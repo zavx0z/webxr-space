@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMxMjEyMTIiLz48cGF0aCBkPSJNOCAxNkgyNE0xNiA4VjI0IiBzdHJva2U9IiM5RTlCRUMiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==" />
     <title>WebXR 3D Gallery</title>
     <script type="importmap">
       {
@@ -11,6 +14,22 @@
           "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
         }
       }
+    </script>
+    <script type="module">
+      import { log } from "./everywhere-everything/web/console.js"
+      new BroadcastChannel("channel").onmessage = (event) => {
+        const { data } = event
+        if (Object.hasOwn(data, "meta")) {
+          for (const patch of data.patches)
+            log({ meta: data.meta, patch, timestamp: data.timestamp, actor: data.actor })
+        } else {
+          console.log(data)
+        }
+      }
+    </script>
+    <script type="module">
+      import "./everywhere-everything/metafor.js"
+      import "./index.js"
     </script>
     <style>
       body {
@@ -67,7 +86,5 @@
 
     <button id="add-object">Добавить объект</button>
     <button id="vr-button">VR Mode</button>
-
-    <script type="module" src="./index.js"></script>
   </body>
 </html>

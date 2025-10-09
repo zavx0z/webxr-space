@@ -9,5 +9,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "scripts": {
+    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js"
   }
 }
