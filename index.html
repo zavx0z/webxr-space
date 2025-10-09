@@ -11,13 +11,14 @@
       {
         "imports": {
           "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+          "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
+          "everywhere-everything/actor": "./everywhere-everything/actor.js"
         }
       }
     </script>
     <script type="module">
       import { log } from "./everywhere-everything/web/console.js"
-      new BroadcastChannel("channel").onmessage = (event) => {
+      new BroadcastChannel("actor-force").onmessage = (event) => {
         const { data } = event
         if (Object.hasOwn(data, "meta")) {
           for (const patch of data.patches)

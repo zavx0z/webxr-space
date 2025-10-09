@@ -11,6 +11,7 @@
     "typescript": "^5"
   },
   "scripts": {
-    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js"
+    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js",
+    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.d.ts"
   }
 }

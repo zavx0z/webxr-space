@@ -1,5 +1,6 @@
 import { PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer } from "three"
 import { Actor } from "./everywhere-everything/actor.js"
+import builder from "./meta/builder.js"
 
 const meta = MetaFor("canvas", {
   description: `Менеджер конечных автоматов.`,
@@ -180,20 +181,16 @@ const meta = MetaFor("canvas", {
   }))
   .reactions()
   .view({
-    render: ({ html }) => html`<meta-for src="./meta/webxr.js" />`,
+    render: ({ html, state }) => html`${state === "инициализация WebXR" && html`<meta-for src="./meta/webxr.js" />`}`,
   })
 
 class MetaXR extends HTMLElement {
   constructor() {
     super()
-    this.actor = Actor.fromSchema(meta, "0")
+    const actor = Actor.fromSchema(meta, "0")
+    this.builder = Actor.fromSchema(builder, "main", { schema: meta.render, parent: actor })
   }
-  connectedCallback() {
-    if (!meta.render) return
-    for (const node of meta.render) {
-      console.log(node)
-    }
-  }
+  connectedCallback() {}
 }
 
 if (!customElements.get("meta-xr")) customElements.define("meta-xr", MetaXR)

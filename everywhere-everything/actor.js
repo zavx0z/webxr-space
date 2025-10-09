@@ -386,13 +386,17 @@ function processesFromSchema(schema) {
   const processes = {};
   for (const [processName, processData] of Object.entries(schema)) {
     if (processData && typeof processData === "object") {
+      const name = processName.replace(/\s/g, "_");
       const process = {
-        action: new Function("return " + processData.action.src)(),
+        action: new Function(`//# sourceURL=${name}_action 
+ return ${processData.action.src}`)(),
         ...processData.success && {
-          success: new Function("return " + processData.success.src)()
+          success: new Function(`//# sourceURL=${name}_success 
+ return ${processData.success.src}`)()
         },
         ...processData.error && {
-          error: new Function("return " + processData.error.src)()
+          error: new Function(`//# sourceURL=${name}_error 
+ return ${processData.error.src}`)()
         },
         ...processData.label && { title: processData.label },
         ...processData.desc && { description: processData.desc }
@@ -655,35 +659,93 @@ function reactionsFromSchema(schema) {
   };
 }
 
+// actor-communication.ts
+class ActorCommunication {
+  static actorsRegistry = new Map;
+  static useBroadcastChannel = true;
+  static channel = new BroadcastChannel("actor-force");
+  constructor() {}
+  static setBroadcastChannel(enabled) {
+    ActorCommunication.useBroadcastChannel = enabled;
+  }
+  static isBroadcastChannelEnabled() {
+    return ActorCommunication.useBroadcastChannel;
+  }
+  static #sendInternalMessage(message) {
+    for (const [actorId, actor] of ActorCommunication.actorsRegistry) {
+      if (actorId !== message.actor && actor.hasReactions()) {
+        const mockEvent = {
+          data: message
+        };
+        actor.handleReactionMessage(mockEvent);
+      }
+    }
+  }
+  static #sendMessage(message) {
+    if (ActorCommunication.useBroadcastChannel) {
+      ActorCommunication.channel.postMessage(message);
+    }
+    ActorCommunication.#sendInternalMessage(message);
+  }
+  static registerActor(actor) {
+    ActorCommunication.actorsRegistry.set(actor.id, actor);
+  }
+  static unregisterActor(actorId) {
+    ActorCommunication.actorsRegistry.delete(actorId);
+  }
+  static getRegisteredActorsCount() {
+    return ActorCommunication.actorsRegistry.size;
+  }
+  static clearRegistry() {
+    ActorCommunication.actorsRegistry.clear();
+  }
+  initializeCommunication() {
+    ActorCommunication.registerActor(this);
+    if (this.hasReactions()) {
+      if (ActorCommunication.useBroadcastChannel) {
+        ActorCommunication.channel.addEventListener("message", this.handleReactionMessage.bind(this));
+      }
+    }
+  }
+  destroyCommunication() {
+    ActorCommunication.unregisterActor(this.id);
+    if (this.hasReactions() && ActorCommunication.useBroadcastChannel) {
+      ActorCommunication.channel.removeEventListener("message", this.handleReactionMessage.bind(this));
+    }
+  }
+  sendMessage(message) {
+    ActorCommunication.#sendMessage(message);
+  }
+}
+
 // actor.ts
-class Actor {
+class Actor extends ActorCommunication {
   name;
   id;
   description;
-  context;
+  ctx;
   state;
   processes;
   reactions;
   render;
   static coreWeakMap = new WeakMap;
-  static channel = new BroadcastChannel("channel");
-  constructor(name, id, description, context, state, processes, reactions, render) {
+  constructor(name, id, description, ctx, state, processes, reactions, render, core = {}) {
+    super();
     this.name = name;
     this.id = id;
     this.description = description;
-    this.context = context;
+    this.ctx = ctx;
     this.state = state;
     this.processes = processes;
     this.reactions = reactions;
     this.render = render;
     this.update = this.update.bind(this);
-    Actor.coreWeakMap.set(this, {});
+    Actor.coreWeakMap.set(this, core);
     this.#init();
   }
   #init() {
-    if (this.reactions.hasReactions())
-      Actor.channel.addEventListener("message", this.handleReactionMessage);
-    Actor.channel.postMessage({
+    this.initializeCommunication();
+    this.sendMessage({
       meta: this.name,
       actor: this.id,
       timestamp: Date.now(),
@@ -692,7 +754,7 @@ class Actor {
           op: "add",
           path: "/",
           value: {
-            context: this.context.snapshot,
+            context: this.ctx.context,
             state: this.state.current,
             process: this.process
           }
@@ -742,18 +804,18 @@ class Actor {
     }
   }
   update(context) {
-    const updated = this.context.update(context);
+    const updated = this.ctx.update(context);
     if (Object.keys(updated).length > 0) {
-      Actor.channel.postMessage(Actor.updateContextMessage(this.name, this.id, updated));
+      this.sendMessage(Actor.updateContextMessage(this.name, this.id, updated));
     }
     return updated;
   }
   executeAction(process) {
     try {
-      Actor.channel.postMessage(Actor.stateBeforeActionMessage(this.name, this.id, this.state.current));
+      this.sendMessage(Actor.stateBeforeActionMessage(this.name, this.id, this.state.current));
       const result = process.action({
-        schema: this.context.schema,
-        context: this.context.context,
+        schema: this.ctx.schema,
+        context: this.ctx.context,
         core: this.core
       });
       if (result instanceof Promise) {
@@ -773,20 +835,20 @@ class Actor {
             throw new Error(`Обработчик ошибки не найден для состояния: ${this.state.current} 
  ${error}`);
         }).finally(() => {
-          Actor.channel.postMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
           this.setProcess(false);
         });
       } else {
         if (process.success)
           process.success({ update: this.update, data: result });
-        Actor.channel.postMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+        this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
         this.setProcess(false);
       }
     } catch (error) {
       console.error(error);
       if (error instanceof Error)
         process.error?.({ update: this.update, error });
-      Actor.channel.postMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+      this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
       this.setProcess(false);
     }
   }
@@ -795,7 +857,7 @@ class Actor {
     if (!transition)
       return;
     for (const [state, conditions] of Object.entries(transition)) {
-      if (checkTransition(conditions, this.context.context)) {
+      if (checkTransition(conditions, this.ctx.context)) {
         const process = this.processes.getProcess(state);
         if (this.process)
           return;
@@ -805,7 +867,7 @@ class Actor {
           this.executeAction(process);
         } else {
           this.setState(state);
-          Actor.channel.postMessage(Actor.stateAfterActionMessage(this.name, this.id, state));
+          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, state));
           if (!this.process)
             this.transition();
         }
@@ -819,19 +881,22 @@ class Actor {
       state: this.state.current,
       process: this.process,
       states: this.state.states,
-      context: this.context.snapshot,
+      context: this.ctx.snapshot,
       ...this.description ? { description: this.description } : {}
     };
+  }
+  hasReactions() {
+    return this.reactions.hasReactions();
   }
   handleReactionMessage(ev) {
     const { data } = ev;
     if (!this.reactions.hasReactions())
       return;
-    if (data.meta === this.name && data.actor === this.id)
+    if (data.actor === this.id)
       return;
     for (const patch of data.patches) {
       this.reactions.run({
-        context: this.context.context,
+        context: this.ctx.context,
         core: this.core,
         meta: data.meta,
         actor: data.actor,
@@ -854,8 +919,11 @@ class Actor {
   static stateAfterActionMessage(meta, actor, state) {
     return { meta, actor, timestamp: Date.now(), patches: [{ op: "replace", path: "/state", value: state }] };
   }
-  static fromSchema(meta, id) {
-    return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? []);
+  destroy() {
+    this.destroyCommunication();
+  }
+  static fromSchema(meta, id, core = {}) {
+    return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core);
   }
 }
 export {

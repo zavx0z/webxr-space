@@ -2,7 +2,7 @@
 var config = {
   active: true,
   collapseAll: true,
-  meta: [],
+  meta: ["core-builder", "node-log"],
   index: null,
   patch: ["add", "remove", "replace", "move", "copy", "test"],
   path: ["/", "/context", "/state"],
