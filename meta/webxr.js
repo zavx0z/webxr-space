@@ -1,0 +1,7 @@
+export default MetaFor("web-xr")
+  .context((t) => ({}))
+  .states({})
+  .core()
+  .processes()
+  .reactions()
+  .view()

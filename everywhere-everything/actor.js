@@ -677,6 +677,7 @@ class Actor {
     this.reactions = reactions;
     this.render = render;
     this.update = this.update.bind(this);
+    Actor.coreWeakMap.set(this, {});
     this.#init();
   }
   #init() {
@@ -711,7 +712,7 @@ class Actor {
     }
   }
   get core() {
-    return Actor.coreWeakMap.get(this) ?? {};
+    return Actor.coreWeakMap.get(this);
   }
   set core(value) {
     Actor.coreWeakMap.set(this, value);
