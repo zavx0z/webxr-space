@@ -722,18 +722,18 @@ class ActorCommunication {
 class Actor extends ActorCommunication {
   name;
   id;
-  description;
+  desc;
   ctx;
   state;
   processes;
   reactions;
   render;
   static coreWeakMap = new WeakMap;
-  constructor(name, id, description, ctx, state, processes, reactions, render, core = {}) {
+  constructor(name, id, desc, ctx, state, processes, reactions, render, core = {}) {
     super();
     this.name = name;
     this.id = id;
-    this.description = description;
+    this.desc = desc;
     this.ctx = ctx;
     this.state = state;
     this.processes = processes;
@@ -882,7 +882,7 @@ class Actor extends ActorCommunication {
       process: this.process,
       states: this.state.states,
       context: this.ctx.snapshot,
-      ...this.description ? { description: this.description } : {}
+      ...this.desc ? { description: this.desc } : {}
     };
   }
   hasReactions() {

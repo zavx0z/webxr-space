@@ -64,17 +64,15 @@ export default MetaFor("core-builder")
 
         const metaNodeLog = (await import("../nodes/log.js")).default
         const { Actor } = await import("everywhere-everything/actor")
-        // @ts-ignore
-        const reactionName = Object.keys(metaNodeLog.reactions.reactions)[0]
-        // @ts-ignore
-        const reaction = metaNodeLog.reactions.reactions[reactionName]
-        reaction.cond.meta = core.parent.name
-        reaction.cond.actor = core.parent.id
+
+        for (const key of Object.keys(metaNodeLog.reactions?.reactions || [])) {
+          const reaction = metaNodeLog.reactions?.reactions[key]
+          if (!reaction) continue
+          reaction.cond.meta = core.parent.name
+          reaction.cond.actor = core.parent.id
+        }
+        
         const reactionActor = Actor.fromSchema(metaNodeLog, `${core.parent.name}/${core.parent.id}`)
-        console.log(reactionActor)
-        const state = core.parent.state
-        const context = core.parent.ctx
-        console.log(state, context)
       })
       .success(({}) => {})
       .error(({ error }) => console.log(error)),
