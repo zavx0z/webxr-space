@@ -2,7 +2,6 @@
 var config = {
   active: true,
   collapseAll: true,
-  // meta: ["core-builder", "node-log"],
   meta: [],
   index: null,
   patch: ["add", "remove", "replace", "move", "copy", "test"],
@@ -18,9 +17,10 @@ var config = {
 };
 var isLog = (message, path) => Boolean(config.active && message.patch.path === path && config.path.includes(path) && (!config.meta.length || config.meta.includes(message.meta)) && (config.index === null || message.actor.index === config.index));
 function log(message, core) {
-  const { meta, actor, patch } = message;
+  const { meta, actor, path: actorPath, patch } = message;
   const metaStr = String(meta).padEnd(config.width.meta, " ");
-  const index = String(actor).padEnd(4, " ");
+  const actorStr = String(actor).padEnd(12, " ");
+  const pathStr = String(actorPath).padEnd(8, " ");
   const op = centerText(String(patch.op), config.width.op);
   const path = String(patch.path).padEnd(config.width.path, " ");
   const value = formattedObj(patch.value);
@@ -30,8 +30,10 @@ function log(message, core) {
       ;
       (() => {
         const msg = [
-          `%c${metaStr}${index}%c | %c${op}%c | %c${path}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}`,
           "color: #3498db; font-weight: bold",
+          "color: #9b59b6; font-weight: bold",
+          "color: #f39c12; font-weight: bold",
           "",
           "color: #e74c3c",
           "",
@@ -50,8 +52,10 @@ function log(message, core) {
       ;
       (() => {
         const msg = [
-          `%c${metaStr}${index}%c | %c${op}%c | %c${path}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}`,
           `color: #3498db; font-weight: bold; ${isError ? "background: #7d4545" : ""}`,
+          "color: #9b59b6; font-weight: bold",
+          "color: #f39c12; font-weight: bold",
           "",
           "color: #e74c3c",
           "",
@@ -79,8 +83,10 @@ function log(message, core) {
       (() => {
         const stateValue = Array.isArray(patch.value) ? JSON.stringify(patch.value, null, 2) : typeof patch.value === "object" && patch.value !== null ? JSON.stringify(patch.value, null, 2) : patch.value;
         const msg = [
-          `%c${metaStr}${index}%c | %c${op}%c | %c${path}%c %c${stateValue}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}%c %c${stateValue}`,
           "color: #3498db; font-weight: bold",
+          "color: #9b59b6; font-weight: bold",
+          "color: #f39c12; font-weight: bold",
           "",
           "color: #e74c3c",
           "",

@@ -22,7 +22,7 @@
         const { data } = event
         if (Object.hasOwn(data, "meta")) {
           for (const patch of data.patches)
-            log({ meta: data.meta, patch, timestamp: data.timestamp, actor: data.actor })
+            log({ meta: data.meta, patch, timestamp: data.timestamp, actor: data.actor, path: data.path })
         } else {
           console.log(data)
         }

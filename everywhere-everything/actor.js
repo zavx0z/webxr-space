@@ -1131,6 +1131,7 @@ class Actor extends ActorCommunication {
     this.sendMessage({
       meta: this.name,
       actor: this.id,
+      path: this.path,
       timestamp: Date.now(),
       patches: [
         {
@@ -1189,13 +1190,13 @@ class Actor extends ActorCommunication {
   update(context) {
     const updated = this.ctx.update(context);
     if (Object.keys(updated).length > 0) {
-      this.sendMessage(Actor.updateContextMessage(this.name, this.id, updated));
+      this.sendMessage(Actor.updateContextMessage(this.name, this.id, this.path, updated));
     }
     return updated;
   }
   executeAction(process) {
     try {
-      this.sendMessage(Actor.stateBeforeActionMessage(this.name, this.id, this.state.current));
+      this.sendMessage(Actor.stateBeforeActionMessage(this.name, this.id, this.path, this.state.current));
       const result = process.action({
         schema: this.ctx.schema,
         context: this.ctx.context,
@@ -1219,13 +1220,13 @@ class Actor extends ActorCommunication {
             throw new Error(`Обработчик ошибки не найден для состояния: ${this.state.current} 
  ${error}`);
         }).finally(() => {
-          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.path, this.state.current));
           this.setProcess(false);
         });
       } else {
         if (process.success)
           process.success({ update: this.update, data: result });
-        this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+        this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.path, this.state.current));
         this.setProcess(false);
       }
     } catch (error) {
@@ -1233,7 +1234,7 @@ class Actor extends ActorCommunication {
         process.error?.({ update: this.update, error });
       else
         console.error(error);
-      this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
+      this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.path, this.state.current));
       this.setProcess(false);
     }
   }
@@ -1252,7 +1253,7 @@ class Actor extends ActorCommunication {
           this.executeAction(process);
         } else {
           this.setState(state);
-          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, state));
+          this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.path, state));
           if (!this.process)
             this.transition();
         }
@@ -1294,17 +1295,17 @@ class Actor extends ActorCommunication {
     }
     this.transition();
   }
-  static initMessage(meta, actor, snapshot) {
-    return { meta, actor, timestamp: Date.now(), patches: [{ op: "add", path: "/", value: snapshot }] };
+  static initMessage(meta, actor, path, snapshot) {
+    return { meta, actor, path, timestamp: Date.now(), patches: [{ op: "add", path: "/", value: snapshot }] };
   }
-  static updateContextMessage(meta, actor, updated) {
-    return { meta, actor, timestamp: Date.now(), patches: [{ op: "replace", path: "/context", value: updated }] };
+  static updateContextMessage(meta, actor, path, updated) {
+    return { meta, actor, path, timestamp: Date.now(), patches: [{ op: "replace", path: "/context", value: updated }] };
   }
-  static stateBeforeActionMessage(meta, actor, state) {
-    return { meta, actor, timestamp: Date.now(), patches: [{ op: "test", path: "/state", value: state }] };
+  static stateBeforeActionMessage(meta, actor, path, state) {
+    return { meta, actor, path, timestamp: Date.now(), patches: [{ op: "test", path: "/state", value: state }] };
   }
-  static stateAfterActionMessage(meta, actor, state) {
-    return { meta, actor, timestamp: Date.now(), patches: [{ op: "replace", path: "/state", value: state }] };
+  static stateAfterActionMessage(meta, actor, path, state) {
+    return { meta, actor, path, timestamp: Date.now(), patches: [{ op: "replace", path: "/state", value: state }] };
   }
   destroy() {
     const hierarchy = ActorCommunication.getHierarchy();
