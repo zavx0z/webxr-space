@@ -149,13 +149,13 @@ const meta = MetaFor("canvas", {
         } // Проверка поддержки WebXR
         async function checkWebXRSupport() {
           if (!navigator.xr) {
-            console.warn("WebXR не поддерживается в этом браузере")
+            // console.warn("WebXR не поддерживается в этом браузере")
             return false
           }
 
           try {
             const isSupported = await navigator.xr.isSessionSupported("immersive-vr")
-            console.log("WebXR immersive-vr поддерживается:", isSupported)
+            // console.log("WebXR immersive-vr поддерживается:", isSupported)
             return isSupported
           } catch (error) {
             console.error("Ошибка проверки WebXR:", error)
@@ -189,7 +189,7 @@ class MetaXR extends HTMLElement {
   constructor() {
     super()
     const actor = Actor.fromSchema(meta, "0")
-    this.builder = Actor.fromSchema(builder, "main", { schema: meta.render, parent: actor })
+    this.builder = Actor.fromSchema(builder, "main", { child: meta.render, parent: actor })
   }
   connectedCallback() {}
 }

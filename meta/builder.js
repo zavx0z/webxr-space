@@ -24,8 +24,8 @@ export default MetaFor("core-builder")
   .core({
     /** @type {Actor|null} */
     parent: null,
-    /** @type {NodeMeta[]} */
-    schema: [],
+    /** @type {NodeType[]} */
+    child: [],
     /** @type {NodeType|null} */
     currNode: null,
     nodeTree: null,
@@ -33,13 +33,13 @@ export default MetaFor("core-builder")
   .processes((process) => ({
     "получение элемента схемы": process()
       .action(({ core, context }) => {
-        if (!core.schema || !core.schema.length) return {}
-        console.log(core.schema)
+        if (!core.child || !core.child.length) return {}
+        console.log(core.child)
 
         let target
 
         if (context.cursor.length === 0) {
-          target = /** @type {NodeMeta} */ (core.schema[0])
+          target = /** @type {NodeMeta} */ (core.child[0])
           const tag = /** @type {string} */ (target.tag)
           core.currNode = target
           return { cursor: [0], tag, type: target.type }
@@ -67,18 +67,10 @@ export default MetaFor("core-builder")
         const node = /** @type {NodeLogical} */ (core.currNode)
         const metaNodeLog = (await import("../nodes/log.js")).default
         const { Actor } = await import("everywhere-everything/actor")
-
-        for (const key of Object.keys(metaNodeLog.reactions?.reactions || [])) {
-          const reaction = metaNodeLog.reactions?.reactions[key]
-          if (!reaction) continue
-          reaction.cond.meta = core.parent.name
-          reaction.cond.actor = core.parent.id
-        }
-        console.log(core.parent.state)
         // @ts-ignore
         metaNodeLog.context.state["default"] = core.parent.state.value
         console.log(metaNodeLog, core.parent.state.current)
-        const reactionActor = Actor.fromSchema(metaNodeLog, `${core.parent.name}/${core.parent.id}`, {
+        Actor.fromSchema(metaNodeLog, `${core.parent.name}/${core.parent.id}`, {
           schema: core.currNode,
           parent: core.parent,
           evalCondition: new Function("_", "return Boolean(" + node.expr + ");"),

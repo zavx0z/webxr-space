@@ -1921,7 +1921,7 @@ var reactionsSchema = (builder) => {
   const states = {};
   let reactionAutoId = 0;
   const chainResult = builder((config) => ({
-    filter: (conditions) => ({
+    filter: (filterFn) => ({
       equal: (update) => {
         const { read, write } = extractFields(update);
         const label = config?.label || "";
@@ -1930,7 +1930,7 @@ var reactionsSchema = (builder) => {
         reactions[id] = {
           label,
           ...desc && { desc },
-          cond: conditions,
+          cond: filterFn.toString(),
           read,
           write,
           src: update.toString()
@@ -2035,10 +2035,10 @@ function parseFunction(fn, allowWrite = true) {
 }
 function parseProcess(process) {
   const result = {};
-  if (process.title)
-    result.label = process.title;
-  if (process.description)
-    result.desc = process.description;
+  if (process.label)
+    result.label = process.label;
+  if (process.desc)
+    result.desc = process.desc;
   const parsed = parseFunction(process.action, false);
   result.action = {
     src: process.action.toString(),

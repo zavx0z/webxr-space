@@ -308,6 +308,8 @@ export type ActionParams<C extends Schema, I extends Core> = {
 	core: I;
 	/** Схема контекста */
 	schema: C;
+	/** */
+	self: Self;
 };
 /**
  * Цепочка для декларации action с типобезопасной поддержкой success и error.
@@ -477,9 +479,9 @@ export type Process<C extends Schema = Schema, I extends Core = Core, Res = any>
 		error: Error;
 	}) => void;
 	/** Название процесса для документации */
-	title?: string;
+	label?: string;
 	/** Описание процесса для документации */
-	description?: string;
+	desc?: string;
 };
 /**
  * Обработчик действия процесса.
@@ -1315,6 +1317,7 @@ export type ReactionParams = {
 	actor: string;
 	timestamp: number;
 	patch: JsonPatch;
+	self: Self;
 };
 /**
  * Конфигурация одной реакции
@@ -1366,8 +1369,8 @@ export type Reaction<C extends Schema, S extends string, I extends Core> = {
  * const reactions: ReactionsChain<MyContext, "idle" | "loading"> = (reaction) => [
  *   [
  *     ["idle", "loading"], // Состояния
- *     reaction({ title: "Обработка сообщений" })
- *       .filter({ meta: "user" })
+ *     reaction({ label: "Обработка сообщений" })
+ *       .filter(({ self }) => ({ meta: "user", actor: self.actor.split("/")[1] }))
  *       .equal(({ update, patch }) => {
  *         update({ lastMessage: patch.value })
  *       })
@@ -1382,7 +1385,9 @@ export type ReactionsDeclaration<C extends Schema, S extends string, I extends C
 	desc?: string;
 }) => {
 	/** Добавляет декларативные фильтры */
-	filter: (conditions: ReactionFilterConditions) => {
+	filter: (filterFn: (params: {
+		self: Self;
+	}) => ReactionFilterConditions) => {
 		/** Добавляет функцию обработки события */
 		equal: (updateFn: ReactionUpdate<C, S, I>) => Reaction<C, S, I> & {
 			/** Метод для регистрации состояний */
@@ -1396,7 +1401,7 @@ export type ReactionsSchema = {
 	reactions: Record<string, {
 		label: string;
 		desc?: string;
-		cond: ReactionFilterConditions;
+		cond: string;
 		read?: string[];
 		write?: string[];
 		src: string;
@@ -2807,5 +2812,9 @@ export interface MetaSchema<C extends Schema = Schema, S extends string = string
 	/** Стили компонента */
 	style?: string;
 }
+export type Self = {
+	meta: string;
+	actor: string;
+};
 
 export {};

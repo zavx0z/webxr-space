@@ -386,11 +386,11 @@ var checkTransition = (conditions, context) => {
 };
 
 // core/processes.ts
-function processesFromSchema(schema) {
+function processesFromSchema(schema, self = { meta: "unknown", actor: "unknown" }) {
   const processes = {};
   for (const [processName, processData] of Object.entries(schema)) {
     if (processData && typeof processData === "object") {
-      const name = processName.replace(/\s/g, "_");
+      const name = self.meta + "_" + self.actor.replace(/\//g, "_") + "_" + processName.replace(/\s/g, "_");
       const process = {
         action: new Function(`//# sourceURL=${name}_action 
  return ${processData.action.src}`)(),
@@ -402,8 +402,8 @@ function processesFromSchema(schema) {
           error: new Function(`//# sourceURL=${name}_error 
  return ${processData.error.src}`)()
         },
-        ...processData.label && { title: processData.label },
-        ...processData.desc && { description: processData.desc }
+        ...processData.label && { label: processData.label },
+        ...processData.desc && { desc: processData.desc }
       };
       processes[processName] = process;
     }
@@ -612,12 +612,12 @@ function reactionsFromSchema(schema) {
   for (const [reactionId, reactionData] of Object.entries(schema.reactions)) {
     if (reactionData && typeof reactionData === "object") {
       const updateFn = new Function("return " + reactionData.src)();
-      const filterFn = createFilterFn(reactionData.cond);
+      const filterFn = new Function("return " + reactionData.cond)();
       const reaction = {
-        title: reactionData.label,
-        ...reactionData.desc && { description: reactionData.desc },
+        label: reactionData.label,
+        ...reactionData.desc && { desc: reactionData.desc },
         update: updateFn,
-        filter: filterFn,
+        getConditions: filterFn,
         states: []
       };
       reactions.push(reaction);
@@ -636,11 +636,14 @@ function reactionsFromSchema(schema) {
       for (const reaction of reactions) {
         if (!reaction.states.includes(params.state))
           continue;
-        if (reaction.filter({
+        const conditions = reaction.getConditions({ self: params.self });
+        const filterFn = createFilterFn(conditions);
+        if (filterFn({
           meta: params.meta,
           actor: params.actor,
           timestamp: params.timestamp,
-          patch: params.patch
+          patch: params.patch,
+          self: params.self
         })) {
           reaction.update({
             update: params.update,
@@ -822,7 +825,8 @@ class Actor extends ActorCommunication {
       const result = process.action({
         schema: this.ctx.schema,
         context: this.ctx.context,
-        core: this.core
+        core: this.core,
+        self: { meta: this.name, actor: this.id }
       });
       if (result instanceof Promise) {
         result.then((data) => {
@@ -910,7 +914,8 @@ class Actor extends ActorCommunication {
         timestamp: data.timestamp,
         patch,
         state: this.state.current,
-        update: this.update
+        update: this.update,
+        self: { meta: this.name, actor: this.id }
       });
     }
     this.transition();
@@ -936,7 +941,7 @@ class Actor extends ActorCommunication {
     this.children = [];
   }
   static fromSchema(meta, id, core = {}) {
-    return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core);
+    return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}, { meta: meta.name, actor: id }), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core);
   }
 }
 export {
