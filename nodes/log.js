@@ -56,10 +56,10 @@ export default MetaFor("node-log")
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
 
-        const meta = (await import("../meta/builder.js")).default
+        const { meta } = await import("./node-builder.js")
         const { Actor } = await import("everywhere-everything/actor")
 
-        Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })
+        // Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })
       })
       .error(({ error }) => console.log(error)),
     удаление: process()
@@ -75,7 +75,6 @@ export default MetaFor("node-log")
       ["ожидание", "создание", "удаление"],
       reaction({ label: "Обновление состояния родительского актора" })
         .filter(({ self }) => ({
-          meta: self.actor.split("/")[0],
           actor: self.actor.split("/")[1],
           path: "/state",
           op: "replace",

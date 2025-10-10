@@ -666,9 +666,356 @@ function reactionsFromSchema(schema) {
   };
 }
 
-// actor-communication.ts
+// order-tree/index.ts
+function createActorStore() {
+  return {
+    arena: new Map,
+    childrenView: new Map,
+    dirty: new Set
+  };
+}
+function getParentPath(path) {
+  if (path === "")
+    return null;
+  const lastSlash = path.lastIndexOf("/");
+  return lastSlash === -1 ? null : path.substring(0, lastSlash);
+}
+function midOrder(a, b) {
+  if (a == null && b == null)
+    return 0;
+  if (a == null)
+    return b - 1;
+  if (b == null)
+    return a + 1;
+  return (a + b) / 2;
+}
+function markDirty(store, parentPath) {
+  const key = parentPath ?? "";
+  store.dirty.add(key);
+}
+function createActorNode(store, path, actor) {
+  if (store.arena.has(path)) {
+    throw new Error(`Actor node already exists: ${path}`);
+  }
+  const node = {
+    path,
+    parent: getParentPath(path),
+    order: 0,
+    actor
+  };
+  store.arena.set(path, node);
+}
+function getChildren(store, parentPath) {
+  const key = parentPath ?? "";
+  if (!store.childrenView.has(key)) {
+    store.childrenView.set(key, []);
+  }
+  const children = store.childrenView.get(key);
+  if (store.dirty.has(key)) {
+    children.sort((a, b) => {
+      const nodeA = store.arena.get(a);
+      const nodeB = store.arena.get(b);
+      return nodeA.order - nodeB.order;
+    });
+    store.dirty.delete(key);
+  }
+  return Object.freeze([...children]);
+}
+function appendChild(store, parentPath, actorPath) {
+  const node = store.arena.get(actorPath);
+  if (!node) {
+    throw new Error(`Unknown actor: ${actorPath}`);
+  }
+  const children = getChildren(store, parentPath);
+  const lastKey = children.length > 0 ? children[children.length - 1] : null;
+  const lastOrder = lastKey ? store.arena.get(lastKey).order : null;
+  node.parent = parentPath;
+  node.order = midOrder(lastOrder, null);
+  const parentKey = parentPath ?? "";
+  const childrenArray = store.childrenView.get(parentKey);
+  childrenArray.push(actorPath);
+  markDirty(store, parentPath);
+}
+function insertBetween(store, leftPath, rightPath, actorPath) {
+  const node = store.arena.get(actorPath);
+  if (!node) {
+    throw new Error(`Unknown actor: ${actorPath}`);
+  }
+  const leftNode = leftPath ? store.arena.get(leftPath) : null;
+  const rightNode = rightPath ? store.arena.get(rightPath) : null;
+  let parentPath = null;
+  if (leftNode && rightNode) {
+    const leftParentKey = leftNode.parent ?? "";
+    const rightParentKey = rightNode.parent ?? "";
+    if (leftParentKey !== rightParentKey) {
+      throw new Error("Neighbors must share the same parent");
+    }
+    parentPath = leftNode.parent;
+  } else if (leftNode) {
+    parentPath = leftNode.parent;
+  } else if (rightNode) {
+    parentPath = rightNode.parent;
+  }
+  node.parent = parentPath;
+  const leftOrder = leftNode ? leftNode.order : null;
+  const rightOrder = rightNode ? rightNode.order : null;
+  node.order = midOrder(leftOrder, rightOrder);
+  const parentKey = parentPath ?? "";
+  if (!store.childrenView.has(parentKey)) {
+    store.childrenView.set(parentKey, []);
+  }
+  const children = store.childrenView.get(parentKey);
+  const insertPos = binarySearchByOrder(store, children, node.order);
+  children.splice(insertPos, 0, actorPath);
+  markDirty(store, parentPath);
+}
+function binarySearchByOrder(store, children, order) {
+  let lo = 0;
+  let hi = children.length;
+  while (lo < hi) {
+    const mid = lo + hi >>> 1;
+    const childPath = children[mid];
+    if (!childPath)
+      throw new Error(`Child at index ${mid} is undefined`);
+    const node = store.arena.get(childPath);
+    if (!node)
+      throw new Error(`Node not found: ${childPath}`);
+    const midOrder2 = node.order;
+    if (midOrder2 <= order) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+function unlinkActor(store, actorPath) {
+  const node = store.arena.get(actorPath);
+  if (!node || !node.parent)
+    return;
+  const parentKey = node.parent;
+  const children = store.childrenView.get(parentKey);
+  if (children) {
+    const index = children.indexOf(actorPath);
+    if (index !== -1) {
+      children.splice(index, 1);
+    }
+  }
+  markDirty(store, node.parent);
+  node.parent = null;
+}
+function moveAfter(store, targetPath, actorPath) {
+  if (targetPath === actorPath)
+    return;
+  const targetNode = store.arena.get(targetPath);
+  if (!targetNode) {
+    throw new Error(`Target actor not found: ${targetPath}`);
+  }
+  unlinkActor(store, actorPath);
+  const nextSibling = getNextSibling(store, targetNode.parent, targetPath);
+  insertBetween(store, targetPath, nextSibling, actorPath);
+}
+function moveBefore(store, targetPath, actorPath) {
+  if (targetPath === actorPath)
+    return;
+  const targetNode = store.arena.get(targetPath);
+  if (!targetNode) {
+    throw new Error(`Target actor not found: ${targetPath}`);
+  }
+  const prevSibling = getPrevSibling(store, targetNode.parent, targetPath);
+  unlinkActor(store, actorPath);
+  insertBetween(store, prevSibling, targetPath, actorPath);
+}
+function reparentActor(store, newParentPath, actorPath, options = { at: "end" }) {
+  unlinkActor(store, actorPath);
+  if (options.at === "start") {
+    const firstChild = getFirstChild(store, newParentPath);
+    insertBetween(store, null, firstChild, actorPath);
+  } else if (options.at === "after" && options.after) {
+    const nextSibling = getNextSibling(store, newParentPath, options.after);
+    insertBetween(store, options.after, nextSibling, actorPath);
+  } else {
+    appendChild(store, newParentPath, actorPath);
+  }
+}
+function getFirstChild(store, parentPath) {
+  const children = getChildren(store, parentPath);
+  return children.length > 0 ? children[0] ?? null : null;
+}
+function getNextSibling(store, parentPath, actorPath) {
+  const children = getChildren(store, parentPath);
+  const index = children.indexOf(actorPath);
+  return index >= 0 && index + 1 < children.length ? children[index + 1] ?? null : null;
+}
+function getPrevSibling(store, parentPath, actorPath) {
+  const children = getChildren(store, parentPath);
+  const index = children.indexOf(actorPath);
+  return index > 0 ? children[index - 1] ?? null : null;
+}
+function getByIndexPath(store, rootPath, indexPath) {
+  let currentPath = rootPath;
+  for (const index of indexPath) {
+    const children = getChildren(store, currentPath);
+    if (index >= children.length)
+      return null;
+    const nextPath = children[index];
+    if (!nextPath)
+      return null;
+    currentPath = nextPath;
+  }
+  return currentPath;
+}
+function normalizeChildren(store, parentPath) {
+  const children = getChildren(store, parentPath);
+  children.forEach((childPath, index) => {
+    const node = store.arena.get(childPath);
+    node.order = index;
+  });
+  markDirty(store, parentPath);
+}
+function removeActor(store, actorPath, recursive = false) {
+  const node = store.arena.get(actorPath);
+  if (!node)
+    return;
+  if (recursive) {
+    const children = getChildren(store, actorPath);
+    for (const childPath of children) {
+      removeActor(store, childPath, true);
+    }
+  }
+  unlinkActor(store, actorPath);
+  store.arena.delete(actorPath);
+  store.childrenView.delete(actorPath);
+  store.dirty.delete(actorPath);
+}
+function getActor(store, actorPath) {
+  const node = store.arena.get(actorPath);
+  return node ? node.actor : null;
+}
+function hasActor(store, actorPath) {
+  return store.arena.has(actorPath);
+}
+
+// core/hierarchy.ts
+class ActorHierarchy {
+  store = createActorStore();
+  idIndex = new Map;
+  pathCounter = 0;
+  generateRootPath() {
+    return (this.pathCounter++).toString();
+  }
+  resetPathCounter() {
+    this.pathCounter = 0;
+  }
+  createNode(path, actor) {
+    createActorNode(this.store, path, actor);
+    this.idIndex.set(actor.id, path);
+  }
+  appendChild(parentPath, childPath) {
+    appendChild(this.store, parentPath, childPath);
+  }
+  insertBetween(leftPath, rightPath, actorPath) {
+    insertBetween(this.store, leftPath, rightPath, actorPath);
+  }
+  moveAfter(targetPath, actorPath) {
+    moveAfter(this.store, targetPath, actorPath);
+  }
+  moveBefore(targetPath, actorPath) {
+    moveBefore(this.store, targetPath, actorPath);
+  }
+  reparent(newParentPath, actorPath, options) {
+    reparentActor(this.store, newParentPath, actorPath, options);
+  }
+  removeNode(actorPath, recursive = false) {
+    const actor = getActor(this.store, actorPath);
+    if (actor) {
+      this.idIndex.delete(actor.id);
+    }
+    removeActor(this.store, actorPath, recursive);
+  }
+  getActor(actorPath) {
+    return getActor(this.store, actorPath);
+  }
+  getActorById(actorId) {
+    const path = this.idIndex.get(actorId);
+    return path ? getActor(this.store, path) : null;
+  }
+  getPathById(actorId) {
+    return this.idIndex.get(actorId) ?? null;
+  }
+  hasActor(actorPath) {
+    return hasActor(this.store, actorPath);
+  }
+  getChildren(parentPath) {
+    return getChildren(this.store, parentPath);
+  }
+  getByIndexPath(rootPath, indexPath) {
+    return getByIndexPath(this.store, rootPath, indexPath);
+  }
+  normalizeChildren(parentPath) {
+    normalizeChildren(this.store, parentPath);
+  }
+  getAllActors() {
+    const actors = [];
+    for (const node of this.store.arena.values()) {
+      actors.push(node.actor);
+    }
+    return actors;
+  }
+  getActorCount() {
+    return this.store.arena.size;
+  }
+  clear() {
+    this.store.arena.clear();
+    this.store.childrenView.clear();
+    this.store.dirty.clear();
+    this.idIndex.clear();
+    this.pathCounter = 0;
+  }
+  getRootNodes() {
+    return Array.from(getChildren(this.store, null));
+  }
+  isRootNode(actorPath) {
+    const node = this.store.arena.get(actorPath);
+    return node ? node.parent === null : false;
+  }
+  getParentPath(actorPath) {
+    const node = this.store.arena.get(actorPath);
+    return node ? node.parent : null;
+  }
+  getDepth(actorPath) {
+    if (actorPath === "")
+      return 0;
+    return actorPath.split("/").length;
+  }
+  isAncestor(ancestorPath, descendantPath) {
+    if (ancestorPath === descendantPath)
+      return false;
+    return descendantPath.startsWith(ancestorPath + "/") || ancestorPath === "" && !descendantPath.includes("/");
+  }
+  getDescendants(actorPath) {
+    const descendants = [];
+    const children = getChildren(this.store, actorPath);
+    for (const childPath of children) {
+      descendants.push(childPath);
+      descendants.push(...this.getDescendants(childPath));
+    }
+    return descendants;
+  }
+  getPathToRoot(actorPath) {
+    const path = [];
+    let currentPath = actorPath;
+    while (currentPath !== null) {
+      path.unshift(currentPath);
+      currentPath = this.getParentPath(currentPath);
+    }
+    return path;
+  }
+}
+
+// core/communication.ts
 class ActorCommunication {
-  static actorsRegistry = new Map;
+  static hierarchy = new ActorHierarchy;
   static useBroadcastChannel = true;
   static channel = new BroadcastChannel("actor-force");
   constructor() {}
@@ -679,8 +1026,9 @@ class ActorCommunication {
     return ActorCommunication.useBroadcastChannel;
   }
   static #sendInternalMessage(message) {
-    for (const [actorId, actor] of ActorCommunication.actorsRegistry) {
-      if (actorId !== message.actor && actor.hasReactions()) {
+    const hierarchyActors = ActorCommunication.hierarchy.getAllActors();
+    for (const actor of hierarchyActors) {
+      if (actor.id !== message.actor && actor.hasReactions()) {
         const mockEvent = {
           data: message
         };
@@ -695,16 +1043,39 @@ class ActorCommunication {
     ActorCommunication.#sendInternalMessage(message);
   }
   static registerActor(actor) {
-    ActorCommunication.actorsRegistry.set(actor.id, actor);
+    if (!ActorCommunication.hierarchy.hasActor(actor.path)) {
+      ActorCommunication.hierarchy.createNode(actor.path, actor);
+    }
   }
-  static unregisterActor(actorId) {
-    ActorCommunication.actorsRegistry.delete(actorId);
+  static unregisterActor(actor) {
+    if (ActorCommunication.hierarchy.hasActor(actor.path)) {
+      ActorCommunication.hierarchy.removeNode(actor.path);
+    }
   }
   static getRegisteredActorsCount() {
-    return ActorCommunication.actorsRegistry.size;
+    return ActorCommunication.hierarchy.getActorCount();
   }
   static clearRegistry() {
-    ActorCommunication.actorsRegistry.clear();
+    ActorCommunication.hierarchy.clear();
+  }
+  static getHierarchy() {
+    return ActorCommunication.hierarchy;
+  }
+  static addChildActor(parentPath, childActor) {
+    if (!ActorCommunication.hierarchy.hasActor(childActor.path)) {
+      ActorCommunication.hierarchy.createNode(childActor.path, childActor);
+    }
+    ActorCommunication.hierarchy.appendChild(parentPath, childActor.path);
+  }
+  static getActorChildren(parentPath) {
+    const childrenPaths = ActorCommunication.hierarchy.getChildren(parentPath);
+    return childrenPaths.map((path) => ActorCommunication.hierarchy.getActor(path)).filter((actor) => actor !== null);
+  }
+  static getActorByPath(path) {
+    return ActorCommunication.hierarchy.getActor(path);
+  }
+  static hasActorByPath(path) {
+    return ActorCommunication.hierarchy.hasActor(path);
   }
   initializeCommunication() {
     ActorCommunication.registerActor(this);
@@ -715,7 +1086,7 @@ class ActorCommunication {
     }
   }
   destroyCommunication() {
-    ActorCommunication.unregisterActor(this.id);
+    ActorCommunication.unregisterActor(this);
     if (this.hasReactions() && ActorCommunication.useBroadcastChannel) {
       ActorCommunication.channel.removeEventListener("message", this.handleReactionMessage.bind(this));
     }
@@ -736,9 +1107,8 @@ class Actor extends ActorCommunication {
   reactions;
   render;
   static coreWeakMap = new WeakMap;
-  children = [];
-  parent = null;
-  constructor(name, id, desc, ctx, state, processes, reactions, render, core = {}) {
+  path;
+  constructor(name, id, desc, ctx, state, processes, reactions, render, core = {}, path) {
     super();
     this.name = name;
     this.id = id;
@@ -748,9 +1118,13 @@ class Actor extends ActorCommunication {
     this.processes = processes;
     this.reactions = reactions;
     this.render = render;
+    this.path = path ?? ActorCommunication.getHierarchy().generateRootPath();
     this.update = this.update.bind(this);
     Actor.coreWeakMap.set(this, core);
     this.#init();
+  }
+  static resetPathCounter() {
+    ActorCommunication.getHierarchy().resetPathCounter();
   }
   #init() {
     this.initializeCommunication();
@@ -933,15 +1307,24 @@ class Actor extends ActorCommunication {
     return { meta, actor, timestamp: Date.now(), patches: [{ op: "replace", path: "/state", value: state }] };
   }
   destroy() {
+    const hierarchy = ActorCommunication.getHierarchy();
+    const children = hierarchy.getChildren(this.path);
+    for (const childPath of children) {
+      const childActor = hierarchy.getActor(childPath);
+      if (childActor instanceof Actor) {
+        childActor.destroy();
+      }
+    }
     this.destroyCommunication();
     Actor.coreWeakMap.delete(this);
     this.stateListeners.clear();
     this.ctx.clearSubscribers();
-    this.parent = null;
-    this.children = [];
   }
-  static fromSchema(meta, id, core = {}) {
-    return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}, { meta: meta.name, actor: id }), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core);
+  static fromSchema(config) {
+    const { meta, id, core = {}, context = {}, path } = config;
+    const ctx = contextFromSchema(meta.context);
+    ctx.update(context);
+    return new Actor(meta.name, id, meta.description, ctx, { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}, { meta: meta.name, actor: id }), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core, path);
   }
 }
 export {
