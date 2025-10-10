@@ -2067,19 +2067,34 @@ var processesSchema = (processes) => {
     const chain = {
       title: config?.label,
       description: config?.desc,
+      _successHandler: undefined,
+      _errorHandler: undefined,
       action: (fn) => {
         chain.action = fn;
         return chain;
       },
       success: (handler) => {
-        chain.success = handler;
+        chain._successHandler = handler;
         return chain;
       },
       error: (handler) => {
-        chain.error = handler;
+        chain._errorHandler = handler;
         return chain;
       },
-      getResult: () => chain
+      getResult: () => {
+        const result2 = {
+          action: chain.action
+        };
+        if (chain._successHandler)
+          result2.success = chain._successHandler;
+        if (chain._errorHandler)
+          result2.error = chain._errorHandler;
+        if (chain.title)
+          result2.title = chain.title;
+        if (chain.description)
+          result2.description = chain.description;
+        return result2;
+      }
     };
     return chain;
   });

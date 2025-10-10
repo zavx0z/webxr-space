@@ -729,6 +729,8 @@ class Actor extends ActorCommunication {
   reactions;
   render;
   static coreWeakMap = new WeakMap;
+  children = [];
+  parent = null;
   constructor(name, id, desc, ctx, state, processes, reactions, render, core = {}) {
     super();
     this.name = name;
@@ -845,9 +847,10 @@ class Actor extends ActorCommunication {
         this.setProcess(false);
       }
     } catch (error) {
-      console.error(error);
       if (error instanceof Error)
         process.error?.({ update: this.update, error });
+      else
+        console.error(error);
       this.sendMessage(Actor.stateAfterActionMessage(this.name, this.id, this.state.current));
       this.setProcess(false);
     }
@@ -921,6 +924,10 @@ class Actor extends ActorCommunication {
   }
   destroy() {
     this.destroyCommunication();
+    Actor.coreWeakMap.delete(this);
+    this.stateListeners.clear();
+    this.parent = null;
+    this.children = [];
   }
   static fromSchema(meta, id, core = {}) {
     return new Actor(meta.name, id, meta.description, contextFromSchema(meta.context), { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core);

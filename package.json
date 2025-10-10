@@ -11,6 +11,8 @@
     "typescript": "^5"
   },
   "scripts": {
+    "metafor:build": "cd ../zavx0z/metafor && bun run build:metafor && cp dist/metafor.js ../../webxr-space/everywhere-everything/metafor.js",
+    "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/everywhere-everything/metafor.d.ts",
     "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js",
     "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.d.ts"
   }

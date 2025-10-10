@@ -1,5 +1,7 @@
 /**
  * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
+ * @typedef {import("everywhere-everything/metafor").NodeType} NodeType
+ * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
@@ -24,7 +26,7 @@ export default MetaFor("core-builder")
     parent: null,
     /** @type {NodeMeta[]} */
     schema: [],
-    /** @type {NodeMeta|null} */
+    /** @type {NodeType|null} */
     currNode: null,
     nodeTree: null,
   })
@@ -62,6 +64,7 @@ export default MetaFor("core-builder")
         if (!core.currNode) throw new Error("Нет логической ноды для обработки")
         if (!core.parent) throw new Error("Нет родительского актора")
 
+        const node = /** @type {NodeLogical} */ (core.currNode)
         const metaNodeLog = (await import("../nodes/log.js")).default
         const { Actor } = await import("everywhere-everything/actor")
 
@@ -71,8 +74,15 @@ export default MetaFor("core-builder")
           reaction.cond.meta = core.parent.name
           reaction.cond.actor = core.parent.id
         }
-        
-        const reactionActor = Actor.fromSchema(metaNodeLog, `${core.parent.name}/${core.parent.id}`)
+        console.log(core.parent.state)
+        // @ts-ignore
+        metaNodeLog.context.state["default"] = core.parent.state.value
+        console.log(metaNodeLog, core.parent.state.current)
+        const reactionActor = Actor.fromSchema(metaNodeLog, `${core.parent.name}/${core.parent.id}`, {
+          schema: core.currNode,
+          parent: core.parent,
+          evalCondition: new Function("_", "return Boolean(" + node.expr + ");"),
+        })
       })
       .success(({}) => {})
       .error(({ error }) => console.log(error)),

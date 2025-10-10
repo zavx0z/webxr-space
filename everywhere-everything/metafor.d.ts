@@ -1860,7 +1860,7 @@ export interface NodeElement extends Attributes {
 	 * ]
 	 * ```
 	 */
-	child?: Node$1[];
+	child?: NodeType[];
 }
 /**
  * Мета-узел в AST.
@@ -1903,7 +1903,7 @@ export interface NodeMeta extends Attributes {
 	/** Тип узла - всегда "meta" для мета-узлов */
 	type: "meta";
 	/** Дочерние элементы (опционально) */
-	child?: Node$1[];
+	child?: NodeType[];
 	/** Core свойство для meta-компонентов (передача core объекта) */
 	core?: ValueStatic | ValueDynamic | ValueVariable;
 	/** Context свойство для meta-компонентов (передача context объекта) */
@@ -2105,7 +2105,7 @@ export interface NodeCondition {
 	 * - true: первый элемент массива (child[0])
 	 * - false: второй элемент массива (child[1])
 	 */
-	child: Node$1[];
+	child: NodeType[];
 }
 /**
  * Узел логического оператора в AST.
@@ -2238,7 +2238,7 @@ export interface NodeLogical {
 	 */
 	expr?: string;
 	/** Дочерние узлы, которые отображаются только если условие истинно */
-	child: Node$1[];
+	child: NodeType[];
 }
 /**
  * Текстовый узел в AST.
@@ -2474,9 +2474,41 @@ export interface NodeMap {
 	 * ]
 	 * ```
 	 */
-	child: Node$1[];
+	child: NodeType[];
 }
-type Node$1 = NodeMap | NodeCondition | NodeLogical | NodeText | NodeElement | NodeMeta;
+/**
+ * Объединенный тип всех возможных узлов парсера.
+ * Представляет любую структуру, которая может быть получена в результате парсинга HTML-шаблона.
+ *
+ * @group Nodes
+ * @example Структура с различными типами узлов
+ * ```html
+ * <div class="container">
+ *   <h1>${context.title}</h1>
+ *   ${context.isLoggedIn ?
+ *     html`<span>Добро пожаловать!</span>` :
+ *     html`<a href="/login">Войти</a>`
+ *   }
+ *   ${core.notifications.length > 0 && html`
+ *     <ul>
+ *       ${core.notifications.map(n => html`<li>${n.message}</li>`)}
+ *     </ul>
+ *   `}
+ *   <meta-component core="config" context="userData">
+ *     <p>Содержимое компонента</p>
+ *   </meta-component>
+ * </div>
+ * ```
+ *
+ * Результат парсинга будет содержать:
+ * - NodeElement для div, h1, span, a, ul, li, p
+ * - NodeText для статического текста и динамических значений
+ * - NodeCondition для тернарного оператора
+ * - NodeLogical для логического оператора &&
+ * - NodeMap для итерации по массиву
+ * - NodeMeta для meta-component
+ */
+export type NodeType = NodeMap | NodeCondition | NodeLogical | NodeText | NodeElement | NodeMeta;
 /**
  * MetaFor — фабрика для создания web-компонента-актора конечного автомата
  * @param name - имя актора (участвует в формировании хеша, но не является итоговым тегом)
@@ -2771,7 +2803,7 @@ export interface MetaSchema<C extends Schema = Schema, S extends string = string
 	/** Схема контекста */
 	context: Schema;
 	/** Сериализованный view как строка template literal */
-	render?: Node$1[];
+	render?: NodeType[];
 	/** Стили компонента */
 	style?: string;
 }

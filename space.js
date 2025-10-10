@@ -105,13 +105,14 @@ const meta = MetaFor("canvas", {
       .error(({ error }) => console.log(error)),
     "обработка изменения размера окна": process()
       .action(async ({ core }) => {
-        window.addEventListener("resize", () => {
+        const handler = () => {
           if (!core.camera) throw new Error("Камера отсутствует")
           if (!core.renderer) throw new Error("Рендерер отсутствует")
           core.camera.aspect = window.innerWidth / window.innerHeight
           core.camera.updateProjectionMatrix()
           core.renderer.setSize(window.innerWidth, window.innerHeight)
-        })
+        }
+        window.addEventListener("resize", () => handler)
       })
       .success(() => {})
       .error(({ error }) => console.log(error)),
@@ -171,9 +172,9 @@ const meta = MetaFor("canvas", {
           const vrButton = VRButton.createButton(core.renderer)
           document.body.appendChild(vrButton)
 
-          console.log("WebXR инициализирован успешно")
+          // console.log("WebXR инициализирован успешно")
         } else {
-          console.log("WebXR недоступен, работаем в обычном режиме")
+          // console.log("WebXR недоступен, работаем в обычном режиме")
         }
       })
       .success(() => {})
