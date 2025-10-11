@@ -1,5 +1,30 @@
 // Воркер для отрисовки частиц - весь код в одном файле
 
+// Флаг для включения/отключения отладочных логов
+// Установите в true для включения логов: const DEBUG = true
+const DEBUG = false
+
+/**
+ * Условное логирование - выводит лог только если DEBUG = true
+ * @param {...any} args - Аргументы для console.log
+ */
+function debugLog(...args) {
+  if (DEBUG) {
+    console.log(...args)
+  }
+}
+
+/**
+ * @typedef {Object} Particle
+ * @property {number} x - X координата
+ * @property {number} y - Y координата
+ * @property {number} orbitRadius - Радиус орбиты
+ * @property {number} angle - Угол
+ * @property {number} speed - Скорость
+ * @property {number} hierarchyLevel - Уровень иерархии
+ * @property {boolean} isCore - Является ли ядром
+ */
+
 class ParticlesWorker {
   /**
    * @param {OffscreenCanvas} canvas
@@ -7,35 +32,66 @@ class ParticlesWorker {
    * @param {number} height
    */
   constructor(canvas, width, height) {
+    // Стабилизируем shape - инициализируем все поля
     this.canvas = canvas
-    this.ctx = canvas.getContext("2d")
-    if (!this.ctx) {
-      throw new Error("Failed to get 2D context from canvas")
-    }
+    this.ctx = undefined
     this.particles = new Map()
     this.isRunning = false
     this.screenWidth = width
     this.screenHeight = height
+    this.broadcastChannel = null
+
+    // Инициализация после стабилизации shape
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      throw new Error("Failed to get 2D context from canvas")
+    }
+    this.ctx = ctx
 
     this.setupCanvas()
     this.setupBroadcastChannel()
     this.startAnimation()
   }
 
+  // JSDoc типы для полей
+  /** @type {OffscreenCanvas | undefined} */
+  canvas
+
+  /** @type {OffscreenCanvasRenderingContext2D | undefined} */
+  ctx
+
+  /** @type {Map<string, Particle>} */
+  particles
+
+  /** @type {boolean} */
+  isRunning
+
+  /** @type {number} */
+  screenWidth
+
+  /** @type {number} */
+  screenHeight
+
+  /** @type {BroadcastChannel | null} */
+  broadcastChannel
+
   /**
    * Настройка canvas с размерами экрана
    */
   setupCanvas() {
     // Настройка canvas - используем переданные размеры экрана
-    this.canvas.width = this.screenWidth
-    this.canvas.height = this.screenHeight
+    if (this.canvas) {
+      this.canvas.width = this.screenWidth
+      this.canvas.height = this.screenHeight
+    }
   }
 
   /**
    * Настройка подписки на BroadcastChannel для получения событий акторов
    */
   setupBroadcastChannel() {
-    new BroadcastChannel("actor-force").onmessage = (event) => {
+    this.broadcastChannel = new BroadcastChannel("actor-force")
+    this.broadcastChannel.onmessage = (event) => {
       const { data } = event
       if (!Object.hasOwn(data, "meta")) return
       const { path } = data
@@ -56,6 +112,9 @@ class ParticlesWorker {
    * @param {string} path - Путь актора
    */
   addParticle(path) {
+    if (!this.canvas) return
+
+    debugLog(`➕ Adding particle: ${path}`)
     const centerX = this.canvas.width / 2
     const centerY = this.canvas.height / 2
 
@@ -101,6 +160,12 @@ class ParticlesWorker {
     }
 
     this.particles.set(path, particle)
+    debugLog(`📊 Total particles: ${this.particles.size}`)
+
+    // Перезапускаем анимацию если она остановлена
+    if (!this.isRunning) {
+      this.startAnimation()
+    }
   }
 
   /**
@@ -108,13 +173,27 @@ class ParticlesWorker {
    * @param {string} path - Путь актора
    */
   removeParticle(path) {
+    debugLog(`➖ Removing particle: ${path}`)
     this.particles.delete(path)
+    debugLog(`📊 Total particles: ${this.particles.size}`)
+
+    // Если частиц не осталось, очищаем canvas и останавливаем анимацию
+    if (this.particles.size === 0 && this.ctx && this.canvas) {
+      debugLog("🧹 Clearing canvas - no particles left")
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      if (this.isRunning) {
+        debugLog("⏹️ Stopping animation from removeParticle")
+        this.stopAnimation()
+      }
+    }
   }
 
   /**
    * Отрисовка всех частиц на canvas
    */
   paint() {
+    if (!this.ctx || !this.canvas) return
+
     // Очищаем canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
@@ -123,19 +202,22 @@ class ParticlesWorker {
       return
     }
 
+    // Кешируем часто используемые значения
+    const centerX = this.canvas.width / 2
+    const centerY = this.canvas.height / 2
+    const time = Date.now() * 0.001
+
     // Рисуем частицы
     this.particles.forEach((particle, path) => {
       // Голубое свечение для всех частиц
       const hue = 200 + ((path.charCodeAt(0) * 20) % 40) // Голубой спектр 200-240
+      if (!this.ctx) return
       this.ctx.fillStyle = `hsl(${hue}, 70%, 60%)`
 
       // Размер частицы зависит от типа
       const size = particle.isCore ? 12 : 5 + particle.hierarchyLevel * 3
 
       // Орбитальное движение
-      const centerX = this.canvas.width / 2
-      const centerY = this.canvas.height / 2
-
       if (particle.isCore) {
         // Ядро остается в центре
         particle.x = centerX
@@ -148,11 +230,11 @@ class ParticlesWorker {
       }
 
       // Пульсация для футуристичного эффекта
-      const time = Date.now() * 0.001
       const pulse = Math.sin(time * 2 + path.charCodeAt(0)) * 0.3 + 0.7
       const animatedSize = Math.max(1, size * pulse)
 
       // Создаем радиальный градиент для свечения
+      if (!this.ctx) return
       const gradient = this.ctx.createRadialGradient(
         particle.x,
         particle.y,
@@ -167,6 +249,7 @@ class ParticlesWorker {
       gradient.addColorStop(1, `hsla(${hue}, 40%, 20%, 0)`)
 
       // Внешнее свечение
+      if (!this.ctx) return
       this.ctx.fillStyle = gradient
       this.ctx.beginPath()
       this.ctx.arc(particle.x, particle.y, animatedSize * 3, 0, Math.PI * 2)
@@ -196,6 +279,7 @@ class ParticlesWorker {
         const ringRadius = Math.max(1, animatedSize * (1.5 + i * 0.8) + Math.sin(ringTime) * 5)
         const ringAlpha = ((0.3 - i * 0.08) * (Math.sin(ringTime) + 1)) / 2
 
+        if (!this.ctx) return
         this.ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${ringAlpha})`
         this.ctx.lineWidth = 2
         this.ctx.beginPath()
@@ -205,8 +289,6 @@ class ParticlesWorker {
     })
 
     // Рисуем орбиты детей
-    const centerX = this.canvas.width / 2
-    const centerY = this.canvas.height / 2
     const uniqueOrbits = new Set()
 
     this.particles.forEach((particle) => {
@@ -216,6 +298,7 @@ class ParticlesWorker {
     })
 
     uniqueOrbits.forEach((orbitRadius) => {
+      if (!this.ctx) return
       this.ctx.strokeStyle = `hsla(200, 50%, 60%, 0.3)`
       this.ctx.lineWidth = 1
       this.ctx.setLineDash([10, 10])
@@ -244,6 +327,7 @@ class ParticlesWorker {
             // Пульсирующая связь
             const pulse = Math.sin(time * 3 + path1.charCodeAt(0)) * 0.2 + 0.8
 
+            if (!this.ctx) return
             this.ctx.strokeStyle = `hsla(210, 80%, 70%, ${alpha * pulse})`
             this.ctx.lineWidth = 1
             this.ctx.setLineDash([5, 5])
@@ -262,12 +346,19 @@ class ParticlesWorker {
    * Запуск анимационного цикла
    */
   startAnimation() {
+    debugLog("🎬 Starting animation loop")
     this.isRunning = true
 
     const animate = () => {
       if (this.isRunning) {
         this.paint()
-        requestAnimationFrame(animate)
+        // Продолжаем анимацию только если есть частицы
+        if (this.particles.size > 0) {
+          requestAnimationFrame(animate)
+        } else {
+          debugLog("⏹️ Stopping animation - no particles")
+          this.stopAnimation()
+        }
       }
     }
     animate()
@@ -277,6 +368,7 @@ class ParticlesWorker {
    * Остановка анимационного цикла
    */
   stopAnimation() {
+    debugLog("⏹️ Stopping animation loop")
     this.isRunning = false
   }
 
@@ -284,8 +376,20 @@ class ParticlesWorker {
    * Уничтожение воркера и очистка ресурсов
    */
   destroy() {
+    debugLog("💥 Destroying particles worker")
     this.stopAnimation()
     this.particles.clear()
+
+    // Закрываем BroadcastChannel
+    if (this.broadcastChannel) {
+      debugLog("📡 Closing BroadcastChannel")
+      this.broadcastChannel.close()
+      this.broadcastChannel = null
+    }
+
+    // Очищаем ссылки (используем undefined вместо null для совместимости с типами)
+    this.canvas = undefined
+    this.ctx = undefined
   }
 }
 /** @type {ParticlesWorker | null} */
@@ -296,18 +400,35 @@ let particlesWorker = null
  * @param {MessageEvent} e - Событие сообщения
  */
 self.onmessage = function (e) {
-  const { type, canvas, width, height } = e.data
+  const { type, canvas, width, height, visible } = e.data
 
   if (type === "init") {
+    debugLog("🚀 Initializing particles worker")
     // Инициализируем воркер с переданным canvas и размерами
     particlesWorker = new ParticlesWorker(canvas, width, height)
 
     // Отправляем сообщение о готовности воркера
     self.postMessage({ type: "worker-ready" })
   } else if (type === "destroy") {
+    debugLog("💥 Destroying particles worker from main thread")
     // Очищаем ресурсы
     if (particlesWorker) {
       particlesWorker.destroy()
+      particlesWorker = null
+    }
+  } else if (type === "visibility-change") {
+    debugLog(`👁️ Visibility change: ${visible ? "visible" : "hidden"}`)
+    // Обработка изменения видимости таба
+    if (particlesWorker) {
+      if (!visible) {
+        // Таб скрыт - останавливаем анимацию
+        debugLog("⏸️ Pausing animation - tab hidden")
+        particlesWorker.isRunning = false
+      } else if (particlesWorker.particles.size > 0) {
+        // Таб активен и есть частицы - перезапускаем анимацию
+        debugLog("▶️ Resuming animation - tab visible")
+        particlesWorker.startAnimation()
+      }
     }
   }
 }

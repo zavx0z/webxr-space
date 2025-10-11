@@ -103,6 +103,7 @@ export const meta = MetaFor("node-builder")
         .filter(({ context }) => ({
           actor: /** @type {string} */ (context.builderId),
           path: "/state",
+          op: "replace",
           value: "завершение",
         }))
         .equal(({ self }) => self.destroy()),

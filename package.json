@@ -19,7 +19,7 @@
     "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/everywhere-everything/metafor.d.ts",
     "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js",
     "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.d.ts",
-    "web:build": "cd ../zavx0z/metafor && bun run build:web && cp dist/web/i.js ../../webxr-space/everywhere-everything/web/i.js",
-    "server:build": "cd ../zavx0z/metafor && bun run build:server && cp dist/server/i.js ../../webxr-space/everywhere-everything/server/i.js"
+    "web:build": "cd ../zavx0z/metafor && bun run build:web && cp dist/web/log.js ../../webxr-space/everywhere-everything/web/log.js",
+    "server:build": "cd ../zavx0z/metafor && bun run build:server && cp dist/server/log.js ../../webxr-space/everywhere-everything/server/log.js"
   }
 }

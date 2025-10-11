@@ -19,10 +19,7 @@
     </script>
     <script type="module">
       import "./everywhere-everything/metafor.js"
-      function main() {
-        import("./space.js")
-      }
-      new Worker("./worker-logger.js", { type: "module" }).onmessage = main
+      import "./space.js"
     </script>
     <style>
       body {
