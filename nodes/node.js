@@ -88,9 +88,7 @@ export const meta = MetaFor("node-builder")
       .success(({}) => {})
       .error(({ error }) => console.log(error)),
     "сборка завершена": process()
-      .action(({ core }) => {
-        core.builder?.destroy()
-      })
+      .action(({ core }) => {})
       .success(({}) => {})
       .error(({ error }) => console.log(error)),
     "": process()
@@ -107,7 +105,7 @@ export const meta = MetaFor("node-builder")
           path: "/state",
           value: "завершение",
         }))
-        .equal(({ update }) => update({ type: null })),
+        .equal(({ self }) => self.destroy()),
     ],
   ])
   .view()

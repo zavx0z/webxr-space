@@ -308,7 +308,7 @@ export type ActionParams<C extends Schema, I extends Core> = {
 	core: I;
 	/** Схема контекста */
 	schema: C;
-	/** */
+	/** Полный идентификатор актора с методом destroy */
 	self: Self;
 };
 /**
@@ -320,7 +320,11 @@ export type ActionParams<C extends Schema, I extends Core> = {
  *
  * @example
  * ```typescript
- * const chain = action(({ context }) => ({ name: context.name }))
+ * const chain = action(({ context, core, schema, self }) => {
+ *   // Доступ ко всем параметрам процесса
+ *   // self.destroy() доступен в процессах
+ *   return { name: context.name }
+ * })
  *   .success(({ update, data }) => update({ name: data.name }))
  *   .error(({ update, error }) => update({ name: error.message }))
  *
@@ -331,16 +335,29 @@ export type ActionChain<C extends Schema, I extends Core, Res> = {
 	/**
 	 * Основная функция процесса, вызывается автоматом.
 	 *
-	 * Получает текущий контекст и должна вернуть результат или выбросить исключение.
+	 * Получает полный набор параметров для выполнения процесса и должна вернуть результат или выбросить исключение.
 	 *
-	 * @param params - объект с текущим контекстом
+	 * @param params - объект с параметрами процесса:
+	 *   - `context` - текущий контекст актора
+	 *   - `core` - ядро актора для сложных данных
+	 *   - `schema` - схема контекста для валидации и установки значений по умолчанию
+	 *   - `self` - полный идентификатор актора с методом destroy
 	 * @returns результат процесса (может быть промисом)
 	 *
 	 * @example
 	 * ```typescript
-	 * action: ({ context }) => {
+	 * action: ({ context, core, schema, self }) => {
 	 *   // Доступ к контексту
 	 *   console.log(context.email, context.password)
+	 *
+	 *   // Доступ к ядру
+	 *   core.users.push({ name: context.name })
+	 *
+	 *   // Доступ к схеме для валидации
+	 *   const isValid = schema.email.validate(context.email)
+	 *
+	 *   // self.destroy() доступен для уничтожения актора
+	 *   // self.meta, self.actor, self.path доступны
 	 *
 	 *   // Возврат результата
 	 *   return { userId: 123, token: "abc" }
@@ -452,8 +469,9 @@ export type ActionChain<C extends Schema, I extends Core, Res> = {
  * const process: Process<MyContext, { userId: number }> = {
  *   label: "Авторизация",
  *   desc: "Процесс входа пользователя",
- *   action: async ({ context }) => {
- *     // Логика авторизации
+ *   action: async ({ context, core, schema, self }) => {
+ *     // Логика авторизации с доступом ко всем параметрам
+ *     // self.destroy() доступен для уничтожения актора
  *     return { userId: 123 }
  *   },
  *   success: ({ update, data }) => {
@@ -1352,7 +1370,7 @@ export type Reaction<C extends Schema, S extends string, I extends Core> = {
 	/** Функция фильтрации событий */
 	filter: (args: ReactionParams) => boolean;
 	/** Функция обработки события */
-	update: ReactionUpdate<C, S, I>;
+	update: ReactionAction<C, S, I>;
 };
 /**
  * Цепочка для создания массива реакций
@@ -1370,8 +1388,9 @@ export type Reaction<C extends Schema, S extends string, I extends Core> = {
  *     ["idle", "loading"], // Состояния
  *     reaction({ label: "Обработка сообщений" })
  *       .filter(({ self }) => ({ meta: "user", actor: self.actor.split("/")[1] }))
- *       .equal(({ update, patch }) => {
+ *       .equal(({ update, patch, self }) => {
  *         update({ lastMessage: patch.value })
+ *         // self.destroy() доступен в equal, но не в filter
  *       })
  *   ]
  * ]
@@ -1383,13 +1402,13 @@ export type ReactionsDeclaration<C extends Schema, S extends string, I extends C
 	/** Описание реакции */
 	desc?: string;
 }) => {
-	/** Добавляет декларативные фильтры */
-	filter: (filterFn: (params: {
-		self: Self;
+	/** Добавляет декларативные фильтры (использует SelfInfo без destroy) */
+	filter: (filter: (params: {
+		self: SelfInfo;
 		context: Values<C>;
 	}) => ReactionFilterConditions) => {
-		/** Добавляет функцию обработки события */
-		equal: (updateFn: ReactionUpdate<C, S, I>) => Reaction<C, S, I> & {
+		/** Добавляет функцию обработки события (использует Self с destroy) */
+		equal: (reaction: ReactionAction<C, S, I>) => Reaction<C, S, I> & {
 			/** Метод для регистрации состояний */
 			registerStates: (states: S[]) => void;
 		};
@@ -1426,20 +1445,23 @@ export type ReactionsSchema = {
  *   update,    // Функция для обновления контекста
  *   context,   // Текущий контекст
  *   core,      // Core объект
- *   message,   // Полное сообщение
- *   state      // Текущее состояние
+ *   meta,      // Мета-информация отправителя
+ *   actor,     // ID актора-отправителя
+ *   timestamp, // Временная метка
+ *   patch,     // Патч данных
+ *   state,     // Текущее состояние
+ *   self       // Полный идентификатор актора с destroy
  * }) => {
  *   // Обработка события
  *   update({
- *     lastMessage: message.patch.value,
- *     messageCount: context.messageCount + 1,
- *     senderMeta: message.meta,
- *     actorIndex: message.actor.index
+ *     lastMessage: patch.value,
+ *     messageCount: context.messageCount + 1
  *   })
+ *   // self.destroy() доступен для уничтожения актора
  * }
  * ```
  */
-export type ReactionUpdate<C extends Schema, S extends string, I extends Core> = (args: {
+export type ReactionAction<C extends Schema, S extends string, I extends Core> = (args: {
 	/** Функция для обновления контекста */
 	update: Update<C>;
 	/** Текущий контекст */
@@ -1456,6 +1478,8 @@ export type ReactionUpdate<C extends Schema, S extends string, I extends Core> =
 	patch: JsonPatch;
 	/** Текущее состояние */
 	state: S;
+	/** Идентификатор актора с методом destroy */
+	self: Self;
 }) => void; /** Результат цепочки реакций */
 export type ReactionsChainResult<C extends Schema, S extends string, I extends Core> = [
 	S[],
@@ -2886,26 +2910,44 @@ export interface Meta<C extends Schema = Schema, S extends string = string, I ex
 	core: I;
 }
 /**
- * Идентификатор актора в системе MetaFor
+ * Базовая информация об акторе в системе MetaFor
  *
- * Содержит полную информацию о местоположении актора в иерархии:
- * - `meta` - мета-информация о типе актора
- * - `actor` - уникальный идентификатор актора
- * - `path` - позиционный путь в VDOM (например, "0/1/2")
+ * Содержит основную информацию о местоположении актора в иерархии.
+ * Используется в фильтрах реакций, где не требуется доступ к методу destroy.
  *
  * @example
  * ```typescript
- * const self: Self = {
+ * const selfInfo: SelfInfo = {
  *   meta: "user-profile",
  *   actor: "user-123",
  *   path: "0/1/2"
  * }
  * ```
  */
-export type Self = {
+export type SelfInfo = {
 	meta: string;
 	actor: string;
 	path: string;
+};
+/**
+ * Полный идентификатор актора в системе MetaFor
+ *
+ * Наследует базовую информацию от SelfInfo и добавляет метод destroy.
+ * Используется в процессах и обработчиках реакций (equal) для доступа к методу уничтожения актора.
+ * В фильтрах реакций (filter) используется только SelfInfo без метода destroy.
+ *
+ * @example
+ * ```typescript
+ * const self: Self = {
+ *   meta: "user-profile",
+ *   actor: "user-123",
+ *   path: "0/1/2",
+ *   destroy: () => actor.destroy()
+ * }
+ * ```
+ */
+export type Self = SelfInfo & {
+	destroy: () => void;
 };
 
 export {

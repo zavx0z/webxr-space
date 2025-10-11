@@ -1921,7 +1921,7 @@ var reactionsSchema = (builder) => {
   const states = {};
   let reactionAutoId = 0;
   const chainResult = builder((config) => ({
-    filter: (filterFn) => ({
+    filter: (filter) => ({
       equal: (update) => {
         const { read, write } = extractFields(update);
         const label = config?.label || "";
@@ -1930,7 +1930,7 @@ var reactionsSchema = (builder) => {
         reactions[id] = {
           label,
           ...desc && { desc },
-          cond: filterFn.toString(),
+          cond: filter.toString(),
           read,
           write,
           src: update.toString()
@@ -1958,8 +1958,8 @@ var reactionsSchema = (builder) => {
     return null;
   return { reactions, states };
 };
-function extractFields(update) {
-  const updateStr = update.toString();
+function extractFields(reaction) {
+  const updateStr = reaction.toString();
   const read = [];
   const write = [];
   const contextMatches = updateStr.match(/context\.(\w+)/g);

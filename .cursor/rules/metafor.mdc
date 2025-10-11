@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Правила MetaFor для AI агента
@@ -11,18 +11,20 @@ MetaFor — это фреймворк для создания акторов н�
 ### Позиционные пути (Path)
 
 - Каждый актор имеет уникальный позиционный путь в VDOM (например, "0/1/2")
-- Пути генерируются автоматически через `ActorHierarchy`
-- Доступны в `Self` объекте: `{ meta, actor, path }`
+- Пути генерируются автоматически через `Fields`
+- Доступны в `SelfInfo` объекте: `{ meta, actor, path }`
+- Полный `Self` объект включает метод `destroy`: `{ meta, actor, path, destroy }`
 
 ### Расширенные фильтры реакций
 
-- Доступ к контексту в функции `filter`: `filter(({ self, context }) => ...)`
+- Доступ к контексту в функции `filter`: `filter(({ self, context }) => ...)` (использует `SelfInfo` без `destroy`)
+- В обработчиках `equal` доступен полный `Self` с методом `destroy`
 - Декларативные условия фильтрации с поддержкой сложных условий
 - Фильтрация по meta, actor, path, op, value, timestamp
 
 ### Иерархия акторов
 
-- `ActorHierarchy` для управления позиционными путями
+- `Fields` для управления позиционными путями
 - Автоматическая генерация корневых путей
 - Управление иерархией VDOM
 
@@ -165,10 +167,11 @@ Core содержит сложные объекты, сервисы и DOM сс�
     label: "Загрузка данных",
     description: "Загружает данные пользователя"
   })
-    .action(async ({ context, core }) => {
-      // Асинхронная логика
+    .action(async ({ context, core, schema, self }) => {
+      // Асинхронная логика с доступом ко всем параметрам
       const response = await fetch(`/api/users/${context.userId}`)
       const user = await response.json()
+      // self.destroy() доступен для уничтожения актора
       return { user, timestamp: Date.now() }
     })
     .success(({ update, data, core }) => {
@@ -190,9 +193,10 @@ Core содержит сложные объекты, сервисы и DOM сс�
 
   // Процесс для состояния "success"
   success: process()
-    .action(() => {
-      // Синхронное действие
+    .action(({ context, core, schema, self }) => {
+      // Синхронное действие с доступом ко всем параметрам
       localStorage.setItem('lastSuccess', Date.now().toString())
+      // self.destroy() доступен для уничтожения актора
       return { saved: true }
     })
     .success(({ update }) => {
@@ -226,13 +230,14 @@ const childFormName = "child-form" // имя дочернего form компо�
           path: "/context", // путь: "/" | "/context" | "/state"
           value: { userId: { gt: 0 } }, // условия на значение
         })
-        .equal(({ update, patch, context, core, meta }) => {
-          // Обработка сообщения
+        .equal(({ update, patch, context, core, meta, self }) => {
+          // Обработка сообщения с доступом к self.destroy()
           const user = core.users.get(patch.value.userId)
           update({
             selectedUserName: user?.name || "Неизвестный",
             lastMessageTime: meta.timestamp,
           })
+          // self.destroy() доступен для уничтожения актора
         }),
     ],
 
@@ -244,8 +249,9 @@ const childFormName = "child-form" // имя дочернего form компо�
           op: "add",
           path: "/",
         })
-        .equal(({ patch }) => {
+        .equal(({ patch, self }) => {
           console.log("Добавлен компонент:", patch.value)
+          // self.destroy() доступен для уничтожения актора
         }),
     ],
   ])
@@ -399,8 +405,9 @@ const userProfile = MetaFor("user-profile")
   }))
   .processes((process) => ({
     loading: process()
-      .action(async ({ context }) => {
+      .action(async ({ context, core, schema, self }) => {
         const response = await fetch(`/api/users/${context.userId}`)
+        // self.destroy() доступен для уничтожения актора
         return await response.json()
       })
       .success(({ update, data }) => {

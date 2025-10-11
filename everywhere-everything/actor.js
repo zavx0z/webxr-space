@@ -386,7 +386,7 @@ var checkTransition = (conditions, context) => {
 };
 
 // core/processes.ts
-function processesFromSchema(schema, self = { meta: "unknown", actor: "unknown", path: "0" }) {
+function processesFromSchema(schema, self = { meta: "unknown", actor: "unknown", path: "0", destroy: () => {} }) {
   const processes = {};
   for (const [processName, processData] of Object.entries(schema)) {
     if (processData && typeof processData === "object") {
@@ -636,7 +636,10 @@ function reactionsFromSchema(schema) {
       for (const reaction of reactions) {
         if (!reaction.states.includes(params.state))
           continue;
-        const conditions = reaction.getConditions({ self: params.self, context: params.context });
+        const conditions = reaction.getConditions({
+          self: { meta: params.self.meta, actor: params.self.actor, path: params.self.path },
+          context: params.context
+        });
         const filterFn = createFilterFn(conditions);
         if (filterFn({
           meta: params.meta,
@@ -653,7 +656,8 @@ function reactionsFromSchema(schema) {
             actor: params.actor,
             timestamp: params.timestamp,
             patch: params.patch,
-            state: params.state
+            state: params.state,
+            self: params.self
           });
         }
       }
@@ -1120,6 +1124,7 @@ class Actor extends ActorCommunication {
     this.render = render;
     this.path = path ?? ActorCommunication.getFields().generateRootPath();
     this.update = this.update.bind(this);
+    this.destroy = this.destroy.bind(this);
     Actor.coreWeakMap.set(this, core || {});
     this.#init();
   }
@@ -1201,7 +1206,7 @@ class Actor extends ActorCommunication {
         schema: this.ctx.schema,
         context: this.ctx.context,
         core: this.core,
-        self: { meta: this.name, actor: this.id, path: this.path }
+        self: { meta: this.name, actor: this.id, path: this.path, destroy: this.destroy }
       });
       if (result instanceof Promise) {
         result.then((data) => {
@@ -1290,7 +1295,7 @@ class Actor extends ActorCommunication {
         patch,
         state: this.state.current,
         update: this.update,
-        self: { meta: this.name, actor: this.id, path: this.path }
+        self: { meta: this.name, actor: this.id, path: this.path, destroy: this.destroy }
       });
     }
     this.transition();
@@ -1330,7 +1335,7 @@ class Actor extends ActorCommunication {
     const { meta, id, core, context = {}, path } = config;
     const ctx = contextFromSchema(meta.context);
     ctx.update(context);
-    return new Actor(meta.name, id, meta.desc, ctx, { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}, { meta: meta.name, actor: id, path: path ?? "0" }), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core, path);
+    return new Actor(meta.name, id, meta.desc, ctx, { current: Object.keys(meta.states)[0], states: meta.states }, processesFromSchema(meta.processes ?? {}, { meta: meta.name, actor: id, path: path ?? "0", destroy: () => {} }), reactionsFromSchema(meta.reactions ?? { reactions: {}, states: {} }), meta.render ?? [], core, path);
   }
 }
 export {

@@ -1,11 +1,5 @@
 /**
- * @typedef {import("everywhere-everything/metafor").NodeType} NodeType
  * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
- * @typedef {import("everywhere-everything/metafor").NodeElement} NodeElement
- * @typedef {import("everywhere-everything/metafor").NodeText} NodeText
- * @typedef {import("everywhere-everything/metafor").NodeCondition} NodeCondition
- * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
- * @typedef {import("everywhere-everything/metafor").NodeMap} NodeMap
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
@@ -27,8 +21,8 @@ export const meta = MetaFor("meta-builder", {
       ошибка: { error: { null: false } },
     },
     "создание актора": {
-      завершение: {},
       ошибка: { error: { null: false } },
+      завершение: {},
     },
     ошибка: {
       "подготовка данных": {},
@@ -52,22 +46,17 @@ export const meta = MetaFor("meta-builder", {
       .success(({ data, update }) => update(data))
       .error(({ error }) => console.log(error)),
     "создание актора": process()
-      .action(async ({ core, context }) => {
+      .action(async ({ context }) => {
         const [{ Actor }, { meta }] = await Promise.all([
           import("everywhere-everything/actor"),
           import(/**@type {string} */ (context.src)),
         ])
-        const actor = Actor.fromSchema({
-          meta,
-          id: crypto.randomUUID(),
-          path: context.path,
-        })
-        core.createdActor = actor
-        return {}
+        Actor.fromSchema({ meta, id: crypto.randomUUID(), path: context.path })
       })
-      .success(() => {})
       .error(({ error }) => console.log("Ошибка создания мета-актора:", error)),
+    завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
   }))
   .reactions()
   .view()
+
 /** @typedef {meta} Meta */
