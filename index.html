@@ -18,21 +18,12 @@
       }
     </script>
     <script type="module">
-      import { log } from "./everywhere-everything/web/console.js"
-      new BroadcastChannel("actor-force").onmessage = (event) => {
-        const { data } = event
-        if (Object.hasOwn(data, "meta")) {
-          for (const patch of data.patches)
-            log({ meta: data.meta, patch, timestamp: data.timestamp, actor: data.actor, path: data.path })
-        } else {
-          console.log(data)
-        }
+      function main() {
+        import("./everywhere-everything/metafor.js")
+        import("./space.js")
+        
       }
-    </script>
-    <script type="module">
-      import "./everywhere-everything/metafor.js"
-      import "./space.js"
-      import "./index.js"
+      new Worker("./worker-logger.js", { type: "module" }).onmessage = main
     </script>
     <style>
       body {
@@ -89,6 +80,6 @@
 
     <button id="add-object">Добавить объект</button>
     <button id="vr-button">VR Mode</button>
-    <meta-xr></meta-xr>
+    <everywhere-everything></everywhere-everything>
   </body>
 </html>

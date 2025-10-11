@@ -6,22 +6,20 @@
  * @typedef {import("everywhere-everything/metafor").NodeCondition} NodeCondition
  * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
  * @typedef {import("everywhere-everything/metafor").NodeMap} NodeMap
- * @typedef {import("everywhere-everything/metafor").MetaSchema} MetaSchema
  * @typedef {import("everywhere-everything/actor").Actor} Actor
- * @typedef {import("everywhere-everything/actor").ActorHierarchy} ActorHierarchy
  */
 
 export const meta = MetaFor("meta-builder", {
   desc: "Актор для создания мета-акторов",
 })
   .context((t) => ({
-    tag: t.string.optional({ label: "Тег мета-элемента" }),
-    src: t.string.optional({ label: "Путь к мета-схеме" }),
+    id: t.string.optional({ label: "Актор-id" }),
+    path: t.string.optional({ label: "Актор-путь" }),
 
-    path: t.string.optional({ label: "Путь создаваемого актора" }),
-    id: t.string.optional({ label: "ID создаваемого актора" }),
+    tag: t.string.optional({ label: "Мета-тег" }),
+    src: t.string.optional({ label: "Мета-адрес" }),
 
-    error: t.string.optional({ label: "Сообщение об ошибке" }),
+    error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
     "подготовка данных": {
@@ -54,9 +52,17 @@ export const meta = MetaFor("meta-builder", {
       .success(({ data, update }) => update(data))
       .error(({ error }) => console.log(error)),
     "создание актора": process()
-      .action(async ({ context }) => {
-        const [{ Actor }, meta] = await Promise.all([import("everywhere-everything/actor"), import("nodes/meta.js")])
-
+      .action(async ({ core, context }) => {
+        const [{ Actor }, { meta }] = await Promise.all([
+          import("everywhere-everything/actor"),
+          import(/**@type {string} */ (context.src)),
+        ])
+        const actor = Actor.fromSchema({
+          meta,
+          id: crypto.randomUUID(),
+          path: context.path,
+        })
+        core.createdActor = actor
         return {}
       })
       .success(() => {})

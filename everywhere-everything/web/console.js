@@ -19,7 +19,7 @@ var isLog = (message, path) => Boolean(config.active && message.patch.path === p
 function log(message, core) {
   const { meta, actor, path: actorPath, patch } = message;
   const metaStr = String(meta).padEnd(config.width.meta, " ");
-  const actorStr = String(actor).padEnd(22, " ");
+  const actorStr = String(actor).padEnd(40, " ");
   const pathStr = String(actorPath).padEnd(8, " ");
   const op = String(patch.op).padEnd(config.width.op, " ");
   const path = String(patch.path).padEnd(config.width.path, " ");

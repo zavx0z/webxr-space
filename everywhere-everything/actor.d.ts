@@ -896,8 +896,8 @@ function hasActor(store, actorPath) {
   return store.arena.has(actorPath);
 }
 
-// core/hierarchy.ts
-class ActorHierarchy {
+// core/field.ts
+class Field {
   store = createActorStore();
   idIndex = new Map;
   pathCounter = 0;
@@ -1015,7 +1015,7 @@ class ActorHierarchy {
 
 // core/communication.ts
 class ActorCommunication {
-  static hierarchy = new ActorHierarchy;
+  static field = new Field;
   static useBroadcastChannel = true;
   static channel = new BroadcastChannel("actor-force");
   constructor() {}
@@ -1026,7 +1026,7 @@ class ActorCommunication {
     return ActorCommunication.useBroadcastChannel;
   }
   static #sendInternalMessage(message) {
-    const hierarchyActors = ActorCommunication.hierarchy.getAllActors();
+    const hierarchyActors = ActorCommunication.field.getAllActors();
     for (const actor of hierarchyActors) {
       if (actor.id !== message.actor && actor.hasReactions()) {
         const mockEvent = {
@@ -1043,39 +1043,39 @@ class ActorCommunication {
     ActorCommunication.#sendInternalMessage(message);
   }
   static registerActor(actor) {
-    if (!ActorCommunication.hierarchy.hasActor(actor.path)) {
-      ActorCommunication.hierarchy.createNode(actor.path, actor);
+    if (!ActorCommunication.field.hasActor(actor.path)) {
+      ActorCommunication.field.createNode(actor.path, actor);
     }
   }
   static unregisterActor(actor) {
-    if (ActorCommunication.hierarchy.hasActor(actor.path)) {
-      ActorCommunication.hierarchy.removeNode(actor.path);
+    if (ActorCommunication.field.hasActor(actor.path)) {
+      ActorCommunication.field.removeNode(actor.path);
     }
   }
   static getRegisteredActorsCount() {
-    return ActorCommunication.hierarchy.getActorCount();
+    return ActorCommunication.field.getActorCount();
   }
   static clearRegistry() {
-    ActorCommunication.hierarchy.clear();
+    ActorCommunication.field.clear();
   }
   static getHierarchy() {
-    return ActorCommunication.hierarchy;
+    return ActorCommunication.field;
   }
   static addChildActor(parentPath, childActor) {
-    if (!ActorCommunication.hierarchy.hasActor(childActor.path)) {
-      ActorCommunication.hierarchy.createNode(childActor.path, childActor);
+    if (!ActorCommunication.field.hasActor(childActor.path)) {
+      ActorCommunication.field.createNode(childActor.path, childActor);
     }
-    ActorCommunication.hierarchy.appendChild(parentPath, childActor.path);
+    ActorCommunication.field.appendChild(parentPath, childActor.path);
   }
   static getActorChildren(parentPath) {
-    const childrenPaths = ActorCommunication.hierarchy.getChildren(parentPath);
-    return childrenPaths.map((path) => ActorCommunication.hierarchy.getActor(path)).filter((actor) => actor !== null);
+    const childrenPaths = ActorCommunication.field.getChildren(parentPath);
+    return childrenPaths.map((path) => ActorCommunication.field.getActor(path)).filter((actor) => actor !== null);
   }
   static getActorByPath(path) {
-    return ActorCommunication.hierarchy.getActor(path);
+    return ActorCommunication.field.getActor(path);
   }
   static hasActorByPath(path) {
-    return ActorCommunication.hierarchy.hasActor(path);
+    return ActorCommunication.field.hasActor(path);
   }
   initializeCommunication() {
     ActorCommunication.registerActor(this);
@@ -1329,6 +1329,6 @@ class Actor extends ActorCommunication {
   }
 }
 export {
-  ActorHierarchy,
+  Field,
   Actor
 };

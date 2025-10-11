@@ -9,7 +9,7 @@ class MetaXR extends HTMLElement {
       id: "root-builder",
       context: { path: "1" },
       core: {
-        hierarchy: Actor.hierarchy,
+        field: Actor.field,
         node: {
           tag: "meta-for",
           type: "meta",
@@ -23,4 +23,4 @@ class MetaXR extends HTMLElement {
   connectedCallback() {}
 }
 
-if (!customElements.get("meta-xr")) customElements.define("meta-xr", MetaXR)
+if (!customElements.get("everywhere-everything")) customElements.define("everywhere-everything", MetaXR)

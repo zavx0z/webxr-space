@@ -2,17 +2,17 @@
  * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
  * @typedef {import("everywhere-everything/metafor").NodeType} NodeType
  * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
- * @typedef {import("everywhere-everything/metafor").MetaSchema} MetaSchema
+ * @typedef {import("everywhere-everything/actor").Field} Field
  * @typedef {import("everywhere-everything/actor").Actor} Actor
- * @typedef {import("everywhere-everything/actor").ActorHierarchy} ActorHierarchy
  */
 
 export const meta = MetaFor("node-builder")
   .context((t) => ({
-    type: t.enum("log", "meta", "map", "cond", "text", "el").optional({ label: "Тип обрабатываемого элемента" }),
+    type: t.enum("log", "meta", "map", "cond", "text", "el").optional({ label: "Тип элемента" }),
     tag: t.string.optional(),
-    builderId: t.string.optional(),
     path: t.string.optional({ label: "Путь ноды" }),
+    
+    builderId: t.string.optional(),
   }))
   .states({
     "определение сборщика": {
@@ -31,8 +31,8 @@ export const meta = MetaFor("node-builder")
   .core({
     /** @type {NodeType|null} */
     node: null,
-    /** @type {ActorHierarchy|null} */
-    hierarchy: null,
+    /** @type {Field|null} */
+    field: null,
     /** @type {Actor|null} */
     builder: null,
   })
@@ -40,7 +40,7 @@ export const meta = MetaFor("node-builder")
     "определение сборщика": process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
-        if (!core.hierarchy) throw new Error("Иерархия не передана")
+        if (!core.field) throw new Error("Иерархия не передана")
 
         if (Object.hasOwn(core.node, "tag")) {
           const node = /** @type {NodeMeta } */ (core.node)
@@ -58,14 +58,14 @@ export const meta = MetaFor("node-builder")
         ])
         const builderId = `${self.actor}-${self.path}`
         const actor = Actor.fromSchema({
-          meta: meta,
+          meta,
           id: builderId,
           path: self.path + "/0",
-          core: { node: core.node, hierarchy: core.hierarchy },
+          core: { node: core.node, hierarchy: core.field },
           context: { path: context.path },
         })
         core.builder = actor
-        return { builderId }
+        return {  }
       })
       .success(({ update, data }) => update(data))
       .error(({ error }) => console.log(error)),
@@ -84,6 +84,12 @@ export const meta = MetaFor("node-builder")
         //   parent: core.node,
         //   evalCondition: new Function("_", "return Boolean(" + node.expr + ");"),
         // })
+      })
+      .success(({}) => {})
+      .error(({ error }) => console.log(error)),
+    "сборка завершена": process()
+      .action(({ core }) => {
+        const actor = core.builder?.core.createdActor
       })
       .success(({}) => {})
       .error(({ error }) => console.log(error)),

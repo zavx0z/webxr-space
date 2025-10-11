@@ -539,7 +539,7 @@ export type ProcessesSchema = Record<string, ParsedProcess>;
  * @includeExample ./proc/test/actions.basic.spec.ts
  * @includeExample ./proc/test/actions.types.spec.ts
  */
-export type ProcessesDeclaration<C extends Schema = Schema, S extends string, I extends Core = Core> = (process: (config?: ProcessConfig) => ProcessChain<C, I>) => Partial<Record<S, ActionChain<C, I, any>>>;
+export type ProcessesDeclaration<C extends Schema = Schema, S extends string = string, I extends Core = Core> = (process: (config?: ProcessConfig) => ProcessChain<C, I>) => Partial<Record<S, ActionChain<C, I, any>>>;
 export type ProcessConfig = {
 	/** Название*/
 	label?: string;
@@ -2563,7 +2563,7 @@ export type NodeType = NodeMap | NodeCondition | NodeLogical | NodeText | NodeEl
  *   .view({ render: ({ context }) => html`<div>${context.name}</div>` })
  * ```
  */
-export type MetaForType = (name: string, config?: MetaForConfig) => {
+type MetaFor$1 = (name: string, config?: MetaForConfig) => {
 	/**
 	 * Регистрирует схему контекста для автомата.
 	 *
@@ -2699,7 +2699,7 @@ export type MetaForType = (name: string, config?: MetaForConfig) => {
 						 * document.body.innerHTML = `<meta-my-component></meta-my-component>`
 						 * ```
 						 */
-						view(view?: ViewDeclaration<C, I, S>): MetaSchema<C, S, I>;
+						view(view?: ViewDeclaration<C, I, S>): Meta<C, S, I>;
 					};
 				};
 			};
@@ -2709,9 +2709,9 @@ export type MetaForType = (name: string, config?: MetaForConfig) => {
 declare global {
 	var DEV: boolean;
 	interface Window {
-		MetaFor: MetaForType;
+		MetaFor: MetaFor$1;
 	}
-	var MetaFor: MetaForType;
+	var MetaFor: MetaFor$1;
 }
 /**
  * Конфигурация компонента MetaFor
@@ -2857,7 +2857,7 @@ export interface ViewDeclaration<C extends Schema, I extends Core, S extends str
  *
  * @example
  * ```typescript
- * const schema: MetaSchema = {
+ * const schema: Meta = {
  *   name: "user-profile",
  *   context: { name: types.string.required("") },
  *   states: { idle: { loading: {} } },
@@ -2865,7 +2865,7 @@ export interface ViewDeclaration<C extends Schema, I extends Core, S extends str
  * }
  * ```
  */
-export interface MetaSchema<C extends Schema = Schema, S extends string = string, I extends Core = {}> {
+export interface Meta<C extends Schema = Schema, S extends string = string, I extends Core = {}> {
 	/** Название компонента */
 	name: string;
 	/** Описание компонента */
@@ -2906,6 +2906,10 @@ export type Self = {
 	meta: string;
 	actor: string;
 	path: string;
+};
+
+export {
+	MetaFor$1 as MetaFor,
 };
 
 export {};

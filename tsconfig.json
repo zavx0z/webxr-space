@@ -32,6 +32,9 @@
       "everywhere-everything/metafor": [
         "./everywhere-everything/metafor.d.ts"
       ],
+      "everywhere-everything/actor": [
+        "./everywhere-everything/actor.d.ts"
+      ],
     }
   },
   "exclude": [
