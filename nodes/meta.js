@@ -12,6 +12,7 @@ export const meta = MetaFor("meta-builder", {
 
     tag: t.string.optional({ label: "Мета-тег" }),
     src: t.string.optional({ label: "Мета-адрес" }),
+    child: t.boolean.required(false, { label: "Наличие дочерних элементов" }),
 
     error: t.string.optional({ label: "Ошибка" }),
   }))
@@ -22,8 +23,10 @@ export const meta = MetaFor("meta-builder", {
     },
     "создание актора": {
       ошибка: { error: { null: false } },
+      "передача дочерних элементов": { child: true },
       завершение: {},
     },
+    "передача дочерних элементов": {},
     ошибка: {
       "подготовка данных": {},
     },
@@ -44,7 +47,7 @@ export const meta = MetaFor("meta-builder", {
         return { tag: core.node.tag, src: /** @type {string} */ (core.node.string.src) }
       })
       .success(({ data, update }) => update(data))
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
     "создание актора": process()
       .action(async ({ context }) => {
         const [{ Actor }, { meta }] = await Promise.all([
@@ -53,8 +56,8 @@ export const meta = MetaFor("meta-builder", {
         ])
         Actor.fromSchema({ meta, id: crypto.randomUUID(), path: context.path })
       })
-      .error(({ error }) => console.log("Ошибка создания мета-актора:", error)),
-    завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
+      .error(({ error, update }) => update({ error: error.message })),
+    // завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
   }))
   .reactions()
   .view()

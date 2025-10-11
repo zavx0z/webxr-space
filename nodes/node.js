@@ -57,17 +57,14 @@ export const meta = MetaFor("node-builder")
           import("nodes/meta.js"),
         ])
         const builderId = `${self.actor}-${self.path}`
-        const actor = Actor.fromSchema({
+        core.builder = Actor.fromSchema({
           meta,
           id: builderId,
           path: self.path + "/0",
           core: { node: core.node, hierarchy: core.fields },
           context: { path: context.path },
         })
-        core.builder = actor
-        return {}
       })
-      .success(({ update, data }) => update(data))
       .error(({ error }) => console.log(error)),
     "сборка логического": process()
       .action(async ({ core, context }) => {
@@ -96,18 +93,19 @@ export const meta = MetaFor("node-builder")
       .success(({}) => {})
       .error(({ error }) => console.log(error)),
   }))
-  .reactions((reaction) => [
-    [
-      ["сборка актора", "сборка логического"],
-      reaction()
-        .filter(({ context }) => ({
-          actor: /** @type {string} */ (context.builderId),
-          path: "/state",
-          op: "replace",
-          value: "завершение",
-        }))
-        .equal(({ self }) => self.destroy()),
-    ],
-  ])
+  .reactions()
+  // .reactions((reaction) => [
+  //   [
+  //     ["сборка актора", "сборка логического"],
+  //     reaction()
+  //       .filter(({ context }) => ({
+  //         actor: /** @type {string} */ (context.builderId),
+  //         path: "/state",
+  //         op: "replace",
+  //         value: "завершение",
+  //       }))
+  //       .equal(({ self }) => self.destroy()),
+  //   ],
+  // ])
   .view()
 /** @typedef {meta} Meta */

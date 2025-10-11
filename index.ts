@@ -1,7 +1,40 @@
+import { readFileSync } from "fs"
+import { networkInterfaces } from "os"
 import index from "./index.html"
+
+// Получаем IP адреса локальной сети
+function getLocalIPs(): string[] {
+  const interfaces = networkInterfaces()
+  const ips: string[] = []
+
+  for (const name of Object.keys(interfaces)) {
+    const iface = interfaces[name]
+    if (!iface) continue
+
+    for (const alias of iface) {
+      if (alias.family === "IPv4" && !alias.internal) {
+        ips.push(alias.address)
+      }
+    }
+  }
+
+  return ips
+}
+
+const localIPs = getLocalIPs()
+const port = 3000
+
+// Читаем SSL сертификаты
+const key = readFileSync("./ssl/key.pem")
+const cert = readFileSync("./ssl/cert.pem")
 
 Bun.serve({
   hostname: "0.0.0.0",
+  port,
+  tls: {
+    key,
+    cert,
+  },
   routes: {
     "/": index,
     "/index.html": index,
@@ -23,4 +56,14 @@ Bun.serve({
   },
 })
 
-console.log("Bun server started on http://localhost:3000")
+console.log(`🚀 HTTPS Server started:`)
+console.log(`   Local: https://localhost:${port}`)
+console.log(`   Network: https://${localIPs[0] || "0.0.0.0"}:${port}`)
+console.log(`   HMR enabled: ✅`)
+console.log(`   WebXR ready: ✅`)
+console.log(`\n📱 Для доступа с VR гарнитуры используйте:`)
+localIPs.forEach((ip) => {
+  console.log(`   https://${ip}:${port}`)
+})
+console.log(`\n⚠️  При первом подключении браузер покажет предупреждение о сертификате.`)
+console.log(`   Нажмите "Дополнительно" → "Перейти на сайт (небезопасно)"`)
