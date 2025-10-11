@@ -52,13 +52,13 @@ export const meta = MetaFor("node-builder")
       .error(({ error }) => console.log(error)),
     "сборка актора": process()
       .action(async ({ context, self, core }) => {
-        const [{ meta }, { Actor }] = await Promise.all([
-          import("nodes/meta-builder.js"),
+        const [{ Actor }, { meta }] = await Promise.all([
           import("everywhere-everything/actor"),
+          import("nodes/meta.js"),
         ])
         const builderId = `${self.actor}-${self.path}`
         const actor = Actor.fromSchema({
-          meta,
+          meta: meta,
           id: builderId,
           path: self.path + "/0",
           core: { node: core.node, hierarchy: core.hierarchy },
@@ -105,3 +105,4 @@ export const meta = MetaFor("node-builder")
     ],
   ])
   .view()
+/** @typedef {meta} Meta */

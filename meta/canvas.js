@@ -1,7 +1,7 @@
 import { PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer } from "three"
 
 export const meta = MetaFor("canvas", {
-  description: `Менеджер конечных автоматов.`,
+  desc: `Менеджер конечных автоматов.`,
 })
   .context((t) => ({
     fov: t.number.required(75, { label: "" }),

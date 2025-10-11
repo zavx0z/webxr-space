@@ -1,5 +1,5 @@
 import { Actor } from "./everywhere-everything/actor.js"
-import { meta } from "./nodes/node-builder.js"
+import { meta } from "./nodes/node.js"
 
 class MetaXR extends HTMLElement {
   constructor() {

@@ -56,7 +56,7 @@ export default MetaFor("node-log")
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
 
-        const { meta } = await import("./node-builder.js")
+        const { meta } = await import("./node.js")
         const { Actor } = await import("everywhere-everything/actor")
 
         // Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })

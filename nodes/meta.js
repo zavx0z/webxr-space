@@ -12,31 +12,30 @@
  */
 
 export const meta = MetaFor("meta-builder", {
-  description: "Актор для создания мета-акторов",
+  desc: "Актор для создания мета-акторов",
 })
   .context((t) => ({
     tag: t.string.optional({ label: "Тег мета-элемента" }),
     src: t.string.optional({ label: "Путь к мета-схеме" }),
-    actorId: t.string.optional({ label: "ID созданного актора" }),
-    errorMessage: t.string.optional({ label: "Сообщение об ошибке" }),
-    path: t.string.optional({ label: "Путь ноды" }),
+
+    path: t.string.optional({ label: "Путь создаваемого актора" }),
+    id: t.string.optional({ label: "ID создаваемого актора" }),
+
+    error: t.string.optional({ label: "Сообщение об ошибке" }),
   }))
   .states({
     "подготовка данных": {
-      "загрузка мета-схемы": { src: { null: false } },
+      "создание актора": { src: { null: false } },
+      ошибка: { error: { null: false } },
     },
-    "загрузка мета-схемы": {
-      "создание мета-актора": {},
-      ошибка: { errorMessage: { length: { min: 1 } } },
-    },
-    "создание мета-актора": {
+    "создание актора": {
       завершение: {},
-      ошибка: { errorMessage: { length: { min: 1 } } },
+      ошибка: { error: { null: false } },
     },
-    завершение: {},
     ошибка: {
       "подготовка данных": {},
     },
+    завершение: {},
   })
   .core({
     /** @type {NodeMeta|null} */
@@ -54,20 +53,10 @@ export const meta = MetaFor("meta-builder", {
       })
       .success(({ data, update }) => update(data))
       .error(({ error }) => console.log(error)),
-    "загрузка мета-схемы": process({ label: "Загрузка мета-схемы" })
+    "создание актора": process()
       .action(async ({ context }) => {
-        const [{ meta }, { Actor }] = await Promise.all([
-          import("nodes/meta-builder.js"),
-          import("everywhere-everything/actor"),
-        ])
+        const [{ Actor }, meta] = await Promise.all([import("everywhere-everything/actor"), import("nodes/meta.js")])
 
-        return {}
-      })
-      .success(() => {})
-      .error(({ error }) => console.log("Ошибка загрузки мета-схемы:", error)),
-    "создание мета-актора": process({ label: "Создание мета-актора" })
-      .action(() => {
-        // console.log("Процесс: создание мета-актора")
         return {}
       })
       .success(() => {})
@@ -75,3 +64,4 @@ export const meta = MetaFor("meta-builder", {
   }))
   .reactions()
   .view()
+/** @typedef {meta} Meta */
