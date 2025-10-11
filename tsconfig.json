@@ -31,7 +31,7 @@
     "paths": {
       "everywhere-everything/metafor": [
         "./everywhere-everything/metafor.d.ts"
-      ]
+      ],
     }
   },
   "exclude": [

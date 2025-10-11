@@ -8,7 +8,7 @@ var config = {
   path: ["/", "/context", "/state"],
   width: {
     meta: 22,
-    op: 8,
+    op: 10,
     path: 15
   },
   detail: {
@@ -19,9 +19,9 @@ var isLog = (message, path) => Boolean(config.active && message.patch.path === p
 function log(message, core) {
   const { meta, actor, path: actorPath, patch } = message;
   const metaStr = String(meta).padEnd(config.width.meta, " ");
-  const actorStr = String(actor).padEnd(12, " ");
+  const actorStr = String(actor).padEnd(22, " ");
   const pathStr = String(actorPath).padEnd(8, " ");
-  const op = centerText(String(patch.op), config.width.op);
+  const op = String(patch.op).padEnd(config.width.op, " ");
   const path = String(patch.path).padEnd(config.width.path, " ");
   const value = formattedObj(patch.value);
   const isError = Object.hasOwn(patch.value, "error");
@@ -30,7 +30,7 @@ function log(message, core) {
       ;
       (() => {
         const msg = [
-          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c  |  %c${op}%c  |  %c${path}`,
           "color: #3498db; font-weight: bold",
           "color: #9b59b6; font-weight: bold",
           "color: #f39c12; font-weight: bold",
@@ -52,7 +52,7 @@ function log(message, core) {
       ;
       (() => {
         const msg = [
-          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c  |  %c${op}%c  |  %c${path}`,
           `color: #3498db; font-weight: bold; ${isError ? "background: #7d4545" : ""}`,
           "color: #9b59b6; font-weight: bold",
           "color: #f39c12; font-weight: bold",
@@ -83,7 +83,7 @@ function log(message, core) {
       (() => {
         const stateValue = Array.isArray(patch.value) ? JSON.stringify(patch.value, null, 2) : typeof patch.value === "object" && patch.value !== null ? JSON.stringify(patch.value, null, 2) : patch.value;
         const msg = [
-          `%c${metaStr}%c${actorStr}%c${pathStr}%c | %c${op}%c | %c${path}%c %c${stateValue}`,
+          `%c${metaStr}%c${actorStr}%c${pathStr}%c  |  %c${op}%c  |  %c${path}%c  %c${stateValue}`,
           "color: #3498db; font-weight: bold",
           "color: #9b59b6; font-weight: bold",
           "color: #f39c12; font-weight: bold",
@@ -104,10 +104,6 @@ function log(message, core) {
       break;
   }
 }
-var centerText = (text, width) => {
-  const padLeft = Math.floor((width - text.length) / 2);
-  return text.padStart(padLeft + text.length, " ").padEnd(width, " ");
-};
 var formattedObj = (value) => JSON.stringify(value, null, 2).split(`
 `).map((line, i, lines) => {
   if (i === 0 || i === lines.length - 1) {

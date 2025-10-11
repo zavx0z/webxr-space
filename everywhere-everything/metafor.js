@@ -1925,7 +1925,7 @@ var reactionsSchema = (builder) => {
       equal: (update) => {
         const { read, write } = extractFields(update);
         const label = config?.label || "";
-        const desc = config?.description;
+        const desc = config?.desc;
         const id = `${label}_${reactionAutoId++}`;
         reactions[id] = {
           label,
@@ -1939,7 +1939,7 @@ var reactionsSchema = (builder) => {
           label,
           update,
           filter: () => true,
-          ...desc && { description: desc },
+          ...desc && { desc },
           registerStates: (list) => {
             for (const state of list) {
               const key = state;
@@ -2065,8 +2065,8 @@ function parseProcess(process) {
 var processesSchema = (processes) => {
   const chains = processes((config) => {
     const chain = {
-      title: config?.label,
-      description: config?.desc,
+      label: config?.label,
+      desc: config?.desc,
       _successHandler: undefined,
       _errorHandler: undefined,
       action: (fn) => {
@@ -2089,10 +2089,10 @@ var processesSchema = (processes) => {
           result2.success = chain._successHandler;
         if (chain._errorHandler)
           result2.error = chain._errorHandler;
-        if (chain.title)
-          result2.title = chain.title;
-        if (chain.description)
-          result2.description = chain.description;
+        if (chain.label)
+          result2.label = chain.label;
+        if (chain.desc)
+          result2.desc = chain.desc;
         return result2;
       }
     };
@@ -2126,7 +2126,7 @@ function serializeStyle(fn) {
 
 // metafor.ts
 globalThis.MetaFor = function(name, config) {
-  const description = config?.description;
+  const desc = config?.desc;
   const dev = config?.dev ?? globalThis.DEV ?? false;
   return {
     context(schema) {
@@ -2135,8 +2135,7 @@ globalThis.MetaFor = function(name, config) {
         states(states) {
           validateNoUnconditionalCycles(states);
           return {
-            core(coreBuilder = () => ({})) {
-              const core = typeof coreBuilder === "function" ? coreBuilder() : coreBuilder;
+            core(core) {
               return {
                 processes(process = () => ({})) {
                   const processes = processesSchema(process);
@@ -2145,9 +2144,9 @@ globalThis.MetaFor = function(name, config) {
                       const reactions = reactionsSchema(reaction);
                       return {
                         view(view) {
-                          const schema2 = { name, states, context };
-                          if (description)
-                            schema2.description = description;
+                          const schema2 = { name, states, context, core: core || {} };
+                          if (desc)
+                            schema2.desc = desc;
                           if (view && "style" in view)
                             schema2.style = serializeStyle(view.style);
                           if (view && "render" in view)

@@ -1,6 +1,6 @@
 import { PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer } from "three"
 
-export default MetaFor("canvas", {
+export const meta = MetaFor("canvas", {
   description: `Менеджер конечных автоматов.`,
 })
   .context((t) => ({

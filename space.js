@@ -6,11 +6,10 @@ class MetaXR extends HTMLElement {
     super()
     this.builder = Actor.fromSchema({
       meta,
-      id: "-0",
-      context: {
-        path: [0],
-      },
+      id: "root-builder",
+      context: { path: "1" },
       core: {
+        hierarchy: Actor.hierarchy,
         node: {
           tag: "meta-for",
           type: "meta",
