@@ -1142,7 +1142,7 @@ var TAG_LOOKAHEAD = /(?=<\/?[A-Za-z][A-Za-z0-9:-]*[^>]*>|<\/?meta-[^>]*>|<\/?met
 var isValidTagName = (name) => /^[A-Za-z][A-Za-z0-9:-]*$/.test(name) && !name.includes("*") || name.startsWith("meta-");
 var shouldIgnoreAt = (input, i) => input[i + 1] === "!" || input[i + 1] === "?";
 var extractHtmlElements = (input) => {
-  const store = new Field;
+  const store = new Fields;
   let lastIndex = 0;
   TAG_LOOKAHEAD.lastIndex = 0;
   let m;
@@ -1330,7 +1330,7 @@ class Cursor {
   }
 }
 
-class Field {
+class Fields {
   child = [];
   cursor;
   constructor() {

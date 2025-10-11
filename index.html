@@ -18,10 +18,9 @@
       }
     </script>
     <script type="module">
+      import "./everywhere-everything/metafor.js"
       function main() {
-        import("./everywhere-everything/metafor.js")
         import("./space.js")
-        
       }
       new Worker("./worker-logger.js", { type: "module" }).onmessage = main
     </script>

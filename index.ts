@@ -1,6 +1,7 @@
 import index from "./index.html"
 
 Bun.serve({
+  hostname: "0.0.0.0",
   routes: {
     "/": index,
     "/index.html": index,

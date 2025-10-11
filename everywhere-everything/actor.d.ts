@@ -897,7 +897,7 @@ function hasActor(store, actorPath) {
 }
 
 // core/field.ts
-class Field {
+class Fields {
   store = createActorStore();
   idIndex = new Map;
   pathCounter = 0;
@@ -1015,7 +1015,7 @@ class Field {
 
 // core/communication.ts
 class ActorCommunication {
-  static field = new Field;
+  static fields = new Fields;
   static useBroadcastChannel = true;
   static channel = new BroadcastChannel("actor-force");
   constructor() {}
@@ -1026,7 +1026,7 @@ class ActorCommunication {
     return ActorCommunication.useBroadcastChannel;
   }
   static #sendInternalMessage(message) {
-    const hierarchyActors = ActorCommunication.field.getAllActors();
+    const hierarchyActors = ActorCommunication.fields.getAllActors();
     for (const actor of hierarchyActors) {
       if (actor.id !== message.actor && actor.hasReactions()) {
         const mockEvent = {
@@ -1043,39 +1043,39 @@ class ActorCommunication {
     ActorCommunication.#sendInternalMessage(message);
   }
   static registerActor(actor) {
-    if (!ActorCommunication.field.hasActor(actor.path)) {
-      ActorCommunication.field.createNode(actor.path, actor);
+    if (!ActorCommunication.fields.hasActor(actor.path)) {
+      ActorCommunication.fields.createNode(actor.path, actor);
     }
   }
   static unregisterActor(actor) {
-    if (ActorCommunication.field.hasActor(actor.path)) {
-      ActorCommunication.field.removeNode(actor.path);
+    if (ActorCommunication.fields.hasActor(actor.path)) {
+      ActorCommunication.fields.removeNode(actor.path);
     }
   }
   static getRegisteredActorsCount() {
-    return ActorCommunication.field.getActorCount();
+    return ActorCommunication.fields.getActorCount();
   }
   static clearRegistry() {
-    ActorCommunication.field.clear();
+    ActorCommunication.fields.clear();
   }
   static getHierarchy() {
-    return ActorCommunication.field;
+    return ActorCommunication.fields;
   }
   static addChildActor(parentPath, childActor) {
-    if (!ActorCommunication.field.hasActor(childActor.path)) {
-      ActorCommunication.field.createNode(childActor.path, childActor);
+    if (!ActorCommunication.fields.hasActor(childActor.path)) {
+      ActorCommunication.fields.createNode(childActor.path, childActor);
     }
-    ActorCommunication.field.appendChild(parentPath, childActor.path);
+    ActorCommunication.fields.appendChild(parentPath, childActor.path);
   }
   static getActorChildren(parentPath) {
-    const childrenPaths = ActorCommunication.field.getChildren(parentPath);
-    return childrenPaths.map((path) => ActorCommunication.field.getActor(path)).filter((actor) => actor !== null);
+    const childrenPaths = ActorCommunication.fields.getChildren(parentPath);
+    return childrenPaths.map((path) => ActorCommunication.fields.getActor(path)).filter((actor) => actor !== null);
   }
   static getActorByPath(path) {
-    return ActorCommunication.field.getActor(path);
+    return ActorCommunication.fields.getActor(path);
   }
   static hasActorByPath(path) {
-    return ActorCommunication.field.hasActor(path);
+    return ActorCommunication.fields.hasActor(path);
   }
   initializeCommunication() {
     ActorCommunication.registerActor(this);
@@ -1329,6 +1329,6 @@ class Actor extends ActorCommunication {
   }
 }
 export {
-  Field,
+  Fields,
   Actor
 };
