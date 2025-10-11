@@ -430,5 +430,40 @@ self.onmessage = function (e) {
         particlesWorker.startAnimation()
       }
     }
+  } else if (type === "resize") {
+    debugLog(`📏 Resizing canvas: ${width}x${height}`)
+    // Обработка изменения размера окна
+    if (particlesWorker && particlesWorker.canvas && particlesWorker.ctx) {
+      // Очищаем canvas перед изменением размера
+      particlesWorker.ctx.clearRect(0, 0, particlesWorker.canvas.width, particlesWorker.canvas.height)
+
+      particlesWorker.canvas.width = width
+      particlesWorker.canvas.height = height
+      particlesWorker.screenWidth = width
+      particlesWorker.screenHeight = height
+
+      // Обновляем позиции частиц относительно нового центра
+      const newCenterX = width / 2
+      const newCenterY = height / 2
+
+      particlesWorker.particles.forEach((particle) => {
+        if (particle.isCore) {
+          // Ядро перемещаем в новый центр
+          particle.x = newCenterX
+          particle.y = newCenterY
+        } else if (particle.orbitRadius > 0) {
+          // Дети на орбитах - пересчитываем позицию относительно нового центра
+          particle.x = newCenterX + Math.cos(particle.angle) * particle.orbitRadius
+          particle.y = newCenterY + Math.sin(particle.angle) * particle.orbitRadius
+        }
+      })
+
+      // Принудительно перерисовываем после изменения размера
+      if (particlesWorker.particles.size > 0) {
+        particlesWorker.paint()
+      }
+
+      debugLog("✅ Canvas resized and particles repositioned")
+    }
   }
 }

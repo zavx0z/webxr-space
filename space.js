@@ -11,17 +11,19 @@ const DEBUG = false
  * @param {...any} args - Аргументы для console.log
  */
 function debugLog(...args) {
-  if (DEBUG) {
-    console.log(...args)
-  }
+  if (DEBUG) console.log(...args)
 }
 
 class MetaXR extends HTMLElement {
+  /** @type {Worker|null} */
+  worker = null
+  /** @type {Actor|null} */
+  builder = null
+
   constructor() {
     super()
-    // Стабилизируем shape - инициализируем все поля
-    this.worker = null
-    this.builder = null
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
+    this.handleResize = this.handleResize.bind(this)
   }
 
   async connectedCallback() {
@@ -49,9 +51,8 @@ class MetaXR extends HTMLElement {
       }
     }
 
-    // Обработка потери фокуса таба для экономии ресурсов
-    this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
+    window.addEventListener("resize", this.handleResize)
     this.worker.postMessage(
       {
         type: "init",
@@ -95,10 +96,25 @@ class MetaXR extends HTMLElement {
     })
   }
 
+  /**
+   * Обработчик изменения размера окна
+   */
+  handleResize() {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    debugLog(`📏 Window resized: ${width}x${height}`)
+    this.worker?.postMessage({
+      type: "resize",
+      width,
+      height,
+    })
+  }
+
   disconnectedCallback() {
     debugLog("🔌 Disconnecting MetaXR component")
-    // Отписываемся от события видимости
+    // Отписываемся от событий
     document.removeEventListener("visibilitychange", this.handleVisibilityChange)
+    window.removeEventListener("resize", this.handleResize)
 
     if (this.worker) {
       debugLog("💥 Terminating worker")
