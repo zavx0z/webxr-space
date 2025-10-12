@@ -1,14 +1,46 @@
 // ───────────────────────────────────────────────────────────────────────────────
-// Particles Worker — иерархические орбиты с учётом толщины поддерева,
-// плавные переходы, авто-масштабирование под вьюпорт.
-// Каждый ребёнок у своего родителя — на СВОЕЙ орбите (полосе).
-// ЛИНИЯ ОРБИТЫ ВСЕГДА ПРОХОДИТ ЧЕРЕЗ ЦЕНТР ЧАСТИЦЫ.
+// Particles Worker — иерархические орбиты с толщиной поддерева,
+// авто-масштаб, плавные переходы. Новые узлы появляются сразу на орбитах.
 // ───────────────────────────────────────────────────────────────────────────────
 
 /**
- * @typedef {import('./worker-virtual.t.ts').ParticlesConfig} ParticlesConfig
- * @typedef {import('./worker-virtual.t.ts').Particle} Particle
- * @typedef {import('./worker-virtual.t.ts').Center} Center
+ * @typedef {"none"|"adjacent"|"all-siblings"} LinkMode
+ *  - "none"        — не рисовать связи
+ *  - "adjacent"    — соединять соседних по индексу
+ *  - "all-siblings"— соединять каждую пару
+ */
+
+/**
+ * @typedef {"uniform"|"golden"} AngleDistribution
+ *  - "uniform" — равномерно по индексу
+ *  - "golden"  — «золотой угол» для лучшего заполнения круга
+ */
+
+/**
+ * @typedef {Object} ParticlesConfig
+ * @property {boolean} debug               Включить console-логи
+ * @property {number}  viewMargin          Доля от половины min(side) для сцены (0..1)
+ * @property {number}  leafBandWidth       Полная ширина «полосы» для листа (узел без детей)
+ * @property {number}  firstBandOffset     Отступ от родителя до ВНУТРЕННЕЙ кромки первой орбиты
+ * @property {number}  interBandGap        Зазор между соседними орбитами детей
+ * @property {number}  minScale            Нижний предел масштаба
+ * @property {number}  maxScale            Верхний предел масштаба
+ * @property {number}  lerpPos             Интерполяция позиции (0..1) при перестройках
+ * @property {number}  lerpRadius          Интерполяция радиуса орбиты (0..1) при перестройках
+ * @property {number}  angleSpeedBase      Базовая угловая скорость (рад/кадр)
+ * @property {number}  angleDepthAttenuation  Затухание скорости по глубине: base/(d+1)^a
+ * @property {AngleDistribution} angleDistribution Стартовое распределение углов
+ * @property {boolean} drawOrbits          Рисовать орбиты
+ * @property {number[]} orbitDash          Штрих-паттерн орбит (напр. [8,10])
+ * @property {number}  orbitAlpha          Прозрачность линий орбит (0..1)
+ * @property {LinkMode} linkMode           Режим связей между детьми
+ * @property {number[]} linkDash           Штрих-паттерн связей
+ * @property {number}  linkMaxDist         Максимальная длина связи
+ * @property {number}  linkBaseAlpha       Базовая непрозрачность связи
+ * @property {number}  particleRingThickness Толщина «энергетических колец»
+ * @property {number}  coreSize            Размер ядра
+ * @property {number}  nodeSizeBase        База размера обычной точки
+ * @property {number}  nodeSizePerDepth    Надбавка к размеру на уровень глубины
  */
 
 /** @type {ParticlesConfig} */
@@ -37,7 +69,6 @@ const CONFIG = {
   drawOrbits: true,
   orbitDash: [8, 10],
   orbitAlpha: 0.22,
-  orbitLineAt: "center",
 
   linkMode: "adjacent",
   linkDash: [5, 5],
@@ -57,6 +88,22 @@ function dlog(...a) {
   if (CONFIG.debug) console.log(...a)
 }
 
+/**
+ * @typedef {Object} Particle
+ * @property {number} x                    // текущая позиция для рендера
+ * @property {number} y
+ * @property {number} tx                   // целевая позиция (пересчёт)
+ * @property {number} ty
+ * @property {number} orbitRadius          // сглаженный локальный радиус (до центра полосы)
+ * @property {number} targetOrbitRadius    // целевой локальный радиус (центр полосы)
+ * @property {number} bandHalf             // половина ширины «полосы»
+ * @property {number} angle                // угол относительно родителя
+ * @property {number} speed                // угловая скорость
+ * @property {number} depth                // глубина (root=0)
+ * @property {boolean} isCore
+ * @property {string|null} parentPath
+ */
+
 class ParticlesWorker {
   /**
    * @param {OffscreenCanvas} canvas
@@ -71,6 +118,8 @@ class ParticlesWorker {
 
     /** @type {Map<string, Particle>} */ this.particles = new Map()
     /** @type {Map<string, string[]>} */ this.childrenOf = new Map()
+    /** @type {Set<string>} */ this.justAdded = new Set() // ← новые пути для моментальной расстановки
+
     this.isRunning = false
     this.screenWidth = width
     this.screenHeight = height
@@ -84,11 +133,11 @@ class ParticlesWorker {
     this.startAnimation()
   }
 
-  // поля для TS/JSDoc
   /** @type {OffscreenCanvas|undefined} */ canvas
   /** @type {OffscreenCanvasRenderingContext2D|undefined} */ ctx
   /** @type {Map<string, Particle>} */ particles
   /** @type {Map<string, string[]>} */ childrenOf
+  /** @type {Set<string>} */ justAdded
   /** @type {boolean} */ isRunning
   /** @type {number} */ screenWidth
   /** @type {number} */ screenHeight
@@ -118,8 +167,7 @@ class ParticlesWorker {
     }
   }
 
-  /** Добавить/обновить частицу по пути
-   * @param {string} path */
+  /** @param {string} path */
   addParticle(path) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
@@ -144,6 +192,7 @@ class ParticlesWorker {
         parentPath,
       }
       this.particles.set(path, p)
+      this.justAdded.add(path) // ← помечаем для моментальной расстановки
     } else {
       existed.depth = depth
       existed.parentPath = parentPath
@@ -152,13 +201,14 @@ class ParticlesWorker {
 
     this.rebuildTree()
     this.recomputeTargets()
+    this.snapNewlyAdded() // ← сразу ставим все новые точки на их орбиты
     if (!this.isRunning) this.startAnimation()
   }
 
-  /** Удалить частицу
-   * @param {string} path */
+  /** @param {string} path */
   removeParticle(path) {
     this.particles.delete(path)
+    this.justAdded.delete(path)
     this.rebuildTree()
     this.recomputeTargets()
     if (this.particles.size === 0 && this.ctx && this.canvas) {
@@ -167,7 +217,6 @@ class ParticlesWorker {
     }
   }
 
-  /** Собрать parent->children[] с детерминированной сортировкой */
   rebuildTree() {
     this.childrenOf.clear()
     this.childrenOf.set("0", [])
@@ -193,14 +242,13 @@ class ParticlesWorker {
     }
   }
 
-  /** Посчитать целевые локальные радиусы + подобрать глобальный масштаб (всё влезает) */
+  /** целевые локальные радиусы и глобальный масштаб */
   recomputeTargets() {
     for (const [, p] of this.particles) {
       p.targetOrbitRadius = 0
       p.bandHalf = 0
     }
 
-    // локальная упаковка детей вокруг parent: выдаём каждому ширину «полосы»
     /** @param {string} parentPath */
     const packLocal = (parentPath) => {
       const kids = this.childrenOf.get(parentPath) || []
@@ -208,10 +256,10 @@ class ParticlesWorker {
 
       let offset = CONFIG.firstBandOffset
       for (const k of kids) {
-        const bandWidth = packLocal(k) // полная ширина «полосы» ребёнка (его поддерево)
+        const bandWidth = packLocal(k)
         const child = this.particles.get(k)
         if (!child) continue
-        child.targetOrbitRadius = offset + bandWidth / 2 // локальный центр орбиты от родителя
+        child.targetOrbitRadius = offset + bandWidth / 2
         child.bandHalf = bandWidth / 2
         offset += bandWidth + CONFIG.interBandGap
       }
@@ -219,7 +267,7 @@ class ParticlesWorker {
     }
     packLocal("0")
 
-    // максимальная глобальная «выбегаемость» от корня: суммируем локальные центры + половину полосы вниз по ветке
+    // оценка максимального разлёта от корня
     let maxExtent = 0
     /** @param {string} parentPath @param {number} accum */
     const dfs = (parentPath, accum) => {
@@ -240,7 +288,48 @@ class ParticlesWorker {
     this.globalScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, scale))
   }
 
-  /** Один кадр анимации */
+  /** Моментальная расстановка только что добавленных узлов на их орбиты */
+  snapNewlyAdded() {
+    if (this.justAdded.size === 0) return
+
+    // 1) сначала выставим целевые центры для ВСЕХ (tx,ty) из targetOrbitRadius — сверху вниз
+    /** @param {string} parentPath */
+    const placeUsingTargets = (parentPath) => {
+      const parent = this.particles.get(parentPath)
+      if (!parent) return
+      const px = parentPath === "0" ? this.center.x : parent.tx
+      const py = parentPath === "0" ? this.center.y : parent.ty
+      const kids = this.childrenOf.get(parentPath) || []
+      for (const k of kids) {
+        const ch = this.particles.get(k)
+        if (!ch) continue
+        const R = ch.targetOrbitRadius * this.globalScale
+        ch.tx = px + Math.cos(ch.angle) * R
+        ch.ty = py + Math.sin(ch.angle) * R
+        placeUsingTargets(k)
+      }
+    }
+
+    // корень: целевой центр — геометрический центр
+    const root = this.particles.get("0")
+    if (root) {
+      root.tx = this.center.x
+      root.ty = this.center.y
+    }
+    placeUsingTargets("0")
+
+    // 2) для только что добавленных — мгновенно приравниваем текущие к целевым
+    for (const path of this.justAdded) {
+      const p = this.particles.get(path)
+      if (!p) continue
+      p.orbitRadius = p.targetOrbitRadius
+      p.x = p.tx
+      p.y = p.ty
+    }
+    this.justAdded.clear()
+  }
+
+  /** один кадр */
   paint() {
     if (!this.ctx || !this.canvas) return
     const t = Date.now() * 0.001
@@ -248,10 +337,10 @@ class ParticlesWorker {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     if (!this.particles.has("0")) return
 
-    // шаг углов
+    // углы
     for (const [, p] of this.particles) if (!p.isCore) p.angle += p.speed
 
-    // Раскладываем детей вокруг ЦЕЛЕВОГО центра родителя (tx, ty)
+    // раскладка вокруг целевых центров родителей
     /** @param {string} parentPath */
     const placeAroundTarget = (parentPath) => {
       const parent = this.particles.get(parentPath)
@@ -270,7 +359,6 @@ class ParticlesWorker {
       }
     }
 
-    // корень в центре
     const root = this.particles.get("0")
     if (root) {
       root.tx = this.center.x
@@ -278,18 +366,18 @@ class ParticlesWorker {
     }
     placeAroundTarget("0")
 
-    // интерполяция позиций (рисуем по x,y — они могут отставать от tx,ty)
+    // интерполяция к целям (для существующих узлов при перестройках)
     for (const [, p] of this.particles) {
       p.x += (p.tx - p.x) * CONFIG.lerpPos
       p.y += (p.ty - p.y) * CONFIG.lerpPos
     }
 
-    if (CONFIG.drawOrbits) this.drawAllOrbits() // линия по центру частицы
+    if (CONFIG.drawOrbits) this.drawAllOrbits()
     this.drawLinks()
     this.drawParticles(t)
   }
 
-  /** Орбиты: радиус берём из ФАКТИЧЕСКИХ НАРИСОВАННЫХ позиций (x,y), а не из расчётных величин. */
+  /** орбиты — радиус из фактической геометрии (центр-к-центру) */
   drawAllOrbits() {
     if (!this.ctx) return
     const ctx = this.ctx
@@ -299,9 +387,8 @@ class ParticlesWorker {
       if (kids.length === 0) continue
       const par = this.particles.get(parent)
       if (!par) continue
-
       const px = par.x,
-        py = par.y // рисуем вокруг текущего ОТРИСОВАННОГО центра родителя
+        py = par.y
 
       ctx.setLineDash(CONFIG.orbitDash)
       ctx.strokeStyle = `hsla(200,50%,60%,${CONFIG.orbitAlpha})`
@@ -309,7 +396,6 @@ class ParticlesWorker {
       for (const k of kids) {
         const ch = this.particles.get(k)
         if (!ch) continue
-        // КЛЮЧ: радиус орбиты = реальное расстояние от рисуемого родителя до рисуемого ребёнка.
         const R = Math.hypot(ch.x - px, ch.y - py)
         ctx.beginPath()
         ctx.arc(px, py, Math.max(1, R), 0, Math.PI * 2)
@@ -430,6 +516,7 @@ class ParticlesWorker {
     this.stopAnimation()
     this.particles.clear()
     this.childrenOf.clear()
+    this.justAdded.clear()
     if (this.broadcastChannel) {
       this.broadcastChannel.close()
       this.broadcastChannel = null
@@ -438,21 +525,18 @@ class ParticlesWorker {
     this.ctx = undefined
   }
 
-  /** Родитель пути
-   * @param {string} path */
+  /** @param {string} path */
   getParent(path) {
     if (path === "0") return null
     const i = path.lastIndexOf("/")
     return i === -1 ? "0" : path.slice(0, i)
   }
 
-  /** Скорость с учётом глубины */
   /** @param {number} depth */
   speedForDepth(depth) {
     return CONFIG.angleSpeedBase / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation))
   }
 
-  /** Начальный угол по выбранной стратегии */
   /** @param {string} path */
   initialAngleFor(path) {
     const parent = this.getParent(path)
@@ -500,6 +584,7 @@ self.onmessage = function (e) {
     particlesWorker.center.x = w / 2
     particlesWorker.center.y = h / 2
     particlesWorker.recomputeTargets()
+    // при ресайзе новые узлы не добавляются, снап не нужен
     particlesWorker.paint()
   } else if (type === "add") {
     if (particlesWorker) particlesWorker.addParticle(e.data.path)
