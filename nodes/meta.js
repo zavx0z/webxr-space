@@ -18,7 +18,7 @@ export const meta = MetaFor("meta-builder", {
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    "подготовка данных": {
+    "сбор данных": {
       "загрузка меты": { src: { null: false } },
       ошибка: { error: { null: false } },
     },
@@ -44,7 +44,7 @@ export const meta = MetaFor("meta-builder", {
     meta: null,
   })
   .processes((process) => ({
-    "подготовка данных": process()
+    "сбор данных": process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
         if (!core.node.string?.src) throw new Error("Нет параметра src!")
@@ -70,12 +70,14 @@ export const meta = MetaFor("meta-builder", {
       // .success(({ data, update }) => {})
       .error(({ error, update }) => update({ error: error.message })),
     "передача дочерних элементов": process()
-      .action(async ({ core }) => {
+      .action(async ({ core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
         const [{ Actor }, { default: meta }] = await Promise.all([
           import("everywhere-everything/actor"),
           import("nodes/nodes.js"),
         ])
+        Actor.createSibling(self.actor, { meta, id: crypto.randomUUID() })
+        Actor.fromSchema({ meta: core.meta, id: crypto.randomUUID() })
         // console.log(core.meta.render, meta)
       })
       .error(({ error, update }) => update({ error: error.message })),

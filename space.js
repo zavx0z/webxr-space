@@ -71,7 +71,6 @@ class MetaXR extends HTMLElement {
       id: "root-builder",
       context: { path: "1" },
       core: {
-        fields: Actor.fields,
         node: {
           tag: "meta-for",
           type: "meta",

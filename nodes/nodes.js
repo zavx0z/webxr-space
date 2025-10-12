@@ -14,7 +14,7 @@ const meta = MetaFor("child-build-runner")
     errorMessage: t.string.optional({ label: "Сообщение об ошибке" }),
   }))
   .states({
-    ожидание: {
+    "сбор данных": {
       "обработка детей": { children: { length: { min: 1 } } },
     },
     "обработка детей": {
@@ -32,7 +32,7 @@ const meta = MetaFor("child-build-runner")
     },
     завершение: {},
     ошибка: {
-      ожидание: {},
+      "сбор данных": {},
     },
   })
   .core({
@@ -42,25 +42,29 @@ const meta = MetaFor("child-build-runner")
     createdActors: [],
   })
   .processes((process) => ({
-    "обработка детей": process({ label: "Обработка дочерних узлов" })
+    "сбор данных": process()
       .action(() => {
         console.log("Процесс: обработка детей")
         return {}
       })
       .success(() => {})
       .error(({ error }) => console.log("Ошибка обработки детей:", error)),
-
-    "создание node-builder": process({ label: "Создание node-builder" })
+    "обработка детей": process()
       .action(() => {
-        console.log("Процесс: создание node-builder")
+        return {}
+      })
+      .success(() => {})
+      .error(({ error }) => console.log("Ошибка обработки детей:", error)),
+
+    "создание node-builder": process()
+      .action(() => {
         return {}
       })
       .success(() => {})
       .error(({ error }) => console.log("Ошибка создания node-builder:", error)),
 
-    "следующий ребенок": process({ label: "Переход к следующему ребенку" })
+    "следующий ребенок": process()
       .action(() => {
-        console.log("Процесс: следующий ребенок")
         return {}
       })
       .success(() => {})

@@ -31,8 +31,6 @@ export const meta = MetaFor("node-builder")
   .core({
     /** @type {NodeType|null} */
     node: null,
-    /** @type {Fields|null} */
-    fields: null,
     /** @type {Actor|null} */
     builder: null,
   })
@@ -40,7 +38,6 @@ export const meta = MetaFor("node-builder")
     "определение сборщика": process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
-        if (!core.fields) throw new Error("Иерархия не передана")
 
         if (Object.hasOwn(core.node, "tag")) {
           const node = /** @type {NodeMeta } */ (core.node)
@@ -61,7 +58,7 @@ export const meta = MetaFor("node-builder")
           meta,
           id: builderId,
           path: self.path + "/0",
-          core: { node: core.node, hierarchy: core.fields },
+          core: { node: core.node },
           context: { path: context.path },
         })
       })

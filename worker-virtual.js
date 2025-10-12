@@ -1,29 +1,61 @@
-// Воркер для отрисовки частиц - весь код в одном файле
-
-// Флаг для включения/отключения отладочных логов
-// Установите в true для включения логов: const DEBUG = true
-const DEBUG = false
+// ───────────────────────────────────────────────────────────────────────────────
+// Particles Worker — иерархические орбиты с учётом толщины поддерева,
+// плавные переходы, авто-масштабирование под вьюпорт.
+// Каждый ребёнок у своего родителя — на СВОЕЙ орбите (полосе).
+// ЛИНИЯ ОРБИТЫ ВСЕГДА ПРОХОДИТ ЧЕРЕЗ ЦЕНТР ЧАСТИЦЫ.
+// ───────────────────────────────────────────────────────────────────────────────
 
 /**
- * Условное логирование - выводит лог только если DEBUG = true
- * @param {...any} args - Аргументы для console.log
+ * @typedef {import('./worker-virtual.t.ts').ParticlesConfig} ParticlesConfig
+ * @typedef {import('./worker-virtual.t.ts').Particle} Particle
+ * @typedef {import('./worker-virtual.t.ts').Center} Center
  */
-function debugLog(...args) {
-  if (DEBUG) {
-    console.log(...args)
-  }
+
+/** @type {ParticlesConfig} */
+const CONFIG = {
+  debug: false,
+
+  viewMargin: 0.9,
+
+  // геометрия упаковки
+  leafBandWidth: 18,
+  firstBandOffset: 44,
+  interBandGap: 22,
+
+  // масштаб
+  minScale: 0.2,
+  maxScale: 1,
+
+  // плавность/углы
+  lerpPos: 0.12,
+  lerpRadius: 0.18,
+  angleSpeedBase: 0.12,
+  angleDepthAttenuation: 1,
+  angleDistribution: "uniform",
+
+  // орбиты/связи
+  drawOrbits: true,
+  orbitDash: [8, 10],
+  orbitAlpha: 0.22,
+  orbitLineAt: "center",
+
+  linkMode: "adjacent",
+  linkDash: [5, 5],
+  linkMaxDist: 180,
+  linkBaseAlpha: 0.4,
+
+  // частицы
+  particleRingThickness: 2,
+  coreSize: 10,
+  nodeSizeBase: 5,
+  nodeSizePerDepth: 2,
 }
 
-/**
- * @typedef {Object} Particle
- * @property {number} x - X координата
- * @property {number} y - Y координата
- * @property {number} orbitRadius - Радиус орбиты
- * @property {number} angle - Угол
- * @property {number} speed - Скорость
- * @property {number} hierarchyLevel - Уровень иерархии
- * @property {boolean} isCore - Является ли ядром
- */
+/** лог с учётом CONFIG.debug */
+/** @param {...any} a */
+function dlog(...a) {
+  if (CONFIG.debug) console.log(...a)
+}
 
 class ParticlesWorker {
   /**
@@ -32,63 +64,46 @@ class ParticlesWorker {
    * @param {number} height
    */
   constructor(canvas, width, height) {
-    // Стабилизируем shape - инициализируем все поля
     this.canvas = canvas
-    this.ctx = undefined
-    this.particles = new Map()
+    /** @type {OffscreenCanvasRenderingContext2D} */
+    this.ctx = /** @type any */ (canvas.getContext("2d"))
+    if (!this.ctx) throw new Error("2D context failed")
+
+    /** @type {Map<string, Particle>} */ this.particles = new Map()
+    /** @type {Map<string, string[]>} */ this.childrenOf = new Map()
     this.isRunning = false
     this.screenWidth = width
     this.screenHeight = height
     this.broadcastChannel = null
 
-    // Инициализация после стабилизации shape
-    const ctx = canvas.getContext("2d")
-    if (!ctx) {
-      throw new Error("Failed to get 2D context from canvas")
-    }
-    this.ctx = ctx
+    this.globalScale = 1
+    this.center = { x: width / 2, y: height / 2 }
 
     this.setupCanvas()
     this.setupBroadcastChannel()
     this.startAnimation()
   }
 
-  // JSDoc типы для полей
-  /** @type {OffscreenCanvas | undefined} */
-  canvas
+  // поля для TS/JSDoc
+  /** @type {OffscreenCanvas|undefined} */ canvas
+  /** @type {OffscreenCanvasRenderingContext2D|undefined} */ ctx
+  /** @type {Map<string, Particle>} */ particles
+  /** @type {Map<string, string[]>} */ childrenOf
+  /** @type {boolean} */ isRunning
+  /** @type {number} */ screenWidth
+  /** @type {number} */ screenHeight
+  /** @type {BroadcastChannel|null} */ broadcastChannel
+  /** @type {number} */ globalScale
+  /** @type {{x:number,y:number}} */ center
 
-  /** @type {OffscreenCanvasRenderingContext2D | undefined} */
-  ctx
-
-  /** @type {Map<string, Particle>} */
-  particles
-
-  /** @type {boolean} */
-  isRunning
-
-  /** @type {number} */
-  screenWidth
-
-  /** @type {number} */
-  screenHeight
-
-  /** @type {BroadcastChannel | null} */
-  broadcastChannel
-
-  /**
-   * Настройка canvas с размерами экрана
-   */
   setupCanvas() {
-    // Настройка canvas - используем переданные размеры экрана
-    if (this.canvas) {
-      this.canvas.width = this.screenWidth
-      this.canvas.height = this.screenHeight
-    }
+    if (!this.canvas) return
+    this.canvas.width = this.screenWidth
+    this.canvas.height = this.screenHeight
+    this.center.x = this.canvas.width / 2
+    this.center.y = this.canvas.height / 2
   }
 
-  /**
-   * Настройка подписки на BroadcastChannel для получения событий акторов
-   */
   setupBroadcastChannel() {
     this.broadcastChannel = new BroadcastChannel("actor-force")
     this.broadcastChannel.onmessage = (event) => {
@@ -96,374 +111,399 @@ class ParticlesWorker {
       if (!Object.hasOwn(data, "meta")) return
       const { path } = data
       if (!path.startsWith("0")) return
-
       for (const patch of data.patches) {
-        if (patch.path === "/" && patch.op === "add") {
-          this.addParticle(path)
-        } else if (patch.path === "/" && patch.op === "remove") {
-          this.removeParticle(path)
-        }
+        if (patch.path === "/" && patch.op === "add") this.addParticle(path)
+        else if (patch.path === "/" && patch.op === "remove") this.removeParticle(path)
       }
     }
   }
 
-  /**
-   * Добавляет частицу по пути
-   * @param {string} path - Путь актора
-   */
+  /** Добавить/обновить частицу по пути
+   * @param {string} path */
   addParticle(path) {
     if (!this.canvas) return
+    const parentPath = this.getParent(path)
+    const depth = path === "0" ? 0 : path.split("/").length - 1
 
-    debugLog(`➕ Adding particle: ${path}`)
-    const centerX = this.canvas.width / 2
-    const centerY = this.canvas.height / 2
-
-    let particle
-
-    if (path === "0") {
-      // Ядро в центре
-      particle = {
-        x: centerX,
-        y: centerY,
+    const existed = this.particles.get(path)
+    if (!existed) {
+      const angle = this.initialAngleFor(path)
+      /** @type {Particle} */
+      const p = {
+        x: this.center.x,
+        y: this.center.y,
+        tx: this.center.x,
+        ty: this.center.y,
         orbitRadius: 0,
-        angle: 0,
-        speed: 0,
-        hierarchyLevel: 0,
-        isCore: true,
+        targetOrbitRadius: 0,
+        bandHalf: 0,
+        angle,
+        speed: this.speedForDepth(depth),
+        depth,
+        isCore: path === "0",
+        parentPath,
       }
-    } else if (path.startsWith("0/")) {
-      // Дети на орбитах вокруг ядра
-      const childNumber = parseInt(path.split("/")[1] || "0")
-      const orbitRadius = 80 + childNumber * 20 // Разные орбиты для разных детей
-      const angle = (childNumber * Math.PI * 2) / 8 // Равномерное распределение
-
-      particle = {
-        x: centerX + Math.cos(angle) * orbitRadius,
-        y: centerY + Math.sin(angle) * orbitRadius,
-        orbitRadius: orbitRadius,
-        angle: angle,
-        speed: 0.3 + Math.random() * 0.4, // Скорость вращения
-        hierarchyLevel: 1,
-        isCore: false,
-      }
+      this.particles.set(path, p)
     } else {
-      // Другие частицы - случайное размещение
-      particle = {
-        x: Math.random() * this.canvas.width,
-        y: Math.random() * this.canvas.height,
-        orbitRadius: 0,
-        angle: 0,
-        speed: 0,
-        hierarchyLevel: 0,
-        isCore: false,
-      }
+      existed.depth = depth
+      existed.parentPath = parentPath
+      existed.speed = this.speedForDepth(depth)
     }
 
-    this.particles.set(path, particle)
-    debugLog(`📊 Total particles: ${this.particles.size}`)
-
-    // Перезапускаем анимацию если она остановлена
-    if (!this.isRunning) {
-      this.startAnimation()
-    }
+    this.rebuildTree()
+    this.recomputeTargets()
+    if (!this.isRunning) this.startAnimation()
   }
 
-  /**
-   * Удаляет частицу по пути
-   * @param {string} path - Путь актора
-   */
+  /** Удалить частицу
+   * @param {string} path */
   removeParticle(path) {
-    debugLog(`➖ Removing particle: ${path}`)
     this.particles.delete(path)
-    debugLog(`📊 Total particles: ${this.particles.size}`)
-
-    // Если частиц не осталось, очищаем canvas и останавливаем анимацию
+    this.rebuildTree()
+    this.recomputeTargets()
     if (this.particles.size === 0 && this.ctx && this.canvas) {
-      debugLog("🧹 Clearing canvas - no particles left")
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-      if (this.isRunning) {
-        debugLog("⏹️ Stopping animation from removeParticle")
-        this.stopAnimation()
-      }
+      if (this.isRunning) this.stopAnimation()
     }
   }
 
-  /**
-   * Отрисовка всех частиц на canvas
-   */
+  /** Собрать parent->children[] с детерминированной сортировкой */
+  rebuildTree() {
+    this.childrenOf.clear()
+    this.childrenOf.set("0", [])
+    for (const [path] of this.particles) if (!this.childrenOf.has(path)) this.childrenOf.set(path, [])
+
+    for (const [path, p] of this.particles) {
+      if (path === "0") continue
+      const parent = p.parentPath ?? "0"
+      if (!this.childrenOf.has(parent)) this.childrenOf.set(parent, [])
+      this.childrenOf.get(parent)?.push(path)
+    }
+
+    for (const [, arr] of this.childrenOf) {
+      arr.sort((a, b) => {
+        const as = a.split("/").map(Number),
+          bs = b.split("/").map(Number)
+        const n = Math.min(as.length, bs.length)
+        for (let i = 0; i < n; i++) {
+          if (as[i] !== bs[i]) return (as[i] || 0) - (bs[i] || 0)
+        }
+        return as.length - bs.length
+      })
+    }
+  }
+
+  /** Посчитать целевые локальные радиусы + подобрать глобальный масштаб (всё влезает) */
+  recomputeTargets() {
+    for (const [, p] of this.particles) {
+      p.targetOrbitRadius = 0
+      p.bandHalf = 0
+    }
+
+    // локальная упаковка детей вокруг parent: выдаём каждому ширину «полосы»
+    /** @param {string} parentPath */
+    const packLocal = (parentPath) => {
+      const kids = this.childrenOf.get(parentPath) || []
+      if (kids.length === 0) return CONFIG.leafBandWidth
+
+      let offset = CONFIG.firstBandOffset
+      for (const k of kids) {
+        const bandWidth = packLocal(k) // полная ширина «полосы» ребёнка (его поддерево)
+        const child = this.particles.get(k)
+        if (!child) continue
+        child.targetOrbitRadius = offset + bandWidth / 2 // локальный центр орбиты от родителя
+        child.bandHalf = bandWidth / 2
+        offset += bandWidth + CONFIG.interBandGap
+      }
+      return offset
+    }
+    packLocal("0")
+
+    // максимальная глобальная «выбегаемость» от корня: суммируем локальные центры + половину полосы вниз по ветке
+    let maxExtent = 0
+    /** @param {string} parentPath @param {number} accum */
+    const dfs = (parentPath, accum) => {
+      const kids = this.childrenOf.get(parentPath) || []
+      for (const k of kids) {
+        const ch = this.particles.get(k)
+        if (!ch) continue
+        const local = ch.targetOrbitRadius + ch.bandHalf
+        const next = accum + local
+        if (next > maxExtent) maxExtent = next
+        dfs(k, next)
+      }
+    }
+    dfs("0", 0)
+
+    const allowed = Math.min(this.screenWidth, this.screenHeight) * 0.5 * CONFIG.viewMargin
+    const scale = allowed / Math.max(1, maxExtent)
+    this.globalScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, scale))
+  }
+
+  /** Один кадр анимации */
   paint() {
     if (!this.ctx || !this.canvas) return
+    const t = Date.now() * 0.001
 
-    // Очищаем canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    if (!this.particles.has("0")) return
 
-    // Проверяем наличие частиц
-    if (this.particles.size === 0) {
-      return
+    // шаг углов
+    for (const [, p] of this.particles) if (!p.isCore) p.angle += p.speed
+
+    // Раскладываем детей вокруг ЦЕЛЕВОГО центра родителя (tx, ty)
+    /** @param {string} parentPath */
+    const placeAroundTarget = (parentPath) => {
+      const parent = this.particles.get(parentPath)
+      if (!parent) return
+      const px = parent.tx,
+        py = parent.ty
+      const kids = this.childrenOf.get(parentPath) || []
+      for (const k of kids) {
+        const ch = this.particles.get(k)
+        if (!ch) continue
+        ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * CONFIG.lerpRadius
+        const R = ch.orbitRadius * this.globalScale
+        ch.tx = px + Math.cos(ch.angle) * R
+        ch.ty = py + Math.sin(ch.angle) * R
+        placeAroundTarget(k)
+      }
     }
 
-    // Кешируем часто используемые значения
-    const centerX = this.canvas.width / 2
-    const centerY = this.canvas.height / 2
-    const time = Date.now() * 0.001
+    // корень в центре
+    const root = this.particles.get("0")
+    if (root) {
+      root.tx = this.center.x
+      root.ty = this.center.y
+    }
+    placeAroundTarget("0")
 
-    // Рисуем частицы
-    this.particles.forEach((particle, path) => {
-      // Голубое свечение для всех частиц
-      const hue = 200 + ((path.charCodeAt(0) * 20) % 40) // Голубой спектр 200-240
-      if (!this.ctx) return
-      this.ctx.fillStyle = `hsl(${hue}, 70%, 60%)`
+    // интерполяция позиций (рисуем по x,y — они могут отставать от tx,ty)
+    for (const [, p] of this.particles) {
+      p.x += (p.tx - p.x) * CONFIG.lerpPos
+      p.y += (p.ty - p.y) * CONFIG.lerpPos
+    }
 
-      // Размер частицы зависит от типа
-      const size = particle.isCore ? 12 : 5 + particle.hierarchyLevel * 3
+    if (CONFIG.drawOrbits) this.drawAllOrbits() // линия по центру частицы
+    this.drawLinks()
+    this.drawParticles(t)
+  }
 
-      // Орбитальное движение
-      if (particle.isCore) {
-        // Ядро остается в центре
-        particle.x = centerX
-        particle.y = centerY
-      } else if (particle.orbitRadius > 0) {
-        // Дети вращаются вокруг ядра
-        particle.angle += particle.speed * 0.01
-        particle.x = centerX + Math.cos(particle.angle) * particle.orbitRadius
-        particle.y = centerY + Math.sin(particle.angle) * particle.orbitRadius
+  /** Орбиты: радиус берём из ФАКТИЧЕСКИХ НАРИСОВАННЫХ позиций (x,y), а не из расчётных величин. */
+  drawAllOrbits() {
+    if (!this.ctx) return
+    const ctx = this.ctx
+    ctx.lineWidth = 1
+
+    for (const [parent, kids] of this.childrenOf) {
+      if (kids.length === 0) continue
+      const par = this.particles.get(parent)
+      if (!par) continue
+
+      const px = par.x,
+        py = par.y // рисуем вокруг текущего ОТРИСОВАННОГО центра родителя
+
+      ctx.setLineDash(CONFIG.orbitDash)
+      ctx.strokeStyle = `hsla(200,50%,60%,${CONFIG.orbitAlpha})`
+
+      for (const k of kids) {
+        const ch = this.particles.get(k)
+        if (!ch) continue
+        // КЛЮЧ: радиус орбиты = реальное расстояние от рисуемого родителя до рисуемого ребёнка.
+        const R = Math.hypot(ch.x - px, ch.y - py)
+        ctx.beginPath()
+        ctx.arc(px, py, Math.max(1, R), 0, Math.PI * 2)
+        ctx.stroke()
       }
+      ctx.setLineDash([])
+    }
+  }
 
-      // Пульсация для футуристичного эффекта
-      const pulse = Math.sin(time * 2 + path.charCodeAt(0)) * 0.3 + 0.7
-      const animatedSize = Math.max(1, size * pulse)
+  drawLinks() {
+    if (!this.ctx) return
+    if (CONFIG.linkMode === "none") return
+    const ctx = this.ctx
 
-      // Создаем радиальный градиент для свечения
-      if (!this.ctx) return
-      const gradient = this.ctx.createRadialGradient(
-        particle.x,
-        particle.y,
-        0,
-        particle.x,
-        particle.y,
-        animatedSize * 3
-      )
-      gradient.addColorStop(0, `hsla(${hue}, 100%, 80%, 0.9)`)
-      gradient.addColorStop(0.3, `hsla(${hue}, 80%, 60%, 0.6)`)
-      gradient.addColorStop(0.7, `hsla(${hue}, 60%, 40%, 0.3)`)
-      gradient.addColorStop(1, `hsla(${hue}, 40%, 20%, 0)`)
+    for (const [, kids] of this.childrenOf) {
+      if (kids.length < 2) continue
 
-      // Внешнее свечение
-      if (!this.ctx) return
-      this.ctx.fillStyle = gradient
-      this.ctx.beginPath()
-      this.ctx.arc(particle.x, particle.y, animatedSize * 3, 0, Math.PI * 2)
-      this.ctx.fill()
-
-      // Внутреннее ядро частицы
-      const coreGradient = this.ctx.createRadialGradient(
-        particle.x,
-        particle.y,
-        0,
-        particle.x,
-        particle.y,
-        animatedSize
-      )
-      coreGradient.addColorStop(0, `hsl(${hue}, 100%, 95%)`)
-      coreGradient.addColorStop(0.5, `hsl(${hue}, 90%, 70%)`)
-      coreGradient.addColorStop(1, `hsl(${hue}, 80%, 50%)`)
-
-      this.ctx.fillStyle = coreGradient
-      this.ctx.beginPath()
-      this.ctx.arc(particle.x, particle.y, animatedSize, 0, Math.PI * 2)
-      this.ctx.fill()
-
-      // Добавляем энергетические кольца
-      for (let i = 1; i <= 3; i++) {
-        const ringTime = time * (1 + i * 0.5)
-        const ringRadius = Math.max(1, animatedSize * (1.5 + i * 0.8) + Math.sin(ringTime) * 5)
-        const ringAlpha = ((0.3 - i * 0.08) * (Math.sin(ringTime) + 1)) / 2
-
-        if (!this.ctx) return
-        this.ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${ringAlpha})`
-        this.ctx.lineWidth = 2
-        this.ctx.beginPath()
-        this.ctx.arc(particle.x, particle.y, ringRadius, 0, Math.PI * 2)
-        this.ctx.stroke()
-      }
-    })
-
-    // Рисуем орбиты детей
-    const uniqueOrbits = new Set()
-
-    this.particles.forEach((particle) => {
-      if (!particle.isCore && particle.orbitRadius > 0) {
-        uniqueOrbits.add(particle.orbitRadius)
-      }
-    })
-
-    uniqueOrbits.forEach((orbitRadius) => {
-      if (!this.ctx) return
-      this.ctx.strokeStyle = `hsla(200, 50%, 60%, 0.3)`
-      this.ctx.lineWidth = 1
-      this.ctx.setLineDash([10, 10])
-      this.ctx.beginPath()
-      this.ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2)
-      this.ctx.stroke()
-      this.ctx.setLineDash([])
-    })
-
-    // Рисуем энергетические связи между частицами на одной орбите
-    const particlesArray = Array.from(this.particles.entries())
-    for (let i = 0; i < particlesArray.length; i++) {
-      for (let j = i + 1; j < particlesArray.length; j++) {
-        const [path1, particle1] = /**@type{[any, any]} */ (particlesArray[i])
-        const [path2, particle2] = /**@type{[any, any]} */ (particlesArray[j])
-
-        // Связываем только частицы на одной орбите
-        if (Math.abs(particle1.orbitRadius - particle2.orbitRadius) < 10) {
-          const distance = Math.sqrt(Math.pow(particle1.x - particle2.x, 2) + Math.pow(particle1.y - particle2.y, 2))
-
-          // Рисуем связь только если частицы близко
-          if (distance < 100) {
-            const alpha = (1 - distance / 100) * 0.4
-            const time = Date.now() * 0.001
-
-            // Пульсирующая связь
-            const pulse = Math.sin(time * 3 + path1.charCodeAt(0)) * 0.2 + 0.8
-
-            if (!this.ctx) return
-            this.ctx.strokeStyle = `hsla(210, 80%, 70%, ${alpha * pulse})`
-            this.ctx.lineWidth = 1
-            this.ctx.setLineDash([5, 5])
-            this.ctx.beginPath()
-            this.ctx.moveTo(particle1.x, particle1.y)
-            this.ctx.lineTo(particle2.x, particle2.y)
-            this.ctx.stroke()
-            this.ctx.setLineDash([])
+      /** @type {[Particle,Particle][]} */
+      const pairs = []
+      if (CONFIG.linkMode === "adjacent") {
+        for (let i = 0; i < kids.length; i++) {
+          const kidA = kids[i]
+          const kidB = kids[(i + 1) % kids.length]
+          if (!kidA || !kidB) continue
+          const a = this.particles.get(kidA),
+            b = this.particles.get(kidB)
+          if (a && b) pairs.push([a, b])
+        }
+      } else {
+        for (let i = 0; i < kids.length; i++)
+          for (let j = i + 1; j < kids.length; j++) {
+            const kidA = kids[i]
+            const kidB = kids[j]
+            if (!kidA || !kidB) continue
+            const a = this.particles.get(kidA),
+              b = this.particles.get(kidB)
+            if (a && b) pairs.push([a, b])
           }
-        }
+      }
+
+      for (const [a, b] of pairs) {
+        const dx = a.x - b.x,
+          dy = a.y - b.y
+        const dist = Math.hypot(dx, dy)
+        if (dist > CONFIG.linkMaxDist) continue
+        const alpha = CONFIG.linkBaseAlpha * (1 - dist / CONFIG.linkMaxDist)
+        ctx.strokeStyle = `hsla(210,80%,70%,${alpha})`
+        ctx.lineWidth = 1
+        ctx.setLineDash(CONFIG.linkDash)
+        ctx.beginPath()
+        ctx.moveTo(a.x, a.y)
+        ctx.lineTo(b.x, b.y)
+        ctx.stroke()
+        ctx.setLineDash([])
       }
     }
   }
 
-  /**
-   * Запуск анимационного цикла
-   */
+  /** @param {number} time */
+  drawParticles(time) {
+    if (!this.ctx) return
+    const ctx = this.ctx
+    for (const [path, p] of this.particles) {
+      const hue = 200 + ((path.charCodeAt(0) * 20) % 40)
+      const base = p.isCore ? CONFIG.coreSize : CONFIG.nodeSizeBase + p.depth * CONFIG.nodeSizePerDepth
+      const pulse = Math.sin(time * 2 + path.charCodeAt(0)) * 0.3 + 0.7
+      const sz = Math.max(1, base * pulse)
+
+      const g1 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, sz * 3)
+      g1.addColorStop(0, `hsla(${hue},100%,80%,0.9)`)
+      g1.addColorStop(0.35, `hsla(${hue},80%,60%,0.55)`)
+      g1.addColorStop(0.8, `hsla(${hue},50%,40%,0.18)`)
+      g1.addColorStop(1, `hsla(${hue},40%,20%,0)`)
+      ctx.fillStyle = g1
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, sz * 3, 0, Math.PI * 2)
+      ctx.fill()
+
+      const g2 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, sz)
+      g2.addColorStop(0, `hsl(${hue},100%,95%)`)
+      g2.addColorStop(0.55, `hsl(${hue},90%,70%)`)
+      g2.addColorStop(1, `hsl(${hue},80%,50%)`)
+      ctx.fillStyle = g2
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, sz, 0, Math.PI * 2)
+      ctx.fill()
+
+      for (let i = 1; i <= 3; i++) {
+        const rt = time * (1 + i * 0.5)
+        const rr = Math.max(1, sz * (1.5 + i * 0.8) + Math.sin(rt) * 5)
+        const ra = ((0.3 - i * 0.08) * (Math.sin(rt) + 1)) / 2
+        ctx.strokeStyle = `hsla(${hue},70%,60%,${Math.max(0, ra)})`
+        ctx.lineWidth = CONFIG.particleRingThickness
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, rr, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    }
+  }
+
   startAnimation() {
-    debugLog("🎬 Starting animation loop")
+    dlog("🎬 start")
     this.isRunning = true
-
-    const animate = () => {
-      if (this.isRunning) {
-        this.paint()
-        // Продолжаем анимацию только если есть частицы
-        if (this.particles.size > 0) {
-          requestAnimationFrame(animate)
-        } else {
-          debugLog("⏹️ Stopping animation - no particles")
-          this.stopAnimation()
-        }
-      }
+    const tick = () => {
+      if (!this.isRunning) return
+      this.paint()
+      requestAnimationFrame(tick)
     }
-    animate()
+    requestAnimationFrame(tick)
   }
-
-  /**
-   * Остановка анимационного цикла
-   */
   stopAnimation() {
-    debugLog("⏹️ Stopping animation loop")
+    dlog("⏹ stop")
     this.isRunning = false
   }
 
-  /**
-   * Уничтожение воркера и очистка ресурсов
-   */
   destroy() {
-    debugLog("💥 Destroying particles worker")
+    dlog("💥 destroy")
     this.stopAnimation()
     this.particles.clear()
-
-    // Закрываем BroadcastChannel
+    this.childrenOf.clear()
     if (this.broadcastChannel) {
-      debugLog("📡 Closing BroadcastChannel")
       this.broadcastChannel.close()
       this.broadcastChannel = null
     }
-
-    // Очищаем ссылки (используем undefined вместо null для совместимости с типами)
     this.canvas = undefined
     this.ctx = undefined
   }
+
+  /** Родитель пути
+   * @param {string} path */
+  getParent(path) {
+    if (path === "0") return null
+    const i = path.lastIndexOf("/")
+    return i === -1 ? "0" : path.slice(0, i)
+  }
+
+  /** Скорость с учётом глубины */
+  /** @param {number} depth */
+  speedForDepth(depth) {
+    return CONFIG.angleSpeedBase / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation))
+  }
+
+  /** Начальный угол по выбранной стратегии */
+  /** @param {string} path */
+  initialAngleFor(path) {
+    const parent = this.getParent(path)
+    const kids = parent ? this.childrenOf.get(parent) || [] : []
+    const idx = kids.length
+    if (CONFIG.angleDistribution === "golden") {
+      const golden = Math.PI * (3 - Math.sqrt(5))
+      return (idx * golden) % (Math.PI * 2)
+    }
+    const n = Math.max(1, idx + 1)
+    return (idx / n) * Math.PI * 2
+  }
 }
-/** @type {ParticlesWorker | null} */
+
+/** @type {ParticlesWorker|null} */
 let particlesWorker = null
 
-/**
- * Обработчик сообщений от основного потока
- * @param {MessageEvent} e - Событие сообщения
- */
+// ───────────────────────────────────────────────────────────────────────────────
+// Сообщения из main-потока
+// ───────────────────────────────────────────────────────────────────────────────
 self.onmessage = function (e) {
   const { type, canvas, width, height, visible } = e.data
 
   if (type === "init") {
-    debugLog("🚀 Initializing particles worker")
-    // Инициализируем воркер с переданным canvas и размерами
     particlesWorker = new ParticlesWorker(canvas, width, height)
-
-    // Отправляем сообщение о готовности воркера
     self.postMessage({ type: "worker-ready" })
   } else if (type === "destroy") {
-    debugLog("💥 Destroying particles worker from main thread")
-    // Очищаем ресурсы
     if (particlesWorker) {
       particlesWorker.destroy()
       particlesWorker = null
     }
   } else if (type === "visibility-change") {
-    debugLog(`👁️ Visibility change: ${visible ? "visible" : "hidden"}`)
-    // Обработка изменения видимости таба
-    if (particlesWorker) {
-      if (!visible) {
-        // Таб скрыт - останавливаем анимацию
-        debugLog("⏸️ Pausing animation - tab hidden")
-        particlesWorker.isRunning = false
-      } else if (particlesWorker.particles.size > 0) {
-        // Таб активен и есть частицы - перезапускаем анимацию
-        debugLog("▶️ Resuming animation - tab visible")
-        particlesWorker.startAnimation()
-      }
-    }
+    if (!particlesWorker) return
+    if (!visible) particlesWorker.isRunning = false
+    else particlesWorker.startAnimation()
   } else if (type === "resize") {
-    debugLog(`📏 Resizing canvas: ${width}x${height}`)
-    // Обработка изменения размера окна
-    if (particlesWorker && particlesWorker.canvas && particlesWorker.ctx) {
-      // Очищаем canvas перед изменением размера
-      particlesWorker.ctx.clearRect(0, 0, particlesWorker.canvas.width, particlesWorker.canvas.height)
-
-      particlesWorker.canvas.width = width
-      particlesWorker.canvas.height = height
-      particlesWorker.screenWidth = width
-      particlesWorker.screenHeight = height
-
-      // Обновляем позиции частиц относительно нового центра
-      const newCenterX = width / 2
-      const newCenterY = height / 2
-
-      particlesWorker.particles.forEach((particle) => {
-        if (particle.isCore) {
-          // Ядро перемещаем в новый центр
-          particle.x = newCenterX
-          particle.y = newCenterY
-        } else if (particle.orbitRadius > 0) {
-          // Дети на орбитах - пересчитываем позицию относительно нового центра
-          particle.x = newCenterX + Math.cos(particle.angle) * particle.orbitRadius
-          particle.y = newCenterY + Math.sin(particle.angle) * particle.orbitRadius
-        }
-      })
-
-      // Принудительно перерисовываем после изменения размера
-      if (particlesWorker.particles.size > 0) {
-        particlesWorker.paint()
-      }
-
-      debugLog("✅ Canvas resized and particles repositioned")
-    }
+    if (!particlesWorker || !particlesWorker.canvas || !particlesWorker.ctx) return
+    const w = width,
+      h = height
+    particlesWorker.ctx.clearRect(0, 0, particlesWorker.canvas.width, particlesWorker.canvas.height)
+    particlesWorker.canvas.width = w
+    particlesWorker.canvas.height = h
+    particlesWorker.screenWidth = w
+    particlesWorker.screenHeight = h
+    particlesWorker.center.x = w / 2
+    particlesWorker.center.y = h / 2
+    particlesWorker.recomputeTargets()
+    particlesWorker.paint()
+  } else if (type === "add") {
+    if (particlesWorker) particlesWorker.addParticle(e.data.path)
+  } else if (type === "remove") {
+    if (particlesWorker) particlesWorker.removeParticle(e.data.path)
   }
 }
