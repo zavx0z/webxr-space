@@ -74,6 +74,28 @@ export interface ParticlesConfig {
   nodeSizePerDepth: number
   /** Где рисовать орбиту */
   orbitLineAt: OrbitLineAt
+  /** Длительность вспышки при спауне (мс) */
+  flareDuration: number
+  /** Стартовый радиус вспышки (px) */
+  flareR0: number
+  /** Финальный радиус вспышки (px) */
+  flareR1: number
+  /** Максимальная прозрачность вспышки (0..1) */
+  flareMaxAlpha: number
+  /** Интенсивность дрожания (px) */
+  shakeIntensity: number
+  /** Скорость дрожания */
+  shakeSpeed: number
+  /** Вариация скорости между частицами */
+  shakeVariation: number
+  /** Скорость пульсации */
+  pulseSpeed: number
+  /** Амплитуда пульсации (0..1) */
+  pulseAmplitude: number
+  /** Базовая величина пульсации (0..1) */
+  pulseBase: number
+  /** Вариация времени между частицами (0..1) */
+  pulseTimeVariation: number
 }
 
 /**
@@ -104,6 +126,26 @@ export interface Particle {
   isCore: boolean
   /** Путь к родителю */
   parentPath: string | null
+  /** Смещение дрожания по X */
+  shakeOffsetX: number
+  /** Смещение дрожания по Y */
+  shakeOffsetY: number
+  /** Фаза дрожания для уникальности */
+  shakePhase: number
+  /** Seed для пульсации (уникальная фаза) */
+  pulseSeed: number
+}
+
+/**
+ * Вспышка при спауне частицы
+ */
+export interface Flare {
+  /** Позиция X */
+  x: number
+  /** Позиция Y */
+  y: number
+  /** Время старта (мс) */
+  t0: number
 }
 
 /**

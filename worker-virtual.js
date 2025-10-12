@@ -4,117 +4,136 @@
 // в СЛУЧАЙНОЙ точке (квантовый скачок) + эффект вспышки.
 // ───────────────────────────────────────────────────────────────────────────────
 
-/**
- * @typedef {"none"|"adjacent"|"all-siblings"} LinkMode
- * @typedef {"uniform"|"golden"} AngleDistribution
- */
+// TypeScript типы импортированы через JSDoc
 
 /**
- * @typedef {Object} ParticlesConfig
- * @property {boolean} debug
- * @property {number}  viewMargin
- * @property {number}  leafBandWidth
- * @property {number}  firstBandOffset
- * @property {number}  interBandGap
- * @property {number}  minScale
- * @property {number}  maxScale
- * @property {number}  lerpPos
- * @property {number}  lerpRadius
- * @property {number}  angleSpeedBase
- * @property {number}  angleDepthAttenuation
- * @property {AngleDistribution} angleDistribution
- * @property {boolean} drawOrbits
- * @property {number[]} orbitDash
- * @property {number}  orbitAlpha
- * @property {LinkMode} linkMode
- * @property {number[]} linkDash
- * @property {number}  linkMaxDist
- * @property {number}  linkBaseAlpha
- * @property {number}  particleRingThickness
- * @property {number}  coreSize
- * @property {number}  nodeSizeBase
- * @property {number}  nodeSizePerDepth
- * // вспышка при спауне
- * @property {number}  flareDuration       // длительность вспышки (мс)
- * @property {number}  flareR0             // стартовый радиус вспышки (px)
- * @property {number}  flareR1             // финальный радиус вспышки (px)
- * @property {number}  flareMaxAlpha       // максимальная прозрачность вспышки (0..1)
+ * @typedef {import('./worker-virtual.t.js').ParticlesConfig} ParticlesConfig
+ * @typedef {import('./worker-virtual.t.js').Particle} Particle
+ * @typedef {import('./worker-virtual.t.js').Flare} Flare
+ * @typedef {import('./worker-virtual.t.js').Center} Center
  */
 
 /** @type {ParticlesConfig} */
-const CONFIG = {
-  debug: false,
+const CONFIG = true
+  ? {
+      debug: false,
 
-  viewMargin: 0.9,
+      viewMargin: 0.9,
 
-  // геометрия упаковки
-  leafBandWidth: 18,
-  firstBandOffset: 44,
-  interBandGap: 22,
+      // геометрия упаковки
+      leafBandWidth: 12,
+      firstBandOffset: 4,
+      interBandGap: 4,
 
-  // масштаб
-  minScale: 0.2,
-  maxScale: 1,
+      // масштаб
+      minScale: 0.2,
+      maxScale: 1,
 
-  // плавность/углы
-  lerpPos: 0.12,
-  lerpRadius: 0.18,
-  angleSpeedBase: 0.12,
-  angleDepthAttenuation: 1,
-  angleDistribution: "uniform", // используется только для вычисления стартовых фаз детей у уже существующих родителей
+      // плавность/углы
+      lerpPos: 0.12,
+      lerpRadius: 0.18,
+      angleSpeedBase: 1,
+      angleDepthAttenuation: 1,
+      angleDistribution: "uniform", // используется только для вычисления стартовых фаз детей у уже существующих родителей
 
-  // орбиты/связи
-  drawOrbits: true,
-  orbitDash: [8, 10],
-  orbitAlpha: 0.22,
+      // орбиты/связи
+      drawOrbits: true,
+      orbitDash: [0, 0],
+      orbitAlpha: 0.22,
 
-  linkMode: "adjacent",
-  linkDash: [5, 5],
-  linkMaxDist: 180,
-  linkBaseAlpha: 0.4,
+      linkMode: "adjacent",
+      linkDash: [5, 5],
+      linkMaxDist: 180,
+      linkBaseAlpha: 1,
 
-  // частицы
-  particleRingThickness: 2,
-  coreSize: 10,
-  nodeSizeBase: 5,
-  nodeSizePerDepth: 2,
+      // частицы
+      particleRingThickness: 2,
+      coreSize: 3,
+      nodeSizeBase: 2,
+      nodeSizePerDepth: 0,
 
-  // вспышка
-  flareDuration: 420,
-  flareR0: 10,
-  flareR1: 90,
-  flareMaxAlpha: 0.6,
-}
+      // вспышка
+      flareDuration: 420,
+      flareR0: 10,
+      flareR1: 90,
+      flareMaxAlpha: 0.6,
 
+      // дрожание
+      shakeIntensity: 1.4, // интенсивность дрожания (px)
+      shakeSpeed: 44.0, // скорость дрожания
+      shakeVariation: 0.8, // вариация скорости между частицами
+
+      // пульсация
+      pulseSpeed: 22.0, // скорость пульсации
+      pulseAmplitude: 0.3, // амплитуда пульсации (0..1)
+      pulseBase: 0.7, // базовая величина пульсации (0..1)
+      pulseTimeVariation: 0.8, // вариация времени между частицами (0..1)
+
+      // орбита
+      orbitLineAt: "center",
+    }
+  : {
+      debug: false,
+
+      viewMargin: 0.9,
+
+      // геометрия упаковки
+      leafBandWidth: 12,
+      firstBandOffset: 12,
+      interBandGap: 22,
+
+      // масштаб
+      minScale: 0.2,
+      maxScale: 1,
+
+      // плавность/углы
+      lerpPos: 0.12,
+      lerpRadius: 0.18,
+      angleSpeedBase: 0.12,
+      angleDepthAttenuation: 1,
+      angleDistribution: "uniform", // используется только для вычисления стартовых фаз детей у уже существующих родителей
+
+      // орбиты/связи
+      drawOrbits: true,
+      orbitDash: [0, 0],
+      orbitAlpha: 0.22,
+
+      linkMode: "adjacent",
+      linkDash: [5, 5],
+      linkMaxDist: 180,
+      linkBaseAlpha: 1,
+
+      // частицы
+      particleRingThickness: 2,
+      coreSize: 4,
+      nodeSizeBase: 2,
+      nodeSizePerDepth: 0,
+
+      // вспышка
+      flareDuration: 420,
+      flareR0: 10,
+      flareR1: 90,
+      flareMaxAlpha: 0.6,
+
+      // дрожание
+      shakeIntensity: 1.4, // интенсивность дрожания (px)
+      shakeSpeed: 44.0, // скорость дрожания
+      shakeVariation: 0.8, // вариация скорости между частицами
+
+      // пульсация
+      pulseSpeed: 22.0, // скорость пульсации
+      pulseAmplitude: 0.3, // амплитуда пульсации (0..1)
+      pulseBase: 0.7, // базовая величина пульсации (0..1)
+      pulseTimeVariation: 0.5, // вариация времени между частицами (0..1)
+
+      // орбита
+      orbitLineAt: "center",
+    }
 /** лог с учётом CONFIG.debug */
 /** @param {...any} a */
 function dlog(...a) {
   if (CONFIG.debug) console.log(...a)
 }
-
-/**
- * @typedef {Object} Particle
- * @property {number} x
- * @property {number} y
- * @property {number} tx
- * @property {number} ty
- * @property {number} orbitRadius          // локальный центр полосы (сглаженный)
- * @property {number} targetOrbitRadius    // локальный центр полосы (целевой)
- * @property {number} bandHalf             // половина ширины «полосы»
- * @property {number} angle                // фаза на орбите
- * @property {number} speed
- * @property {number} depth
- * @property {boolean} isCore
- * @property {string|null} parentPath
- */
-
-/**
- * Вспышка на спауне
- * @typedef {Object} Flare
- * @property {number} x
- * @property {number} y
- * @property {number} t0        // время старта (ms)
- */
 
 class ParticlesWorker {
   /**
@@ -123,23 +142,35 @@ class ParticlesWorker {
    * @param {number} height
    */
   constructor(canvas, width, height) {
+    /** @type {OffscreenCanvas} */
     this.canvas = canvas
     /** @type {OffscreenCanvasRenderingContext2D} */
-    this.ctx = /** @type any */ (canvas.getContext("2d"))
+    this.ctx = /** @type {OffscreenCanvasRenderingContext2D} */ (canvas.getContext("2d"))
     if (!this.ctx) throw new Error("2D context failed")
 
-    /** @type {Map<string, Particle>} */ this.particles = new Map()
-    /** @type {Map<string, string[]>} */ this.childrenOf = new Map()
-    /** @type {Set<string>} */ this.justAdded = new Set() // новые пути для моментальной расстановки
-    /** @type {Set<string>} */ this.pendingFlares = new Set() // вспышку поставить ПОСЛЕ снапа
-    /** @type {Flare[]} */ this.flares = [] // активные вспышки
+    /** @type {Map<string, Particle>} */
+    this.particles = new Map()
+    /** @type {Map<string, string[]>} */
+    this.childrenOf = new Map()
+    /** @type {Set<string>} */
+    this.justAdded = new Set() // новые пути для моментальной расстановки
+    /** @type {Set<string>} */
+    this.pendingFlares = new Set() // вспышку поставить ПОСЛЕ снапа
+    /** @type {Flare[]} */
+    this.flares = [] // активные вспышки
 
+    /** @type {boolean} */
     this.isRunning = false
+    /** @type {number} */
     this.screenWidth = width
+    /** @type {number} */
     this.screenHeight = height
+    /** @type {BroadcastChannel | null} */
     this.broadcastChannel = null
 
+    /** @type {number} */
     this.globalScale = 1
+    /** @type {Center} */
     this.center = { x: width / 2, y: height / 2 }
 
     this.setupCanvas()
@@ -208,6 +239,10 @@ class ParticlesWorker {
         depth,
         isCore: path === "0",
         parentPath,
+        shakeOffsetX: 0,
+        shakeOffsetY: 0,
+        shakePhase: Math.random() * Math.PI * 2,
+        pulseSeed: Math.random() * Math.PI * 2,
       }
       this.particles.set(path, p)
       this.justAdded.add(path) // снапнуть позицию на орбиту сразу
@@ -401,6 +436,19 @@ class ParticlesWorker {
       p.y += (p.ty - p.y) * CONFIG.lerpPos
     }
 
+    // дрожание частиц
+    for (const [, p] of this.particles) {
+      const shakeTime = t * CONFIG.shakeSpeed + p.shakePhase
+      const shakeVariation = 1 + (p.shakePhase % 1) * CONFIG.shakeVariation
+      p.shakeOffsetX = Math.sin(shakeTime * shakeVariation) * CONFIG.shakeIntensity
+      p.shakeOffsetY = Math.cos(shakeTime * shakeVariation * 1.3) * CONFIG.shakeIntensity
+
+      // отладка дрожания
+      if (CONFIG.debug && Math.random() < 0.01) {
+        dlog(`🔍 Shake: ${p.shakeOffsetX.toFixed(2)}, ${p.shakeOffsetY.toFixed(2)}`)
+      }
+    }
+
     if (CONFIG.drawOrbits) this.drawAllOrbits()
     this.drawLinks()
     this.drawFlares(now) // ← вспышки поверх орбит, но под частицами
@@ -523,38 +571,45 @@ class ParticlesWorker {
     if (!this.ctx) return
     const ctx = this.ctx
     for (const [path, p] of this.particles) {
+      // позиция с дрожанием
+      const shakeX = p.x + p.shakeOffsetX
+      const shakeY = p.y + p.shakeOffsetY
+
       const hue = 200 + ((path.charCodeAt(0) * 20) % 40)
       const base = p.isCore ? CONFIG.coreSize : CONFIG.nodeSizeBase + p.depth * CONFIG.nodeSizePerDepth
-      const pulse = Math.sin(time * 2 + path.charCodeAt(0)) * 0.3 + 0.7
+      const timeOffset = p.pulseSeed * CONFIG.pulseTimeVariation
+      const pulse =
+        Math.sin((time + timeOffset) * CONFIG.pulseSpeed + p.pulseSeed) * CONFIG.pulseAmplitude + CONFIG.pulseBase
       const sz = Math.max(1, base * pulse)
 
-      const g1 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, sz * 3)
+      const g1 = ctx.createRadialGradient(shakeX, shakeY, 0, shakeX, shakeY, sz * 3)
       g1.addColorStop(0, `hsla(${hue},100%,80%,0.9)`)
       g1.addColorStop(0.35, `hsla(${hue},80%,60%,0.55)`)
       g1.addColorStop(0.8, `hsla(${hue},50%,40%,0.18)`)
       g1.addColorStop(1, `hsla(${hue},40%,20%,0)`)
       ctx.fillStyle = g1
       ctx.beginPath()
-      ctx.arc(p.x, p.y, sz * 3, 0, Math.PI * 2)
+      ctx.arc(shakeX, shakeY, sz * 3, 0, Math.PI * 2)
       ctx.fill()
 
-      const g2 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, sz)
+      const g2 = ctx.createRadialGradient(shakeX, shakeY, 0, shakeX, shakeY, sz)
       g2.addColorStop(0, `hsl(${hue},100%,95%)`)
       g2.addColorStop(0.55, `hsl(${hue},90%,70%)`)
       g2.addColorStop(1, `hsl(${hue},80%,50%)`)
       ctx.fillStyle = g2
       ctx.beginPath()
-      ctx.arc(p.x, p.y, sz, 0, Math.PI * 2)
+      ctx.arc(shakeX, shakeY, sz, 0, Math.PI * 2)
       ctx.fill()
 
       for (let i = 1; i <= 3; i++) {
-        const rt = time * (1 + i * 0.5)
+        const timeOffset = p.pulseSeed * CONFIG.pulseTimeVariation
+        const rt = (time + timeOffset) * CONFIG.pulseSpeed * (1 + i * 0.5) + p.pulseSeed
         const rr = Math.max(1, sz * (1.5 + i * 0.8) + Math.sin(rt) * 5)
         const ra = ((0.3 - i * 0.08) * (Math.sin(rt) + 1)) / 2
         ctx.strokeStyle = `hsla(${hue},70%,60%,${Math.max(0, ra)})`
         ctx.lineWidth = CONFIG.particleRingThickness
         ctx.beginPath()
-        ctx.arc(p.x, p.y, rr, 0, Math.PI * 2)
+        ctx.arc(shakeX, shakeY, rr, 0, Math.PI * 2)
         ctx.stroke()
       }
     }
@@ -587,8 +642,9 @@ class ParticlesWorker {
       this.broadcastChannel.close()
       this.broadcastChannel = null
     }
-    this.canvas = undefined
-    this.ctx = undefined
+    // Очищаем ссылки
+    this.canvas = /** @type {any} */ (null)
+    this.ctx = /** @type {any} */ (null)
   }
 
   /** @param {string} path */
