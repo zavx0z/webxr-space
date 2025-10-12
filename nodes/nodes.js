@@ -9,22 +9,24 @@
 const meta = MetaFor("child-build-runner")
   .context((t) => ({
     children: t.array.optional([], { label: "Массив дочерних узлов" }),
+
+    count: t.number.optional(0, { label: "Кол-во детей" }),
     currentChildIndex: t.number.optional(0, { label: "Индекс текущего ребенка" }),
-    processedChildren: t.array.optional([], { label: "Обработанные дети" }),
-    errorMessage: t.string.optional({ label: "Сообщение об ошибке" }),
+
+    error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
     "сбор данных": {
-      "обработка детей": { children: { length: { min: 1 } } },
+      "обработка детей": { count: { gt: 0 } },
     },
     "обработка детей": {
       "создание node-builder": {},
       завершение: {},
-      ошибка: { errorMessage: { length: { min: 1 } } },
+      ошибка: { error: { length: { min: 1 } } },
     },
     "создание node-builder": {
       "следующий ребенок": {},
-      ошибка: { errorMessage: { length: { min: 1 } } },
+      ошибка: { error: { length: { min: 1 } } },
     },
     "следующий ребенок": {
       // "обработка детей": {},
@@ -36,39 +38,32 @@ const meta = MetaFor("child-build-runner")
     },
   })
   .core({
-    /** @type {NodeType|null} */
-    currentChild: null,
-    /** @type {Actor[]} */
-    createdActors: [],
+    /** @type {NodeType[]} */
+    child: [],
   })
   .processes((process) => ({
     "сбор данных": process()
-      .action(() => {
-        console.log("Процесс: обработка детей")
-        return {}
-      })
-      .success(() => {})
-      .error(({ error }) => console.log("Ошибка обработки детей:", error)),
+      .action(({ core }) => core.child.length)
+      .success(({ data, update }) => update({ count: data }))
+      .error(({ error, update }) => update({ error: error.message })),
     "обработка детей": process()
       .action(() => {
         return {}
       })
       .success(() => {})
-      .error(({ error }) => console.log("Ошибка обработки детей:", error)),
-
+      .error(({ error, update }) => update({ error: error.message })),
     "создание node-builder": process()
       .action(() => {
         return {}
       })
       .success(() => {})
-      .error(({ error }) => console.log("Ошибка создания node-builder:", error)),
-
+      .error(({ error, update }) => update({ error: error.message })),
     "следующий ребенок": process()
       .action(() => {
         return {}
       })
       .success(() => {})
-      .error(({ error }) => console.log("Ошибка перехода к следующему ребенку:", error)),
+      .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions()
   .view()

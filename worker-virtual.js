@@ -1,46 +1,44 @@
 // ───────────────────────────────────────────────────────────────────────────────
 // Particles Worker — иерархические орбиты с толщиной поддерева,
-// авто-масштаб, плавные переходы. Новые узлы появляются сразу на орбитах.
+// авто-масштаб, плавные переходы. Новые узлы появляются сразу на орбитах
+// в СЛУЧАЙНОЙ точке (квантовый скачок) + эффект вспышки.
 // ───────────────────────────────────────────────────────────────────────────────
 
 /**
  * @typedef {"none"|"adjacent"|"all-siblings"} LinkMode
- *  - "none"        — не рисовать связи
- *  - "adjacent"    — соединять соседних по индексу
- *  - "all-siblings"— соединять каждую пару
- */
-
-/**
  * @typedef {"uniform"|"golden"} AngleDistribution
- *  - "uniform" — равномерно по индексу
- *  - "golden"  — «золотой угол» для лучшего заполнения круга
  */
 
 /**
  * @typedef {Object} ParticlesConfig
- * @property {boolean} debug               Включить console-логи
- * @property {number}  viewMargin          Доля от половины min(side) для сцены (0..1)
- * @property {number}  leafBandWidth       Полная ширина «полосы» для листа (узел без детей)
- * @property {number}  firstBandOffset     Отступ от родителя до ВНУТРЕННЕЙ кромки первой орбиты
- * @property {number}  interBandGap        Зазор между соседними орбитами детей
- * @property {number}  minScale            Нижний предел масштаба
- * @property {number}  maxScale            Верхний предел масштаба
- * @property {number}  lerpPos             Интерполяция позиции (0..1) при перестройках
- * @property {number}  lerpRadius          Интерполяция радиуса орбиты (0..1) при перестройках
- * @property {number}  angleSpeedBase      Базовая угловая скорость (рад/кадр)
- * @property {number}  angleDepthAttenuation  Затухание скорости по глубине: base/(d+1)^a
- * @property {AngleDistribution} angleDistribution Стартовое распределение углов
- * @property {boolean} drawOrbits          Рисовать орбиты
- * @property {number[]} orbitDash          Штрих-паттерн орбит (напр. [8,10])
- * @property {number}  orbitAlpha          Прозрачность линий орбит (0..1)
- * @property {LinkMode} linkMode           Режим связей между детьми
- * @property {number[]} linkDash           Штрих-паттерн связей
- * @property {number}  linkMaxDist         Максимальная длина связи
- * @property {number}  linkBaseAlpha       Базовая непрозрачность связи
- * @property {number}  particleRingThickness Толщина «энергетических колец»
- * @property {number}  coreSize            Размер ядра
- * @property {number}  nodeSizeBase        База размера обычной точки
- * @property {number}  nodeSizePerDepth    Надбавка к размеру на уровень глубины
+ * @property {boolean} debug
+ * @property {number}  viewMargin
+ * @property {number}  leafBandWidth
+ * @property {number}  firstBandOffset
+ * @property {number}  interBandGap
+ * @property {number}  minScale
+ * @property {number}  maxScale
+ * @property {number}  lerpPos
+ * @property {number}  lerpRadius
+ * @property {number}  angleSpeedBase
+ * @property {number}  angleDepthAttenuation
+ * @property {AngleDistribution} angleDistribution
+ * @property {boolean} drawOrbits
+ * @property {number[]} orbitDash
+ * @property {number}  orbitAlpha
+ * @property {LinkMode} linkMode
+ * @property {number[]} linkDash
+ * @property {number}  linkMaxDist
+ * @property {number}  linkBaseAlpha
+ * @property {number}  particleRingThickness
+ * @property {number}  coreSize
+ * @property {number}  nodeSizeBase
+ * @property {number}  nodeSizePerDepth
+ * // вспышка при спауне
+ * @property {number}  flareDuration       // длительность вспышки (мс)
+ * @property {number}  flareR0             // стартовый радиус вспышки (px)
+ * @property {number}  flareR1             // финальный радиус вспышки (px)
+ * @property {number}  flareMaxAlpha       // максимальная прозрачность вспышки (0..1)
  */
 
 /** @type {ParticlesConfig} */
@@ -63,7 +61,7 @@ const CONFIG = {
   lerpRadius: 0.18,
   angleSpeedBase: 0.12,
   angleDepthAttenuation: 1,
-  angleDistribution: "uniform",
+  angleDistribution: "uniform", // используется только для вычисления стартовых фаз детей у уже существующих родителей
 
   // орбиты/связи
   drawOrbits: true,
@@ -80,6 +78,12 @@ const CONFIG = {
   coreSize: 10,
   nodeSizeBase: 5,
   nodeSizePerDepth: 2,
+
+  // вспышка
+  flareDuration: 420,
+  flareR0: 10,
+  flareR1: 90,
+  flareMaxAlpha: 0.6,
 }
 
 /** лог с учётом CONFIG.debug */
@@ -90,18 +94,26 @@ function dlog(...a) {
 
 /**
  * @typedef {Object} Particle
- * @property {number} x                    // текущая позиция для рендера
+ * @property {number} x
  * @property {number} y
- * @property {number} tx                   // целевая позиция (пересчёт)
+ * @property {number} tx
  * @property {number} ty
- * @property {number} orbitRadius          // сглаженный локальный радиус (до центра полосы)
- * @property {number} targetOrbitRadius    // целевой локальный радиус (центр полосы)
+ * @property {number} orbitRadius          // локальный центр полосы (сглаженный)
+ * @property {number} targetOrbitRadius    // локальный центр полосы (целевой)
  * @property {number} bandHalf             // половина ширины «полосы»
- * @property {number} angle                // угол относительно родителя
- * @property {number} speed                // угловая скорость
- * @property {number} depth                // глубина (root=0)
+ * @property {number} angle                // фаза на орбите
+ * @property {number} speed
+ * @property {number} depth
  * @property {boolean} isCore
  * @property {string|null} parentPath
+ */
+
+/**
+ * Вспышка на спауне
+ * @typedef {Object} Flare
+ * @property {number} x
+ * @property {number} y
+ * @property {number} t0        // время старта (ms)
  */
 
 class ParticlesWorker {
@@ -118,7 +130,9 @@ class ParticlesWorker {
 
     /** @type {Map<string, Particle>} */ this.particles = new Map()
     /** @type {Map<string, string[]>} */ this.childrenOf = new Map()
-    /** @type {Set<string>} */ this.justAdded = new Set() // ← новые пути для моментальной расстановки
+    /** @type {Set<string>} */ this.justAdded = new Set() // новые пути для моментальной расстановки
+    /** @type {Set<string>} */ this.pendingFlares = new Set() // вспышку поставить ПОСЛЕ снапа
+    /** @type {Flare[]} */ this.flares = [] // активные вспышки
 
     this.isRunning = false
     this.screenWidth = width
@@ -138,6 +152,8 @@ class ParticlesWorker {
   /** @type {Map<string, Particle>} */ particles
   /** @type {Map<string, string[]>} */ childrenOf
   /** @type {Set<string>} */ justAdded
+  /** @type {Set<string>} */ pendingFlares
+  /** @type {Flare[]} */ flares
   /** @type {boolean} */ isRunning
   /** @type {number} */ screenWidth
   /** @type {number} */ screenHeight
@@ -167,7 +183,8 @@ class ParticlesWorker {
     }
   }
 
-  /** @param {string} path */
+  /** Добавить (квантовый спаун: случайная фаза сразу на орбите + вспышка)
+   * @param {string} path */
   addParticle(path) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
@@ -175,7 +192,8 @@ class ParticlesWorker {
 
     const existed = this.particles.get(path)
     if (!existed) {
-      const angle = this.initialAngleFor(path)
+      // ВАЖНО: создаём со СЛУЧАЙНЫМ углом (квантовый скачок)
+      const angle = Math.random() * Math.PI * 2
       /** @type {Particle} */
       const p = {
         x: this.center.x,
@@ -192,7 +210,8 @@ class ParticlesWorker {
         parentPath,
       }
       this.particles.set(path, p)
-      this.justAdded.add(path) // ← помечаем для моментальной расстановки
+      this.justAdded.add(path) // снапнуть позицию на орбиту сразу
+      this.pendingFlares.add(path) // и после снапа запустить вспышку
     } else {
       existed.depth = depth
       existed.parentPath = parentPath
@@ -201,7 +220,7 @@ class ParticlesWorker {
 
     this.rebuildTree()
     this.recomputeTargets()
-    this.snapNewlyAdded() // ← сразу ставим все новые точки на их орбиты
+    this.snapNewlyAdded() // моментально ставим на орбиты
     if (!this.isRunning) this.startAnimation()
   }
 
@@ -209,6 +228,7 @@ class ParticlesWorker {
   removeParticle(path) {
     this.particles.delete(path)
     this.justAdded.delete(path)
+    this.pendingFlares.delete(path)
     this.rebuildTree()
     this.recomputeTargets()
     if (this.particles.size === 0 && this.ctx && this.canvas) {
@@ -292,7 +312,7 @@ class ParticlesWorker {
   snapNewlyAdded() {
     if (this.justAdded.size === 0) return
 
-    // 1) сначала выставим целевые центры для ВСЕХ (tx,ty) из targetOrbitRadius — сверху вниз
+    // выставим целевые центры для всех (tx,ty) из targetOrbitRadius
     /** @param {string} parentPath */
     const placeUsingTargets = (parentPath) => {
       const parent = this.particles.get(parentPath)
@@ -310,7 +330,6 @@ class ParticlesWorker {
       }
     }
 
-    // корень: целевой центр — геометрический центр
     const root = this.particles.get("0")
     if (root) {
       root.tx = this.center.x
@@ -318,7 +337,7 @@ class ParticlesWorker {
     }
     placeUsingTargets("0")
 
-    // 2) для только что добавленных — мгновенно приравниваем текущие к целевым
+    // мгновенно приравниваем текущие координаты для только что добавленных
     for (const path of this.justAdded) {
       const p = this.particles.get(path)
       if (!p) continue
@@ -326,13 +345,23 @@ class ParticlesWorker {
       p.x = p.tx
       p.y = p.ty
     }
+
+    // подготовить вспышки
+    const now = performance.now()
+    for (const path of this.pendingFlares) {
+      const p = this.particles.get(path)
+      if (!p) continue
+      this.flares.push({ x: p.x, y: p.y, t0: now })
+    }
+    this.pendingFlares.clear()
     this.justAdded.clear()
   }
 
   /** один кадр */
   paint() {
     if (!this.ctx || !this.canvas) return
-    const t = Date.now() * 0.001
+    const now = performance.now()
+    const t = now * 0.001
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     if (!this.particles.has("0")) return
@@ -366,7 +395,7 @@ class ParticlesWorker {
     }
     placeAroundTarget("0")
 
-    // интерполяция к целям (для существующих узлов при перестройках)
+    // интерполяция к целям
     for (const [, p] of this.particles) {
       p.x += (p.tx - p.x) * CONFIG.lerpPos
       p.y += (p.ty - p.y) * CONFIG.lerpPos
@@ -374,6 +403,7 @@ class ParticlesWorker {
 
     if (CONFIG.drawOrbits) this.drawAllOrbits()
     this.drawLinks()
+    this.drawFlares(now) // ← вспышки поверх орбит, но под частицами
     this.drawParticles(t)
   }
 
@@ -417,21 +447,15 @@ class ParticlesWorker {
       const pairs = []
       if (CONFIG.linkMode === "adjacent") {
         for (let i = 0; i < kids.length; i++) {
-          const kidA = kids[i]
-          const kidB = kids[(i + 1) % kids.length]
-          if (!kidA || !kidB) continue
-          const a = this.particles.get(kidA),
-            b = this.particles.get(kidB)
+          const a = this.particles.get(kids[i] || ""),
+            b = this.particles.get(kids[(i + 1) % kids.length] || "")
           if (a && b) pairs.push([a, b])
         }
       } else {
         for (let i = 0; i < kids.length; i++)
           for (let j = i + 1; j < kids.length; j++) {
-            const kidA = kids[i]
-            const kidB = kids[j]
-            if (!kidA || !kidB) continue
-            const a = this.particles.get(kidA),
-              b = this.particles.get(kidB)
+            const a = this.particles.get(kids[i] || ""),
+              b = this.particles.get(kids[j] || "")
             if (a && b) pairs.push([a, b])
           }
       }
@@ -454,6 +478,46 @@ class ParticlesWorker {
     }
   }
 
+  /** вспышки при спауне */
+  /** @param {number} nowMs */
+  drawFlares(nowMs) {
+    if (!this.ctx) return
+    const ctx = this.ctx
+    const dur = CONFIG.flareDuration
+    if (this.flares.length === 0) return
+
+    // фильтруем живые и рисуем
+    const alive = []
+    for (const fl of this.flares) {
+      const dt = nowMs - fl.t0
+      if (dt < 0 || dt > dur) continue
+      alive.push(fl)
+
+      const k = dt / dur
+      const r = CONFIG.flareR0 + (CONFIG.flareR1 - CONFIG.flareR0) * k
+      const a = CONFIG.flareMaxAlpha * (1 - k)
+
+      // внешняя мягкая засветка
+      const g = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, r)
+      g.addColorStop(0, `hsla(200,100%,80%,${a * 0.35})`)
+      g.addColorStop(1, `hsla(200,100%,50%,0)`)
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.arc(fl.x, fl.y, r, 0, Math.PI * 2)
+      ctx.fill()
+
+      // тонкое расширяющееся кольцо
+      ctx.lineWidth = 1.5
+      ctx.strokeStyle = `hsla(200,100%,70%,${a})`
+      ctx.setLineDash([])
+      ctx.beginPath()
+      ctx.arc(fl.x, fl.y, r * 0.85, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    this.flares = alive
+  }
+
+  /** частицы */
   /** @param {number} time */
   drawParticles(time) {
     if (!this.ctx) return
@@ -517,6 +581,8 @@ class ParticlesWorker {
     this.particles.clear()
     this.childrenOf.clear()
     this.justAdded.clear()
+    this.pendingFlares.clear()
+    this.flares.length = 0
     if (this.broadcastChannel) {
       this.broadcastChannel.close()
       this.broadcastChannel = null
@@ -539,6 +605,8 @@ class ParticlesWorker {
 
   /** @param {string} path */
   initialAngleFor(path) {
+    // НЕ ИСПОЛЬЗУЕМ для новых — там всегда random; метод оставлен на случай,
+    // если захочешь пересчитать углы существующих детей по стратегии.
     const parent = this.getParent(path)
     const kids = parent ? this.childrenOf.get(parent) || [] : []
     const idx = kids.length
@@ -584,7 +652,7 @@ self.onmessage = function (e) {
     particlesWorker.center.x = w / 2
     particlesWorker.center.y = h / 2
     particlesWorker.recomputeTargets()
-    // при ресайзе новые узлы не добавляются, снап не нужен
+    // новые узлы не добавляются при ресайзе — снап не нужен
     particlesWorker.paint()
   } else if (type === "add") {
     if (particlesWorker) particlesWorker.addParticle(e.data.path)

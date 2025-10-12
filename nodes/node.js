@@ -53,11 +53,8 @@ export const meta = MetaFor("node-builder")
           import("everywhere-everything/actor"),
           import("nodes/meta.js"),
         ])
-        const builderId = `${self.actor}-${self.path}`
-        core.builder = Actor.fromSchema({
-          meta,
-          id: builderId,
-          path: self.path + "/0",
+        Actor.appendChild(self.actor, meta, {
+          id: `${self.actor}-${self.path}`,
           core: { node: core.node },
           context: { path: context.path },
         })

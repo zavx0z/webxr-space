@@ -64,10 +64,10 @@ export const meta = MetaFor("meta-builder", {
     "создание актора": process()
       .action(async ({ context, core }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        const { Actor } = await import("everywhere-everything/actor")
-        Actor.fromSchema({ meta: core.meta, id: crypto.randomUUID(), path: context.path })
+        import("everywhere-everything/actor").then(({ Actor }) => {
+          Actor.fromSchema({ meta: core.meta, id: crypto.randomUUID(), path: context.path })
+        })
       })
-      // .success(({ data, update }) => {})
       .error(({ error, update }) => update({ error: error.message })),
     "передача дочерних элементов": process()
       .action(async ({ core, self }) => {
@@ -76,9 +76,7 @@ export const meta = MetaFor("meta-builder", {
           import("everywhere-everything/actor"),
           import("nodes/nodes.js"),
         ])
-        Actor.createSibling(self.actor, { meta, id: crypto.randomUUID() })
-        Actor.fromSchema({ meta: core.meta, id: crypto.randomUUID() })
-        // console.log(core.meta.render, meta)
+        Actor.createSibling(self.actor, meta, { core: { child: core.meta.render } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
