@@ -3,15 +3,24 @@
  * - "none"        — не рисовать связи
  * - "adjacent"    — соединять соседние по индексу
  * - "all-siblings"— соединять каждую пару
+ * - "parent"      — соединять родителя с каждым ребенком
  */
-export type LinkMode = "none" | "adjacent" | "all-siblings"
+export type LinkMode = "none" | "adjacent" | "all-siblings" | "parent"
 
 /**
  * Распределение начальных углов детей
  * - "uniform" — равномерно по индексу
  * - "golden"  — «золотой угол» (лучше заполняет круг при большом числе детей)
+ * - "vertical" — вертикальное выстраивание снизу вверх
  */
-export type AngleDistribution = "uniform" | "golden"
+export type AngleDistribution = "uniform" | "golden" | "vertical"
+
+/**
+ * Режим раскладки частиц
+ * - "line" — одномерная (все дети над родителем, один X)
+ * - "tree" — древовидная (братья равномерно по дуге, но на одной орбите)
+ */
+export type LayoutMode = "line" | "tree"
 
 /**
  * Где рисовать орбиту:
@@ -26,6 +35,8 @@ export type OrbitLineAt = "inner" | "center" | "outer" | "band"
  * Конфиг визуализации (все расстояния — в «радиальных юнитах» до масштабирования)
  */
 export interface ParticlesConfig {
+  /** Режим раскладки частиц */
+  layout: LayoutMode
   /** Включить console-логи */
   debug: boolean
   /** Доля от половины меньшей стороны экрана (0..1) */
@@ -96,6 +107,22 @@ export interface ParticlesConfig {
   pulseBase: number
   /** Вариация времени между частицами (0..1) */
   pulseTimeVariation: number
+  /** Параметры для режима tree */
+  tree: TreeConfig
+}
+
+/**
+ * Конфигурация для режима tree
+ */
+export interface TreeConfig {
+  /** Ширина дуги распределения вокруг верхней точки (радианы) */
+  spreadRad: number
+  /** Минимальный зазор между соседями вдоль дуги (в пикселях) */
+  marginPx: number
+  /** Автомасштаб дуги под количество детей и радиус */
+  autoSpread: boolean
+  /** Нижняя граница углового шага (радианы), null — не ограничивать */
+  minAngleStepRad: number | null
 }
 
 /**

@@ -9,6 +9,11 @@
  * @typedef {import('./worker-virtual.t.js').Particle} Particle
  * @typedef {import('./worker-virtual.t.js').Flare} Flare
  * @typedef {import('./worker-virtual.t.js').Center} Center
+ * @typedef {import('./worker-virtual.t.js').LayoutMode} LayoutMode
+ * @typedef {import('./worker-virtual.t.js').LinkMode} LinkMode
+ * @typedef {import('./worker-virtual.t.js').AngleDistribution} AngleDistribution
+ * @typedef {import('./worker-virtual.t.js').OrbitLineAt} OrbitLineAt
+ * @typedef {import('./worker-virtual.t.js').TreeConfig} TreeConfig
  */
 
 // ── Конфиг (можно переопределять через init/set-config) ───────────────────────
@@ -92,6 +97,7 @@ let CONFIG = { ...DEFAULT_CONFIG }
 const SPAWN_ANGLE = -Math.PI / 2
 
 /** лог с учётом CONFIG.debug */
+/** @param {...any} a */
 function dlog(...a) {
   if (CONFIG.debug) console.log(...a)
 }
@@ -166,17 +172,20 @@ class ParticlesWorker {
 
   // ── построение дерева и геометрии ───────────────────────────────────────────
 
+  /** @param {string} path */
   getParent(path) {
     if (path === "0") return null
     const i = path.lastIndexOf("/")
     return i === -1 ? "0" : path.slice(0, i)
   }
 
+  /** @param {number} depth */
   speedForDepth(depth) {
     return CONFIG.angleSpeedBase / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation))
   }
 
   // равномерная дуга вокруг верхней точки SPAWN_ANGLE
+  /** @param {number} n @param {number} orbitRpx */
   buildTreeAngles(n, orbitRpx) {
     if (n <= 0) return []
     if (n === 1) return [SPAWN_ANGLE]
@@ -236,6 +245,7 @@ class ParticlesWorker {
     // локальная упаковка:
     //  - line: каждый ребёнок имеет свою полосу (как раньше)
     //  - tree: у ОДНОГО родителя все дети делят ОДНУ общую полосу (на одной орбите)
+    /** @param {string} parentPath */
     const packLocal = (parentPath) => {
       const kids = this.childrenOf.get(parentPath) || []
       if (kids.length === 0) return CONFIG.leafBandWidth
@@ -261,7 +271,8 @@ class ParticlesWorker {
         let offset = CONFIG.firstBandOffset
         for (let i = 0; i < kids.length; i++) {
           const k = kids[i]
-          const bandWidth = childWidths[i]
+          if (!k) continue
+          const bandWidth = childWidths[i] || 0
           const ch = this.particles.get(k)
           if (!ch) continue
           ch.targetOrbitRadius = offset + bandWidth / 2
@@ -275,6 +286,7 @@ class ParticlesWorker {
 
     // максимальная «выбегаемость» вниз по ветке (для масштаба)
     let maxExtent = 0
+    /** @param {string} parentPath @param {number} accum */
     const dfs = (parentPath, accum) => {
       const kids = this.childrenOf.get(parentPath) || []
       for (const k of kids) {
@@ -295,6 +307,7 @@ class ParticlesWorker {
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
 
+  /** @param {string} path */
   addParticle(path) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
@@ -336,6 +349,7 @@ class ParticlesWorker {
     if (!this.isRunning) this.startAnimation()
   }
 
+  /** @param {string} path */
   removeParticle(path) {
     this.particles.delete(path)
     this.justAdded.delete(path)
@@ -352,6 +366,7 @@ class ParticlesWorker {
   snapNewlyAdded() {
     if (this.justAdded.size === 0) return
 
+    /** @param {string} parentPath */
     const placeUsingTargets = (parentPath) => {
       const parent = this.particles.get(parentPath)
       if (!parent) return
@@ -360,16 +375,21 @@ class ParticlesWorker {
       const kids = this.childrenOf.get(parentPath) || []
 
       if (CONFIG.layout === "tree" && kids.length > 0) {
-        const any = this.particles.get(kids[0])
+        const firstKid = kids[0]
+        if (!firstKid) return
+        const any = this.particles.get(firstKid)
         const Rpx = any ? any.targetOrbitRadius * this.globalScale : 0
         const angles = this.buildTreeAngles(kids.length, Rpx)
         for (let i = 0; i < kids.length; i++) {
-          const ch = this.particles.get(kids[i])
+          const k = kids[i]
+          if (!k) continue
+          const ch = this.particles.get(k)
           if (!ch) continue
           const R = ch.targetOrbitRadius * this.globalScale
-          ch.tx = px + Math.cos(angles[i]) * R
-          ch.ty = py + Math.sin(angles[i]) * R
-          placeUsingTargets(kids[i])
+          const angle = angles[i] || 0
+          ch.tx = px + Math.cos(angle) * R
+          ch.ty = py + Math.sin(angle) * R
+          placeUsingTargets(k)
         }
       } else {
         // line
@@ -424,6 +444,7 @@ class ParticlesWorker {
     // угловая анимация
     for (const [, p] of this.particles) if (!p.isCore) p.angle += p.speed
 
+    /** @param {string} parentPath */
     const placeAroundTarget = (parentPath) => {
       const parent = this.particles.get(parentPath)
       if (!parent) return
@@ -437,17 +458,22 @@ class ParticlesWorker {
           if (!ch) continue
           ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * CONFIG.lerpRadius
         }
-        const any = this.particles.get(kids[0])
+        const firstKid = kids[0]
+        if (!firstKid) return
+        const any = this.particles.get(firstKid)
         const Rpx = any ? any.orbitRadius * this.globalScale : 0
         const angles = this.buildTreeAngles(kids.length, Rpx)
 
         for (let i = 0; i < kids.length; i++) {
-          const ch = this.particles.get(kids[i])
+          const k = kids[i]
+          if (!k) continue
+          const ch = this.particles.get(k)
           if (!ch) continue
           const R = ch.orbitRadius * this.globalScale
-          ch.tx = px + Math.cos(angles[i]) * R
-          ch.ty = py + Math.sin(angles[i]) * R
-          placeAroundTarget(kids[i])
+          const angle = angles[i] || 0
+          ch.tx = px + Math.cos(angle) * R
+          ch.ty = py + Math.sin(angle) * R
+          placeAroundTarget(k)
         }
       } else {
         // line
@@ -585,6 +611,7 @@ class ParticlesWorker {
     }
   }
 
+  /** @param {number} nowMs */
   drawFlares(nowMs) {
     if (!this.ctx) return
     const ctx = this.ctx
@@ -619,6 +646,7 @@ class ParticlesWorker {
     this.flares = alive
   }
 
+  /** @param {number} time */
   drawParticles(time) {
     if (!this.ctx) return
     const ctx = this.ctx
