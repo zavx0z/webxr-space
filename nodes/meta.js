@@ -76,7 +76,9 @@ export const meta = MetaFor("meta-builder", {
           import("everywhere-everything/actor"),
           import("nodes/nodes.js"),
         ])
-        Actor.createSibling(self.actor, meta, { core: { child: core.meta.render } })
+        const child = core.meta.render
+        const id = `${self.meta}:${self.path}`
+        Actor.createSibling(self.actor, meta, { id, core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),

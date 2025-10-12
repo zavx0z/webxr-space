@@ -13,6 +13,7 @@ export const meta = MetaFor("node-builder")
     path: t.string.optional({ label: "Путь ноды" }),
 
     builderId: t.string.optional(),
+    error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
     "определение сборщика": {
@@ -46,7 +47,7 @@ export const meta = MetaFor("node-builder")
         } else return { type: core.node.type }
       })
       .success(({ update, data }) => update(data))
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
     "сборка актора": process()
       .action(async ({ context, self, core }) => {
         const [{ Actor }, { meta }] = await Promise.all([
@@ -59,7 +60,7 @@ export const meta = MetaFor("node-builder")
           context: { path: context.path },
         })
       })
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
     "сборка логического": process()
       .action(async ({ core, context }) => {
         // if (!core.currNode) throw new Error("Нет логической ноды для обработки")
@@ -103,3 +104,4 @@ export const meta = MetaFor("node-builder")
   // ])
   .view()
 /** @typedef {meta} Meta */
+export default meta

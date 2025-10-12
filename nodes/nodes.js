@@ -8,33 +8,34 @@
 
 const meta = MetaFor("child-build-runner")
   .context((t) => ({
-    children: t.array.optional([], { label: "Массив дочерних узлов" }),
+    children: t.number.required(0, { label: "Кол-во детей" }),
+    current: t.number.required(0, { label: "Индекс текущего ребенка" }),
 
-    count: t.number.optional(0, { label: "Кол-во детей" }),
-    currentChildIndex: t.number.optional(0, { label: "Индекс текущего ребенка" }),
+    process: t.array.required(/** @type {number[]} */ ([]), { label: "создаются" }),
+    success: t.array.required(/** @type {number[]} */ ([]), { label: "успешно завершены" }),
+    rejected: t.array.required(/** @type {number[]} */ ([]), { label: "завершились с ошибкой" }),
 
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
     "сбор данных": {
-      "обработка детей": { count: { gt: 0 } },
+      ошибка: { error: { null: false } },
+      сборка: { children: { gt: 0 } },
+      завершение: { children: { eq: 0 } },
     },
-    "обработка детей": {
-      "создание node-builder": {},
-      завершение: {},
-      ошибка: { error: { length: { min: 1 } } },
+    сборка: {
+      ошибка: { error: { null: false } },
+      "выбор следующего": {},
     },
-    "создание node-builder": {
-      "следующий ребенок": {},
-      ошибка: { error: { length: { min: 1 } } },
+    "выбор следующего": {
+      ошибка: { error: { null: false } },
+      сборка: { current: { gte: 0 } },
+      "ожидание всех результатов": { current: { lt: 0 } },
     },
-    "следующий ребенок": {
-      // "обработка детей": {},
-      завершение: {},
-    },
+    "ожидание всех результатов": {},
     завершение: {},
     ошибка: {
-      "сбор данных": {},
+      // "сбор данных": {},
     },
   })
   .core({
@@ -44,25 +45,29 @@ const meta = MetaFor("child-build-runner")
   .processes((process) => ({
     "сбор данных": process()
       .action(({ core }) => core.child.length)
-      .success(({ data, update }) => update({ count: data }))
+      .success(({ data, update }) => update({ children: data, current: 0 }))
       .error(({ error, update }) => update({ error: error.message })),
-    "обработка детей": process()
-      .action(() => {
-        return {}
+    сборка: process()
+      .action(async ({ self, context, core }) => {
+        const [{ Actor }, { default: meta }] = await Promise.all([
+          import("everywhere-everything/actor"),
+          import("nodes/node.js"),
+        ])
+        const node = core.child[context.current]
+        const id = `${self.path} ${node?.type}:${context.current}`
+        Actor.appendChild(self.actor, meta, { id, core: { node } })
       })
-      .success(() => {})
       .error(({ error, update }) => update({ error: error.message })),
-    "создание node-builder": process()
-      .action(() => {
-        return {}
+    "выбор следующего": process()
+      .action(({ context: { current, children } }) => {
+        const last = current + 1
+        return last === children ? -1 : last
       })
-      .success(() => {})
+      .success(({ data, update }) => update({ current: data }))
       .error(({ error, update }) => update({ error: error.message })),
-    "следующий ребенок": process()
-      .action(() => {
-        return {}
-      })
-      .success(() => {})
+    "ожидание всех результатов": process()
+      .action(({ context }) => {})
+      .success(({ data, update }) => update({}))
       .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions()
