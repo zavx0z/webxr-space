@@ -14,6 +14,7 @@
  * @typedef {import('./worker-virtual.t.js').AngleDistribution} AngleDistribution
  * @typedef {import('./worker-virtual.t.js').OrbitLineAt} OrbitLineAt
  * @typedef {import('./worker-virtual.t.js').TreeConfig} TreeConfig
+ * @typedef {import('./worker-virtual.t.js').LabelConfig} LabelConfig
  */
 
 // ── Конфиг (можно переопределять через init/set-config) ───────────────────────
@@ -88,6 +89,21 @@ const DEFAULT_CONFIG = {
     // нижняя граница углового шага (радианы), null — не ограничивать
     minAngleStepRad: null,
   },
+  // подписи
+  label: {
+    show: true,
+    font: "12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+    color: "rgba(200,230,255,0.95)",
+    subColor: "rgba(180,210,235,0.75)",
+    shadow: "rgba(0,0,0,0.6)",
+    shadowBlur: 2,
+    // отступ от нижнего края «ядра» до первой строки
+    offsetY: 10,
+    // вертикальный шаг между строками
+    lineHeight: 14,
+    // max ширина (мягкое усечение с «…»)
+    maxWidth: 160,
+  },
 }
 
 // текущий конфиг
@@ -160,14 +176,32 @@ class ParticlesWorker {
     this.broadcastChannel = new BroadcastChannel("actor-force")
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
-      if (!Object.hasOwn(data, "meta")) return
-      const { path } = data
-      if (!path.startsWith("0")) return
-      for (const patch of data.patches) {
-        if (patch.path === "/" && patch.op === "add") this.addParticle(path)
+      // meta и actor могут отсутствовать — это ок
+      const meta = data?.meta || null
+      const actor = data?.actor || null
+      const { path } = data || {}
+      if (!path || !String(path).startsWith("0")) return
+
+      for (const patch of data.patches || []) {
+        if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, actor)
         else if (patch.path === "/" && patch.op === "remove") this.removeParticle(path)
+        else {
+          // можно обновлять подписи для уже существующей частицы
+          if (meta || actor) this.updateParticleLabels(path, meta, actor)
+        }
       }
     }
+  }
+
+  /** @param {string} path @param {any} meta @param {any} actor */
+  updateParticleLabels(path, meta, actor) {
+    const p = this.particles.get(path)
+    if (!p) return
+    if (meta && typeof meta === "object") {
+      // пробуем наиболее вероятные поля имени
+      p.labelMain = meta.name ?? meta.title ?? meta.label ?? p.labelMain
+    }
+    if (actor != null) p.labelSub = String(actor)
   }
 
   // ── построение дерева и геометрии ───────────────────────────────────────────
@@ -307,8 +341,8 @@ class ParticlesWorker {
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
 
-  /** @param {string} path */
-  addParticle(path) {
+  /** @param {string} path @param {any} meta @param {any} actor */
+  addParticle(path, meta = null, actor = null) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
     const depth = path === "0" ? 0 : path.split("/").length - 1
@@ -333,7 +367,13 @@ class ParticlesWorker {
         shakeOffsetY: 0,
         shakePhase: Math.random() * Math.PI * 2,
         pulseSeed: Math.random() * Math.PI * 2,
+        labelMain: "",
+        labelSub: "",
       }
+      // первичное заполнение
+      if (meta != null) p.labelMain = String(meta)
+      if (actor != null) p.labelSub = String(actor)
+
       this.particles.set(path, p)
       this.justAdded.add(path)
       this.pendingFlares.add(path)
@@ -341,6 +381,8 @@ class ParticlesWorker {
       existed.depth = depth
       existed.parentPath = parentPath
       existed.speed = this.speedForDepth(depth)
+      // обновляем подписи, если пришли
+      if (meta || actor) this.updateParticleLabels(path, meta, actor)
     }
 
     this.rebuildTree()
@@ -514,6 +556,7 @@ class ParticlesWorker {
     this.drawLinks()
     this.drawFlares(now)
     this.drawParticles(t)
+    this.drawLabels()
   }
 
   // ── рисование вспомогательных слоёв ─────────────────────────────────────────
@@ -726,6 +769,59 @@ class ParticlesWorker {
     }
     this.canvas = /** @type {any} */ (null)
     this.ctx = /** @type {any} */ (null)
+  }
+
+  drawLabels() {
+    if (!this.ctx || !CONFIG.label?.show) return
+    const ctx = this.ctx
+    const L = CONFIG.label
+
+    ctx.save()
+    ctx.font = L.font
+    ctx.textAlign = "center"
+    ctx.textBaseline = "top"
+    if (L.shadow) {
+      ctx.shadowColor = L.shadow
+      ctx.shadowBlur = L.shadowBlur ?? 0
+    }
+
+    /** мягкое усечение */
+    /** @param {string} text @param {number} maxWidth */
+    const ellipsize = (text, maxWidth) => {
+      if (!text) return ""
+      const w = ctx.measureText(text).width
+      if (w <= maxWidth) return text
+      const ell = "…"
+      let lo = 0,
+        hi = text.length
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1
+        const s = text.slice(0, mid) + ell
+        if (ctx.measureText(s).width <= maxWidth) lo = mid + 1
+        else hi = mid
+      }
+      return text.slice(0, Math.max(0, lo - 1)) + ell
+    }
+
+    for (const [, p] of this.particles) {
+      // рисуем под фактическим отрисованным центром (с дрожанием)
+      const x = p.x + (p.shakeOffsetX || 0)
+      const y0 = p.y + (p.shakeOffsetY || 0) + (CONFIG.coreSize + L.offsetY)
+
+      const main = ellipsize(p.labelMain || "", L.maxWidth)
+      const sub = ellipsize(p.labelSub || "", L.maxWidth)
+
+      if (main) {
+        ctx.fillStyle = L.color
+        ctx.fillText(main, x, y0)
+      }
+      if (sub) {
+        ctx.fillStyle = L.subColor
+        ctx.fillText(sub, x, y0 + L.lineHeight)
+      }
+    }
+
+    ctx.restore()
   }
 }
 

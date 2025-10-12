@@ -109,6 +109,32 @@ export interface ParticlesConfig {
   pulseTimeVariation: number
   /** Параметры для режима tree */
   tree: TreeConfig
+  /** Конфигурация подписей */
+  label: LabelConfig
+}
+
+/**
+ * Конфигурация подписей частиц
+ */
+export interface LabelConfig {
+  /** Показывать подписи */
+  show: boolean
+  /** Шрифт подписей */
+  font: string
+  /** Цвет основной подписи */
+  color: string
+  /** Цвет дополнительной подписи */
+  subColor: string
+  /** Цвет тени */
+  shadow: string
+  /** Размытие тени */
+  shadowBlur: number
+  /** Отступ от нижнего края частицы до первой строки */
+  offsetY: number
+  /** Вертикальный шаг между строками */
+  lineHeight: number
+  /** Максимальная ширина (мягкое усечение с «…») */
+  maxWidth: number
 }
 
 /**
@@ -161,6 +187,10 @@ export interface Particle {
   shakePhase: number
   /** Seed для пульсации (уникальная фаза) */
   pulseSeed: number
+  /** Основная подпись (из meta) */
+  labelMain: string
+  /** Дополнительная подпись (actor id) */
+  labelSub: string
 }
 
 /**

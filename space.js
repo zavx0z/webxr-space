@@ -70,18 +70,32 @@ class MetaXR extends HTMLElement {
           nodeSizeBase: nodeSize,
           nodeSizePerDepth: 0,
           // геометрия упаковки по радиусу
-          leafBandWidth: 50,
+          leafBandWidth: 100,
           firstBandOffset: 0,
           interBandGap: 0,
           // дрожание/пульсация
-          shakeIntensity: 1.4,
-          shakeSpeed: 0.4,
-          shakeVariation: 0.8,
+          shakeIntensity: 1,
+          shakeSpeed: 0,
+          shakeVariation: 0,
 
           pulseSpeed: 0.04,
           pulseAmplitude: 0.01,
           pulseBase: 0.2,
           pulseTimeVariation: 0.5,
+          label: {
+            show: true,
+            font: "8px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+            color: "rgba(200,230,255,0.95)",
+            subColor: "rgba(180,210,235,0.75)",
+            shadow: "rgba(0,0,0,0.6)",
+            shadowBlur: 2,
+            // отступ от нижнего края «ядра» до первой строки
+            offsetY: -14,
+            // вертикальный шаг между строками
+            lineHeight: 10,
+            // max ширина (мягкое усечение с «…»)
+            maxWidth: 80,
+          },
         },
       },
       [offscreenCanvas]
