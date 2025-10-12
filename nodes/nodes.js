@@ -2,7 +2,7 @@
  * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
  * @typedef {import("everywhere-everything/metafor").NodeType} NodeType
  * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
- * @typedef {import("everywhere-everything/metafor").MetaSchema} MetaSchema
+ * @typedef {import("everywhere-everything/metafor").Meta} MetaSchema
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
@@ -27,7 +27,7 @@ const meta = MetaFor("child-build-runner")
       ошибка: { errorMessage: { length: { min: 1 } } },
     },
     "следующий ребенок": {
-      "обработка детей": {},
+      // "обработка детей": {},
       завершение: {},
     },
     завершение: {},
