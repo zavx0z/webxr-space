@@ -1,3 +1,4 @@
+import { line } from "./worker-virtual.config.js"
 import { Actor } from "./everywhere-everything/actor.js"
 import { threadLog } from "./everywhere-everything/web/log.js"
 import { meta } from "./nodes/node.js"
@@ -53,12 +54,35 @@ class MetaXR extends HTMLElement {
 
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
     window.addEventListener("resize", this.handleResize)
+    const nodeSize = 22
     this.worker.postMessage(
       {
         type: "init",
         canvas: offscreenCanvas,
         width: window.innerWidth,
         height: window.innerHeight,
+        // config: line,
+        config: {
+          layout: "tree",
+          // частицы
+          particleRingThickness: 0,
+          coreSize: nodeSize,
+          nodeSizeBase: nodeSize,
+          nodeSizePerDepth: 0,
+          // геометрия упаковки по радиусу
+          leafBandWidth: 50,
+          firstBandOffset: 0,
+          interBandGap: 0,
+          // дрожание/пульсация
+          shakeIntensity: 1.4,
+          shakeSpeed: 0.4,
+          shakeVariation: 0.8,
+
+          pulseSpeed: 0.04,
+          pulseAmplitude: 0.01,
+          pulseBase: 0.2,
+          pulseTimeVariation: 0.5,
+        },
       },
       [offscreenCanvas]
     )

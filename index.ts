@@ -2,6 +2,8 @@ import { readFileSync } from "fs"
 import { networkInterfaces } from "os"
 import index from "./index.html"
 
+import "./worker-virtual"
+
 // Получаем IP адреса локальной сети
 function getLocalIPs(): string[] {
   const interfaces = networkInterfaces()
