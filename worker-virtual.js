@@ -409,7 +409,7 @@ class ParticlesWorker {
         labelSub: "",
       }
       if (meta != null) p.labelMain = String(meta?.name ?? meta?.title ?? meta?.label ?? meta)
-      if (actor != null) p.labelSub = String(actor)
+      if (actor != null) p.labelSub = actor.includes("-") ? actor.slice(actor.lastIndexOf("-") + 1) : actor
 
       this.particles.set(path, p)
       this.justAdded.add(path)
