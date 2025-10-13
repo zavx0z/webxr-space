@@ -1,7 +1,11 @@
 // ───────────────────────────────────────────────────────────────────────────────
-// Particles Worker — 1D/line и 2D/tree раскладки с орбитами, авто-масштабом,
-// плавными переходами и вспышкой при спауне. В tree у одного родителя
-// все дети на ОДНОЙ орбите (общий пояс = max толщины их поддеревьев).
+// Particles Worker — 1D/line, 2D/tree и quantum (орбиты) раскладки с орбитами,
+// авто-масштабом, плавными переходами и вспышкой при спауне.
+//  • tree: у одного родителя все дети на ОДНОЙ орбите (общий пояс = max толщины
+//          их поддеревьев), раскладка по дуге вокруг верхней точки.
+//  • line: одномерная — дети над родителем (один X), у каждого свой радиус.
+//  • quantum: как изначально — у каждого ребёнка свой радиус, вращение по кругу,
+//             новые узлы спавнятся в СЛУЧАЙНОЙ фазе.
 // ───────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -19,9 +23,8 @@
 
 // ── Конфиг (можно переопределять через init/set-config) ───────────────────────
 const DEFAULT_CONFIG = {
-  // "line" — одномерная (все дети над родителем, один X)
-  // "tree" — древовидная (братья равномерно по дуге, но на одной орбите)
-  layout: "tree",
+  // "line" | "tree" | "quantum"
+  layout: /** @type {LayoutMode} */ ("tree"),
 
   debug: false,
   viewMargin: 0.9,
@@ -41,8 +44,8 @@ const DEFAULT_CONFIG = {
   angleSpeedBase: 0.12,
   angleDepthAttenuation: 1,
 
-  // стартовое распределение углов (используется в line при перераздаче)
-  angleDistribution: "uniform",
+  // стартовое распределение углов (для некоторых режимов)
+  angleDistribution: /** @type {AngleDistribution} */ ("uniform"),
 
   // орбиты/связи
   drawOrbits: true,
@@ -51,7 +54,7 @@ const DEFAULT_CONFIG = {
 
   // "parent" — соединять родителя с каждым ребёнком (по умолчанию)
   // доступны "adjacent" | "all-siblings" | "none"
-  linkMode: "parent",
+  linkMode: /** @type {LinkMode} */ ("parent"),
   linkDash: [5, 5],
   linkMaxDist: 99999,
   linkBaseAlpha: 1,
@@ -79,7 +82,7 @@ const DEFAULT_CONFIG = {
   pulseTimeVariation: 0.5,
 
   // 2D/tree специфика
-  tree: {
+  tree: /** @type {TreeConfig} */ ({
     // ширина дуги распределения вокруг верхней точки (радианы)
     spreadRad: Math.PI / 2,
     // минимальный зазор между соседями вдоль дуги (в пикселях)
@@ -88,33 +91,31 @@ const DEFAULT_CONFIG = {
     autoSpread: true,
     // нижняя граница углового шага (радианы), null — не ограничивать
     minAngleStepRad: null,
-  },
+  }),
+
   // подписи
-  label: {
+  label: /** @type {LabelConfig} */ ({
     show: true,
     font: "12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
     color: "rgba(200,230,255,0.95)",
     subColor: "rgba(180,210,235,0.75)",
     shadow: "rgba(0,0,0,0.6)",
     shadowBlur: 2,
-    // отступ от нижнего края «ядра» до первой строки
     offsetY: 10,
-    // вертикальный шаг между строками
     lineHeight: 14,
-    // max ширина (мягкое усечение с «…»)
     maxWidth: 160,
-  },
+  }),
 }
 
 // текущий конфиг
-let CONFIG = { ...DEFAULT_CONFIG }
+let CONFIG = /** @type {ParticlesConfig} */ ({ ...DEFAULT_CONFIG })
 
 // угол «над родителем» (одинаковый X)
 const SPAWN_ANGLE = -Math.PI / 2
 
 /** лог с учётом CONFIG.debug */
 /** @param {...any} a */
-function dlog(...a) {
+function dlog(.../** @type {any[]} */ a) {
   if (CONFIG.debug) console.log(...a)
 }
 
@@ -176,7 +177,6 @@ class ParticlesWorker {
     this.broadcastChannel = new BroadcastChannel("actor-force")
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
-      // meta и actor могут отсутствовать — это ок
       const meta = data?.meta || null
       const actor = data?.actor || null
       const { path } = data || {}
@@ -186,7 +186,6 @@ class ParticlesWorker {
         if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, actor)
         else if (patch.path === "/" && patch.op === "remove") this.removeParticle(path)
         else {
-          // можно обновлять подписи для уже существующей частицы
           if (meta || actor) this.updateParticleLabels(path, meta, actor)
         }
       }
@@ -198,8 +197,9 @@ class ParticlesWorker {
     const p = this.particles.get(path)
     if (!p) return
     if (meta && typeof meta === "object") {
-      // пробуем наиболее вероятные поля имени
       p.labelMain = meta.name ?? meta.title ?? meta.label ?? p.labelMain
+    } else if (meta != null) {
+      p.labelMain = String(meta)
     }
     if (actor != null) p.labelSub = String(actor)
   }
@@ -215,7 +215,7 @@ class ParticlesWorker {
 
   /** @param {number} depth */
   speedForDepth(depth) {
-    return CONFIG.angleSpeedBase / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation))
+    return (CONFIG.angleSpeedBase || 0.12) / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation || 1))
   }
 
   // равномерная дуга вокруг верхней точки SPAWN_ANGLE
@@ -224,15 +224,12 @@ class ParticlesWorker {
     if (n <= 0) return []
     if (n === 1) return [SPAWN_ANGLE]
 
-    const minStepFromMargin = orbitRpx > 0 ? CONFIG.tree.marginPx / Math.max(1, orbitRpx) : 0
-    const minStep = Math.max(
-      0.0001,
-      CONFIG.tree.minAngleStepRad != null ? CONFIG.tree.minAngleStepRad : 0,
-      minStepFromMargin
-    )
+    const tree = CONFIG.tree || {}
+    const minStepFromMargin = orbitRpx > 0 ? (tree.marginPx || 8) / Math.max(1, orbitRpx) : 0
+    const minStep = Math.max(0.0001, tree.minAngleStepRad != null ? tree.minAngleStepRad : 0, minStepFromMargin)
 
-    let spread = CONFIG.tree.spreadRad
-    if (CONFIG.tree.autoSpread) {
+    let spread = tree.spreadRad || Math.PI / 2
+    if (tree.autoSpread) {
       spread = Math.max(spread, minStep * (n - 1))
       spread = Math.min(spread, Math.PI * 2 - 0.001)
     }
@@ -257,7 +254,6 @@ class ParticlesWorker {
       this.childrenOf.get(parent)?.push(path)
     }
 
-    // детерминированная сортировка
     for (const [, arr] of this.childrenOf) {
       arr.sort((a, b) => {
         const as = a.split("/").map(Number),
@@ -276,33 +272,27 @@ class ParticlesWorker {
       p.bandHalf = 0
     }
 
-    // локальная упаковка:
-    //  - line: каждый ребёнок имеет свою полосу (как раньше)
-    //  - tree: у ОДНОГО родителя все дети делят ОДНУ общую полосу (на одной орбите)
     /** @param {string} parentPath */
     const packLocal = (parentPath) => {
       const kids = this.childrenOf.get(parentPath) || []
-      if (kids.length === 0) return CONFIG.leafBandWidth
+      if (kids.length === 0) return CONFIG.leafBandWidth || 12
 
-      // рекурсивно посчитать «толщины» детей
       const childWidths = kids.map((k) => packLocal(k))
 
       if (CONFIG.layout === "tree") {
-        // общая полоса = максимум из толщин поддеревьев детей
-        const groupWidth = Math.max(CONFIG.leafBandWidth, ...childWidths)
-        // всем детям присваиваем ОДИН и тот же центральный радиус этой полосы
-        let offset = CONFIG.firstBandOffset
+        // все дети на одной орбите: ширина = max ширин поддеревьев детей
+        const groupWidth = Math.max(CONFIG.leafBandWidth || 12, ...childWidths)
+        let offset = CONFIG.firstBandOffset || 0
         for (const k of kids) {
           const ch = this.particles.get(k)
           if (!ch) continue
           ch.targetOrbitRadius = offset + groupWidth / 2
           ch.bandHalf = groupWidth / 2
         }
-        // для следующей «орбиты» от этого родителя суммарная ширина равна groupWidth
         return offset + groupWidth
       } else {
-        // line: у каждого своя полоса (как было)
-        let offset = CONFIG.firstBandOffset
+        // line и quantum: у каждого своя полоса/радиус
+        let offset = CONFIG.firstBandOffset || 0
         for (let i = 0; i < kids.length; i++) {
           const k = kids[i]
           if (!k) continue
@@ -311,17 +301,16 @@ class ParticlesWorker {
           if (!ch) continue
           ch.targetOrbitRadius = offset + bandWidth / 2
           ch.bandHalf = bandWidth / 2
-          offset += bandWidth + CONFIG.interBandGap
+          offset += bandWidth + (CONFIG.interBandGap || 0)
         }
         return offset
       }
     }
     packLocal("0")
 
-    // максимальная «выбегаемость» вниз по ветке (для масштаба)
+    // масштаб
     let maxExtent = 0
-    /** @param {string} parentPath @param {number} accum */
-    const dfs = (parentPath, accum) => {
+    const dfs = (/** @type {string} */ parentPath, /** @type {number} */ accum) => {
       const kids = this.childrenOf.get(parentPath) || []
       for (const k of kids) {
         const ch = this.particles.get(k)
@@ -334,9 +323,9 @@ class ParticlesWorker {
     }
     dfs("0", 0)
 
-    const allowed = Math.min(this.screenWidth, this.screenHeight) * 0.5 * CONFIG.viewMargin
+    const allowed = Math.min(this.screenWidth, this.screenHeight) * 0.5 * (CONFIG.viewMargin || 0.9)
     const scale = allowed / Math.max(1, maxExtent)
-    this.globalScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, scale))
+    this.globalScale = Math.max(CONFIG.minScale || 0.2, Math.min(CONFIG.maxScale || 1, scale))
   }
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
@@ -349,6 +338,8 @@ class ParticlesWorker {
 
     const existed = this.particles.get(path)
     if (!existed) {
+      const angle = SPAWN_ANGLE // фиксировано над родителем для line/tree
+
       /** @type {Particle} */
       const p = {
         x: this.center.x,
@@ -358,7 +349,7 @@ class ParticlesWorker {
         orbitRadius: 0,
         targetOrbitRadius: 0,
         bandHalf: 0,
-        angle: SPAWN_ANGLE, // спавним над родителем (одинаковый X)
+        angle,
         speed: this.speedForDepth(depth),
         depth,
         isCore: path === "0",
@@ -370,8 +361,7 @@ class ParticlesWorker {
         labelMain: "",
         labelSub: "",
       }
-      // первичное заполнение
-      if (meta != null) p.labelMain = String(meta)
+      if (meta != null) p.labelMain = String(meta?.name ?? meta?.title ?? meta?.label ?? meta)
       if (actor != null) p.labelSub = String(actor)
 
       this.particles.set(path, p)
@@ -381,7 +371,6 @@ class ParticlesWorker {
       existed.depth = depth
       existed.parentPath = parentPath
       existed.speed = this.speedForDepth(depth)
-      // обновляем подписи, если пришли
       if (meta || actor) this.updateParticleLabels(path, meta, actor)
     }
 
@@ -408,8 +397,7 @@ class ParticlesWorker {
   snapNewlyAdded() {
     if (this.justAdded.size === 0) return
 
-    /** @param {string} parentPath */
-    const placeUsingTargets = (parentPath) => {
+    const placeUsingTargets = (/** @type {string} */ parentPath) => {
       const parent = this.particles.get(parentPath)
       if (!parent) return
       const px = parentPath === "0" ? this.center.x : parent.tx
@@ -428,20 +416,29 @@ class ParticlesWorker {
           const ch = this.particles.get(k)
           if (!ch) continue
           const R = ch.targetOrbitRadius * this.globalScale
-          const angle = angles[i] || 0
+          const angle = angles[i] || SPAWN_ANGLE
           ch.tx = px + Math.cos(angle) * R
           ch.ty = py + Math.sin(angle) * R
-          placeUsingTargets(k)
+          if (k) placeUsingTargets(k)
         }
-      } else {
-        // line
+      } else if (CONFIG.layout === "line") {
         for (const k of kids) {
           const ch = this.particles.get(k)
           if (!ch) continue
           const R = ch.targetOrbitRadius * this.globalScale
           ch.tx = px + Math.cos(SPAWN_ANGLE) * R
           ch.ty = py + Math.sin(SPAWN_ANGLE) * R
-          placeUsingTargets(k)
+          if (k) placeUsingTargets(k)
+        }
+      } else {
+        // quantum — по собственному углу
+        for (const k of kids) {
+          const ch = this.particles.get(k)
+          if (!ch) continue
+          const R = ch.targetOrbitRadius * this.globalScale
+          ch.tx = px + Math.cos(ch.angle) * R
+          ch.ty = py + Math.sin(ch.angle) * R
+          if (k) placeUsingTargets(k)
         }
       }
     }
@@ -453,7 +450,6 @@ class ParticlesWorker {
     }
     placeUsingTargets("0")
 
-    // мгновенно приравниваем текущие координаты
     for (const path of this.justAdded) {
       const p = this.particles.get(path)
       if (!p) continue
@@ -462,7 +458,6 @@ class ParticlesWorker {
       p.y = p.ty
     }
 
-    // вспышки
     const now = performance.now()
     for (const path of this.pendingFlares) {
       const p = this.particles.get(path)
@@ -483,11 +478,10 @@ class ParticlesWorker {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     if (!this.particles.has("0")) return
 
-    // угловая анимация
+    // угловая анимация — крутятся все, но эффект виден только в quantum/tree (в tree — если расширять на 2π)
     for (const [, p] of this.particles) if (!p.isCore) p.angle += p.speed
 
-    /** @param {string} parentPath */
-    const placeAroundTarget = (parentPath) => {
+    const placeAroundTarget = (/** @type {string} */ parentPath) => {
       const parent = this.particles.get(parentPath)
       if (!parent) return
       const px = parent.tx,
@@ -498,11 +492,10 @@ class ParticlesWorker {
         for (const k of kids) {
           const ch = this.particles.get(k)
           if (!ch) continue
-          ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * CONFIG.lerpRadius
+          ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * (CONFIG.lerpRadius || 0.18)
         }
         const firstKid = kids[0]
-        if (!firstKid) return
-        const any = this.particles.get(firstKid)
+        const any = firstKid ? this.particles.get(firstKid) : null
         const Rpx = any ? any.orbitRadius * this.globalScale : 0
         const angles = this.buildTreeAngles(kids.length, Rpx)
 
@@ -512,20 +505,30 @@ class ParticlesWorker {
           const ch = this.particles.get(k)
           if (!ch) continue
           const R = ch.orbitRadius * this.globalScale
-          const angle = angles[i] || 0
+          const angle = angles[i] || SPAWN_ANGLE
           ch.tx = px + Math.cos(angle) * R
           ch.ty = py + Math.sin(angle) * R
           placeAroundTarget(k)
         }
-      } else {
-        // line
+      } else if (CONFIG.layout === "line") {
         for (const k of kids) {
           const ch = this.particles.get(k)
           if (!ch) continue
-          ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * CONFIG.lerpRadius
+          ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * (CONFIG.lerpRadius || 0.18)
           const R = ch.orbitRadius * this.globalScale
           ch.tx = px + Math.cos(SPAWN_ANGLE) * R
           ch.ty = py + Math.sin(SPAWN_ANGLE) * R
+          placeAroundTarget(k)
+        }
+      } else {
+        // quantum
+        for (const k of kids) {
+          const ch = this.particles.get(k)
+          if (!ch) continue
+          ch.orbitRadius += (ch.targetOrbitRadius - ch.orbitRadius) * (CONFIG.lerpRadius || 0.18)
+          const R = ch.orbitRadius * this.globalScale
+          ch.tx = px + Math.cos(ch.angle) * R
+          ch.ty = py + Math.sin(ch.angle) * R
           placeAroundTarget(k)
         }
       }
@@ -538,18 +541,18 @@ class ParticlesWorker {
     }
     placeAroundTarget("0")
 
-    // интерполяция
+    // интерполяция к целям
     for (const [, p] of this.particles) {
-      p.x += (p.tx - p.x) * CONFIG.lerpPos
-      p.y += (p.ty - p.y) * CONFIG.lerpPos
+      p.x += (p.tx - p.x) * (CONFIG.lerpPos || 0.12)
+      p.y += (p.ty - p.y) * (CONFIG.lerpPos || 0.12)
     }
 
     // дрожание
     for (const [, p] of this.particles) {
-      const shakeTime = t * CONFIG.shakeSpeed + p.shakePhase
-      const shakeVariation = 1 + (p.shakePhase % 1) * CONFIG.shakeVariation
-      p.shakeOffsetX = Math.sin(shakeTime * shakeVariation) * CONFIG.shakeIntensity
-      p.shakeOffsetY = Math.cos(shakeTime * shakeVariation * 1.3) * CONFIG.shakeIntensity
+      const shakeTime = t * (CONFIG.shakeSpeed || 44.0) + p.shakePhase
+      const shakeVariation = 1 + (p.shakePhase % 1) * (CONFIG.shakeVariation || 0.8)
+      p.shakeOffsetX = Math.sin(shakeTime * shakeVariation) * (CONFIG.shakeIntensity || 1.4)
+      p.shakeOffsetY = Math.cos(shakeTime * shakeVariation * 1.3) * (CONFIG.shakeIntensity || 1.4)
     }
 
     if (CONFIG.drawOrbits) this.drawAllOrbits()
@@ -573,8 +576,8 @@ class ParticlesWorker {
       const px = par.x,
         py = par.y
 
-      ctx.setLineDash(CONFIG.orbitDash)
-      ctx.strokeStyle = `hsla(200,50%,60%,${CONFIG.orbitAlpha})`
+      ctx.setLineDash(CONFIG.orbitDash || [0, 0])
+      ctx.strokeStyle = `hsla(200,50%,60%,${CONFIG.orbitAlpha || 0.22})`
 
       for (const k of kids) {
         const ch = this.particles.get(k)
@@ -605,11 +608,12 @@ class ParticlesWorker {
           const dx = par.x - ch.x,
             dy = par.y - ch.y
           const dist = Math.hypot(dx, dy)
-          if (dist > CONFIG.linkMaxDist) continue
-          const alpha = CONFIG.linkBaseAlpha * (1 - dist / CONFIG.linkMaxDist)
+          const maxDist = CONFIG.linkMaxDist || 180
+          if (dist > maxDist) continue
+          const alpha = (CONFIG.linkBaseAlpha || 1) * (1 - dist / maxDist)
           ctx.strokeStyle = `hsla(210,80%,70%,${alpha})`
           ctx.lineWidth = 1
-          ctx.setLineDash(CONFIG.linkDash)
+          ctx.setLineDash(CONFIG.linkDash || [5, 5])
           ctx.beginPath()
           ctx.moveTo(par.x, par.y)
           ctx.lineTo(ch.x, ch.y)
@@ -640,11 +644,12 @@ class ParticlesWorker {
         const dx = a.x - b.x,
           dy = a.y - b.y
         const dist = Math.hypot(dx, dy)
-        if (dist > CONFIG.linkMaxDist) continue
-        const alpha = CONFIG.linkBaseAlpha * (1 - dist / CONFIG.linkMaxDist)
+        const maxDist = CONFIG.linkMaxDist || 180
+        if (dist > maxDist) continue
+        const alpha = (CONFIG.linkBaseAlpha || 1) * (1 - dist / maxDist)
         ctx.strokeStyle = `hsla(210,80%,70%,${alpha})`
         ctx.lineWidth = 1
-        ctx.setLineDash(CONFIG.linkDash)
+        ctx.setLineDash(CONFIG.linkDash || [5, 5])
         ctx.beginPath()
         ctx.moveTo(a.x, a.y)
         ctx.lineTo(b.x, b.y)
@@ -658,7 +663,7 @@ class ParticlesWorker {
   drawFlares(nowMs) {
     if (!this.ctx) return
     const ctx = this.ctx
-    const dur = CONFIG.flareDuration
+    const dur = CONFIG.flareDuration || 420
     if (this.flares.length === 0) return
 
     const alive = []
@@ -668,8 +673,10 @@ class ParticlesWorker {
       alive.push(fl)
 
       const k = dt / dur
-      const r = CONFIG.flareR0 + (CONFIG.flareR1 - CONFIG.flareR0) * k
-      const a = CONFIG.flareMaxAlpha * (1 - k)
+      const r0 = CONFIG.flareR0 || 10
+      const r1 = CONFIG.flareR1 || 90
+      const r = r0 + (r1 - r0) * k
+      const a = (CONFIG.flareMaxAlpha || 0.6) * (1 - k)
 
       const g = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, r)
       g.addColorStop(0, `hsla(200,100%,80%,${a * 0.35})`)
@@ -698,10 +705,13 @@ class ParticlesWorker {
       const shakeY = p.y + p.shakeOffsetY
 
       const hue = 200 + ((path.charCodeAt(0) * 20) % 40)
-      const base = p.isCore ? CONFIG.coreSize : CONFIG.nodeSizeBase + p.depth * CONFIG.nodeSizePerDepth
-      const timeOffset = p.pulseSeed * CONFIG.pulseTimeVariation
+      const base = p.isCore
+        ? CONFIG.coreSize || 4
+        : (CONFIG.nodeSizeBase || 2) + p.depth * (CONFIG.nodeSizePerDepth || 0)
+      const timeOffset = p.pulseSeed * (CONFIG.pulseTimeVariation || 0.5)
       const pulse =
-        Math.sin((time + timeOffset) * CONFIG.pulseSpeed + p.pulseSeed) * CONFIG.pulseAmplitude + CONFIG.pulseBase
+        Math.sin((time + timeOffset) * (CONFIG.pulseSpeed || 22.0) + p.pulseSeed) * (CONFIG.pulseAmplitude || 0.3) +
+        (CONFIG.pulseBase || 0.7)
       const sz = Math.max(1, base * pulse)
 
       const g1 = ctx.createRadialGradient(shakeX, shakeY, 0, shakeX, shakeY, sz * 3)
@@ -724,12 +734,12 @@ class ParticlesWorker {
       ctx.fill()
 
       for (let i = 1; i <= 3; i++) {
-        const to = p.pulseSeed * CONFIG.pulseTimeVariation
-        const rt = (time + to) * CONFIG.pulseSpeed * (1 + i * 0.5) + p.pulseSeed
+        const to = p.pulseSeed * (CONFIG.pulseTimeVariation || 0.5)
+        const rt = (time + to) * (CONFIG.pulseSpeed || 22.0) * (1 + i * 0.5) + p.pulseSeed
         const rr = Math.max(1, sz * (1.5 + i * 0.8) + Math.sin(rt) * 5)
         const ra = ((0.3 - i * 0.08) * (Math.sin(rt) + 1)) / 2
         ctx.strokeStyle = `hsla(${hue},70%,60%,${Math.max(0, ra)})`
-        ctx.lineWidth = CONFIG.particleRingThickness
+        ctx.lineWidth = CONFIG.particleRingThickness || 2
         ctx.beginPath()
         ctx.arc(shakeX, shakeY, rr, 0, Math.PI * 2)
         ctx.stroke()
@@ -777,7 +787,7 @@ class ParticlesWorker {
     const L = CONFIG.label
 
     ctx.save()
-    ctx.font = L.font
+    ctx.font = L.font || "12px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
     ctx.textAlign = "center"
     ctx.textBaseline = "top"
     if (L.shadow) {
@@ -785,9 +795,7 @@ class ParticlesWorker {
       ctx.shadowBlur = L.shadowBlur ?? 0
     }
 
-    /** мягкое усечение */
-    /** @param {string} text @param {number} maxWidth */
-    const ellipsize = (text, maxWidth) => {
+    const ellipsize = (/** @type {string} */ text, /** @type {number} */ maxWidth) => {
       if (!text) return ""
       const w = ctx.measureText(text).width
       if (w <= maxWidth) return text
@@ -804,20 +812,17 @@ class ParticlesWorker {
     }
 
     for (const [, p] of this.particles) {
-      // рисуем под фактическим отрисованным центром (с дрожанием)
       const x = p.x + (p.shakeOffsetX || 0)
-      const y0 = p.y + (p.shakeOffsetY || 0) + (CONFIG.coreSize + L.offsetY)
-
-      const main = ellipsize(p.labelMain || "", L.maxWidth)
-      const sub = ellipsize(p.labelSub || "", L.maxWidth)
-
+      const y0 = p.y + (p.shakeOffsetY || 0) + ((CONFIG.coreSize || 4) + (L.offsetY || 10))
+      const main = ellipsize(p.labelMain || "", L.maxWidth || 160)
+      const sub = ellipsize(p.labelSub || "", L.maxWidth || 160)
       if (main) {
-        ctx.fillStyle = L.color
+        ctx.fillStyle = L.color || "rgba(200,230,255,0.95)"
         ctx.fillText(main, x, y0)
       }
       if (sub) {
-        ctx.fillStyle = L.subColor
-        ctx.fillText(sub, x, y0 + L.lineHeight)
+        ctx.fillStyle = L.subColor || "rgba(180,210,235,0.75)"
+        ctx.fillText(sub, x, y0 + (L.lineHeight || 14))
       }
     }
 
@@ -840,6 +845,7 @@ self.onmessage = function (e) {
         ...DEFAULT_CONFIG,
         ...config,
         tree: { ...(DEFAULT_CONFIG.tree || {}), ...(config.tree || {}) },
+        label: { ...(DEFAULT_CONFIG.label || {}), ...(config.label || {}) },
       }
     }
     particlesWorker = new ParticlesWorker(canvas, width, height)
@@ -850,6 +856,7 @@ self.onmessage = function (e) {
         ...CONFIG,
         ...config,
         tree: { ...(CONFIG.tree || DEFAULT_CONFIG.tree), ...(config.tree || {}) },
+        label: { ...(CONFIG.label || DEFAULT_CONFIG.label), ...(config.label || {}) },
       }
       if (particlesWorker) particlesWorker.recomputeTargets()
     }
@@ -876,7 +883,7 @@ self.onmessage = function (e) {
     particlesWorker.recomputeTargets()
     particlesWorker.paint()
   } else if (type === "add") {
-    if (particlesWorker) particlesWorker.addParticle(e.data.path)
+    if (particlesWorker) particlesWorker.addParticle(e.data.path, e.data.meta, e.data.actor)
   } else if (type === "remove") {
     if (particlesWorker) particlesWorker.removeParticle(e.data.path)
   }

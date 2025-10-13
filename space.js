@@ -1,4 +1,4 @@
-import { line, tree } from "./worker-virtual.config.js"
+import { line, quantum, tree } from "./worker-virtual.config.js"
 import { Actor } from "./everywhere-everything/actor.js"
 import { threadLog } from "./everywhere-everything/web/log.js"
 import { meta } from "./nodes/node.js"
@@ -64,7 +64,7 @@ class MetaXR extends HTMLElement {
         canvas: offscreenCanvas,
         width: window.innerWidth,
         height: window.innerHeight,
-        config: mode === "develop" ? tree : mode === "line" ? line : {},
+        config: mode === "tree" ? tree : mode === "line" ? line : mode === "quantum" ? quantum : {},
       },
       [offscreenCanvas]
     )
