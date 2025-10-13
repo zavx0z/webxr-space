@@ -3,20 +3,26 @@
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
-export default MetaFor("node-log")
+export const meta = MetaFor("logical")
   .context((t) => ({
     state: t.string.optional(),
     status: t.boolean.optional(),
     children: t.array.required(/** @type {string[]} */ ([])),
+
+    error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    проверка: {
-      создание: { status: true },
-      удаление: { status: false, children: { length: { min: 1 } } },
-      ожидание: {},
+    "сбор данных": {
+      "передача дочерних элементов": {},
     },
+    "передача дочерних элементов": {
+      ошибка: { error: { null: false } },
+      завершение: {},
+    },
+    ошибка: {},
+    завершение: {},
     ожидание: {
-      проверка: { state: { null: false } },
+      "сбор данных": { state: { null: false } },
     },
     создание: {
       ожидание: {},
@@ -26,6 +32,8 @@ export default MetaFor("node-log")
     },
   })
   .core({
+    /** @type {NodeLogical|null} */
+    node: null,
     data: {},
     /** @type {Actor|null} */
     parent: null,
@@ -37,12 +45,12 @@ export default MetaFor("node-log")
     evalCondition: (state) => false,
   })
   .processes((process) => ({
-    проверка: process()
+    "сбор данных": process()
       .action(({ core, context, self }) => {
-        if (!core.parent) throw new Error("Отсутствует родительский актор")
-        if (!core.schema) throw new Error("Отсутствует схема компонентов")
-        console.log(self)
-        return { status: core.evalCondition([context.state]), children: core.schema.child.map((i) => i.type) }
+        if (!core.node) throw new Error("Нода не передана")
+
+        console.log(core.node)
+        return {}
       })
       .success(({ data, update }) => {
         console.log(data)
@@ -52,6 +60,18 @@ export default MetaFor("node-log")
         console.log("error", error)
         update({ state: null })
       }),
+    "передача дочерних элементов": process()
+      .action(async ({ core, self }) => {
+        if (!core.node) throw new Error("Отсутствует схема компонентов")
+        const [{ Actor }, { default: meta }] = await Promise.all([
+          import("everywhere-everything/actor"),
+          import("nodes/nodes.js"),
+        ])
+        const child = core.node.child
+        const id = `${self.meta}:${self.path}`
+        Actor.appendChild(self.actor, meta, { id, core: { child } })
+      })
+      .error(({ error, update }) => update({ error: error.message })),
     создание: process()
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
@@ -86,3 +106,4 @@ export default MetaFor("node-log")
     ],
   ])
   .view()
+export default meta

@@ -6,7 +6,7 @@
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
-const meta = MetaFor("child-build-runner")
+const meta = MetaFor("nodes")
   .context((t) => ({
     children: t.number.required(0, { label: "Кол-во детей" }),
     current: t.number.required(0, { label: "Индекс текущего ребенка" }),

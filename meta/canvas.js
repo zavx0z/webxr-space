@@ -180,5 +180,5 @@ export const meta = MetaFor("canvas", {
   }))
   .reactions()
   .view({
-    render: ({ html, state }) => html`${state === "инициализация WebXR" && html`<meta-for src="./meta/webxr.js" />`}`,
+    render: ({ html, state }) => html`${state === "инициализация WebXR" && html`<meta-for src="/meta/webxr.js" />`}`,
   })

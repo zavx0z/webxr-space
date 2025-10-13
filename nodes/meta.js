@@ -4,7 +4,7 @@
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
-export const meta = MetaFor("meta-builder", {
+export const meta = MetaFor("meta", {
   desc: "Актор для создания мета-акторов",
 })
   .context((t) => ({
@@ -56,13 +56,14 @@ export const meta = MetaFor("meta-builder", {
     "загрузка меты": process()
       .action(async ({ context, core }) => {
         const { meta } = await import(/**@type {string} */ (context.src))
+        if (!meta) throw new Error(`Отсутствует мета по пути: ${context.src}`)
         core.meta = meta
-        return meta.render && meta.render.length
+        return meta?.render?.length
       })
       .success(({ data, update }) => update({ child: !!data }))
       .error(({ error, update }) => update({ error: error.message })),
     "создание актора": process()
-      .action(async ({ context, core, self }) => {
+      .action(async ({ core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
         import("everywhere-everything/actor").then(({ Actor }) => {
           Actor.appendChild(self.actor, core.meta)
@@ -78,7 +79,7 @@ export const meta = MetaFor("meta-builder", {
         ])
         const child = core.meta.render
         const id = `${self.meta}:${self.path}`
-        Actor.createSibling(self.actor, meta, { id, core: { child } })
+        Actor.appendChild(self.actor, meta, { id, core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     // завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
