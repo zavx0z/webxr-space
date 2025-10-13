@@ -177,6 +177,17 @@ class ParticlesWorker {
     this.broadcastChannel = new BroadcastChannel("actor-force")
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
+      
+      // Обработка запроса путей от main потока
+      if (data.type === 'request-paths') {
+        // Отправляем запрос обратно в main поток через postMessage
+        self.postMessage({
+          type: 'request-paths',
+          timestamp: data.timestamp
+        })
+        return
+      }
+      
       const meta = data?.meta || null
       const actor = data?.actor || null
       const { path } = data || {}
@@ -423,6 +434,41 @@ class ParticlesWorker {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
       if (this.isRunning) this.stopAnimation()
     }
+    
+    // Запрашиваем обновленные пути из main потока
+    this.requestPathsFromMain()
+  }
+
+  /**
+   * Запрос путей частиц из main потока
+   */
+  requestPathsFromMain() {
+    if (this.broadcastChannel) {
+      this.broadcastChannel.postMessage({
+        type: 'request-paths',
+        timestamp: Date.now()
+      })
+    }
+  }
+
+  /**
+   * Обновление путей частиц из main потока
+   * @param {string[]} paths - Массив путей активных частиц
+   */
+  updatePaths(paths) {
+    // Удаляем частицы, которых нет в новом списке путей
+    const currentPaths = new Set(this.particles.keys())
+    const newPaths = new Set(paths)
+    
+    for (const path of currentPaths) {
+      if (!newPaths.has(path)) {
+        this.removeParticle(path)
+      }
+    }
+    
+    // Пересчитываем дерево и цели
+    this.rebuildTree()
+    this.recomputeTargets()
   }
 
   // мгновенная постановка только что добавленных точек на орбиты
@@ -923,5 +969,7 @@ self.onmessage = function (e) {
     if (particlesWorker) particlesWorker.addParticle(e.data.path, e.data.meta, e.data.actor)
   } else if (type === "remove") {
     if (particlesWorker) particlesWorker.removeParticle(e.data.path)
+  } else if (type === "update-paths") {
+    if (particlesWorker) particlesWorker.updatePaths(e.data.paths)
   }
 }

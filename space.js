@@ -20,6 +20,11 @@ class MetaXR extends HTMLElement {
   worker = null
   /** @type {Actor|null} */
   builder = null
+  
+  // Система дебаунсинга для запросов путей частиц
+  /** @type {boolean} */ pathsRequestPending = false
+  /** @type {ReturnType<typeof setTimeout>|null} */ pathsDebounceTimer = null
+  /** @type {number} */ pathsDebounceDelay = 100 // мс
 
   constructor() {
     super()
@@ -51,6 +56,9 @@ class MetaXR extends HTMLElement {
       if (event.data.type === "worker-ready") {
         debugLog("✅ Worker ready, initializing Actor")
         this.initializeActor()
+      } else if (event.data.type === "request-paths") {
+        debugLog("📥 Worker requested paths")
+        this.requestPathsDebounced()
       }
     }
 
@@ -79,6 +87,58 @@ class MetaXR extends HTMLElement {
       core: { node: { tag: "meta-for", type: "meta", string: { src } } },
     })
     debugLog("✅ Actor system initialized")
+  }
+
+  /**
+   * Запрос путей частиц с дебаунсингом
+   * Отправляет запрос в worker только после завершения всех активных запросов
+   */
+  requestPathsDebounced() {
+    // Устанавливаем флаг, что запрос активен
+    this.pathsRequestPending = true
+    
+    // Очищаем предыдущий таймер
+    if (this.pathsDebounceTimer) {
+      clearTimeout(this.pathsDebounceTimer)
+    }
+    
+    // Устанавливаем новый таймер
+    this.pathsDebounceTimer = setTimeout(() => {
+      this.sendPathsToWorker()
+      this.pathsRequestPending = false
+      this.pathsDebounceTimer = null
+    }, this.pathsDebounceDelay)
+  }
+
+  /**
+   * Отправка путей частиц в worker
+   */
+  sendPathsToWorker() {
+    if (!this.builder) return
+    
+    // Получаем пути всех активных частиц из builder
+    const activePaths = this.getActiveParticlePaths()
+    
+    debugLog("📤 Sending paths to worker:", activePaths)
+    
+    // Отправляем обновленные пути в worker
+    this.worker?.postMessage({
+      type: "update-paths",
+      paths: activePaths
+    })
+  }
+
+  /**
+   * Получение путей активных частиц
+   * @returns {string[]} Массив путей активных частиц
+   */
+  getActiveParticlePaths() {
+    if (!this.builder) return []
+    
+    // Здесь нужно получить пути всех активных частиц из builder
+    // Это зависит от структуры вашего builder и системы акторов
+    // Пока возвращаем пустой массив, нужно будет реализовать логику получения путей
+    return []
   }
 
   /**
