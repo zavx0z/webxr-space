@@ -6,7 +6,7 @@
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
-const meta = MetaFor("nodes")
+export const meta = MetaFor("nodes")
   .context((t) => ({
     children: t.number.required(0, { label: "Кол-во детей" }),
     current: t.number.required(0, { label: "Индекс текущего ребенка" }),
@@ -18,24 +18,26 @@ const meta = MetaFor("nodes")
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    "сбор данных": {
+    данные: {
       ошибка: { error: { null: false } },
       сборка: { children: { gt: 0 } },
-      завершение: { children: { eq: 0 } },
+      конец: { children: { eq: 0 } },
     },
     сборка: {
       ошибка: { error: { null: false } },
-      "выбор следующего": {},
+      следующий: {},
     },
-    "выбор следующего": {
+    следующий: {
       ошибка: { error: { null: false } },
       сборка: { current: { gte: 0 } },
-      "ожидание всех результатов": { current: { lt: 0 } },
+      ожидание: { current: { lt: 0 } },
     },
-    "ожидание всех результатов": {},
-    завершение: {},
+    ожидание: {
+      конец: { process: { length: 0 } },
+    },
+    конец: {},
     ошибка: {
-      // "сбор данных": {},
+      // "данные": {},
     },
   })
   .core({
@@ -43,7 +45,7 @@ const meta = MetaFor("nodes")
     child: [],
   })
   .processes((process) => ({
-    "сбор данных": process()
+    данные: process()
       .action(({ core }) => core.child.length)
       .success(({ data, update }) => update({ children: data, current: 0 }))
       .error(({ error, update }) => update({ error: error.message })),
@@ -60,32 +62,33 @@ const meta = MetaFor("nodes")
       })
       .success(({ data, update }) => update({ process: data }))
       .error(({ error, update }) => update({ error: error.message })),
-    "выбор следующего": process()
+    следующий: process()
       .action(({ context: { current, children } }) => {
         const last = current + 1
         return last === children ? -1 : last
       })
       .success(({ data, update }) => update({ current: data }))
       .error(({ error, update }) => update({ error: error.message })),
-    "ожидание всех результатов": process()
-      .action(({ context }) => {})
-      .success(({ data, update }) => update({}))
+    конец: process()
+      .action(({ self }) => self.destroy(false))
       .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
     [
-      ["ожидание всех результатов", "сборка", "выбор следующего"],
+      ["ожидание", "сборка", "следующий"],
       reaction()
         .filter(({ self, context }) => ({
           actor: { in: context.process },
-          path: "/state",
-          op: "replace",
-          value: { in: ["сборка завершена"] },
+          op: "remove",
         }))
-        .equal(({ update, actor, context }) => update({ success: [...context.success, actor] })),
+        .equal(({ update, actor, context, self }) => {
+          // if (context.success.length + 1 === context.process.length) self.destroy(false)
+          // else
+          update({ success: [...context.success, actor] })
+        }),
     ],
     [
-      ["ожидание всех результатов", "сборка", "выбор следующего"],
+      ["ожидание", "сборка", "следующий"],
       reaction()
         .filter(({ context }) => ({
           actor: { in: context.process },
@@ -93,7 +96,11 @@ const meta = MetaFor("nodes")
           op: "replace",
           value: { includeKey: "error" },
         }))
-        .equal(({ update, actor, context }) => update({ rejected: [...context.rejected, actor] })),
+        .equal(({ update, actor, context }) => {
+          if (context.rejected.length + 1 + context.success.length === context.process.length)
+            update({ error: "Ожидание завершено с ошибкой" })
+          update({ rejected: [...context.rejected, actor] })
+        }),
     ],
   ])
   .view()

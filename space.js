@@ -1,7 +1,7 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
 import { Actor, Fields } from "./everywhere-everything/actor.js"
 import { threadLog } from "./everywhere-everything/web/log.js"
-import { meta } from "./nodes/node.js"
+import { meta } from "./nodes/nodes.js"
 
 // Флаг для включения/отключения отладочных логов
 // Установите в true для включения логов: const DEBUG = true
@@ -30,6 +30,17 @@ class MetaXR extends HTMLElement {
     super()
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleResize = this.handleResize.bind(this)
+  }
+
+  initializeActor() {
+    debugLog("🎭 Initializing Actor system")
+    const src = this.getAttribute("src")
+    this.builder = Actor.fromSchema({
+      meta,
+      id: "root-builder",
+      core: { child: [{ tag: "meta-for", type: "meta", string: { src } }] },
+    })
+    debugLog("✅ Actor system initialized")
   }
 
   async connectedCallback() {
@@ -76,17 +87,6 @@ class MetaXR extends HTMLElement {
       },
       [offscreenCanvas]
     )
-  }
-
-  initializeActor() {
-    debugLog("🎭 Initializing Actor system")
-    const src = this.getAttribute("src")
-    this.builder = Actor.fromSchema({
-      meta,
-      id: "root-builder",
-      core: { node: { tag: "meta-for", type: "meta", string: { src } } },
-    })
-    debugLog("✅ Actor system initialized")
   }
 
   /**

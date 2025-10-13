@@ -4,9 +4,7 @@
  * @typedef {import("everywhere-everything/actor").Actor} Actor
  */
 
-export const meta = MetaFor("meta", {
-  desc: "Актор для создания мета-акторов",
-})
+export const meta = MetaFor("meta")
   .context((t) => ({
     id: t.string.optional({ label: "Актор-id" }),
     path: t.string.optional({ label: "Актор-путь" }),
@@ -18,24 +16,25 @@ export const meta = MetaFor("meta", {
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    "сбор данных": {
-      "загрузка меты": { src: { null: false } },
+    данные: {
+      загрузка: { src: { null: false } },
       ошибка: { error: { null: false } },
     },
-    "загрузка меты": {
-      "создание актора": { src: { null: false } },
+    загрузка: {
+      родитель: { src: { null: false } },
     },
-    "создание актора": {
+    родитель: {
       ошибка: { error: { null: false } },
-      "передача дочерних элементов": { child: true },
-      завершение: {},
+      дети: { child: true },
+      ожидание: {},
     },
-    "передача дочерних элементов": {
+    дети: {
       ошибка: { error: { null: false } },
-      завершение: {},
+      ожидание: {},
     },
+    ожидание: {},
     ошибка: {},
-    завершение: {},
+    конец: {},
   })
   .core({
     /** @type {NodeMeta|null} */
@@ -44,16 +43,16 @@ export const meta = MetaFor("meta", {
     meta: null,
   })
   .processes((process) => ({
-    "сбор данных": process()
+    данные: process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
         if (!core.node.string?.src) throw new Error("Нет параметра src!")
         if (typeof core.node.tag !== "string") throw new Error("Реализовать обработку динамического тега")
-        return { tag: core.node.tag, src: /** @type {string} */ (core.node.string.src) }
+        return { tag: core.node.tag, src: /** @type {string} */ (core.node.string.src), id: crypto.randomUUID() }
       })
       .success(({ data, update }) => update(data))
       .error(({ error, update }) => update({ error: error.message })),
-    "загрузка меты": process()
+    загрузка: process()
       .action(async ({ context, core }) => {
         const { meta } = await import(/**@type {string} */ (context.src))
         if (!meta) throw new Error(`Отсутствует мета по пути: ${context.src}`)
@@ -62,15 +61,14 @@ export const meta = MetaFor("meta", {
       })
       .success(({ data, update }) => update({ child: !!data }))
       .error(({ error, update }) => update({ error: error.message })),
-    "создание актора": process()
-      .action(async ({ core, self }) => {
+    родитель: process()
+      .action(async ({ core, self, context }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        import("everywhere-everything/actor").then(({ Actor }) => {
-          Actor.appendChild(self.actor, core.meta)
-        })
+        const { Actor } = await import("everywhere-everything/actor")
+        Actor.appendChild(self.actor, core.meta, { id: context.id })
       })
       .error(({ error, update }) => update({ error: error.message })),
-    "передача дочерних элементов": process()
+    дети: process()
       .action(async ({ core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
         const [{ Actor }, { default: meta }] = await Promise.all([
@@ -82,7 +80,7 @@ export const meta = MetaFor("meta", {
         Actor.appendChild(self.actor, meta, { id, core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
-    // завершение: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
+    // конец: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
   }))
   .reactions()
   .view()

@@ -12,10 +12,10 @@ export const meta = MetaFor("logical")
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    "сбор данных": {
-      "передача дочерних элементов": {},
+    данные: {
+      дети: {},
     },
-    "передача дочерних элементов": {
+    дети: {
       ошибка: { error: { null: false } },
       ожидание: {},
     },
@@ -27,12 +27,11 @@ export const meta = MetaFor("logical")
       ожидание: {},
     },
     ошибка: {},
-    завершение: {},
+    конец: {},
   })
   .core({
     /** @type {NodeLogical|null} */
     node: null,
-    data: {},
     /** @type {Actor|null} */
     parent: null,
     /** @type {NodeLogical|null} */
@@ -43,16 +42,14 @@ export const meta = MetaFor("logical")
     evalCondition: (state) => false,
   })
   .processes((process) => ({
-    "сбор данных": process()
+    данные: process()
       .action(({ core, context, self }) => {
         if (!core.node) throw new Error("Нода не передана")
-
-        // console.log(core.node)
         return {}
       })
       .success(({ data, update }) => update({ ...data, state: null }))
       .error(({ error, update }) => update({ error: error.message })),
-    "передача дочерних элементов": process()
+    дети: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Отсутствует схема компонентов")
         const [{ Actor }, { default: meta }] = await Promise.all([
@@ -67,7 +64,6 @@ export const meta = MetaFor("logical")
     создание: process()
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
-
         const { meta } = await import("./node.js")
         const { Actor } = await import("everywhere-everything/actor")
 
@@ -76,12 +72,6 @@ export const meta = MetaFor("logical")
       .error(({ error, update }) => update({ error: error.message })),
     удаление: process()
       .action(({}) => {})
-      .error(({ error, update }) => update({ error: error.message })),
-    ожидание: process()
-      .action(({}) => {
-        console.log("Log")
-      })
-      .success(({ update }) => update({ status: null }))
       .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
@@ -93,10 +83,7 @@ export const meta = MetaFor("logical")
           path: "/state",
           op: "replace",
         }))
-        .equal(({ update, patch }) => {
-          const upd = update({ state: patch.value })
-          // console.log(upd)
-        }),
+        .equal(({ update, patch }) => update({ state: patch.value })),
     ],
   ])
   .view()

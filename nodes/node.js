@@ -15,18 +15,18 @@ export const meta = MetaFor("node")
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
-    "определение сборщика": {
-      "сборка актора": { type: "meta", tag: { startsWith: "meta-" } },
-      "сборка логического": { type: "log" },
-      "сборка завершена": { type: null },
+    идентификация: {
+      сборка: { type: "meta", tag: { startsWith: "meta-" } },
+      логический: { type: "log" },
+      конец: { type: null },
     },
-    "сборка актора": {
-      "сборка завершена": { type: null },
+    сборка: {
+      конец: { type: null },
     },
-    "сборка логического": {
-      "сборка завершена": { type: null },
+    логический: {
+      конец: { type: null },
     },
-    "сборка завершена": {},
+    конец: {},
   })
   .core({
     /** @type {NodeType|null} */
@@ -35,7 +35,7 @@ export const meta = MetaFor("node")
     builder: null,
   })
   .processes((process) => ({
-    "определение сборщика": process()
+    идентификация: process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
         if (Object.hasOwn(core.node, "tag")) {
@@ -46,8 +46,8 @@ export const meta = MetaFor("node")
       })
       .success(({ update, data }) => update(data))
       .error(({ error, update }) => update({ error: error.message })),
-    "сборка актора": process()
-      .action(async ({ context, self, core }) => {
+    сборка: process()
+      .action(async ({ self, core }) => {
         const [{ Actor }, { meta }] = await Promise.all([
           import("everywhere-everything/actor"),
           import("nodes/meta.js"),
@@ -58,7 +58,7 @@ export const meta = MetaFor("node")
         })
       })
       .error(({ error, update }) => update({ error: error.message })),
-    "сборка логического": process()
+    логический: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Нет родительского актора")
         const [{ Actor }, { meta }] = await Promise.all([
@@ -69,20 +69,11 @@ export const meta = MetaFor("node")
           core: { node: core.node },
         })
       })
-      .success(({}) => {})
-      .error(({ error }) => console.log(error)),
-    "сборка завершена": process()
-      .action(({ core }) => {})
-      .success(({}) => {})
-      .error(({ error }) => console.log(error)),
-    "": process()
-      .action(({}) => {})
-      .success(({}) => {})
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
     [
-      ["сборка актора", "сборка логического"],
+      ["сборка", "логический"],
       reaction()
         .filter(({ context }) => ({
           actor: /** @type {string} */ (context.id),
@@ -91,9 +82,7 @@ export const meta = MetaFor("node")
           value: "завершение",
         }))
         // .equal(({ self }) => {}),
-        .equal(({ self }) => {
-          if (self.path !== "0") self.destroy(false)
-        }),
+        .equal(({ self }) => self.destroy(false)),
     ],
   ])
   .view()
