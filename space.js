@@ -28,9 +28,9 @@ class MetaXR extends HTMLElement {
   }
 
   async connectedCallback() {
-    const mode = this.getAttribute("mode")
-    console.log(mode)
-    await threadLog()
+    const log = this.hasAttribute("log")
+    log && (await threadLog())
+
     const canvas = /**@type {HTMLCanvasElement} */ (document.createElement("canvas"))
     canvas.className = "virtual"
     canvas.style.pointerEvents = "none"
@@ -56,6 +56,8 @@ class MetaXR extends HTMLElement {
 
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
     window.addEventListener("resize", this.handleResize)
+
+    const mode = this.getAttribute("mode")
     this.worker.postMessage(
       {
         type: "init",
