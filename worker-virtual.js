@@ -26,7 +26,11 @@ const DEFAULT_CONFIG = {
   // "line" | "tree" | "quantum"
   layout: /** @type {LayoutMode} */ ("tree"),
 
+  // задержка анимации - останавливаем анимацию если патч не приходит за указанное время (ms)
+  // 0 = не отслеживать, анимация работает постоянно
+  animateDelay: 1000,
   debug: false,
+
   viewMargin: 0.9,
 
   // геометрия упаковки по радиусу
@@ -145,6 +149,11 @@ class ParticlesWorker {
     this.globalScale = 1
     /** @type {Center} */ this.center = { x: width / 2, y: height / 2 }
 
+    // таймеры для animateDelay
+    /** @type {number} */ this.lastPatchTime = 0
+    /** @type {ReturnType<typeof setTimeout>|null} */ this.animationTimeoutId = null
+    /** @type {boolean} */ this.isTrackingActivity = false
+
     this.setupCanvas()
     this.setupBroadcastChannel()
     this.startAnimation()
@@ -164,6 +173,9 @@ class ParticlesWorker {
   /** @type {BroadcastChannel|null} */ broadcastChannel
   /** @type {number} */ globalScale
   /** @type {{x:number,y:number}} */ center
+  /** @type {number} */ lastPatchTime
+  /** @type {ReturnType<typeof setTimeout>|null} */ animationTimeoutId
+  /** @type {boolean} */ isTrackingActivity
 
   setupCanvas() {
     if (!this.canvas) return
@@ -181,6 +193,9 @@ class ParticlesWorker {
       const actor = data?.actor || null
       const { path } = data || {}
       if (!path || !String(path).startsWith("0")) return
+
+      // сбрасываем таймер анимации при получении патча (если включено отслеживание)
+      this.resetAnimationTimer()
 
       for (const patch of data.patches || []) {
         if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, actor)
@@ -802,22 +817,58 @@ class ParticlesWorker {
   startAnimation() {
     dlog("🎬 start")
     this.isRunning = true
+    // сбрасываем таймер только если включено отслеживание
+    if (this.isTrackingActivity) {
+      this.resetAnimationTimer()
+    }
     const tick = () => {
-      if (this.isRunning) {
-        this.paint()
-        requestAnimationFrame(tick)
-      }
+      if (!this.isRunning) return
+      this.paint()
+      requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
   }
   stopAnimation() {
     dlog("⏹ stop")
     this.isRunning = false
+    this.clearAnimationTimer()
+  }
+
+  /**
+   * Сбрасывает таймер анимации при получении патча
+   */
+  resetAnimationTimer() {
+    // работаем только если включено отслеживание и delay > 0
+    if (!this.isTrackingActivity) return
+
+    this.lastPatchTime = performance.now()
+    this.clearAnimationTimer()
+
+    const delay = CONFIG.animateDelay || 0
+    if (delay > 0) {
+      this.animationTimeoutId = setTimeout(() => {
+        if (this.isRunning) {
+          dlog("⏰ animation timeout - stopping animation")
+          this.stopAnimation()
+        }
+      }, delay)
+    }
+  }
+
+  /**
+   * Очищает таймер анимации
+   */
+  clearAnimationTimer() {
+    if (this.animationTimeoutId !== null) {
+      clearTimeout(this.animationTimeoutId)
+      this.animationTimeoutId = null
+    }
   }
 
   destroy() {
     dlog("💥 destroy")
     this.stopAnimation()
+    this.clearAnimationTimer()
     this.particles.clear()
     this.childrenOf.clear()
     this.justAdded.clear()
@@ -899,16 +950,40 @@ self.onmessage = function (e) {
       }
     }
     particlesWorker = new ParticlesWorker(canvas, width, height)
+    // Автоматически включаем отслеживание при загрузке, если animateDelay > 0
+    if (particlesWorker) {
+      particlesWorker.isTrackingActivity = (CONFIG.animateDelay || 0) > 0
+      if (particlesWorker.isTrackingActivity) {
+        particlesWorker.resetAnimationTimer()
+      }
+    }
     self.postMessage({ type: "worker-ready" })
   } else if (type === "set-config") {
     if (config && typeof config === "object") {
+      const prevDelay = CONFIG.animateDelay || 0
       CONFIG = {
         ...CONFIG,
         ...config,
         tree: { ...(CONFIG.tree || DEFAULT_CONFIG.tree), ...(config.tree || {}) },
         label: { ...(CONFIG.label || DEFAULT_CONFIG.label), ...(config.label || {}) },
       }
-      if (particlesWorker) particlesWorker.recomputeTargets()
+      const newDelay = CONFIG.animateDelay || 0
+      if (particlesWorker) {
+        // Переключаем режим отслеживания при изменении animateDelay
+        if (!particlesWorker.isTrackingActivity && newDelay > 0) {
+          particlesWorker.isTrackingActivity = true
+          particlesWorker.resetAnimationTimer()
+        } else if (particlesWorker.isTrackingActivity && newDelay === 0) {
+          particlesWorker.isTrackingActivity = false
+          particlesWorker.clearAnimationTimer()
+          // Убедимся, что анимация продолжает работать без отслеживания
+          if (!particlesWorker.isRunning) particlesWorker.startAnimation()
+        } else if (particlesWorker.isTrackingActivity && prevDelay !== newDelay && newDelay > 0) {
+          // Обновили значение задержки — перезапустим таймер
+          particlesWorker.resetAnimationTimer()
+        }
+        particlesWorker.recomputeTargets()
+      }
     }
   } else if (type === "destroy") {
     if (particlesWorker) {
@@ -917,7 +992,7 @@ self.onmessage = function (e) {
     }
   } else if (type === "visibility-change") {
     if (!particlesWorker) return
-    if (!visible) particlesWorker.isRunning = false
+    if (!visible) particlesWorker.stopAnimation()
     else particlesWorker.startAnimation()
   } else if (type === "resize") {
     if (!particlesWorker || !particlesWorker.canvas || !particlesWorker.ctx) return
@@ -933,15 +1008,29 @@ self.onmessage = function (e) {
     particlesWorker.recomputeTargets()
     particlesWorker.paint()
   } else if (type === "add") {
-    if (particlesWorker) particlesWorker.addParticle(e.data.path, e.data.meta, e.data.actor)
+    if (particlesWorker) {
+      particlesWorker.resetAnimationTimer()
+      particlesWorker.addParticle(e.data.path, e.data.meta, e.data.actor)
+    }
   } else if (type === "remove") {
-    if (particlesWorker) particlesWorker.removeParticle(e.data.path)
+    if (particlesWorker) {
+      particlesWorker.resetAnimationTimer()
+      particlesWorker.removeParticle(e.data.path)
+    }
   } else if (type === "update-paths") {
     if (particlesWorker) {
+      particlesWorker.resetAnimationTimer()
       particlesWorker.particles = new Map()
       e.data.paths.forEach((/** @type {{ actor: string, meta: string, path: string }} */ element) => {
         particlesWorker?.addParticle(element.path, element.meta, element.actor)
       })
+    }
+  } else if (type === "start-tracking") {
+    if (particlesWorker) {
+      particlesWorker.isTrackingActivity = true
+      dlog("🔍 started activity tracking")
+      // сбрасываем таймер при включении отслеживания
+      particlesWorker.resetAnimationTimer()
     }
   }
 }

@@ -111,6 +111,8 @@ export interface ParticlesConfig {
   tree?: TreeConfig
   /** Конфигурация подписей */
   label?: LabelConfig
+  /** Задержка анимации - останавливаем анимацию если патч не приходит за указанное время (ms) */
+  animateDelay?: number
 }
 
 /**
