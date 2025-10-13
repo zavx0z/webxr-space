@@ -62,10 +62,10 @@ export const meta = MetaFor("meta-builder", {
       .success(({ data, update }) => update({ child: !!data }))
       .error(({ error, update }) => update({ error: error.message })),
     "создание актора": process()
-      .action(async ({ context, core }) => {
+      .action(async ({ context, core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
         import("everywhere-everything/actor").then(({ Actor }) => {
-          Actor.fromSchema({ meta: core.meta, id: crypto.randomUUID(), path: context.path })
+          Actor.appendChild(self.actor, core.meta)
         })
       })
       .error(({ error, update }) => update({ error: error.message })),

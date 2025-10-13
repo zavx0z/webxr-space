@@ -36,81 +36,81 @@ export type OrbitLineAt = "inner" | "center" | "outer" | "band"
  */
 export interface ParticlesConfig {
   /** Режим раскладки частиц */
-  layout: LayoutMode
+  layout?: LayoutMode
   /** Включить console-логи */
-  debug: boolean
+  debug?: boolean
   /** Доля от половины меньшей стороны экрана (0..1) */
-  viewMargin: number
+  viewMargin?: number
   /** Полная ширина «полосы» для ЛИСТА (узел без детей) */
-  leafBandWidth: number
+  leafBandWidth?: number
   /** Отступ от центра родителя до внутренней кромки ПЕРВОЙ орбиты */
-  firstBandOffset: number
+  firstBandOffset?: number
   /** Зазор между соседними орбитами детей одного родителя */
-  interBandGap: number
+  interBandGap?: number
   /** Нижний предел масштаба */
-  minScale: number
+  minScale?: number
   /** Верхний предел масштаба */
-  maxScale: number
+  maxScale?: number
   /** Интерполяция позиции (0..1) */
-  lerpPos: number
+  lerpPos?: number
   /** Интерполяция локального радиуса орбиты (0..1) */
-  lerpRadius: number
+  lerpRadius?: number
   /** Базовая угловая скорость (рад/кадр) */
-  angleSpeedBase: number
+  angleSpeedBase?: number
   /** speed = base / (depth+1)^attenuation */
-  angleDepthAttenuation: number
+  angleDepthAttenuation?: number
   /** Стратегия стартовых углов */
-  angleDistribution: AngleDistribution
+  angleDistribution?: AngleDistribution
   /** Рисовать орбиты */
-  drawOrbits: boolean
+  drawOrbits?: boolean
   /** Штрих-паттерн орбит, напр. [8,10] */
-  orbitDash: number[]
+  orbitDash?: number[]
   /** Прозрачность линий орбит (0..1) */
-  orbitAlpha: number
+  orbitAlpha?: number
   /** Режим связей между детьми */
-  linkMode: LinkMode
+  linkMode?: LinkMode
   /** Штрих-паттерн связей */
-  linkDash: number[]
+  linkDash?: number[]
   /** Максимальная длина связи */
-  linkMaxDist: number
+  linkMaxDist?: number
   /** Базовая непрозрачность связи */
-  linkBaseAlpha: number
+  linkBaseAlpha?: number
   /** Толщина «энергетических колец» */
-  particleRingThickness: number
+  particleRingThickness?: number
   /** Размер ядра (root) */
-  coreSize: number
+  coreSize?: number
   /** База размера точки */
-  nodeSizeBase: number
+  nodeSizeBase?: number
   /** Надбавка к размеру за уровень */
-  nodeSizePerDepth: number
+  nodeSizePerDepth?: number
   /** Где рисовать орбиту */
-  orbitLineAt: OrbitLineAt
+  orbitLineAt?: OrbitLineAt
   /** Длительность вспышки при спауне (мс) */
-  flareDuration: number
+  flareDuration?: number
   /** Стартовый радиус вспышки (px) */
-  flareR0: number
+  flareR0?: number
   /** Финальный радиус вспышки (px) */
-  flareR1: number
+  flareR1?: number
   /** Максимальная прозрачность вспышки (0..1) */
-  flareMaxAlpha: number
+  flareMaxAlpha?: number
   /** Интенсивность дрожания (px) */
-  shakeIntensity: number
+  shakeIntensity?: number
   /** Скорость дрожания */
-  shakeSpeed: number
+  shakeSpeed?: number
   /** Вариация скорости между частицами */
-  shakeVariation: number
+  shakeVariation?: number
   /** Скорость пульсации */
-  pulseSpeed: number
+  pulseSpeed?: number
   /** Амплитуда пульсации (0..1) */
-  pulseAmplitude: number
+  pulseAmplitude?: number
   /** Базовая величина пульсации (0..1) */
-  pulseBase: number
+  pulseBase?: number
   /** Вариация времени между частицами (0..1) */
-  pulseTimeVariation: number
+  pulseTimeVariation?: number
   /** Параметры для режима tree */
-  tree: TreeConfig
+  tree?: TreeConfig
   /** Конфигурация подписей */
-  label: LabelConfig
+  label?: LabelConfig
 }
 
 /**
@@ -118,23 +118,23 @@ export interface ParticlesConfig {
  */
 export interface LabelConfig {
   /** Показывать подписи */
-  show: boolean
+  show?: boolean
   /** Шрифт подписей */
-  font: string
+  font?: string
   /** Цвет основной подписи */
-  color: string
+  color?: string
   /** Цвет дополнительной подписи */
-  subColor: string
+  subColor?: string
   /** Цвет тени */
-  shadow: string
+  shadow?: string
   /** Размытие тени */
-  shadowBlur: number
+  shadowBlur?: number
   /** Отступ от нижнего края частицы до первой строки */
-  offsetY: number
+  offsetY?: number
   /** Вертикальный шаг между строками */
-  lineHeight: number
+  lineHeight?: number
   /** Максимальная ширина (мягкое усечение с «…») */
-  maxWidth: number
+  maxWidth?: number
 }
 
 /**
@@ -142,13 +142,13 @@ export interface LabelConfig {
  */
 export interface TreeConfig {
   /** Ширина дуги распределения вокруг верхней точки (радианы) */
-  spreadRad: number
+  spreadRad?: number
   /** Минимальный зазор между соседями вдоль дуги (в пикселях) */
-  marginPx: number
+  marginPx?: number
   /** Автомасштаб дуги под количество детей и радиус */
-  autoSpread: boolean
+  autoSpread?: boolean
   /** Нижняя граница углового шага (радианы), null — не ограничивать */
-  minAngleStepRad: number | null
+  minAngleStepRad?: number | null
 }
 
 /**

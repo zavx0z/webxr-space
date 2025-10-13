@@ -1,4 +1,4 @@
-import { line } from "./worker-virtual.config.js"
+import { line, tree } from "./worker-virtual.config.js"
 import { Actor } from "./everywhere-everything/actor.js"
 import { threadLog } from "./everywhere-everything/web/log.js"
 import { meta } from "./nodes/node.js"
@@ -28,6 +28,8 @@ class MetaXR extends HTMLElement {
   }
 
   async connectedCallback() {
+    const mode = this.getAttribute("mode")
+    console.log(mode)
     await threadLog()
     const canvas = /**@type {HTMLCanvasElement} */ (document.createElement("canvas"))
     canvas.className = "virtual"
@@ -54,49 +56,13 @@ class MetaXR extends HTMLElement {
 
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
     window.addEventListener("resize", this.handleResize)
-    const nodeSize = 22
     this.worker.postMessage(
       {
         type: "init",
         canvas: offscreenCanvas,
         width: window.innerWidth,
         height: window.innerHeight,
-        // config: line,
-        config: {
-          layout: "tree",
-          // частицы
-          particleRingThickness: 0,
-          coreSize: nodeSize,
-          nodeSizeBase: nodeSize,
-          nodeSizePerDepth: 0,
-          // геометрия упаковки по радиусу
-          leafBandWidth: 100,
-          firstBandOffset: 0,
-          interBandGap: 0,
-          // дрожание/пульсация
-          shakeIntensity: 1,
-          shakeSpeed: 0,
-          shakeVariation: 0,
-
-          pulseSpeed: 0.04,
-          pulseAmplitude: 0.01,
-          pulseBase: 0.2,
-          pulseTimeVariation: 0.5,
-          label: {
-            show: true,
-            font: "8px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-            color: "rgba(200,230,255,0.95)",
-            subColor: "rgba(180,210,235,0.75)",
-            shadow: "rgba(0,0,0,0.6)",
-            shadowBlur: 2,
-            // отступ от нижнего края «ядра» до первой строки
-            offsetY: -14,
-            // вертикальный шаг между строками
-            lineHeight: 10,
-            // max ширина (мягкое усечение с «…»)
-            maxWidth: 80,
-          },
-        },
+        config: mode === "develop" ? tree : mode === "line" ? line : {},
       },
       [offscreenCanvas]
     )
