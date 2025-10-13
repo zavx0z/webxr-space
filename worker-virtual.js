@@ -328,6 +328,38 @@ class ParticlesWorker {
     this.globalScale = Math.max(CONFIG.minScale ?? 0.2, Math.min(CONFIG.maxScale ?? 1, scale))
   }
 
+  // ── центрирование дерева ────────────────────────────────────────────────────
+
+  /** центрирует дерево относительно экрана */
+  centerTree() {
+    if (this.particles.size <= 1) return // только корень или пусто
+
+    let minX = Infinity,
+      maxX = -Infinity
+    let minY = Infinity,
+      maxY = -Infinity
+
+    // находим границы дерева
+    for (const [, p] of this.particles) {
+      if (p.tx < minX) minX = p.tx
+      if (p.tx > maxX) maxX = p.tx
+      if (p.ty < minY) minY = p.ty
+      if (p.ty > maxY) maxY = p.ty
+    }
+
+    // вычисляем смещение для центрирования
+    const treeWidth = maxX - minX
+    const treeHeight = maxY - minY
+    const offsetX = this.center.x - (minX + treeWidth / 2)
+    const offsetY = this.center.y - (minY + treeHeight / 2)
+
+    // применяем смещение ко всем частицам
+    for (const [, p] of this.particles) {
+      p.tx += offsetX
+      p.ty += offsetY
+    }
+  }
+
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
 
   /** @param {string} path @param {any} meta @param {any} actor */
@@ -540,6 +572,11 @@ class ParticlesWorker {
       root.ty = this.center.y
     }
     placeAroundTarget("0")
+
+    // центрирование дерева в режиме tree
+    if (CONFIG.layout === "tree") {
+      this.centerTree()
+    }
 
     // интерполяция к целям
     for (const [, p] of this.particles) {

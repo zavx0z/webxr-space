@@ -59,6 +59,7 @@ export const line = {
   label: { show: false },
 }
 const nodeSize = 22
+const fontSize = 10
 /** @type {Partial<import("./worker-virtual.t").ParticlesConfig>} */
 export const tree = {
   layout: "tree",
@@ -68,7 +69,7 @@ export const tree = {
   nodeSizeBase: nodeSize,
   nodeSizePerDepth: 0,
   // геометрия упаковки по радиусу
-  leafBandWidth: 100,
+  leafBandWidth: 444,
   firstBandOffset: 0,
   interBandGap: 0,
   // дрожание/пульсация
@@ -82,7 +83,7 @@ export const tree = {
   pulseTimeVariation: 0.5,
   label: {
     show: true,
-    font: "8px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+    font: `${fontSize}px Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif`,
     color: "rgba(200,230,255,0.95)",
     subColor: "rgba(180,210,235,0.75)",
     shadow: "rgba(0,0,0,0.6)",
@@ -90,7 +91,7 @@ export const tree = {
     // отступ от нижнего края «ядра» до первой строки
     offsetY: -14,
     // вертикальный шаг между строками
-    lineHeight: 10,
+    lineHeight: fontSize,
     // max ширина (мягкое усечение с «…»)
     maxWidth: 80,
   },
