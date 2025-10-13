@@ -11,9 +11,9 @@ const meta = MetaFor("nodes")
     children: t.number.required(0, { label: "Кол-во детей" }),
     current: t.number.required(0, { label: "Индекс текущего ребенка" }),
 
-    process: t.array.required(/** @type {number[]} */ ([]), { label: "создаются" }),
-    success: t.array.required(/** @type {number[]} */ ([]), { label: "успешно завершены" }),
-    rejected: t.array.required(/** @type {number[]} */ ([]), { label: "завершились с ошибкой" }),
+    process: t.array.required(/** @type {string[]} */ ([]), { label: "создаются" }),
+    success: t.array.required(/** @type {string[]} */ ([]), { label: "успешно завершены" }),
+    rejected: t.array.required(/** @type {string[]} */ ([]), { label: "завершились с ошибкой" }),
 
     error: t.string.optional({ label: "Ошибка" }),
   }))
@@ -56,7 +56,9 @@ const meta = MetaFor("nodes")
         const node = core.child[context.current]
         const id = `${self.path} ${node?.type}:${context.current}`
         Actor.appendChild(self.actor, meta, { id, core: { node } })
+        return [...context.process, id]
       })
+      .success(({ data, update }) => update({ process: data }))
       .error(({ error, update }) => update({ error: error.message })),
     "выбор следующего": process()
       .action(({ context: { current, children } }) => {
@@ -70,7 +72,16 @@ const meta = MetaFor("nodes")
       .success(({ data, update }) => update({}))
       .error(({ error, update }) => update({ error: error.message })),
   }))
-  .reactions()
+  .reactions((reaction) => [
+    [
+      ["ожидание всех результатов", "сборка", "выбор следующего"],
+      reaction()
+        .filter(({ self, context }) => ({
+          actor: {in: context.process}
+        }))
+        .equal(({ update }) => update({})),
+    ],
+  ])
   .view()
 
 /** @typedef {meta} Meta */
