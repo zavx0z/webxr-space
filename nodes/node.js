@@ -10,14 +10,13 @@ export const meta = MetaFor("node-builder")
   .context((t) => ({
     type: t.enum("log", "meta", "map", "cond", "text", "el").optional({ label: "Тип элемента" }),
     tag: t.string.optional(),
-    path: t.string.optional({ label: "Путь ноды" }),
 
     builderId: t.string.optional(),
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
     "определение сборщика": {
-      "сборка актора": { type: "meta", tag: { startsWith: "meta-" }, path: { null: false } },
+      "сборка актора": { type: "meta", tag: { startsWith: "meta-" } },
       "сборка логического": { type: "log" },
       "сборка завершена": { type: null },
     },
@@ -57,7 +56,6 @@ export const meta = MetaFor("node-builder")
         Actor.appendChild(self.actor, meta, {
           id: `${self.actor}-${self.path}`,
           core: { node: core.node },
-          context: { path: context.path },
         })
       })
       .error(({ error, update }) => update({ error: error.message })),
