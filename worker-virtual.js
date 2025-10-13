@@ -177,17 +177,6 @@ class ParticlesWorker {
     this.broadcastChannel = new BroadcastChannel("actor-force")
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
-      
-      // Обработка запроса путей от main потока
-      if (data.type === 'request-paths') {
-        // Отправляем запрос обратно в main поток через postMessage
-        self.postMessage({
-          type: 'request-paths',
-          timestamp: data.timestamp
-        })
-        return
-      }
-      
       const meta = data?.meta || null
       const actor = data?.actor || null
       const { path } = data || {}
@@ -434,7 +423,7 @@ class ParticlesWorker {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
       if (this.isRunning) this.stopAnimation()
     }
-    
+
     // Запрашиваем обновленные пути из main потока
     this.requestPathsFromMain()
   }
@@ -443,32 +432,10 @@ class ParticlesWorker {
    * Запрос путей частиц из main потока
    */
   requestPathsFromMain() {
-    if (this.broadcastChannel) {
-      this.broadcastChannel.postMessage({
-        type: 'request-paths',
-        timestamp: Date.now()
-      })
-    }
-  }
-
-  /**
-   * Обновление путей частиц из main потока
-   * @param {string[]} paths - Массив путей активных частиц
-   */
-  updatePaths(paths) {
-    // Удаляем частицы, которых нет в новом списке путей
-    const currentPaths = new Set(this.particles.keys())
-    const newPaths = new Set(paths)
-    
-    for (const path of currentPaths) {
-      if (!newPaths.has(path)) {
-        this.removeParticle(path)
-      }
-    }
-    
-    // Пересчитываем дерево и цели
-    this.rebuildTree()
-    this.recomputeTargets()
+    self.postMessage({
+      type: "request-paths",
+      timestamp: Date.now(),
+    })
   }
 
   // мгновенная постановка только что добавленных точек на орбиты
@@ -970,6 +937,11 @@ self.onmessage = function (e) {
   } else if (type === "remove") {
     if (particlesWorker) particlesWorker.removeParticle(e.data.path)
   } else if (type === "update-paths") {
-    if (particlesWorker) particlesWorker.updatePaths(e.data.paths)
+    if (particlesWorker) {
+      particlesWorker.particles = new Map()
+      e.data.paths.forEach((/** @type {{ actor: string, meta: string, path: string }} */ element) => {
+        particlesWorker?.addParticle(element.path, element.meta, element.actor)
+      })
+    }
   }
 }

@@ -11,7 +11,7 @@ export const meta = MetaFor("node")
     type: t.enum("log", "meta", "map", "cond", "text", "el").optional({ label: "Тип элемента" }),
     tag: t.string.optional(),
 
-    // builderId: t.string.optional(),
+    id: t.string.optional({ label: "Id сборщика" }),
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
@@ -80,20 +80,22 @@ export const meta = MetaFor("node")
       .success(({}) => {})
       .error(({ error }) => console.log(error)),
   }))
-  .reactions()
-  // .reactions((reaction) => [
-  //   [
-  //     ["сборка актора", "сборка логического"],
-  //     reaction()
-  //       .filter(({ context }) => ({
-  //         actor: /** @type {string} */ (context.builderId),
-  //         path: "/state",
-  //         op: "replace",
-  //         value: "завершение",
-  //       }))
-  //       .equal(({ self }) => self.destroy()),
-  //   ],
-  // ])
+  .reactions((reaction) => [
+    [
+      ["сборка актора", "сборка логического"],
+      reaction()
+        .filter(({ context }) => ({
+          actor: /** @type {string} */ (context.id),
+          path: "/state",
+          op: "replace",
+          value: "завершение",
+        }))
+        // .equal(({ self }) => {}),
+        .equal(({ self }) => {
+          if (self.path !== "0") self.destroy(false)
+        }),
+    ],
+  ])
   .view()
 /** @typedef {meta} Meta */
 export default meta

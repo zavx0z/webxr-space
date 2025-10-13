@@ -1,5 +1,5 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
-import { Actor } from "./everywhere-everything/actor.js"
+import { Actor, Fields } from "./everywhere-everything/actor.js"
 import { threadLog } from "./everywhere-everything/web/log.js"
 import { meta } from "./nodes/node.js"
 
@@ -20,7 +20,7 @@ class MetaXR extends HTMLElement {
   worker = null
   /** @type {Actor|null} */
   builder = null
-  
+
   // Система дебаунсинга для запросов путей частиц
   /** @type {boolean} */ pathsRequestPending = false
   /** @type {ReturnType<typeof setTimeout>|null} */ pathsDebounceTimer = null
@@ -96,12 +96,12 @@ class MetaXR extends HTMLElement {
   requestPathsDebounced() {
     // Устанавливаем флаг, что запрос активен
     this.pathsRequestPending = true
-    
+
     // Очищаем предыдущий таймер
     if (this.pathsDebounceTimer) {
       clearTimeout(this.pathsDebounceTimer)
     }
-    
+
     // Устанавливаем новый таймер
     this.pathsDebounceTimer = setTimeout(() => {
       this.sendPathsToWorker()
@@ -115,30 +115,39 @@ class MetaXR extends HTMLElement {
    */
   sendPathsToWorker() {
     if (!this.builder) return
-    
+
     // Получаем пути всех активных частиц из builder
     const activePaths = this.getActiveParticlePaths()
-    
+
+    // Если нет активных частиц, не отправляем пустой массив
+    if (!activePaths || activePaths.length === 0) {
+      debugLog("📤 No active particles, skipping paths update")
+      return
+    }
+
     debugLog("📤 Sending paths to worker:", activePaths)
-    
+
     // Отправляем обновленные пути в worker
     this.worker?.postMessage({
       type: "update-paths",
-      paths: activePaths
+      paths: activePaths,
     })
   }
 
   /**
    * Получение путей активных частиц
-   * @returns {string[]} Массив путей активных частиц
+   * @returns {Array<{ actor: string, meta: string, path: string }>} Массив путей активных частиц
    */
   getActiveParticlePaths() {
     if (!this.builder) return []
-    
-    // Здесь нужно получить пути всех активных частиц из builder
-    // Это зависит от структуры вашего builder и системы акторов
-    // Пока возвращаем пустой массив, нужно будет реализовать логику получения путей
-    return []
+    /** @type {import("everywhere-everything/actor").Fields|null} */
+    const fields = Fields.get()
+    /** @type {Array<{ actor: string, meta: string, path: string }>} */
+    const paths = []
+    if (!fields) return paths
+    // @ts-ignore
+    for (const [key, actor] of fields.actors.entries()) paths.push({ actor: key, meta: actor.name, path: actor.path })
+    return paths
   }
 
   /**

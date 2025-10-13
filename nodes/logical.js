@@ -17,19 +17,17 @@ export const meta = MetaFor("logical")
     },
     "передача дочерних элементов": {
       ошибка: { error: { null: false } },
-      завершение: {},
+      ожидание: {},
     },
-    ошибка: {},
-    завершение: {},
-    ожидание: {
-      "сбор данных": { state: { null: false } },
-    },
+    ожидание: {},
     создание: {
       ожидание: {},
     },
     удаление: {
       ожидание: {},
     },
+    ошибка: {},
+    завершение: {},
   })
   .core({
     /** @type {NodeLogical|null} */
@@ -49,17 +47,11 @@ export const meta = MetaFor("logical")
       .action(({ core, context, self }) => {
         if (!core.node) throw new Error("Нода не передана")
 
-        console.log(core.node)
+        // console.log(core.node)
         return {}
       })
-      .success(({ data, update }) => {
-        console.log(data)
-        update({ ...data, state: null })
-      })
-      .error(({ error, update }) => {
-        console.log("error", error)
-        update({ state: null })
-      }),
+      .success(({ data, update }) => update({ ...data, state: null }))
+      .error(({ error, update }) => update({ error: error.message })),
     "передача дочерних элементов": process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Отсутствует схема компонентов")
@@ -81,14 +73,16 @@ export const meta = MetaFor("logical")
 
         // Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })
       })
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
     удаление: process()
       .action(({}) => {})
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
     ожидание: process()
-      .action(({}) => {})
+      .action(({}) => {
+        console.log("Log")
+      })
       .success(({ update }) => update({ status: null }))
-      .error(({ error }) => console.log(error)),
+      .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
     [
@@ -101,7 +95,7 @@ export const meta = MetaFor("logical")
         }))
         .equal(({ update, patch }) => {
           const upd = update({ state: patch.value })
-          console.log(upd)
+          // console.log(upd)
         }),
     ],
   ])

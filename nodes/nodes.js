@@ -77,9 +77,23 @@ const meta = MetaFor("nodes")
       ["ожидание всех результатов", "сборка", "выбор следующего"],
       reaction()
         .filter(({ self, context }) => ({
-          actor: {in: context.process}
+          actor: { in: context.process },
+          path: "/state",
+          op: "replace",
+          value: { in: ["сборка завершена"] },
         }))
-        .equal(({ update }) => update({})),
+        .equal(({ update, actor, context }) => update({ success: [...context.success, actor] })),
+    ],
+    [
+      ["ожидание всех результатов", "сборка", "выбор следующего"],
+      reaction()
+        .filter(({ context }) => ({
+          actor: { in: context.process },
+          path: "/context",
+          op: "replace",
+          value: { includeKey: "error" },
+        }))
+        .equal(({ update, actor, context }) => update({ rejected: [...context.rejected, actor] })),
     ],
   ])
   .view()
