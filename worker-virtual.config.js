@@ -72,7 +72,7 @@ export const tree = {
   firstBandOffset: 0,
   interBandGap: 0,
   // дрожание/пульсация
-  shakeIntensity: 1,
+  shakeIntensity: 0,
   shakeSpeed: 0,
   shakeVariation: 0,
 

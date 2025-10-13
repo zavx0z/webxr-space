@@ -215,7 +215,7 @@ class ParticlesWorker {
 
   /** @param {number} depth */
   speedForDepth(depth) {
-    return (CONFIG.angleSpeedBase || 0.12) / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation || 1))
+    return (CONFIG.angleSpeedBase ?? 0.12) / Math.pow(depth + 1, Math.max(0, CONFIG.angleDepthAttenuation ?? 1))
   }
 
   // равномерная дуга вокруг верхней точки SPAWN_ANGLE
@@ -275,14 +275,14 @@ class ParticlesWorker {
     /** @param {string} parentPath */
     const packLocal = (parentPath) => {
       const kids = this.childrenOf.get(parentPath) || []
-      if (kids.length === 0) return CONFIG.leafBandWidth || 12
+      if (kids.length === 0) return CONFIG.leafBandWidth ?? 12
 
       const childWidths = kids.map((k) => packLocal(k))
 
       if (CONFIG.layout === "tree") {
         // все дети на одной орбите: ширина = max ширин поддеревьев детей
-        const groupWidth = Math.max(CONFIG.leafBandWidth || 12, ...childWidths)
-        let offset = CONFIG.firstBandOffset || 0
+        const groupWidth = Math.max(CONFIG.leafBandWidth ?? 12, ...childWidths)
+        let offset = CONFIG.firstBandOffset ?? 0
         for (const k of kids) {
           const ch = this.particles.get(k)
           if (!ch) continue
@@ -292,7 +292,7 @@ class ParticlesWorker {
         return offset + groupWidth
       } else {
         // line и quantum: у каждого своя полоса/радиус
-        let offset = CONFIG.firstBandOffset || 0
+        let offset = CONFIG.firstBandOffset ?? 0
         for (let i = 0; i < kids.length; i++) {
           const k = kids[i]
           if (!k) continue
@@ -301,7 +301,7 @@ class ParticlesWorker {
           if (!ch) continue
           ch.targetOrbitRadius = offset + bandWidth / 2
           ch.bandHalf = bandWidth / 2
-          offset += bandWidth + (CONFIG.interBandGap || 0)
+          offset += bandWidth + (CONFIG.interBandGap ?? 0)
         }
         return offset
       }
@@ -323,9 +323,9 @@ class ParticlesWorker {
     }
     dfs("0", 0)
 
-    const allowed = Math.min(this.screenWidth, this.screenHeight) * 0.5 * (CONFIG.viewMargin || 0.9)
+    const allowed = Math.min(this.screenWidth, this.screenHeight) * 0.5 * (CONFIG.viewMargin ?? 0.9)
     const scale = allowed / Math.max(1, maxExtent)
-    this.globalScale = Math.max(CONFIG.minScale || 0.2, Math.min(CONFIG.maxScale || 1, scale))
+    this.globalScale = Math.max(CONFIG.minScale ?? 0.2, Math.min(CONFIG.maxScale ?? 1, scale))
   }
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
@@ -543,16 +543,16 @@ class ParticlesWorker {
 
     // интерполяция к целям
     for (const [, p] of this.particles) {
-      p.x += (p.tx - p.x) * (CONFIG.lerpPos || 0.12)
-      p.y += (p.ty - p.y) * (CONFIG.lerpPos || 0.12)
+      p.x += (p.tx - p.x) * (CONFIG.lerpPos ?? 0.12)
+      p.y += (p.ty - p.y) * (CONFIG.lerpPos ?? 0.12)
     }
 
     // дрожание
     for (const [, p] of this.particles) {
-      const shakeTime = t * (CONFIG.shakeSpeed || 44.0) + p.shakePhase
-      const shakeVariation = 1 + (p.shakePhase % 1) * (CONFIG.shakeVariation || 0.8)
-      p.shakeOffsetX = Math.sin(shakeTime * shakeVariation) * (CONFIG.shakeIntensity || 1.4)
-      p.shakeOffsetY = Math.cos(shakeTime * shakeVariation * 1.3) * (CONFIG.shakeIntensity || 1.4)
+      const shakeTime = t * (CONFIG.shakeSpeed ?? 44.0) + p.shakePhase
+      const shakeVariation = 1 + (p.shakePhase % 1) * (CONFIG.shakeVariation ?? 0.8)
+      p.shakeOffsetX = Math.sin(shakeTime * shakeVariation) * (CONFIG.shakeIntensity ?? 1.4)
+      p.shakeOffsetY = Math.cos(shakeTime * shakeVariation * 1.3) * (CONFIG.shakeIntensity ?? 1.4)
     }
 
     if (CONFIG.drawOrbits) this.drawAllOrbits()
@@ -708,10 +708,10 @@ class ParticlesWorker {
       const base = p.isCore
         ? CONFIG.coreSize || 4
         : (CONFIG.nodeSizeBase || 2) + p.depth * (CONFIG.nodeSizePerDepth || 0)
-      const timeOffset = p.pulseSeed * (CONFIG.pulseTimeVariation || 0.5)
+      const timeOffset = p.pulseSeed * (CONFIG.pulseTimeVariation ?? 0.5)
       const pulse =
-        Math.sin((time + timeOffset) * (CONFIG.pulseSpeed || 22.0) + p.pulseSeed) * (CONFIG.pulseAmplitude || 0.3) +
-        (CONFIG.pulseBase || 0.7)
+        Math.sin((time + timeOffset) * (CONFIG.pulseSpeed ?? 22.0) + p.pulseSeed) * (CONFIG.pulseAmplitude ?? 0.3) +
+        (CONFIG.pulseBase ?? 0.7)
       const sz = Math.max(1, base * pulse)
 
       const g1 = ctx.createRadialGradient(shakeX, shakeY, 0, shakeX, shakeY, sz * 3)
@@ -734,8 +734,8 @@ class ParticlesWorker {
       ctx.fill()
 
       for (let i = 1; i <= 3; i++) {
-        const to = p.pulseSeed * (CONFIG.pulseTimeVariation || 0.5)
-        const rt = (time + to) * (CONFIG.pulseSpeed || 22.0) * (1 + i * 0.5) + p.pulseSeed
+        const to = p.pulseSeed * (CONFIG.pulseTimeVariation ?? 0.5)
+        const rt = (time + to) * (CONFIG.pulseSpeed ?? 22.0) * (1 + i * 0.5) + p.pulseSeed
         const rr = Math.max(1, sz * (1.5 + i * 0.8) + Math.sin(rt) * 5)
         const ra = ((0.3 - i * 0.08) * (Math.sin(rt) + 1)) / 2
         ctx.strokeStyle = `hsla(${hue},70%,60%,${Math.max(0, ra)})`
