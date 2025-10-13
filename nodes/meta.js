@@ -65,7 +65,7 @@ export const meta = MetaFor("meta")
       .action(async ({ core, self, context }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
         const { Actor } = await import("everywhere-everything/actor")
-        Actor.appendChild(self.actor, core.meta, { id: context.id })
+        // Actor.appendChild(self.actor, core.meta, { id: context.id })
       })
       .error(({ error, update }) => update({ error: error.message })),
     дети: process()
@@ -76,8 +76,7 @@ export const meta = MetaFor("meta")
           import("nodes/nodes.js"),
         ])
         const child = core.meta.render
-        const id = `${self.meta}:${self.path}`
-        Actor.appendChild(self.actor, meta, { id, core: { child } })
+        Actor.appendChild(self.actor, meta, { core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     // конец: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),

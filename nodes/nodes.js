@@ -56,8 +56,7 @@ export const meta = MetaFor("nodes")
           import("nodes/node.js"),
         ])
         const node = core.child[context.current]
-        const id = `${self.path} ${node?.type}:${context.current}`
-        Actor.appendChild(self.actor, meta, { id, core: { node } })
+        const id = Actor.appendChild(self.actor, meta, { core: { node } })
         return [...context.process, id]
       })
       .success(({ data, update }) => update({ process: data }))
@@ -77,7 +76,7 @@ export const meta = MetaFor("nodes")
     [
       ["ожидание", "сборка", "следующий"],
       reaction()
-        .filter(({ self, context }) => ({
+        .filter(({ context }) => ({
           actor: { in: context.process },
           op: "remove",
         }))

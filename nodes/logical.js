@@ -57,8 +57,7 @@ export const meta = MetaFor("logical")
           import("nodes/nodes.js"),
         ])
         const child = core.node.child
-        const id = `${self.meta}:${self.path}`
-        Actor.appendChild(self.actor, meta, { id, core: { child } })
+        Actor.appendChild(self.actor, meta, { core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     создание: process()

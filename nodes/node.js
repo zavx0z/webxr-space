@@ -16,11 +16,11 @@ export const meta = MetaFor("node")
   }))
   .states({
     идентификация: {
-      сборка: { type: "meta", tag: { startsWith: "meta-" } },
+      мета: { type: "meta", tag: { startsWith: "meta-" } },
       логический: { type: "log" },
       конец: { type: null },
     },
-    сборка: {
+    мета: {
       конец: { type: null },
     },
     логический: {
@@ -46,16 +46,13 @@ export const meta = MetaFor("node")
       })
       .success(({ update, data }) => update(data))
       .error(({ error, update }) => update({ error: error.message })),
-    сборка: process()
+    мета: process()
       .action(async ({ self, core }) => {
         const [{ Actor }, { meta }] = await Promise.all([
           import("everywhere-everything/actor"),
           import("nodes/meta.js"),
         ])
-        Actor.appendChild(self.actor, meta, {
-          id: `${self.actor}-${self.path}`,
-          core: { node: core.node },
-        })
+        Actor.appendChild(self.actor, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     логический: process()
@@ -65,21 +62,19 @@ export const meta = MetaFor("node")
           import("everywhere-everything/actor"),
           import("nodes/logical.js"),
         ])
-        Actor.appendChild(self.actor, meta, {
-          core: { node: core.node },
-        })
+        Actor.appendChild(self.actor, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
     [
-      ["сборка", "логический"],
+      ["мета", "логический"],
       reaction()
         .filter(({ context }) => ({
           actor: /** @type {string} */ (context.id),
           path: "/state",
           op: "replace",
-          value: "завершение",
+          value: "ожидание",
         }))
         // .equal(({ self }) => {}),
         .equal(({ self }) => self.destroy(false)),

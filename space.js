@@ -35,11 +35,7 @@ class MetaXR extends HTMLElement {
   initializeActor() {
     debugLog("🎭 Initializing Actor system")
     const src = this.getAttribute("src")
-    this.builder = Actor.fromSchema({
-      meta,
-      id: "root-builder",
-      core: { child: [{ tag: "meta-for", type: "meta", string: { src } }] },
-    })
+    this.builder = Actor.fromSchema({ meta, core: { child: [{ tag: "meta-for", type: "meta", string: { src } }] } })
     debugLog("✅ Actor system initialized")
   }
 
