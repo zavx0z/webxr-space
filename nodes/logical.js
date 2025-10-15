@@ -1,6 +1,6 @@
 /**
- * @typedef {import("metafor/metafor.js").NodeLogical} NodeLogical
- * @typedef {import("metafor/actor.js").Actor} Actor
+ * @typedef {import("@metafor/meta").NodeLogical} NodeLogical
+ * @typedef {import("@metafor/actor").Actor} Actor
  */
 
 export const meta = MetaFor("logical")
@@ -52,7 +52,7 @@ export const meta = MetaFor("logical")
     дети: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Отсутствует схема компонентов")
-        const [{ Actor }, { default: meta }] = await Promise.all([import("metafor/actor.js"), import("nodes/nodes.js")])
+        const [{ Actor }, { default: meta }] = await Promise.all([import("@metafor/actor"), import("nodes/nodes.js")])
         const child = core.node.child
         Actor.appendChild(self.actor, meta, { core: { child } })
       })
@@ -61,7 +61,7 @@ export const meta = MetaFor("logical")
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
         const { meta } = await import("./node.js")
-        const { Actor } = await import("metafor/actor.js")
+        const { Actor } = await import("@metafor/actor")
 
         // Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })
       })

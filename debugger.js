@@ -1,9 +1,12 @@
-import { Actor } from "./metafor/actor.js"
+import { Actor } from "@metafor/actor"
 const css = String.raw
 const html = String.raw
 
 class Debugger extends HTMLElement {
   constructor() {
+    Actor.break()
+    console.log(Actor.isLocked)
+
     super()
 
     this.innerHTML = html`
@@ -15,7 +18,6 @@ class Debugger extends HTMLElement {
         <button id="step" title="Шаг вперёд">⏭</button>
       </div>
     `
-    Actor.break()
   }
 
   connectedCallback() {

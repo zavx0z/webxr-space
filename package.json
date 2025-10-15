@@ -4,22 +4,18 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "^1.3.0",
     "@types/three": "^0.180.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "scripts": {
-    "test:order-tree": "bun test ./order-tree/index.test.js",
-    "dev": "bun --hot ./index.ts",
-    "build": "bun run metafor:build && bun run actor:build && bun run web:build && bun run server:build && bun run actor:typegen  && bun run metafor:typegen",
-    "rebuild": "bun run metafor:build && bun run web:build && bun run server:build && bun run actor:build",
-    "metafor:build": "cd ../zavx0z/metafor && bun run build:metafor && cp dist/metafor.js ../../webxr-space/metafor/metafor.js",
-    "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/metafor/metafor.d.ts",
-    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/metafor/actor.js",
-    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.d.ts ../../webxr-space/metafor/actor.d.ts",
-    "web:build": "cd ../zavx0z/metafor && bun run build:web && cp -r dist/web ../../webxr-space/metafor",
-    "server:build": "cd ../zavx0z/metafor && bun run build:server && cp -r dist/server ../../webxr-space/metafor"
+    "upd": "bun update --latest && bun i"
+  },
+  "dependencies": {
+    "@metafor/actor": "^0.4.4",
+    "@metafor/inspect": "^0.4.0",
+    "@metafor/meta": "^0.4.1"
   }
 }

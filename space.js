@@ -1,6 +1,6 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
-import { Actor } from "./metafor/actor.js"
-import { threadLog } from "./metafor/web/log.js"
+import { Actor } from "@metafor/actor"
+import { threadLog } from "@metafor/inspect/web"
 import { meta } from "./nodes/nodes.js"
 
 // Флаг для включения/отключения отладочных логов
@@ -28,6 +28,8 @@ class MetaXR extends HTMLElement {
 
   constructor() {
     super()
+    Actor.break()
+
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleResize = this.handleResize.bind(this)
   }

@@ -12,17 +12,15 @@
         "imports": {
           "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
           "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
-          "metafor/actor": "./metafor/actor.js",
+          "@metafor/meta": "./node_modules/@metafor/meta/dist/metafor.js",
+          "@metafor/actor": "./node_modules/@metafor/actor/dist/actor.js",
+          "@metafor/inspect/web": "./node_modules/@metafor/inspect/dist/web/logger.js",
           "nodes/": "./nodes/",
           "meta/": "./meta/"
         }
       }
     </script>
-    <script type="module">
-      import "./debugger.js"
-      import "./metafor/metafor.js"
-      import "./space.js"
-    </script>
+    <script type="module" src="./index.js"></script>
     <style>
       body {
         margin: 0;

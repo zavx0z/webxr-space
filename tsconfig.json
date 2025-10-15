@@ -29,11 +29,8 @@
     // Path mapping
     "baseUrl": ".",
     "paths": {
-      "metafor/metafor": [
-        "metafor/metafor.d.ts"
-      ],
-      "metafor/actor": [
-        "metafor/actor.d.ts"
+      "nodes": [
+        "./nodes"
       ],
     }
   },

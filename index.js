@@ -1,3 +1,7 @@
+import "./debugger.js"
+import "@metafor/meta"
+import "./space.js"
+
 // // Анимационный цикл
 // function animate() {
 //   renderer.setAnimationLoop(() => {

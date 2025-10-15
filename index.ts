@@ -1,8 +1,5 @@
 import { readFileSync } from "fs"
 import { networkInterfaces } from "os"
-import index from "./index.html"
-
-import "./worker-virtual"
 
 // Получаем IP адреса локальной сети
 function getLocalIPs(): string[] {
@@ -38,8 +35,7 @@ Bun.serve({
     cert,
   },
   routes: {
-    "/": index,
-    "/index.html": index,
+    "/": Bun.file("./index.html"),
   },
   async fetch(req) {
     const url = new URL(req.url)
@@ -51,10 +47,6 @@ Bun.serve({
     }
 
     return new Response("Not Found", { status: 404 })
-  },
-  development: {
-    hmr: true,
-    console: true,
   },
 })
 

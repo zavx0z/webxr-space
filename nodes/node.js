@@ -1,9 +1,8 @@
 /**
- * @typedef {import("metafor/metafor").NodeMeta} NodeMeta
- * @typedef {import("metafor/metafor").NodeType} NodeType
- * @typedef {import("metafor/metafor").NodeLogical} NodeLogical
- * @typedef {import("metafor/actor").Fields} Fields
- * @typedef {import("metafor/actor").Actor} Actor
+ * @typedef {import("@metafor/meta").NodeMeta} NodeMeta
+ * @typedef {import("@metafor/meta").NodeType} NodeType
+ * @typedef {import("@metafor/meta").NodeLogical} NodeLogical
+ * @typedef {import("@metafor/actor").Actor} Actor
  */
 
 export const meta = MetaFor("node")
@@ -48,14 +47,14 @@ export const meta = MetaFor("node")
       .error(({ error, update }) => update({ error: error.message })),
     мета: process()
       .action(async ({ self, core }) => {
-        const [{ Actor }, { meta }] = await Promise.all([import("metafor/actor"), import("nodes/meta.js")])
+        const [{ Actor }, { meta }] = await Promise.all([import("@metafor/actor"), import("nodes/meta.js")])
         Actor.appendChild(self.actor, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     логический: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Нет родительского актора")
-        const [{ Actor }, { meta }] = await Promise.all([import("metafor/actor"), import("nodes/logical.js")])
+        const [{ Actor }, { meta }] = await Promise.all([import("@metafor/actor"), import("nodes/logical.js")])
         Actor.appendChild(self.actor, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
