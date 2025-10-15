@@ -1,5 +1,5 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
-import { Actor, Fields } from "./metafor/actor.js"
+import { Actor } from "./metafor/actor.js"
 import { threadLog } from "./metafor/web/log.js"
 import { meta } from "./nodes/nodes.js"
 
@@ -30,8 +30,6 @@ class MetaXR extends HTMLElement {
     super()
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleResize = this.handleResize.bind(this)
-    Actor.break()
-    console.log(Actor.isLocked)
   }
 
   initializeActor() {
@@ -94,12 +92,10 @@ class MetaXR extends HTMLElement {
   requestPathsDebounced() {
     // Устанавливаем флаг, что запрос активен
     this.pathsRequestPending = true
-
     // Очищаем предыдущий таймер
     if (this.pathsDebounceTimer) {
       clearTimeout(this.pathsDebounceTimer)
     }
-
     // Устанавливаем новый таймер
     this.pathsDebounceTimer = setTimeout(() => {
       this.sendPathsToWorker()
@@ -113,41 +109,16 @@ class MetaXR extends HTMLElement {
    */
   sendPathsToWorker() {
     if (!this.builder) return
-
     // Получаем пути всех активных частиц из builder
-    const activePaths = this.getActiveParticlePaths()
-
+    const activePaths = Actor.all
     // Если нет активных частиц, не отправляем пустой массив
     if (!activePaths || activePaths.length === 0) {
       debugLog("📤 No active particles, skipping paths update")
       return
     }
-
     debugLog("📤 Sending paths to worker:", activePaths)
-
     // Отправляем обновленные пути в worker
-    this.worker?.postMessage({
-      type: "update-paths",
-      paths: activePaths,
-    })
-  }
-
-  /**
-   * Получение путей активных частиц
-   * @returns {Array<{ actor: string, meta: string, path: string }>} Массив путей активных частиц
-   */
-  getActiveParticlePaths() {
-    if (!this.builder) return []
-    /** @type {import("metafor/actor.js").Fields|null} */
-    const fields = Fields.get()
-    /** @type {Array<{ actor: string, meta: string, path: string }>} */
-    const paths = []
-    if (!fields) return paths
-    // @ts-ignore
-    for (const [key, actor] of fields.actors.entries()) {
-      paths.push({ actor: key, meta: actor.meta, path: actor.path })
-    }
-    return paths
+    this.worker?.postMessage({ type: "update-paths", paths: activePaths })
   }
 
   /**
@@ -156,10 +127,7 @@ class MetaXR extends HTMLElement {
   handleVisibilityChange() {
     const visible = !document.hidden
     debugLog(`👁️ Tab visibility changed: ${visible ? "visible" : "hidden"}`)
-    this.worker?.postMessage({
-      type: "visibility-change",
-      visible,
-    })
+    this.worker?.postMessage({ type: "visibility-change", visible })
   }
 
   /**
@@ -169,11 +137,7 @@ class MetaXR extends HTMLElement {
     const width = window.innerWidth
     const height = window.innerHeight
     debugLog(`📏 Window resized: ${width}x${height}`)
-    this.worker?.postMessage({
-      type: "resize",
-      width,
-      height,
-    })
+    this.worker?.postMessage({ type: "resize", width, height })
   }
 
   disconnectedCallback() {

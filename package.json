@@ -18,7 +18,7 @@
     "metafor:build": "cd ../zavx0z/metafor && bun run build:metafor && cp dist/metafor.js ../../webxr-space/metafor/metafor.js",
     "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/metafor/metafor.d.ts",
     "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/metafor/actor.js",
-    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/metafor/actor.d.ts",
+    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.d.ts ../../webxr-space/metafor/actor.d.ts",
     "web:build": "cd ../zavx0z/metafor && bun run build:web && cp -r dist/web ../../webxr-space/metafor",
     "server:build": "cd ../zavx0z/metafor && bun run build:server && cp -r dist/server ../../webxr-space/metafor"
   }
