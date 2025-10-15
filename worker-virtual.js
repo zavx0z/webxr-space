@@ -22,6 +22,7 @@
  */
 
 // ── Конфиг (можно переопределять через init/set-config) ───────────────────────
+/** @type {ParticlesConfig} */
 const DEFAULT_CONFIG = {
   // "line" | "tree" | "quantum"
   layout: /** @type {LayoutMode} */ ("tree"),
@@ -80,9 +81,9 @@ const DEFAULT_CONFIG = {
   shakeSpeed: 44.0,
   shakeVariation: 0.8,
 
-  pulseSpeed: 22.0,
   pulseAmplitude: 0.3,
   pulseBase: 0.7,
+  pulseSpeed: 22.0,
   pulseTimeVariation: 0.5,
 
   // 2D/tree специфика

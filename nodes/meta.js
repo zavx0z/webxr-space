@@ -1,7 +1,7 @@
 /**
- * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
- * @typedef {import("everywhere-everything/metafor").Meta} MetaType
- * @typedef {import("everywhere-everything/actor").Actor} Actor
+ * @typedef {import("metafor/metafor").NodeMeta} NodeMeta
+ * @typedef {import("metafor/metafor").Meta} MetaType
+ * @typedef {import("metafor/actor").Actor} Actor
  */
 
 export const meta = MetaFor("meta")
@@ -64,17 +64,14 @@ export const meta = MetaFor("meta")
     родитель: process()
       .action(async ({ core, self, context }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        const { Actor } = await import("everywhere-everything/actor")
+        const { Actor } = await import("metafor/actor")
         // Actor.appendChild(self.actor, core.meta, { id: context.id })
       })
       .error(({ error, update }) => update({ error: error.message })),
     дети: process()
       .action(async ({ core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        const [{ Actor }, { default: meta }] = await Promise.all([
-          import("everywhere-everything/actor"),
-          import("nodes/nodes.js"),
-        ])
+        const [{ Actor }, { default: meta }] = await Promise.all([import("metafor/actor"), import("nodes/nodes.js")])
         const child = core.meta.render
         Actor.appendChild(self.actor, meta, { core: { child } })
       })

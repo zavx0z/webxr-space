@@ -95,7 +95,7 @@ export const meta = MetaFor("canvas", {
     "добавление рендерера в DOM": process()
       .action(async ({ core }) => {
         if (!core.renderer) throw new Error("Рендерер отсутствует")
-        const MetaXR = document.getElementsByTagName("everywhere-everything")[0]
+        const MetaXR = document.getElementsByTagName("metafor")[0]
         if (!MetaXR) throw new Error("Родительский элемент отсутствует")
         MetaXR.append(core.renderer.domElement)
       })

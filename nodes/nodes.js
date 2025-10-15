@@ -1,9 +1,9 @@
 /**
- * @typedef {import("everywhere-everything/metafor").NodeMeta} NodeMeta
- * @typedef {import("everywhere-everything/metafor").NodeType} NodeType
- * @typedef {import("everywhere-everything/metafor").NodeLogical} NodeLogical
- * @typedef {import("everywhere-everything/metafor").Meta} MetaSchema
- * @typedef {import("everywhere-everything/actor").Actor} Actor
+ * @typedef {import("metafor/metafor").NodeMeta} NodeMeta
+ * @typedef {import("metafor/metafor").NodeType} NodeType
+ * @typedef {import("metafor/metafor").NodeLogical} NodeLogical
+ * @typedef {import("metafor/metafor").Meta} MetaSchema
+ * @typedef {import("metafor/actor").Actor} Actor
  */
 
 export const meta = MetaFor("nodes")
@@ -51,10 +51,7 @@ export const meta = MetaFor("nodes")
       .error(({ error, update }) => update({ error: error.message })),
     сборка: process()
       .action(async ({ self, context, core }) => {
-        const [{ Actor }, { default: meta }] = await Promise.all([
-          import("everywhere-everything/actor"),
-          import("nodes/node.js"),
-        ])
+        const [{ Actor }, { default: meta }] = await Promise.all([import("metafor/actor"), import("nodes/node.js")])
         const node = core.child[context.current]
         const id = Actor.appendChild(self.actor, meta, { core: { node } })
         return [...context.process, id]

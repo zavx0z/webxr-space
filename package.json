@@ -15,11 +15,11 @@
     "dev": "bun --hot ./index.ts",
     "build": "bun run metafor:build && bun run actor:build && bun run web:build && bun run server:build && bun run actor:typegen  && bun run metafor:typegen",
     "rebuild": "bun run metafor:build && bun run web:build && bun run server:build && bun run actor:build",
-    "metafor:build": "cd ../zavx0z/metafor && bun run build:metafor && cp dist/metafor.js ../../webxr-space/everywhere-everything/metafor.js",
-    "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/everywhere-everything/metafor.d.ts",
-    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.js",
-    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/everywhere-everything/actor.d.ts",
-    "web:build": "cd ../zavx0z/metafor && bun run build:web && cp -r dist/web ../../webxr-space/everywhere-everything",
-    "server:build": "cd ../zavx0z/metafor && bun run build:server && cp -r dist/server ../../webxr-space/everywhere-everything"
+    "metafor:build": "cd ../zavx0z/metafor && bun run build:metafor && cp dist/metafor.js ../../webxr-space/metafor/metafor.js",
+    "metafor:typegen": "cd ../zavx0z/metafor && bun run typegen:metafor && cp dist/metafor.d.ts ../../webxr-space/metafor/metafor.d.ts",
+    "actor:build": "cd ../zavx0z/metafor && bun run build:actor && cp dist/actor.js ../../webxr-space/metafor/actor.js",
+    "actor:typegen": "cd ../zavx0z/metafor && bun run typegen:actor && cp dist/actor.js ../../webxr-space/metafor/actor.d.ts",
+    "web:build": "cd ../zavx0z/metafor && bun run build:web && cp -r dist/web ../../webxr-space/metafor",
+    "server:build": "cd ../zavx0z/metafor && bun run build:server && cp -r dist/server ../../webxr-space/metafor"
   }
 }

@@ -12,14 +12,14 @@
         "imports": {
           "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
           "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
-          "everywhere-everything/actor": "./everywhere-everything/actor.js",
+          "metafor/actor": "./metafor/actor.js",
           "nodes/": "./nodes/",
           "meta/": "./meta/"
         }
       }
     </script>
     <script type="module">
-      import "./everywhere-everything/metafor.js"
+      import "./metafor/metafor.js"
       import "./space.js"
     </script>
     <style>
@@ -77,6 +77,6 @@
 
     <button id="add-object">Добавить объект</button>
     <button id="vr-button">VR Mode</button>
-    <everywhere-everything src="/meta/canvas.js" mode="tree" log></everywhere-everything>
+    <meta-for src="/meta/canvas.js" mode="tree" log></meta-for>
   </body>
 </html>

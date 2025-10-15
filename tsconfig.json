@@ -29,16 +29,16 @@
     // Path mapping
     "baseUrl": ".",
     "paths": {
-      "everywhere-everything/metafor": [
-        "./everywhere-everything/metafor.d.ts"
+      "metafor/metafor": [
+        "metafor/metafor.d.ts"
       ],
-      "everywhere-everything/actor": [
-        "./everywhere-everything/actor.d.ts"
+      "metafor/actor": [
+        "metafor/actor.d.ts"
       ],
     }
   },
   "exclude": [
     "node_modules/**/*",
-    "everywhere-everything/**/*",
+    "metafor/**/*",
   ],
 }

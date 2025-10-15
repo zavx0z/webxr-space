@@ -1,6 +1,6 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
-import { Actor, Fields } from "./everywhere-everything/actor.js"
-import { threadLog } from "./everywhere-everything/web/log.js"
+import { Actor, Fields } from "./metafor/actor.js"
+import { threadLog } from "./metafor/web/log.js"
 import { meta } from "./nodes/nodes.js"
 
 // Флаг для включения/отключения отладочных логов
@@ -30,6 +30,8 @@ class MetaXR extends HTMLElement {
     super()
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleResize = this.handleResize.bind(this)
+    Actor.break()
+    console.log(Actor.isLocked)
   }
 
   initializeActor() {
@@ -136,13 +138,15 @@ class MetaXR extends HTMLElement {
    */
   getActiveParticlePaths() {
     if (!this.builder) return []
-    /** @type {import("everywhere-everything/actor").Fields|null} */
+    /** @type {import("metafor/actor.js").Fields|null} */
     const fields = Fields.get()
     /** @type {Array<{ actor: string, meta: string, path: string }>} */
     const paths = []
     if (!fields) return paths
     // @ts-ignore
-    for (const [key, actor] of fields.actors.entries()) paths.push({ actor: key, meta: actor.name, path: actor.path })
+    for (const [key, actor] of fields.actors.entries()) {
+      paths.push({ actor: key, meta: actor.meta, path: actor.path })
+    }
     return paths
   }
 
@@ -187,4 +191,4 @@ class MetaXR extends HTMLElement {
   }
 }
 
-if (!customElements.get("everywhere-everything")) customElements.define("everywhere-everything", MetaXR)
+if (!customElements.get("meta-for")) customElements.define("meta-for", MetaXR)
