@@ -4,7 +4,7 @@
     "": {
       "name": "webxr-space",
       "dependencies": {
-        "@metafor/actor": "^0.4.4",
+        "@metafor/actor": "^0.4.5",
         "@metafor/inspect": "^0.4.0",
         "@metafor/meta": "^0.4.1",
       },
@@ -20,7 +20,7 @@
   "packages": {
     "@dimforge/rapier3d-compat": ["@dimforge/rapier3d-compat@0.12.0", "", {}, "sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow=="],
 
-    "@metafor/actor": ["@metafor/actor@0.4.4", "", { "dependencies": { "@zavx0z/context": "2.3.0" } }, "sha512-Rfi5hebOsT9iPY0Em4ltZ92LXY3a3dDp/4hldtIbrd2HjrSvQJJUQobHjvojQ1W4Frk7/ki5NWuQGIRYfK4+yQ=="],
+    "@metafor/actor": ["@metafor/actor@0.4.5", "", { "dependencies": { "@zavx0z/context": "2.3.0" } }, "sha512-xdvFExPdmaOSKc6v2leV9eE4HqBjNX/Lu6NL2j56L/Eg+fUyF5cmsG1IWjRgKb1k1th1gkU+yhGSqNCeLRImAw=="],
 
     "@metafor/inspect": ["@metafor/inspect@0.4.0", "", { "dependencies": { "@metafor/actor": "0.4.0" } }, "sha512-7S9tIqFhKZMLIv2t7gi5WAouD8schIsuRhWp6j0GgwubAU29+snLg3w53imYcLELVubpYU2moCTfiy53JSFq6A=="],
 

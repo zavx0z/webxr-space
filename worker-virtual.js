@@ -187,7 +187,7 @@ class ParticlesWorker {
   }
 
   setupBroadcastChannel() {
-    this.broadcastChannel = new BroadcastChannel("actor-force")
+    this.broadcastChannel = new BroadcastChannel("electromagnetic")
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
       const meta = data?.meta || null
@@ -217,7 +217,7 @@ class ParticlesWorker {
     } else if (meta != null) {
       p.labelMain = String(meta)
     }
-    if (actor != null) p.labelSub = String(actor)
+    if (actor != null) p.labelSub = actor.split("-").pop()
   }
 
   // ── построение дерева и геометрии ───────────────────────────────────────────
@@ -410,7 +410,7 @@ class ParticlesWorker {
         labelSub: "",
       }
       if (meta != null) p.labelMain = String(meta?.name ?? meta?.title ?? meta?.label ?? meta)
-      if (actor != null) p.labelSub = actor.includes("-") ? actor.slice(actor.lastIndexOf("-") + 1) : actor
+      if (actor != null) p.labelSub = actor.includes("-") ? actor.split("-").pop() : actor
 
       this.particles.set(path, p)
       this.justAdded.add(path)
@@ -1022,7 +1022,7 @@ self.onmessage = function (e) {
     if (particlesWorker) {
       particlesWorker.resetAnimationTimer()
       particlesWorker.particles = new Map()
-      e.data.paths.forEach((/** @type {{ actor: string, meta: string, path: string }} */ element) => {
+      e.data.paths.forEach((/** @type {import("@metafor/actor").SelfInfo} */ element) => {
         particlesWorker?.addParticle(element.path, element.meta, element.actor)
       })
     }

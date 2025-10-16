@@ -14,7 +14,8 @@
           "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
           "@metafor/meta": "./node_modules/@metafor/meta/dist/metafor.js",
           "@metafor/actor": "./node_modules/@metafor/actor/dist/actor.js",
-          "@metafor/inspect/web": "./node_modules/@metafor/inspect/dist/web/logger.js",
+          "@metafor/inspect/web/logger": "./node_modules/@metafor/inspect/dist/web/logger.js",
+          "@metafor/inspect/web/debugger": "./node_modules/@metafor/inspect/dist/web/debugger.js",
           "nodes/": "./nodes/",
           "meta/": "./meta/"
         }
@@ -69,7 +70,7 @@
     </style>
   </head>
   <body>
-    <meta-debugger></meta-debugger>
+    <meta-inspect brk></meta-inspect>
     <div id="info">
       <div>Выбранный объект: <span id="selected-object">Нет</span></div>
       <div>Полигонов: <span id="polygon-count">0</span></div>

@@ -1,4 +1,4 @@
-import "./debugger.js"
+import "@metafor/inspect/web/debugger"
 import "@metafor/meta"
 import "./space.js"
 
