@@ -1,5 +1,5 @@
 import { line, quantum, tree } from "./worker-virtual.config.js"
-import { Actor } from "@metafor/actor"
+import { Atom } from "@metafor/atom"
 import { threadLog } from "@metafor/inspect/web/logger"
 import { meta } from "./nodes/nodes.js"
 
@@ -18,7 +18,7 @@ function debugLog(...args) {
 class MetaXR extends HTMLElement {
   /** @type {Worker|null} */
   worker = null
-  /** @type {Actor|null} */
+  /** @type {Atom|null} */
   builder = null
 
   // Система дебаунсинга для запросов путей частиц
@@ -32,11 +32,11 @@ class MetaXR extends HTMLElement {
     this.handleResize = this.handleResize.bind(this)
   }
 
-  initializeActor() {
-    debugLog("🎭 Initializing Actor system")
+  initializeAtom() {
+    debugLog("🎭 Initializing Atom system")
     const src = this.getAttribute("src")
-    this.builder = Actor.fromSchema({ meta, core: { child: [{ tag: "meta-for", type: "meta", string: { src } }] } })
-    debugLog("✅ Actor system initialized")
+    this.builder = Atom.fromSchema({ meta, core: { child: [{ tag: "meta-for", type: "meta", string: { src } }] } })
+    debugLog("✅ Atom system initialized")
   }
 
   async connectedCallback() {
@@ -61,8 +61,8 @@ class MetaXR extends HTMLElement {
     }
     this.worker.onmessage = (event) => {
       if (event.data.type === "worker-ready") {
-        debugLog("✅ Worker ready, initializing Actor")
-        this.initializeActor()
+        debugLog("✅ Worker ready, initializing Atom")
+        this.initializeAtom()
       } else if (event.data.type === "request-paths") {
         debugLog("📥 Worker requested paths")
         this.requestPathsDebounced()
@@ -110,7 +110,7 @@ class MetaXR extends HTMLElement {
   sendPathsToWorker() {
     if (!this.builder) return
     // Получаем пути всех активных частиц из builder
-    const activePaths = Actor.all
+    const activePaths = Atom.getAllAddresses()
     // Если нет активных частиц, не отправляем пустой массив
     if (!activePaths || activePaths.length === 0) {
       debugLog("📤 No active particles, skipping paths update")

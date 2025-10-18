@@ -1,7 +1,7 @@
 /**
  * @typedef {import("@metafor/meta").NodeMeta} NodeMeta
  * @typedef {import("@metafor/meta").Meta} MetaType
- * @typedef {import("@metafor/actor").Actor} Actor
+ * @typedef {import("@metafor/atom").Atom} Atom
  */
 
 export const meta = MetaFor("meta")
@@ -64,16 +64,16 @@ export const meta = MetaFor("meta")
     родитель: process()
       .action(async ({ core, self, context }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        const { Actor } = await import("@metafor/actor")
-        // Actor.appendChild(self.actor, core.meta, { id: context.id })
+        const { Atom } = await import("@metafor/atom")
+        // Atom.append(self.Atom, core.meta, { id: context.id })
       })
       .error(({ error, update }) => update({ error: error.message })),
     дети: process()
       .action(async ({ core, self }) => {
         if (!core.meta) throw new Error("Отсутствует мета")
-        const [{ Actor }, { default: meta }] = await Promise.all([import("@metafor/actor"), import("nodes/nodes.js")])
+        const [{ Atom }, { default: meta }] = await Promise.all([import("@metafor/atom"), import("nodes/nodes.js")])
         const child = core.meta.render
-        Actor.appendChild(self.actor, meta, { core: { child } })
+        Atom.append(self.atom, meta, { core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     // конец: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),

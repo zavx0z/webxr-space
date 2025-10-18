@@ -1,6 +1,6 @@
 /**
  * @typedef {import("@metafor/meta").NodeLogical} NodeLogical
- * @typedef {import("@metafor/actor").Actor} Actor
+ * @typedef {import("@metafor/atom").Atom} Atom
  */
 
 export const meta = MetaFor("logical")
@@ -32,7 +32,7 @@ export const meta = MetaFor("logical")
   .core({
     /** @type {NodeLogical|null} */
     node: null,
-    /** @type {Actor|null} */
+    /** @type {Atom|null} */
     parent: null,
     /** @type {NodeLogical|null} */
     schema: null,
@@ -52,18 +52,18 @@ export const meta = MetaFor("logical")
     дети: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Отсутствует схема компонентов")
-        const [{ Actor }, { default: meta }] = await Promise.all([import("@metafor/actor"), import("nodes/nodes.js")])
+        const [{ Atom }, { default: meta }] = await Promise.all([import("@metafor/atom"), import("nodes/nodes.js")])
         const child = core.node.child
-        Actor.appendChild(self.actor, meta, { core: { child } })
+        Atom.append(self.atom, meta, { core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     создание: process()
       .action(async ({ core }) => {
         if (!core.schema) throw new Error("Отсутствует схема компонентов")
         const { meta } = await import("./node.js")
-        const { Actor } = await import("@metafor/actor")
+        const { Atom } = await import("@metafor/atom")
 
-        // Actor.fromSchema(meta, "canvas/0", { child: core.schema.child })
+        // Atom.fromSchema(meta, "canvas/0", { child: core.schema.child })
       })
       .error(({ error, update }) => update({ error: error.message })),
     удаление: process()
@@ -75,7 +75,7 @@ export const meta = MetaFor("logical")
       ["ожидание", "создание", "удаление"],
       reaction({ label: "Обновление состояния родительского актора" })
         .filter(({ self }) => ({
-          actor: self.actor.split("/")[1],
+          Atom: self.atom.split("/")[1],
           path: "/state",
           op: "replace",
         }))

@@ -3,7 +3,7 @@
  * @typedef {import("@metafor/meta").NodeType} NodeType
  * @typedef {import("@metafor/meta").NodeLogical} NodeLogical
  * @typedef {import("@metafor/meta").Meta} MetaSchema
- * @typedef {import("@metafor/actor").Actor} Actor
+ * @typedef {import("@metafor/atom").Atom} Atom
  */
 
 export const meta = MetaFor("nodes")
@@ -51,9 +51,9 @@ export const meta = MetaFor("nodes")
       .error(({ error, update }) => update({ error: error.message })),
     сборка: process()
       .action(async ({ self, context, core }) => {
-        const [{ Actor }, { default: meta }] = await Promise.all([import("@metafor/actor"), import("nodes/node.js")])
+        const [{ Atom }, { default: meta }] = await Promise.all([import("@metafor/atom"), import("nodes/node.js")])
         const node = core.child[context.current]
-        const id = Actor.appendChild(self.actor, meta, { core: { node } })
+        const id = Atom.append(self.atom, meta, { core: { node } })
         return [...context.process, id]
       })
       .success(({ data, update }) => update({ process: data }))
@@ -66,7 +66,7 @@ export const meta = MetaFor("nodes")
       .success(({ data, update }) => update({ current: data }))
       .error(({ error, update }) => update({ error: error.message })),
     конец: process()
-      .action(({ self }) => self.destroy(false))
+      .action(({ destroy }) => destroy(false))
       .error(({ error, update }) => update({ error: error.message })),
   }))
   .reactions((reaction) => [
@@ -74,28 +74,28 @@ export const meta = MetaFor("nodes")
       ["ожидание", "сборка", "следующий"],
       reaction()
         .filter(({ context }) => ({
-          actor: { in: context.process },
+          Atom: { in: context.process },
           op: "remove",
         }))
-        .equal(({ update, actor, context, self }) => {
+        .equal(({ update, atom, context }) => {
           // if (context.success.length + 1 === context.process.length) self.destroy(false)
           // else
-          update({ success: [...context.success, actor] })
+          update({ success: [...context.success, atom] })
         }),
     ],
     [
       ["ожидание", "сборка", "следующий"],
       reaction()
         .filter(({ context }) => ({
-          actor: { in: context.process },
+          atom: { in: context.process },
           path: "/context",
           op: "replace",
           value: { includeKey: "error" },
         }))
-        .equal(({ update, actor, context }) => {
+        .equal(({ update, atom, context }) => {
           if (context.rejected.length + 1 + context.success.length === context.process.length)
             update({ error: "Ожидание завершено с ошибкой" })
-          update({ rejected: [...context.rejected, actor] })
+          update({ rejected: [...context.rejected, atom] })
         }),
     ],
   ])

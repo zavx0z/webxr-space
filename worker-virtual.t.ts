@@ -191,7 +191,7 @@ export interface Particle {
   pulseSeed: number
   /** Основная подпись (из meta) */
   labelMain: string
-  /** Дополнительная подпись (actor id) */
+  /** Дополнительная подпись (Atom id) */
   labelSub: string
 }
 

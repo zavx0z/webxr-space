@@ -191,7 +191,7 @@ class ParticlesWorker {
     this.broadcastChannel.onmessage = (event) => {
       const { data } = event
       const meta = data?.meta || null
-      const actor = data?.actor || null
+      const Atom = data?.Atom || null
       const { path } = data || {}
       if (!path || !String(path).startsWith("0")) return
 
@@ -199,17 +199,17 @@ class ParticlesWorker {
       this.resetAnimationTimer()
 
       for (const patch of data.patches || []) {
-        if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, actor)
+        if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, Atom)
         else if (patch.path === "/" && patch.op === "remove") this.removeParticle(path)
         else {
-          if (meta || actor) this.updateParticleLabels(path, meta, actor)
+          if (meta || Atom) this.updateParticleLabels(path, meta, Atom)
         }
       }
     }
   }
 
-  /** @param {string} path @param {any} meta @param {any} actor */
-  updateParticleLabels(path, meta, actor) {
+  /** @param {string} path @param {any} meta @param {any} Atom */
+  updateParticleLabels(path, meta, Atom) {
     const p = this.particles.get(path)
     if (!p) return
     if (meta && typeof meta === "object") {
@@ -217,7 +217,7 @@ class ParticlesWorker {
     } else if (meta != null) {
       p.labelMain = String(meta)
     }
-    if (actor != null) p.labelSub = actor.split("-").pop()
+    if (Atom != null) p.labelSub = Atom.split("-").pop()
   }
 
   // ── построение дерева и геометрии ───────────────────────────────────────────
@@ -378,8 +378,8 @@ class ParticlesWorker {
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
 
-  /** @param {string} path @param {any} meta @param {any} actor */
-  addParticle(path, meta = null, actor = null) {
+  /** @param {string} path @param {any} meta @param {any} Atom */
+  addParticle(path, meta = null, Atom = null) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
     const depth = path === "0" ? 0 : path.split("/").length - 1
@@ -410,7 +410,7 @@ class ParticlesWorker {
         labelSub: "",
       }
       if (meta != null) p.labelMain = String(meta?.name ?? meta?.title ?? meta?.label ?? meta)
-      if (actor != null) p.labelSub = actor.includes("-") ? actor.split("-").pop() : actor
+      if (Atom != null) p.labelSub = Atom.includes("-") ? Atom.split("-").pop() : Atom
 
       this.particles.set(path, p)
       this.justAdded.add(path)
@@ -419,7 +419,7 @@ class ParticlesWorker {
       existed.depth = depth
       existed.parentPath = parentPath
       existed.speed = this.speedForDepth(depth)
-      if (meta || actor) this.updateParticleLabels(path, meta, actor)
+      if (meta || Atom) this.updateParticleLabels(path, meta, Atom)
     }
 
     this.rebuildTree()
@@ -1011,7 +1011,7 @@ self.onmessage = function (e) {
   } else if (type === "add") {
     if (particlesWorker) {
       particlesWorker.resetAnimationTimer()
-      particlesWorker.addParticle(e.data.path, e.data.meta, e.data.actor)
+      particlesWorker.addParticle(e.data.path, e.data.meta, e.data.Atom)
     }
   } else if (type === "remove") {
     if (particlesWorker) {
@@ -1022,8 +1022,8 @@ self.onmessage = function (e) {
     if (particlesWorker) {
       particlesWorker.resetAnimationTimer()
       particlesWorker.particles = new Map()
-      e.data.paths.forEach((/** @type {import("@metafor/actor").SelfInfo} */ element) => {
-        particlesWorker?.addParticle(element.path, element.meta, element.actor)
+      e.data.paths.forEach((/** @type {import("@metafor/atom").Self} */ element) => {
+        particlesWorker?.addParticle(element.path, element.meta, element.atom)
       })
     }
   } else if (type === "start-tracking") {

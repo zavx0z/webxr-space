@@ -38,7 +38,7 @@ export const meta = MetaFor("view")
       reaction()
         .filter(({ context, self }) => ({
           meta: self.meta,
-          actor: "",
+          Atom: "",
           path: "/state",
           op: "replace",
           value: "состояние",

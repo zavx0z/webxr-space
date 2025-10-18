@@ -2,7 +2,7 @@
  * @typedef {import("@metafor/meta").NodeMeta} NodeMeta
  * @typedef {import("@metafor/meta").NodeType} NodeType
  * @typedef {import("@metafor/meta").NodeLogical} NodeLogical
- * @typedef {import("@metafor/actor").Actor} Actor
+ * @typedef {import("@metafor/atom").Atom} Atom
  */
 
 export const meta = MetaFor("node")
@@ -30,7 +30,7 @@ export const meta = MetaFor("node")
   .core({
     /** @type {NodeType|null} */
     node: null,
-    /** @type {Actor|null} */
+    /** @type {Atom|null} */
     builder: null,
   })
   .processes((process) => ({
@@ -47,15 +47,15 @@ export const meta = MetaFor("node")
       .error(({ error, update }) => update({ error: error.message })),
     мета: process()
       .action(async ({ self, core }) => {
-        const [{ Actor }, { meta }] = await Promise.all([import("@metafor/actor"), import("nodes/meta.js")])
-        Actor.appendChild(self.actor, meta, { core: { node: core.node } })
+        const [{ Atom }, { meta }] = await Promise.all([import("@metafor/atom"), import("nodes/meta.js")])
+        Atom.append(self.atom, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
     логический: process()
       .action(async ({ core, self }) => {
         if (!core.node) throw new Error("Нет родительского актора")
-        const [{ Actor }, { meta }] = await Promise.all([import("@metafor/actor"), import("nodes/logical.js")])
-        Actor.appendChild(self.actor, meta, { core: { node: core.node } })
+        const [{ Atom }, { meta }] = await Promise.all([import("@metafor/atom"), import("nodes/logical.js")])
+        Atom.append(self.atom, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
   }))
@@ -64,13 +64,13 @@ export const meta = MetaFor("node")
       ["мета", "логический"],
       reaction()
         .filter(({ context }) => ({
-          actor: /** @type {string} */ (context.id),
+          Atom: /** @type {string} */ (context.id),
           path: "/state",
           op: "replace",
           value: "ожидание",
         }))
         // .equal(({ self }) => {}),
-        .equal(({ self }) => self.destroy(false)),
+        .equal(({ self, destroy }) => destroy(false)),
     ],
   ])
   .view()
