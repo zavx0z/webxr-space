@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: |
+          # Создаем директорию для сборки
+          mkdir -p dist
+
+          # Копируем все необходимые файлы
+          cp -r . dist/
+
+          # Удаляем ненужные файлы из dist
+          rm -rf dist/.git
+          rm -rf dist/.github
+          rm -rf dist/node_modules
+          rm -rf dist/ssl
+          rm -rf dist/tsconfig.json
+          rm -rf dist/worker-virtual.config.js
+          rm -rf dist/worker-virtual.t.ts
+
+          # Устанавливаем зависимости в dist
+          cd dist
+          bun install --production
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist

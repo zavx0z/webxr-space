@@ -189,20 +189,21 @@ class ParticlesWorker {
   setupBroadcastChannel() {
     this.broadcastChannel = new BroadcastChannel("electromagnetic")
     this.broadcastChannel.onmessage = (event) => {
+      /**@type {{data: import("@metafor/atom").Photon}} */
       const { data } = event
       const meta = data?.meta || null
-      const Atom = data?.Atom || null
+      const atom = data?.atom || null
       const { path } = data || {}
       if (!path || !String(path).startsWith("0")) return
 
       // сбрасываем таймер анимации при получении патча (если включено отслеживание)
       this.resetAnimationTimer()
 
-      for (const patch of data.patches || []) {
-        if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, Atom)
+      for (const patch of data.impulses || []) {
+        if (patch.path === "/" && patch.op === "add") this.addParticle(path, meta, atom)
         else if (patch.path === "/" && patch.op === "remove") this.removeParticle(path)
         else {
-          if (meta || Atom) this.updateParticleLabels(path, meta, Atom)
+          if (meta || atom) this.updateParticleLabels(path, meta, atom)
         }
       }
     }
@@ -1011,7 +1012,7 @@ self.onmessage = function (e) {
   } else if (type === "add") {
     if (particlesWorker) {
       particlesWorker.resetAnimationTimer()
-      particlesWorker.addParticle(e.data.path, e.data.meta, e.data.Atom)
+      particlesWorker.addParticle(e.data.path, e.data.meta, e.data.atom)
     }
   } else if (type === "remove") {
     if (particlesWorker) {

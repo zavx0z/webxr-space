@@ -26,7 +26,7 @@ export const meta = MetaFor("view")
   })
   .processes((process) => ({
     ошибка: process()
-      .action(async ({ self, core, context }) => {
+      .action(() => {
         return { error: null }
       })
       .success(({ data, update }) => update(data))
@@ -36,14 +36,14 @@ export const meta = MetaFor("view")
     [
       ["начало", "ожидание", "ошибка", "конец"],
       reaction()
-        .filter(({ context, self }) => ({
+        .filter(({ self }) => ({
           meta: self.meta,
           Atom: "",
           path: "/state",
           op: "replace",
           value: "состояние",
         }))
-        .equal(({ self }) => self.destroy(false)),
+        .equal(({ destroy }) => destroy(false)),
     ],
   ])
   .view()
