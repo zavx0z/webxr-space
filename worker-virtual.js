@@ -20,7 +20,12 @@
  * @typedef {import('./worker-virtual.t.js').TreeConfig} TreeConfig
  * @typedef {import('./worker-virtual.t.js').LabelConfig} LabelConfig
  */
-
+/**
+ * @param {string} uuid
+ */
+function shortUUID(uuid) {
+  return uuid.slice(0, 8)
+}
 // ── Конфиг (можно переопределять через init/set-config) ───────────────────────
 /** @type {ParticlesConfig} */
 const DEFAULT_CONFIG = {
@@ -209,8 +214,8 @@ class ParticlesWorker {
     }
   }
 
-  /** @param {string} path @param {any} meta @param {any} Atom */
-  updateParticleLabels(path, meta, Atom) {
+  /** @param {string} path @param {any} meta @param {any} atom */
+  updateParticleLabels(path, meta, atom) {
     const p = this.particles.get(path)
     if (!p) return
     if (meta && typeof meta === "object") {
@@ -218,7 +223,7 @@ class ParticlesWorker {
     } else if (meta != null) {
       p.labelMain = String(meta)
     }
-    if (Atom != null) p.labelSub = Atom.split("-").pop()
+    if (atom != null) p.labelSub = shortUUID(atom)
   }
 
   // ── построение дерева и геометрии ───────────────────────────────────────────
@@ -379,8 +384,8 @@ class ParticlesWorker {
 
   // ── жизненный цикл добавления/удаления ──────────────────────────────────────
 
-  /** @param {string} path @param {any} meta @param {any} Atom */
-  addParticle(path, meta = null, Atom = null) {
+  /** @param {string} path @param {any} meta @param {any} atom */
+  addParticle(path, meta = null, atom = null) {
     if (!this.canvas) return
     const parentPath = this.getParent(path)
     const depth = path === "0" ? 0 : path.split("/").length - 1
@@ -411,7 +416,7 @@ class ParticlesWorker {
         labelSub: "",
       }
       if (meta != null) p.labelMain = String(meta?.name ?? meta?.title ?? meta?.label ?? meta)
-      if (Atom != null) p.labelSub = Atom.includes("-") ? Atom.split("-").pop() : Atom
+      if (atom != null) p.labelSub = shortUUID(atom)
 
       this.particles.set(path, p)
       this.justAdded.add(path)
@@ -420,7 +425,7 @@ class ParticlesWorker {
       existed.depth = depth
       existed.parentPath = parentPath
       existed.speed = this.speedForDepth(depth)
-      if (meta || Atom) this.updateParticleLabels(path, meta, Atom)
+      if (meta || atom) this.updateParticleLabels(path, meta, atom)
     }
 
     this.rebuildTree()

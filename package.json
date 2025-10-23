@@ -12,6 +12,7 @@
   },
   "scripts": {
     "upd": "bun update --latest && bun i",
+    "link:local": "bun link  @metafor/meta @metafor/atom @metafor/inspect",
     "build": "mkdir -p dist && cp -r . dist/ && rm -rf dist/.git dist/.github dist/node_modules dist/ssl dist/tsconfig.json dist/worker-virtual.config.js dist/worker-virtual.t.ts && cd dist && bun install --production",
     "dev": "bun --hot index.ts",
     "start": "bun index.ts"

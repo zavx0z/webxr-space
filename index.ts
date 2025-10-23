@@ -1,5 +1,6 @@
 import { readFileSync } from "fs"
 import { networkInterfaces } from "os"
+import path from "path"
 
 // Получаем IP адреса локальной сети
 function getLocalIPs(): string[] {
@@ -40,10 +41,45 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url)
     const pathname = decodeURIComponent(url.pathname)
-
+    switch (pathname) {
+      case "/node_modules/@metafor/inspect/dist/web/debugger.js":
+        debugger
+        return new Response(Bun.file(path.join(__dirname, "../zavx0z/metafor/infra/inspect/dist/web/debugger.js")), {
+          headers: {
+            "Content-Type": "application/javascript",
+          },
+        })
+      case "/node_modules/@metafor/meta/dist/metafor.min.js":
+        return new Response(Bun.file(path.join(__dirname, "../zavx0z/metafor/meta/dist/metafor.js")), {
+          headers: {
+            "Content-Type": "application/javascript",
+          },
+        })
+      case "/node_modules/@metafor/atom/dist/atom.min.js":
+        return new Response(Bun.file(path.join(__dirname, "../zavx0z/metafor/atom/dist/atom.js")), {
+          headers: {
+            "Content-Type": "application/javascript",
+          },
+        })
+      case "/zavx0z/metafor/node_modules/@zavx0z/context/dist/index.js":
+        return new Response(
+          Bun.file(path.join(__dirname, "../zavx0z/metafor/node_modules/@zavx0z/context/dist/index.d.ts")),
+          {
+            headers: {
+              "Content-Type": "application/javascript",
+            },
+          }
+        )
+    }
     const file = Bun.file("." + pathname)
     if (await file.exists()) {
-      return new Response(file)
+      return new Response(file, {
+        headers: {
+          "Content-Type": "application/javascript",
+        },
+      })
+    } else {
+      console.log("Not found:", pathname)
     }
 
     return new Response("Not Found", { status: 404 })

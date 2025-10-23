@@ -28,6 +28,7 @@ class MetaXR extends HTMLElement {
 
   constructor() {
     super()
+    Atom.lock = true
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleResize = this.handleResize.bind(this)
   }
