@@ -33,7 +33,7 @@ export const meta = MetaFor("node")
     /** @type {Atom|null} */
     builder: null,
   })
-  .processes((process) => ({
+  .processes((process, destroy) => ({
     идентификация: process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
@@ -58,6 +58,9 @@ export const meta = MetaFor("node")
         Atom.append(self.atom, meta, { core: { node: core.node } })
       })
       .error(({ error, update }) => update({ error: error.message })),
+    конец: destroy().before(() => {
+      console.log("destroy Node")
+    }),
   }))
   .reactions((reaction) => [
     [
@@ -69,8 +72,7 @@ export const meta = MetaFor("node")
           op: "replace",
           value: "ожидание",
         }))
-        // .equal(({ self }) => {}),
-        .equal(({ self, destroy }) => destroy(false)),
+        .equal(({ update }) => update({ type: null, tag: null, id: null })),
     ],
   ])
   .view()

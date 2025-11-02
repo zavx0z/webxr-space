@@ -4,6 +4,7 @@
  */
 export const meta = MetaFor("view")
   .context((t) => ({
+    finally: t.boolean.optional(false, { label: "Завершено" }),
     error: t.string.optional({ label: "Ошибка" }),
   }))
   .states({
@@ -12,13 +13,17 @@ export const meta = MetaFor("view")
       ожидание: {},
     },
     ожидание: {
-      конец: {},
+      конец: {
+        finally: true,
+      },
     },
     ошибка: {
       ожидание: {},
-      конец: {},
+      конец: {
+        finally: true,
+      },
     },
-    конец: {},
+    конец: null,
   })
   .core({
     /** @type {Shared} */
@@ -38,12 +43,12 @@ export const meta = MetaFor("view")
       reaction()
         .filter(({ self }) => ({
           meta: self.meta,
-          Atom: "",
+          atom: "",
           path: "/state",
           op: "replace",
           value: "состояние",
         }))
-        .equal(({ destroy }) => destroy(false)),
+        .equal(() => {}),
     ],
   ])
   .view()

@@ -21,7 +21,6 @@ export const meta = MetaFor("nodes")
     данные: {
       ошибка: { error: { null: false } },
       сборка: { children: { gt: 0 } },
-      конец: { children: { eq: 0 } },
     },
     сборка: {
       ошибка: { error: { null: false } },
@@ -35,16 +34,16 @@ export const meta = MetaFor("nodes")
     ожидание: {
       конец: { process: { length: 0 } },
     },
-    конец: {},
     ошибка: {
       // "данные": {},
     },
+    конец: null,
   })
   .core({
     /** @type {NodeType[]} */
     child: [],
   })
-  .processes((process) => ({
+  .processes((process, destroy) => ({
     данные: process()
       .action(({ core }) => core.child.length)
       .success(({ data, update }) => update({ children: data, current: 0 }))
@@ -65,16 +64,16 @@ export const meta = MetaFor("nodes")
       })
       .success(({ data, update }) => update({ current: data }))
       .error(({ error, update }) => update({ error: error.message })),
-    конец: process()
-      .action(({ destroy }) => destroy(false))
-      .error(({ error, update }) => update({ error: error.message })),
+    конец: destroy().before(() => {
+      console.log("destroy Nodes")
+    }),
   }))
   .reactions((reaction) => [
     [
       ["ожидание", "сборка", "следующий"],
       reaction()
         .filter(({ context }) => ({
-          Atom: { in: context.process },
+          atom: { in: context.process },
           op: "remove",
         }))
         .equal(({ update, atom, context }) => {
