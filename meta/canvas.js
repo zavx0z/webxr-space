@@ -72,21 +72,21 @@ export const meta = MetaFor("canvas", {
       .success(({ data, update }) => update({}))
       .error(({ error }) => console.log(error)),
     "инициализация камеры": process()
-      .action(async ({ core, context, schema }) => {
+      .action(async ({ core, context, fields }) => {
         const { PerspectiveCamera } = await import("three")
-        const camera = new PerspectiveCamera(context.fov, context.aspect ?? schema.aspect.default, 0.1, 1000)
+        const camera = new PerspectiveCamera(context.fov, context.aspect ?? fields.aspect.default, 0.1, 1000)
         camera.position.set(0, 1.6, 0)
         core.camera = camera
       })
       .success(() => {})
       .error(({ error }) => console.log(error)),
     "инициализация рендерера": process()
-      .action(async ({ context, schema, core }) => {
+      .action(async ({ context, fields, core }) => {
         const { WebGLRenderer, PCFSoftShadowMap } = await import("three")
-        const renderer = new WebGLRenderer({ antialias: context.antialias ?? schema.antialias.default })
+        const renderer = new WebGLRenderer({ antialias: context.antialias ?? fields.antialias.default })
         renderer.setSize(window.innerWidth, window.innerHeight)
         renderer.setClearColor(context.clearColor)
-        renderer.shadowMap.enabled = context.shadowMapEnable ?? schema.shadowMapEnable.default
+        renderer.shadowMap.enabled = context.shadowMapEnable ?? fields.shadowMapEnable.default
         renderer.shadowMap.type = PCFSoftShadowMap
         core.renderer = renderer
       })

@@ -25,7 +25,7 @@ export const meta = MetaFor("node")
     логический: {
       конец: { type: null },
     },
-    конец: {},
+    конец: null,
   })
   .core({
     /** @type {NodeType|null} */
@@ -67,7 +67,7 @@ export const meta = MetaFor("node")
       ["мета", "логический"],
       reaction()
         .filter(({ context }) => ({
-          Atom: /** @type {string} */ (context.id),
+          atom: /** @type {string} */ (context.id),
           path: "/state",
           op: "replace",
           value: "ожидание",
