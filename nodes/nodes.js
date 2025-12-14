@@ -77,9 +77,8 @@ export const meta = MetaFor("nodes")
           op: "remove",
         }))
         .equal(({ update, atom, context }) => {
-          // if (context.success.length + 1 === context.process.length) self.destroy(false)
-          // else
-          update({ success: [...context.success, atom] })
+          if (context.success.length + 1 === context.process.length) update({ process: [] })
+          else update({ success: [...context.success, atom] })
         }),
     ],
     [

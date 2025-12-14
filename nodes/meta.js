@@ -34,7 +34,7 @@ export const meta = MetaFor("meta")
     },
     ожидание: {},
     ошибка: {},
-    конец: {},
+    конец: null,
   })
   .core({
     /** @type {NodeMeta|null} */
@@ -42,7 +42,7 @@ export const meta = MetaFor("meta")
     /** @type {MetaType|null} */
     meta: null,
   })
-  .processes((process) => ({
+  .processes((process, destroy) => ({
     данные: process()
       .action(({ core }) => {
         if (!core.node) throw new Error("Нода не передана")
@@ -76,7 +76,7 @@ export const meta = MetaFor("meta")
         Atom.append(self.atom, meta, { core: { child } })
       })
       .error(({ error, update }) => update({ error: error.message })),
-    // конец: process({ label: "Самоуничтожение" }).action(({ self }) => self.destroy()),
+    конец: destroy(),
   }))
   .reactions()
   .view()

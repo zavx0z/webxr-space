@@ -16,5 +16,6 @@
     "cSpell.words": [
         "рендерера",
         "webxr"
-    ]
+    ],
+    "liveServer.settings.port": 5501
 }
