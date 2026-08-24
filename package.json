@@ -1,0 +1,27 @@
+{
+  "name": "@nodes/core",
+  "version": "0.0.1",
+  "description": "Live NodeTree runtime, Parameter stores and projection coordination. Built for MetaFor.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/node.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://zavx0z.github.io/node/core/",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "metafor": "https://github.com/zavx0z/metafor",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./json-patch": "./json-patch.ts",
+    "./parameter": "./parameter.ts",
+    "./node-tree": "./node-tree.ts",
+    "./projection-types": "./projection-types.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  }
+}
