@@ -16,7 +16,8 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    }
+    },
+    "./fonts/jetbrains-mono-bold.ttf": "./static/fonts/jetbrains-mono-bold.ttf"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
