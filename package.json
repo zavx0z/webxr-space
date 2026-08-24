@@ -1,0 +1,55 @@
+{
+  "name": "@ui/components",
+  "version": "0.0.1",
+  "description": "Composable visual WebGPU controls built on @ui/elements. Built for MetaFor and reusable in immersive interfaces.",
+  "type": "module",
+  "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./button": "./button.ts",
+    "./field": "./field.ts",
+    "./pane": "./pane.ts",
+    "./checkbox": "./checkbox.ts",
+    "./badge": "./badge.ts",
+    "./typography": "./typography.ts",
+    "./text-field": "./text-field.ts",
+    "./control-group": "./control-group.ts",
+    "./number-input": "./number-input.ts",
+    "./integer-input": "./integer-input.ts",
+    "./color-input": "./color-input.ts",
+    "./vector-input": "./vector-input.ts",
+    "./matrix-input": "./matrix-input.ts",
+    "./reference-input": "./reference-input.ts",
+    "./enum-input": "./enum-input.ts",
+    "./collection-input": "./collection-input.ts",
+    "./path-input": "./path-input.ts",
+    "./switcher": "./switcher.ts",
+    "./progress-checkbox": "./progress-checkbox.ts",
+    "./slider-control": "./slider-control.ts",
+    "./divider": "./divider.ts",
+    "./list": "./list.ts",
+    "./table": "./table.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false",
+    "typecheck:storybook": "tsc --noEmit --pretty false --project storybook/tsconfig.json"
+  },
+  "dependencies": {
+    "@engine/core": "link:@engine/core",
+    "@layout/core": "link:@layout/core",
+    "@ui/elements": "workspace:*"
+  },
+  "devDependencies": {
+    "@ui/storybook": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/ui.git",
+    "directory": "packages/components"
+  },
+  "homepage": "https://zavx0z.github.io/ui/components/",
+  "metafor": "https://github.com/zavx0z/metafor",
+  "keywords": ["webgpu", "ui", "components", "metafor"]
+}
