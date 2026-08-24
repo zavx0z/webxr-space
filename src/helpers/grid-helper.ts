@@ -5,7 +5,7 @@ import { BufferGeometry } from "../core/buffer-geometry"
 import { Color } from "../math"
 
 /**
- * Генерирует процедурную сетку, похожую на сетку в Blender.
+ * Generates a procedural reference grid for spatial editing.
  */
 export class GridHelper extends LineSegments {
   /**

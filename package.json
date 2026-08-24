@@ -4,6 +4,7 @@
   "private": true,
   "description": "Built for MetaFor: reusable retained WebGPU scene, rendering, geometry, material, and interaction primitives.",
   "homepage": "https://zavx0z.github.io/engine/",
+  "metafor": "https://github.com/zavx0z/metafor",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/engine.git",
