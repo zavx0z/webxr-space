@@ -1,0 +1,32 @@
+{
+  "name": "@nodes/worker",
+  "version": "0.0.1",
+  "description": "Worker transport and exact fixed/adaptive layout executors. Built for MetaFor.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/node.git",
+    "directory": "packages/worker"
+  },
+  "homepage": "https://zavx0z.github.io/node/worker/",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "metafor": "https://github.com/zavx0z/metafor",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/worker.ts",
+    "./transport": "./transport.ts",
+    "./fixed/client": "./fixed/client.ts",
+    "./fixed/executor": "./fixed/executor.ts",
+    "./adaptive/client": "./adaptive/client.ts",
+    "./adaptive/executor": "./adaptive/executor.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@nodes/layout": "workspace:*"
+  }
+}
