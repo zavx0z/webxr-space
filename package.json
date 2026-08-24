@@ -10,7 +10,7 @@
     "url": "git+https://github.com/zavx0z/engine.git",
     "directory": "packages/core"
   },
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
