@@ -1,0 +1,27 @@
+{
+  "name": "@nodes/editor",
+  "version": "0.0.1",
+  "description": "Headless JSON Patch authoring commands for a live NodeTree. Built for MetaFor.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/node.git",
+    "directory": "packages/editor"
+  },
+  "homepage": "https://zavx0z.github.io/node/editor/",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "metafor": "https://github.com/zavx0z/metafor",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./node-tree-editor": "./node-tree-editor.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@nodes/core": "workspace:*"
+  }
+}
