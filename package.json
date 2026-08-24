@@ -1,0 +1,34 @@
+{
+  "name": "@engine/core",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Built for MetaFor: reusable retained WebGPU scene, rendering, geometry, material, and interaction primitives.",
+  "homepage": "https://zavx0z.github.io/engine/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/engine.git",
+    "directory": "packages/core"
+  },
+  "license": "ISC",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "bun test src",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "keywords": [
+    "metafor",
+    "webgpu",
+    "graphics",
+    "immersive-interfaces",
+    "spatial-computing"
+  ]
+}
