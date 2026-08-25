@@ -67,7 +67,7 @@ describe("CodeEditor read-only component", () => {
     expect(surface.texts.some(([text]) => text === "3")).toBeTrue()
     expect(surface.roundedRects[0]?.[4]).toMatchObject({
       fill: opaqueRgba8ToColor(uiTheme.spaceText.back),
-      border: rgba8ToColor(uiTheme.material.editorBorder),
+      border: rgba8ToColor(uiTheme.material.editorOutline),
     })
     expect(surface.rects.map((call) => call[4])).toContainEqual(rgba8ToColor(uiTheme.spaceText.gutter))
     expect(surface.rects[0]?.slice(0, 2)).toEqual([1, 1])

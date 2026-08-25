@@ -133,7 +133,7 @@ export function CodeEditor(
     scrollContentHeight: contentHeight,
     sx: {
       background: opaqueRgba8ToColor(uiTheme.spaceText.back),
-      borderColor: rgba8ToColor(uiTheme.material.editorBorder),
+      borderColor: rgba8ToColor(uiTheme.material.editorOutline),
       padding: 0,
       overflow: "auto",
       scrollbarWidth: 4,
