@@ -122,3 +122,14 @@ contracts — [`@nodes/ui`](../ui/requirements.md).
    renderer-neutral metadata, но не `FieldDefinition` callbacks.
 5. Legacy `NodeSystem*`, Port/Edge contracts и compatibility aliases не
    сохраняются.
+
+## Package-owned dev stories
+
+1. Dev-only stories, fixtures и browser entrypoints, которые объясняют
+   семантику `@nodes/core`, принадлежат каталогу `./storybook` рядом с Core.
+2. Repository Storybook подключает эти файлы в свой общий каталог, но Core не
+   владеет отдельным server, process, port, static build или Pages lifecycle.
+3. `./storybook` не входит в production exports и не добавляет Storybook, DOM,
+   UI или Engine в runtime dependencies `@nodes/core`. Примеры импортируют
+   production Core и общую инфраструктуру только через их exact public
+   subpaths.
