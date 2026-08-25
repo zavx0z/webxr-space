@@ -75,6 +75,66 @@ describe("presentation clip upload", () => {
     expect(upload.ranges.get(invalid)).toEqual({start: 0, count: 1})
   })
 
+  test("fails closed for malformed coordinate spaces and matrices without throwing", () => {
+    const missingMatrix = {} as Object3D
+    const malformedMatrix = new Object3D()
+    Object.assign(malformedMatrix, {matrixWorld: {elements: []}})
+    const throwingMatrix = Object.defineProperty({}, "matrixWorld", {
+      get() {
+        throw new Error("malformed matrix getter")
+      },
+    }) as Object3D
+    const objects = [missingMatrix, malformedMatrix, throwingMatrix].map((coordinateSpace) => {
+      const object = new Object3D()
+      object.presentationClips = [{
+        kind: "rounded-rect",
+        coordinateSpace,
+        center: [0, 0],
+        halfSize: [10, 10],
+        radii: [2, 2, 2, 2],
+      }]
+      return object
+    })
+
+    const upload = encodePresentationClipChains(objects)
+    const invalidRange = upload.ranges.get(objects[0]!)
+    expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS)
+    expect(invalidRange).toEqual({start: 0, count: 1})
+    expect(upload.ranges.get(objects[1]!)).toBe(invalidRange)
+    expect(upload.ranges.get(objects[2]!)).toBe(invalidRange)
+    expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
+  })
+
+  test("refreshes coordinate inverses between frame-local encoding calls", () => {
+    let inverseComputations = 0
+    const coordinateSpace = new Object3D()
+    const determinant = coordinateSpace.matrixWorld.determinant.bind(coordinateSpace.matrixWorld)
+    coordinateSpace.matrixWorld.determinant = () => {
+      inverseComputations += 1
+      return determinant()
+    }
+    coordinateSpace.updateWorldMatrix()
+    const object = new Object3D()
+    object.presentationClips = [{
+      kind: "rounded-rect",
+      coordinateSpace,
+      center: [0, 0],
+      halfSize: [10, 10],
+      radii: [2, 2, 2, 2],
+    }]
+
+    const first = encodePresentationClipChains([object])
+    coordinateSpace.position.x = 7
+    coordinateSpace.updateWorldMatrix()
+    const second = encodePresentationClipChains([object])
+
+    expect([...first.data.slice(0, 16)]).not.toEqual([...second.data.slice(0, 16)])
+    expect([...second.data.slice(0, 16)]).toEqual(
+      [...new Matrix4().copy(coordinateSpace.matrixWorld).invert().elements].map(Math.fround),
+    )
+    expect(inverseComputations).toBe(2)
+  })
+
   test("maps an over-depth chain to one shared fail-closed record", () => {
     const coordinateSpace = new Object3D()
     coordinateSpace.updateWorldMatrix()
