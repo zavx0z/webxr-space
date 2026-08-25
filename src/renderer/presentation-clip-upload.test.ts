@@ -84,36 +84,92 @@ describe("presentation clip upload", () => {
         throw new Error("malformed matrix getter")
       },
     }) as Object3D
-    const objects = [missingMatrix, malformedMatrix, throwingMatrix].map((coordinateSpace) => {
-      const object = new Object3D()
-      object.presentationClips = [{
-        kind: "rounded-rect",
-        coordinateSpace,
-        center: [0, 0],
-        halfSize: [10, 10],
-        radii: [2, 2, 2, 2],
-      }]
-      return object
-    })
+    const forgedDeterminant = {
+      matrixWorld: {
+        elements: new Array(16).fill(0),
+        determinant: () => 1,
+      },
+    } as unknown as Object3D
+    const f32OverflowMatrix = {
+      matrixWorld: {
+        elements: [
+          1e-40, 0, 0, 0,
+          0, 1, 0, 0,
+          0, 0, 1, 0,
+          0, 0, 0, 1,
+        ],
+      },
+    } as unknown as Object3D
+    const objects = [missingMatrix, malformedMatrix, throwingMatrix, forgedDeterminant, f32OverflowMatrix]
+      .map((coordinateSpace) => {
+        const object = new Object3D()
+        object.presentationClips = [{
+          kind: "rounded-rect",
+          coordinateSpace,
+          center: [0, 0],
+          halfSize: [10, 10],
+          radii: [2, 2, 2, 2],
+        }]
+        return object
+      })
 
     const upload = encodePresentationClipChains(objects)
     const invalidRange = upload.ranges.get(objects[0]!)
     expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS)
     expect(invalidRange).toEqual({start: 0, count: 1})
-    expect(upload.ranges.get(objects[1]!)).toBe(invalidRange)
-    expect(upload.ranges.get(objects[2]!)).toBe(invalidRange)
+    for (const object of objects.slice(1)) expect(upload.ranges.get(object)).toBe(invalidRange)
+    expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
+  })
+
+  test("fails closed for malformed presentation clip collections without throwing", () => {
+    const coordinateSpace = new Object3D()
+    coordinateSpace.updateWorldMatrix()
+    const validShape = {
+      kind: "rounded-rect" as const,
+      coordinateSpace,
+      center: [0, 0] as const,
+      halfSize: [10, 10] as const,
+      radii: [2, 2, 2, 2] as const,
+    }
+    const nullClips = new Object3D()
+    Object.assign(nullClips, {presentationClips: null})
+    const arrayLikeClips = new Object3D()
+    Object.assign(arrayLikeClips, {presentationClips: {0: validShape, length: 1}})
+    const negativeLength = new Object3D()
+    Object.assign(negativeLength, {presentationClips: {length: -1}})
+    const throwingGetter = Object.defineProperty(new Object3D(), "presentationClips", {
+      get() {
+        throw new Error("malformed presentationClips getter")
+      },
+    })
+    const throwingElement = new Object3D()
+    throwingElement.presentationClips = new Proxy([validShape], {
+      get(target, property, receiver) {
+        if (property === "0") throw new Error("malformed clip element getter")
+        return Reflect.get(target, property, receiver)
+      },
+    })
+    const objects = [nullClips, arrayLikeClips, negativeLength, throwingGetter, throwingElement]
+
+    const upload = encodePresentationClipChains(objects)
+    const invalidRange = upload.ranges.get(objects[0]!)
+    expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS)
+    expect(invalidRange).toEqual({start: 0, count: 1})
+    for (const object of objects.slice(1)) expect(upload.ranges.get(object)).toBe(invalidRange)
     expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
   })
 
   test("refreshes coordinate inverses between frame-local encoding calls", () => {
     let inverseComputations = 0
     const coordinateSpace = new Object3D()
-    const determinant = coordinateSpace.matrixWorld.determinant.bind(coordinateSpace.matrixWorld)
-    coordinateSpace.matrixWorld.determinant = () => {
-      inverseComputations += 1
-      return determinant()
-    }
     coordinateSpace.updateWorldMatrix()
+    const matrixWorld = coordinateSpace.matrixWorld
+    Object.defineProperty(coordinateSpace, "matrixWorld", {
+      get() {
+        inverseComputations += 1
+        return matrixWorld
+      },
+    })
     const object = new Object3D()
     object.presentationClips = [{
       kind: "rounded-rect",
@@ -124,13 +180,12 @@ describe("presentation clip upload", () => {
     }]
 
     const first = encodePresentationClipChains([object])
-    coordinateSpace.position.x = 7
-    coordinateSpace.updateWorldMatrix()
+    matrixWorld.makeTranslation(7, 0, 0)
     const second = encodePresentationClipChains([object])
 
     expect([...first.data.slice(0, 16)]).not.toEqual([...second.data.slice(0, 16)])
     expect([...second.data.slice(0, 16)]).toEqual(
-      [...new Matrix4().copy(coordinateSpace.matrixWorld).invert().elements].map(Math.fround),
+      [...new Matrix4().copy(matrixWorld).invert().elements].map(Math.fround),
     )
     expect(inverseComputations).toBe(2)
   })
@@ -212,11 +267,13 @@ describe("presentation clip upload", () => {
       const space = new Object3D()
       space.position.set(index * 2, -index, 0)
       space.updateWorldMatrix()
-      const determinant = space.matrixWorld.determinant.bind(space.matrixWorld)
-      space.matrixWorld.determinant = () => {
-        inverseComputations += 1
-        return determinant()
-      }
+      const matrixWorld = space.matrixWorld
+      Object.defineProperty(space, "matrixWorld", {
+        get() {
+          inverseComputations += 1
+          return matrixWorld
+        },
+      })
       return space
     })
     const objects = Array.from({length: 10_000}, () => {

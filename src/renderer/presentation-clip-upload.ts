@@ -29,8 +29,7 @@ type InternedPresentationClipChain = Readonly<{
 }>
 
 type PresentationClipMatrix = Readonly<{
-  elements: ArrayLike<number>
-  determinant(): number
+  elements: ArrayLike<unknown>
 }>
 
 const PRESENTATION_CLIP_GEOMETRY_FLOATS = 8
@@ -85,7 +84,11 @@ export function encodePresentationClipChains(
 
   for (const object of objects) {
     if (ranges.has(object)) continue
-    const shapes = object.presentationClips
+    const shapes = readPresentationClipShapes(object)
+    if (shapes === null) {
+      ranges.set(object, failClosedRange())
+      continue
+    }
     const shapeCount = shapes.length
     if (shapeCount === 0) {
       ranges.set(object, EMPTY_RANGE)
@@ -99,7 +102,13 @@ export function encodePresentationClipChains(
     let signatureHash = mixPresentationClipHash(PRESENTATION_CLIP_HASH_OFFSET, shapeCount)
     let signatureValid = true
     for (let shapeIndex = 0; shapeIndex < shapeCount; shapeIndex += 1) {
-      const shape = shapes[shapeIndex]!
+      let shape: PresentationClipShape
+      try {
+        shape = shapes[shapeIndex]!
+      } catch {
+        signatureValid = false
+        break
+      }
       const coordinateSpace = readCoordinateSpace(shape)
       const geometryOffset = shapeIndex * PRESENTATION_CLIP_GEOMETRY_FLOATS
       if (
@@ -196,6 +205,18 @@ export function encodePresentationClipChains(
   }
 
   return {data: new Float32Array(values), ranges}
+}
+
+function readPresentationClipShapes(object: Object3D): readonly PresentationClipShape[] | null {
+  try {
+    const shapes = (object as {presentationClips?: unknown} | null | undefined)?.presentationClips
+    if (!Array.isArray(shapes)) return null
+    const length = shapes.length
+    if (!Number.isSafeInteger(length) || length < 0) return null
+    return shapes as readonly PresentationClipShape[]
+  } catch {
+    return null
+  }
 }
 
 function readCoordinateSpace(shape: PresentationClipShape): Object3D | null {
@@ -336,18 +357,19 @@ function inverseForCoordinateSpace(
   try {
     const matrix = readPresentationClipMatrix(coordinateSpace)
     if (matrix !== null) {
-      let matrixValid = true
-      for (let index = 0; index < matrix.elements.length; index += 1) {
-        if (!Number.isFinite(matrix.elements[index]!)) {
-          matrixValid = false
+      const trustedMatrix = new Matrix4()
+      let elementsValid = true
+      for (let index = 0; index < 16; index += 1) {
+        const value = matrix.elements[index]
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+          elementsValid = false
           break
         }
+        trustedMatrix.elements[index] = value
       }
-      const determinant = matrixValid ? matrix.determinant() : Number.NaN
+      const determinant = elementsValid ? trustedMatrix.determinant() : Number.NaN
       if (Number.isFinite(determinant) && determinant !== 0) {
-        const localMatrix = new Matrix4()
-        localMatrix.elements.set(matrix.elements)
-        const candidate = new Float32Array(localMatrix.invert().elements)
+        const candidate = new Float32Array(trustedMatrix.invert().elements)
         if (candidate.every(Number.isFinite)) inverse = candidate
       }
     }
@@ -364,8 +386,6 @@ function readPresentationClipMatrix(coordinateSpace: Object3D): PresentationClip
   const elements = (matrix as {elements?: unknown}).elements
   if (elements === null || (typeof elements !== "object" && typeof elements !== "function")) return null
   if ((elements as ArrayLike<unknown>).length !== 16) return null
-  const determinant = (matrix as {determinant?: unknown}).determinant
-  if (typeof determinant !== "function") return null
   return matrix as PresentationClipMatrix
 }
 
