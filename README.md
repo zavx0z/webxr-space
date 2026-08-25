@@ -12,3 +12,7 @@ Editor не содержит the adopted reference, WebGPU, canvas или layout
 projector только по явной команде.
 
 Действующие законы находятся в [требованиях editor](requirements.md).
+
+Dev-only интерактивный пример Editor находится в [`storybook/`](storybook/).
+Репозиторий показывает его в общем Storybook, но этот каталог не экспортируется
+как часть `@nodes/editor` и не меняет production dependencies пакета.

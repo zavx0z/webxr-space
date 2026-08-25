@@ -49,11 +49,18 @@
 3. Parameter остаётся единственным Store значения. Editor не создаёт соседний
    value Record и не переносит callbacks в JSON presentation.
 
-## Parent storybook
+## Package-owned dev stories
 
-1. Parent storybook показывает production `NodeTreeEditor` через dev-only
-   retained dock: Node, Parameter и Link можно добавить, выбрать и удалить, а
-   числовое значение Parameter — изменить тем же Store.
-2. После structural команды canvas сохраняет последнюю принятую проекцию и
+1. Dev-only stories, retained dock и browser entrypoints, которые объясняют
+   семантику `@nodes/editor`, принадлежат каталогу `./storybook` рядом с Editor.
+   Repository Storybook подключает их в общий процесс, routes и static build.
+2. Story показывает production `NodeTreeEditor` через dev-only retained dock:
+   Node, Parameter и Link можно добавить, выбрать и удалить, а числовое
+   значение Parameter — изменить тем же Store.
+3. После structural команды canvas сохраняет последнюю принятую проекцию и
    явно показывает устаревший layout. Кнопка «Перестроить layout» получает и
    применяет новую проекцию; автоматической перестановки Node нет.
+4. `./storybook` не входит в production exports и не добавляет Storybook,
+   Layout, UI или Engine в runtime dependencies `@nodes/editor`. Примеры
+   импортируют production owners и общую инфраструктуру только через exact
+   public subpaths.
