@@ -6,7 +6,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 
 type ControlGroupStoryArgs = StorybookStoryArgs & Readonly<{
   rows: number
@@ -16,7 +16,7 @@ export function createControlGroupStory(): StorybookStoryModule {
   return defineStorybookStoryModule<ControlGroupStoryArgs>({
     defaultArgs: {rows: 3},
     controls: [
-      {key: "rows", label: "Строки", group: "Внешний вид", kind: "number"},
+      {key: "rows", label: "Строки", group: "Внешний вид", kind: "number", interactive: false},
     ],
     render(surface, args, frame) {
       const rows = controlGroupRows(args.rows)

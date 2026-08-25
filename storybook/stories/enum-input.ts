@@ -7,7 +7,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {EnumInputStoryVariant} from "../stories.ts"
 import {uiIcons} from "@ui/elements/icons"
 import {uiShapeMetrics} from "@ui/elements/shape"
@@ -107,7 +107,7 @@ export function createEnumInputStory(variant: EnumInputStoryVariant): StorybookS
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "readonly", label: "Только чтение", group: "Состояние", kind: "boolean"},
       {key: "open", label: "Раскрыто", group: "Состояние", kind: "boolean"},
-      {key: "event", label: "Последнее событие", group: "События", kind: "custom"},
+      {key: "event", label: "Последнее событие", group: "События", kind: "custom", interactive: false},
     ],
     render(surface, args, frame) {
       const width = args.presentation === "expanded"

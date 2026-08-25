@@ -4,7 +4,8 @@ import {fileURLToPath} from "node:url"
 import type {TrueTypeFont} from "@engine/core"
 import {loadSharedFont} from "@engine/core/default-font"
 import {FIELD_KINDS} from "@ui/components/field"
-import {defineStorybookStoryModule, planStorybookShell} from "@ui/storybook"
+import {defineStorybookStoryModule} from "@zavx0z/storybook/stories"
+import {planStorybookShell} from "@zavx0z/storybook/workbench"
 import {createInputEditState, focusInput} from "@ui/elements"
 import {UiSurface as BaseUiSurface, type UiSurface} from "@layout/core/surface"
 import {insertActiveInputText} from "@layout/core/text-input"
@@ -17,6 +18,7 @@ import {
   componentVariantItems,
 } from "./stories.ts"
 import {ComponentsStoryPreviewSurface} from "./story-preview.ts"
+import {UI_STORYBOOK_RESPONSIVE_POLICY} from "../../storybook/app/workbench-policy.ts"
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
 let font: TrueTypeFont
@@ -59,7 +61,7 @@ beforeAll(async () => {
 
 describe("@ui/components package-owned Workbench stories", () => {
   test("preserves every exact detail route and derives prefix overviews", () => {
-    expect(COMPONENT_STORIES.fallback).toBe("button/basic/contained")
+    expect(COMPONENT_STORIES.representative).toBe("button/basic/contained")
     for (const route of [
       "button/basic/text",
       "button/basic/contained",
@@ -706,7 +708,7 @@ describe("@ui/components package-owned Workbench stories", () => {
   })
 
   test("uses public full-viewport Workbench geometry and the central UI hub", async () => {
-    const desktop = planStorybookShell(1920, 1080)
+    const desktop = planStorybookShell(1920, 1080, {responsive: UI_STORYBOOK_RESPONSIVE_POLICY})
     expect(desktop.preview).toEqual({x: 375, y: 3, w: 1101, h: 1049})
     expect(desktop.info).toEqual({x: 1477, y: 3, w: 440, h: 1074})
     const server = await Bun.file(join(storybookRoot, "../../storybook/app/server.ts")).text()
@@ -715,7 +717,7 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(server).toContain("UI_STORYBOOK_PORT ?? 4017")
     expect(pages).toContain('mountPath: entry.routePrefix')
     expect(pages).toContain('canvasId: "stage-canvas"')
-    expect(pages).toContain('homePath: "/"')
+    expect(pages).toContain('home: {path: "/", label: "Главная"')
   })
 })
 

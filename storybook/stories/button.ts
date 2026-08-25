@@ -9,7 +9,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {ButtonStorySection, ButtonStoryVariant} from "../stories.ts"
 
 type ButtonStoryArgs = StorybookStoryArgs & Readonly<{
@@ -30,7 +30,7 @@ export function createButtonStory(options: Readonly<{
   return defineStorybookStoryModule<ButtonStoryArgs>({
     defaultArgs: initial,
     controls: [
-      {key: "label", label: "Подпись", group: "Основные", kind: "text"},
+      {key: "label", label: "Подпись", group: "Основные", kind: "text", interactive: false},
       {
         key: "variant",
         label: "Вариант",

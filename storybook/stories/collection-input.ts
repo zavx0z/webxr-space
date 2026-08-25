@@ -8,7 +8,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import {uiShapeMetrics} from "@ui/elements/shape"
 import type {CollectionInputStoryVariant} from "../stories.ts"
 
@@ -36,7 +36,7 @@ export function createCollectionInputStory(variant: CollectionInputStoryVariant)
   return defineStorybookStoryModule<CollectionInputStoryArgs>({
     defaultArgs: collectionInputDefaults(variant),
     controls: [
-      {key: "items", label: "Элементы", group: "Данные", kind: "custom"},
+      {key: "items", label: "Элементы", group: "Данные", kind: "custom", interactive: false},
       {
         key: "selected-id",
         label: "Выбранный элемент",
@@ -49,7 +49,7 @@ export function createCollectionInputStory(variant: CollectionInputStoryVariant)
           {value: "", label: "Нет выбора"},
         ],
       },
-      {key: "visible-rows", label: "Видимые строки", group: "Внешний вид", kind: "number"},
+      {key: "visible-rows", label: "Видимые строки", group: "Внешний вид", kind: "number", interactive: false},
       {
         key: "density",
         label: "Плотность",
@@ -62,7 +62,7 @@ export function createCollectionInputStory(variant: CollectionInputStoryVariant)
       },
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "readonly", label: "Только чтение", group: "Состояние", kind: "boolean"},
-      {key: "event", label: "Последнее событие", group: "События", kind: "custom"},
+      {key: "event", label: "Последнее событие", group: "События", kind: "custom", interactive: false},
     ],
     render(surface, args, frame) {
       const items = collectionItems(args.items)

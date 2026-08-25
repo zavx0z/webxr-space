@@ -9,7 +9,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {ColorInputStoryVariant} from "../stories.ts"
 
 type ColorInputStoryArgs = StorybookStoryArgs & Readonly<{
@@ -38,7 +38,7 @@ export function createColorInputStory(variant: ColorInputStoryVariant): Storyboo
       event: "Ожидание",
     },
     controls: [
-      {key: "value", label: "RGBA", group: "Значение", kind: "custom"},
+      {key: "value", label: "RGBA", group: "Значение", kind: "custom", interactive: false},
       {key: "open", label: "Picker открыт", group: "Состояние", kind: "boolean"},
       {
         key: "presentation",
@@ -52,7 +52,7 @@ export function createColorInputStory(variant: ColorInputStoryVariant): Storyboo
       },
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "readonly", label: "Только чтение", group: "Состояние", kind: "boolean"},
-      {key: "event", label: "Последнее событие", group: "События", kind: "custom"},
+      {key: "event", label: "Последнее событие", group: "События", kind: "custom", interactive: false},
     ],
     render(surface, args, frame) {
       const value = colorValue(args.value)

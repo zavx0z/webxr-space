@@ -3,7 +3,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 
 type CodeEditorStoryArgs = StorybookStoryArgs & Readonly<{
   "show-line-numbers": boolean

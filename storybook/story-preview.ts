@@ -1,12 +1,12 @@
 import {type Object3D} from "@engine/core"
 import {UiSurface} from "@layout/core/surface"
 import {clearReadOnlyTextParticipants} from "@ui/elements/input"
-import {drawStorybookPreviewChrome} from "@ui/storybook/surfaces"
+import {drawStorybookPreviewChrome} from "@zavx0z/storybook/workbench"
 import type {
   StorybookStoryArgs,
   StorybookStoryIndexItem,
   StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 
 export type ComponentsStoryPreviewDiagnostics = Readonly<{
   route: string

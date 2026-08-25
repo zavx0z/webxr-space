@@ -5,12 +5,11 @@ import {
   StorybookNavigationSurface,
   StorybookStoryPanelSurface,
   planStorybookShell,
-  storybookPublicPath,
-  type StorybookStoryArgs,
-  type StorybookStoryModule,
   type StorybookStoryPanelMode,
   type StorybookStoryPanelOptions,
-} from "@ui/storybook"
+} from "@zavx0z/storybook/workbench"
+import {storybookPublicPath} from "@zavx0z/storybook/environment"
+import type {StorybookStoryArgs, StorybookStoryModule} from "@zavx0z/storybook/stories"
 import {
   COMPONENT_STORIES,
   componentCatalogItems,
@@ -25,8 +24,9 @@ import {
   mountedStoryComponentPath,
   mountedStorySectionPath,
 } from "../../storybook/app/mounted-story-page.ts"
+import {UI_STORYBOOK_RESPONSIVE_POLICY} from "../../storybook/app/workbench-policy.ts"
 
-const COMPONENTS_MOUNT_PATH = storybookPublicPath("/components")
+const COMPONENTS_MOUNT_PATH = storybookPublicPath("ui", "/components")
 
 export type ComponentsStorybookObserver = Readonly<{
   snapshot(): Readonly<Record<string, unknown>>
@@ -126,7 +126,9 @@ async function startComponentsStorybook(): Promise<void> {
     })
     storyPanel = new StorybookStoryPanelSurface(storyPanelOptions())
 
-    const frames = (w: number, h: number) => planStorybookShell(w, h)
+    const frames = (w: number, h: number) => planStorybookShell(w, h, {
+      responsive: UI_STORYBOOK_RESPONSIVE_POLICY,
+    })
     runtime.addSurface(backdrop, ({w, h}) => ({x: 0, y: 0, w, h}))
     runtime.addSurface(catalog, ({w, h}) => frames(w, h).catalog)
     runtime.addSurface(sections, ({w, h}) => frames(w, h).section)

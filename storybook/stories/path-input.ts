@@ -3,7 +3,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {PathInputStoryVariant} from "../stories.ts"
 import {uiShapeMetrics} from "@ui/elements/shape"
 
@@ -25,7 +25,7 @@ export function createPathInputStory(variant: PathInputStoryVariant): StorybookS
   return defineStorybookStoryModule<PathInputStoryArgs>({
     defaultArgs: pathInputDefaults(variant),
     controls: [
-      {key: "value", label: "Путь", group: "Значение", kind: "text"},
+      {key: "value", label: "Путь", group: "Значение", kind: "text", interactive: false},
       {
         key: "density",
         label: "Плотность",
@@ -38,7 +38,7 @@ export function createPathInputStory(variant: PathInputStoryVariant): StorybookS
       },
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "readonly", label: "Только чтение", group: "Состояние", kind: "boolean"},
-      {key: "event", label: "Последнее событие", group: "События", kind: "custom"},
+      {key: "event", label: "Последнее событие", group: "События", kind: "custom", interactive: false},
     ],
     render(surface, args, frame) {
       const height = args.density === "compact" ? uiShapeMetrics.controlHeight : uiShapeMetrics.rowHeight

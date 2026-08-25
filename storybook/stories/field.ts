@@ -10,7 +10,7 @@ import {
   type StorybookStoryArgs,
   type StorybookStoryControl,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {FieldStoryKind} from "../stories.ts"
 
 type FieldStoryArgs = StorybookStoryArgs & Readonly<{
@@ -83,13 +83,14 @@ function fieldStoryWidth(
 
 function fieldControls(kind: FieldStoryKind): readonly StorybookStoryControl<keyof FieldStoryArgs & string>[] {
   const valueControl: StorybookStoryControl<"value"> = kind === "boolean"
-    ? {key: "value", label: "Значение", group: "Значение", kind: "boolean"}
+    ? {key: "value", label: "Значение", group: "Значение", kind: "boolean", interactive: true}
     : kind === "enum"
       ? {
         key: "value",
         label: "Операция",
         group: "Значение",
         kind: "select",
+        interactive: true,
         options: [
           {value: "add", label: "Сложение"},
           {value: "multiply", label: "Умножение"},
@@ -101,6 +102,7 @@ function fieldControls(kind: FieldStoryKind): readonly StorybookStoryControl<key
         label: kind === "color" ? "RGBA" : "Значение",
         group: "Значение",
         kind: kind === "number" || kind === "integer" ? "number" : kind === "color" ? "color" : kind === "text" ? "text" : "custom",
+        interactive: false,
       }
   return [
     valueControl,
@@ -109,12 +111,13 @@ function fieldControls(kind: FieldStoryKind): readonly StorybookStoryControl<key
       label: "Плотность",
       group: "Внешний вид",
       kind: "select",
+      interactive: true,
       options: [
         {value: "regular", label: "Обычная"},
         {value: "compact", label: "Компактная"},
       ],
     },
-    {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
+    {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean", interactive: true},
   ]
 }
 

@@ -6,7 +6,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import {uiShapeMetrics} from "@ui/elements/shape"
 
 type ReferenceInputStoryArgs = StorybookStoryArgs & Readonly<{
@@ -37,7 +37,7 @@ export function createReferenceInputStory(): StorybookStoryModule {
       event: "Ожидание",
     },
     controls: [
-      {key: "value", label: "Ссылка", group: "Значение", kind: "custom"},
+      {key: "value", label: "Ссылка", group: "Значение", kind: "custom", interactive: false},
       {
         key: "density",
         label: "Плотность",
@@ -50,7 +50,7 @@ export function createReferenceInputStory(): StorybookStoryModule {
       },
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "readonly", label: "Только чтение", group: "Состояние", kind: "boolean"},
-      {key: "event", label: "Последнее событие", group: "События", kind: "custom"},
+      {key: "event", label: "Последнее событие", group: "События", kind: "custom", interactive: false},
     ],
     render(surface, args, frame) {
       const value = referenceValue(args.value)

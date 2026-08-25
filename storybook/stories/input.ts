@@ -10,7 +10,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {StandaloneInputStory} from "../stories.ts"
 
 type StandaloneInputArgs = StorybookStoryArgs & Readonly<{
@@ -37,6 +37,7 @@ export function createStandaloneInputStory(component: StandaloneInputStory): Sto
         label: component === "vector-input" ? "Координаты" : "Ячейки",
         group: "Значение",
         kind: "custom",
+        interactive: false,
       },
       {
         key: "density",

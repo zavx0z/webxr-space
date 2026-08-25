@@ -16,7 +16,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {SimpleComponentStory} from "../stories.ts"
 
 type SimpleStoryArgs = StorybookStoryArgs & Readonly<{
@@ -45,9 +45,9 @@ export function createSimpleComponentStory(options: Readonly<{
       disabled: false,
     },
     controls: [
-      {key: "label", label: "Подпись", group: "Основные", kind: "text"},
+      {key: "label", label: "Подпись", group: "Основные", kind: "text", interactive: false},
       {key: "checked", label: "Включено", group: "Состояние", kind: "boolean"},
-      {key: "value", label: "Значение", group: "Состояние", kind: "number"},
+      {key: "value", label: "Значение", group: "Состояние", kind: "number", interactive: false},
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
     ],
     render(surface, args, frame) {

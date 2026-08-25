@@ -1,9 +1,9 @@
 import {
   defineStorybookStories,
-  type StorybookNavigationItem,
   type StorybookStoryIndexItem,
   type StorybookStoryModule,
-} from "@ui/storybook"
+} from "@zavx0z/storybook/stories"
+import type {StorybookNavigationItem} from "@zavx0z/storybook/workbench"
 
 export type ButtonStorySection = "basic" | "icon" | "icon-label" | "sizes" | "color"
 export type ButtonStoryVariant =
@@ -497,10 +497,10 @@ export const COMPONENT_STORIES = defineStorybookStories({
       ],
     },
   ],
-  fallback: {component: "button", section: "basic", variant: "contained"},
+  representative: {component: "button", section: "basic", variant: "contained"},
 })
 
-export const COMPONENT_STORY_ROUTES = Object.freeze([...COMPONENT_STORIES.declaration.routes])
+export const COMPONENT_STORY_ROUTES = Object.freeze([...COMPONENT_STORIES.routeTree.leaves])
 export type ComponentsStoryRoute = typeof COMPONENT_STORY_ROUTES[number]
 
 export function componentStoryIndex(route: ComponentsStoryRoute): StorybookStoryIndexItem {

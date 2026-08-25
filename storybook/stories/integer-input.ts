@@ -4,7 +4,7 @@ import {
   defineStorybookStoryModule,
   type StorybookStoryArgs,
   type StorybookStoryModule,
-} from "@ui/storybook/stories"
+} from "@zavx0z/storybook/stories"
 import type {IntegerInputStoryVariant} from "../stories.ts"
 
 type IntegerInputStoryArgs = StorybookStoryArgs & Readonly<{
@@ -19,8 +19,8 @@ export function createIntegerInputStory(variant: IntegerInputStoryVariant): Stor
   return defineStorybookStoryModule<IntegerInputStoryArgs>({
     defaultArgs: initial,
     controls: [
-      {key: "label", label: "Подпись", group: "Основные", kind: "text"},
-      {key: "value", label: "Значение", group: "Основные", kind: "number"},
+      {key: "label", label: "Подпись", group: "Основные", kind: "text", interactive: false},
+      {key: "value", label: "Значение", group: "Основные", kind: "number", interactive: false},
       {key: "disabled", label: "Недоступно", group: "Состояние", kind: "boolean"},
       {key: "read-only", label: "Только чтение", group: "Состояние", kind: "boolean"},
     ],
