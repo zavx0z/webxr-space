@@ -57,7 +57,10 @@ solver-free; explicit `projection` адаптирует живой root `NodeTre
    renderer без изменения NodeEditor или central switch.
 7. Поля внутри Node и standalone controls вызывают один renderer из
    `@ui/components`; node package не копирует field implementation.
-8. Вся внутренняя композиция Node, Socket labels/default fields, catalog panels
+8. `@nodes/ui` применяет upstream-контракты
+   [Layout `LAYOUT-SLOT-001` и `LAYOUT-FLEX-001`](https://github.com/zavx0z/layout/blob/main/packages/core/requirements.md#semantic-child-slots)
+   и [UI `UI-COMPOSITION-001`, `UI-COMPOSITION-003`, `UI-COMPOSITION-004`](https://github.com/zavx0z/ui/blob/main/ARCHITECTURE.md#ui-composition-law).
+   Вся внутренняя композиция Node, Socket labels/default fields, catalog panels
    и storybook regions выполняется `flexRow`/`flexColumn` либо
    `flexRowCss`/`flexColumnCss` из `@layout/core`. Ручные UI-grid offsets запрещены.
 9. Принятый compact preset использует intrinsic Field density. Parameter Field
@@ -100,7 +103,11 @@ solver-free; explicit `projection` адаптирует живой root `NodeTre
 
 ## View и compositing
 
-1. NodeEditor поддерживает fit, pan, zoom, culling и selection независимо от
+1. NodeEditor применяет upstream-контракты
+   [Layout `LAYOUT-RETAINED-001`](https://github.com/zavx0z/layout/blob/main/packages/core/requirements.md#retained-ui-subtrees),
+   [`LAYOUT-CLIP-001`](https://github.com/zavx0z/layout/blob/main/packages/core/requirements.md#clip-parity)
+   и [UI `UI-COMPOSITION-002`, `UI-COMPOSITION-004`](https://github.com/zavx0z/ui/blob/main/ARCHITECTURE.md#ui-composition-law).
+   Он поддерживает fit, pan, zoom, culling и selection независимо от
    конкретного renderer preset. NodeCanvas хранит один retained content-root:
    pan/zoom меняет только его engine position/scale, а Grid, Frame passes, Links
    и Nodes остаются устойчивыми children с локальной geometry.
