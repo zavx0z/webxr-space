@@ -5,8 +5,9 @@ import {
   ColorPickerMaterial,
   Mesh,
   Object3D,
-  TrueTypeFont,
+  type TrueTypeFont,
 } from "@engine/core"
+import {loadSharedFont} from "@engine/core/default-font"
 import {UiSurface} from "@layout/core/surface"
 import {type UiRuntime} from "@layout/core/runtime"
 import {ColorInput, type ColorInputValue} from "./color-input.ts"
@@ -80,8 +81,7 @@ const pickerPlanes = (root: Object3D): Mesh[] => {
 let font: TrueTypeFont
 
 beforeAll(async () => {
-  const bytes = await Bun.file(new URL("../../../engine/packages/core/static/fonts/jetbrains-mono-bold.ttf", import.meta.url)).arrayBuffer()
-  font = new TrueTypeFont(bytes)
+  font = await loadSharedFont(import.meta.resolve("@engine/core/fonts/jetbrains-mono-bold.ttf"))
 })
 
 describe("retained ColorInput owner", () => {

@@ -1,7 +1,8 @@
 import {beforeAll, describe, expect, test} from "bun:test"
 import {basename, join} from "node:path"
 import {fileURLToPath} from "node:url"
-import {TrueTypeFont} from "@engine/core"
+import type {TrueTypeFont} from "@engine/core"
+import {loadSharedFont} from "@engine/core/default-font"
 import {FIELD_KINDS} from "@ui/components/field"
 import {defineStorybookStoryModule, planStorybookShell} from "@ui/storybook"
 import {createInputEditState, focusInput} from "@ui/elements"
@@ -53,8 +54,7 @@ function storyBrowseHit(surface: StoryActionSurface): HitCall | undefined {
 }
 
 beforeAll(async () => {
-  const bytes = await Bun.file(new URL("../../../../engine/packages/core/static/fonts/jetbrains-mono-bold.ttf", import.meta.url)).arrayBuffer()
-  font = new TrueTypeFont(bytes)
+  font = await loadSharedFont(import.meta.resolve("@engine/core/fonts/jetbrains-mono-bold.ttf"))
 })
 
 describe("@ui/components package-owned Workbench stories", () => {

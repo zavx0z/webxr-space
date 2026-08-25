@@ -154,7 +154,8 @@ control нельзя опустить в Elements только ради повт
    нужного действующей Node UI, а не отложенной демонстрацией после всей library.
 3. Blender задаёт проверяемое поведение, состав, форму, группировку, состояния,
    пропорции, base palette и material states controls в обеих density. Project
-   font остаётся MetaFor; semantic type/status colors получают явное
+   font выбирается composition root из Engine-owned default либо custom source;
+   Component его не загружает. Semantic type/status colors получают явное
    Blender-role mapping. Boolean и прочие controls не сохраняют прежнее
    отличие без отдельного нового owner decision.
 4. Размеры, padding, row rhythm и положение частей сверяются по точному Blender

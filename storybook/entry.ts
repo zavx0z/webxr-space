@@ -48,7 +48,6 @@ async function startComponentsStorybook(): Promise<void> {
   document.documentElement.dataset.uiStorybookPage = "components"
   try {
     const runtime = await UiRuntime.create(canvas, {
-      fontUrl: storybookPublicPath("/fonts/jetbrains-mono-bold.ttf"),
       virtualDisplay: {initial: "near", surfaceDisplay: true, grid: false},
     })
     runtime.handleResize()
