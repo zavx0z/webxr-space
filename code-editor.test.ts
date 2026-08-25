@@ -19,6 +19,7 @@ class RecordingSurface extends UiSurface {
   readonly texts: DrawTextCall[] = []
   readonly keyedRenders: string[] = []
   readonly hits = new Map<string, HitOptions>()
+  readonly hitRects = new Map<string, Readonly<{x: number; y: number; w: number; h: number}>>()
   readonly clips: ClipCall[] = []
   readonly rects: DrawRectCall[] = []
   readonly roundedRects: DrawRoundedRectCall[] = []
@@ -38,21 +39,36 @@ class RecordingSurface extends UiSurface {
   override popClip(): void {}
   override requestKeyedRender(key: string): void { this.keyedRenders.push(key) }
   override hit(
-    _x: number,
-    _y: number,
-    _w: number,
-    _h: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
     _action: () => void,
     cursorOrOptions: string | HitOptions = "pointer",
   ): void {
     if (typeof cursorOrOptions !== "string" && cursorOrOptions.key !== undefined) {
       this.hits.set(cursorOrOptions.key, cursorOrOptions)
+      this.hitRects.set(cursorOrOptions.key, {x, y, w, h})
     }
   }
   protected render(): void {}
 }
 
 describe("CodeEditor read-only component", () => {
+  test("composes fixed gutter and grow text slots through one Flex plan", async () => {
+    const source = await Bun.file(new URL("./code-editor.ts", import.meta.url)).text()
+
+    expect(source).toContain('import {flexRow} from "@layout/core/flex"')
+    expect(source.match(/\bflexRow\(\{/g)).toHaveLength(1)
+    expect(source).toContain("width: gutterWidth")
+    expect(source).toContain('width: "grow"')
+    expect(source).not.toContain("codeStartX")
+    expect(source).not.toContain("codeClipX")
+    expect(source).not.toContain("createRetainedParent")
+    expect(source).not.toContain("materializeRetainedParent")
+    expect(source).not.toContain("drawRoundedRect")
+  })
+
   test("resolves TypeScript, shows line numbers and uses distinct Islands Dark materials", () => {
     const surface = new RecordingSurface()
     CodeEditor(surface, 0, 0, 320, 160, {
@@ -203,6 +219,59 @@ describe("CodeEditor read-only component", () => {
     expect(codeEditorScrollPosition(surface, "scroll").top).toBeGreaterThan(0)
     expect(surface.texts.find(([text]) => text === "6")?.[1]).toBe(firstGutterX)
     expect(positions).toHaveLength(2)
+  })
+
+  test("keeps a partially visible first row after scrolling by one line", () => {
+    const surface = new RecordingSurface()
+    const props = {
+      key: "vertical-inset",
+      value: Array.from({length: 20}, (_, index) => `row-${index + 1}`).join("\n"),
+      readOnly: true,
+      languageId: "plaintext",
+      fontPx: 10,
+      linePx: 16,
+    } as const
+
+    CodeEditor(surface, 0, 0, 180, 48, props)
+    divScrollTo(surface, "vertical-inset", {top: 16})
+    surface.texts.length = 0
+    CodeEditor(surface, 0, 0, 180, 48, props)
+
+    expect(codeEditorScrollPosition(surface, "vertical-inset").top).toBe(16)
+    expect(surface.texts.some(([text]) => text === "1")).toBeTrue()
+    expect(surface.texts.some(([text]) => text === "row-1")).toBeTrue()
+    const textHit = surface.hitRects.get("vertical-inset")
+    expect(textHit?.x).toBeGreaterThan(0)
+  })
+
+  test("maps pointer selection through both scroll axes inside the text slot", () => {
+    const surface = new RecordingSurface()
+    const selections: Array<CodeEditorSelection | null> = []
+    const props = {
+      key: "scrolled-selection",
+      value: Array.from({length: 12}, (_, index) => `${"abcdefghij".repeat(4)}-${index}`).join("\n"),
+      readOnly: true,
+      showLineNumbers: false,
+      fontPx: 10,
+      linePx: 16,
+      onSelectionChange: (selection: CodeEditorSelection | null) => { selections.push(selection) },
+    } as const
+
+    CodeEditor(surface, 0, 0, 80, 48, props)
+    divScrollTo(surface, "scrolled-selection", {left: 12, top: 16})
+    CodeEditor(surface, 0, 0, 80, 48, props)
+
+    expect(codeEditorScrollPosition(surface, "scrolled-selection")).toEqual({left: 12, top: 16})
+    const pointer = {button: 0, preventDefault() {}} as MouseEvent
+    const hit = surface.hits.get("scrolled-selection")
+    expect(hit).toBeDefined()
+    hit!.onPointerDown?.(1, 2, pointer)
+    hit!.onPointerMove?.(31, 2, pointer)
+    hit!.onPointerUp?.(pointer)
+
+    expect(selections.at(-1)?.range.start.line).toBe(0)
+    expect(selections.at(-1)?.range.end.line).toBe(0)
+    expect(selections.at(-1)?.text).toBe("bcdef")
   })
 
   test("leaves Cmd+C unhandled when the pointer selection is empty", () => {

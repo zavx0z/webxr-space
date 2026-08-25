@@ -1,5 +1,5 @@
-import type {UiSurface} from "@layout/core/surface"
-import {Z} from "@layout/core/surface"
+import {flexRow} from "@layout/core/flex"
+import {Z, type UiSurface} from "@layout/core/surface"
 import {
   createCodeTokenMaterials,
   renderCodeTextRuns,
@@ -89,7 +89,6 @@ type CodeEditorState = {
 }
 
 const codeEditorStates = new WeakMap<UiSurface, Map<string, CodeEditorState>>()
-const EDITOR_BORDER_INSET_PX = 1
 const CODE_BLOCK_INSET_PX = 6
 const CODE_GAP_PX = 4
 const GUTTER_SIDE_PAD_PX = 8
@@ -113,8 +112,9 @@ export function CodeEditor(
     ? Math.ceil(host.measureText("9".repeat(String(Math.max(1, state.lines.length)).length), fontPx) + GUTTER_SIDE_PAD_PX * 2)
     : 0
   const maxLineWidth = Math.max(1, ...state.lines.map((line) => codeLineWidth(host, state, line, fontPx)))
-  const codeLeftInset = showLineNumbers ? CODE_GAP_PX : CODE_BLOCK_INSET_PX
-  const contentWidth = gutterWidth + codeLeftInset + maxLineWidth + CODE_BLOCK_INSET_PX
+  const textInsetLeft = showLineNumbers ? CODE_GAP_PX : CODE_BLOCK_INSET_PX
+  const textContentWidth = textInsetLeft + maxLineWidth + CODE_BLOCK_INSET_PX
+  const contentWidth = gutterWidth + textContentWidth
   const contentHeight = Math.max(1, state.lines.length * linePx + CODE_BLOCK_INSET_PX * 2)
 
   registerReadOnlyTextParticipant(host, props.key, {
@@ -138,102 +138,120 @@ export function CodeEditor(
       overflow: "auto",
       scrollbarWidth: 4,
     },
-    children: ({scrollLeft, scrollTop, viewportWidth, viewportHeight, contentWidth: scrollContentWidth}) => {
-      const viewportX = x
-      const viewportY = y
-      const codeRowsY = viewportY + CODE_BLOCK_INSET_PX
-      const codeStartX = viewportX + gutterWidth + codeLeftInset - scrollLeft
-      const codeMaxPx = Math.max(maxLineWidth, scrollContentWidth - gutterWidth)
-
+    children: ({scrollLeft, scrollTop, viewportX, viewportY, viewportWidth, viewportHeight}) => {
       if (state.lastScrollLeft !== scrollLeft || state.lastScrollTop !== scrollTop) {
         state.lastScrollLeft = scrollLeft
         state.lastScrollTop = scrollTop
         props.onScrollChange?.(Object.freeze({left: scrollLeft, top: scrollTop}))
       }
 
-      const codeClipX = viewportX + gutterWidth
-      const codeClipWidth = Math.max(1, viewportWidth - gutterWidth)
-
-      host.hit(codeClipX, viewportY, codeClipWidth, viewportHeight, () => {}, {
-        key: props.key,
-        cursor: "text",
-        activeCursor: "text",
-        onPointerDown: (localX, localY, event) => {
-          if (event?.button !== undefined && event.button !== 0) return
-          focusReadOnlyTextParticipant(host, props.key)
-          const position = codePositionFromPoint(host, state, localX, localY, {
-            codeStartX,
-            viewportY: codeRowsY,
-            scrollTop,
-            fontPx,
-            linePx,
-          })
-          state.anchor = position
-          state.focus = position
-          state.dragging = true
-          emitCodeSelection(props, state)
-          host.requestKeyedRender(props.key)
-          event?.preventDefault()
-        },
-        onPointerMove: (localX, localY) => {
-          if (!state.dragging) return
-          const position = codePositionFromPoint(host, state, localX, localY, {
-            codeStartX,
-            viewportY: codeRowsY,
-            scrollTop,
-            fontPx,
-            linePx,
-          })
-          if (sameTextPosition(state.focus, position)) return
-          state.focus = position
-          emitCodeSelection(props, state)
-          host.requestKeyedRender(props.key)
-        },
-        onPointerUp: () => {
-          if (!state.dragging) return
-          state.dragging = false
-          emitCodeSelection(props, state)
-          host.requestKeyedRender(props.key)
-        },
-      })
-
-      if (showLineNumbers) {
-        host.drawRect(
-          viewportX + EDITOR_BORDER_INSET_PX,
-          viewportY + EDITOR_BORDER_INSET_PX,
-          Math.max(1, gutterWidth - EDITOR_BORDER_INSET_PX),
-          Math.max(1, viewportHeight - EDITOR_BORDER_INSET_PX * 2),
-          rgba8ToColor(uiTheme.spaceText.gutter),
-          Z.CONTAINER + 0.01,
-        )
-        host.drawRect(
-          viewportX + gutterWidth - GUTTER_RULE_PX,
-          viewportY,
-          GUTTER_RULE_PX,
-          viewportHeight,
-          rgba8ToColor(uiTheme.material.editorBorder),
-          Z.SEPARATOR,
-        )
-      }
-
-      const firstLine = Math.max(0, Math.floor(scrollTop / linePx))
-      const lastLine = Math.min(state.lines.length - 1, Math.ceil((scrollTop + viewportHeight) / linePx))
+      const firstLine = Math.max(0, Math.floor((scrollTop - CODE_BLOCK_INSET_PX) / linePx))
+      const lastLine = Math.min(
+        state.lines.length - 1,
+        Math.ceil((scrollTop + viewportHeight - CODE_BLOCK_INSET_PX) / linePx) - 1,
+      )
       const range = orderedTextSelection(state.anchor, state.focus)
-      for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
-        const line = state.lines[lineIndex] ?? ""
-        const rowY = codeRowsY + lineIndex * linePx - scrollTop
-        if (showLineNumbers) drawCodeLineNumber(host, lineIndex + 1, viewportX, rowY, gutterWidth, linePx, fontPx)
-      }
 
-      host.pushClip(codeClipX, viewportY, codeClipWidth, viewportHeight)
-      for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
-        const line = state.lines[lineIndex] ?? ""
-        const rowY = codeRowsY + lineIndex * linePx - scrollTop
-        const textY = rowY + Math.max(0, (linePx - fontPx) / 2)
-        if (range !== null) drawCodeSelection(host, line, lineIndex, range, codeStartX, rowY, linePx, fontPx)
-        drawCodeLine(host, state, line, lineIndex, codeStartX, textY, codeMaxPx, fontPx, linePx)
-      }
-      host.popClip()
+      flexRow({
+        x: viewportX,
+        y: viewportY,
+        w: viewportWidth,
+        h: viewportHeight,
+        alignItems: "stretch",
+        items: [
+          showLineNumbers
+            ? {
+                width: gutterWidth,
+                height: viewportHeight,
+                draw: (slotX, slotY, slotWidth, slotHeight) => {
+                  host.drawRect(
+                    slotX,
+                    slotY,
+                    slotWidth,
+                    slotHeight,
+                    rgba8ToColor(uiTheme.spaceText.gutter),
+                    Z.CONTAINER + 0.01,
+                  )
+                  host.drawRect(
+                    slotX + slotWidth - GUTTER_RULE_PX,
+                    slotY,
+                    GUTTER_RULE_PX,
+                    slotHeight,
+                    rgba8ToColor(uiTheme.material.editorBorder),
+                    Z.SEPARATOR,
+                  )
+                  for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
+                    const rowY = slotY + CODE_BLOCK_INSET_PX + lineIndex * linePx - scrollTop
+                    drawCodeLineNumber(host, lineIndex + 1, slotX, rowY, slotWidth, linePx, fontPx)
+                  }
+                },
+              }
+            : false,
+          {
+            width: "grow",
+            height: viewportHeight,
+            draw: (slotX, slotY, slotWidth, slotHeight) => {
+              const textRowsY = slotY + CODE_BLOCK_INSET_PX
+              const textOriginX = slotX + textInsetLeft - scrollLeft
+
+              host.hit(slotX, slotY, slotWidth, slotHeight, () => {}, {
+                key: props.key,
+                cursor: "text",
+                activeCursor: "text",
+                onPointerDown: (localX, localY, event) => {
+                  if (event?.button !== undefined && event.button !== 0) return
+                  focusReadOnlyTextParticipant(host, props.key)
+                  const position = codePositionFromPoint(host, state, localX, localY, {
+                    textOriginX,
+                    textRowsY,
+                    scrollTop,
+                    fontPx,
+                    linePx,
+                  })
+                  state.anchor = position
+                  state.focus = position
+                  state.dragging = true
+                  emitCodeSelection(props, state)
+                  host.requestKeyedRender(props.key)
+                  event?.preventDefault()
+                },
+                onPointerMove: (localX, localY) => {
+                  if (!state.dragging) return
+                  const position = codePositionFromPoint(host, state, localX, localY, {
+                    textOriginX,
+                    textRowsY,
+                    scrollTop,
+                    fontPx,
+                    linePx,
+                  })
+                  if (sameTextPosition(state.focus, position)) return
+                  state.focus = position
+                  emitCodeSelection(props, state)
+                  host.requestKeyedRender(props.key)
+                },
+                onPointerUp: () => {
+                  if (!state.dragging) return
+                  state.dragging = false
+                  emitCodeSelection(props, state)
+                  host.requestKeyedRender(props.key)
+                },
+              })
+
+              host.pushClip(slotX, slotY, slotWidth, slotHeight)
+              for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
+                const line = state.lines[lineIndex] ?? ""
+                const rowY = textRowsY + lineIndex * linePx - scrollTop
+                const textY = rowY + Math.max(0, (linePx - fontPx) / 2)
+                if (range !== null) {
+                  drawCodeSelection(host, line, lineIndex, range, textOriginX, rowY, linePx, fontPx)
+                }
+                drawCodeLine(host, state, line, lineIndex, textOriginX, textY, maxLineWidth, fontPx, linePx)
+              }
+              host.popClip()
+            },
+          },
+        ],
+      })
     },
   })
 }
@@ -331,8 +349,8 @@ function codePositionFromPoint(
   localX: number,
   localY: number,
   layout: Readonly<{
-    codeStartX: number
-    viewportY: number
+    textOriginX: number
+    textRowsY: number
     scrollTop: number
     fontPx: number
     linePx: number
@@ -340,10 +358,10 @@ function codePositionFromPoint(
 ): TextPosition {
   const lineIndex = Math.max(0, Math.min(
     state.lines.length - 1,
-    Math.floor((localY - layout.viewportY + layout.scrollTop) / layout.linePx),
+    Math.floor((localY - layout.textRowsY + layout.scrollTop) / layout.linePx),
   ))
   const line = state.lines[lineIndex] ?? ""
-  const x = Math.max(0, localX - layout.codeStartX)
+  const x = Math.max(0, localX - layout.textOriginX)
   let low = 0
   let high = line.length
   while (low < high) {
@@ -432,7 +450,7 @@ function drawCodeSelection(
   line: string,
   lineIndex: number,
   range: TextSelectionRange,
-  codeStartX: number,
+  textOriginX: number,
   rowY: number,
   linePx: number,
   fontPx: number,
@@ -442,8 +460,8 @@ function drawCodeSelection(
   const endColumn = lineIndex === range.end.line ? range.end.col : line.length
   const includesLineBreak = lineIndex < range.end.line
   if (endColumn <= startColumn && !includesLineBreak) return
-  const startX = codeStartX + codeColumnX(host, line, startColumn, fontPx)
-  const endX = codeStartX + codeColumnX(host, line, endColumn, fontPx)
+  const startX = textOriginX + codeColumnX(host, line, startColumn, fontPx)
+  const endX = textOriginX + codeColumnX(host, line, endColumn, fontPx)
   const lineBreakWidth = includesLineBreak ? Math.max(2, host.measureText("M", fontPx) * 0.45) : 0
   host.drawRect(
     startX,
