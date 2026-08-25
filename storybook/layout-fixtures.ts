@@ -1,5 +1,14 @@
 import type {AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
-import type {StorybookFixture} from "./layout-storybook-types.ts"
+
+export type LayoutFixture = Readonly<{
+  id: string
+  family: string
+  policyId: "fixed" | "adaptive"
+  label: string
+  description: string
+  expectedDirection: "RIGHT" | "DOWN"
+  graph: AdaptiveLayoutGraph
+}>
 
 const fixedTopology = {
   nodes: [
@@ -59,9 +68,9 @@ const adaptiveCompoundTopology = {
 function fixedFixture(
   id: string,
   label: string,
-  expectedDirection: StorybookFixture["expectedDirection"],
+  expectedDirection: LayoutFixture["expectedDirection"],
   viewport: AdaptiveLayoutGraph["viewport"],
-): StorybookFixture {
+): LayoutFixture {
   return {
     id,
     family: "fixed-baseline",
@@ -76,9 +85,9 @@ function fixedFixture(
 function adaptiveFixture(
   id: string,
   label: string,
-  expectedDirection: StorybookFixture["expectedDirection"],
+  expectedDirection: LayoutFixture["expectedDirection"],
   viewport: AdaptiveLayoutGraph["viewport"],
-): StorybookFixture {
+): LayoutFixture {
   return {
     id,
     family: "adaptive-side-selection",
@@ -93,9 +102,9 @@ function adaptiveFixture(
 function adaptiveCompoundFixture(
   id: string,
   label: string,
-  expectedDirection: StorybookFixture["expectedDirection"],
+  expectedDirection: LayoutFixture["expectedDirection"],
   viewport: AdaptiveLayoutGraph["viewport"],
-): StorybookFixture {
+): LayoutFixture {
   return {
     id,
     family: "adaptive-compound-side-selection",
@@ -107,7 +116,7 @@ function adaptiveCompoundFixture(
   }
 }
 
-export const STORYBOOK_FIXTURES: readonly StorybookFixture[] = [
+export const STORYBOOK_FIXTURES: readonly LayoutFixture[] = [
   fixedFixture("fixed-baseline-right", "Фиксированная основа · альбомная", "RIGHT", {width: 1180, height: 680}),
   fixedFixture("fixed-baseline-down", "Фиксированная основа · портретная", "DOWN", {width: 520, height: 920}),
   adaptiveFixture("adaptive-shared-right", "Общий адаптивный порт · альбомная", "RIGHT", {width: 960, height: 560}),
@@ -116,12 +125,12 @@ export const STORYBOOK_FIXTURES: readonly StorybookFixture[] = [
   adaptiveCompoundFixture("adaptive-compound-down", "Вложенная адаптивная раскладка · портретная", "DOWN", {width: 480, height: 820}),
 ]
 
-export function getStorybookFixture(id: string): StorybookFixture {
+export function getStorybookFixture(id: string): LayoutFixture {
   const fixture = STORYBOOK_FIXTURES.find((candidate) => candidate.id === id)
   if (fixture === undefined) throw new Error(`Неизвестный сценарий стенда: ${id}`)
   return fixture
 }
 
-export function getFixtureFamily(family: string): readonly StorybookFixture[] {
+export function getFixtureFamily(family: string): readonly LayoutFixture[] {
   return STORYBOOK_FIXTURES.filter((fixture) => fixture.family === family)
 }

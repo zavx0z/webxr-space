@@ -1,7 +1,7 @@
 {
   "name": "@nodes/layout",
   "version": "0.0.1",
-  "description": "Minimal ELK-like compound graph layout and orthogonal routing. Built for MetaFor.",
+  "description": "Isolated high-performance compound and top-down graph layout policies. Built for MetaFor.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/node.git",
@@ -27,12 +27,17 @@
       "types": "./src/adaptive.ts",
       "default": "./src/adaptive.ts"
     },
+    "./top-down": {
+      "types": "./src/top-down.ts",
+      "default": "./src/top-down.ts"
+    },
     "./types": {
       "types": "./types/index.ts",
       "default": "./types/index.ts"
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --pretty false"
+    "typecheck": "tsc --noEmit --pretty false",
+    "benchmark:top-down": "bun benchmarks/top-down.ts"
   }
 }

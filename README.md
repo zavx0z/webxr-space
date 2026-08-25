@@ -12,7 +12,9 @@ placement, размеры compound-контейнеров, gateways и орто�
 * [общие законы](requirements/common.md);
 * [adaptive side-selection](requirements/adaptive.md);
 * [горизонтальная раскладка `RIGHT`](requirements/right.md);
-* [вертикальная раскладка `DOWN`](requirements/down.md).
+* [вертикальная раскладка `DOWN`](requirements/down.md);
+* [отдельная раскладка `top-down`](requirements/top-down.md);
+* [архитектурные правила производительности](requirements/performance.md).
 
 Worker, UI, управление видом и traffic presentation не принадлежат этим
 документам.
@@ -38,6 +40,13 @@ assignments, а каждый candidate передаёт тому же общем
 каждого measured port уже есть одна сторона `WEST | EAST`. Он не читает и не
 выводит socket capability. Обе policies переиспользуют geometry laws без
 копирования router и validators.
+
+`@nodes/layout/top-down` — третий, физически независимый entrypoint для плоских
+ацикличных схем сверху вниз. Он принимает horizontal offset точного порта,
+разрешает source=`SOUTH`, target=`NORTH` и использует отдельные bounded
+ranking/placement/routing фазы. Top-down не импортирует compound solver,
+visibility A* или adaptive candidate search; fixed/adaptive также не импортируют
+top-down implementation.
 
 ## Протокол
 
@@ -230,14 +239,15 @@ bun run --cwd packages/layout typecheck
 bun test packages/layout/storybook/layout-storybook.test.ts
 ```
 
-Dev-only SVG stories принадлежат `@nodes/layout` и находятся в
-`packages/layout/storybook`. Репозиторный `@nodes/storybook` только собирает их
-в свою страницу `/layout/` и владеет общим процессом, маршрутом и static build.
-Stories вызывают только public fixed/adaptive entrypoints, сравнивают
-`RIGHT`/`DOWN` fixtures и показывают готовую geometry без NodeTree, Card,
-WebGPU, HUD и product renderer. Storybook не экспортируется из
-`@nodes/layout` и не входит в его production dependencies; числовые fixtures,
-SVG и hashes проверяются отдельно от production package.
+Dev-only stories принадлежат `@nodes/layout` и находятся в
+`packages/layout/storybook`. Репозиторный `@nodes/storybook` собирает их в
+стандартную retained WebGPU page `/layout/` и владеет общим процессом, route
+tree и static build. Shared Workbench использует точные UI Elements/Components,
+а package-owned preview показывает geometry. Каждый lazy story импортирует
+ровно один public fixed, adaptive или top-down entrypoint; NodeTree, editor и
+product renderer не входят в страницу. Storybook не экспортируется из
+`@nodes/layout` и не входит в его production dependencies. Frozen geometry и
+SVG baselines fixed/adaptive проверяются отдельно от WebGPU presentation.
 
 Полный consumer-путь `NodeTree → projection → NodeEditor` отдельно показывает
 центральная WebGPU page `/editor/live-node-tree` того же `bun run nodes:storybook`.
@@ -251,7 +261,8 @@ SVG и hashes проверяются отдельно от production package.
 Когда задача, меняющая placement, compaction, routing, порядок кандидатов, soft
 objectives или поисковый бюджет, готова к переводу в `REVIEW`, исполнитель:
 
-1. Запускает один final benchmark на принятых frozen `RIGHT` и `DOWN` inputs.
+1. Запускает один final benchmark на принятых frozen inputs каждой изменённой
+   policy (`RIGHT`/`DOWN` для compound solver-а и reference DAG для top-down).
 2. Сохраняет machine-readable result в
    `project/artifacts/<ID>/benchmark-current.json`. Результат содержит все
    samples, min/median/p95/max, hashes inputs и geometry, runtime environment и

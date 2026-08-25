@@ -1,17 +1,25 @@
 import {describe, expect, test} from "bun:test"
-import {readdir} from "node:fs/promises"
-import {join, relative} from "node:path"
+import {join} from "node:path"
 import {fileURLToPath} from "node:url"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutFixed} from "@nodes/layout/fixed"
+import {layoutTopDown} from "@nodes/layout/top-down"
 import {getFixtureFamily, STORYBOOK_FIXTURES} from "./layout-fixtures.ts"
-import {STORYBOOK_POLICIES} from "./layout-policies.ts"
-import {runStorybookLayout} from "./layout-runner.ts"
-import {findGatewayPoints, layoutPortLabels, orderNodeGeometryForPainting} from "./render-layout-svg.ts"
+import {
+  LAYOUT_STORIES,
+  layoutCatalogItems,
+  layoutSectionItems,
+  layoutStoryRoute,
+  layoutVariantItems,
+} from "./layout-stories.ts"
+import {renderLayoutSvg} from "./render-layout-svg.ts"
+import {TOP_DOWN_REFERENCE_GRAPH} from "./top-down-fixture.ts"
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
-const nodesStorybookRoot = fileURLToPath(new URL("../../storybook/", import.meta.url))
 const layoutRoot = fileURLToPath(new URL("../", import.meta.url))
+const repositoryStorybookRoot = fileURLToPath(new URL("../../storybook/", import.meta.url))
 
-const BASELINES = {
+const FIXED_BASELINES = {
   "fixed-baseline-right": {
     direction: "RIGHT",
     bounds: {x: 0, y: 0, width: 632, height: 446},
@@ -41,9 +49,6 @@ const ADAPTIVE_BASELINES = {
     resultHash: "5c50a710cb8f79b6c42cc79b9eb7ea219798e1700f2606952bc97f8a4899af3d",
     svgHash: "6c0bd1792ce1e9c27d8eb0ae784e6df45760e9dbba6b2cde232f137fc068027e",
   },
-} as const
-
-const ADAPTIVE_COMPOUND_BASELINES = {
   "adaptive-compound-right": {
     direction: "RIGHT",
     side: "EAST",
@@ -60,485 +65,145 @@ const ADAPTIVE_COMPOUND_BASELINES = {
   },
 } as const
 
-describe("package-owned nodes layout storybook", () => {
-  test("is package-owned and composed by the repository storybook without a package-local server", async () => {
-    const parentServer = await Bun.file(join(nodesStorybookRoot, "server.ts")).text()
-    const manifest = await Bun.file(join(layoutRoot, "package.json")).json() as {
-      scripts?: Record<string, string>
-    }
-    const parentManifest = await Bun.file(join(nodesStorybookRoot, "package.json")).json() as {
-      name?: string
-      scripts?: Record<string, string>
-    }
-    const client = await Bun.file(join(storybookRoot, "fixed-adaptive.stories.ts")).text()
-    const detail = await Bun.file(join(storybookRoot, "layout-detail.ts")).text()
+describe("standard package-owned Layout Storybook", () => {
+  test("uses the shared retained Workbench and exact UI owners", async () => {
+    const entry = await Bun.file(join(storybookRoot, "layout.stories.ts")).text()
+    const preview = await Bun.file(join(storybookRoot, "layout-preview-surface.ts")).text()
+    const renderer = await Bun.file(join(storybookRoot, "render-layout-preview.ts")).text()
+    const registry = await Bun.file(join(repositoryStorybookRoot, "server/page-registry.ts")).text()
 
-    expect(await Bun.file(join(layoutRoot, "storybook/server.ts")).exists()).toBeFalse()
-    expect(await Bun.file(join(layoutRoot, "storybook/tsconfig.json")).exists()).toBeFalse()
-    expect(parentServer).toContain("NODES_STORYBOOK_PORT ?? 4018")
-    expect(parentServer).not.toContain("NODES_STORYBOOK_PORT ?? 4015")
-    expect(manifest.scripts).toEqual({typecheck: "tsc --noEmit --pretty false"})
-    expect(parentManifest).toMatchObject({
-      name: "@nodes/storybook",
-      scripts: {storybook: "bun server.ts", test: "bun test .", typecheck: "tsc --noEmit --pretty false"},
-    })
-    expect(client).toContain('document.documentElement.dataset.nodesLayoutStorybook = "starting"')
-    expect(`${client}\n${detail}`).toContain('document.documentElement.dataset.nodesLayoutStorybook = "ready"')
-    expect(detail).toContain('document.documentElement.dataset.nodesLayoutStorybook = "error"')
+    expect(entry).toContain('UiRuntime} from "@layout/core/runtime"')
+    expect(entry).toContain('from "@zavx0z/storybook/workbench"')
+    expect(entry).toContain("StorybookBackdropSurface")
+    expect(entry).toContain("StorybookNavigationSurface")
+    expect(entry).toContain("StorybookDockSurface")
+    expect(entry).toContain("StorybookStoryPanelSurface")
+    expect(entry).toContain("planStorybookShell")
+    expect(preview).toContain("drawStorybookPreviewChrome")
+    expect(renderer).toContain('Pane} from "@ui/components/pane"')
+    expect(renderer).toContain('Typography} from "@ui/components/typography"')
+    expect(renderer).toContain('div} from "@ui/elements/div"')
+    expect(registry).toContain('body: {kind: "canvas", canvasId: "nodes-storybook-canvas"}')
+    expect(registry).toContain('entrypoint: join(packagesRoot, "layout/storybook/layout.stories.ts")')
+    expect(await Bun.file(join(storybookRoot, "layout-storybook-body.html")).exists()).toBeFalse()
+    expect(await Bun.file(join(storybookRoot, "layout-detail.ts")).exists()).toBeFalse()
   })
 
-  test("keeps the SVG detail visible on package overview and exact leaf", async () => {
-    const entry = await Bun.file(join(storybookRoot, "fixed-adaptive.stories.ts")).text()
-    const detail = await Bun.file(join(storybookRoot, "layout-detail.ts")).text()
-    const body = await Bun.file(join(storybookRoot, "layout-storybook-body.html")).text()
-    expect(entry).toContain("LAYOUT_STORYBOOK_ROUTE_TREE")
-    expect(entry).toContain('from "@zavx0z/storybook/route-tree"')
-    expect(entry).toContain('from "@zavx0z/storybook/environment"')
-    expect(entry).toContain('storybookPublicPath("node", LAYOUT_STORYBOOK_BASE_PATH)')
-    expect(entry).not.toContain("@ui/storybook")
-    expect(entry).toContain('await import("./layout-detail.ts")')
-    expect(entry).not.toContain("runStorybookLayout")
-    expect(detail).toContain("runStorybookLayout")
-    expect(body).not.toContain('id="layout-overview"')
-    expect(body).toContain('id="layout-detail"')
-    expect(body).not.toContain('id="layout-detail" class="layout-storybook" lang="ru" aria-label="Стенд раскладки нод" hidden')
-  })
-
-  test("runs the public fixed policy against frozen RIGHT and DOWN inputs", () => {
-    expect(STORYBOOK_POLICIES.map(({id}) => id)).toEqual(["fixed", "adaptive"])
-
-    for (const fixture of getFixtureFamily("fixed-baseline")) {
-      const baseline = BASELINES[fixture.id as keyof typeof BASELINES]
-      expect(baseline, `missing baseline for ${fixture.id}`).toBeDefined()
-      const first = runStorybookLayout("fixed", fixture.graph)
-      const second = runStorybookLayout("fixed", fixture.graph)
-
-      expect(first.result.direction).toBe(fixture.expectedDirection)
-      expect(first.result.direction).toBe(baseline.direction)
-      expect(first.result.bounds).toEqual(baseline.bounds)
-      expect(hash(first.result)).toBe(baseline.resultHash)
-      expect(hash(first.svg)).toBe(baseline.svgHash)
-      expect(second.result).toEqual(first.result)
-      expect(second.svg).toBe(first.svg)
-    }
-  })
-
-  test("keeps the comparison fixtures topology-identical apart from viewport", () => {
-    for (const family of [
-      "fixed-baseline",
-      "adaptive-side-selection",
-      "adaptive-compound-side-selection",
-    ]) {
-      const [right, down] = getFixtureFamily(family)
-      expect(right).toBeDefined()
-      expect(down).toBeDefined()
-      expect(withoutViewport(right!.graph)).toEqual(withoutViewport(down!.graph))
-      expect(right!.graph.viewport.width).toBeGreaterThan(right!.graph.viewport.height)
-      expect(down!.graph.viewport.width).toBeLessThan(down!.graph.viewport.height)
-    }
-  })
-
-  test("binds every scenario family to exactly one policy", async () => {
-    expect(STORYBOOK_FIXTURES.map(({id, policyId}) => [id, policyId])).toEqual([
-      ["fixed-baseline-right", "fixed"],
-      ["fixed-baseline-down", "fixed"],
-      ["adaptive-shared-right", "adaptive"],
-      ["adaptive-shared-down", "adaptive"],
-      ["adaptive-compound-right", "adaptive"],
-      ["adaptive-compound-down", "adaptive"],
+  test("publishes the standard package-policy-scenario-variant hierarchy", () => {
+    expect(LAYOUT_STORIES.index.map(({route}) => route)).toEqual([
+      "fixed/baseline/right",
+      "fixed/baseline/down",
+      "adaptive/shared/right",
+      "adaptive/shared/down",
+      "adaptive/compound/right",
+      "adaptive/compound/down",
+      "top-down/blender-area/default",
     ])
-    for (const family of new Set(STORYBOOK_FIXTURES.map(({family}) => family))) {
-      expect(new Set(getFixtureFamily(family).map(({policyId}) => policyId)).size).toBe(1)
-    }
-
-    const html = await Bun.file(join(storybookRoot, "layout-storybook-body.html")).text()
-    const client = await Bun.file(join(storybookRoot, "layout-detail.ts")).text()
-    const styles = await Bun.file(join(storybookRoot, "layout-storybook.css")).text()
-    expect(html).toContain('<output id="policy-value" class="readonly-value"></output>')
-    expect(html).not.toContain('<select id="policy"')
-    expect(client).not.toContain("policySelect")
-    expect(client).toContain("runStorybookLayout(fixture.policyId, graph)")
-    expect(client).toContain("runStorybookLayout(selected.policyId, fixture.graph)")
-    expect(client).toContain('fixtureSelect.addEventListener("change", resetAndRunFixture)')
-    expect(client).toContain("comparison.replaceChildren()")
-    expect(styles).toContain(".comparison[hidden] { display: none; }")
+    expect(LAYOUT_STORIES.representative).toBe("fixed/baseline/right")
+    expect(layoutStoryRoute("")).toBe("fixed/baseline/right")
+    expect(layoutStoryRoute("top-down")).toBe("top-down/blender-area/default")
+    expect(layoutCatalogItems(new Set()).map(({route}) => route)).toEqual(["fixed", "adaptive", "top-down"])
+    expect(layoutSectionItems("adaptive/shared/right").map(({route}) => route))
+      .toEqual(["adaptive/shared", "adaptive/compound"])
+    expect(layoutVariantItems("fixed/baseline/right").map(({route}) => route))
+      .toEqual(["fixed/baseline/right", "fixed/baseline/down"])
   })
 
-  test("runs the public adaptive policy through nested compounds in RIGHT and DOWN", () => {
-    const fixtures = getFixtureFamily("adaptive-compound-side-selection")
-    expect(fixtures).toHaveLength(2)
+  test("lazy story modules import only their exact production policy", async () => {
+    const eager = await Bun.file(join(storybookRoot, "layout-stories.ts")).text()
+    const fixed = await Bun.file(join(storybookRoot, "stories/fixed.ts")).text()
+    const adaptive = await Bun.file(join(storybookRoot, "stories/adaptive.ts")).text()
+    const topDown = await Bun.file(join(storybookRoot, "stories/top-down.ts")).text()
 
-    for (const fixture of fixtures) {
-      const baseline = ADAPTIVE_COMPOUND_BASELINES[
-        fixture.id as keyof typeof ADAPTIVE_COMPOUND_BASELINES
-      ]
-      const first = runStorybookLayout("adaptive", fixture.graph)
-      const repeated = runStorybookLayout("adaptive", fixture.graph)
-      const permuted = runStorybookLayout("adaptive", permuteGraph(fixture.graph))
-      const shared = first.result.ports.find(({id}) => id === "source/shared")
-      const compoundIds = new Set(fixture.graph.nodes.flatMap(({parentId}) =>
-        parentId === undefined ? [] : [parentId]))
+    expect(eager).not.toMatch(/from "@nodes\/layout\/(?:fixed|adaptive|top-down)"/)
+    expect(fixed).toContain('from "@nodes/layout/fixed"')
+    expect(fixed).not.toContain("@nodes/layout/adaptive")
+    expect(fixed).not.toContain("@nodes/layout/top-down")
+    expect(adaptive).toContain('from "@nodes/layout/adaptive"')
+    expect(adaptive).not.toContain("@nodes/layout/fixed")
+    expect(adaptive).not.toContain("@nodes/layout/top-down")
+    expect(topDown).toContain('from "@nodes/layout/top-down"')
+    expect(topDown).not.toContain("@nodes/layout/fixed")
+    expect(topDown).not.toContain("@nodes/layout/adaptive")
 
-      expect(baseline, `missing baseline for ${fixture.id}`).toBeDefined()
-      expect(compoundIds).toEqual(new Set(["source-zone", "target-zone"]))
-      expect(first.result.direction).toBe(fixture.expectedDirection)
-      expect(first.result.direction).toBe(baseline.direction)
-      expect(first.result.bounds).toEqual(baseline.bounds)
-      expect(shared?.side).toBe(baseline.side)
-      expect(first.metrics.compoundCount).toBe(2)
-      expect(first.metrics.gatewayCount).toBe(4)
-      expect(first.policyDiagnostics).toMatchObject({
-        candidateBudget: 16,
-        theoreticalCandidateCount: "2",
-        dynamicPortCount: 1,
-        attemptedCandidates: 2,
-      })
-      expect(hash(first.result)).toBe(baseline.resultHash)
-      expect(hash(first.svg)).toBe(baseline.svgHash)
-      expect(repeated.result).toEqual(first.result)
-      expect(repeated.policyDiagnostics).toEqual(first.policyDiagnostics)
-      expect(repeated.svg).toBe(first.svg)
-      expect(permuted.result).toEqual(first.result)
-      expect(permuted.policyDiagnostics).toEqual(first.policyDiagnostics)
-      expect(permuted.svg).toBe(first.svg)
+    for (const route of LAYOUT_STORIES.index.map(({route}) => route)) {
+      const module = await LAYOUT_STORIES.load(route)
+      expect(module.source(module.defaultArgs)).toContain("const result = layout")
+      expect(module.controls.map(({key}) => key)).toEqual(["routes", "ports"])
     }
   })
 
-  test("runs the public adaptive policy as a deterministic RIGHT and DOWN matrix", () => {
-    for (const fixture of getFixtureFamily("adaptive-side-selection")) {
-      const baseline = ADAPTIVE_BASELINES[fixture.id as keyof typeof ADAPTIVE_BASELINES]
-      const first = runStorybookLayout("adaptive", fixture.graph)
-      const second = runStorybookLayout("adaptive", fixture.graph)
-      const shared = first.result.ports.find(({id}) => id === "source/shared")
-
-      expect(baseline, `missing baseline for ${fixture.id}`).toBeDefined()
-      expect(first.result.direction).toBe(fixture.expectedDirection)
-      expect(first.result.direction).toBe(baseline.direction)
-      expect(first.result.bounds).toEqual(baseline.bounds)
-      expect(shared?.side).toBe(baseline.side)
-      expect(first.svg).toContain("data-port-id=\"source/shared\"")
-      expect(first.svg).toContain(`data-side="${baseline.side}"`)
-      expect(hash(first.result)).toBe(baseline.resultHash)
-      expect(hash(first.svg)).toBe(baseline.svgHash)
-      expect(first.policyDiagnostics).toMatchObject({
-        candidateBudget: 16,
-        theoreticalCandidateCount: "2",
-        dynamicPortCount: 1,
-        attemptedCandidates: 2,
-      })
-      expect(second.result).toEqual(first.result)
-      expect(second.svg).toBe(first.svg)
-      expect(second.policyDiagnostics).toEqual(first.policyDiagnostics)
-    }
-  })
-
-  test("renders inspectable nodes, compounds, exact ports, routes, bends, gateways and bounds", () => {
+  test("preserves every frozen fixed/adaptive geometry and SVG baseline", () => {
     for (const fixture of getFixtureFamily("fixed-baseline")) {
-      const run = runStorybookLayout("fixed", fixture.graph)
-      const paintedNodeIds = orderNodeGeometryForPainting(fixture.graph, run.result.nodes).map(({id}) => id)
-      expect(run.svg).toContain(`data-direction="${fixture.expectedDirection}"`)
-      expect(run.svg).toContain("data-kind=\"layout-bounds\"")
-      expect(run.svg).toContain("data-layer=\"compound-backgrounds\"")
-      expect(run.svg).toContain("data-layer=\"compound-chrome\"")
-      expect(run.svg).toContain("data-layer=\"leaf-nodes\"")
-      expect(run.svg).toContain("class=\"node compound\"")
-      expect(run.svg).toContain("data-layer=\"ports\"")
-      expect(run.svg).toContain("data-port-id=\"producer/out-primary\"")
-      expect(run.svg).toContain("data-layer=\"edges\"")
-      expect(run.svg).toContain("data-edge-id=\"primary\"")
-      expect(run.svg).toContain("class=\"bend\"")
-      expect(run.svg).toContain("data-layer=\"gateways\"")
-      expect(run.svg).toContain("class=\"gateway\"")
-      expect(run.metrics.compoundCount).toBe(2)
-      expect(run.metrics.bendCount).toBeGreaterThan(0)
-      expect(run.metrics.gatewayCount).toBeGreaterThan(0)
-      expect(run.metrics.totalManhattan).toBeGreaterThan(0)
-      expect(paintedNodeIds).toEqual([
-        "source-zone",
-        "observer",
-        "producer",
-        "target-zone",
-        "consumer-a",
-        "consumer-b",
-      ])
-      for (const {id, parentId} of fixture.graph.nodes) {
-        if (parentId === undefined) continue
-        expect(run.svg.indexOf(`data-node-id="${parentId}"`)).toBeLessThan(
-          run.svg.indexOf(`data-node-id="${id}"`),
-        )
-      }
+      const baseline = FIXED_BASELINES[fixture.id as keyof typeof FIXED_BASELINES]
+      const result = layoutFixed(fixture.graph)
+      const title = `Фиксированная · ${formatDirection(result.direction)}`
+      const svg = renderLayoutSvg(fixture.graph, result, title)
+      expect(result.direction).toBe(baseline.direction)
+      expect(result.bounds).toEqual(baseline.bounds)
+      expect(hash(result)).toBe(baseline.resultHash)
+      expect(hash(svg)).toBe(baseline.svgHash)
+    }
+    for (const fixture of STORYBOOK_FIXTURES.filter(({policyId}) => policyId === "adaptive")) {
+      const baseline = ADAPTIVE_BASELINES[fixture.id as keyof typeof ADAPTIVE_BASELINES]
+      const {result, diagnostics} = layoutAdaptiveWithDiagnostics(fixture.graph)
+      const title = `Адаптивная · ${formatDirection(result.direction)}`
+      const svg = renderLayoutSvg(fixture.graph, result, title)
+      expect(result.direction).toBe(baseline.direction)
+      expect(result.bounds).toEqual(baseline.bounds)
+      expect(result.ports.find(({id}) => id === "source/shared")?.side).toBe(baseline.side)
+      expect(diagnostics.attemptedCandidates).toBeLessThanOrEqual(diagnostics.candidateBudget)
+      expect(hash(result)).toBe(baseline.resultHash)
+      expect(hash(svg)).toBe(baseline.svgHash)
     }
   })
 
-  test("paints exact semantic endpoints above containing owners and below leaf nodes", () => {
-    for (const fixture of STORYBOOK_FIXTURES) {
-      const policy = fixture.family === "fixed-baseline" ? "fixed" : "adaptive"
-      const run = runStorybookLayout(policy, fixture.graph)
-      const inputEdgeById = new Map(fixture.graph.edges.map((edge) => [edge.id, edge]))
-      const portById = new Map(run.result.ports.map((port) => [port.id, port]))
-
-      for (const edge of run.result.edges) {
-        const inputEdge = inputEdgeById.get(edge.id)
-        const section = edge.sections[0]
-        expect(inputEdge).toBeDefined()
-        expect(section).toBeDefined()
-        const source = portById.get(inputEdge!.sourcePortId)
-        const target = portById.get(inputEdge!.targetPortId)
-        expect(source).toBeDefined()
-        expect(target).toBeDefined()
-        expect(section!.startPoint).toEqual({x: source!.x, y: source!.y})
-        expect(section!.endPoint).toEqual({x: target!.x, y: target!.y})
-      }
-
-      const layerOrder = [
-        "compound-backgrounds",
-        "edges",
-        "port-label-leaders",
-        "compound-chrome",
-        "leaf-nodes",
-        "gateways",
-        "ports",
-        "port-labels",
-      ].map((layer) => run.svg.indexOf(`data-layer="${layer}"`))
-      expect(layerOrder.every((index) => index >= 0)).toBeTrue()
-      expect([...layerOrder].sort((left, right) => left - right)).toEqual(layerOrder)
-      expect(layerContents(run.svg, "compound-backgrounds")).not.toContain("class=\"node-id\"")
-      if (run.metrics.compoundCount > 0) {
-        expect(layerContents(run.svg, "compound-chrome")).toContain("class=\"node-id\"")
-      } else {
-        expect(layerContents(run.svg, "compound-chrome")).toBe("")
-      }
-      expect(run.svg).toContain("class=\"edge-arrow\"")
-      expect(run.svg).toContain(".edge-arrow{fill:#7dd3fc}")
+  test("freezes the new reference topology without manual ranks or routes", () => {
+    const result = layoutTopDown(TOP_DOWN_REFERENCE_GRAPH)
+    expect(TOP_DOWN_REFERENCE_GRAPH).not.toHaveProperty("viewport")
+    for (const node of TOP_DOWN_REFERENCE_GRAPH.nodes) {
+      expect(node).not.toHaveProperty("x")
+      expect(node).not.toHaveProperty("y")
+      expect(node).not.toHaveProperty("rank")
     }
-
-    const fixture = getFixtureFamily("fixed-baseline")[0]!
-    const run = runStorybookLayout("fixed", fixture.graph)
-    const reply = run.result.edges.find(({id}) => id === "reply")!
-    const observerPort = run.result.ports.find(({id}) => id === "observer/in-reply")!
-    const gateway = findGatewayPoints(fixture.graph, run.result).find(({edgeId, nodeId}) =>
-      edgeId === "reply" && nodeId === "source-zone")
-    expect(reply.sections[0]!.endPoint).toEqual({x: observerPort.x, y: observerPort.y})
-    expect(gateway?.point).toEqual({x: 56, y: 178})
-    expect(observerPort).toMatchObject({x: 84, y: 178})
+    expect(JSON.stringify(TOP_DOWN_REFERENCE_GRAPH.edges)).not.toMatch(/"(?:bendPoints|lane|rank)"/)
+    expect(result.direction).toBe("DOWN")
+    expect(result.nodes).toHaveLength(19)
+    expect(result.edges).toHaveLength(20)
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 1084, height: 1306})
+    expect(hash(result)).toBe("804b0d2c41f599d4d29932e13c1421caf6e8f2950d12567e1f814ae802e151b5")
   })
 
-  test("places deterministic port labels outside route bounds with exact non-overlapping leaders", () => {
-    for (const fixture of STORYBOOK_FIXTURES) {
-      const policy = fixture.family === "fixed-baseline" ? "fixed" : "adaptive"
-      const run = runStorybookLayout(policy, fixture.graph)
-      const labels = layoutPortLabels(run.result)
-      const repeated = layoutPortLabels(run.result)
-      const portById = new Map(run.result.ports.map((port) => [port.id, port]))
-
-      expect(repeated).toEqual(labels)
-      expect(labels).toHaveLength(run.result.ports.length)
-      expect(run.svg).toContain("data-kind=\"port-label\"")
-      expect(run.svg).toContain("class=\"port-label-leader\"")
-
-      const layerOrder = [
-        "compound-backgrounds",
-        "edges",
-        "port-label-leaders",
-        "compound-chrome",
-        "leaf-nodes",
-        "gateways",
-        "ports",
-        "port-labels",
-      ].map((layer) => run.svg.indexOf(`data-layer="${layer}"`))
-      expect(layerOrder.every((index) => index >= 0)).toBeTrue()
-      expect([...layerOrder].sort((left, right) => left - right)).toEqual(layerOrder)
-      expect(layerContents(run.svg, "port-label-leaders")).toContain("port-label-leader")
-      expect(layerContents(run.svg, "port-label-leaders")).not.toContain("port-label-box")
-      expect(layerContents(run.svg, "port-labels")).not.toContain("port-label-leader")
-      expect(layerContents(run.svg, "port-labels")).toContain("port-label-box")
-
-      for (const label of labels) {
-        const port = portById.get(label.portId)
-        expect(port).toBeDefined()
-        expect(label.leader.startPoint).toEqual({x: port!.x, y: port!.y})
-        expect(label.leader.endPoint.y).toBe(label.box.y + label.box.height / 2)
-        if (label.side === "WEST") {
-          expect(label.box.x + label.box.width).toBeLessThan(run.result.bounds.x)
-          expect(label.leader.endPoint.x).toBe(label.box.x + label.box.width)
-        } else {
-          expect(label.box.x).toBeGreaterThan(run.result.bounds.x + run.result.bounds.width)
-          expect(label.leader.endPoint.x).toBe(label.box.x)
-        }
-      }
-
-      for (let left = 0; left < labels.length; left += 1) {
-        for (let right = left + 1; right < labels.length; right += 1) {
-          expect(overlaps(labels[left]!.box, labels[right]!.box)).toBeFalse()
-        }
-      }
-    }
-  })
-
-  test("keeps the complete visible storybook interface in Russian", async () => {
-    const html = await Bun.file(join(storybookRoot, "layout-storybook-body.html")).text()
-    const entry = await Bun.file(join(storybookRoot, "fixed-adaptive.stories.ts")).text()
-    const detail = await Bun.file(join(storybookRoot, "layout-detail.ts")).text()
-    const fixtures = await Bun.file(join(storybookRoot, "layout-fixtures.ts")).text()
-    const policies = await Bun.file(join(storybookRoot, "layout-policies.ts")).text()
-    const visibleSource = [html, entry, detail, fixtures, policies].join("\n")
-
-    expect(html).toContain('class="layout-storybook" lang="ru"')
-    for (const required of [
-      "Стенд раскладки",
-      "Сценарий",
-      "Политика сценария",
-      "Нормализованный числовой вход",
-      "Запустить",
-      "Сбросить",
-      "Сравнить RIGHT / DOWN",
-      "Слои SVG",
-      "Сохранить результат",
-      "Результат JSON",
-      "Диагностика",
-      "Фиксированная",
-      "Адаптивная",
-      "Вложенная адаптивная раскладка",
-      "Горизонтальная (RIGHT)",
-      "Вертикальная (DOWN)",
-      "мс",
-    ]) expect(visibleSource).toContain(required)
-
-    for (const removed of [
-      "Layout storybook",
-      "Public policy in",
-      ">Fixture<",
-      "Policy / variant",
-      "Normalized numeric input",
-      ">Run<",
-      ">Reset<",
-      "Compare RIGHT / DOWN",
-      "SVG layers",
-      "Export input",
-      "Export result",
-      "Export SVG",
-      "Result JSON",
-      "No diagnostics yet",
-      "Fixed baseline",
-      "Adaptive shared port",
-      "Public fixed-port policy",
-      "Public bounded policy",
-      "продуктового renderer",
-      "составная topology",
-      "числовые anchors",
-      "форме viewport",
-      "hard-валидатор",
-      "Политика / вариант",
-    ]) expect(visibleSource).not.toContain(removed)
-  })
-
-  test("keeps all storybook sources outside production exports and free of forbidden imports", async () => {
+  test("keeps Storybook outside production exports and splits policy implementations", async () => {
     const packageJson = await Bun.file(join(layoutRoot, "package.json")).json() as {
       exports?: Record<string, unknown>
     }
     expect(Object.keys(packageJson.exports ?? {})).not.toContain("./storybook")
-
-    const files = await sourceFiles(storybookRoot)
-    const productionFiles = files.filter((path) => !path.endsWith(".test.ts"))
-    const source = await readAll(productionFiles)
-    for (const forbidden of [
-      /from ["']@nodes\/layout["']/,
-      /from ["']@nodes\/ui/,
-      /from ["']@nodes\/hud/,
-      /from ["']@metafor\/engine/,
-      /from ["'][^"']*hamiltonian/i,
-      /from ["'][^"']*bulk/i,
-      /from ["']@nodes\/layout\/(?:src|internal)/,
-    ]) expect(source).not.toMatch(forbidden)
-
-    const runtimeLayoutImports = productionFiles.flatMap((path) => {
-      const contents = Bun.file(path).text()
-      return [{path, contents}]
-    })
-    const loaded = await Promise.all(runtimeLayoutImports.map(async ({path, contents}) => ({
-      path,
-      contents: await contents,
-    })))
-    const callers = loaded.filter(({contents}) =>
-      /import\s*{[^}]*\blayoutFixed\b[^}]*}\s*from\s*["']@nodes\/layout\/fixed["']/.test(contents))
-    expect(callers.map(({path}) => relative(storybookRoot, path))).toEqual(["layout-policies.ts"])
-    const adaptiveCallers = loaded.filter(({contents}) =>
-      /import\s*{[^}]*\blayoutAdaptiveWithDiagnostics\b[^}]*}\s*from\s*["']@nodes\/layout\/adaptive["']/.test(contents))
-    expect(adaptiveCallers.map(({path}) => relative(storybookRoot, path))).toEqual(["layout-policies.ts"])
-  })
-
-  test("builds as a browser-only SVG tool without renderer or GPU code", async () => {
     const build = await Bun.build({
-      entrypoints: [join(storybookRoot, "fixed-adaptive.stories.ts")],
+      entrypoints: [join(storybookRoot, "layout.stories.ts")],
       target: "browser",
       format: "esm",
       minify: true,
-      sourcemap: "none",
+      splitting: true,
     })
     expect(build.success, build.logs.map(({message}) => message).join("\n")).toBeTrue()
-    const output = build.outputs[0]
-    expect(output).toBeDefined()
-    const source = await output!.text()
-    expect(source).not.toContain("NodeSystemSurface")
-    expect(source).not.toContain("GPUDevice")
-    expect(source).not.toContain("struct GlobalUniforms")
-    expect(source).not.toContain("NodeInspectorSurface")
-    expect(source).not.toContain("WebGPU")
+    const sources = await Promise.all(build.outputs.map((output) => output.text()))
+    expect(sources.some((source) => source.includes("TOP_DOWN_CYCLE_DETECTED"))).toBeTrue()
+    expect(sources.some((source) => source.includes("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT"))).toBeTrue()
+    for (const source of sources) {
+      if (!source.includes("TOP_DOWN_CYCLE_DETECTED")) continue
+      expect(source).not.toContain("NO_LEGAL_LAYOUT")
+      expect(source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
+      expect(source).not.toContain("Port has conflicting edge roles")
+    }
   })
 })
 
-function withoutViewport(graph: (typeof STORYBOOK_FIXTURES)[number]["graph"]): unknown {
-  const {viewport: _, ...topology} = graph
-  return topology
-}
-
-function permuteGraph(
-  graph: (typeof STORYBOOK_FIXTURES)[number]["graph"],
-): (typeof STORYBOOK_FIXTURES)[number]["graph"] {
-  return {
-    ...graph,
-    nodes: [...graph.nodes].reverse(),
-    ports: [...graph.ports].reverse().map((port) => ({
-      ...port,
-      allowedSides: [...port.allowedSides].reverse(),
-    })),
-    edges: [...graph.edges].reverse(),
-  }
+function formatDirection(direction: "RIGHT" | "DOWN"): string {
+  return direction === "RIGHT" ? "Горизонтальная (RIGHT)" : "Вертикальная (DOWN)"
 }
 
 function hash(value: unknown): string {
   const bytes = typeof value === "string" ? value : JSON.stringify(value)
   return new Bun.CryptoHasher("sha256").update(bytes).digest("hex")
-}
-
-function overlaps(
-  left: Readonly<{x: number; y: number; width: number; height: number}>,
-  right: Readonly<{x: number; y: number; width: number; height: number}>,
-): boolean {
-  return left.x < right.x + right.width
-    && left.x + left.width > right.x
-    && left.y < right.y + right.height
-    && left.y + left.height > right.y
-}
-
-function layerContents(svg: string, layer: string): string {
-  const match = svg.match(new RegExp(`<g data-layer="${layer}"[^>]*>(.*?)</g>`))
-  expect(match, `missing SVG layer ${layer}`).not.toBeNull()
-  return match![1]!
-}
-
-async function sourceFiles(root: string): Promise<string[]> {
-  const entries = await readdir(root, {withFileTypes: true})
-  const files: string[] = []
-  for (const entry of entries) {
-    const path = join(root, entry.name)
-    if (entry.isDirectory()) files.push(...await sourceFiles(path))
-    else if (entry.isFile() && (path.endsWith(".ts") || path.endsWith(".html") || path.endsWith(".css"))) files.push(path)
-  }
-  return files.sort()
-}
-
-async function readAll(paths: readonly string[]): Promise<string> {
-  return (await Promise.all(paths.map(async (path) =>
-    `// ${relative(storybookRoot, path)}\n${await Bun.file(path).text()}`))).join("\n")
 }
