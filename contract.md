@@ -14,6 +14,13 @@ This means:
 - consumers do not convert axes or units again;
 - renderer adaptation belongs inside Engine rather than an application scene.
 
+## Development Storybook boundary
+
+`packages/core/storybook/**` owns the live examples of this public contract,
+but remains development-only. It is absent from `@engine/core` exports and the
+production TypeScript project. The repository Storybook loads each example by
+its exact registered route; an unknown suffix cannot select another scene.
+
 ## Default font asset
 
 Engine owns the project-default TTF and exposes it through the explicit
