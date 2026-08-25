@@ -227,15 +227,17 @@ compound corridor и каждого фактического межслойно�
 ```bash
 bun test packages/layout/src
 bun run --cwd packages/layout typecheck
-bun test packages/storybook/pages/layout/layout-storybook.test.ts
+bun test packages/layout/storybook/layout-storybook.test.ts
 ```
 
-Dev-only SVG storybook принадлежит центральному package `@nodes/storybook` и
-находится в `packages/storybook/pages/layout`. Он вызывает только public
-fixed/adaptive entrypoints через private registry, сравнивает `RIGHT`/`DOWN`
-fixtures и показывает готовую geometry без NodeTree, Card, WebGPU, HUD и
-product renderer. Storybook не экспортируется из `@nodes/layout`; его
-числовые fixtures, SVG и hashes проверяются отдельно от production package.
+Dev-only SVG stories принадлежат `@nodes/layout` и находятся в
+`packages/layout/storybook`. Репозиторный `@nodes/storybook` только собирает их
+в свою страницу `/layout/` и владеет общим процессом, маршрутом и static build.
+Stories вызывают только public fixed/adaptive entrypoints, сравнивают
+`RIGHT`/`DOWN` fixtures и показывают готовую geometry без NodeTree, Card,
+WebGPU, HUD и product renderer. Storybook не экспортируется из
+`@nodes/layout` и не входит в его production dependencies; числовые fixtures,
+SVG и hashes проверяются отдельно от production package.
 
 Полный consumer-путь `NodeTree → projection → NodeEditor` отдельно показывает
 центральная WebGPU page `/editor/live-node-tree` того же `bun run nodes:storybook`.
