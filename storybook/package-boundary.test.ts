@@ -1,4 +1,5 @@
 import {describe, expect, test} from "bun:test"
+import {access} from "node:fs/promises"
 import {join, resolve} from "node:path"
 
 const storybookRoot = import.meta.dir
@@ -14,6 +15,7 @@ const sharedImports = new Set([
 describe("@nodes/ui Storybook owner boundary", () => {
   test("keeps every UI story and fixture beside its semantic owner", async () => {
     expect(await filesBelow(legacyRoot)).toEqual([])
+    expect(await filesBelow(join(storybookRoot, ".missing-owner-root"))).toEqual([])
     expect(await filesBelow(storybookRoot)).toEqual(expect.arrayContaining([
       "node-editor.stories.ts",
       "ui-navigation.ts",
@@ -63,6 +65,12 @@ function importedSpecifiers(source: string): readonly string[] {
 }
 
 async function filesBelow(root: string): Promise<readonly string[]> {
+  try {
+    await access(root)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return []
+    throw error
+  }
   const files: string[] = []
   const glob = new Bun.Glob("**/*")
   for await (const path of glob.scan({cwd: root, onlyFiles: true})) files.push(path)
