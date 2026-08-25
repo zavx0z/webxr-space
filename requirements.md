@@ -33,6 +33,22 @@ control нельзя опустить в Elements только ради повт
    subtree без независимого transform и dirty lifecycle; missing либо
    неоднозначный render key не выбирает случайный retained owner.
 
+## Composition boundary
+
+1. Каждый Component исполняет
+   [`UI-COMPOSITION-001..004`](../../ARCHITECTURE.md#ui-composition-law) и
+   получает механику slot/Flex/retained/clip только из
+   [контракта `@layout/core`](https://github.com/zavx0z/layout/blob/main/packages/core/requirements.md).
+2. Два и более semantic child slots одного Component планируются одним
+   `flexRow`, `flexColumn`, `flexRowCss` либо `flexColumnCss`. Component не
+   вычисляет offsets siblings и не восстанавливает геометрию parent frame.
+3. Visual primitives внутри одного выданного slot могут вычислять glyph,
+   caret, selection, border и icon geometry. Это исключение не распространяется
+   на gutter, header, toolbar, content region либо другие semantic siblings.
+4. Focused structural test доказывает Flex composition и consumer-owned retained
+   parent каждого нового composite Component; pixel-only test этот gate не
+   заменяет.
+
 ## Dev storybook boundary
 
 1. Components package page `/components/` является desktop consumer общего Workbench
@@ -80,12 +96,18 @@ control нельзя опустить в Elements только ради повт
    Dark по отдельному owner decision. Gutter примыкает к editor frame без
    общего content padding; inset принадлежит только строкам кода. Source-backed
    editor outline визуально отделяет `.space_text.back` от preview background.
+   Radius и shaped descendant clip принадлежат parent `Pane`/`div` по
+   `LAYOUT-CLIP-001`; CodeEditor не воспроизводит углы parent вручную.
 5. Pointer selection является локальным view state точного `key`. `Cmd/Ctrl+C`
    копирует только непустое выделение через один Elements-owned keyed read-only
    text participant; soft keyboard и mutating input target не создаются.
 6. Shared Storybook source panel использует тот же production `CodeEditor` с
    TypeScript language, сохраняет отдельные title/copy/controls/events owners и
    rematerialize-ит только source owner при scroll либо selection.
+7. Gutter и text region являются двумя semantic sibling slots одного
+   `flexRow`: gutter получает fixed width, text region — grow remainder и
+   собственный content inset. Ручные `codeStartX`/`codeClipX` sibling offsets
+   запрещены; focused structural test доказывает Flex plan.
 
 ## Универсальные поля
 
