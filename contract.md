@@ -38,6 +38,14 @@ Changing only a parent transform updates inherited `matrixWorld` and the frame. 
 
 Framebuffer clipping remains material presentation rather than a geometry change. It is derived from the actual `matrixWorld` chain of the same `Object3D` subtree and the owner's fixed viewport. A parent transform can therefore update clipping on the next frame without rematerialization. Plain single-color interface meshes obey the same optional clip as text, images, and rounded meshes.
 
+`Object3D.presentationClips` is the neutral resolved clip chain for one
+renderable. Each rounded rectangle names the `Object3D` coordinate space that
+owns its centre, half-size, and corner radii. Renderer evaluates every shape in
+that live coordinate space and intersects the results without rewriting child
+geometry. A rectangular clip is the same shape with zero radii. Invalid,
+non-invertible, or unsupported clipped presentation fails closed instead of
+silently drawing outside the requested boundary.
+
 ## Soft SDF shadow
 
 A rounded interface shadow is analytical presentation of the same local rectangle, not a separate texture or geometric blur ring. One expanded quad evaluates rounded distance and smooth falloff in a single fragment pass. A normal interface shadow does not use an offscreen framebuffer, blur texture, repeated bands, or post-processing.

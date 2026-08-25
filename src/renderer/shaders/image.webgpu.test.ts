@@ -1,7 +1,6 @@
 import {beforeAll, describe, expect, test} from "bun:test"
 import {setupDevice} from "../../../test/setup-device"
-import imageShader from "./image.wgsl"
-import externalImageShader from "./image-external.wgsl"
+import {imageExternalShader as externalImageShader, imageShader} from "./ui-shaders"
 
 describe("image tint shader contract", () => {
   let device: GPUDevice
@@ -22,7 +21,10 @@ describe("image tint shader contract", () => {
       entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"}}],
     })
     const perObjectLayout = device.createBindGroupLayout({
-      entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform", hasDynamicOffset: true}}],
+      entries: [
+        {binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform", hasDynamicOffset: true}},
+        {binding: 2, visibility: GPUShaderStage.FRAGMENT, buffer: {type: "read-only-storage"}},
+      ],
     })
     const imageLayout = device.createBindGroupLayout({
       entries: [

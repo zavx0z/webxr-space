@@ -16,6 +16,8 @@ struct SceneUniforms {
 };
 @binding(1) @group(0) var<uniform> sceneUniforms: SceneUniforms;
 
+// @engine-presentation-clip
+
 // clipBounds — screen-space rect (framebuffer-pixels): (minX, minY, maxX, maxY).
 // Фрагменты с position.xy вне этого rect'а discardятся. Clip — на стадии
 // фрагмента после projection, поэтому камеру/perspective учитывать не нужно:
@@ -25,11 +27,14 @@ struct PerObjectUniforms {
     normalMatrix: mat4x4<f32>,
     color: vec4<f32>,
     clipBounds: vec4<f32>,
+    presentationClipPadding: array<vec4<f32>, 4>,
+    presentationClipRange: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
+    @location(0) worldPosition: vec3<f32>,
 };
 
 @vertex
@@ -37,6 +42,7 @@ fn vs_main(@location(0) pos: vec3<f32>) -> VertexOutput {
     var out: VertexOutput;
     let worldPosition = perObject.modelMatrix * vec4<f32>(pos, 1.0);
     out.position = globalUniforms.viewProjectionMatrix * worldPosition;
+    out.worldPosition = worldPosition.xyz;
     return out;
 }
 
@@ -45,7 +51,7 @@ fn isClipDisabled() -> bool {
     return b.x == 0.0 && b.y == 0.0 && b.z == 0.0 && b.w == 0.0;
 }
 
-fn applyClip(position: vec4<f32>) {
+fn applyClip(position: vec4<f32>, worldPosition: vec3<f32>) -> f32 {
     if (!isClipDisabled()) {
         let p = position.xy;
         let b = perObject.clipBounds;
@@ -53,17 +59,20 @@ fn applyClip(position: vec4<f32>) {
             discard;
         }
     }
+    let coverage = presentationClipCoverage(worldPosition, perObject.presentationClipRange);
+    if (coverage <= 0.0) { discard; }
+    return coverage;
 }
 
 @fragment
 fn fs_stencil(in: VertexOutput) -> @location(0) vec4<f32> {
-    applyClip(in.position);
+    _ = applyClip(in.position, in.worldPosition);
     // Output is ignored due to write mask, but must return valid type
     return vec4<f32>(1.0, 0.0, 0.0, 1.0);
 }
 
 @fragment
 fn fs_cover(in: VertexOutput) -> @location(0) vec4<f32> {
-    applyClip(in.position);
-    return perObject.color;
+    let coverage = applyClip(in.position, in.worldPosition);
+    return vec4<f32>(perObject.color.rgb, perObject.color.a * coverage);
 }

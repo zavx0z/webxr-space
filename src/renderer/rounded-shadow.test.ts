@@ -4,7 +4,7 @@ import {PlaneGeometry} from "../geometries/plane-geometry"
 import {Matrix4} from "../math/matrix-4"
 import {RoundedRectMaterial} from "../materials/rounded-rect-material"
 import {Renderer} from "./index"
-import roundedShader from "./shaders/rounded.wgsl"
+import {roundedShader} from "./shaders/ui-shaders"
 
 type RendererProbe = {
   perObjectDataCPU: Float32Array
@@ -73,7 +73,7 @@ describe("RoundedRectMaterial analytical shadow", () => {
     expect(roundedShader).toContain("let shadowDistance = dOuter - shadowSpread;")
     expect(roundedShader).toContain("smoothstep(-shadowBlur, shadowBlur, shadowDistance)")
     expect(roundedShader).not.toContain("max(shadowBlur, aa)")
-    expect(roundedShader.match(/@binding\(/g)).toHaveLength(2)
+    expect(roundedShader.match(/@binding\(/g)).toHaveLength(3)
     expect(roundedShader).not.toContain("texture_2d")
     expect(roundedShader).not.toContain("textureSample")
     expect(roundedShader).not.toContain("sampler")

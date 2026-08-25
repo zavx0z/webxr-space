@@ -18,6 +18,8 @@ struct GlobalUniforms {
 };
 @binding(0) @group(0) var<uniform> globalUniforms: GlobalUniforms;
 
+// @engine-presentation-clip
+
 struct PerObjectUniforms {
     modelMatrix: mat4x4<f32>,
     normalMatrix: mat4x4<f32>,
@@ -27,12 +29,14 @@ struct PerObjectUniforms {
     radii: vec4<f32>,
     params: vec4<f32>,
     clipBounds: vec4<f32>,
+    presentationClipRange: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) localPos: vec2<f32>,
+    @location(1) worldPosition: vec3<f32>,
 };
 
 @vertex
@@ -48,6 +52,7 @@ fn vs_main(
     // local 2D position в координатах самого меша (centered).
     // PlaneGeometry центрирована вокруг нуля; pos.xy уже в [-w/2, w/2].
     out.localPos = pos.xy;
+    out.worldPosition = worldPosition.xyz;
     return out;
 }
 
@@ -81,6 +86,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             discard;
         }
     }
+    let presentationCoverage = presentationClipCoverage(in.worldPosition, perObject.presentationClipRange);
+    if (presentationCoverage <= 0.0) { discard; }
 
     let halfSize = perObject.size.xy * 0.5;
     // Радиусы клампим до min(halfSize.x, halfSize.y), иначе SDF даёт артефакты.
@@ -114,14 +121,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             // A spread-only hard edge keeps the ordinary derivative AA.
             shadowMask = 1.0 - smoothstep(-aa, aa, shadowDistance);
         }
-        let a = perObject.fill.a * shadowMask * opacity;
+        let a = perObject.fill.a * shadowMask * opacity * presentationCoverage;
         if (a <= 0.0) { discard; }
         return vec4<f32>(perObject.fill.rgb, a);
     }
 
     if (borderWidth <= 0.0) {
         // Только заливка — без border.
-        let a = perObject.fill.a * outerMask * opacity;
+        let a = perObject.fill.a * outerMask * opacity * presentationCoverage;
         if (a <= 0.0) { discard; }
         return vec4<f32>(perObject.fill.rgb, a);
     }
@@ -136,9 +143,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let borderStrength = max(outerMask - innerMask, 0.0);
     let fillStrength = innerMask;
 
-    let rgb = perObject.fill.rgb * fillStrength * perObject.fill.a
-            + perObject.border.rgb * borderStrength * perObject.border.a;
-    let a = (fillStrength * perObject.fill.a + borderStrength * perObject.border.a) * opacity;
+    let rgb = (perObject.fill.rgb * fillStrength * perObject.fill.a
+            + perObject.border.rgb * borderStrength * perObject.border.a) * opacity * presentationCoverage;
+    let a = (fillStrength * perObject.fill.a + borderStrength * perObject.border.a) * opacity * presentationCoverage;
     if (a <= 0.0) { discard; }
     // Premultiplied → divide rgb на a чтобы получить straight color,
     // потому что blend pipeline ожидает src-alpha с straight color.

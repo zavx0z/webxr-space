@@ -4,7 +4,7 @@ import {PlaneGeometry} from "../geometries/plane-geometry"
 import {Matrix4} from "../math/matrix-4"
 import {MeshBasicMaterial} from "../materials/mesh-basic-material"
 import {Renderer} from "./index"
-import meshBasicShader from "./shaders/mesh-basic.wgsl"
+import {meshBasicShader} from "./shaders/ui-shaders"
 
 type RendererProbe = {
   perObjectDataCPU: Float32Array

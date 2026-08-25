@@ -24,6 +24,7 @@
  */
 
 export * from "./core/object-3d"
+export * from "./core/presentation-clip"
 export * from "./core/buffer-geometry"
 export * from "./geometries/plane-geometry"
 export * from "./geometries/textured-plane-geometry"

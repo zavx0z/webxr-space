@@ -10,7 +10,6 @@ import {Matrix4, Vector3, Frustum} from "../math"
 import {LineSegments} from "../objects/line-segments"
 import {Text} from "../objects/text"
 import {Object3D} from "../core/object-3d"
-import meshBasicWGSL from "./shaders/mesh-basic.wgsl"
 import thinFilmWGSL from "./shaders/thin-film.wgsl"
 import holographicWGSL from "./shaders/holographic.wgsl"
 import meshStaticWGSL from "./shaders/mesh-static.wgsl"
@@ -18,12 +17,15 @@ import meshSkinnedWGSL from "./shaders/mesh-skinned.wgsl"
 import meshInstancedWGSL from "./shaders/mesh-instanced.wgsl"
 
 import lineShaderCode from "./shaders/line.wgsl"
-import textShaderCode from "./shaders/text.wgsl"
-import imageShaderCode from "./shaders/image.wgsl"
-import imageExternalShaderCode from "./shaders/image-external.wgsl"
-import roundedShaderCode from "./shaders/rounded.wgsl"
-import radialBackdropShaderCode from "./shaders/radial-backdrop.ts"
-import colorPickerShaderCode from "./shaders/color-picker.wgsl"
+import {
+  colorPickerShader as colorPickerShaderCode,
+  imageExternalShader as imageExternalShaderCode,
+  imageShader as imageShaderCode,
+  meshBasicShader as meshBasicWGSL,
+  radialBackdropShader as radialBackdropShaderCode,
+  roundedShader as roundedShaderCode,
+  textShader as textShaderCode,
+} from "./shaders/ui-shaders"
 import {TEXT_COVER_FACE_STATE, TEXT_STENCIL_BACK_FACE_STATE, TEXT_STENCIL_FACE_STATE} from "./text-stencil"
 import {
   LINE_OVERLAY_BLEND_STATE,
@@ -49,6 +51,14 @@ import {
   populateBoneMatrixBlock,
   type PerObjectUploadPlan,
 } from "./per-object-upload"
+import {
+  encodePresentationClipChains,
+  PRESENTATION_CLIP_RANGE_FLOAT_OFFSET,
+  PRESENTATION_CLIP_RECORD_FLOATS,
+  PRESENTATION_CLIP_RECORD_SIZE,
+  type PresentationClipRange,
+} from "./presentation-clip-upload"
+import {renderItemSupportsPresentationClips} from "./presentation-clip-support"
 
 if (import.meta.hot) {
   (import.meta.hot.accept as unknown as (dependencies: string[], callback: () => void) => void)([
@@ -161,6 +171,9 @@ export class Renderer {
   private perObjectDataCPU: Float32Array | null = null
   private boneMatricesDataCPU: Float32Array | null = null
   private perObjectCapacity = INITIAL_RENDERABLE_CAPACITY
+  private presentationClipBuffer: GPUBuffer | null = null
+  private presentationClipCapacity = 0
+  private presentationClipRanges: ReadonlyMap<Object3D, PresentationClipRange> = new Map()
 
   private geometryCache: Map<BufferGeometry, GeometryBuffers> = new Map()
   private depthTexture: GPUTexture | null = null
@@ -269,6 +282,11 @@ export class Renderer {
           binding: 1, // for skinning
           visibility: GPUShaderStage.VERTEX,
           buffer: {type: "uniform", hasDynamicOffset: true},
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.FRAGMENT,
+          buffer: {type: "read-only-storage"},
         },
       ],
     })
@@ -1321,6 +1339,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.perObjectBindGroup &&
       this.perObjectDataCPU &&
       this.boneMatricesDataCPU &&
+      this.presentationClipBuffer &&
       this.canvas
     )
   }
@@ -1432,6 +1451,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // passes before submit would make earlier passes read the later data.
     this.updateSceneUniforms(frameLights, viewPoint.viewMatrix)
     this.ensurePerObjectCapacity(frameRenderItems.length)
+    const presentationClipUpload = encodePresentationClipChains(frameRenderItems.map((item) => item.object))
+    this.ensurePresentationClipCapacity(presentationClipUpload.data.length / PRESENTATION_CLIP_RECORD_FLOATS)
+    this.presentationClipRanges = presentationClipUpload.ranges
     const uploadPlan = this.updatePerObjectData(frameRenderItems)
     if (uploadPlan.uniformBytes > 0 && this.perObjectDataCPU && this.perObjectUniformBuffer) {
       this.device!.queue.writeBuffer(
@@ -1452,6 +1474,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
           range.byteLength,
         )
       }
+    }
+    if (presentationClipUpload.data.byteLength > 0 && this.presentationClipBuffer) {
+      this.device!.queue.writeBuffer(this.presentationClipBuffer, 0, presentationClipUpload.data)
     }
 
     const directDrawLayers = preparedLayers.filter(hasDirectRenderItems)
@@ -1603,28 +1628,60 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.boneMatricesBuffer = boneMatricesBuffer
     this.perObjectDataCPU = new Float32Array(capacity * (PER_OBJECT_UNIFORM_SIZE / 4))
     this.boneMatricesDataCPU = new Float32Array(capacity * (BONE_MATRICES_SIZE / 4))
+    this.ensurePresentationClipCapacity(1)
+    this.createPerObjectBindGroup()
+    this.perObjectCapacity = capacity
+    previousUniformBuffer?.destroy()
+    previousBoneMatricesBuffer?.destroy()
+  }
+
+  private ensurePresentationClipCapacity(required: number): void {
+    if (!this.device) return
+    const boundedRequired = Math.max(1, required)
+    if (this.presentationClipBuffer !== null && boundedRequired <= this.presentationClipCapacity) return
+    let nextCapacity = Math.max(1, this.presentationClipCapacity)
+    while (nextCapacity < boundedRequired) nextCapacity *= 2
+    const previous = this.presentationClipBuffer
+    this.presentationClipBuffer = this.device.createBuffer({
+      size: nextCapacity * PRESENTATION_CLIP_RECORD_SIZE,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    })
+    this.presentationClipCapacity = nextCapacity
+    this.createPerObjectBindGroup()
+    previous?.destroy()
+  }
+
+  private createPerObjectBindGroup(): void {
+    if (
+      !this.device ||
+      !this.perObjectBindGroupLayout ||
+      !this.perObjectUniformBuffer ||
+      !this.boneMatricesBuffer ||
+      !this.presentationClipBuffer
+    ) return
     this.perObjectBindGroup = this.device.createBindGroup({
       layout: this.perObjectBindGroupLayout,
       entries: [
         {
           binding: 0,
           resource: {
-            buffer: uniformBuffer,
+            buffer: this.perObjectUniformBuffer,
             size: PER_OBJECT_UNIFORM_SIZE,
           },
         },
         {
           binding: 1,
           resource: {
-            buffer: boneMatricesBuffer,
+            buffer: this.boneMatricesBuffer,
             size: BONE_MATRICES_SIZE,
           },
         },
+        {
+          binding: 2,
+          resource: {buffer: this.presentationClipBuffer},
+        },
       ],
     })
-    this.perObjectCapacity = capacity
-    previousUniformBuffer?.destroy()
-    previousBoneMatricesBuffer?.destroy()
   }
 
   private writePerObjectRgba(offsetFloats: number, color: {r: number, g: number, b: number, a: number}, alpha = color.a): void {
@@ -1687,6 +1744,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
           this.updateTextData(item.object as Text, item.worldMatrix, offsetFloats, item.type === "text-stencil")
           break
       }
+      this.writePresentationClipRange(item.object, offsetFloats)
     }
     return uploadPlan
   }
@@ -1922,6 +1980,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.writePerObjectRgba(offsetFloats + 32, material.color, material.color.a * material.opacity)
   }
 
+  private writePresentationClipRange(object: Object3D, offsetFloats: number): void {
+    const range = this.presentationClipRanges.get(object)
+    if (range === undefined || this.perObjectDataCPU === null) return
+    this.perObjectDataCPU[offsetFloats + PRESENTATION_CLIP_RANGE_FLOAT_OFFSET] = range.start
+    this.perObjectDataCPU[offsetFloats + PRESENTATION_CLIP_RANGE_FLOAT_OFFSET + 1] = range.count
+  }
+
   private renderObjectList(
     passEncoder: GPURenderPassEncoder,
     objectsToRender: RenderItem[],
@@ -1933,6 +1998,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     for (const item of objectsToRender) {
       const renderIndex = renderIndexByItem.get(item)
       if (renderIndex === undefined) continue
+      if (item.object.presentationClips.length > 0 && !renderItemSupportsPresentationClips(item)) continue
 
       let pipeline: GPURenderPipeline | null = null
 

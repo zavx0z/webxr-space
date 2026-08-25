@@ -1,6 +1,6 @@
 import {beforeAll, describe, expect, test} from "bun:test"
 import {setupDevice} from "../../../test/setup-device"
-import colorPickerShader from "./color-picker.wgsl"
+import {colorPickerShader} from "./ui-shaders"
 
 describe("color picker shader WebGPU pipeline", () => {
   let device: GPUDevice
@@ -19,7 +19,7 @@ describe("color picker shader WebGPU pipeline", () => {
     expect(colorPickerShader).not.toContain("0.32")
     expect(colorPickerShader).not.toContain("0.54")
     expect(colorPickerShader).not.toContain("0.004")
-    expect(colorPickerShader.match(/@binding\(/g)).toHaveLength(2)
+    expect(colorPickerShader.match(/@binding\(/g)).toHaveLength(3)
     expect(colorPickerShader).not.toContain("texture_2d")
     expect(colorPickerShader).not.toContain("textureSample")
     expect(colorPickerShader).not.toContain("sampler")
@@ -56,6 +56,7 @@ describe("color picker shader WebGPU pipeline", () => {
       entries: [
         {binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform", hasDynamicOffset: true}},
         {binding: 1, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform", hasDynamicOffset: true}},
+        {binding: 2, visibility: GPUShaderStage.FRAGMENT, buffer: {type: "read-only-storage"}},
       ],
     })
     const module = device.createShaderModule({code: colorPickerShader})
@@ -100,7 +101,10 @@ async function renderValueStrip(
     entries: [{binding: 0, visibility: GPUShaderStage.VERTEX, buffer: {type: "uniform"}}],
   })
   const perObjectLayout = device.createBindGroupLayout({
-    entries: [{binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"}}],
+    entries: [
+      {binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: {type: "uniform"}},
+      {binding: 2, visibility: GPUShaderStage.FRAGMENT, buffer: {type: "read-only-storage"}},
+    ],
   })
   const pipeline = await device.createRenderPipelineAsync({
     layout: device.createPipelineLayout({bindGroupLayouts: [globalLayout, perObjectLayout]}),
@@ -132,13 +136,17 @@ async function renderValueStrip(
   objectData.set([options.hue, options.saturation, 0.4, 0.7], 32)
   objectData.set([2, 2, 1, 1], 36)
   const objectBuffer = gpuBuffer(device, objectData, GPUBufferUsage.UNIFORM)
+  const presentationClipBuffer = gpuBuffer(device, new Float32Array(24), GPUBufferUsage.STORAGE)
   const globalBindGroup = device.createBindGroup({
     layout: globalLayout,
     entries: [{binding: 0, resource: {buffer: globalBuffer}}],
   })
   const objectBindGroup = device.createBindGroup({
     layout: perObjectLayout,
-    entries: [{binding: 0, resource: {buffer: objectBuffer}}],
+    entries: [
+      {binding: 0, resource: {buffer: objectBuffer}},
+      {binding: 2, resource: {buffer: presentationClipBuffer}},
+    ],
   })
   const texture = device.createTexture({
     size: {width, height},
@@ -184,6 +192,7 @@ async function renderValueStrip(
   normalBuffer.destroy()
   globalBuffer.destroy()
   objectBuffer.destroy()
+  presentationClipBuffer.destroy()
   readback.destroy()
   return result
 }

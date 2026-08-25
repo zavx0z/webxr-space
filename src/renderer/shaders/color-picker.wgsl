@@ -3,6 +3,8 @@ struct GlobalUniforms {
 };
 @binding(0) @group(0) var<uniform> globalUniforms: GlobalUniforms;
 
+// @engine-presentation-clip
+
 struct PerObjectUniforms {
     modelMatrix: mat4x4<f32>,
     normalMatrix: mat4x4<f32>,
@@ -12,12 +14,14 @@ struct PerObjectUniforms {
     checkerSecondary: vec4<f32>,
     checkerParams: vec4<f32>,
     clipBounds: vec4<f32>,
+    presentationClipRange: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) localPos: vec2<f32>,
+    @location(1) worldPosition: vec3<f32>,
 };
 
 @vertex
@@ -30,6 +34,7 @@ fn vs_main(
     let worldPosition = perObject.modelMatrix * vec4<f32>(pos, 1.0);
     out.position = globalUniforms.viewProjectionMatrix * worldPosition;
     out.localPos = pos.xy;
+    out.worldPosition = worldPosition.xyz;
     return out;
 }
 
@@ -52,9 +57,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (outsideClip(in.position)) {
         discard;
     }
+    let presentationCoverage = presentationClipCoverage(in.worldPosition, perObject.presentationClipRange);
+    if (presentationCoverage <= 0.0) { discard; }
     let size = max(perObject.geometry.xy, vec2<f32>(0.0001));
     let mode = perObject.geometry.z;
-    let opacity = perObject.geometry.w;
+    let opacity = perObject.geometry.w * presentationCoverage;
     let uv = vec2<f32>(
         in.localPos.x / size.x + 0.5,
         0.5 - in.localPos.y / size.y

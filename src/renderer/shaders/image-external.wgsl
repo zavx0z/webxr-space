@@ -3,6 +3,8 @@ struct GlobalUniforms {
 };
 @binding(0) @group(0) var<uniform> globalUniforms: GlobalUniforms;
 
+// @engine-presentation-clip
+
 struct PerObjectUniforms {
     modelMatrix: mat4x4<f32>,
     normalMatrix: mat4x4<f32>,
@@ -10,6 +12,8 @@ struct PerObjectUniforms {
     clipBounds: vec4<f32>,
     imageViewBox: vec4<f32>,
     imageParams: vec4<f32>,
+    presentationClipPadding: array<vec4<f32>, 2>,
+    presentationClipRange: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
@@ -19,6 +23,7 @@ struct PerObjectUniforms {
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) uv: vec2<f32>,
+    @location(1) worldPosition: vec3<f32>,
 };
 
 @vertex
@@ -30,6 +35,7 @@ fn vs_main(
     let worldPosition = perObject.modelMatrix * vec4<f32>(pos, 1.0);
     out.position = globalUniforms.viewProjectionMatrix * worldPosition;
     out.uv = uv;
+    out.worldPosition = worldPosition.xyz;
     return out;
 }
 
@@ -47,6 +53,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             discard;
         }
     }
+    let presentationCoverage = presentationClipCoverage(in.worldPosition, perObject.presentationClipRange);
+    if (presentationCoverage <= 0.0) { discard; }
 
     let vb = perObject.imageViewBox;
     let opacity = perObject.imageParams.x;
@@ -89,6 +97,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let color = textureSampleBaseClampToEdge(imageTexture, imageSampler, sourceUv);
     return vec4<f32>(
         color.rgb * perObject.color.rgb,
-        color.a * perObject.color.a * opacity * alpha,
+        color.a * perObject.color.a * opacity * alpha * presentationCoverage,
     );
 }

@@ -2,6 +2,7 @@ import { Matrix4, Quaternion, Vector3 } from "../math"
 import { Raycaster, type Intersection } from "./raycaster"
 import type { LayoutProps } from '../layout/layout-types';
 import type { ComputedLayout } from '../layout/layout-types';
+import type {PresentationClipShape} from "./presentation-clip"
 
 export type RenderLayer = "world" | "ui"
 
@@ -26,6 +27,13 @@ export class Object3D {
    * UI roots use this to opt their whole subtree into UI depth semantics.
    */
   public renderLayer?: RenderLayer
+  /**
+   * Resolved analytical presentation clips for this renderable.
+   *
+   * Every shape is evaluated in its own `coordinateSpace`; multiple shapes
+   * intersect. Renderer presentation clips never rewrite object geometry.
+   */
+  public presentationClips: readonly PresentationClipShape[] = []
   public quaternion: Quaternion = new Quaternion()
 
   // Внутреннее свойство для хранения вращения в углах Эйлера.

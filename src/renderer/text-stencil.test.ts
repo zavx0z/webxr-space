@@ -8,7 +8,7 @@ import {Matrix4} from "../math/matrix-4"
 import {TextMaterial} from "../materials/text-material"
 import type {Text} from "../objects/text"
 import {Renderer} from "./index"
-import textShader from "./shaders/text.wgsl"
+import {textShader} from "./shaders/ui-shaders"
 
 type RendererProbe = {
   perObjectDataCPU: Float32Array
@@ -27,8 +27,8 @@ describe("text stencil config", () => {
   })
 
   test("text stencil and cover apply the same framebuffer clip", () => {
-    expect(textShader).toContain("fn applyClip(position: vec4<f32>)")
-    expect(textShader.match(/applyClip\(in\.position\);/g)).toHaveLength(2)
+    expect(textShader).toContain("fn applyClip(position: vec4<f32>, worldPosition: vec3<f32>) -> f32")
+    expect(textShader.match(/applyClip\(in\.position, in\.worldPosition\)/g)).toHaveLength(2)
   })
 
   test("uploads the same framebuffer clip for stencil and cover passes", () => {

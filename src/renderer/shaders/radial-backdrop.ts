@@ -4,6 +4,8 @@ struct GlobalUniforms {
 };
 @binding(0) @group(0) var<uniform> globalUniforms: GlobalUniforms;
 
+// @engine-presentation-clip
+
 struct PerObjectUniforms {
     modelMatrix: mat4x4<f32>,
     normalMatrix: mat4x4<f32>,
@@ -13,12 +15,14 @@ struct PerObjectUniforms {
     size: vec4<f32>,
     glowAParams: vec4<f32>,
     glowBParams: vec4<f32>,
+    presentationClipRange: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) localPos: vec2<f32>,
+    @location(1) worldPosition: vec3<f32>,
 };
 
 @vertex
@@ -32,6 +36,7 @@ fn vs_main(
     let worldPosition = perObject.modelMatrix * vec4<f32>(pos, 1.0);
     out.position = globalUniforms.viewProjectionMatrix * worldPosition;
     out.localPos = pos.xy;
+    out.worldPosition = worldPosition.xyz;
     return out;
 }
 
@@ -50,6 +55,8 @@ fn over(base: vec3<f32>, top: vec3<f32>, alpha: f32) -> vec3<f32> {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let presentationCoverage = presentationClipCoverage(in.worldPosition, perObject.presentationClipRange);
+    if (presentationCoverage <= 0.0) { discard; }
     let size = max(perObject.size.xy, vec2<f32>(0.0001));
     let uv = vec2<f32>(
         in.localPos.x / size.x + 0.5,
@@ -62,6 +69,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     rgb = over(rgb, perObject.glowA.rgb, a);
     rgb = over(rgb, perObject.glowB.rgb, b);
 
-    return vec4<f32>(rgb, perObject.base.a);
+    return vec4<f32>(rgb, perObject.base.a * presentationCoverage);
 }
 `
