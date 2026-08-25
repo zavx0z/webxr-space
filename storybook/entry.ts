@@ -8,7 +8,10 @@ import {
   type StorybookStoryPanelMode,
   type StorybookStoryPanelOptions,
 } from "@zavx0z/storybook/workbench"
-import {storybookPublicPath} from "@zavx0z/storybook/environment"
+import {
+  storybookPublicPath,
+  waitForStorybookFrameBoundary,
+} from "@zavx0z/storybook/environment"
 import type {StorybookStoryArgs, StorybookStoryModule} from "@zavx0z/storybook/stories"
 import {
   COMPONENT_STORIES,
@@ -38,6 +41,7 @@ export type ComponentsStorybookObserver = Readonly<{
 declare global {
   var __componentsStorybookObserver: ComponentsStorybookObserver | undefined
   var __componentsStoryControlBridge: ((key: string, value: unknown) => void) | undefined
+  var __uiStorybookCapturePresentedFrame: (() => Promise<Blob | null>) | undefined
 }
 
 async function startComponentsStorybook(): Promise<void> {
@@ -50,6 +54,7 @@ async function startComponentsStorybook(): Promise<void> {
     const runtime = await UiRuntime.create(canvas, {
       virtualDisplay: {initial: "near", surfaceDisplay: true, grid: false},
     })
+    globalThis.__uiStorybookCapturePresentedFrame = () => runtime.renderer.captureLastPresentedFramePng()
     runtime.handleResize()
 
     const router = createMountedStoryRouter<ComponentsStoryRoute>(COMPONENT_STORIES, COMPONENTS_MOUNT_PATH)
@@ -253,6 +258,8 @@ async function startComponentsStorybook(): Promise<void> {
     }).observe(canvas)
     runtime.handleResize()
     publish()
+    runtime.requestRender()
+    await waitForStorybookFrameBoundary()
     document.documentElement.dataset.componentsStorybook = "ready"
     document.documentElement.dataset.uiStorybook = "ready"
   } catch (error) {
