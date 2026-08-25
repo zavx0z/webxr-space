@@ -70,6 +70,7 @@ describe("CodeEditor read-only component", () => {
       border: rgba8ToColor(uiTheme.material.editorBorder),
     })
     expect(surface.rects.map((call) => call[4])).toContainEqual(rgba8ToColor(uiTheme.spaceText.gutter))
+    expect(surface.rects[0]?.slice(0, 2)).toEqual([1, 1])
     expect(surface.texts.find(([text]) => text === "1")?.[3].material.color)
       .toEqual(rgba8ToColor(uiTheme.spaceText.lineNumbers))
     const keyword = surface.texts.find(([text]) => text === "const")

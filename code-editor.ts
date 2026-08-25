@@ -89,7 +89,8 @@ type CodeEditorState = {
 }
 
 const codeEditorStates = new WeakMap<UiSurface, Map<string, CodeEditorState>>()
-const CODE_INSET_PX = 6
+const EDITOR_BORDER_INSET_PX = 1
+const CODE_BLOCK_INSET_PX = 6
 const CODE_GAP_PX = 4
 const GUTTER_SIDE_PAD_PX = 8
 const GUTTER_RULE_PX = 1
@@ -112,8 +113,9 @@ export function CodeEditor(
     ? Math.ceil(host.measureText("9".repeat(String(Math.max(1, state.lines.length)).length), fontPx) + GUTTER_SIDE_PAD_PX * 2)
     : 0
   const maxLineWidth = Math.max(1, ...state.lines.map((line) => codeLineWidth(host, state, line, fontPx)))
-  const contentWidth = gutterWidth + (showLineNumbers ? CODE_GAP_PX : 0) + maxLineWidth + CODE_INSET_PX * 2
-  const contentHeight = Math.max(1, state.lines.length * linePx + CODE_INSET_PX * 2)
+  const codeLeftInset = showLineNumbers ? CODE_GAP_PX : CODE_BLOCK_INSET_PX
+  const contentWidth = gutterWidth + codeLeftInset + maxLineWidth + CODE_BLOCK_INSET_PX
+  const contentHeight = Math.max(1, state.lines.length * linePx + CODE_BLOCK_INSET_PX * 2)
 
   registerReadOnlyTextParticipant(host, props.key, {
     hasSelection: () => orderedTextSelection(state.anchor, state.focus) !== null,
@@ -132,14 +134,15 @@ export function CodeEditor(
     sx: {
       background: opaqueRgba8ToColor(uiTheme.spaceText.back),
       borderColor: rgba8ToColor(uiTheme.material.editorBorder),
-      padding: CODE_INSET_PX,
+      padding: 0,
       overflow: "auto",
       scrollbarWidth: 4,
     },
     children: ({scrollLeft, scrollTop, viewportWidth, viewportHeight, contentWidth: scrollContentWidth}) => {
-      const viewportX = x + CODE_INSET_PX
-      const viewportY = y + CODE_INSET_PX
-      const codeStartX = viewportX + gutterWidth + (showLineNumbers ? CODE_GAP_PX : 0) - scrollLeft
+      const viewportX = x
+      const viewportY = y
+      const codeRowsY = viewportY + CODE_BLOCK_INSET_PX
+      const codeStartX = viewportX + gutterWidth + codeLeftInset - scrollLeft
       const codeMaxPx = Math.max(maxLineWidth, scrollContentWidth - gutterWidth)
 
       if (state.lastScrollLeft !== scrollLeft || state.lastScrollTop !== scrollTop) {
@@ -148,8 +151,8 @@ export function CodeEditor(
         props.onScrollChange?.(Object.freeze({left: scrollLeft, top: scrollTop}))
       }
 
-      const codeClipX = viewportX + gutterWidth + (showLineNumbers ? CODE_GAP_PX : 0)
-      const codeClipWidth = Math.max(1, viewportWidth - gutterWidth - (showLineNumbers ? CODE_GAP_PX : 0))
+      const codeClipX = viewportX + gutterWidth
+      const codeClipWidth = Math.max(1, viewportWidth - gutterWidth)
 
       host.hit(codeClipX, viewportY, codeClipWidth, viewportHeight, () => {}, {
         key: props.key,
@@ -160,7 +163,7 @@ export function CodeEditor(
           focusReadOnlyTextParticipant(host, props.key)
           const position = codePositionFromPoint(host, state, localX, localY, {
             codeStartX,
-            viewportY,
+            viewportY: codeRowsY,
             scrollTop,
             fontPx,
             linePx,
@@ -176,7 +179,7 @@ export function CodeEditor(
           if (!state.dragging) return
           const position = codePositionFromPoint(host, state, localX, localY, {
             codeStartX,
-            viewportY,
+            viewportY: codeRowsY,
             scrollTop,
             fontPx,
             linePx,
@@ -195,7 +198,14 @@ export function CodeEditor(
       })
 
       if (showLineNumbers) {
-        host.drawRect(viewportX, viewportY, gutterWidth, viewportHeight, rgba8ToColor(uiTheme.spaceText.gutter), Z.CONTAINER + 0.01)
+        host.drawRect(
+          viewportX + EDITOR_BORDER_INSET_PX,
+          viewportY + EDITOR_BORDER_INSET_PX,
+          Math.max(1, gutterWidth - EDITOR_BORDER_INSET_PX),
+          Math.max(1, viewportHeight - EDITOR_BORDER_INSET_PX * 2),
+          rgba8ToColor(uiTheme.spaceText.gutter),
+          Z.CONTAINER + 0.01,
+        )
         host.drawRect(
           viewportX + gutterWidth - GUTTER_RULE_PX,
           viewportY,
@@ -211,14 +221,14 @@ export function CodeEditor(
       const range = orderedTextSelection(state.anchor, state.focus)
       for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
         const line = state.lines[lineIndex] ?? ""
-        const rowY = viewportY + lineIndex * linePx - scrollTop
+        const rowY = codeRowsY + lineIndex * linePx - scrollTop
         if (showLineNumbers) drawCodeLineNumber(host, lineIndex + 1, viewportX, rowY, gutterWidth, linePx, fontPx)
       }
 
       host.pushClip(codeClipX, viewportY, codeClipWidth, viewportHeight)
       for (let lineIndex = firstLine; lineIndex <= lastLine; lineIndex++) {
         const line = state.lines[lineIndex] ?? ""
-        const rowY = viewportY + lineIndex * linePx - scrollTop
+        const rowY = codeRowsY + lineIndex * linePx - scrollTop
         const textY = rowY + Math.max(0, (linePx - fontPx) / 2)
         if (range !== null) drawCodeSelection(host, line, lineIndex, range, codeStartX, rowY, linePx, fontPx)
         drawCodeLine(host, state, line, lineIndex, codeStartX, textY, codeMaxPx, fontPx, linePx)

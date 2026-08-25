@@ -77,7 +77,8 @@ control нельзя опустить в Elements только ради повт
    `Token.fg` сильнее category fallback, а `Token.bg` сохраняет color swatch.
    Blender 5.2 `.space_text` задаёт background, darker line-number gutter,
    line-number text, selection и cursor roles; syntax palette остаётся Islands
-   Dark по отдельному owner decision.
+   Dark по отдельному owner decision. Gutter примыкает к editor frame без
+   общего content padding; inset принадлежит только строкам кода.
 5. Pointer selection является локальным view state точного `key`. `Cmd/Ctrl+C`
    копирует только непустое выделение через один Elements-owned keyed read-only
    text participant; soft keyboard и mutating input target не создаются.
