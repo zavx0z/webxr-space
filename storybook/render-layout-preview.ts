@@ -49,12 +49,18 @@ export function drawLayoutPreview(
   })
 
   if (options.showRoutes) {
+    const arrowTips = new Set<string>()
     for (const edge of result.edges) {
       const section = edge.sections[0]
       if (section === undefined) continue
       const points = [section.startPoint, ...section.bendPoints, section.endPoint].map(transform)
       surface.drawPolyline(points, palette.cyan, Math.max(1, scale * 2))
-      drawArrow(surface, points, Math.max(4, scale * 9))
+      const tip = points.at(-1)
+      const tipKey = tip === undefined ? "" : `${tip.x}\0${tip.y}`
+      if (tip !== undefined && !arrowTips.has(tipKey)) {
+        arrowTips.add(tipKey)
+        drawArrow(surface, points, Math.max(4, scale * 9))
+      }
     }
   }
 

@@ -39,16 +39,19 @@ compound solver-а fixed/adaptive.
    `NORTH` center. Все промежуточные segments ортогональны.
 2. Edge между соседними ranks использует только их межслойный corridor. Каждый
    несовпадающий horizontal run получает устойчивый track с `edgeSpacing`.
-3. Edge, пропускающий один или несколько ranks, получает устойчивую внешнюю
-   левую или правую lane. Выбор минимизирует горизонтальный detour; tie-break
-   задаётся semantic ID. Вертикальная часть lane проходит вне всех node rows.
-4. Long-edge lane пересекает только source и target corridors. Она не создаёт
-   dummy objects на каждый промежуточный rank, поэтому память не зависит от
-   суммы длин всех edges по ranks.
-5. Связи одного exact source или target могут иметь общий terminal segment, но
+3. Edge, пропускающий один или несколько ranks, сначала использует ближайший
+   свободный вертикальный канал между промежуточными нодами. Канал обязан иметь
+   `edgeSpacing` до node rectangles и ранее занятых несвязанных channels.
+4. Внешняя левая или правая lane является только fallback, когда локального
+   канала нет. Выбор стороны минимизирует горизонтальный detour; вертикальная
+   часть fallback-lane проходит вне всех node rows.
+5. Проверка локального канала не создаёт dummy objects на каждый промежуточный
+   rank. Production output и постоянная память не зависят от суммы длин edges
+   по ranks.
+6. Связи одного exact source или target могут иметь общий terminal segment, но
    остаются разными semantic edges. Несвязанные horizontal tracks и внешние
    lanes не overlap.
-6. Repeated и коллинеарные точки удаляются без изменения exact endpoints.
+7. Repeated и коллинеарные точки удаляются без изменения exact endpoints.
 
 ## Ограниченная сложность
 

@@ -83,6 +83,7 @@ describe("standard package-owned Layout Storybook", () => {
     expect(renderer).toContain('Pane} from "@ui/components/pane"')
     expect(renderer).toContain('Typography} from "@ui/components/typography"')
     expect(renderer).toContain('div} from "@ui/elements/div"')
+    expect(renderer).toContain("const arrowTips = new Set<string>()")
     expect(registry).toContain('body: {kind: "canvas", canvasId: "nodes-storybook-canvas"}')
     expect(registry).toContain('entrypoint: join(packagesRoot, "layout/storybook/layout.stories.ts")')
     expect(await Bun.file(join(storybookRoot, "layout-storybook-body.html")).exists()).toBeFalse()
@@ -170,8 +171,8 @@ describe("standard package-owned Layout Storybook", () => {
     expect(result.direction).toBe("DOWN")
     expect(result.nodes).toHaveLength(19)
     expect(result.edges).toHaveLength(20)
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 1084, height: 1306})
-    expect(hash(result)).toBe("804b0d2c41f599d4d29932e13c1421caf6e8f2950d12567e1f814ae802e151b5")
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 1028, height: 1306})
+    expect(hash(result)).toBe("7f0ad19dbff455b7fe94e5356e4062ea9125b33c3bdac4a20f7017e8a099fb2a")
   })
 
   test("keeps Storybook outside production exports and splits policy implementations", async () => {

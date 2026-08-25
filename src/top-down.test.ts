@@ -47,11 +47,20 @@ describe("isolated top-down DAG policy", () => {
     expect(permuted).toEqual(first)
   })
 
-  test("keeps long edges outside intermediate node rows without dummy output", () => {
+  test("uses compact local channels for long edges without dummy output", () => {
     const result = layoutTopDown(TOP_DOWN_REFERENCE_GRAPH)
     const longRoutes = result.edges.filter(({sections}) => sections[0]!.bendPoints.length >= 4)
+    const compact = result.edges.find(({id}) => id === "flow-12-ui-layout-panel-ui-button")!
+    const compactPoints = [compact.sections[0]!.startPoint, ...compact.sections[0]!.bendPoints, compact.sections[0]!.endPoint]
 
     expect(longRoutes.length).toBeGreaterThan(0)
+    expect(compactPoints).toEqual([
+      {x: 357, y: 998},
+      {x: 357, y: 1170},
+      {x: 514, y: 1170},
+      {x: 514, y: 1202},
+    ])
+    expect(result.bounds.width).toBe(1028)
     expect(result.nodes.map(({id}) => id).sort()).toEqual(
       TOP_DOWN_REFERENCE_GRAPH.nodes.map(({id}) => id).sort(),
     )
@@ -63,6 +72,36 @@ describe("isolated top-down DAG policy", () => {
       })
       expect(vertical).toBeDefined()
     }
+  })
+
+  test("uses an external lane only when an intermediate rank blocks every local channel", () => {
+    const graph: TopDownLayoutGraph = {
+      nodes: [
+        {id: "source", width: 100, height: 50},
+        {id: "blocker", width: 300, height: 60},
+        {id: "target", width: 100, height: 50},
+      ],
+      ports: [
+        {id: "source/out", nodeId: "source", x: 50},
+        {id: "blocker/in", nodeId: "blocker", x: 150},
+        {id: "blocker/out", nodeId: "blocker", x: 150},
+        {id: "target/in", nodeId: "target", x: 50},
+      ],
+      edges: [
+        {id: "source-blocker", sourcePortId: "source/out", targetPortId: "blocker/in"},
+        {id: "blocker-target", sourcePortId: "blocker/out", targetPortId: "target/in"},
+        {id: "source-target", sourcePortId: "source/out", targetPortId: "target/in"},
+      ],
+    }
+    const result = layoutTopDown(graph)
+    const route = result.edges.find(({id}) => id === "source-target")!
+    const points = [route.sections[0]!.startPoint, ...route.sections[0]!.bendPoints, route.sections[0]!.endPoint]
+    const left = Math.min(...result.nodes.map(({x}) => x))
+    const right = Math.max(...result.nodes.map(({x, width}) => x + width))
+    const external = points.find(({x}) => x < left || x > right)
+
+    expect(external).toBeDefined()
+    expect(nodeInteriorCrossings(result)).toEqual([])
   })
 
   test("supports disconnected roots and an isolated node", () => {

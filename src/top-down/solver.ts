@@ -51,7 +51,11 @@ type RankedGraph = Readonly<{
   outgoing: readonly (readonly number[])[]
 }>
 
-type LongSide = -1 | 0 | 1
+type LongRouteMode = -1 | 0 | 1 | 2
+
+type HorizontalInterval = Readonly<{start: number; end: number}>
+
+type VerticalReservation = Readonly<{x: number; edgeIndex: number}>
 
 type TrackLeg = {
   edgeIndex: number
@@ -67,7 +71,7 @@ type Placement = Readonly<{
   portX: Float64Array
   portY: Float64Array
   portSide: readonly ("NORTH" | "SOUTH" | null)[]
-  longSide: Int8Array
+  longMode: Int8Array
   longLaneX: Float64Array
   exitTrackY: Float64Array
   entryTrackY: Float64Array
@@ -302,6 +306,80 @@ function sortLayer(
   })
 }
 
+function findLocalVerticalLane(input: Readonly<{
+  graph: NormalizedGraph
+  ranked: RankedGraph
+  edgeIndex: number
+  sourceRank: number
+  targetRank: number
+  sourceX: number
+  targetX: number
+  contentWidth: number
+  nodeBlocksByRank: readonly (readonly HorizontalInterval[])[]
+  reservationsByRank: readonly (readonly VerticalReservation[])[]
+}>): number | null {
+  const edge = input.graph.edges[input.edgeIndex]!
+  let allowed: readonly HorizontalInterval[] = [{start: 0, end: input.contentWidth}]
+  for (let rank = input.sourceRank + 1; rank < input.targetRank; rank += 1) {
+    allowed = subtractIntervals(allowed, input.nodeBlocksByRank[rank]!)
+    if (allowed.length === 0) return null
+    for (const reservation of input.reservationsByRank[rank]!) {
+      const reservedEdge = input.graph.edges[reservation.edgeIndex]!
+      const related = reservedEdge.sourcePortIndex === edge.sourcePortIndex ||
+        reservedEdge.targetPortIndex === edge.targetPortIndex
+      if (related) continue
+      allowed = subtractIntervals(allowed, [{
+        start: Math.max(0, reservation.x - input.graph.options.edgeSpacing),
+        end: Math.min(input.contentWidth, reservation.x + input.graph.options.edgeSpacing),
+      }])
+      if (allowed.length === 0) return null
+    }
+  }
+  if (intervalContains(allowed, input.sourceX)) return input.sourceX
+  if (intervalContains(allowed, input.targetX)) return input.targetX
+  const midpoint = (input.sourceX + input.targetX) / 2
+  const candidates = allowed.map((interval) => Math.max(interval.start, Math.min(interval.end, midpoint)))
+  return candidates.sort((left, right) =>
+    (Math.abs(input.sourceX - left) + Math.abs(input.targetX - left)) -
+      (Math.abs(input.sourceX - right) + Math.abs(input.targetX - right)) ||
+    Math.abs(input.sourceX - left) - Math.abs(input.sourceX - right) ||
+    left - right)[0] ?? null
+}
+
+function intervalContains(intervals: readonly HorizontalInterval[], value: number): boolean {
+  return intervals.some(({start, end}) => value >= start && value <= end)
+}
+
+function mergeIntervals(intervals: readonly HorizontalInterval[]): readonly HorizontalInterval[] {
+  if (intervals.length < 2) return intervals
+  const ordered = [...intervals].sort((left, right) => left.start - right.start || left.end - right.end)
+  const result: Array<{start: number; end: number}> = []
+  for (const interval of ordered) {
+    const previous = result.at(-1)
+    if (previous === undefined || interval.start > previous.end) {
+      result.push({start: interval.start, end: interval.end})
+    } else if (interval.end > previous.end) previous.end = interval.end
+  }
+  return result
+}
+
+function subtractIntervals(
+  allowed: readonly HorizontalInterval[],
+  blocked: readonly HorizontalInterval[],
+): readonly HorizontalInterval[] {
+  let result = allowed
+  for (const block of blocked) {
+    result = result.flatMap((interval): readonly HorizontalInterval[] => {
+      if (block.end <= interval.start || block.start >= interval.end) return [interval]
+      const fragments: HorizontalInterval[] = []
+      if (block.start > interval.start) fragments.push({start: interval.start, end: block.start})
+      if (block.end < interval.end) fragments.push({start: block.end, end: interval.end})
+      return fragments
+    })
+  }
+  return result
+}
+
 function placeAndRouteTracks(graph: NormalizedGraph, ranked: RankedGraph): Placement {
   const nodeCount = graph.nodes.length
   const edgeCount = graph.edges.length
@@ -333,23 +411,51 @@ function placeAndRouteTracks(graph: NormalizedGraph, ranked: RankedGraph): Place
   }
 
   const basePortX = graph.ports.map((port) => nodeX[port.nodeIndex]! + port.offsetX)
-  const longSide = new Int8Array(edgeCount)
+  const longMode = new Int8Array(edgeCount)
+  const baseLongLaneX = new Float64Array(edgeCount)
+  const nodeBlocksByRank = ranked.layers.map((layer) => mergeIntervals(layer.map((nodeIndex) => ({
+    start: Math.max(0, nodeX[nodeIndex]! - graph.options.edgeSpacing),
+    end: Math.min(contentWidth, nodeX[nodeIndex]! + graph.nodes[nodeIndex]!.width + graph.options.edgeSpacing),
+  }))))
+  const reservationsByRank = ranked.layers.map(() => [] as VerticalReservation[])
   let leftLongCount = 0
   let rightLongCount = 0
   for (let edgeIndex = 0; edgeIndex < edgeCount; edgeIndex += 1) {
     const edge = graph.edges[edgeIndex]!
-    if (ranked.ranks[edge.targetNodeIndex]! - ranked.ranks[edge.sourceNodeIndex]! <= 1) continue
+    const sourceRank = ranked.ranks[edge.sourceNodeIndex]!
+    const targetRank = ranked.ranks[edge.targetNodeIndex]!
+    if (targetRank - sourceRank <= 1) continue
     const sourceX = basePortX[edge.sourcePortIndex]!
     const targetX = basePortX[edge.targetPortIndex]!
+    const localLaneX = findLocalVerticalLane({
+      graph,
+      ranked,
+      edgeIndex,
+      sourceRank,
+      targetRank,
+      sourceX,
+      targetX,
+      contentWidth,
+      nodeBlocksByRank,
+      reservationsByRank,
+    })
+    if (localLaneX !== null) {
+      longMode[edgeIndex] = 2
+      baseLongLaneX[edgeIndex] = localLaneX
+      for (let rank = sourceRank + 1; rank < targetRank; rank += 1) {
+        reservationsByRank[rank]!.push({x: localLaneX, edgeIndex})
+      }
+      continue
+    }
     const leftCost = sourceX + targetX
     const rightCost = (contentWidth - sourceX) + (contentWidth - targetX)
-    const side: LongSide = leftCost < rightCost
+    const mode: LongRouteMode = leftCost < rightCost
       ? -1
       : rightCost < leftCost
         ? 1
         : leftLongCount <= rightLongCount ? -1 : 1
-    longSide[edgeIndex] = side
-    if (side === -1) leftLongCount += 1
+    longMode[edgeIndex] = mode
+    if (mode === -1) leftLongCount += 1
     else rightLongCount += 1
   }
   const leftReserve = leftLongCount === 0 ? 0 : (leftLongCount + 1) * graph.options.edgeSpacing
@@ -369,10 +475,12 @@ function placeAndRouteTracks(graph: NormalizedGraph, ranked: RankedGraph): Place
   let leftLaneIndex = 0
   let rightLaneIndex = 0
   for (let edgeIndex = 0; edgeIndex < edgeCount; edgeIndex += 1) {
-    if (longSide[edgeIndex] === -1) {
+    if (longMode[edgeIndex] === -1) {
       longLaneX[edgeIndex] = contentLeft - graph.options.edgeSpacing * (++leftLaneIndex)
-    } else if (longSide[edgeIndex] === 1) {
+    } else if (longMode[edgeIndex] === 1) {
       longLaneX[edgeIndex] = contentRight + graph.options.edgeSpacing * (++rightLaneIndex)
+    } else if (longMode[edgeIndex] === 2) {
+      longLaneX[edgeIndex] = baseLongLaneX[edgeIndex]! + contentLeft
     }
   }
 
@@ -383,7 +491,7 @@ function placeAndRouteTracks(graph: NormalizedGraph, ranked: RankedGraph): Place
     const targetRank = ranked.ranks[edge.targetNodeIndex]!
     const sourceX = portX[edge.sourcePortIndex]!
     const targetX = portX[edge.targetPortIndex]!
-    if (longSide[edgeIndex] === 0) {
+    if (longMode[edgeIndex] === 0) {
       if (sourceX !== targetX) {
         legsByGap[sourceRank]!.push({edgeIndex, kind: 0, fromX: sourceX, toX: targetX, y: 0})
       }
@@ -453,7 +561,7 @@ function placeAndRouteTracks(graph: NormalizedGraph, ranked: RankedGraph): Place
     portX,
     portY,
     portSide,
-    longSide,
+    longMode,
     longLaneX,
     exitTrackY,
     entryTrackY,
@@ -483,7 +591,7 @@ function materializeResult(graph: NormalizedGraph, placement: Placement): TopDow
     const startPoint = point(placement.portX[edge.sourcePortIndex]!, placement.portY[edge.sourcePortIndex]!)
     const endPoint = point(placement.portX[edge.targetPortIndex]!, placement.portY[edge.targetPortIndex]!)
     let points: LayoutPoint[]
-    if (placement.longSide[edgeIndex] === 0) {
+    if (placement.longMode[edgeIndex] === 0) {
       const trackY = placement.adjacentTrackY[edgeIndex]!
       points = startPoint.x === endPoint.x || trackY === 0
         ? [startPoint, endPoint]
