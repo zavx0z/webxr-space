@@ -11,7 +11,7 @@ import {
   focusReadOnlyTextParticipant,
   registerReadOnlyTextParticipant,
 } from "@ui/elements/input"
-import {cssColor, type CssColor} from "@ui/elements/style"
+import {cssColor, textMaterial, type CssColor} from "@ui/elements/style"
 import {
   orderedTextSelection,
   sameTextPosition,
@@ -26,6 +26,11 @@ import {
   resolveVscodeScopeColorHex,
   syntaxTokens,
 } from "@ui/elements/theme"
+import {
+  opaqueRgba8ToColor,
+  rgba8ToColor,
+  uiTheme,
+} from "@ui/elements/theme-reference"
 import {
   resolveLanguageHighlighter,
   type Tokens,
@@ -125,6 +130,8 @@ export function CodeEditor(
     scrollContentWidth: contentWidth,
     scrollContentHeight: contentHeight,
     sx: {
+      background: opaqueRgba8ToColor(uiTheme.spaceText.back),
+      borderColor: rgba8ToColor(uiTheme.material.editorBorder),
       padding: CODE_INSET_PX,
       overflow: "auto",
       scrollbarWidth: 4,
@@ -188,8 +195,15 @@ export function CodeEditor(
       })
 
       if (showLineNumbers) {
-        host.drawRect(viewportX, viewportY, gutterWidth, viewportHeight, palette.bgPanelDim, Z.CONTAINER + 0.01)
-        host.drawRect(viewportX + gutterWidth - GUTTER_RULE_PX, viewportY, GUTTER_RULE_PX, viewportHeight, palette.borderRule, Z.SEPARATOR)
+        host.drawRect(viewportX, viewportY, gutterWidth, viewportHeight, rgba8ToColor(uiTheme.spaceText.gutter), Z.CONTAINER + 0.01)
+        host.drawRect(
+          viewportX + gutterWidth - GUTTER_RULE_PX,
+          viewportY,
+          GUTTER_RULE_PX,
+          viewportHeight,
+          rgba8ToColor(uiTheme.material.editorBorder),
+          Z.SEPARATOR,
+        )
       }
 
       const firstLine = Math.max(0, Math.floor(scrollTop / linePx))
@@ -396,7 +410,7 @@ function drawCodeLineNumber(
   const labelWidth = host.measureText(label, fontPx)
   host.drawText(label, gutterX + gutterWidth - GUTTER_SIDE_PAD_PX - labelWidth, rowY + Math.max(0, (linePx - fontPx) / 2), {
     fontPx,
-    material: host.materials.muted,
+    material: textMaterial(host, rgba8ToColor(uiTheme.spaceText.lineNumbers)),
     maxWidthPx: gutterWidth - GUTTER_SIDE_PAD_PX * 2,
     fit: false,
     measure: false,
@@ -421,7 +435,14 @@ function drawCodeSelection(
   const startX = codeStartX + codeColumnX(host, line, startColumn, fontPx)
   const endX = codeStartX + codeColumnX(host, line, endColumn, fontPx)
   const lineBreakWidth = includesLineBreak ? Math.max(2, host.measureText("M", fontPx) * 0.45) : 0
-  host.drawRect(startX, rowY, Math.max(1, endX - startX + lineBreakWidth), linePx, palette.activeRowFill, Z.TEXT - 0.01)
+  host.drawRect(
+    startX,
+    rowY,
+    Math.max(1, endX - startX + lineBreakWidth),
+    linePx,
+    rgba8ToColor(uiTheme.spaceText.selection),
+    Z.TEXT - 0.01,
+  )
 }
 
 function emitCodeSelection(props: CodeEditorProps, state: CodeEditorState): void {

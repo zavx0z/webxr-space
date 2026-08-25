@@ -75,8 +75,9 @@ control нельзя опустить в Elements только ради повт
    запрещены.
 4. Syntax presentation использует действующую Islands Dark theme. Явный
    `Token.fg` сильнее category fallback, а `Token.bg` сохраняет color swatch.
-   Blender 5.2 задаёт плотную editor-region композицию и фиксированный gutter,
-   но этот срез не заявляет pixel parity с его Text Editor palette.
+   Blender 5.2 `.space_text` задаёт background, darker line-number gutter,
+   line-number text, selection и cursor roles; syntax palette остаётся Islands
+   Dark по отдельному owner decision.
 5. Pointer selection является локальным view state точного `key`. `Cmd/Ctrl+C`
    копирует только непустое выделение через один Elements-owned keyed read-only
    text participant; soft keyboard и mutating input target не создаются.

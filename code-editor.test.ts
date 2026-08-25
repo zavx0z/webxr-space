@@ -3,6 +3,7 @@ import {Color} from "@engine/core"
 import {handleActiveInputKey, surfaceHasActiveInput} from "@layout/core/text-input"
 import {UiSurface, type HitOptions, type UiSurface as UiSurfaceType} from "@layout/core/surface"
 import {divScrollTo} from "@ui/elements/div"
+import {opaqueRgba8ToColor, rgba8ToColor, uiTheme} from "@ui/elements/theme-reference"
 import {
   CodeEditor,
   codeEditorScrollPosition,
@@ -11,12 +12,16 @@ import {
 
 type DrawTextCall = Parameters<UiSurfaceType["drawText"]>
 type ClipCall = Parameters<UiSurfaceType["pushClip"]>
+type DrawRectCall = Parameters<UiSurfaceType["drawRect"]>
+type DrawRoundedRectCall = Parameters<UiSurfaceType["drawRoundedRect"]>
 
 class RecordingSurface extends UiSurface {
   readonly texts: DrawTextCall[] = []
   readonly keyedRenders: string[] = []
   readonly hits = new Map<string, HitOptions>()
   readonly clips: ClipCall[] = []
+  readonly rects: DrawRectCall[] = []
+  readonly roundedRects: DrawRoundedRectCall[] = []
 
   override measureText(text: string, fontPx: number): number {
     return [...text].length * fontPx * 0.6
@@ -27,8 +32,8 @@ class RecordingSurface extends UiSurface {
     return this.measureText(args[0], args[3].fontPx)
   }
 
-  override drawRoundedRect(): void {}
-  override drawRect(): void {}
+  override drawRoundedRect(...args: DrawRoundedRectCall): void { this.roundedRects.push(args) }
+  override drawRect(...args: DrawRectCall): void { this.rects.push(args) }
   override pushClip(...args: ClipCall): void { this.clips.push(args) }
   override popClip(): void {}
   override requestKeyedRender(key: string): void { this.keyedRenders.push(key) }
@@ -60,6 +65,13 @@ describe("CodeEditor read-only component", () => {
     expect(surface.texts.some(([text]) => text === "1")).toBeTrue()
     expect(surface.texts.some(([text]) => text === "2")).toBeTrue()
     expect(surface.texts.some(([text]) => text === "3")).toBeTrue()
+    expect(surface.roundedRects[0]?.[4]).toMatchObject({
+      fill: opaqueRgba8ToColor(uiTheme.spaceText.back),
+      border: rgba8ToColor(uiTheme.material.editorBorder),
+    })
+    expect(surface.rects.map((call) => call[4])).toContainEqual(rgba8ToColor(uiTheme.spaceText.gutter))
+    expect(surface.texts.find(([text]) => text === "1")?.[3].material.color)
+      .toEqual(rgba8ToColor(uiTheme.spaceText.lineNumbers))
     const keyword = surface.texts.find(([text]) => text === "const")
     const string = surface.texts.find(([text]) => text.includes('"demo"'))
     const comment = surface.texts.find(([text]) => text.includes("// comment"))
