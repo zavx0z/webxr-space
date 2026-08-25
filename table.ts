@@ -296,6 +296,20 @@ function renderTableRow<Row>(
     if (selected) host.drawRect(x, rowHitY, Math.max(1, ctx.viewportWidth), rowHitH, TABLE_ROW_SELECTED_FILL, TABLE_BODY_BG_Z + 0.01)
     else if (state.hovered) host.drawRect(x, rowHitY, Math.max(1, ctx.viewportWidth), rowHitH, TABLE_ROW_HOVER_FILL, TABLE_BODY_BG_Z + 0.01)
   }
+  if ((props.onRowClick !== undefined || props.onRowDoubleClick !== undefined) && rowHitH > 0) {
+    const rowCursor = typeof props.rowCursor === "string" ? props.rowCursor : "pointer"
+    host.hit(x, rowHitY, Math.max(1, ctx.viewportWidth), rowHitH, () => {}, {
+      key: rowHitKey,
+      cursor: rowCursor,
+      onPointerDown: (localX, _localY, event) => {
+        if (event?.button !== undefined && event.button !== 0) return
+        event?.preventDefault()
+        const pointerCtx = tableRowPointerContext(row, rowIndex, rowId, selected, props, ctx, localX, event)
+        props.onRowClick?.(pointerCtx)
+        if ((event?.detail ?? 1) >= 2) props.onRowDoubleClick?.(pointerCtx)
+      },
+    })
+  }
   for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
     const column = props.columns[columnIndex]!
     const w = Math.max(1, column.width)
@@ -325,20 +339,6 @@ function renderTableRow<Row>(
       }
     }
     columnX += w
-  }
-  if ((props.onRowClick !== undefined || props.onRowDoubleClick !== undefined) && rowHitH > 0) {
-    const rowCursor = typeof props.rowCursor === "string" ? props.rowCursor : "pointer"
-    host.hit(x, rowHitY, Math.max(1, ctx.viewportWidth), rowHitH, () => {}, {
-      key: rowHitKey,
-      cursor: rowCursor,
-      onPointerDown: (localX, _localY, event) => {
-        if (event?.button !== undefined && event.button !== 0) return
-        event?.preventDefault()
-        const pointerCtx = tableRowPointerContext(row, rowIndex, rowId, selected, props, ctx, localX, event)
-        props.onRowClick?.(pointerCtx)
-        if ((event?.detail ?? 1) >= 2) props.onRowDoubleClick?.(pointerCtx)
-      },
-    })
   }
 }
 
