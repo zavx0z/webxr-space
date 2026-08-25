@@ -155,7 +155,7 @@ export function Table<Row>(host: UiSurface, x: number, y: number, width: number,
       scrollbarWidth: 4,
       ...props.sx,
     },
-    children: (ctx) => renderTable(host, x, y, props, ctx, rowH, headerH, key),
+    children: (ctx) => renderTable(host, props, ctx, rowH, headerH, key),
   })
 }
 
@@ -165,14 +165,14 @@ export function tableScrollTo(surface: UiSurface, key: string, next: {left?: num
 
 function renderTable<Row>(
   host: UiSurface,
-  x: number,
-  y: number,
   props: TableProps<Row>,
   ctx: DivScrollContext,
   rowH: number,
   headerH: number,
   key: string,
 ): void {
+  const x = ctx.viewportX
+  const y = ctx.viewportY
   const bodyY = y + headerH
   const bodyH = Math.max(1, ctx.viewportHeight - headerH)
   const firstRow = Math.max(0, Math.floor(ctx.scrollTop / rowH))
@@ -208,7 +208,7 @@ function renderTableBody<Row>(
       maxWidthPx: Math.max(1, ctx.viewportWidth - 20),
       z: TABLE_BODY_TEXT_Z,
     })
-    renderVerticalRules(host, x, bodyY, bodyH, props.columns, ctx.scrollLeft, TABLE_BODY_RULE_Z)
+    renderVerticalRules(host, ctx.contentX, bodyY, bodyH, props.columns, TABLE_BODY_RULE_Z)
     return
   }
 
@@ -221,7 +221,7 @@ function renderTableBody<Row>(
     host.drawRect(x, rowY + rowH - 1, Math.max(1, ctx.viewportWidth), 1, palette.borderRule, TABLE_BODY_RULE_Z)
     renderTableRow(host, x, rowY, rowH, props, ctx, row, rowIndex, key, bodyY, bodyH)
   }
-  renderVerticalRules(host, x, bodyY, bodyH, props.columns, ctx.scrollLeft, TABLE_BODY_RULE_Z)
+  renderVerticalRules(host, ctx.contentX, bodyY, bodyH, props.columns, TABLE_BODY_RULE_Z)
 }
 
 function renderTableHeader<Row>(
@@ -235,7 +235,7 @@ function renderTableHeader<Row>(
   const headerW = Math.max(1, ctx.viewportWidth)
   host.drawRect(x, y, headerW, headerH + TABLE_HEADER_EDGE_COVER_PX, TABLE_HEADER_BACKDROP_FILL, TABLE_HEADER_BACKDROP_Z)
   host.drawRect(x, y, headerW, headerH, TABLE_HEADER_FILL, TABLE_HEADER_BG_Z)
-  let columnX = x - ctx.scrollLeft
+  let columnX = ctx.contentX
   const fontPx = props.headerFontPx ?? props.fontPx ?? DEFAULT_TABLE_FONT_PX
   const padX = props.cellPaddingX ?? DEFAULT_TABLE_CELL_PAD_X
   for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
@@ -260,10 +260,9 @@ function renderVerticalRules<Row>(
   y: number,
   h: number,
   columns: readonly TableColumn<Row>[],
-  scrollLeft: number,
   z: number,
 ): void {
-  let columnX = x - scrollLeft
+  let columnX = x
   for (const column of columns) {
     host.drawRect(columnX, y, 1, h, palette.borderRule, z)
     columnX += Math.max(1, column.width)
@@ -284,7 +283,7 @@ function renderTableRow<Row>(
   bodyY: number,
   bodyH: number,
 ): void {
-  let columnX = x - ctx.scrollLeft
+  let columnX = ctx.contentX
   const fontPx = props.fontPx ?? DEFAULT_TABLE_FONT_PX
   const padX = props.cellPaddingX ?? DEFAULT_TABLE_CELL_PAD_X
   const rowId = tableRowId(row, rowIndex, props)
@@ -335,7 +334,7 @@ function renderTableRow<Row>(
       onPointerDown: (localX, _localY, event) => {
         if (event?.button !== undefined && event.button !== 0) return
         event?.preventDefault()
-        const pointerCtx = tableRowPointerContext(row, rowIndex, rowId, selected, props, ctx, x, localX, event)
+        const pointerCtx = tableRowPointerContext(row, rowIndex, rowId, selected, props, ctx, localX, event)
         props.onRowClick?.(pointerCtx)
         if ((event?.detail ?? 1) >= 2) props.onRowDoubleClick?.(pointerCtx)
       },
@@ -360,11 +359,10 @@ function tableRowPointerContext<Row>(
   selected: boolean,
   props: TableProps<Row>,
   ctx: DivScrollContext,
-  tableX: number,
   localX: number,
   event: MouseEvent | undefined,
 ): TableRowPointerContext<Row> {
-  let columnX = tableX - ctx.scrollLeft
+  let columnX = ctx.contentX
   for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
     const column = props.columns[columnIndex]!
     const w = Math.max(1, column.width)

@@ -116,15 +116,15 @@ export function List(host: UiSurface, x: number, y: number, width: number, heigh
     },
     children: (ctx) => {
       if (props.subheader !== undefined) {
-        ListSubheader(host, x, y + paddingY - ctx.scrollTop, width, subheaderH, {children: props.subheader})
+        ListSubheader(host, ctx.viewportX, ctx.contentY + paddingY, ctx.viewportWidth, subheaderH, {children: props.subheader})
       }
 
-      const rowX = x
-      const rowW = Math.max(1, width - (ctx.contentHeight > ctx.viewportHeight ? 10 : 0))
-      let rowY = y + paddingY + subheaderH - ctx.scrollTop
+      const rowX = ctx.contentX
+      const rowW = Math.max(1, ctx.viewportWidth)
+      let rowY = ctx.contentY + paddingY + subheaderH
       for (const [index, item] of items.entries()) {
         const rowH = item.height ?? itemHeight
-        if (rowY + rowH < y || rowY > y + height) {
+        if (rowY + rowH < ctx.viewportY || rowY > ctx.viewportY + ctx.viewportHeight) {
           rowY += rowH + itemGap
           continue
         }
