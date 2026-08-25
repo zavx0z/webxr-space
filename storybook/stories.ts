@@ -154,6 +154,11 @@ const loadPathInputStory = (
   return createPathInputStory(variant)
 }
 
+const loadCodeEditorStory = async (): Promise<StorybookStoryModule> => {
+  const {createCodeEditorStory} = await import("./stories/code-editor.ts")
+  return createCodeEditorStory()
+}
+
 const singleVariant = (
   component: SimpleComponentStory,
   title: string,
@@ -469,6 +474,22 @@ export const COMPONENT_STORIES = defineStorybookStories({
       id: "data",
       label: "Данные",
       components: [
+        {
+          id: "code-editor",
+          label: "Редактор кода",
+          apiName: "CodeEditor",
+          tags: ["code", "source", "syntax", "read-only"],
+          sections: [{
+            id: "state",
+            label: "Состояние",
+            variants: [{
+              id: "read-only",
+              label: "Только чтение",
+              title: "CodeEditor · Только чтение",
+              load: loadCodeEditorStory,
+            }],
+          }],
+        },
         {id: "list", label: "Список", apiName: "List", sections: [{id: "basic", label: "Основной", variants: singleVariant("list", "List · Основной")} ]},
         {id: "table", label: "Таблица", apiName: "Table", sections: [{id: "basic", label: "Основная", variants: singleVariant("table", "Table · Основная")} ]},
         {id: "scrollbar", label: "Полоса прокрутки", apiName: "scrollbar", sections: [{id: "vertical", label: "Вертикальная", variants: singleVariant("scrollbar", "Scrollbar · Вертикальная")} ]},

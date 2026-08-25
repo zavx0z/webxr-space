@@ -110,6 +110,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       "switcher",
       "progress-checkbox",
       "slider-control",
+      "code-editor",
       "list",
       "table",
       "scrollbar",
@@ -137,6 +138,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       "Переключатель",
       "Флажок прогресса",
       "Слайдер",
+      "Редактор кода",
       "Список",
       "Таблица",
       "Полоса прокрутки",
@@ -582,6 +584,11 @@ describe("@ui/components package-owned Workbench stories", () => {
 
     const noti = await COMPONENT_STORIES.load("noti/status/unavailable")
     expect(noti.source(noti.defaultArgs)).toContain("не опубликован в рабочем API")
+
+    const codeEditor = await COMPONENT_STORIES.load("code-editor/state/read-only")
+    expect(codeEditor.source(codeEditor.defaultArgs)).toContain('from "@ui/components/code-editor"')
+    expect(codeEditor.source(codeEditor.defaultArgs)).toContain("readOnly: true")
+    expect(codeEditor.defaultArgs).toEqual({"show-line-numbers": true})
   })
 
   test("renders every Button size inside the same available story rect", async () => {
@@ -661,6 +668,7 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(entry!.source).not.toContain("function createCollectionInputStory")
     expect(entry!.source).not.toContain("function createPathInputStory")
     expect(entry!.source).not.toContain("function createIntegerInputStory")
+    expect(entry!.source).not.toContain("function createCodeEditorStory")
     expect(entry!.source).not.toContain('@ui/components/vector-input')
     expect(entry!.source).not.toContain('@ui/components/matrix-input')
     expect(entry!.source).not.toContain('@ui/components/reference-input')
@@ -670,6 +678,9 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(outputs.some(({source}) => source.includes("function createButtonStory"))).toBeTrue()
     expect(outputs.some(({source}) => source.includes("function createFieldStory"))).toBeTrue()
     expect(outputs.some(({source}) => source.includes("function createSimpleComponentStory"))).toBeTrue()
+    const codeEditorChunk = outputs.find(({source}) => source.includes("function createCodeEditorStory"))
+    expect(codeEditorChunk).toBeDefined()
+    expect(codeEditorChunk!.source).toContain('@ui/components/code-editor')
     const integerInputChunk = outputs.find(({source}) => source.includes("function createIntegerInputStory"))
     expect(integerInputChunk).toBeDefined()
     expect(integerInputChunk!.source).toContain('@ui/components/integer-input')

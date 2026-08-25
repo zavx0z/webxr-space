@@ -60,6 +60,30 @@ control нельзя опустить в Elements только ради повт
    зависимый storybook slice, а следующий public leaf не сдвигает acceptance
    snapshot до его story/result. Lazy implementation остаётся вне initial entry.
 
+## Read-only CodeEditor
+
+1. `CodeEditor` является function-based production Component для отображения
+   многострочного кода внутри consumer-owned retained parent. Он не создаёт
+   `UiSurface`, runtime, renderer, canvas, header либо HUD frame.
+2. Первый public contract честно поддерживает только `readOnly: true`.
+   Component владеет line-number gutter, tokenized text, single pointer
+   selection и независимым horizontal/vertical scroll, но не публикует caret,
+   text mutation, paste/cut, undo/redo, wrap либо debugger/Git vocabulary.
+3. `tokens` имеют приоритет над language resolution. Иначе язык выбирается
+   через exact `@zavx0z/highlighter` по `languageId`, затем `path`, с plaintext
+   fallback. Используются только `Token`, `Tokens` и `Tokenize`; editor aliases
+   запрещены.
+4. Syntax presentation использует действующую Islands Dark theme. Явный
+   `Token.fg` сильнее category fallback, а `Token.bg` сохраняет color swatch.
+   Blender 5.2 задаёт плотную editor-region композицию и фиксированный gutter,
+   но этот срез не заявляет pixel parity с его Text Editor palette.
+5. Pointer selection является локальным view state точного `key`. `Cmd/Ctrl+C`
+   копирует только непустое выделение через один Elements-owned keyed read-only
+   text participant; soft keyboard и mutating input target не создаются.
+6. Shared Storybook source panel использует тот же production `CodeEditor` с
+   TypeScript language, сохраняет отдельные title/copy/controls/events owners и
+   rematerialize-ит только source owner при scroll либо selection.
+
 ## Универсальные поля
 
 1. `Field` является discriminated union с устойчивым `id`, `label`, optional

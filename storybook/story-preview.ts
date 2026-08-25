@@ -1,5 +1,6 @@
 import {type Object3D} from "@engine/core"
 import {UiSurface} from "@layout/core/surface"
+import {clearReadOnlyTextParticipants} from "@ui/elements/input"
 import {drawStorybookPreviewChrome} from "@ui/storybook/surfaces"
 import type {
   StorybookStoryArgs,
@@ -48,6 +49,7 @@ export class ComponentsStoryPreviewSurface extends UiSurface {
     module: StorybookStoryModule,
     args: StorybookStoryArgs,
   ): void {
+    if (this.#storyIndex?.route !== index.route) clearReadOnlyTextParticipants(this)
     this.#storyIndex = index
     this.#storyModule = module
     this.#args = args

@@ -30,7 +30,8 @@
     "./slider-control": "./slider-control.ts",
     "./divider": "./divider.ts",
     "./list": "./list.ts",
-    "./table": "./table.ts"
+    "./table": "./table.ts",
+    "./code-editor": "./code-editor.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false",
@@ -39,6 +40,7 @@
   "dependencies": {
     "@engine/core": "link:@engine/core",
     "@layout/core": "link:@layout/core",
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter",
     "@ui/elements": "workspace:*"
   },
   "devDependencies": {
