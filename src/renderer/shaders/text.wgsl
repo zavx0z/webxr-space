@@ -40,25 +40,30 @@ fn vs_main(@location(0) pos: vec3<f32>) -> VertexOutput {
     return out;
 }
 
-@fragment
-fn fs_stencil(in: VertexOutput) -> @location(0) vec4<f32> {
-    // Output is ignored due to write mask, but must return valid type
-    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-}
-
 fn isClipDisabled() -> bool {
     let b = perObject.clipBounds;
     return b.x == 0.0 && b.y == 0.0 && b.z == 0.0 && b.w == 0.0;
 }
 
-@fragment
-fn fs_cover(in: VertexOutput) -> @location(0) vec4<f32> {
+fn applyClip(position: vec4<f32>) {
     if (!isClipDisabled()) {
-        let p = in.position.xy;
+        let p = position.xy;
         let b = perObject.clipBounds;
         if (p.x < b.x || p.x > b.z || p.y < b.y || p.y > b.w) {
             discard;
         }
     }
+}
+
+@fragment
+fn fs_stencil(in: VertexOutput) -> @location(0) vec4<f32> {
+    applyClip(in.position);
+    // Output is ignored due to write mask, but must return valid type
+    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+}
+
+@fragment
+fn fs_cover(in: VertexOutput) -> @location(0) vec4<f32> {
+    applyClip(in.position);
     return perObject.color;
 }

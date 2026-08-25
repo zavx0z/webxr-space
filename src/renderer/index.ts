@@ -1911,15 +1911,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
   private updateTextData(text: Text, worldMatrix: Matrix4, offsetFloats: number, isStencil: boolean): void {
     this.perObjectDataCPU!.set(worldMatrix.elements, offsetFloats)
-    if (isStencil) return
-    const material = text.material as TextMaterial
-    this.writePerObjectRgba(offsetFloats + 32, material.color, material.color.a * material.opacity)
     // clipBounds (4 floats) at 36..40 — screen-pixel scissor.
     // perObjectDataCPU обнулён в начале фрейма; пропуск = clipping off
     // (clipBounds == zeros сигнализирует шейдеру выключение).
     if (text.clipBounds !== null) {
       this.perObjectDataCPU!.set(text.clipBounds, offsetFloats + 36)
     }
+    if (isStencil) return
+    const material = text.material as TextMaterial
+    this.writePerObjectRgba(offsetFloats + 32, material.color, material.color.a * material.opacity)
   }
 
   private renderObjectList(
