@@ -3,12 +3,13 @@ import {join} from "node:path"
 import {fileURLToPath} from "node:url"
 import {runAdaptiveWorkerRequest} from "@nodes/worker/adaptive/executor"
 import {runFixedWorkerRequest} from "@nodes/worker/fixed/executor"
-import {adaptiveWorkerFixture, fixedWorkerFixture} from "./worker-fixture.ts"
+import {runTopDownWorkerRequest} from "@nodes/worker/top-down/executor"
+import {adaptiveWorkerFixture, fixedWorkerFixture, topDownWorkerFixture} from "./worker-fixture.ts"
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
 
 describe("@nodes/worker package-owned storybook", () => {
-  test("shows exact fixed and adaptive serializable envelopes", () => {
+  test("shows exact fixed, adaptive and top-down serializable envelopes", () => {
     const fixed = structuredClone(runFixedWorkerRequest({
       type: "layout",
       requestId: 1,
@@ -21,8 +22,15 @@ describe("@nodes/worker package-owned storybook", () => {
       generation: 8,
       graph: adaptiveWorkerFixture(),
     }))
+    const topDown = structuredClone(runTopDownWorkerRequest({
+      type: "layout",
+      requestId: 3,
+      generation: 9,
+      graph: topDownWorkerFixture(),
+    }))
     expect(fixed).toMatchObject({type: "layout-result", requestId: 1, generation: 7})
     expect(adaptive).toMatchObject({type: "layout-result", requestId: 2, generation: 8})
+    expect(topDown).toMatchObject({type: "layout-result", requestId: 3, generation: 9})
     if (adaptive.type === "layout-result") expect(adaptive.diagnostics.attemptedCandidates).toBeGreaterThan(0)
   })
 

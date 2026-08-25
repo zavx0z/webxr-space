@@ -4,6 +4,11 @@ import type {
   AdaptiveNoLegalSideWitness,
 } from "@nodes/layout/adaptive"
 import type {FixedLayoutGraph, FixedLayoutResult} from "@nodes/layout/fixed"
+import type {
+  TopDownCycleWitness,
+  TopDownLayoutGraph,
+  TopDownLayoutResult,
+} from "@nodes/layout/top-down"
 import type {LayoutResult} from "@nodes/layout/types"
 
 /** Policy-neutral request envelope for one long-lived layout Worker. */
@@ -36,6 +41,14 @@ export type SerializedAdaptiveLayoutError = Readonly<{
   message: string
   code: "NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT"
   witness: AdaptiveNoLegalSideWitness
+}>
+
+/** Serializable form of a top-down DAG cycle detected before placement. */
+export type SerializedTopDownLayoutError = Readonly<{
+  name: "TopDownLayoutError"
+  message: string
+  code: "CYCLE_DETECTED"
+  witness: TopDownCycleWitness
 }>
 
 /** Явная вычислительная ошибка без main-thread fallback. */
@@ -85,4 +98,17 @@ export type AdaptiveWorkerInput = WorkerInput<AdaptiveLayoutGraph>
 export type AdaptiveWorkerEndpoint = WorkerEndpoint<
   AdaptiveWorkerRequest,
   AdaptiveWorkerResponse
+>
+
+/** Top-down policy contract with a typed cycle witness and no fallback. */
+export type TopDownWorkerRequest = WorkerRequest<TopDownLayoutGraph>
+export type TopDownWorkerSuccess = WorkerSuccess<TopDownLayoutResult>
+export type TopDownWorkerFailure = WorkerFailure<
+  SerializedWorkerError | SerializedTopDownLayoutError
+>
+export type TopDownWorkerResponse = TopDownWorkerSuccess | TopDownWorkerFailure
+export type TopDownWorkerInput = WorkerInput<TopDownLayoutGraph>
+export type TopDownWorkerEndpoint = WorkerEndpoint<
+  TopDownWorkerRequest,
+  TopDownWorkerResponse
 >

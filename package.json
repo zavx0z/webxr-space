@@ -1,7 +1,7 @@
 {
   "name": "@nodes/worker",
   "version": "0.0.1",
-  "description": "Worker transport and exact fixed/adaptive layout executors. Built for MetaFor.",
+  "description": "Worker transport and exact fixed/adaptive/top-down layout executors. Built for MetaFor.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/node.git",
@@ -21,7 +21,9 @@
     "./fixed/client": "./fixed/client.ts",
     "./fixed/executor": "./fixed/executor.ts",
     "./adaptive/client": "./adaptive/client.ts",
-    "./adaptive/executor": "./adaptive/executor.ts"
+    "./adaptive/executor": "./adaptive/executor.ts",
+    "./top-down/client": "./top-down/client.ts",
+    "./top-down/executor": "./top-down/executor.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"

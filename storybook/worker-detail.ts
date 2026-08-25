@@ -1,6 +1,7 @@
 import {runAdaptiveWorkerRequest} from "@nodes/worker/adaptive/executor"
 import {runFixedWorkerRequest} from "@nodes/worker/fixed/executor"
-import {adaptiveWorkerFixture, fixedWorkerFixture} from "./worker-fixture.ts"
+import {runTopDownWorkerRequest} from "@nodes/worker/top-down/executor"
+import {adaptiveWorkerFixture, fixedWorkerFixture, topDownWorkerFixture} from "./worker-fixture.ts"
 
 const requestView = requiredElement("worker-request", HTMLPreElement)
 const responseView = requiredElement("worker-response", HTMLPreElement)
@@ -8,24 +9,33 @@ const status = requiredElement("worker-status", HTMLOutputElement)
 let generation = 0
 
 for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-policy]")) {
-  button.addEventListener("click", () => run(button.dataset.policy === "adaptive" ? "adaptive" : "fixed"))
+  button.addEventListener("click", () => {
+    const policy = button.dataset.policy
+    if (policy !== "fixed" && policy !== "adaptive" && policy !== "top-down") return
+    run(policy)
+  })
 }
 
 run("fixed")
 document.documentElement.dataset.nodesStorybook = "ready"
 
-function run(policy: "fixed" | "adaptive"): void {
+function run(policy: "fixed" | "adaptive" | "top-down"): void {
   generation += 1
   if (policy === "fixed") {
     const request = {type: "layout" as const, requestId: generation, generation, graph: fixedWorkerFixture()}
     publish(policy, request, runFixedWorkerRequest(request))
     return
   }
-  const request = {type: "layout" as const, requestId: generation, generation, graph: adaptiveWorkerFixture()}
-  publish(policy, request, runAdaptiveWorkerRequest(request))
+  if (policy === "adaptive") {
+    const request = {type: "layout" as const, requestId: generation, generation, graph: adaptiveWorkerFixture()}
+    publish(policy, request, runAdaptiveWorkerRequest(request))
+    return
+  }
+  const request = {type: "layout" as const, requestId: generation, generation, graph: topDownWorkerFixture()}
+  publish(policy, request, runTopDownWorkerRequest(request))
 }
 
-function publish(policy: "fixed" | "adaptive", request: unknown, response: Readonly<{type: string}>): void {
+function publish(policy: "fixed" | "adaptive" | "top-down", request: unknown, response: Readonly<{type: string}>): void {
   requestView.textContent = JSON.stringify(request, null, 2)
   responseView.textContent = JSON.stringify(response, null, 2)
   status.value = `${policy} · generation ${generation} · ${response.type}`

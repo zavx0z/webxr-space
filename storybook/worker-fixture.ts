@@ -1,5 +1,6 @@
 import type {AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
 import type {FixedLayoutGraph} from "@nodes/layout/fixed"
+import type {TopDownLayoutGraph} from "@nodes/layout/top-down"
 
 export function fixedWorkerFixture(): FixedLayoutGraph {
   return {
@@ -25,5 +26,19 @@ export function adaptiveWorkerFixture(): AdaptiveLayoutGraph {
       {id: "target/io", nodeId: "target", y: 50, capability: "inout", allowedSides: ["WEST", "EAST"]},
     ],
     edges: [{id: "value", sourcePortId: "source/io", targetPortId: "target/io"}],
+  }
+}
+
+export function topDownWorkerFixture(): TopDownLayoutGraph {
+  return {
+    nodes: [
+      {id: "source", width: 180, height: 100},
+      {id: "target", width: 180, height: 100},
+    ],
+    ports: [
+      {id: "source/out", nodeId: "source", x: 90},
+      {id: "target/in", nodeId: "target", x: 90},
+    ],
+    edges: [{id: "value", sourcePortId: "source/out", targetPortId: "target/in"}],
   }
 }

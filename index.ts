@@ -1,5 +1,5 @@
 /**
- * Exact fixed-policy surface; adaptive consumers use the adaptive subpaths.
+ * Exact fixed-policy surface; adaptive and top-down consumers use exact subpaths.
  * Built for [MetaFor](https://github.com/zavx0z/metafor).
  * @packageDocumentation
  */
