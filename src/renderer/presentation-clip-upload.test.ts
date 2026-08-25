@@ -8,6 +8,7 @@ import {MeshLambertMaterial} from "../materials/mesh-lambert-material"
 import {Renderer} from "./index"
 import {
   encodePresentationClipChains,
+  MAX_PRESENTATION_CLIPS_PER_OBJECT,
   PRESENTATION_CLIP_RANGE_FLOAT_OFFSET,
   PRESENTATION_CLIP_RECORD_FLOATS,
   type PresentationClipRange,
@@ -48,7 +49,7 @@ describe("presentation clip upload", () => {
 
     expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS * 2)
     expect(upload.ranges.get(clipped)).toEqual({start: 0, count: 2})
-    expect(upload.ranges.get(plain)).toEqual({start: 2, count: 0})
+    expect(upload.ranges.get(plain)).toEqual({start: 0, count: 0})
     expect([...upload.data.slice(0, 16)]).toEqual(
       [...new Matrix4().copy(firstSpace.matrixWorld).invert().elements].map(Math.fround),
     )
@@ -72,6 +73,111 @@ describe("presentation clip upload", () => {
     const upload = encodePresentationClipChains([invalid])
     expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
     expect(upload.ranges.get(invalid)).toEqual({start: 0, count: 1})
+  })
+
+  test("maps an over-depth chain to one shared fail-closed record", () => {
+    const coordinateSpace = new Object3D()
+    coordinateSpace.updateWorldMatrix()
+    const first = new Object3D()
+    const second = new Object3D()
+    for (const object of [first, second]) {
+      object.presentationClips = Array.from({length: MAX_PRESENTATION_CLIPS_PER_OBJECT + 1}, (_, index) => ({
+        kind: "rounded-rect" as const,
+        coordinateSpace,
+        center: [index, 0] as const,
+        halfSize: [10, 10] as const,
+        radii: [2, 2, 2, 2] as const,
+      }))
+    }
+
+    const upload = encodePresentationClipChains([first, second])
+    const invalidRange = upload.ranges.get(first)
+    expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS)
+    expect(invalidRange).toEqual({start: 0, count: 1})
+    expect(upload.ranges.get(second)).toBe(invalidRange)
+    expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
+  })
+
+  test("uses one invalid range when the total storage record limit is exhausted", () => {
+    const spaces = Array.from({length: 4}, (_, index) => {
+      const space = new Object3D()
+      space.position.x = index
+      space.updateWorldMatrix()
+      return space
+    })
+    const objects = spaces.map((coordinateSpace, index) => {
+      const object = new Object3D()
+      object.presentationClips = [{
+        kind: "rounded-rect",
+        coordinateSpace,
+        center: [index, 0],
+        halfSize: [10, 10],
+        radii: [2, 2, 2, 2],
+      }]
+      return object
+    })
+
+    const upload = encodePresentationClipChains(objects, {maxRecords: 3})
+    const invalidRange = upload.ranges.get(objects[2]!)
+    expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS * 3)
+    expect(upload.ranges.get(objects[0]!)).toEqual({start: 0, count: 1})
+    expect(upload.ranges.get(objects[1]!)).toEqual({start: 1, count: 1})
+    expect(invalidRange).toEqual({start: 2, count: 1})
+    expect(upload.ranges.get(objects[3]!)).toBe(invalidRange)
+    expect([...upload.data.slice(PRESENTATION_CLIP_RECORD_FLOATS * 2 + 16, PRESENTATION_CLIP_RECORD_FLOATS * 2 + 20)])
+      .toEqual([0, 0, -1, -1])
+  })
+
+  test("fails closed when finite f64 geometry overflows during f32 conversion", () => {
+    const coordinateSpace = new Object3D()
+    coordinateSpace.updateWorldMatrix()
+    const object = new Object3D()
+    object.presentationClips = [{
+      kind: "rounded-rect",
+      coordinateSpace,
+      center: [Number.MAX_VALUE, 0],
+      halfSize: [10, 10],
+      radii: [2, 2, 2, 2],
+    }]
+
+    const upload = encodePresentationClipChains([object])
+    expect(upload.ranges.get(object)).toEqual({start: 0, count: 1})
+    expect(upload.data.every(Number.isFinite)).toBeTrue()
+    expect([...upload.data.slice(16, 20)]).toEqual([0, 0, -1, -1])
+  })
+
+  test("interns one three-record range for ten thousand identical chains", () => {
+    let inverseComputations = 0
+    const spaces = Array.from({length: 3}, (_, index) => {
+      const space = new Object3D()
+      space.position.set(index * 2, -index, 0)
+      space.updateWorldMatrix()
+      const determinant = space.matrixWorld.determinant.bind(space.matrixWorld)
+      space.matrixWorld.determinant = () => {
+        inverseComputations += 1
+        return determinant()
+      }
+      return space
+    })
+    const objects = Array.from({length: 10_000}, () => {
+      const object = new Object3D()
+      object.presentationClips = spaces.map((coordinateSpace, index) => ({
+        kind: "rounded-rect" as const,
+        coordinateSpace,
+        center: [index * 0.25, -index * 0.5] as const,
+        halfSize: [10 - index, 8 - index] as const,
+        radii: [2, 3, 4, 1] as const,
+      }))
+      return object
+    })
+
+    const upload = encodePresentationClipChains(objects, {maxRecords: 8})
+    const sharedRange = upload.ranges.get(objects[0]!)!
+    expect(upload.data).toHaveLength(PRESENTATION_CLIP_RECORD_FLOATS * 3)
+    expect(upload.ranges.size).toBe(10_000)
+    expect(sharedRange).toEqual({start: 0, count: 3})
+    expect(new Set(upload.ranges.values()).size).toBe(1)
+    expect(inverseComputations).toBe(3)
   })
 
   test("writes the clip range into the free tail of each 256-byte object block", () => {

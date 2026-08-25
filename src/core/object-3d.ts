@@ -32,6 +32,7 @@ export class Object3D {
    *
    * Every shape is evaluated in its own `coordinateSpace`; multiple shapes
    * intersect. Renderer presentation clips never rewrite object geometry.
+   * Chains deeper than the renderer-owned bound fail closed.
    */
   public presentationClips: readonly PresentationClipShape[] = []
   public quaternion: Quaternion = new Quaternion()

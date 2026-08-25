@@ -1,4 +1,5 @@
 import {describe, expect, test} from "bun:test"
+import {MAX_PRESENTATION_CLIPS_PER_OBJECT} from "../presentation-clip-upload"
 import {composePresentationClipShader} from "./presentation-clip"
 import {
   colorPickerShader,
@@ -26,6 +27,9 @@ describe("presentation clip shader composition", () => {
       expect(shader).not.toContain("// @engine-presentation-clip")
       expect(shader).toContain("var<storage, read> presentationClipRecords")
       expect(shader).toContain("fn presentationClipCoverage(")
+      expect(shader).toContain(`const MAX_PRESENTATION_CLIPS_PER_OBJECT: u32 = ${MAX_PRESENTATION_CLIPS_PER_OBJECT}u`)
+      expect(shader).toContain("if (requestedCount > MAX_PRESENTATION_CLIPS_PER_OBJECT)")
+      expect(shader).toContain("offset < MAX_PRESENTATION_CLIPS_PER_OBJECT")
       expect(shader).toContain("presentationClipSdRoundBox")
       expect(shader).toContain("presentationClipRange: vec4<f32>")
       expect(shader).toContain("worldPosition: vec3<f32>")

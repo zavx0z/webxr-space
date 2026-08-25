@@ -1,3 +1,5 @@
+import {MAX_PRESENTATION_CLIPS_PER_OBJECT} from "../presentation-clip-upload"
+
 const PRESENTATION_CLIP_MARKER = "// @engine-presentation-clip"
 
 const PRESENTATION_CLIP_WGSL = /* wgsl */ `
@@ -7,6 +9,7 @@ struct PresentationClipRecord {
     radii: vec4<f32>,
 };
 @binding(2) @group(1) var<storage, read> presentationClipRecords: array<PresentationClipRecord>;
+const MAX_PRESENTATION_CLIPS_PER_OBJECT: u32 = ${MAX_PRESENTATION_CLIPS_PER_OBJECT}u;
 
 fn presentationClipSdRoundBox(p: vec2<f32>, halfSize: vec2<f32>, radii: vec4<f32>) -> f32 {
     var radius: f32;
@@ -20,9 +23,13 @@ fn presentationClipSdRoundBox(p: vec2<f32>, halfSize: vec2<f32>, radii: vec4<f32
 
 fn presentationClipCoverage(worldPosition: vec3<f32>, range: vec4<f32>) -> f32 {
     let start = u32(max(range.x, 0.0));
-    let count = u32(max(range.y, 0.0));
+    let requestedCount = u32(max(range.y, 0.0));
+    if (requestedCount > MAX_PRESENTATION_CLIPS_PER_OBJECT) {
+        return 0.0;
+    }
     var coverage = 1.0;
-    for (var offset = 0u; offset < count; offset += 1u) {
+    for (var offset = 0u; offset < MAX_PRESENTATION_CLIPS_PER_OBJECT; offset += 1u) {
+        if (offset >= requestedCount) { break; }
         let clip = presentationClipRecords[start + offset];
         let halfSize = clip.geometry.zw;
         if (halfSize.x <= 0.0 || halfSize.y <= 0.0) {

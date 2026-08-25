@@ -46,6 +46,11 @@ geometry. A rectangular clip is the same shape with zero radii. Invalid,
 non-invertible, or unsupported clipped presentation fails closed instead of
 silently drawing outside the requested boundary.
 
+One renderable has at most 16 presentation clip shapes. The total per-frame
+record budget is derived from the device's storage-binding and buffer limits.
+Over-depth chains and chains that cannot fit whole share one invalid record and
+fail closed; Renderer never truncates a chain or silently removes its clip.
+
 ## Soft SDF shadow
 
 A rounded interface shadow is analytical presentation of the same local rectangle, not a separate texture or geometric blur ring. One expanded quad evaluates rounded distance and smooth falloff in a single fragment pass. A normal interface shadow does not use an offscreen framebuffer, blur texture, repeated bands, or post-processing.

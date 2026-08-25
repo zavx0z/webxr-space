@@ -52,6 +52,7 @@ import {
   type PerObjectUploadPlan,
 } from "./per-object-upload"
 import {
+  DEFAULT_MAX_PRESENTATION_CLIP_RECORDS,
   encodePresentationClipChains,
   PRESENTATION_CLIP_RANGE_FLOAT_OFFSET,
   PRESENTATION_CLIP_RECORD_FLOATS,
@@ -173,6 +174,7 @@ export class Renderer {
   private perObjectCapacity = INITIAL_RENDERABLE_CAPACITY
   private presentationClipBuffer: GPUBuffer | null = null
   private presentationClipCapacity = 0
+  private presentationClipRecordLimit = DEFAULT_MAX_PRESENTATION_CLIP_RECORDS
   private presentationClipRanges: ReadonlyMap<Object3D, PresentationClipRange> = new Map()
 
   private geometryCache: Map<BufferGeometry, GeometryBuffers> = new Map()
@@ -210,6 +212,14 @@ export class Renderer {
     if (!adapter) throw new Error("Не удалось получить WebGPU адаптер.")
 
     this.device = await withWebGpuInitTimeout(adapter.requestDevice(), "WebGPU device")
+    const presentationClipLimitBytes = Math.min(
+      this.device.limits.maxStorageBufferBindingSize,
+      this.device.limits.maxBufferSize,
+    )
+    const derivedPresentationClipRecordLimit = Math.floor(presentationClipLimitBytes / PRESENTATION_CLIP_RECORD_SIZE)
+    this.presentationClipRecordLimit = Number.isFinite(derivedPresentationClipRecordLimit)
+      ? Math.max(1, derivedPresentationClipRecordLimit)
+      : DEFAULT_MAX_PRESENTATION_CLIP_RECORDS
 
     this.canvas = canvas || document.createElement("canvas")
     this.context = this.canvas.getContext("webgpu")
@@ -1451,7 +1461,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // passes before submit would make earlier passes read the later data.
     this.updateSceneUniforms(frameLights, viewPoint.viewMatrix)
     this.ensurePerObjectCapacity(frameRenderItems.length)
-    const presentationClipUpload = encodePresentationClipChains(frameRenderItems.map((item) => item.object))
+    const presentationClipUpload = encodePresentationClipChains(
+      frameRenderItems.map((item) => item.object),
+      {maxRecords: this.presentationClipRecordLimit},
+    )
     this.ensurePresentationClipCapacity(presentationClipUpload.data.length / PRESENTATION_CLIP_RECORD_FLOATS)
     this.presentationClipRanges = presentationClipUpload.ranges
     const uploadPlan = this.updatePerObjectData(frameRenderItems)
@@ -1637,10 +1650,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
   private ensurePresentationClipCapacity(required: number): void {
     if (!this.device) return
-    const boundedRequired = Math.max(1, required)
+    const boundedRequired = Math.min(this.presentationClipRecordLimit, Math.max(1, Math.ceil(required)))
     if (this.presentationClipBuffer !== null && boundedRequired <= this.presentationClipCapacity) return
     let nextCapacity = Math.max(1, this.presentationClipCapacity)
-    while (nextCapacity < boundedRequired) nextCapacity *= 2
+    while (nextCapacity < boundedRequired) {
+      nextCapacity = Math.min(this.presentationClipRecordLimit, nextCapacity * 2)
+    }
     const previous = this.presentationClipBuffer
     this.presentationClipBuffer = this.device.createBuffer({
       size: nextCapacity * PRESENTATION_CLIP_RECORD_SIZE,
