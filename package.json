@@ -17,6 +17,7 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./default-font": "./src/text/default-font.ts",
     "./fonts/jetbrains-mono-bold.ttf": "./static/fonts/jetbrains-mono-bold.ttf"
   },
   "main": "./src/index.ts",

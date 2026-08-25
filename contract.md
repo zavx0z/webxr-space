@@ -14,6 +14,22 @@ This means:
 - consumers do not convert axes or units again;
 - renderer adaptation belongs inside Engine rather than an application scene.
 
+## Default font asset
+
+Engine owns the project-default TTF and exposes it through the explicit
+`@engine/core/fonts/jetbrains-mono-bold.ttf` asset subpath. The main
+`@engine/core` entrypoint does not import the asset.
+
+A browser composition root declares the URL it actually serves with
+`<meta name="engine-default-font" content="…">`. The optional
+`@engine/core/default-font` entrypoint resolves that declaration and caches one
+fetch and one parsed `TrueTypeFont` per absolute URL. Package and component code
+does not own a font route or copy.
+
+An explicitly supplied runtime font or font URL bypasses the document default.
+The meta declaration itself has no network side effect, so choosing another
+font never requests the Engine-owned default.
+
 ## Transform hierarchy
 
 Every `Object3D` defines only its local position, rotation, and scale. Engine computes a visual child's `matrixWorld` by composing its local matrix with the entire parent chain, and Renderer consumes that world matrix. Retained interfaces therefore keep visual children below their `Object3D` parent instead of baking the parent transform into every child's geometry.
