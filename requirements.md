@@ -172,9 +172,13 @@ solver-free; explicit `projection` адаптирует живой root `NodeTre
    product consumers подключаются отдельно.
 3. Package-level tests, central UI page и editor integration page доказывают
    разные границы и не подменяют друг друга.
-4. Dev-only UI page является desktop consumer общего Workbench
-   `@ui/storybook`; её exact lifecycle маршрутизирует один `$nodes-dev`
-   selector `nodes`, а package identity задаёт mount `/ui/`. Выбор Component
+4. Dev-only stories принадлежат `@nodes/ui` и живут в `storybook/`
+   рядом с production owner. Repository Storybook собирает их entry,
+   style, routes и evidence на mount `/ui/`; его exact lifecycle маршрутизирует
+   один `$nodes-dev` selector `nodes`. Общие routes, stories и Workbench
+   импортируются только из точных subpaths `@zavx0z/storybook/*`.
+   `storybook/` не входит в production exports, а `@zavx0z/storybook` не является
+   production dependency `@nodes/ui`. Выбор Component
    сначала открывает его overview: `/ui/socket/` показывает все Socket types,
    `/ui/socket/boolean/` — все варианты Boolean, и только
    `/ui/socket/boolean/input` задаёт exact detail story. Prefix overview не

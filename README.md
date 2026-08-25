@@ -26,4 +26,6 @@ The explicit `projection` entrypoint adapts a live `@nodes/core` tree through `@
 
 Public view presets use neutral names: `NodeView`, `SocketView`, `FrameView`, `LinkView`, `NodePlan`, `createNodeRenderers`, `socketPreset`, and `createNodeTreeProjector`. Source-product identity is confined to Storybook evidence provenance.
 
-The normative contracts remain in [`requirements.md`](./requirements.md). Live examples belong to [`@nodes/storybook`](../storybook/README.md) at `/ui/`.
+The normative contracts remain in [`requirements.md`](./requirements.md).
+
+Dev-only examples belong to `@nodes/ui` and live in [`storybook/`](./storybook/). The repository-owned [`@nodes/storybook`](../storybook/README.md) composes their routes, entrypoint, style, accepted evidence, and `/ui/` delivery. Shared `@zavx0z/storybook/*` imports stay inside this development boundary: they are neither production exports nor production dependencies of `@nodes/ui`.
