@@ -13,13 +13,13 @@ export const LAYOUT_STORYBOOK_FIXED_PATH = storybookRouteTreeUrl(
   "fixed/baseline/right",
   {basePath: LAYOUT_STORYBOOK_BASE_PATH},
 )
-export const LAYOUT_STORYBOOK_TOP_DOWN_PATH = storybookRouteTreeUrl(
+export const LAYOUT_STORYBOOK_DAGRE_LAYERED_PATH = storybookRouteTreeUrl(
   LAYOUT_STORYBOOK_ROUTE_TREE,
-  "top-down/blender-area/default",
+  "dagre-layered/default/default",
   {basePath: LAYOUT_STORYBOOK_BASE_PATH},
 )
-export const LAYOUT_STORYBOOK_TOP_DOWN_DENSE_PATH = storybookRouteTreeUrl(
+export const LAYOUT_STORYBOOK_COFFMAN_GRAHAM_PATH = storybookRouteTreeUrl(
   LAYOUT_STORYBOOK_ROUTE_TREE,
-  "top-down/dense/default",
+  "coffman-graham/default/default",
   {basePath: LAYOUT_STORYBOOK_BASE_PATH},
 )

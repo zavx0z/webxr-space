@@ -18,3 +18,17 @@ export type {
   TopDownPortGeometry,
   TopDownPortSide,
 } from "./top-down.ts"
+export type {
+  CoffmanGrahamCurveSegment,
+  CoffmanGrahamCycleWitness,
+  CoffmanGrahamEdgeGeometry,
+  CoffmanGrahamLayoutEdge,
+  CoffmanGrahamLayoutErrorCode,
+  CoffmanGrahamLayoutGraph,
+  CoffmanGrahamLayoutNode,
+  CoffmanGrahamLayoutOptions,
+  CoffmanGrahamLayoutPort,
+  CoffmanGrahamLayoutResult,
+  CoffmanGrahamPortGeometry,
+  CoffmanGrahamPortSide,
+} from "./coffman-graham.ts"

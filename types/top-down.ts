@@ -32,7 +32,7 @@ export type TopDownLayoutPort = Readonly<{
 One semantic relation.
 
 All relations participate in the same Dagre ranking, ordering, placement and
-rounded-path pipeline. The top-down policy intentionally has no edge subtype,
+rounded-corner pipeline. The top-down policy intentionally has no edge subtype,
 constraint flag or alternate router.
 */
 export type TopDownLayoutEdge = Readonly<LayoutEdge>
@@ -71,7 +71,7 @@ export type TopDownPortGeometry = Readonly<{
   side: TopDownPortSide
 }>
 
-/** One cubic Bézier segment in the uniform rounded-edge representation. */
+/** One cubic Bézier segment in the uniform rounded-corner representation. */
 export type TopDownCurveSegment = Readonly<{
   startPoint: LayoutPoint
   controlPoints: readonly [LayoutPoint, LayoutPoint]
@@ -79,10 +79,10 @@ export type TopDownCurveSegment = Readonly<{
 }>
 
 /**
-One independent Dagre edge encoded only as cubic Bézier segments.
+One independent Dagre edge encoded only as a cubic Bézier chain.
 
-Straight Mermaid `L` sections use degenerate cubics and rounded Mermaid `Q`
-corners use mathematically equivalent cubics, so consumers need one primitive.
+Strictly top-down line sections use degenerate cubics. Only real guide-point
+corners bend through equivalent quadratic-to-cubic Bézier segments.
 */
 export type TopDownEdgeGeometry = Readonly<{
   id: string

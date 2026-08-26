@@ -1,29 +1,27 @@
-import {
-  Graph,
-  layout as layoutDagre,
-  type EdgeLabel,
-  type GraphLabel,
-  type NodeLabel,
-  type OrderConstraint,
-} from "@dagrejs/dagre"
+import {connect as dagConnect} from "d3-dag/dist/dag/create.js"
+import {greedy as coordGreedy} from "d3-dag/dist/sugiyama/coord/greedy.js"
+import {twoLayer as decrossTwoLayer} from "d3-dag/dist/sugiyama/decross/two-layer.js"
+import {coffmanGraham as layeringCoffmanGraham} from "d3-dag/dist/sugiyama/layering/coffman-graham.js"
+import {sugify} from "d3-dag/dist/sugiyama/utils.js"
 import type {LayoutPoint} from "../../types/protocol.ts"
 import type {
-  TopDownCurveSegment,
-  TopDownCycleWitness,
-  TopDownEdgeGeometry,
-  TopDownLayoutGraph,
-  TopDownLayoutResult,
-  TopDownPortGeometry,
-} from "../../types/top-down.ts"
+  CoffmanGrahamCurveSegment,
+  CoffmanGrahamCycleWitness,
+  CoffmanGrahamEdgeGeometry,
+  CoffmanGrahamLayoutGraph,
+  CoffmanGrahamLayoutResult,
+  CoffmanGrahamPortGeometry,
+} from "../../types/coffman-graham.ts"
 
-const DEFAULT_NODE_SPACING = 50
-const DEFAULT_LAYER_SPACING = 50
-const DEFAULT_EDGE_SPACING = 20
-const DEFAULT_PADDING = 8
+const DEFAULT_MAX_NODES_PER_LAYER = 4
+const DEFAULT_NODE_SPACING = 32
+const DEFAULT_LAYER_SPACING = 52
+const DEFAULT_EDGE_SPACING = 10
+const DEFAULT_PADDING = 24
 const ROUNDED_CORNER_RADIUS = 5
-const MAX_NODES = 128
-const MAX_PORTS = 256
-const MAX_EDGES = 512
+const MAX_NODES = 512
+const MAX_PORTS = 4096
+const MAX_EDGES = 2048
 const EPSILON = 1e-7
 
 type NormalizedNode = Readonly<{id: string; width: number; height: number}>
@@ -39,14 +37,26 @@ type NormalizedGraph = Readonly<{
   nodes: readonly NormalizedNode[]
   ports: readonly NormalizedPort[]
   edges: readonly NormalizedEdge[]
-  options: Readonly<{nodeSpacing: number; layerSpacing: number; edgeSpacing: number; padding: number}>
+  options: Readonly<{
+    maxNodesPerLayer: number
+    nodeSpacing: number
+    layerSpacing: number
+    edgeSpacing: number
+    padding: number
+  }>
 }>
 type Placement = Readonly<{
   nodeX: Float64Array
   nodeY: Float64Array
+  nodeLayer: Int32Array
   portX: Float64Array
   portY: Float64Array
   edgePoints: ReadonlyMap<string, readonly LayoutPoint[]>
+}>
+type LinkDatum = Readonly<{
+  edgeIds: readonly string[] | null
+  source: string
+  target: string
 }>
 type RoundedPrimitive = Readonly<{
   kind: "line"
@@ -58,29 +68,30 @@ type RoundedPrimitive = Readonly<{
   control: LayoutPoint
   end: LayoutPoint
 }>
-/**
-Runs the single Codex-compatible top-down pipeline.
 
-Every graph uses one Dagre/Sugiyama pass. Every semantic edge then uses the
-same local corner rounding over its own Dagre point chain. No edge can
-select another placement or routing algorithm.
-*/
-export function solveTopDownCurves(
-  input: TopDownLayoutGraph,
-  cycleError: (witness: TopDownCycleWitness) => Error,
-): TopDownLayoutResult {
+export function solveCoffmanGraham(
+  input: CoffmanGrahamLayoutGraph,
+  cycleError: (witness: CoffmanGrahamCycleWitness) => Error,
+): CoffmanGrahamLayoutResult {
   const graph = normalizeGraph(input)
   validateDag(graph, cycleError)
-  const placed = placeWithDagre(graph)
-  const routed = routeRoundedEdges(graph, placed)
+  const placed = placeGraph(graph)
+  const routed = routeEdges(graph, placed)
   return materialize(graph, placed, routed)
 }
 
-function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
+function normalizeGraph(input: CoffmanGrahamLayoutGraph): NormalizedGraph {
   if (input.nodes.length > MAX_NODES || input.ports.length > MAX_PORTS || input.edges.length > MAX_EDGES) {
-    throw new Error(`Top-down graph exceeds the bounded policy budget: ${input.nodes.length}/${input.ports.length}/${input.edges.length}`)
+    throw new Error(`Coffman–Graham graph exceeds the bounded policy budget: ${input.nodes.length}/${input.ports.length}/${input.edges.length}`)
   }
   const options = {
+    maxNodesPerLayer: boundedInteger(
+      input.layoutOptions?.maxNodesPerLayer,
+      DEFAULT_MAX_NODES_PER_LAYER,
+      2,
+      16,
+      "maxNodesPerLayer",
+    ),
     nodeSpacing: positive(input.layoutOptions?.nodeSpacing, DEFAULT_NODE_SPACING, "nodeSpacing"),
     layerSpacing: positive(input.layoutOptions?.layerSpacing, DEFAULT_LAYER_SPACING, "layerSpacing"),
     edgeSpacing: positive(input.layoutOptions?.edgeSpacing, DEFAULT_EDGE_SPACING, "edgeSpacing"),
@@ -89,7 +100,7 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
   const nodeIds = new Set<string>()
   const nodes = [...input.nodes].sort(compareIds).map((node): NormalizedNode => {
     requireId(node.id, "node")
-    if (nodeIds.has(node.id)) throw new Error(`Duplicate top-down node: ${node.id}`)
+    if (nodeIds.has(node.id)) throw new Error(`Duplicate Coffman–Graham node: ${node.id}`)
     nodeIds.add(node.id)
     return {
       id: node.id,
@@ -101,13 +112,13 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
   const portIds = new Set<string>()
   const ports = [...input.ports].sort(compareIds).map((port): NormalizedPort => {
     requireId(port.id, "port")
-    if (portIds.has(port.id)) throw new Error(`Duplicate top-down port: ${port.id}`)
+    if (portIds.has(port.id)) throw new Error(`Duplicate Coffman–Graham port: ${port.id}`)
     portIds.add(port.id)
     const nodeIndex = nodeIndexById.get(port.nodeId)
-    if (nodeIndex === undefined) throw new Error(`Unknown top-down port node: ${port.id}/${port.nodeId}`)
+    if (nodeIndex === undefined) throw new Error(`Unknown Coffman–Graham port node: ${port.id}/${port.nodeId}`)
     const offsetX = finite(port.x, `port.x:${port.id}`)
     if (offsetX < 0 || offsetX > nodes[nodeIndex]!.width) {
-      throw new Error(`Top-down port is outside node width: ${port.id}`)
+      throw new Error(`Coffman–Graham port is outside node width: ${port.id}`)
     }
     return {id: port.id, nodeIndex, offsetX}
   })
@@ -116,15 +127,12 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
   const roles = new Int8Array(ports.length)
   const edges = [...input.edges].sort(compareIds).map((edge): NormalizedEdge => {
     requireId(edge.id, "edge")
-    if (edgeIds.has(edge.id)) throw new Error(`Duplicate top-down edge: ${edge.id}`)
+    if (edgeIds.has(edge.id)) throw new Error(`Duplicate Coffman–Graham edge: ${edge.id}`)
     edgeIds.add(edge.id)
-    if (Object.prototype.hasOwnProperty.call(edge, "constraint")) {
-      throw new Error(`Top-down edges have one semantic type and do not accept constraint: ${edge.id}`)
-    }
     const sourcePortIndex = portIndexById.get(edge.sourcePortId)
     const targetPortIndex = portIndexById.get(edge.targetPortId)
-    if (sourcePortIndex === undefined) throw new Error(`Unknown top-down source port: ${edge.id}/${edge.sourcePortId}`)
-    if (targetPortIndex === undefined) throw new Error(`Unknown top-down target port: ${edge.id}/${edge.targetPortId}`)
+    if (sourcePortIndex === undefined) throw new Error(`Unknown Coffman–Graham source port: ${edge.id}/${edge.sourcePortId}`)
+    if (targetPortIndex === undefined) throw new Error(`Unknown Coffman–Graham target port: ${edge.id}/${edge.targetPortId}`)
     setRole(roles, sourcePortIndex, 1, edge.id, ports[sourcePortIndex]!.id)
     setRole(roles, targetPortIndex, 2, edge.id, ports[targetPortIndex]!.id)
     return {
@@ -138,7 +146,10 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
   return {nodes, ports, edges, options}
 }
 
-function validateDag(graph: NormalizedGraph, cycleError: (witness: TopDownCycleWitness) => Error): void {
+function validateDag(
+  graph: NormalizedGraph,
+  cycleError: (witness: CoffmanGrahamCycleWitness) => Error,
+): void {
   const indegree = new Int32Array(graph.nodes.length)
   const outgoing = Array.from({length: graph.nodes.length}, () => [] as number[])
   for (let index = 0; index < graph.edges.length; index += 1) {
@@ -165,65 +176,104 @@ function validateDag(graph: NormalizedGraph, cycleError: (witness: TopDownCycleW
   throw cycleError(findCycleWitness(graph, outgoing, unresolved))
 }
 
-function placeWithDagre(graph: NormalizedGraph): Placement {
-  const dagre = new Graph<GraphLabel, NodeLabel, EdgeLabel>({
-    directed: true,
-    multigraph: true,
-    compound: false,
-  })
-  dagre.setGraph({
-    rankdir: "TB",
-    ranker: "network-simplex",
-    nodesep: graph.options.nodeSpacing,
-    ranksep: graph.options.layerSpacing,
-    edgesep: graph.options.edgeSpacing,
-    marginx: 0,
-    marginy: 0,
-  })
-  dagre.setDefaultEdgeLabel(() => ({}))
-  const layoutNodeOrder: number[] = []
-  const insertedNodes = new Set<number>()
-  const insertNode = (nodeIndex: number): void => {
-    if (insertedNodes.has(nodeIndex)) return
-    insertedNodes.add(nodeIndex)
-    layoutNodeOrder.push(nodeIndex)
-  }
+function placeGraph(graph: NormalizedGraph): Placement {
+  const connected = new Set<number>()
+  const edgesByNodePair = new Map<string, NormalizedEdge[]>()
   for (const edge of graph.edges) {
-    insertNode(edge.sourceNodeIndex)
-    insertNode(edge.targetNodeIndex)
-  }
-  for (let index = 0; index < graph.nodes.length; index += 1) insertNode(index)
-  for (const index of layoutNodeOrder) {
-    const node = graph.nodes[index]!
-    dagre.setNode(node.id, {width: node.width, height: node.height})
-  }
-  for (const edge of [...graph.edges].reverse()) {
-    dagre.setEdge(
+    connected.add(edge.sourceNodeIndex)
+    connected.add(edge.targetNodeIndex)
+    const key = nodePairKey(
       graph.nodes[edge.sourceNodeIndex]!.id,
       graph.nodes[edge.targetNodeIndex]!.id,
-      {height: 0, minlen: 1, weight: 1, width: 0},
-      edge.id,
     )
+    const values = edgesByNodePair.get(key) ?? []
+    values.push(edge)
+    edgesByNodePair.set(key, values)
   }
-  const desiredOrder = portOrderConstraints(graph)
-  layoutDagre(dagre, {
-    customOrder(layoutGraph, order) {
-      const constraints = acyclicOrderConstraints(desiredOrder.filter(({left, right}) =>
-        layoutGraph.node(left)?.rank === layoutGraph.node(right)?.rank))
-      order(layoutGraph, {constraints: [...constraints]})
-    },
+  const linkData: LinkDatum[] = [...edgesByNodePair.values()].map((edges) => {
+    const edge = edges[0]!
+    return {
+      edgeIds: edges.map(({id}) => id),
+      source: graph.nodes[edge.sourceNodeIndex]!.id,
+      target: graph.nodes[edge.targetNodeIndex]!.id,
+    }
   })
+  for (let index = 0; index < graph.nodes.length; index += 1) {
+    if (!connected.has(index)) {
+      linkData.push({edgeIds: null, source: graph.nodes[index]!.id, target: graph.nodes[index]!.id})
+    }
+  }
+  const dag = dagConnect()
+    .sourceId((datum: LinkDatum) => datum.source)
+    .targetId((datum: LinkDatum) => datum.target)
+    .single(true)(linkData)
+  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]))
+  layeringCoffmanGraham().width(graph.options.maxNodesPerLayer)(dag)
+  const layers = sugify(dag)
+  const size = (node: (typeof layers)[number][number]): readonly [number, number] => {
+    if ("target" in node.data) {
+      const parallelCount = edgesByNodePair.get(nodePairKey(
+        node.data.source.data.id,
+        node.data.target.data.id,
+      ))!.length
+      return [graph.options.edgeSpacing * parallelCount, 0]
+    }
+    const measured = nodeById.get(node.data.node.data.id)!
+    return [measured.width + graph.options.nodeSpacing, measured.height + graph.options.layerSpacing]
+  }
+  let layoutHeight = 0
+  for (const layer of layers) {
+    const layerHeight = Math.max(...layer.map((node) => size(node)[1]))
+    for (const node of layer) node.y = layoutHeight + layerHeight / 2
+    layoutHeight += layerHeight
+  }
+  decrossTwoLayer()(layers)
+  coordGreedy()(layers, (node) => size(node)[0])
+  for (const layer of layers) {
+    for (const node of layer) {
+      if (node.x === undefined || node.y === undefined) {
+        throw new Error("Coffman–Graham coordinate assignment did not place every node")
+      }
+      if ("target" in node.data) continue
+      const original = node.data.node
+      original.x = node.x
+      original.y = node.y
+      const pointsByTarget = new Map(
+        [...original.ichildLinks()].map(({points, target}) => [target, points]),
+      )
+      for (const firstChild of node.ichildren()) {
+        const points = [{x: node.x, y: node.y}]
+        let child = firstChild
+        while ("target" in child.data) {
+          if (child.x === undefined || child.y === undefined) {
+            throw new Error("Coffman–Graham coordinate assignment did not place every dummy")
+          }
+          points.push({x: child.x, y: child.y})
+          child = [...child.ichildren()][0]!
+        }
+        if (child.x === undefined || child.y === undefined) {
+          throw new Error("Coffman–Graham coordinate assignment did not place every target")
+        }
+        points.push({x: child.x, y: child.y})
+        const targetPoints = pointsByTarget.get(child.data.node)
+        if (targetPoints === undefined) {
+          throw new Error("Coffman–Graham did not preserve a routed link")
+        }
+        targetPoints.splice(0, targetPoints.length, ...points)
+      }
+    }
+  }
 
+  const nodeIndexById = new Map(graph.nodes.map((node, index) => [node.id, index]))
   const nodeX = new Float64Array(graph.nodes.length)
   const nodeY = new Float64Array(graph.nodes.length)
-  for (let index = 0; index < graph.nodes.length; index += 1) {
-    const node = graph.nodes[index]!
-    const geometry = dagre.node(node.id)
-    if (!Number.isFinite(geometry.x) || !Number.isFinite(geometry.y)) {
-      throw new Error(`Dagre did not place top-down node: ${node.id}`)
-    }
-    nodeX[index] = clean(geometry.x! - node.width / 2)
-    nodeY[index] = clean(geometry.y! - node.height / 2)
+  const nodeLayer = new Int32Array(graph.nodes.length)
+  for (const node of dag) {
+    const nodeIndex = nodeIndexById.get(node.data.id)!
+    const measured = graph.nodes[nodeIndex]!
+    nodeX[nodeIndex] = clean(node.x! - measured.width / 2)
+    nodeY[nodeIndex] = clean(node.y! - measured.height / 2)
+    nodeLayer[nodeIndex] = node.value!
   }
 
   const portX = new Float64Array(graph.ports.length)
@@ -238,90 +288,60 @@ function placeWithDagre(graph: NormalizedGraph): Placement {
   }
 
   const edgePoints = new Map<string, readonly LayoutPoint[]>()
-  for (const edge of graph.edges) {
-    const label = dagre.edge(
-      graph.nodes[edge.sourceNodeIndex]!.id,
-      graph.nodes[edge.targetNodeIndex]!.id,
-      edge.id,
-    )
-    const points = label.points?.map(({x, y}) => point(x, y)) ?? []
-    if (points.length < 2) throw new Error(`Dagre did not route top-down edge: ${edge.id}`)
-    edgePoints.set(edge.id, points)
-  }
-  return {nodeX, nodeY, portX, portY, edgePoints}
-}
-
-function portOrderConstraints(graph: NormalizedGraph): readonly OrderConstraint[] {
-  const outgoing = new Map<number, NormalizedEdge[]>()
-  const incoming = new Map<number, NormalizedEdge[]>()
-  for (const edge of graph.edges) {
-    const sourceEdges = outgoing.get(edge.sourceNodeIndex) ?? []
-    sourceEdges.push(edge)
-    outgoing.set(edge.sourceNodeIndex, sourceEdges)
-    const targetEdges = incoming.get(edge.targetNodeIndex) ?? []
-    targetEdges.push(edge)
-    incoming.set(edge.targetNodeIndex, targetEdges)
-  }
-  const constraints: OrderConstraint[] = []
-  for (const edges of outgoing.values()) {
-    edges.sort((left, right) =>
-      graph.ports[left.sourcePortIndex]!.offsetX - graph.ports[right.sourcePortIndex]!.offsetX ||
-      left.id.localeCompare(right.id))
-    for (let index = 1; index < edges.length; index += 1) {
-      const left = graph.nodes[edges[index - 1]!.targetNodeIndex]!.id
-      const right = graph.nodes[edges[index]!.targetNodeIndex]!.id
-      if (left !== right) constraints.push({left, right})
+  for (const link of dag.links()) {
+    const datum = link.data as LinkDatum
+    if (datum.edgeIds === null) continue
+    const center = (datum.edgeIds.length - 1) / 2
+    for (let index = 0; index < datum.edgeIds.length; index += 1) {
+      const offsetX = (index - center) * graph.options.edgeSpacing
+      edgePoints.set(
+        datum.edgeIds[index]!,
+        link.points.map(({x, y}) => point(x + offsetX, y)),
+      )
     }
   }
-  for (const edges of incoming.values()) {
-    edges.sort((left, right) =>
-      graph.ports[left.targetPortIndex]!.offsetX - graph.ports[right.targetPortIndex]!.offsetX ||
-      left.id.localeCompare(right.id))
-    for (let index = 1; index < edges.length; index += 1) {
-      const left = graph.nodes[edges[index - 1]!.sourceNodeIndex]!.id
-      const right = graph.nodes[edges[index]!.sourceNodeIndex]!.id
-      if (left !== right) constraints.push({left, right})
-    }
+  if (edgePoints.size !== graph.edges.length) {
+    throw new Error(`Coffman–Graham did not preserve every semantic edge: ${edgePoints.size}/${graph.edges.length}`)
   }
-  return constraints
+  return {nodeX, nodeY, nodeLayer, portX, portY, edgePoints}
 }
 
-function acyclicOrderConstraints(values: readonly OrderConstraint[]): readonly OrderConstraint[] {
-  const adjacency = new Map<string, Set<string>>()
-  const result: OrderConstraint[] = []
-  const reaches = (source: string, target: string): boolean => {
-    const pending = [source]
-    const seen = new Set(pending)
-    while (pending.length > 0) {
-      const current = pending.shift()!
-      if (current === target) return true
-      for (const next of adjacency.get(current) ?? []) {
-        if (seen.has(next)) continue
-        seen.add(next)
-        pending.push(next)
-      }
+function routeEdges(graph: NormalizedGraph, placed: Placement): readonly CoffmanGrahamEdgeGeometry[] {
+  const layerBounds = new Map<number, {top: number; bottom: number; center: number}>()
+  for (let index = 0; index < graph.nodes.length; index += 1) {
+    const layer = placed.nodeLayer[index]!
+    const node = graph.nodes[index]!
+    const current = layerBounds.get(layer)
+    const top = placed.nodeY[index]!
+    const bottom = top + node.height
+    const center = top + node.height / 2
+    if (current === undefined) layerBounds.set(layer, {top, bottom, center})
+    else {
+      current.top = Math.min(current.top, top)
+      current.bottom = Math.max(current.bottom, bottom)
+      current.center = (current.center + center) / 2
     }
-    return false
   }
-  for (const constraint of values) {
-    if (reaches(constraint.right, constraint.left)) continue
-    const targets = adjacency.get(constraint.left) ?? new Set<string>()
-    targets.add(constraint.right)
-    adjacency.set(constraint.left, targets)
-    result.push(constraint)
-  }
-  return result
-}
-
-function routeRoundedEdges(graph: NormalizedGraph, placed: Placement): readonly TopDownEdgeGeometry[] {
-  return graph.edges.map((edge): TopDownEdgeGeometry => {
+  return graph.edges.map((edge): CoffmanGrahamEdgeGeometry => {
     const start = point(placed.portX[edge.sourcePortIndex]!, placed.portY[edge.sourcePortIndex]!)
     const end = point(placed.portX[edge.targetPortIndex]!, placed.portY[edge.targetPortIndex]!)
-    const dagrePoints = placed.edgePoints.get(edge.id)!
-    const path = strictlyDownwardGuide([start, ...dagrePoints.slice(1, -1), end])
+    const sourceLayer = placed.nodeLayer[edge.sourceNodeIndex]!
+    const targetLayer = placed.nodeLayer[edge.targetNodeIndex]!
+    const sourceGuide = point(start.x, layerBounds.get(sourceLayer)!.bottom + graph.options.edgeSpacing)
+    const targetGuide = point(end.x, layerBounds.get(targetLayer)!.top - graph.options.edgeSpacing)
+    const interior = placed.edgePoints.get(edge.id)!.slice(1, -1).flatMap((guide) => {
+      const layer = [...layerBounds.values()].find(({center}) => Math.abs(center - guide.y) <= 1e-5)
+      return layer === undefined
+        ? [guide]
+        : [
+            point(guide.x, layer.top - graph.options.edgeSpacing),
+            point(guide.x, layer.bottom + graph.options.edgeSpacing),
+          ]
+    }).filter(({y}) => y > sourceGuide.y + EPSILON && y < targetGuide.y - EPSILON)
+    const path = strictlyDownwardGuide([start, sourceGuide, ...interior, targetGuide, end])
     const primitives = roundedPrimitives(path, ROUNDED_CORNER_RADIUS)
     const curves = primitivesToCubics(primitives)
-    if (curves.length === 0) throw new Error(`Top-down edge has no rounded path: ${edge.id}`)
+    if (curves.length === 0) throw new Error(`Coffman–Graham edge has no rounded path: ${edge.id}`)
     return {id: edge.id, curves: [curves[0]!, ...curves.slice(1)]}
   })
 }
@@ -361,8 +381,8 @@ function roundedPrimitives(path: readonly LayoutPoint[], radius: number): readon
   return primitives
 }
 
-function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly TopDownCurveSegment[] {
-  return primitives.map((primitive, index): TopDownCurveSegment => {
+function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly CoffmanGrahamCurveSegment[] {
+  return primitives.map((primitive, index): CoffmanGrahamCurveSegment => {
     if (primitive.kind === "quadratic") {
       return {
         startPoint: primitive.start,
@@ -383,10 +403,7 @@ function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly T
       : scale(subtract(primitive.end, primitive.start), 1 / 3)
     return {
       startPoint: primitive.start,
-      controlPoints: [
-        add(primitive.start, startHandle),
-        subtract(primitive.end, endHandle),
-      ],
+      controlPoints: [add(primitive.start, startHandle), subtract(primitive.end, endHandle)],
       endPoint: primitive.end,
     }
   })
@@ -408,24 +425,24 @@ function pushLine(primitives: RoundedPrimitive[], start: LayoutPoint, end: Layou
 function materialize(
   graph: NormalizedGraph,
   placed: Placement,
-  routed: readonly TopDownEdgeGeometry[],
-): TopDownLayoutResult {
+  routed: readonly CoffmanGrahamEdgeGeometry[],
+): CoffmanGrahamLayoutResult {
   const rawBounds = geometryBounds(graph, placed, routed)
   const shiftX = graph.options.padding - rawBounds.x
   const shiftY = graph.options.padding - rawBounds.y
   const sourcePorts = new Set(graph.edges.map(({sourcePortIndex}) => sourcePortIndex))
   const usedPorts = new Set(graph.edges.flatMap(({sourcePortIndex, targetPortIndex}) => [sourcePortIndex, targetPortIndex]))
   const translate = (value: LayoutPoint): LayoutPoint => point(value.x + shiftX, value.y + shiftY)
-  const translateCurve = (curve: TopDownCurveSegment): TopDownCurveSegment => ({
+  const translateCurve = (curve: CoffmanGrahamCurveSegment): CoffmanGrahamCurveSegment => ({
     startPoint: translate(curve.startPoint),
     controlPoints: [translate(curve.controlPoints[0]), translate(curve.controlPoints[1])],
     endPoint: translate(curve.endPoint),
   })
-  const edges = routed.map((edge): TopDownEdgeGeometry => ({
+  const edges = routed.map((edge): CoffmanGrahamEdgeGeometry => ({
     id: edge.id,
     curves: [translateCurve(edge.curves[0]), ...edge.curves.slice(1).map(translateCurve)],
   }))
-  const ports: TopDownPortGeometry[] = []
+  const ports: CoffmanGrahamPortGeometry[] = []
   for (const index of [...usedPorts].sort((left, right) => compareIds(graph.ports[left]!, graph.ports[right]!))) {
     ports.push({
       id: graph.ports[index]!.id,
@@ -456,8 +473,8 @@ function materialize(
 
 function geometryBounds(
   graph: NormalizedGraph,
-  placed: Readonly<{nodeX: Float64Array; nodeY: Float64Array}>,
-  edges: readonly TopDownEdgeGeometry[],
+  placed: Placement,
+  edges: readonly CoffmanGrahamEdgeGeometry[],
 ): Readonly<{x: number; y: number; width: number; height: number}> {
   let left = Math.min(0, ...graph.nodes.map((_, index) => placed.nodeX[index]!))
   let top = Math.min(0, ...graph.nodes.map((_, index) => placed.nodeY[index]!))
@@ -480,7 +497,7 @@ function findCycleWitness(
   graph: NormalizedGraph,
   outgoing: readonly (readonly number[])[],
   unresolved: ReadonlySet<number>,
-): TopDownCycleWitness {
+): CoffmanGrahamCycleWitness {
   const state = new Int8Array(graph.nodes.length)
   const parentEdge = new Int32Array(graph.nodes.length)
   parentEdge.fill(-1)
@@ -507,21 +524,16 @@ function findCycleWitness(
         continue
       }
       if (state[target] !== 1) continue
-      const edgeIds = [graph.edges[edgeIndex]!.id]
       const nodeIds = [graph.nodes[target]!.id]
       let cursor = frame.nodeIndex
       while (cursor !== target) {
         nodeIds.push(graph.nodes[cursor]!.id)
         const incoming = parentEdge[cursor]!
-        if (incoming < 0) throw new Error("Top-down cycle witness reconstruction failed")
-        edgeIds.push(graph.edges[incoming]!.id)
+        if (incoming < 0) throw new Error("Coffman–Graham cycle witness reconstruction failed")
         cursor = graph.edges[incoming]!.sourceNodeIndex
       }
       nodeIds.reverse()
-      edgeIds.reverse()
-      const pairs = nodeIds.map((nodeId, index) => ({nodeId, edgeId: edgeIds[index]!}))
-      pairs.sort((left, right) => left.nodeId.localeCompare(right.nodeId))
-      const firstNode = pairs[0]!.nodeId
+      const firstNode = [...nodeIds].sort()[0]!
       const rotation = nodeIds.indexOf(firstNode)
       const rotatedNodeIds = [...nodeIds.slice(rotation), ...nodeIds.slice(0, rotation)]
       return {
@@ -535,7 +547,7 @@ function findCycleWitness(
       }
     }
   }
-  throw new Error("Top-down cycle witness was not found")
+  throw new Error("Coffman–Graham cycle witness was not found")
 }
 
 function simplifyPath(values: readonly LayoutPoint[]): readonly LayoutPoint[] {
@@ -598,8 +610,8 @@ function samePoint(left: LayoutPoint | undefined, right: LayoutPoint): boolean {
 
 function setRole(roles: Int8Array, index: number, role: 1 | 2, edgeId: string, portId: string): void {
   const previous = roles[index]!
-  if (previous !== 0 && previous !== role) throw new Error(`Top-down port has conflicting edge roles: ${edgeId}/${portId}`)
-  if (previous === role) throw new Error(`Top-down port is reused by multiple edges: ${edgeId}/${portId}`)
+  if (previous !== 0 && previous !== role) throw new Error(`Coffman–Graham port has conflicting edge roles: ${edgeId}/${portId}`)
+  if (previous === role) throw new Error(`Coffman–Graham port is reused by multiple edges: ${edgeId}/${portId}`)
   roles[index] = role
 }
 
@@ -607,6 +619,14 @@ function insertNumber(values: number[], value: number): void {
   let index = 0
   while (index < values.length && values[index]! < value) index += 1
   values.splice(index, 0, value)
+}
+
+function boundedInteger(value: number | undefined, fallback: number, minimum: number, maximum: number, label: string): number {
+  const candidate = value ?? fallback
+  if (!Number.isInteger(candidate) || candidate < minimum || candidate > maximum) {
+    throw new Error(`${label} must be an integer between ${minimum} and ${maximum}`)
+  }
+  return candidate
 }
 
 function positive(value: number | undefined, fallback: number | undefined, label: string): number {
@@ -623,7 +643,7 @@ function finite(value: number, label: string): number {
 }
 
 function requireId(id: string, kind: string): void {
-  if (id.length === 0) throw new Error(`Top-down ${kind} id must not be empty`)
+  if (id.length === 0) throw new Error(`Coffman–Graham ${kind} id must not be empty`)
 }
 
 function point(x: number, y: number): LayoutPoint {
@@ -637,4 +657,8 @@ function clean(value: number): number {
 
 function compareIds(left: Readonly<{id: string}>, right: Readonly<{id: string}>): number {
   return left.id.localeCompare(right.id)
+}
+
+function nodePairKey(sourceId: string, targetId: string): string {
+  return JSON.stringify([sourceId, targetId])
 }

@@ -2,9 +2,17 @@ import {describe, expect, test} from "bun:test"
 import {join} from "node:path"
 import {fileURLToPath} from "node:url"
 import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {
+  layoutCoffmanGraham,
+  type CoffmanGrahamLayoutGraph,
+} from "@nodes/layout/coffman-graham"
 import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {getFixtureFamily, STORYBOOK_FIXTURES} from "./layout-fixtures.ts"
+import {
+  LAYOUT_STORYBOOK_COFFMAN_GRAHAM_PATH,
+  LAYOUT_STORYBOOK_DAGRE_LAYERED_PATH,
+} from "./layout-navigation.ts"
 import {
   LAYOUT_STORIES,
   layoutCatalogItems,
@@ -21,6 +29,10 @@ import {
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
 const layoutRoot = fileURLToPath(new URL("../", import.meta.url))
 const repositoryStorybookRoot = fileURLToPath(new URL("../../storybook/", import.meta.url))
+const COFFMAN_GRAHAM_STORY_GRAPH = {
+  ...TOP_DOWN_DENSE_GRAPH,
+  layoutOptions: {...TOP_DOWN_DENSE_GRAPH.layoutOptions, maxNodesPerLayer: 4},
+} satisfies CoffmanGrahamLayoutGraph
 
 const FIXED_BASELINES = {
   "fixed-baseline-right": {
@@ -104,35 +116,56 @@ describe("standard package-owned Layout Storybook", () => {
       "adaptive/shared/down",
       "adaptive/compound/right",
       "adaptive/compound/down",
-      "top-down/blender-area/default",
-      "top-down/dense/default",
+      "dagre-layered/default/default",
+      "coffman-graham/default/default",
     ])
     expect(LAYOUT_STORIES.representative).toBe("fixed/baseline/right")
     expect(layoutStoryRoute("")).toBe("fixed/baseline/right")
-    expect(layoutStoryRoute("top-down")).toBe("top-down/blender-area/default")
-    expect(layoutCatalogItems(new Set()).map(({route}) => route)).toEqual(["fixed", "adaptive", "top-down"])
+    expect(layoutStoryRoute("dagre-layered")).toBe("dagre-layered/default/default")
+    expect(layoutStoryRoute("coffman-graham")).toBe("coffman-graham/default/default")
+    expect(LAYOUT_STORYBOOK_DAGRE_LAYERED_PATH).toBe("/layout/dagre-layered/default/default")
+    expect(LAYOUT_STORYBOOK_COFFMAN_GRAHAM_PATH).toBe("/layout/coffman-graham/default/default")
+    expect(layoutCatalogItems(new Set()).map(({route}) => route))
+      .toEqual(["fixed", "adaptive", "dagre-layered", "coffman-graham"])
     expect(layoutSectionItems("adaptive/shared/right").map(({route}) => route))
       .toEqual(["adaptive/shared", "adaptive/compound"])
     expect(layoutVariantItems("fixed/baseline/right").map(({route}) => route))
       .toEqual(["fixed/baseline/right", "fixed/baseline/down"])
+    expect(JSON.stringify(LAYOUT_STORIES.index.map(({
+      route,
+      componentLabel,
+      sectionLabel,
+      variantLabel,
+      title,
+      searchText,
+    }) => ({route, componentLabel, sectionLabel, variantLabel, title, searchText}))))
+      .not.toMatch(/Blender Area|Dense DAG/)
   })
 
   test("lazy story modules import only their exact production policy", async () => {
     const eager = await Bun.file(join(storybookRoot, "layout-stories.ts")).text()
     const fixed = await Bun.file(join(storybookRoot, "stories/fixed.ts")).text()
     const adaptive = await Bun.file(join(storybookRoot, "stories/adaptive.ts")).text()
-    const topDown = await Bun.file(join(storybookRoot, "stories/top-down.ts")).text()
+    const dagreLayered = await Bun.file(join(storybookRoot, "stories/dagre-layered.ts")).text()
+    const coffmanGraham = await Bun.file(join(storybookRoot, "stories/coffman-graham.ts")).text()
 
-    expect(eager).not.toMatch(/from "@nodes\/layout\/(?:fixed|adaptive|top-down)"/)
+    expect(eager).not.toMatch(/from "@nodes\/layout\/(?:fixed|adaptive|top-down|coffman-graham)"/)
     expect(fixed).toContain('from "@nodes/layout/fixed"')
     expect(fixed).not.toContain("@nodes/layout/adaptive")
     expect(fixed).not.toContain("@nodes/layout/top-down")
+    expect(fixed).not.toContain("@nodes/layout/coffman-graham")
     expect(adaptive).toContain('from "@nodes/layout/adaptive"')
     expect(adaptive).not.toContain("@nodes/layout/fixed")
     expect(adaptive).not.toContain("@nodes/layout/top-down")
-    expect(topDown).toContain('from "@nodes/layout/top-down"')
-    expect(topDown).not.toContain("@nodes/layout/fixed")
-    expect(topDown).not.toContain("@nodes/layout/adaptive")
+    expect(adaptive).not.toContain("@nodes/layout/coffman-graham")
+    expect(dagreLayered).toContain('from "@nodes/layout/top-down"')
+    expect(dagreLayered).not.toContain("@nodes/layout/fixed")
+    expect(dagreLayered).not.toContain("@nodes/layout/adaptive")
+    expect(dagreLayered).not.toContain("@nodes/layout/coffman-graham")
+    expect(coffmanGraham).toContain('from "@nodes/layout/coffman-graham"')
+    expect(coffmanGraham).not.toContain("@nodes/layout/fixed")
+    expect(coffmanGraham).not.toContain("@nodes/layout/adaptive")
+    expect(coffmanGraham).not.toContain("@nodes/layout/top-down")
 
     for (const route of LAYOUT_STORIES.index.map(({route}) => route)) {
       const module = await LAYOUT_STORIES.load(route)
@@ -166,7 +199,7 @@ describe("standard package-owned Layout Storybook", () => {
     }
   })
 
-  test("freezes the new reference topology without manual ranks or routes", () => {
+  test("freezes the Dagre Layered reference topology without manual ranks or routes", () => {
     const result = layoutTopDown(TOP_DOWN_REFERENCE_GRAPH)
     expect(TOP_DOWN_REFERENCE_GRAPH).not.toHaveProperty("viewport")
     for (const node of TOP_DOWN_REFERENCE_GRAPH.nodes) {
@@ -179,11 +212,12 @@ describe("standard package-owned Layout Storybook", () => {
     expect(result.nodes).toHaveLength(19)
     expect(result.edges).toHaveLength(20)
     expect(result.bounds).toEqual({x: 0, y: 0, width: 1296, height: 1148})
-    expect(hash(result)).toBe("b4fe857a3449b14f8739b0f7a642fe3b56bfc37544636d8ef21c3e8541eee1c7")
+    expect(hash(result)).toBe("d3ca08dfed6c51c934128e15069f24c2b8c437cb13b11a01cdb6877d3ad804e3")
   })
 
-  test("runs the dense DAG through the same single semantic edge type", () => {
-    const result = layoutTopDown(TOP_DOWN_DENSE_GRAPH)
+  test("runs the large graph through the width-bounded Coffman–Graham policy", () => {
+    const result = layoutCoffmanGraham(COFFMAN_GRAHAM_STORY_GRAPH)
+    const layers = Map.groupBy(result.nodes, (node) => node.y + node.height / 2)
     const sourceEndpoints = new Set(result.edges.map(({curves}) => JSON.stringify(curves[0]!.startPoint)))
     const targetEndpoints = new Set(result.edges.map(({curves}) => JSON.stringify(curves.at(-1)!.endPoint)))
 
@@ -194,8 +228,11 @@ describe("standard package-owned Layout Storybook", () => {
     expect(sourceEndpoints.size).toBe(result.edges.length)
     expect(targetEndpoints.size).toBe(result.edges.length)
     expect(result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 5273.5, height: 924})
-    expect(hash(result)).toBe("2da8a883fb0137f86b723a5454f761c91f860f44c2a5d860b4f50939f680c3b3")
+    expect(Math.max(...[...layers.values()].map((nodes) => nodes.length))).toBeLessThanOrEqual(4)
+    expect(result.edges.every(({curves}) => curves.every((curve) =>
+      curve.startPoint.y < curve.endPoint.y))).toBeTrue()
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 3372, height: 2052})
+    expect(hash(result)).toBe("19125d0482e8befcec28e862cacf7bd7dcb1a26a8bdfdbe10784a226b7fa4e5d")
   })
 
   test("keeps Storybook outside production exports and splits policy implementations", async () => {
@@ -213,12 +250,21 @@ describe("standard package-owned Layout Storybook", () => {
     expect(build.success, build.logs.map(({message}) => message).join("\n")).toBeTrue()
     const sources = await Promise.all(build.outputs.map((output) => output.text()))
     expect(sources.some((source) => source.includes("TOP_DOWN_CYCLE_DETECTED"))).toBeTrue()
+    expect(sources.some((source) => source.includes("COFFMAN_GRAHAM_CYCLE_DETECTED"))).toBeTrue()
     expect(sources.some((source) => source.includes("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT"))).toBeTrue()
     for (const source of sources) {
-      if (!source.includes("TOP_DOWN_CYCLE_DETECTED")) continue
-      expect(source).not.toContain("NO_LEGAL_LAYOUT")
-      expect(source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
-      expect(source).not.toContain("Port has conflicting edge roles")
+      if (source.includes("TOP_DOWN_CYCLE_DETECTED")) {
+        expect(source).not.toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
+        expect(source).not.toContain("NO_LEGAL_LAYOUT")
+        expect(source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
+        expect(source).not.toContain("Port has conflicting edge roles")
+      }
+      if (source.includes("COFFMAN_GRAHAM_CYCLE_DETECTED")) {
+        expect(source).not.toContain("TOP_DOWN_CYCLE_DETECTED")
+        expect(source).not.toContain("NO_LEGAL_LAYOUT")
+        expect(source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
+        expect(source).not.toContain("Port has conflicting edge roles")
+      }
     }
   })
 })

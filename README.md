@@ -13,7 +13,8 @@ placement, размеры compound-контейнеров, gateways и орто�
 * [adaptive side-selection](requirements/adaptive.md);
 * [горизонтальная раскладка `RIGHT`](requirements/right.md);
 * [вертикальная раскладка `DOWN`](requirements/down.md);
-* [отдельная раскладка `top-down`](requirements/top-down.md);
+* [Dagre Layered](requirements/top-down.md);
+* [Coffman–Graham Layered](requirements/coffman-graham.md);
 * [архитектурные правила производительности](requirements/performance.md).
 
 Worker, UI, управление видом и traffic presentation не принадлежат этим
@@ -45,11 +46,20 @@ assignments, а каждый candidate передаёт тому же общем
 ацикличных схем сверху вниз. Он принимает horizontal offset точного порта,
 разрешает source=`SOUTH`, target=`NORTH` и использует отдельный pipeline:
 один Dagre/Sugiyama placement, отдельную Dagre point chain каждого named edge и
-одно Mermaid-подобное скругление поворотов радиусом `5`. У edges нет
-`constraint`, `tree/cross/shortcut` или выбора router-а. Прямые и quadratic
-sections кодируются единым cubic connection type. Top-down не импортирует
+одно локальное Bézier-скругление углов без горизонтальных terminal shelves.
+Диагональные и vertical sections остаются прямыми. У edges нет `constraint`,
+`tree/cross/shortcut` или выбора router-а. Все связи используют один cubic
+connection type. Top-down не импортирует
 compound solver или adaptive candidate search; fixed/adaptive также не
 импортируют top-down implementation.
+
+`@nodes/layout/coffman-graham` — отдельный width-bounded entrypoint для больших
+плоских DAG. Coffman–Graham ограничивает число настоящих нод в слое (`4` по
+умолчанию), после чего pinned two-layer/greedy phases детерминированно уменьшают
+пересечения и назначают координаты. Semantic edges не объединяются: каждый
+получает свою strictly-downward point chain, прямые участки и только локально
+скруглённые углы радиусом `5`. Эта policy не является веткой `top-down` и не
+выбирается автоматически по размеру graph.
 
 ## Протокол
 
@@ -247,13 +257,15 @@ Dev-only stories принадлежат `@nodes/layout` и находятся в
 стандартную retained WebGPU page `/layout/` и владеет общим процессом, route
 tree и static build. Shared Workbench использует точные UI Elements/Components,
 а package-owned preview показывает geometry. Каждый lazy story импортирует
-ровно один public fixed, adaptive или top-down entrypoint; NodeTree, editor и
+ровно один public fixed, adaptive, top-down или coffman-graham entrypoint; NodeTree, editor и
 product renderer не входят в страницу. Storybook не экспортируется из
 `@nodes/layout` и не входит в его production dependencies. Frozen geometry и
 SVG baselines fixed/adaptive проверяются отдельно от WebGPU presentation.
-Top-down дополнительно содержит нейтральный dense stress route
-`/layout/top-down/dense/default`: 54 ноды, 85 semantic edges, 170 разнесённых
-independent endpoints и внутренние placement-роли без UI-domain vocabulary.
+Алгоритмы опубликованы под собственными именами: `Dagre Layered` на
+`/layout/dagre-layered/default/default` и `Coffman–Graham Layered` на
+`/layout/coffman-graham/default/default`. Сценарии и fixtures не становятся
+именами layout policy. Width-bounded route проверяется графом из 54 нод,
+85 semantic edges и 170 разнесённых independent endpoints.
 
 Полный consumer-путь `NodeTree → projection → NodeEditor` отдельно показывает
 центральная WebGPU page `/editor/live-node-tree` того же `bun run nodes:storybook`.

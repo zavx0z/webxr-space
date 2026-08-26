@@ -9,7 +9,7 @@ import {
 } from "./top-down.ts"
 
 describe("Codex-compatible Dagre top-down policy", () => {
-  test("uses one independent rounded cubic pipeline for the reference", () => {
+  test("uses one independent rounded-corner cubic pipeline for the reference", () => {
     const result = layoutTopDown(TOP_DOWN_REFERENCE_GRAPH)
     const inputEdgeById = new Map(TOP_DOWN_REFERENCE_GRAPH.edges.map((edge) => [edge.id, edge]))
     const portById = new Map(result.ports.map((port) => [port.id, port]))
@@ -20,9 +20,12 @@ describe("Codex-compatible Dagre top-down policy", () => {
     expect(result.ports).toHaveLength(40)
     expect(result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
     expect(result.edges.some(({curves}) => curves.length > 1)).toBeTrue()
+    expect(result.edges.some(({curves}) => curves.some((curve) => curveFlatness(curve) <= 1e-5))).toBeTrue()
+    expect(result.edges.some(({curves}) => curves.some((curve) => curveFlatness(curve) > 1e-5))).toBeTrue()
     expect(nodeOverlaps(result)).toEqual([])
     expect(curveNodeCrossings(result, TOP_DOWN_REFERENCE_GRAPH)).toEqual([])
     expect(collinearEdgeOverlaps(result)).toEqual([])
+    expect(nonMonotoneCurveSegments(result)).toEqual([])
 
     const sourceEndpoints = new Set<string>()
     const targetEndpoints = new Set<string>()
@@ -252,6 +255,15 @@ function collinearEdgeOverlaps(result: TopDownLayoutResult): string[] {
     }
   }
   return [...new Set(overlaps)].sort()
+}
+
+function nonMonotoneCurveSegments(result: TopDownLayoutResult): string[] {
+  return result.edges.flatMap((edge) => edge.curves.flatMap((curve, index) =>
+    curve.startPoint.y + 1e-7 < curve.controlPoints[0].y &&
+    curve.controlPoints[0].y + 1e-7 < curve.controlPoints[1].y &&
+    curve.controlPoints[1].y + 1e-7 < curve.endPoint.y
+      ? []
+      : [`${edge.id}/${index}`]))
 }
 
 function isContinuousCubicChain(curves: readonly TopDownCurveSegment[]): boolean {

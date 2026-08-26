@@ -4,22 +4,9 @@ import {
   TOP_DOWN_REFERENCE_GRAPH,
   TOP_DOWN_REFERENCE_LABELS,
 } from "../top-down-fixture.ts"
-import {
-  TOP_DOWN_DENSE_GRAPH,
-  TOP_DOWN_DENSE_LABELS,
-} from "../top-down-dense-fixture.ts"
 import {drawLayoutPreview} from "../render-layout-preview.ts"
 
-export function createTopDownLayoutStory(scenario: "reference" | "dense" = "reference") {
-  const fixture = scenario === "dense"
-    ? {
-        graph: TOP_DOWN_DENSE_GRAPH,
-        labels: TOP_DOWN_DENSE_LABELS,
-      }
-    : {
-        graph: TOP_DOWN_REFERENCE_GRAPH,
-        labels: TOP_DOWN_REFERENCE_LABELS,
-      }
+export function createDagreLayeredLayoutStory() {
   return defineStorybookStoryModule({
     defaultArgs: {routes: true, ports: true},
     controls: [
@@ -27,17 +14,17 @@ export function createTopDownLayoutStory(scenario: "reference" | "dense" = "refe
       {key: "ports", label: "Порты", group: "Слои", kind: "boolean"},
     ],
     render(surface, args, frame) {
-      drawLayoutPreview(surface, fixture.graph, layoutTopDown(fixture.graph), frame, {
+      drawLayoutPreview(surface, TOP_DOWN_REFERENCE_GRAPH, layoutTopDown(TOP_DOWN_REFERENCE_GRAPH), frame, {
         showRoutes: args.routes === true,
         showPorts: args.ports === true,
-        labels: fixture.labels,
+        labels: TOP_DOWN_REFERENCE_LABELS,
       })
     },
     source() {
       return [
         'import {layoutTopDown} from "@nodes/layout/top-down"',
         "",
-        `const graph = ${JSON.stringify(fixture.graph, null, 2)}`,
+        `const graph = ${JSON.stringify(TOP_DOWN_REFERENCE_GRAPH, null, 2)}`,
         "const result = layoutTopDown(graph)",
       ].join("\n")
     },

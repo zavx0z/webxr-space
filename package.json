@@ -8,7 +8,8 @@
   },
   "main": "src/index.ts",
   "dependencies": {
-    "@dagrejs/dagre": "3.1.1"
+    "@dagrejs/dagre": "3.1.1",
+    "d3-dag": "0.9.1"
   },
   "exports": {
     ".": {
@@ -27,17 +28,22 @@
       "types": "./src/top-down.ts",
       "default": "./src/top-down.ts"
     },
+    "./coffman-graham": {
+      "types": "./src/coffman-graham.ts",
+      "default": "./src/coffman-graham.ts"
+    },
     "./types": {
       "types": "./types/index.ts",
       "default": "./types/index.ts"
     }
   },
-  "description": "Isolated high-performance compound and top-down graph layout policies. Built for MetaFor.",
+  "description": "Isolated high-performance compound, Dagre and Coffman–Graham graph layout policies. Built for MetaFor.",
   "homepage": "https://zavx0z.github.io/node/layout/",
   "license": "MIT",
   "metafor": "https://github.com/zavx0z/metafor",
   "private": true,
   "scripts": {
+    "benchmark:coffman-graham": "bun benchmarks/coffman-graham.ts",
     "typecheck": "tsc --noEmit --pretty false",
     "benchmark:top-down": "bun benchmarks/top-down.ts"
   },

@@ -70,15 +70,33 @@ policy-сборки. Геометрические законы остаются 
 
 Принятый запуск `bun run --cwd packages/layout benchmark:top-down` на Bun 1.4.0,
 macOS x64, source hash
-`ac2091f25183edb82056200bcb921435ea8348e35ee820412c360d165b76e46f`:
+`57ab93e2ade094b1ff45fb6ac5f5fd0462e962b151812c357e3b49c36ae93b49`:
 
 | Fixture | Nodes / edges | Median | p95 |
 | --- | ---: | ---: | ---: |
-| Blender reference | 19 / 20 | 4.28 ms | 5.76 ms |
-| Dense independent edges | 54 / 85 | 26.57 ms | 29.68 ms |
-| Layered budget | 96 / 87 | 20.11 ms | 21.80 ms |
+| Dagre reference | 19 / 20 | 6.31 ms | 8.54 ms |
+| Dagre stress | 54 / 85 | 35.52 ms | 37.35 ms |
+| Dagre layered budget | 96 / 87 | 27.59 ms | 32.39 ms |
 
-Top-down browser solver artifact имеет отдельный gate `59055` raw / `20479`
-gzip bytes; Worker executor — `59513` / `20652`. Fixed/adaptive bytes и hashes
-остаются прежними. Новая toolchain или geometry меняет baseline только вместе с
-повторным frozen benchmark и package-boundary evidence.
+Dagre browser solver artifact имеет отдельный gate `59154` raw / `20503` gzip
+bytes; его Worker executor — `59612` / `20674`. Fixed/adaptive bytes и hashes
+остаются прежними. Новая toolchain или geometry меняет baseline только вместе
+с повторным frozen benchmark и package-boundary evidence.
+
+## Frozen Coffman–Graham baseline
+
+Принятый запуск `bun run --cwd packages/layout benchmark:coffman-graham` на
+Bun 1.4.0, macOS x64, source hash
+`a581ec3ce01f594dd4743f3c5b48c723c5f03dafbd7d30947796f47031a8fadc`:
+
+| Fixture | Nodes / edges | Median | p95 |
+| --- | ---: | ---: | ---: |
+| Width-bounded reference | 54 / 85 | 5.95 ms | 8.46 ms |
+| Layered medium | 128 / 120 | 4.88 ms | 5.19 ms |
+| Policy node budget | 512 / 496 | 38.90 ms | 47.78 ms |
+
+Coffman–Graham browser solver artifact имеет отдельный exact gate `30571` raw /
+`10381` gzip bytes. Policy импортирует только нужные pinned algorithm modules,
+поэтому LP/quad solvers из полного `d3-dag` bundle в artifact не входят. Marker
+отсутствует в Dagre, fixed и adaptive artifacts; Worker executor — `31019` /
+`10550`, solver-free client — `1493` / `657`.

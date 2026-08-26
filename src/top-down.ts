@@ -49,7 +49,7 @@ Source ports leave through `SOUTH`; target ports enter through `NORTH`.
 
 @param graph - Measured leaf rectangles, exact port offsets and semantic edges.
 
-@returns Geometry-only rectangles, endpoints and uniform rounded cubic chains.
+@returns Geometry-only rectangles, endpoints and uniform rounded-corner cubic chains.
 
 @throws {@link TopDownLayoutError} when the directed node graph contains a cycle.
 @throws `Error` when IDs, dimensions, port offsets or endpoints are invalid.

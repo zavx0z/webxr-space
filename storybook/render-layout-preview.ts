@@ -3,6 +3,7 @@ import {Pane} from "@ui/components/pane"
 import {Typography} from "@ui/components/typography"
 import {div} from "@ui/elements/div"
 import type {UiSurface} from "@layout/core/surface"
+import type {CoffmanGrahamLayoutResult} from "@nodes/layout/coffman-graham"
 import type {LayoutPoint} from "@nodes/layout/types"
 import type {TopDownLayoutResult} from "@nodes/layout/top-down"
 import type {LayoutResult} from "@nodes/layout/types"
@@ -12,8 +13,8 @@ type PreviewGraph = Readonly<{
   edges?: readonly Readonly<{id: string; sourcePortId: string; targetPortId: string}>[]
 }>
 
-type PreviewResult = LayoutResult | TopDownLayoutResult
-type PreviewEdge = LayoutResult["edges"][number] | TopDownLayoutResult["edges"][number]
+type PreviewResult = LayoutResult | TopDownLayoutResult | CoffmanGrahamLayoutResult
+type PreviewEdge = PreviewResult["edges"][number]
 
 export type LayoutPreviewOptions = Readonly<{
   showRoutes: boolean
@@ -109,7 +110,7 @@ export function drawLayoutPreview(
   }
 
   Typography(surface, available.x, available.y, available.w, 20, {
-    children: `${result.nodes.length} nodes · ${options.visibleEdgeIds?.size ?? result.edges.length}/${result.edges.length} spline edges · ${result.direction}`,
+    children: `${result.nodes.length} nodes · ${options.visibleEdgeIds?.size ?? result.edges.length}/${result.edges.length} cubic Bézier edges · ${result.direction}`,
     variant: "caption",
     color: "muted",
   })
@@ -121,7 +122,10 @@ function edgePoints(edge: PreviewEdge): readonly LayoutPoint[] {
   return [section.startPoint, ...section.bendPoints, section.endPoint]
 }
 
-function sampleCurveChain(curves: TopDownLayoutResult["edges"][number]["curves"]): readonly LayoutPoint[] {
+function sampleCurveChain(
+  curves: TopDownLayoutResult["edges"][number]["curves"] |
+    CoffmanGrahamLayoutResult["edges"][number]["curves"],
+): readonly LayoutPoint[] {
   return curves.flatMap((curve, curveIndex) => Array.from({length: 17}, (_, index) => {
     if (curveIndex > 0 && index === 0) return null
     const t = index / 16

@@ -2,8 +2,9 @@
 
 Этот документ владеет отдельной policy `@nodes/layout/top-down`. Она строит
 плоскую причинную DAG-схему сверху вниз и повторяет узкий pipeline обычного
-Codex Mermaid flowchart: Dagre placement и одинаково скруглённые независимые
-edges. Это не responsive-режим `DOWN` compound solver-а fixed/adaptive.
+Codex Mermaid flowchart: Dagre placement и одинаковое локальное скругление
+углов независимых edges. Это не responsive-режим `DOWN` compound solver-а
+fixed/adaptive.
 
 ## Публичная граница
 
@@ -25,7 +26,7 @@ edges. Это не responsive-режим `DOWN` compound solver-а fixed/adaptiv
 
 ## Единый placement pipeline
 
-1. Любой допустимый input — reference, dense, single-root или multi-root —
+1. Любой допустимый input — reference, single-root или multi-root —
    проходит один Dagre/Sugiyama вызов. Ветка по количеству roots, force-layout,
    tidy-tree, forest seed и последующий refinement запрещены.
 2. Dagre graph является directed named multigraph. Каждая semantic связь
@@ -46,13 +47,15 @@ edges. Это не responsive-режим `DOWN` compound solver-а fixed/adaptiv
 1. Каждый edge получает только свою point chain из Dagre. Edge-to-edge graph,
    общий trunk, junction, bundling, renderer dedup и соединение одного edge с
    другим edge запрещены.
-2. Все point chains проходят одну функцию `rounded` с фиксированным радиусом
-   поворота `5`, как Codex Mermaid flowchart. Прямой участок остаётся прямым;
-   каждый настоящий поворот получает tangent-aligned quadratic Bézier corner.
-   Это естественная геометрия одного renderer-а, а не разные типы edges.
-3. Production result использует только cubic primitive. Mermaid-подобный `L`
-   сериализуется как вырожденная cubic Bézier, а `Q` — как математически
-   эквивалентная cubic Bézier. Поэтому renderer не ветвится по segment type.
+2. Exact source и target ports подменяют только граничные точки Dagre. Между
+   ними сохраняются строго нисходящие guide points; дополнительные
+   horizontal terminal shelves, ортогональные полки и Manhattan corridors
+   запрещены.
+3. Strictly downward diagonal и vertical sections сохраняются прямыми. Только
+   настоящий guide-point corner получает tangent-aligned quadratic Bézier с
+   фиксированным радиусом `5`, как `curve="rounded"` в Codex. Production result
+   кодирует line как degenerate cubic, а quadratic corner — как математически
+   эквивалентный cubic. Renderer получает один primitive и не ветвится по типу.
 4. Первый segment начинается точно в source port, последний заканчивается
    точно в target port. Каждая связь материализует собственную cubic chain и
    собственный arrow.
@@ -68,7 +71,7 @@ edges. Это не responsive-режим `DOWN` compound solver-а fixed/adaptiv
    Превышение отклоняется до placement. Более крупный graph требует другой
    специализированной policy или staged projection.
 3. Consumer может менять только bounded spacing values. Ranker, количество
-   проходов, curve mode и corner radius не являются runtime options.
+   проходов и corner radius не являются runtime options.
 4. Result materialize только production geometry. Dagre ranks, dummy nodes,
    order state и diagnostics наружу не копируются.
 5. Top-down остаётся отдельным module graph и Worker executor. Dagre и его byte
@@ -81,11 +84,11 @@ Focused tests обязаны фиксировать:
 - input-order invariance;
 - exact `SOUTH`/`NORTH` endpoints;
 - отдельные endpoints и paths всех semantic edges;
-- отсутствие общих линейных trunks в reference fixture;
+- отсутствие horizontal line runs и общих trunks в reference fixture;
 - fan-in и parallel named edges без relation subtype;
 - node non-overlap и отсутствие edge/node intersections на reference;
 - stable cycle witness и fail-closed invalid inputs;
-- frozen reference/dense bounds, result hashes, bundle bytes и benchmark.
+- frozen reference bounds, result hash, bundle bytes и benchmark.
 
 ## Алгоритмический источник
 

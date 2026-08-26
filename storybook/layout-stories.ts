@@ -12,8 +12,8 @@ export type LayoutStoryRoute =
   | "adaptive/shared/down"
   | "adaptive/compound/right"
   | "adaptive/compound/down"
-  | "top-down/blender-area/default"
-  | "top-down/dense/default"
+  | "dagre-layered/default/default"
+  | "coffman-graham/default/default"
 
 const loadFixed = (fixtureId: string) => async (): Promise<StorybookStoryModule> => {
   const {createFixedLayoutStory} = await import("./stories/fixed.ts")
@@ -25,9 +25,14 @@ const loadAdaptive = (fixtureId: string) => async (): Promise<StorybookStoryModu
   return createAdaptiveLayoutStory(fixtureId)
 }
 
-const loadTopDown = (scenario: "reference" | "dense") => async (): Promise<StorybookStoryModule> => {
-  const {createTopDownLayoutStory} = await import("./stories/top-down.ts")
-  return createTopDownLayoutStory(scenario)
+const loadDagreLayered = async (): Promise<StorybookStoryModule> => {
+  const {createDagreLayeredLayoutStory} = await import("./stories/dagre-layered.ts")
+  return createDagreLayeredLayoutStory()
+}
+
+const loadCoffmanGraham = async (): Promise<StorybookStoryModule> => {
+  const {createCoffmanGrahamLayoutStory} = await import("./stories/coffman-graham.ts")
+  return createCoffmanGrahamLayoutStory()
 }
 
 export const LAYOUT_STORIES = defineStorybookStories({
@@ -79,34 +84,40 @@ export const LAYOUT_STORIES = defineStorybookStories({
     {
       id: "scene-policies",
       label: "Сцена",
-      components: [{
-        id: "top-down",
-        label: "Сверху вниз",
-        apiName: "layoutTopDown",
-        tags: ["dag", "south", "north", "causal"],
-        sections: [
-          {
-            id: "blender-area",
-            label: "Blender Area",
+      components: [
+        {
+          id: "dagre-layered",
+          label: "Dagre Layered",
+          apiName: "layoutTopDown",
+          tags: ["dagre", "layered", "dag", "south", "north"],
+          sections: [{
+            id: "default",
+            label: "Default",
             variants: [{
               id: "default",
-              label: "Полная схема",
-              title: "Top-down · Blender Area",
-              load: loadTopDown("reference"),
+              label: "Default",
+              title: "Dagre Layered",
+              load: loadDagreLayered,
             }],
-          },
-          {
-            id: "dense",
-            label: "Dense DAG",
+          }],
+        },
+        {
+          id: "coffman-graham",
+          label: "Coffman–Graham",
+          apiName: "layoutCoffmanGraham",
+          tags: ["coffman-graham", "width-bounded", "large-dag", "layered"],
+          sections: [{
+            id: "default",
+            label: "Default",
             variants: [{
               id: "default",
-              label: "54 / 85",
-              title: "Top-down · Dense DAG 54 / 85",
-              load: loadTopDown("dense"),
+              label: "W = 4",
+              title: "Coffman–Graham · W = 4",
+              load: loadCoffmanGraham,
             }],
-          },
-        ],
-      }],
+          }],
+        },
+      ],
     },
   ],
   representative: {component: "fixed", section: "baseline", variant: "right"},
