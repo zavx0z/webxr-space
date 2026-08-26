@@ -175,7 +175,7 @@ solver-free; explicit `projection` адаптирует живой root `NodeTre
 4. Dev-only stories принадлежат `@nodes/ui` и живут в `storybook/`
    рядом с production owner. Repository Storybook собирает их entry,
    style, routes и evidence на mount `/ui/`; его exact lifecycle маршрутизирует
-   один `$nodes-dev` selector `nodes`. Общие routes, stories и Workbench
+   один global `$storybook` target для `@nodes/storybook`. Общие routes, stories и Workbench
    импортируются только из точных subpaths `@zavx0z/storybook/*`.
    `storybook/` не входит в production exports, а `@zavx0z/storybook` не является
    production dependency `@nodes/ui`. Выбор Component

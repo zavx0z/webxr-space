@@ -472,7 +472,7 @@ describe("Node component storybook", () => {
     const server = await Bun.file(join(nodesStorybookRoot, "server.ts")).text()
     const pageRegistry = await Bun.file(join(nodesStorybookRoot, "server/page-registry.ts")).text()
     const surfaces = await Bun.file(join(storybookRoot, "surfaces/reference-surfaces.ts")).text()
-    expect(server).toContain("startStorybookHubServer")
+    expect(server).toContain("startStorybookPackageServer")
     expect(pageRegistry).toContain("ui: pageFiles({")
     expect(pageRegistry).toContain('canvasId: "nodes-storybook-canvas"')
     expect(server).toContain("/references/blender-4.5.5-reference.png")
@@ -534,34 +534,20 @@ describe("Node component storybook", () => {
     expect(client).toContain("reference: {x: 0, y: 0, w: 1, h: 1}")
   })
 
-  test("keeps retained observation dev-only and routes exact browser evidence through the shared dispatcher", async () => {
+  test("keeps retained observation dev-only and declares exact browser evidence in the typed app", async () => {
     const client = await Bun.file(join(storybookRoot, "node-editor.stories.ts")).text()
     const observer = await Bun.file(join(storybookRoot, "evidence/retained-observer.ts")).text()
     const production = await Bun.file(join(storybookRoot, "../node-editor.ts")).text()
-    const browser = await Bun.file(join(
-      nodesStorybookRoot,
-      "../../.agents/skills/nodes-dev/scripts/storybook-browser.ts",
-    )).text()
-    const registry = await Bun.file(join(
-      nodesStorybookRoot,
-      "../../.agents/skills/nodes-dev/scripts/storybooks.json",
-    )).json() as {selectors: Record<string, {pages?: unknown[]}>}
+    const pageRegistry = await Bun.file(join(nodesStorybookRoot, "server/page-registry.ts")).text()
 
     expect(client).toContain("createStorybookRetainedObserver(editor)")
     expect(observer).toContain("NodeCanvas.contentRoot")
     expect(observer).toContain("readRibbonEndpointCenters")
     expect(observer).toContain("worldScaleRatioToContentRoot")
     expect(production).not.toContain("__nodeComponentRetainedObserver")
-    expect(registry.selectors["nodes"]).toMatchObject({
-      package: "@nodes/storybook",
-      httpMarker: "<title>Nodes storybook</title>",
-      ready: {kind: "dataset", name: "nodesStorybook", value: "ready"},
-      routes: {default: "/"},
-    })
-    expect(registry.selectors.nodes?.pages).toContainEqual({
-      mountPath: "/ui",
-      canvas: {selector: "#nodes-storybook-canvas", capability: "webgpu", touch: true},
-    })
+    expect(pageRegistry).toContain('readiness: {dataset: "nodesStorybook", value: "ready"}')
+    expect(pageRegistry).toContain('...(capability === "webgpu" ? {touch: true} : {})')
+    expect(pageRegistry).toContain('canvas: {id: canvasId, evidence: "non-black" as const}')
     expect(client).toContain("new StorybookRouteTreeRouter(NODE_STORYBOOK_ROUTE_TREE, {")
     expect(client).toContain('basePath: storybookPublicPath("node", NODE_UI_STORYBOOK_BASE_PATH)')
     expect(client).toContain("nodeStorybookWorkbenchStoryRoute(route)")
@@ -578,12 +564,5 @@ describe("Node component storybook", () => {
     expect(client).toContain('dataset.selectedId = state.selection?.id ?? ""')
     expect(client).toContain("nodeEditorStoryRoute(state.target, state.selected)")
     expect(client).not.toContain("new SocketCatalogSurface")
-    expect(browser).toContain('cdp.send("Target.createTarget", {url, background: true})')
-    expect(browser).toContain('canvas.toDataURL("image/png")')
-    expect(browser).toContain('action === "profile"')
-    expect(browser).toContain("nativeMetricsRestored")
-    for (const forbidden of ["Page.bringToFront", '"/focus"', '"/activate"', '"/windows"']) {
-      expect(browser).not.toContain(forbidden)
-    }
   })
 })
