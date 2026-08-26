@@ -39,6 +39,6 @@ export function topDownWorkerFixture(): TopDownLayoutGraph {
       {id: "source/out", nodeId: "source", x: 90},
       {id: "target/in", nodeId: "target", x: 90},
     ],
-    edges: [{constraint: true, id: "value", sourcePortId: "source/out", targetPortId: "target/in"}],
+    edges: [{id: "value", sourcePortId: "source/out", targetPortId: "target/in"}],
   }
 }
