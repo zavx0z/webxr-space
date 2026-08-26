@@ -1,72 +1,57 @@
-# WebXR 3D Gallery
+# webxr-space
 
-Интерактивная WebXR-галерея 3D-объектов с навигацией и управлением в VR-режиме, построенная на MetaFor фреймворке.
+Development-only superproject for the retained WebGPU/XR interface stack.
 
-## 🚀 Демо
+This repository pins the exact revisions used together for development,
+cross-repository checks, dependency analysis, Storybook catalogs, and live
+graph projections. Production code remains owned by the child repositories.
 
-[Посмотреть на GitHub Pages](https://zavx0z.github.io/webxr-space/)
+## Repositories
 
-## ✨ Функции
+| Path | Repository | Role |
+| --- | --- | --- |
+| `engine/` | `zavx0z/engine` | Retained WebGPU renderer and scene objects |
+| `layout/` | `zavx0z/layout` | UI runtime, surfaces, FlexBox, clipping and input |
+| `ui/` | `zavx0z/ui` | Elements, Components, HUD and UI Storybook |
+| `node/` | `zavx0z/node` | Node model, layout policies and retained editor |
+| `highlighter/` | `zavx0z/highlighter` | Theme-neutral source tokenization |
+| `storybook/` | `zavx0z/storybook` | Shared private Storybook infrastructure |
 
-- **WebXR поддержка** - работа в VR-режиме (Meta Quest)
-- **MetaFor фреймворк** - реактивная архитектура для WebXR
-- **3D галерея** - 5 различных 3D-моделей по кругу
-- **Лазерный указатель** - взаимодействие с объектами
-- **Перемещение объектов** - drag & drop в VR
-- **Удаление объектов** - кнопка X на контроллере
-- **Добавление объектов** - HTML кнопка для новых объектов
-- **Информационная панель** - статистика и управление
-
-## 🛠 Технологии
-
-- **Three.js** - 3D рендеринг и WebXR
-- **MetaFor** - реактивный фреймворк для WebXR
-- **Bun** - быстрый JavaScript runtime
-
-## 📦 Установка и запуск
-
-### Локальная разработка
+## Checkout
 
 ```bash
-# Установка зависимостей
-bun install
-
-# Запуск в режиме разработки
-bun run dev
-
-# Обычный запуск
-bun run start
+git clone --recurse-submodules git@github.com:zavx0z/webxr-space.git
+cd webxr-space
+bun run check
 ```
 
-### Сборка для продакшена
+For an existing checkout:
 
 ```bash
-# Сборка проекта
-bun run build
-
-# Файлы будут в папке dist/
+git submodule update --init --recursive
 ```
 
-## 🎮 Управление
+## Development workflow
 
-### В VR-режиме
+Make and deliver a source change inside its owning submodule, then update the
+superproject pointer separately:
 
-- **Лазерный указатель** - наведение на объекты
-- **Курок** - захват и перемещение объектов
-- **Кнопка X** - удаление выбранного объекта
+```bash
+cd ui
+git switch main
+# edit, check, commit and push UI
+cd ..
+git add ui
+git commit -m "chore: update UI revision"
+```
 
-### В браузере
+The superproject is never imported by production packages. It owns only
+development integration, revision pins, analyzers, catalogs, budgets, and
+cross-repository evidence.
 
-- **Кнопка "VR Mode"** - переключение в VR
-- **Кнопка "Добавить объект"** - добавление случайного объекта
+The former WebXR 3D Gallery remains available in Git history at commit
+`01084cfd61d8` and earlier; it is not part of the new development contour.
 
-## 🔧 Требования
-
-- Современный браузер с поддержкой WebXR
-- VR-гарнитура (Meta Quest) для полного функционала
-- HTTPS соединение (обязательно для WebXR)
-- Bun runtime для разработки
-
-## 📝 Лицензия
-
-MIT License
+GitHub resource constraints and internal guardrails are recorded in
+[`docs/GITHUB-BUDGETS.md`](docs/GITHUB-BUDGETS.md) and
+[`budgets/github.json`](budgets/github.json).

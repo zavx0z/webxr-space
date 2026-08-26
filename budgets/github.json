@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-08-26",
+  "account": {
+    "login": "zavx0z",
+    "plan": "free",
+    "repositoryVisibility": "public"
+  },
+  "officialLimits": {
+    "privateRepositoryMinutesPerMonth": 2000,
+    "artifactAndPackagesStorageBytes": 524288000,
+    "cacheStorageBytesPerRepository": 10737418240,
+    "pagesPublishedSiteBytes": 1073741824,
+    "pagesSoftBandwidthBytesPerMonth": 107374182400
+  },
+  "policy": {
+    "allowedWorkflowEvents": ["workflow_dispatch"],
+    "allowedRunnerLabels": ["ubuntu-latest"],
+    "allowLargerRunners": false,
+    "artifactRetentionDays": 1,
+    "maxPagesArtifactBytes": 26214400,
+    "maxActiveArtifactBytesAcrossAccount": 52428800,
+    "maxCacheBytesPerRepository": 268435456,
+    "allowPackagePublishing": false,
+    "allowAutomaticPagesDeployment": false
+  },
+  "observed": {
+    "capturedAt": "2026-08-26",
+    "activePagesArtifactBytes": 8976335,
+    "bunCacheBytesPerRepositoryApprox": 35658631,
+    "repositoriesWithBunCache": 4
+  },
+  "sources": [
+    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching",
+    "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+    "https://docs.github.com/en/billing/how-tos/set-up-budgets"
+  ]
+}

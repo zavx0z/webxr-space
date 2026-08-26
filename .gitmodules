@@ -1,0 +1,24 @@
+[submodule "engine"]
+	path = engine
+	url = ../engine.git
+	branch = main
+[submodule "layout"]
+	path = layout
+	url = ../layout.git
+	branch = main
+[submodule "ui"]
+	path = ui
+	url = ../ui.git
+	branch = main
+[submodule "node"]
+	path = node
+	url = ../node.git
+	branch = main
+[submodule "highlighter"]
+	path = highlighter
+	url = ../highlighter.git
+	branch = main
+[submodule "storybook"]
+	path = storybook
+	url = ../storybook.git
+	branch = main
