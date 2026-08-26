@@ -37,12 +37,10 @@ describe("UI component graph fit-only presentation", () => {
     expect(layout.result.edges.length).toBe(graph.edges.length)
   })
 
-  test("publishes the dense graph as tree, cross and shortcut presentation types", () => {
-    const kinds = [...layout.edgeKindByLayoutId.values()]
-    expect(kinds.filter((kind) => kind === "tree")).toHaveLength(46)
-    expect(kinds.filter((kind) => kind === "cross")).toHaveLength(32)
-    expect(kinds.filter((kind) => kind === "shortcut")).toHaveLength(7)
-    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 5622.189973, height: 3282.000007})
+  test("publishes every dense relation through one rounded edge pipeline", () => {
+    expect(layout.result.edges).toHaveLength(graph.edges.length)
+    expect(JSON.stringify(layout.input.edges)).not.toMatch(/tree|cross|shortcut|constraint/)
+    expect(layout.result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
   })
 
   test("keeps every spline connection outside unrelated node interiors", () => {

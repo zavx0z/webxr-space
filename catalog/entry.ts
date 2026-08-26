@@ -20,9 +20,7 @@ async function startCatalog(): Promise<void> {
     const runtime = await UiRuntime.create(canvas, {
       virtualDisplay: {initial: "near", surfaceDisplay: true, grid: false},
     })
-    const surface = new UiComponentGraphSurface(typedGraph, previews, {
-      showAllRelations: new URL(location.href).searchParams.get("relations") === "all",
-    })
+    const surface = new UiComponentGraphSurface(typedGraph, previews)
     runtime.addSurface(surface, ({w, h}) => ({x: 0, y: 0, w, h}))
     globalThis.__webxrSpaceCapturePresentedFrame = () => runtime.renderer.captureLastPresentedFramePng()
     globalThis.__webxrSpaceCatalogSnapshot = () => Object.freeze({

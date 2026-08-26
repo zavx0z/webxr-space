@@ -34,7 +34,6 @@ const COMPONENT_HEADER = new Color(0.34, 0.25, 0.48, 0.94)
 export class UiComponentGraphSurface extends UiSurface {
   readonly #layout: UiComponentGraphLayout
   readonly #previews: ReadonlyMap<string, UiGraphStoryPreview>
-  readonly #showAllRelations: boolean
   readonly #contentRoot: Object3D
   #materialized = false
   #materializedFont: unknown = null
@@ -45,12 +44,10 @@ export class UiComponentGraphSurface extends UiSurface {
   constructor(
     graph: UiComponentGraphLayout["graph"],
     previews: ReadonlyMap<string, UiGraphStoryPreview>,
-    options: Readonly<{showAllRelations?: boolean}> = {},
   ) {
     super({bgColor: palette.bg, borderColor: null})
     this.#layout = createUiComponentGraphLayout(graph)
     this.#previews = previews
-    this.#showAllRelations = options.showAllRelations === true
     this.node.name = "UiComponentGraphSurface"
     this.#contentRoot = this.createRetainedParent()
     this.#contentRoot.name = "UiComponentGraphSurface.contentRoot"
@@ -71,9 +68,7 @@ export class UiComponentGraphSurface extends UiSurface {
     return Object.freeze({
       nodes: this.#layout.graph.nodes.length,
       edges: this.#layout.graph.edges.length,
-      visibleEdges: this.#showAllRelations
-        ? this.#layout.graph.edges.length
-        : [...this.#layout.edgeKindByLayoutId.values()].filter((kind) => kind === "tree").length,
+      visibleEdges: this.#layout.graph.edges.length,
       ...previewDiagnostics,
       fitScale: this.#fitScale,
       bounds: this.#layout.result.bounds,
@@ -123,11 +118,9 @@ export class UiComponentGraphSurface extends UiSurface {
   }
 
   #drawGraph(): void {
-    const edges = this.#layout.result.edges
-      .filter(({id}) => this.#showAllRelations || this.#layout.edgeKindByLayoutId.get(id) === "tree")
-      .sort((left, right) => left.id.localeCompare(right.id))
+    const edges = [...this.#layout.result.edges].sort((left, right) => left.id.localeCompare(right.id))
     for (const edge of edges) {
-      const points = separateSemanticEdge(uiComponentEdgePoints(edge.curves), edge.id, 10)
+      const points = uiComponentEdgePoints(edge.curves)
       this.drawPolyline(points, EDGE_COLOR, 1.6)
       const tip = points.at(-1)!
       drawArrow(this, points, 7, EDGE_COLOR)
@@ -220,35 +213,6 @@ export class UiComponentGraphSurface extends UiSurface {
       sx: {textAlign: "center"},
     })
   }
-}
-
-function separateSemanticEdge(
-  points: readonly LayoutPoint[],
-  edgeId: string,
-  maximumOffset: number,
-): readonly LayoutPoint[] {
-  if (points.length < 3) return points
-  const offset = (stableUnit(edgeId) - 0.5) * maximumOffset * 2
-  return points.map((value, index) => {
-    if (index === 0 || index === points.length - 1) return value
-    const before = points[index - 1]!
-    const after = points[index + 1]!
-    const dx = after.x - before.x
-    const dy = after.y - before.y
-    const length = Math.hypot(dx, dy)
-    if (length === 0) return value
-    const taper = Math.sin(Math.PI * index / (points.length - 1))
-    return {x: value.x - dy / length * offset * taper, y: value.y + dx / length * offset * taper}
-  })
-}
-
-function stableUnit(value: string): number {
-  let hash = 2166136261
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) / 0xffffffff
 }
 
 export function summarizeUiComponentGraphPreviews(
