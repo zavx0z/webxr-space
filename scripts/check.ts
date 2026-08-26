@@ -6,8 +6,6 @@ const expected = Object.freeze([
   "projects/layout",
   "projects/ui",
   "projects/node",
-  "projects/highlighter",
-  "projects/storybook",
 ])
 
 const status = Bun.spawnSync(["git", "submodule", "status", "--recursive"], {

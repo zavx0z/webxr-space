@@ -14,11 +14,3 @@
 	path = projects/node
 	url = ../node.git
 	branch = main
-[submodule "highlighter"]
-	path = projects/highlighter
-	url = ../highlighter.git
-	branch = main
-[submodule "storybook"]
-	path = projects/storybook
-	url = ../storybook.git
-	branch = main

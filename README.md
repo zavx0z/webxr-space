@@ -14,8 +14,11 @@ graph projections. Production code remains owned by the child repositories.
 | `projects/layout/` | `zavx0z/layout` | UI runtime, surfaces, FlexBox, clipping and input |
 | `projects/ui/` | `zavx0z/ui` | Elements, Components, HUD and UI Storybook |
 | `projects/node/` | `zavx0z/node` | Node model, layout policies and retained editor |
-| `projects/highlighter/` | `zavx0z/highlighter` | Theme-neutral source tokenization |
-| `projects/storybook/` | `zavx0z/storybook` | Shared private Storybook infrastructure |
+
+Only the four direct UI-stack repositories belong to this superproject.
+Libraries and development tools such as highlighters, Storybook infrastructure,
+parsers, generators, and analyzers remain independent repositories even when
+the UI stack consumes them.
 
 ## Checkout
 

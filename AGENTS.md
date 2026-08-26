@@ -4,9 +4,12 @@
 
 - This repository is a development-only superproject. It is not a production
   package and must never become a production dependency of a child repository.
-- `projects/engine`, `projects/layout`, `projects/ui`, `projects/node`,
-  `projects/highlighter`, and `projects/storybook` are Git submodules and retain
-  independent ownership, histories, checks, releases, and deployment decisions.
+- `projects/engine`, `projects/layout`, `projects/ui`, and `projects/node` are
+  the only Git submodules and retain independent ownership, histories, checks,
+  releases, and deployment decisions.
+- Libraries and development tools such as highlighters, Storybook
+  infrastructure, parsers, generators, and analyzers remain separate
+  repositories. Consumption by the UI stack is not a reason to add a submodule.
 - Work in the supplied branch and checkout. Do not create branches, clones, or
   worktrees without a direct request from zavx0z.
 
