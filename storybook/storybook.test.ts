@@ -1,15 +1,11 @@
-import {beforeAll, describe, expect, test} from "bun:test"
+import {describe, expect, test} from "bun:test"
 import {basename, join} from "node:path"
 import {fileURLToPath} from "node:url"
-import type {TrueTypeFont} from "@engine/core"
-import {loadSharedFont} from "@engine/core/default-font"
 import {FIELD_KINDS} from "@ui/components/field"
-import {defineStorybookStoryModule} from "@zavx0z/storybook/stories"
 import {planStorybookShell} from "@zavx0z/storybook/workbench"
 import {createInputEditState, focusInput} from "@ui/elements"
 import {UiSurface as BaseUiSurface, type UiSurface} from "@layout/core/surface"
 import {insertActiveInputText} from "@layout/core/text-input"
-import type {UiRuntime} from "@layout/core/runtime"
 import {
   COMPONENT_STORIES,
   COMPONENT_STORY_ROUTES,
@@ -17,11 +13,9 @@ import {
   componentSectionItems,
   componentVariantItems,
 } from "./stories.ts"
-import {ComponentsStoryPreviewSurface} from "./story-preview.ts"
 import {UI_STORYBOOK_RESPONSIVE_POLICY} from "../../storybook/app/workbench-policy.ts"
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
-let font: TrueTypeFont
 type HitCall = Parameters<UiSurface["hit"]>
 type RoundedRectCall = Parameters<UiSurface["drawRoundedRect"]>
 type TextCall = Parameters<UiSurface["drawText"]>
@@ -54,10 +48,6 @@ function storyBrowseHit(surface: StoryActionSurface): HitCall | undefined {
     return typeof options === "object" && options !== null && options.tooltip?.label === "Выбрать путь"
   })
 }
-
-beforeAll(async () => {
-  font = await loadSharedFont(import.meta.resolve("@engine/core/fonts/jetbrains-mono-bold.ttf"))
-})
 
 describe("@ui/components package-owned Workbench stories", () => {
   test("preserves every exact detail route and derives prefix overviews", () => {
@@ -605,42 +595,17 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(keys[0]).toEndWith(":192:40:Основная")
   })
 
-  test("uses one retained production preview parent", () => {
-    const module = defineStorybookStoryModule({
-      defaultArgs: {value: 1},
-      render() {},
-      source: () => "const value = 1",
-    })
-    const index = COMPONENT_STORIES.find("field/number/input")!
-    const surface = new ComponentsStoryPreviewSurface()
-    try {
-      surface.attachCanvas(createFakeRuntime())
-      surface.setStory(index, module, module.defaultArgs)
-      surface.setRect({x: 0, y: 0, w: 1024, h: 720}, 0.001, font)
-      expect(surface.diagnostics).toEqual({route: "field/number/input", layoutPlans: 1, materializations: 1})
-      surface.setArgs({value: 2})
-      surface.flushPendingRender()
-      expect(surface.diagnostics).toEqual({route: "field/number/input", layoutPlans: 1, materializations: 2})
-    } finally {
-      surface.dispose()
-    }
-  })
-
-  test("replaces manual info ownership with the shared story interaction panel", async () => {
-    const entry = await Bun.file(join(storybookRoot, "entry.ts")).text()
-    expect(entry).toContain("COMPONENT_STORIES")
+  test("mounts Components metadata in the one-root shared interaction panel", async () => {
+    const entry = await Bun.file(join(storybookRoot, "../../storybook/app/entry.ts")).text()
+    const stories = await Bun.file(join(storybookRoot, "../../storybook/app/stories.ts")).text()
+    expect(stories).toContain("COMPONENT_STORIES")
     expect(entry).toContain("StorybookStoryPanelSurface")
-    expect(entry).toContain("ComponentsStoryPreviewSurface")
-    expect(entry).toContain('title: "Компоненты UI"')
-    expect(entry).toContain('title: "Варианты"')
+    expect(entry).toContain("UiStoryPreviewSurface")
+    expect(entry).toContain('title: "UI"')
     expect(entry).toContain("navigator.clipboard.writeText")
     expect(entry).toContain("runtime.handleResize()")
-    expect(entry).toContain("runtime.requestRender()")
     expect(entry).toContain("runtime.renderer.captureLastPresentedFramePng()")
     expect(entry).toContain("await waitForStorybookFrameBoundary()")
-    expect(entry.indexOf("await waitForStorybookFrameBoundary()")).toBeLessThan(
-      entry.indexOf('dataset.componentsStorybook = "ready"'),
-    )
     expect(entry.indexOf("await waitForStorybookFrameBoundary()")).toBeLessThan(
       entry.indexOf('dataset.uiStorybook = "ready"'),
     )
@@ -654,7 +619,7 @@ describe("@ui/components package-owned Workbench stories", () => {
 
   test("keeps story implementations out of the initial split entry", async () => {
     const build = await Bun.build({
-      entrypoints: [join(storybookRoot, "entry.ts")],
+      entrypoints: [join(storybookRoot, "../../storybook/app/entry.ts")],
       target: "browser",
       format: "esm",
       splitting: true,
@@ -725,22 +690,8 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(server).toContain("startStorybookPackageServer")
     expect(server).not.toContain("port:")
     expect(server).not.toMatch(/UI_STORYBOOK_(?:HOST|PORT)/u)
-    expect(pages).toContain('mountPath: entry.routePrefix')
-    expect(pages).toContain('canvasId: "stage-canvas"')
+    expect(pages).toContain('mountPath: "/"')
+    expect(pages).toContain('canvasId: "ui-storybook-canvas"')
     expect(pages).toContain('home: {path: "/", label: "Главная"')
   })
 })
-
-function createFakeRuntime(): UiRuntime {
-  return {
-    canvas: {style: {}},
-    renderer: {pixelRatio: 1, invalidateGeometry() {}},
-    requestRender() {},
-    uiRectToFramebufferClipBounds: (
-      xMin: number,
-      yMin: number,
-      xMax: number,
-      yMax: number,
-    ) => [xMin, yMin, xMax, yMax],
-  } as unknown as UiRuntime
-}
