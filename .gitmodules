@@ -1,24 +1,24 @@
 [submodule "engine"]
-	path = engine
+	path = projects/engine
 	url = ../engine.git
 	branch = main
 [submodule "layout"]
-	path = layout
+	path = projects/layout
 	url = ../layout.git
 	branch = main
 [submodule "ui"]
-	path = ui
+	path = projects/ui
 	url = ../ui.git
 	branch = main
 [submodule "node"]
-	path = node
+	path = projects/node
 	url = ../node.git
 	branch = main
 [submodule "highlighter"]
-	path = highlighter
+	path = projects/highlighter
 	url = ../highlighter.git
 	branch = main
 [submodule "storybook"]
-	path = storybook
+	path = projects/storybook
 	url = ../storybook.git
 	branch = main

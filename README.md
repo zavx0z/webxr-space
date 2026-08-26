@@ -10,12 +10,12 @@ graph projections. Production code remains owned by the child repositories.
 
 | Path | Repository | Role |
 | --- | --- | --- |
-| `engine/` | `zavx0z/engine` | Retained WebGPU renderer and scene objects |
-| `layout/` | `zavx0z/layout` | UI runtime, surfaces, FlexBox, clipping and input |
-| `ui/` | `zavx0z/ui` | Elements, Components, HUD and UI Storybook |
-| `node/` | `zavx0z/node` | Node model, layout policies and retained editor |
-| `highlighter/` | `zavx0z/highlighter` | Theme-neutral source tokenization |
-| `storybook/` | `zavx0z/storybook` | Shared private Storybook infrastructure |
+| `projects/engine/` | `zavx0z/engine` | Retained WebGPU renderer and scene objects |
+| `projects/layout/` | `zavx0z/layout` | UI runtime, surfaces, FlexBox, clipping and input |
+| `projects/ui/` | `zavx0z/ui` | Elements, Components, HUD and UI Storybook |
+| `projects/node/` | `zavx0z/node` | Node model, layout policies and retained editor |
+| `projects/highlighter/` | `zavx0z/highlighter` | Theme-neutral source tokenization |
+| `projects/storybook/` | `zavx0z/storybook` | Shared private Storybook infrastructure |
 
 ## Checkout
 
@@ -37,11 +37,11 @@ Make and deliver a source change inside its owning submodule, then update the
 superproject pointer separately:
 
 ```bash
-cd ui
+cd projects/ui
 git switch main
 # edit, check, commit and push UI
-cd ..
-git add ui
+cd ../..
+git add projects/ui
 git commit -m "chore: update UI revision"
 ```
 

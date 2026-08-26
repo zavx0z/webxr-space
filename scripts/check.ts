@@ -2,12 +2,12 @@ import {join} from "node:path"
 
 const root = join(import.meta.dir, "..")
 const expected = Object.freeze([
-  "engine",
-  "layout",
-  "ui",
-  "node",
-  "highlighter",
-  "storybook",
+  "projects/engine",
+  "projects/layout",
+  "projects/ui",
+  "projects/node",
+  "projects/highlighter",
+  "projects/storybook",
 ])
 
 const status = Bun.spawnSync(["git", "submodule", "status", "--recursive"], {
