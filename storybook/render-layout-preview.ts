@@ -57,9 +57,14 @@ export function drawLayoutPreview(
   if (options.showRoutes) {
     const edges: PreviewEdge[] = result.edges.filter(({id}) => options.visibleEdgeIds?.has(id) ?? true)
     edges.sort((left, right) => left.id.localeCompare(right.id))
+    const crossingGaps = "crossings" in result
+      ? Map.groupBy(result.crossings, ({underEdgeId}) => underEdgeId)
+      : new Map<string, never[]>()
     for (const edge of edges) {
       const points = edgePoints(edge).map(transform)
-      surface.drawPolyline(points, EDGE_COLOR, Math.max(1, scale * 2))
+      const gaps = (crossingGaps.get(edge.id) ?? []).map(({point}) => transform(point))
+      const runs = splitPolylineAtGaps(points, gaps, Math.max(3, scale * 7))
+      for (const run of runs) surface.drawPolyline(run, EDGE_COLOR, Math.max(1, scale * 2))
       const tip = points.at(-1)
       if (tip !== undefined) drawArrow(surface, points, Math.max(4, scale * 9), EDGE_COLOR)
     }
@@ -109,8 +114,9 @@ export function drawLayoutPreview(
     }
   }
 
+  const bridgeText = "crossings" in result ? ` · ${result.crossings.length} bridges` : ""
   Typography(surface, available.x, available.y, available.w, 20, {
-    children: `${result.nodes.length} nodes · ${options.visibleEdgeIds?.size ?? result.edges.length}/${result.edges.length} cubic Bézier edges · ${result.direction}`,
+    children: `${result.nodes.length} nodes · ${options.visibleEdgeIds?.size ?? result.edges.length}/${result.edges.length} cubic Bézier edges${bridgeText} · ${result.direction}`,
     variant: "caption",
     color: "muted",
   })
@@ -155,4 +161,85 @@ function drawArrow(surface: UiSurface, points: readonly LayoutPoint[], size: num
   const baseY = tip.y - uy * size
   surface.drawLine(tip.x, tip.y, baseX + px * size * 0.45, baseY + py * size * 0.45, color, 1.5)
   surface.drawLine(tip.x, tip.y, baseX - px * size * 0.45, baseY - py * size * 0.45, color, 1.5)
+}
+
+function splitPolylineAtGaps(
+  points: readonly LayoutPoint[],
+  gaps: readonly LayoutPoint[],
+  radius: number,
+): readonly (readonly LayoutPoint[])[] {
+  if (points.length < 2 || gaps.length === 0) return [points]
+  const cumulative = [0]
+  for (let index = 1; index < points.length; index += 1) {
+    cumulative.push(cumulative[index - 1]! + distance(points[index - 1]!, points[index]!))
+  }
+  const total = cumulative.at(-1)!
+  const intervals = gaps.map((gap) => {
+    let nearestDistance = Number.POSITIVE_INFINITY
+    let nearestOffset = 0
+    for (let index = 1; index < points.length; index += 1) {
+      const start = points[index - 1]!
+      const end = points[index]!
+      const dx = end.x - start.x
+      const dy = end.y - start.y
+      const lengthSquared = dx * dx + dy * dy
+      const ratio = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1,
+        ((gap.x - start.x) * dx + (gap.y - start.y) * dy) / lengthSquared))
+      const projected = {x: start.x + dx * ratio, y: start.y + dy * ratio}
+      const candidateDistance = distance(gap, projected)
+      if (candidateDistance < nearestDistance) {
+        nearestDistance = candidateDistance
+        nearestOffset = cumulative[index - 1]! + Math.sqrt(lengthSquared) * ratio
+      }
+    }
+    return {start: Math.max(0, nearestOffset - radius), end: Math.min(total, nearestOffset + radius)}
+  }).sort((left, right) => left.start - right.start || left.end - right.end)
+  const merged: Array<{start: number; end: number}> = []
+  for (const interval of intervals) {
+    const previous = merged.at(-1)
+    if (previous !== undefined && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end)
+    else merged.push({...interval})
+  }
+  const runs: LayoutPoint[][] = []
+  let cursor = 0
+  for (const interval of merged) {
+    if (interval.start > cursor) runs.push(polylineRange(points, cumulative, cursor, interval.start))
+    cursor = Math.max(cursor, interval.end)
+  }
+  if (cursor < total) runs.push(polylineRange(points, cumulative, cursor, total))
+  return runs.filter((run) => run.length >= 2)
+}
+
+function polylineRange(
+  points: readonly LayoutPoint[],
+  cumulative: readonly number[],
+  start: number,
+  end: number,
+): LayoutPoint[] {
+  const result = [pointAtOffset(points, cumulative, start)]
+  for (let index = 1; index < points.length - 1; index += 1) {
+    if (cumulative[index]! > start && cumulative[index]! < end) result.push(points[index]!)
+  }
+  result.push(pointAtOffset(points, cumulative, end))
+  return result
+}
+
+function pointAtOffset(
+  points: readonly LayoutPoint[],
+  cumulative: readonly number[],
+  offset: number,
+): LayoutPoint {
+  let index = 1
+  while (index < cumulative.length && cumulative[index]! < offset) index += 1
+  if (index >= points.length) return points.at(-1)!
+  const startOffset = cumulative[index - 1]!
+  const endOffset = cumulative[index]!
+  const ratio = endOffset === startOffset ? 0 : (offset - startOffset) / (endOffset - startOffset)
+  const start = points[index - 1]!
+  const end = points[index]!
+  return {x: start.x + (end.x - start.x) * ratio, y: start.y + (end.y - start.y) * ratio}
+}
+
+function distance(first: LayoutPoint, second: LayoutPoint): number {
+  return Math.hypot(second.x - first.x, second.y - first.y)
 }

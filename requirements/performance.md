@@ -87,16 +87,16 @@ bytes; его Worker executor — `59612` / `20674`. Fixed/adaptive bytes и has
 
 Принятый запуск `bun run --cwd packages/layout benchmark:coffman-graham` на
 Bun 1.4.0, macOS x64, source hash
-`a581ec3ce01f594dd4743f3c5b48c723c5f03dafbd7d30947796f47031a8fadc`:
+`4d604c72275c8e234b78b705a4ad4394960bd4f762a4df729d00cb7617da79a7`:
 
 | Fixture | Nodes / edges | Median | p95 |
 | --- | ---: | ---: | ---: |
-| Width-bounded reference | 54 / 85 | 5.95 ms | 8.46 ms |
-| Layered medium | 128 / 120 | 4.88 ms | 5.19 ms |
-| Policy node budget | 512 / 496 | 38.90 ms | 47.78 ms |
+| Width-bounded reference | 54 / 85 | 9.97 ms | 13.45 ms |
+| Layered medium | 128 / 120 | 6.19 ms | 6.69 ms |
+| Policy node budget | 512 / 496 | 40.34 ms | 68.20 ms |
 
-Coffman–Graham browser solver artifact имеет отдельный exact gate `30571` raw /
-`10381` gzip bytes. Policy импортирует только нужные pinned algorithm modules,
+Coffman–Graham browser solver artifact имеет отдельный exact gate `36619` raw /
+`12541` gzip bytes. Policy импортирует только нужные pinned algorithm modules,
 поэтому LP/quad solvers из полного `d3-dag` bundle в artifact не входят. Marker
-отсутствует в Dagre, fixed и adaptive artifacts; Worker executor — `31019` /
-`10550`, solver-free client — `1493` / `657`.
+отсутствует в Dagre, fixed и adaptive artifacts; Worker executor — `37067` /
+`12701`, solver-free client — `1493` / `657`.

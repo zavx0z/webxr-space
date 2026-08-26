@@ -5,6 +5,7 @@ import {coffmanGraham as layeringCoffmanGraham} from "d3-dag/dist/sugiyama/layer
 import {sugify} from "d3-dag/dist/sugiyama/utils.js"
 import type {LayoutPoint} from "../../types/protocol.ts"
 import type {
+  CoffmanGrahamCrossingGeometry,
   CoffmanGrahamCurveSegment,
   CoffmanGrahamCycleWitness,
   CoffmanGrahamEdgeGeometry,
@@ -19,6 +20,8 @@ const DEFAULT_LAYER_SPACING = 52
 const DEFAULT_EDGE_SPACING = 10
 const DEFAULT_PADDING = 24
 const ROUNDED_CORNER_RADIUS = 5
+const SOURCE_RUNWAY_SPACINGS = 2
+const TARGET_RUNWAY_SPACINGS = 8
 const MAX_NODES = 512
 const MAX_PORTS = 4096
 const MAX_EDGES = 2048
@@ -53,6 +56,33 @@ type Placement = Readonly<{
   portY: Float64Array
   edgePoints: ReadonlyMap<string, readonly LayoutPoint[]>
 }>
+type LayerGeometry = Readonly<{
+  id: number
+  top: number
+  bottom: number
+  center: number
+}>
+type ChannelLeg = {
+  edgeId: string
+  upperLayer: number
+  lowerLayer: number
+  startX: number
+  endX: number
+  trackIndex: number
+  trackOffset: number
+}
+type CorridorPlan = Readonly<{
+  diagonalBlockStart: number
+}>
+type ChannelPlacement = Placement & Readonly<{
+  layerGeometry: ReadonlyMap<number, LayerGeometry>
+  legsByEdgeId: ReadonlyMap<string, readonly ChannelLeg[]>
+  corridors: ReadonlyMap<number, CorridorPlan>
+}>
+type RoutedGraph = Readonly<{
+  edges: readonly CoffmanGrahamEdgeGeometry[]
+  paths: ReadonlyMap<string, readonly LayoutPoint[]>
+}>
 type LinkDatum = Readonly<{
   edgeIds: readonly string[] | null
   source: string
@@ -75,9 +105,9 @@ export function solveCoffmanGraham(
 ): CoffmanGrahamLayoutResult {
   const graph = normalizeGraph(input)
   validateDag(graph, cycleError)
-  const placed = placeGraph(graph)
+  const placed = planDiagonalChannels(graph, orderPortsByConnections(graph, placeGraph(graph)))
   const routed = routeEdges(graph, placed)
-  return materialize(graph, placed, routed)
+  return materialize(graph, placed, routed.edges, classifyCrossings(routed.paths))
 }
 
 function normalizeGraph(input: CoffmanGrahamLayoutGraph): NormalizedGraph {
@@ -143,7 +173,34 @@ function normalizeGraph(input: CoffmanGrahamLayoutGraph): NormalizedGraph {
       targetNodeIndex: ports[targetPortIndex]!.nodeIndex,
     }
   })
+  validatePortSlots(nodes, ports, roles)
   return {nodes, ports, edges, options}
+}
+
+function validatePortSlots(
+  nodes: readonly NormalizedNode[],
+  ports: readonly NormalizedPort[],
+  roles: Int8Array,
+): void {
+  const slotsByNodeRole = new Map<number, number[]>()
+  for (let index = 0; index < ports.length; index += 1) {
+    const role = roles[index]!
+    if (role === 0) continue
+    const port = ports[index]!
+    const key = port.nodeIndex * 2 + role - 1
+    const slots = slotsByNodeRole.get(key) ?? []
+    slots.push(port.offsetX)
+    slotsByNodeRole.set(key, slots)
+  }
+  for (const [key, slots] of slotsByNodeRole) {
+    slots.sort((left, right) => left - right)
+    for (let index = 1; index < slots.length; index += 1) {
+      if (Math.abs(slots[index]! - slots[index - 1]!) > EPSILON) continue
+      const nodeIndex = Math.floor(key / 2)
+      const side = key % 2 === 0 ? "SOUTH" : "NORTH"
+      throw new Error(`Coffman–Graham port slots overlap: ${nodes[nodeIndex]!.id}/${side}`)
+    }
+  }
 }
 
 function validateDag(
@@ -306,44 +363,449 @@ function placeGraph(graph: NormalizedGraph): Placement {
   return {nodeX, nodeY, nodeLayer, portX, portY, edgePoints}
 }
 
-function routeEdges(graph: NormalizedGraph, placed: Placement): readonly CoffmanGrahamEdgeGeometry[] {
-  const layerBounds = new Map<number, {top: number; bottom: number; center: number}>()
+/** Derives a free node-side port order from the already reduced connection order. */
+function orderPortsByConnections(graph: NormalizedGraph, placed: Placement): Placement {
+  type OrderedPort = Readonly<{
+    edgeId: string
+    portIndex: number
+    adjacentX: number
+  }>
+  const sourceByNode = new Map<number, OrderedPort[]>()
+  const targetByNode = new Map<number, OrderedPort[]>()
+  for (const edge of graph.edges) {
+    const points = placed.edgePoints.get(edge.id)!
+    addOrderedPort(sourceByNode, edge.sourceNodeIndex, {
+      edgeId: edge.id,
+      portIndex: edge.sourcePortIndex,
+      adjacentX: points[1]!.x,
+    })
+    addOrderedPort(targetByNode, edge.targetNodeIndex, {
+      edgeId: edge.id,
+      portIndex: edge.targetPortIndex,
+      adjacentX: points.at(-2)!.x,
+    })
+  }
+  const portX = placed.portX.slice()
+  assignOrderedPortSlots(sourceByNode, portX)
+  assignOrderedPortSlots(targetByNode, portX)
+  return {...placed, portX}
+}
+
+function addOrderedPort<T>(groups: Map<number, T[]>, nodeIndex: number, value: T): void {
+  const values = groups.get(nodeIndex) ?? []
+  values.push(value)
+  groups.set(nodeIndex, values)
+}
+
+function assignOrderedPortSlots(
+  groups: ReadonlyMap<number, readonly Readonly<{
+    edgeId: string
+    portIndex: number
+    adjacentX: number
+  }>[]>,
+  portX: Float64Array,
+): void {
+  for (const values of groups.values()) {
+    const slots = values.map(({portIndex}) => portX[portIndex]!).sort((left, right) => left - right)
+    const ordered = [...values].sort((left, right) =>
+      left.adjacentX - right.adjacentX || left.edgeId.localeCompare(right.edgeId))
+    for (let index = 0; index < ordered.length; index += 1) {
+      portX[ordered[index]!.portIndex] = slots[index]!
+    }
+  }
+}
+
+/** Reserves deterministic Y tracks so diagonal centerlines keep `edgeSpacing`. */
+function planDiagonalChannels(graph: NormalizedGraph, placed: Placement): ChannelPlacement {
+  const originalLayers = collectLayerGeometry(graph, placed)
+  const layerIds = [...originalLayers.keys()].sort((left, right) => left - right)
+  const layerPosition = new Map(layerIds.map((id, index) => [id, index]))
+  const legsByEdgeId = new Map<string, readonly ChannelLeg[]>()
+  const diagonalLegsByUpperLayer = new Map<number, ChannelLeg[]>()
+  for (const edge of graph.edges) {
+    const sourceLayer = placed.nodeLayer[edge.sourceNodeIndex]!
+    const targetLayer = placed.nodeLayer[edge.targetNodeIndex]!
+    const sourcePosition = layerPosition.get(sourceLayer)!
+    const targetPosition = layerPosition.get(targetLayer)!
+    const points = placed.edgePoints.get(edge.id)!
+    const expectedPointCount = targetPosition - sourcePosition + 1
+    if (points.length !== expectedPointCount) {
+      throw new Error(`Coffman–Graham edge guide does not cover every layer: ${edge.id}/${points.length}/${expectedPointCount}`)
+    }
+    const layerXs = [
+      placed.portX[edge.sourcePortIndex]!,
+      ...points.slice(1, -1).map(({x}) => x),
+      placed.portX[edge.targetPortIndex]!,
+    ]
+    const legs: ChannelLeg[] = []
+    for (let offset = 0; offset < expectedPointCount - 1; offset += 1) {
+      const upperLayer = layerIds[sourcePosition + offset]!
+      const lowerLayer = layerIds[sourcePosition + offset + 1]!
+      const leg: ChannelLeg = {
+        edgeId: edge.id,
+        upperLayer,
+        lowerLayer,
+        startX: layerXs[offset]!,
+        endX: layerXs[offset + 1]!,
+        trackIndex: -1,
+        trackOffset: -1,
+      }
+      legs.push(leg)
+      if (Math.abs(leg.endX - leg.startX) > EPSILON) {
+        const values = diagonalLegsByUpperLayer.get(upperLayer) ?? []
+        values.push(leg)
+        diagonalLegsByUpperLayer.set(upperLayer, values)
+      }
+    }
+    legsByEdgeId.set(edge.id, legs)
+  }
+
+  const diagonalBlockHeightByUpperLayer = new Map<number, number>()
+  for (const [upperLayer, legs] of diagonalLegsByUpperLayer) {
+    diagonalBlockHeightByUpperLayer.set(
+      upperLayer,
+      assignDiagonalTracks(legs, graph.options.edgeSpacing),
+    )
+  }
+  const sourceRunway = graph.options.edgeSpacing * SOURCE_RUNWAY_SPACINGS
+  const targetRunway = graph.options.edgeSpacing * TARGET_RUNWAY_SPACINGS
+  const shiftByLayer = new Map<number, number>()
+  let cumulativeShift = 0
+  for (let index = 0; index < layerIds.length; index += 1) {
+    const layerId = layerIds[index]!
+    shiftByLayer.set(layerId, cumulativeShift)
+    const nextLayerId = layerIds[index + 1]
+    if (nextLayerId === undefined) continue
+    const upper = originalLayers.get(layerId)!
+    const lower = originalLayers.get(nextLayerId)!
+    const diagonalBlockHeight = diagonalBlockHeightByUpperLayer.get(layerId) ?? 0
+    const requiredGap = sourceRunway + diagonalBlockHeight + targetRunway
+    const originalGap = lower.top - upper.bottom
+    cumulativeShift += Math.max(0, requiredGap - originalGap)
+  }
+
+  const nodeY = placed.nodeY.slice()
   for (let index = 0; index < graph.nodes.length; index += 1) {
-    const layer = placed.nodeLayer[index]!
+    nodeY[index] = clean(nodeY[index]! + shiftByLayer.get(placed.nodeLayer[index]!)!)
+  }
+  const portY = placed.portY.slice()
+  for (let index = 0; index < graph.ports.length; index += 1) {
+    portY[index] = clean(portY[index]! + shiftByLayer.get(placed.nodeLayer[graph.ports[index]!.nodeIndex]!)!)
+  }
+  const layerGeometry = new Map<number, LayerGeometry>()
+  for (const layerId of layerIds) {
+    const original = originalLayers.get(layerId)!
+    const shift = shiftByLayer.get(layerId)!
+    layerGeometry.set(layerId, {
+      id: layerId,
+      top: clean(original.top + shift),
+      bottom: clean(original.bottom + shift),
+      center: clean(original.center + shift),
+    })
+  }
+  const corridors = new Map<number, CorridorPlan>()
+  for (let index = 0; index < layerIds.length - 1; index += 1) {
+    const upperLayer = layerIds[index]!
+    const upper = layerGeometry.get(upperLayer)!
+    corridors.set(upperLayer, {
+      diagonalBlockStart: clean(upper.bottom + sourceRunway),
+    })
+  }
+  return {
+    ...placed,
+    nodeY,
+    portY,
+    layerGeometry,
+    legsByEdgeId,
+    corridors,
+  }
+}
+
+function collectLayerGeometry(
+  graph: NormalizedGraph,
+  placed: Placement,
+): ReadonlyMap<number, LayerGeometry> {
+  const layers = new Map<number, {id: number; top: number; bottom: number; center: number}>()
+  for (let index = 0; index < graph.nodes.length; index += 1) {
+    const id = placed.nodeLayer[index]!
     const node = graph.nodes[index]!
-    const current = layerBounds.get(layer)
     const top = placed.nodeY[index]!
     const bottom = top + node.height
     const center = top + node.height / 2
-    if (current === undefined) layerBounds.set(layer, {top, bottom, center})
+    const current = layers.get(id)
+    if (current === undefined) layers.set(id, {id, top, bottom, center})
     else {
+      if (Math.abs(current.center - center) > EPSILON) {
+        throw new Error(`Coffman–Graham layer does not share one center: ${id}`)
+      }
       current.top = Math.min(current.top, top)
       current.bottom = Math.max(current.bottom, bottom)
-      current.center = (current.center + center) / 2
     }
   }
-  return graph.edges.map((edge): CoffmanGrahamEdgeGeometry => {
+  return layers
+}
+
+function assignDiagonalTracks(legs: ChannelLeg[], spacing: number): number {
+  const compareLegs = (left: ChannelLeg, right: ChannelLeg): number =>
+    Math.min(left.startX, left.endX) - Math.min(right.startX, right.endX) ||
+    Math.max(left.startX, left.endX) - Math.max(right.startX, right.endX) ||
+    left.edgeId.localeCompare(right.edgeId)
+  const outgoing = new Map(legs.map((leg) => [leg, new Set<ChannelLeg>()]))
+  const predecessors = new Map(legs.map((leg) => [leg, new Set<ChannelLeg>()]))
+  const addPrecedence = (before: ChannelLeg, after: ChannelLeg): void => {
+    if (before === after || outgoing.get(before)!.has(after)) return
+    outgoing.get(before)!.add(after)
+    predecessors.get(after)!.add(before)
+  }
+  for (let leftIndex = 0; leftIndex < legs.length; leftIndex += 1) {
+    const left = legs[leftIndex]!
+    for (let rightIndex = leftIndex + 1; rightIndex < legs.length; rightIndex += 1) {
+      const right = legs[rightIndex]!
+      let leftAboveRight =
+        Number(insideOpenInterval(right.startX, left.startX, left.endX)) +
+        Number(insideOpenInterval(left.endX, right.startX, right.endX))
+      let rightAboveLeft =
+        Number(insideOpenInterval(left.startX, right.startX, right.endX)) +
+        Number(insideOpenInterval(right.endX, left.startX, left.endX))
+      if (Math.abs(left.endX - right.startX) < spacing - EPSILON) leftAboveRight += 1
+      if (Math.abs(right.endX - left.startX) < spacing - EPSILON) rightAboveLeft += 1
+      if (Math.abs(left.endX - right.startX) <= EPSILON) leftAboveRight += 1
+      if (Math.abs(right.endX - left.startX) <= EPSILON) rightAboveLeft += 1
+      if (leftAboveRight < rightAboveLeft) addPrecedence(left, right)
+      else if (rightAboveLeft < leftAboveRight) addPrecedence(right, left)
+    }
+  }
+  const indegree = new Map(legs.map((leg) => [leg, predecessors.get(leg)!.size]))
+  const ready = legs.filter((leg) => indegree.get(leg) === 0).sort(compareLegs)
+  const ordered: ChannelLeg[] = []
+  const emitted = new Set<ChannelLeg>()
+  while (ordered.length < legs.length) {
+    if (ready.length === 0) {
+      const next = legs.filter((leg) => !emitted.has(leg)).sort(compareLegs)[0]!
+      for (const predecessor of predecessors.get(next)!) outgoing.get(predecessor)!.delete(next)
+      predecessors.get(next)!.clear()
+      indegree.set(next, 0)
+      ready.push(next)
+    }
+    const leg = ready.shift()!
+    ordered.push(leg)
+    emitted.add(leg)
+    for (const next of outgoing.get(leg)!) {
+      const remaining = indegree.get(next)! - 1
+      indegree.set(next, remaining)
+      if (remaining === 0) insertBy(ready, next, compareLegs)
+    }
+  }
+  const tracks: ChannelLeg[][] = []
+  for (const leg of ordered) {
+    let selected = 0
+    for (const predecessor of predecessors.get(leg)!) {
+      selected = Math.max(selected, predecessor.trackIndex + 1)
+    }
+    while (true) {
+      const track = tracks[selected]
+      if (track === undefined) {
+        tracks[selected] = [leg]
+        break
+      }
+      if (track.every((existing) => separatedXIntervals(existing, leg, spacing))) {
+        track.push(leg)
+        break
+      }
+      selected += 1
+    }
+    leg.trackIndex = selected
+  }
+  const offsets = new Float64Array(tracks.length)
+  for (let lowerIndex = 0; lowerIndex < tracks.length; lowerIndex += 1) {
+    for (let upperIndex = 0; upperIndex < lowerIndex; upperIndex += 1) {
+      let required = 0
+      for (const upper of tracks[upperIndex]!) {
+        for (const lower of tracks[lowerIndex]!) {
+          if (separatedXIntervals(upper, lower, spacing)) continue
+          required = Math.max(required, requiredDiagonalOffset(upper, lower, spacing))
+        }
+      }
+      offsets[lowerIndex] = Math.max(offsets[lowerIndex]!, offsets[upperIndex]! + required)
+    }
+    offsets[lowerIndex] = clean(offsets[lowerIndex]!)
+    for (const leg of tracks[lowerIndex]!) leg.trackOffset = offsets[lowerIndex]!
+  }
+  return tracks.length === 0
+    ? 0
+    : clean(Math.max(...offsets) + spacing)
+}
+
+/** Minimal downward shift that keeps two finite diagonal centerlines `spacing` apart. */
+function requiredDiagonalOffset(upper: ChannelLeg, lower: ChannelLeg, spacing: number): number {
+  const difference = [
+    point(upper.startX - lower.startX, 0),
+    point(upper.startX - lower.endX, -spacing),
+    point(upper.endX - lower.endX, 0),
+    point(upper.endX - lower.startX, spacing),
+  ]
+  let required = 0
+  for (let index = 0; index < difference.length; index += 1) {
+    const start = difference[index]!
+    const end = difference[(index + 1) % difference.length]!
+    const minimumX = Math.max(-spacing, Math.min(start.x, end.x))
+    const maximumX = Math.min(spacing, Math.max(start.x, end.x))
+    if (minimumX > maximumX + EPSILON) continue
+    if (Math.abs(end.x - start.x) <= EPSILON) {
+      required = Math.max(required, clearanceOffset(start.x, Math.max(start.y, end.y), spacing))
+      continue
+    }
+    const slope = (end.y - start.y) / (end.x - start.x)
+    const intercept = start.y - slope * start.x
+    required = Math.max(
+      required,
+      clearanceOffset(minimumX, slope * minimumX + intercept, spacing),
+      clearanceOffset(maximumX, slope * maximumX + intercept, spacing),
+    )
+    const stationaryX = slope * spacing / Math.sqrt(1 + slope * slope)
+    if (stationaryX >= minimumX - EPSILON && stationaryX <= maximumX + EPSILON) {
+      required = Math.max(
+        required,
+        clearanceOffset(stationaryX, slope * stationaryX + intercept, spacing),
+      )
+    }
+  }
+  return clean(required)
+}
+
+function clearanceOffset(x: number, y: number, spacing: number): number {
+  return y + Math.sqrt(Math.max(0, spacing * spacing - x * x))
+}
+
+function insideOpenInterval(value: number, first: number, second: number): boolean {
+  return value > Math.min(first, second) + EPSILON && value < Math.max(first, second) - EPSILON
+}
+
+function separatedXIntervals(left: ChannelLeg, right: ChannelLeg, spacing: number): boolean {
+  const leftMinimum = Math.min(left.startX, left.endX)
+  const leftMaximum = Math.max(left.startX, left.endX)
+  const rightMinimum = Math.min(right.startX, right.endX)
+  const rightMaximum = Math.max(right.startX, right.endX)
+  return leftMaximum + spacing <= rightMinimum + EPSILON ||
+    rightMaximum + spacing <= leftMinimum + EPSILON
+}
+
+function insertBy<T>(values: T[], value: T, compare: (left: T, right: T) => number): void {
+  let index = 0
+  while (index < values.length && compare(values[index]!, value) <= 0) index += 1
+  values.splice(index, 0, value)
+}
+
+function routeEdges(graph: NormalizedGraph, placed: ChannelPlacement): RoutedGraph {
+  const paths = new Map<string, readonly LayoutPoint[]>()
+  const edges = graph.edges.map((edge): CoffmanGrahamEdgeGeometry => {
     const start = point(placed.portX[edge.sourcePortIndex]!, placed.portY[edge.sourcePortIndex]!)
     const end = point(placed.portX[edge.targetPortIndex]!, placed.portY[edge.targetPortIndex]!)
-    const sourceLayer = placed.nodeLayer[edge.sourceNodeIndex]!
-    const targetLayer = placed.nodeLayer[edge.targetNodeIndex]!
-    const sourceGuide = point(start.x, layerBounds.get(sourceLayer)!.bottom + graph.options.edgeSpacing)
-    const targetGuide = point(end.x, layerBounds.get(targetLayer)!.top - graph.options.edgeSpacing)
-    const interior = placed.edgePoints.get(edge.id)!.slice(1, -1).flatMap((guide) => {
-      const layer = [...layerBounds.values()].find(({center}) => Math.abs(center - guide.y) <= 1e-5)
-      return layer === undefined
-        ? [guide]
-        : [
-            point(guide.x, layer.top - graph.options.edgeSpacing),
-            point(guide.x, layer.bottom + graph.options.edgeSpacing),
-          ]
-    }).filter(({y}) => y > sourceGuide.y + EPSILON && y < targetGuide.y - EPSILON)
-    const path = strictlyDownwardGuide([start, sourceGuide, ...interior, targetGuide, end])
+    const guide: LayoutPoint[] = [start]
+    for (const leg of placed.legsByEdgeId.get(edge.id)!) {
+      const upper = placed.layerGeometry.get(leg.upperLayer)!
+      const lower = placed.layerGeometry.get(leg.lowerLayer)!
+      guide.push(point(
+        leg.startX,
+        upper.bottom + graph.options.edgeSpacing * SOURCE_RUNWAY_SPACINGS,
+      ))
+      const corridor = placed.corridors.get(leg.upperLayer)!
+      if (leg.trackOffset >= 0) {
+        const diagonalStartY = corridor.diagonalBlockStart +
+          leg.trackOffset
+        guide.push(
+          point(leg.startX, diagonalStartY),
+          point(leg.endX, diagonalStartY + graph.options.edgeSpacing),
+        )
+      }
+      guide.push(point(
+        leg.endX,
+        lower.top - graph.options.edgeSpacing * TARGET_RUNWAY_SPACINGS,
+      ))
+    }
+    guide.push(end)
+    const path = strictlyDownwardGuide(guide)
+    paths.set(edge.id, path)
     const primitives = roundedPrimitives(path, ROUNDED_CORNER_RADIUS)
     const curves = primitivesToCubics(primitives)
     if (curves.length === 0) throw new Error(`Coffman–Graham edge has no rounded path: ${edge.id}`)
     return {id: edge.id, curves: [curves[0]!, ...curves.slice(1)]}
   })
+  return {edges, paths}
+}
+
+function classifyCrossings(
+  paths: ReadonlyMap<string, readonly LayoutPoint[]>,
+): readonly CoffmanGrahamCrossingGeometry[] {
+  const sections = [...paths].flatMap(([edgeId, points]) => points.slice(1).map((endPoint, index) => {
+    const startPoint = points[index]!
+    return {
+      edgeId,
+      startPoint,
+      endPoint,
+      minimumX: Math.min(startPoint.x, endPoint.x),
+      maximumX: Math.max(startPoint.x, endPoint.x),
+      minimumY: Math.min(startPoint.y, endPoint.y),
+      maximumY: Math.max(startPoint.y, endPoint.y),
+    }
+  })).sort((left, right) =>
+      left.minimumY - right.minimumY ||
+      left.maximumY - right.maximumY ||
+      left.edgeId.localeCompare(right.edgeId))
+  const crossings: CoffmanGrahamCrossingGeometry[] = []
+  let active: typeof sections = []
+  for (const right of sections) {
+    active = active.filter((left) => left.maximumY > right.minimumY + EPSILON)
+    for (const left of active) {
+      if (left.edgeId === right.edgeId ||
+          left.maximumX <= right.minimumX + EPSILON ||
+          right.maximumX <= left.minimumX + EPSILON) continue
+      const intersection = openLineIntersection(
+        left.startPoint,
+        left.endPoint,
+        right.startPoint,
+        right.endPoint,
+      )
+      if (intersection === null) continue
+      const leftDiagonal = Math.abs(left.endPoint.x - left.startPoint.x) > EPSILON
+      const rightDiagonal = Math.abs(right.endPoint.x - right.startPoint.x) > EPSILON
+      const leftOver = leftDiagonal !== rightDiagonal
+        ? leftDiagonal
+        : left.edgeId.localeCompare(right.edgeId) < 0
+      crossings.push({
+        overEdgeId: leftOver ? left.edgeId : right.edgeId,
+        underEdgeId: leftOver ? right.edgeId : left.edgeId,
+        point: intersection,
+      })
+    }
+    active.push(right)
+  }
+  return crossings.sort((left, right) =>
+    left.point.y - right.point.y ||
+    left.point.x - right.point.x ||
+    left.overEdgeId.localeCompare(right.overEdgeId) ||
+    left.underEdgeId.localeCompare(right.underEdgeId))
+}
+
+function openLineIntersection(
+  leftStart: LayoutPoint,
+  leftEnd: LayoutPoint,
+  rightStart: LayoutPoint,
+  rightEnd: LayoutPoint,
+): LayoutPoint | null {
+  const leftDx = leftEnd.x - leftStart.x
+  const leftDy = leftEnd.y - leftStart.y
+  const rightDx = rightEnd.x - rightStart.x
+  const rightDy = rightEnd.y - rightStart.y
+  const denominator = leftDx * rightDy - leftDy * rightDx
+  if (Math.abs(denominator) <= EPSILON) return null
+  const offsetX = rightStart.x - leftStart.x
+  const offsetY = rightStart.y - leftStart.y
+  const leftRatio = (offsetX * rightDy - offsetY * rightDx) / denominator
+  const rightRatio = (offsetX * leftDy - offsetY * leftDx) / denominator
+  if (leftRatio <= EPSILON || leftRatio >= 1 - EPSILON ||
+      rightRatio <= EPSILON || rightRatio >= 1 - EPSILON) return null
+  return point(leftStart.x + leftDx * leftRatio, leftStart.y + leftDy * leftRatio)
 }
 
 function strictlyDownwardGuide(values: readonly LayoutPoint[]): readonly LayoutPoint[] {
@@ -382,7 +844,7 @@ function roundedPrimitives(path: readonly LayoutPoint[], radius: number): readon
 }
 
 function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly CoffmanGrahamCurveSegment[] {
-  return primitives.map((primitive, index): CoffmanGrahamCurveSegment => {
+  return primitives.map((primitive): CoffmanGrahamCurveSegment => {
     if (primitive.kind === "quadratic") {
       return {
         startPoint: primitive.start,
@@ -393,28 +855,15 @@ function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly C
         endPoint: primitive.end,
       }
     }
-    const previous = primitives[index - 1]
-    const next = primitives[index + 1]
-    const startHandle = previous?.kind === "quadratic"
-      ? subtract(previous.end, previousCubicControl2(previous))
-      : scale(subtract(primitive.end, primitive.start), 1 / 3)
-    const endHandle = next?.kind === "quadratic"
-      ? subtract(nextCubicControl1(next), next.start)
-      : scale(subtract(primitive.end, primitive.start), 1 / 3)
     return {
       startPoint: primitive.start,
-      controlPoints: [add(primitive.start, startHandle), subtract(primitive.end, endHandle)],
+      controlPoints: [
+        interpolate(primitive.start, primitive.end, 1 / 3),
+        interpolate(primitive.start, primitive.end, 2 / 3),
+      ],
       endPoint: primitive.end,
     }
   })
-}
-
-function previousCubicControl2(primitive: Extract<RoundedPrimitive, {kind: "quadratic"}>): LayoutPoint {
-  return interpolate(primitive.end, primitive.control, 2 / 3)
-}
-
-function nextCubicControl1(primitive: Extract<RoundedPrimitive, {kind: "quadratic"}>): LayoutPoint {
-  return interpolate(primitive.start, primitive.control, 2 / 3)
 }
 
 function pushLine(primitives: RoundedPrimitive[], start: LayoutPoint, end: LayoutPoint): void {
@@ -426,6 +875,7 @@ function materialize(
   graph: NormalizedGraph,
   placed: Placement,
   routed: readonly CoffmanGrahamEdgeGeometry[],
+  routedCrossings: readonly CoffmanGrahamCrossingGeometry[],
 ): CoffmanGrahamLayoutResult {
   const rawBounds = geometryBounds(graph, placed, routed)
   const shiftX = graph.options.padding - rawBounds.x
@@ -441,6 +891,11 @@ function materialize(
   const edges = routed.map((edge): CoffmanGrahamEdgeGeometry => ({
     id: edge.id,
     curves: [translateCurve(edge.curves[0]), ...edge.curves.slice(1).map(translateCurve)],
+  }))
+  const crossings = routedCrossings.map((crossing): CoffmanGrahamCrossingGeometry => ({
+    overEdgeId: crossing.overEdgeId,
+    underEdgeId: crossing.underEdgeId,
+    point: translate(crossing.point),
   }))
   const ports: CoffmanGrahamPortGeometry[] = []
   for (const index of [...usedPorts].sort((left, right) => compareIds(graph.ports[left]!, graph.ports[right]!))) {
@@ -468,6 +923,7 @@ function materialize(
     })),
     ports,
     edges,
+    crossings,
   }
 }
 

@@ -102,6 +102,7 @@ describe("standard package-owned Layout Storybook", () => {
     expect(renderer).not.toContain("arrowTips")
     expect(renderer).not.toContain("separateSemanticEdge")
     expect(renderer).toContain("sampleCurveChain")
+    expect(renderer).toContain("splitPolylineAtGaps")
     expect(registry).toContain('body: {kind: "canvas", canvasId: "nodes-storybook-canvas"}')
     expect(registry).toContain('entrypoint: join(packagesRoot, "layout/storybook/layout.stories.ts")')
     expect(await Bun.file(join(storybookRoot, "layout-storybook-body.html")).exists()).toBeFalse()
@@ -231,8 +232,9 @@ describe("standard package-owned Layout Storybook", () => {
     expect(Math.max(...[...layers.values()].map((nodes) => nodes.length))).toBeLessThanOrEqual(4)
     expect(result.edges.every(({curves}) => curves.every((curve) =>
       curve.startPoint.y < curve.endPoint.y))).toBeTrue()
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 3372, height: 2052})
-    expect(hash(result)).toBe("19125d0482e8befcec28e862cacf7bd7dcb1a26a8bdfdbe10784a226b7fa4e5d")
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 3372, height: 3681.9360215})
+    expect(result.crossings).toHaveLength(192)
+    expect(hash(result)).toBe("3af3d3c4e0087f45b6761db78980a1c91b5f10c020cdae56c67df6f133fe634b")
   })
 
   test("keeps Storybook outside production exports and splits policy implementations", async () => {

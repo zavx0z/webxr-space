@@ -16,6 +16,7 @@ export type CoffmanGrahamLayoutNode = Readonly<{
 export type CoffmanGrahamLayoutPort = Readonly<{
   id: string
   nodeId: string
+  /** Measured node-side slot; the policy assigns port IDs by connection order. */
   x: number
 }>
 
@@ -26,6 +27,7 @@ export type CoffmanGrahamLayoutOptions = Readonly<{
   maxNodesPerLayer?: number
   nodeSpacing?: number
   layerSpacing?: number
+  /** Minimum Euclidean centerline clearance for compatible route sections. */
   edgeSpacing?: number
   padding?: number
 }>
@@ -55,12 +57,20 @@ export type CoffmanGrahamEdgeGeometry = Readonly<{
   curves: readonly [CoffmanGrahamCurveSegment, ...CoffmanGrahamCurveSegment[]]
 }>
 
+/** One classified residual crossing rendered as a stable over/under bridge. */
+export type CoffmanGrahamCrossingGeometry = Readonly<{
+  overEdgeId: string
+  underEdgeId: string
+  point: LayoutPoint
+}>
+
 export type CoffmanGrahamLayoutResult = Readonly<{
   direction: "DOWN"
   bounds: LayoutRectangle
   nodes: readonly LayoutNodeGeometry[]
   ports: readonly CoffmanGrahamPortGeometry[]
   edges: readonly CoffmanGrahamEdgeGeometry[]
+  crossings: readonly CoffmanGrahamCrossingGeometry[]
 }>
 
 export type CoffmanGrahamCycleWitness = Readonly<{

@@ -7,6 +7,7 @@ import type {
 import {solveCoffmanGraham} from "./coffman-graham/solver.ts"
 
 export type {
+  CoffmanGrahamCrossingGeometry,
   CoffmanGrahamCurveSegment,
   CoffmanGrahamCycleWitness,
   CoffmanGrahamEdgeGeometry,

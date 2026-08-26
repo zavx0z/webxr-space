@@ -19,6 +19,7 @@ export type {
   TopDownPortSide,
 } from "./top-down.ts"
 export type {
+  CoffmanGrahamCrossingGeometry,
   CoffmanGrahamCurveSegment,
   CoffmanGrahamCycleWitness,
   CoffmanGrahamEdgeGeometry,

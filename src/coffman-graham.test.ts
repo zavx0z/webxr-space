@@ -8,7 +8,7 @@ import {
   type CoffmanGrahamLayoutResult,
 } from "./coffman-graham.ts"
 
-const DENSE_GRAPH = TOP_DOWN_DENSE_GRAPH as CoffmanGrahamLayoutGraph
+const DENSE_GRAPH: CoffmanGrahamLayoutGraph = TOP_DOWN_DENSE_GRAPH
 
 describe("Coffman–Graham width-bounded layered policy", () => {
   test("keeps the 54/85 stress graph compact, independent and node-safe", () => {
@@ -21,15 +21,42 @@ describe("Coffman–Graham width-bounded layered policy", () => {
     expect(result.edges).toHaveLength(85)
     expect(result.ports).toHaveLength(170)
     expect(Math.max(...[...centers.values()].map((nodes) => nodes.length))).toBeLessThanOrEqual(4)
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 3372, height: 2052})
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 3372, height: 3681.9360215})
     expect(result.bounds.width / result.bounds.height).toBeLessThan(2)
     expect(sourceEndpoints.size).toBe(result.edges.length)
     expect(targetEndpoints.size).toBe(result.edges.length)
+    expect(result.edges.every(({curves}) => {
+      const terminal = curves[0]!
+      return Math.abs(terminal.startPoint.x - terminal.endPoint.x) <= 1e-7 &&
+        terminal.endPoint.y - terminal.startPoint.y >= DENSE_GRAPH.layoutOptions!.edgeSpacing!
+    })).toBeTrue()
+    expect(result.edges.every(({curves}) => {
+      const terminal = curves.at(-1)!
+      return Math.abs(terminal.startPoint.x - terminal.endPoint.x) <= 1e-7 &&
+        terminal.endPoint.y - terminal.startPoint.y >=
+          DENSE_GRAPH.layoutOptions!.edgeSpacing! * 8 - 5
+    })).toBeTrue()
     expect(nodeOverlaps(result)).toEqual([])
     expect(curveNodeCrossings(result, DENSE_GRAPH)).toEqual([])
     expect(horizontalSegments(result)).toEqual([])
+    expect(result.crossings).toHaveLength(192)
+    expect(result.crossings.some(({overEdgeId, underEdgeId}) => {
+      const ids = new Set([overEdgeId, underEdgeId])
+      return ids.has("flow-046-rank-5-node-00-rank-6-node-00") &&
+        ids.has("flow-083-rank-0-node-04-rank-6-node-00")
+    })).toBeFalse()
+    expect(result.crossings.length).toBeGreaterThanOrEqual(edgeSectionCrossingKeys(result).length)
+    expect(terminalCrossingViolations(
+      result,
+      DENSE_GRAPH,
+      DENSE_GRAPH.layoutOptions!.edgeSpacing! * 6,
+    )).toEqual([])
     expect(collinearEdgeOverlaps(result)).toEqual([])
-    expect(hash(result)).toBe("19125d0482e8befcec28e862cacf7bd7dcb1a26a8bdfdbe10784a226b7fa4e5d")
+    expect(diagonalClearanceViolations(
+      result,
+      DENSE_GRAPH.layoutOptions!.edgeSpacing!,
+    )).toEqual([])
+    expect(hash(result)).toBe("3af3d3c4e0087f45b6761db78980a1c91b5f10c020cdae56c67df6f133fe634b")
   })
 
   test("is invariant to input collection order", () => {
@@ -77,6 +104,57 @@ describe("Coffman–Graham width-bounded layered policy", () => {
     expect(new Set(result.edges.map(({curves}) => JSON.stringify(curves[0]!.startPoint))).size).toBe(2)
     expect(new Set(result.edges.map(({curves}) => JSON.stringify(curves.at(-1)!.endPoint))).size).toBe(2)
     expect(collinearEdgeOverlaps(result)).toEqual([])
+  })
+
+  test("orders port slots by adjacent connections", () => {
+    const graph: CoffmanGrahamLayoutGraph = {
+      nodes: [
+        {id: "a", width: 100, height: 40},
+        {id: "b", width: 100, height: 40},
+        {id: "c", width: 120, height: 50},
+      ],
+      ports: [
+        {id: "a/out", nodeId: "a", x: 50},
+        {id: "b/out", nodeId: "b", x: 50},
+        {id: "c/from-a", nodeId: "c", x: 20},
+        {id: "c/from-b", nodeId: "c", x: 100},
+      ],
+      edges: [
+        {id: "a-c", sourcePortId: "a/out", targetPortId: "c/from-a"},
+        {id: "b-c", sourcePortId: "b/out", targetPortId: "c/from-b"},
+      ],
+    }
+    const result = layoutCoffmanGraham(graph)
+    const target = result.nodes.find(({id}) => id === "c")!
+    const port = new Map(result.ports.map((value) => [value.id, value]))
+
+    expect(port.get("c/from-a")!.x).toBeGreaterThan(port.get("c/from-b")!.x)
+    expect([
+      port.get("c/from-a")!.x - target.x,
+      port.get("c/from-b")!.x - target.x,
+    ].sort((left, right) => left - right)).toEqual([20, 100])
+    expect(result.crossings).toEqual([])
+  })
+
+  test("fails closed for overlapping port-order slots", () => {
+    const graph: CoffmanGrahamLayoutGraph = {
+      nodes: [
+        {id: "a", width: 100, height: 40},
+        {id: "b", width: 100, height: 40},
+        {id: "c", width: 100, height: 40},
+      ],
+      ports: [
+        {id: "a/out", nodeId: "a", x: 50},
+        {id: "b/out", nodeId: "b", x: 50},
+        {id: "c/first", nodeId: "c", x: 50},
+        {id: "c/second", nodeId: "c", x: 50},
+      ],
+      edges: [
+        {id: "a-c", sourcePortId: "a/out", targetPortId: "c/first"},
+        {id: "b-c", sourcePortId: "b/out", targetPortId: "c/second"},
+      ],
+    }
+    expect(() => layoutCoffmanGraham(graph)).toThrow("port slots overlap: c/NORTH")
   })
 
   test("rejects cycles before Coffman–Graham layering", () => {
@@ -168,6 +246,182 @@ function collinearEdgeOverlaps(result: CoffmanGrahamLayoutResult): string[] {
     }
   }
   return [...new Set(overlaps)].sort()
+}
+
+function edgeSectionCrossingKeys(result: CoffmanGrahamLayoutResult): string[] {
+  const lines = result.edges.flatMap((edge) => edge.curves.flatMap((curve) =>
+    curveFlatness(curve) < 1e-5
+      ? [{edgeId: edge.id, start: curve.startPoint, end: curve.endPoint}]
+      : []))
+  const crossings: string[] = []
+  for (let leftIndex = 0; leftIndex < lines.length; leftIndex += 1) {
+    const left = lines[leftIndex]!
+    for (let rightIndex = leftIndex + 1; rightIndex < lines.length; rightIndex += 1) {
+      const right = lines[rightIndex]!
+      if (left.edgeId === right.edgeId) continue
+      const intersection = openSegmentIntersection(left.start, left.end, right.start, right.end)
+      if (intersection !== null) {
+        crossings.push(crossingKey(left.edgeId, right.edgeId, intersection))
+      }
+    }
+  }
+  return crossings.sort()
+}
+
+function terminalCrossingViolations(
+  result: CoffmanGrahamLayoutResult,
+  graph: CoffmanGrahamLayoutGraph,
+  minimum: number,
+): string[] {
+  const portYById = new Map(result.ports.map(({id, y}) => [id, y]))
+  const targetYByEdgeId = new Map(graph.edges.map(({id, targetPortId}) => [
+    id,
+    portYById.get(targetPortId)!,
+  ]))
+  return result.crossings.flatMap(({overEdgeId, underEdgeId, point}) =>
+    [overEdgeId, underEdgeId].flatMap((edgeId) => {
+      const distance = targetYByEdgeId.get(edgeId)! - point.y
+      return distance > 1e-7 && distance < minimum - 1e-7
+        ? [`${edgeId}:${distance.toFixed(6)}`]
+        : []
+    })).sort()
+}
+
+function crossingKey(
+  firstEdgeId: string,
+  secondEdgeId: string,
+  point: Readonly<{x: number; y: number}>,
+): string {
+  const [first, second] = [firstEdgeId, secondEdgeId].sort()
+  return `${first}:${second}:${point.x.toFixed(3)},${point.y.toFixed(3)}`
+}
+
+function openSegmentIntersection(
+  leftStart: Readonly<{x: number; y: number}>,
+  leftEnd: Readonly<{x: number; y: number}>,
+  rightStart: Readonly<{x: number; y: number}>,
+  rightEnd: Readonly<{x: number; y: number}>,
+): Readonly<{x: number; y: number}> | null {
+  const leftDx = leftEnd.x - leftStart.x
+  const leftDy = leftEnd.y - leftStart.y
+  const rightDx = rightEnd.x - rightStart.x
+  const rightDy = rightEnd.y - rightStart.y
+  const denominator = leftDx * rightDy - leftDy * rightDx
+  if (Math.abs(denominator) <= 1e-7) return null
+  const offsetX = rightStart.x - leftStart.x
+  const offsetY = rightStart.y - leftStart.y
+  const leftRatio = (offsetX * rightDy - offsetY * rightDx) / denominator
+  const rightRatio = (offsetX * leftDy - offsetY * leftDx) / denominator
+  if (leftRatio <= 1e-7 || leftRatio >= 1 - 1e-7 ||
+      rightRatio <= 1e-7 || rightRatio >= 1 - 1e-7) return null
+  return {
+    x: leftStart.x + leftDx * leftRatio,
+    y: leftStart.y + leftDy * leftRatio,
+  }
+}
+
+function diagonalClearanceViolations(
+  result: CoffmanGrahamLayoutResult,
+  minimum: number,
+): string[] {
+  const linesByCorridor = rawDiagonalSections(result)
+  const violations: string[] = []
+  for (let corridor = 0; corridor < linesByCorridor.length; corridor += 1) {
+    const lines = linesByCorridor[corridor]!
+    for (let leftIndex = 0; leftIndex < lines.length; leftIndex += 1) {
+      const left = lines[leftIndex]!
+      for (let rightIndex = leftIndex + 1; rightIndex < lines.length; rightIndex += 1) {
+        const right = lines[rightIndex]!
+        if (left.edgeId === right.edgeId) continue
+        const clearance = segmentDistance(left.start, left.end, right.start, right.end)
+        if (clearance + 1e-5 < minimum) {
+          violations.push(`${corridor}:${left.edgeId}/${right.edgeId}:${clearance.toFixed(6)}`)
+        }
+      }
+    }
+    const origins = [...new Set(lines.map(({originY}) => originY))].sort((left, right) => left - right)
+    for (const origin of origins.slice(1)) {
+      const current = lines.filter(({originY}) => Math.abs(originY - origin) <= 1e-5)
+      const previous = lines.filter(({originY}) => originY < origin - 1e-5)
+      const binding = current.some((lower) => previous.some((upper) =>
+        Math.abs(segmentDistance(upper.start, upper.end, lower.start, lower.end) - minimum) <= 1e-4))
+      if (!binding) {
+        violations.push(`${corridor}:origin:${origin.toFixed(5)}:unbound`)
+      }
+    }
+  }
+  return violations.sort()
+}
+
+function rawDiagonalSections(result: CoffmanGrahamLayoutResult) {
+  const layers = [...Map.groupBy(result.nodes, (node) => node.y + node.height / 2).values()]
+    .map((nodes) => ({
+      top: Math.min(...nodes.map(({y}) => y)),
+      bottom: Math.max(...nodes.map(({y, height}) => y + height)),
+      center: nodes[0]!.y + nodes[0]!.height / 2,
+    }))
+    .sort((left, right) => left.center - right.center)
+  const sections = Array.from({length: Math.max(0, layers.length - 1)}, () => [] as Array<{
+    edgeId: string
+    originY: number
+    start: Readonly<{x: number; y: number}>
+    end: Readonly<{x: number; y: number}>
+  }>)
+  for (const edge of result.edges) {
+    for (let index = 1; index < edge.curves.length - 1; index += 1) {
+      const curve = edge.curves[index]!
+      const previous = edge.curves[index - 1]!
+      const next = edge.curves[index + 1]!
+      const dx = curve.endPoint.x - curve.startPoint.x
+      const dy = curve.endPoint.y - curve.startPoint.y
+      if (curveFlatness(curve) >= 1e-5 || curveFlatness(previous) < 1e-5 ||
+          curveFlatness(next) < 1e-5 || Math.abs(dx) <= 1e-7 || Math.abs(dy) <= 1e-7) continue
+      const start = quadraticCorner(previous)
+      const end = quadraticCorner(next)
+      const corridor = layers.findIndex((layer, candidate) => {
+        const lower = layers[candidate + 1]
+        return lower !== undefined && start.y > layer.bottom + 1e-5 && end.y < lower.top - 1e-5
+      })
+      if (corridor >= 0) sections[corridor]!.push({edgeId: edge.id, originY: start.y, start, end})
+    }
+  }
+  return sections
+}
+
+function quadraticCorner(curve: CoffmanGrahamCurveSegment) {
+  return {
+    x: curve.startPoint.x + (curve.controlPoints[0].x - curve.startPoint.x) * 1.5,
+    y: curve.startPoint.y + (curve.controlPoints[0].y - curve.startPoint.y) * 1.5,
+  }
+}
+
+function segmentDistance(
+  leftStart: Readonly<{x: number; y: number}>,
+  leftEnd: Readonly<{x: number; y: number}>,
+  rightStart: Readonly<{x: number; y: number}>,
+  rightEnd: Readonly<{x: number; y: number}>,
+): number {
+  if (openSegmentIntersection(leftStart, leftEnd, rightStart, rightEnd) !== null) return 0
+  return Math.min(
+    pointSegmentDistance(leftStart, rightStart, rightEnd),
+    pointSegmentDistance(leftEnd, rightStart, rightEnd),
+    pointSegmentDistance(rightStart, leftStart, leftEnd),
+    pointSegmentDistance(rightEnd, leftStart, leftEnd),
+  )
+}
+
+function pointSegmentDistance(
+  point: Readonly<{x: number; y: number}>,
+  start: Readonly<{x: number; y: number}>,
+  end: Readonly<{x: number; y: number}>,
+): number {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const lengthSquared = dx * dx + dy * dy
+  const ratio = lengthSquared <= 1e-7
+    ? 0
+    : Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared))
+  return Math.hypot(point.x - (start.x + dx * ratio), point.y - (start.y + dy * ratio))
 }
 
 function cubicPoint(curve: CoffmanGrahamCurveSegment, t: number) {

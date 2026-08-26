@@ -47,6 +47,15 @@ assignments, а каждый candidate передаёт тому же общем
 разрешает source=`SOUTH`, target=`NORTH` и использует отдельный pipeline:
 один Dagre/Sugiyama placement, отдельную Dagre point chain каждого named edge и
 одно локальное Bézier-скругление углов без горизонтальных terminal shelves.
+У Coffman–Graham боковой переход заканчивается до фиксированной target ingress
+зоны: последние восемь `edgeSpacing` зарезервированы для прямого входа в
+`NORTH` port, поэтому crossings не образуют `X` непосредственно над нодой.
+Policy всегда сохраняет переданный набор X-слотов каждой стороны ноды и
+назначает их связям в порядке соседних dummy-lanes. Альтернативного режима и
+runtime-ветвления port order нет.
+Vertical lanes используют `edgeSpacing` напрямую. Diagonal tracks получают
+минимальные pairwise Y-offsets, обеспечивающие тот же евклидов `edgeSpacing`;
+diagonal rise не прибавляется к каждому pitch консервативно.
 Диагональные и vertical sections остаются прямыми. У edges нет `constraint`,
 `tree/cross/shortcut` или выбора router-а. Все связи используют один cubic
 connection type. Top-down не импортирует
@@ -59,7 +68,9 @@ compound solver или adaptive candidate search; fixed/adaptive также не
 пересечения и назначают координаты. Semantic edges не объединяются: каждый
 получает свою strictly-downward point chain, прямые участки и только локально
 скруглённые углы радиусом `5`. Эта policy не является веткой `top-down` и не
-выбирается автоматически по размеру graph.
+выбирается автоматически по размеру graph. Cost-aware channel order удаляет
+избежные vertical/diagonal crossings; каждая оставшаяся inversion фиксированных
+anchors публикуется одним stable crossing event для bridge/gap presentation.
 
 ## Протокол
 
