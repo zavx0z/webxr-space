@@ -134,9 +134,9 @@ describe("layout Worker policy bundle boundaries", () => {
       sha256: "e4e102a0f376d1b9283f363b7838be796b805c6939ddb48cf66ade6a72bf1fd0",
     })
     expect(coffmanGrahamExecutor).toMatchObject({
-      bytes: 31_019,
-      gzipBytes: 10_550,
-      sha256: "ffdb645f33f785450a5a84c82d5bfe6a3a0c8ee9c294ff73931aa233a07094c2",
+      bytes: 37_067,
+      gzipBytes: 12_701,
+      sha256: "6896473d2ad8c73c5d6632dcb941990681bc3de2dc725e57739d4aa5ebdc94f2",
     })
     expect(coffmanGrahamClient).toMatchObject({
       bytes: 1_493,
