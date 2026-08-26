@@ -3,6 +3,11 @@ import type {
   AdaptiveLayoutGraph,
   AdaptiveNoLegalSideWitness,
 } from "@nodes/layout/adaptive"
+import type {
+  CoffmanGrahamCycleWitness,
+  CoffmanGrahamLayoutGraph,
+  CoffmanGrahamLayoutResult,
+} from "@nodes/layout/coffman-graham"
 import type {FixedLayoutGraph, FixedLayoutResult} from "@nodes/layout/fixed"
 import type {
   TopDownCycleWitness,
@@ -49,6 +54,14 @@ export type SerializedTopDownLayoutError = Readonly<{
   message: string
   code: "CYCLE_DETECTED"
   witness: TopDownCycleWitness
+}>
+
+/** Serializable form of a Coffman–Graham DAG cycle detected before layering. */
+export type SerializedCoffmanGrahamLayoutError = Readonly<{
+  name: "CoffmanGrahamLayoutError"
+  message: string
+  code: "CYCLE_DETECTED"
+  witness: CoffmanGrahamCycleWitness
 }>
 
 /** Явная вычислительная ошибка без main-thread fallback. */
@@ -111,4 +124,18 @@ export type TopDownWorkerInput = WorkerInput<TopDownLayoutGraph>
 export type TopDownWorkerEndpoint = WorkerEndpoint<
   TopDownWorkerRequest,
   TopDownWorkerResponse
+>
+
+/** Width-bounded Coffman–Graham policy with a typed cycle witness. */
+export type CoffmanGrahamWorkerRequest = WorkerRequest<CoffmanGrahamLayoutGraph>
+export type CoffmanGrahamWorkerSuccess = WorkerSuccess<CoffmanGrahamLayoutResult>
+export type CoffmanGrahamWorkerFailure = WorkerFailure<
+  SerializedWorkerError | SerializedCoffmanGrahamLayoutError
+>
+export type CoffmanGrahamWorkerResponse =
+  CoffmanGrahamWorkerSuccess | CoffmanGrahamWorkerFailure
+export type CoffmanGrahamWorkerInput = WorkerInput<CoffmanGrahamLayoutGraph>
+export type CoffmanGrahamWorkerEndpoint = WorkerEndpoint<
+  CoffmanGrahamWorkerRequest,
+  CoffmanGrahamWorkerResponse
 >

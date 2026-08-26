@@ -19,6 +19,8 @@ describe("layout Worker policy bundle boundaries", () => {
       ".",
       "./adaptive/client",
       "./adaptive/executor",
+      "./coffman-graham/client",
+      "./coffman-graham/executor",
       "./fixed/client",
       "./fixed/executor",
       "./top-down/client",
@@ -37,6 +39,7 @@ describe("layout Worker policy bundle boundaries", () => {
     const fixed = await Bun.file(join(packageRoot, "fixed/executor.ts")).text()
     const adaptive = await Bun.file(join(packageRoot, "adaptive/executor.ts")).text()
     const topDown = await Bun.file(join(packageRoot, "top-down/executor.ts")).text()
+    const coffmanGraham = await Bun.file(join(packageRoot, "coffman-graham/executor.ts")).text()
 
     expect(transport).not.toMatch(/@nodes\/layout/)
     expect(executor).not.toMatch(/@nodes\/layout/)
@@ -47,6 +50,10 @@ describe("layout Worker policy bundle boundaries", () => {
     expect(topDown).toContain('from "@nodes/layout/top-down"')
     expect(topDown).not.toContain("@nodes/layout/fixed")
     expect(topDown).not.toContain("@nodes/layout/adaptive")
+    expect(coffmanGraham).toContain('from "@nodes/layout/coffman-graham"')
+    expect(coffmanGraham).not.toContain("@nodes/layout/fixed")
+    expect(coffmanGraham).not.toContain("@nodes/layout/adaptive")
+    expect(coffmanGraham).not.toContain("@nodes/layout/top-down")
   })
 
   test("builds isolated policy executors and solver-free clients", async () => {
@@ -56,6 +63,12 @@ describe("layout Worker policy bundle boundaries", () => {
     const adaptiveClient = await buildFixture("adaptive-worker-client-consumer.ts")
     const topDownExecutor = await buildFixture("top-down-worker-executor-consumer.ts")
     const topDownClient = await buildFixture("top-down-worker-client-consumer.ts")
+    const coffmanGrahamExecutor = await buildFixture(
+      "coffman-graham-worker-executor-consumer.ts",
+    )
+    const coffmanGrahamClient = await buildFixture(
+      "coffman-graham-worker-client-consumer.ts",
+    )
 
     expect(fixedExecutor.source).toContain("Port has conflicting edge roles")
     expect(fixedExecutor.source).toContain("NO_LEGAL_LAYOUT")
@@ -65,17 +78,27 @@ describe("layout Worker policy bundle boundaries", () => {
     expect(adaptiveExecutor.source).not.toContain("Port has conflicting edge roles")
     expect(fixedExecutor.source).not.toContain("TOP_DOWN_CYCLE_DETECTED")
     expect(adaptiveExecutor.source).not.toContain("TOP_DOWN_CYCLE_DETECTED")
+    expect(fixedExecutor.source).not.toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
+    expect(adaptiveExecutor.source).not.toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
+    expect(topDownExecutor.source).not.toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
     expect(topDownExecutor.source).toContain("TOP_DOWN_CYCLE_DETECTED")
     expect(topDownExecutor.source).not.toContain("NO_LEGAL_LAYOUT")
     expect(topDownExecutor.source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
     expect(topDownExecutor.source).not.toContain("Port has conflicting edge roles")
+    expect(coffmanGrahamExecutor.source).toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
+    expect(coffmanGrahamExecutor.source).not.toContain("TOP_DOWN_CYCLE_DETECTED")
+    expect(coffmanGrahamExecutor.source).not.toContain("NO_LEGAL_LAYOUT")
+    expect(coffmanGrahamExecutor.source)
+      .not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
+    expect(coffmanGrahamExecutor.source).not.toContain("Port has conflicting edge roles")
 
-    for (const client of [fixedClient, adaptiveClient, topDownClient]) {
+    for (const client of [fixedClient, adaptiveClient, topDownClient, coffmanGrahamClient]) {
       expect(client.source).toContain("Stale layout generation")
       expect(client.source).not.toContain("NO_LEGAL_LAYOUT")
       expect(client.source).not.toContain("NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT")
       expect(client.source).not.toContain("Port has conflicting edge roles")
       expect(client.source).not.toContain("TOP_DOWN_CYCLE_DETECTED")
+      expect(client.source).not.toContain("COFFMAN_GRAHAM_CYCLE_DETECTED")
     }
 
     expect(fixedExecutor).toMatchObject({
@@ -99,9 +122,9 @@ describe("layout Worker policy bundle boundaries", () => {
       sha256: "d117634350f5567efcf5997c24d1a3d0818a36bfc2951b2daeaf739289885296",
     })
     expect(topDownExecutor).toMatchObject({
-      bytes: 59_513,
-      gzipBytes: 20_652,
-      sha256: "9415b31c99d9b299e72ed549e6e2885a64653053f74b4d14b48844cdfc02b585",
+      bytes: 59_612,
+      gzipBytes: 20_674,
+      sha256: "3b30e8be7b2f0eb3038c653abde8a9f033d3d196c11c27ad4d3cf9494f5207fa",
     })
     expect(fixedClient.bytes).toBeLessThan(8_000)
     expect(adaptiveClient.bytes).toBeLessThan(8_000)
@@ -110,6 +133,17 @@ describe("layout Worker policy bundle boundaries", () => {
       gzipBytes: 658,
       sha256: "e4e102a0f376d1b9283f363b7838be796b805c6939ddb48cf66ade6a72bf1fd0",
     })
+    expect(coffmanGrahamExecutor).toMatchObject({
+      bytes: 31_019,
+      gzipBytes: 10_550,
+      sha256: "ffdb645f33f785450a5a84c82d5bfe6a3a0c8ee9c294ff73931aa233a07094c2",
+    })
+    expect(coffmanGrahamClient).toMatchObject({
+      bytes: 1_493,
+      gzipBytes: 657,
+      sha256: "42021ff4d58e4beba049286ee7a8a16a6b1575e3c1786f52ae6a9e096b62063d",
+    })
+    expect(coffmanGrahamClient.bytes).toBeLessThan(8_000)
   })
 })
 
