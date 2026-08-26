@@ -43,3 +43,16 @@ superproject.
    initially fits and centers the entire graph through one retained-root
    transform. Viewport resize updates only that transform; it does not rerun the
    top-down solver or mutate the source projection.
+7. Presentation derives internal graph-theoretic placement roles without replacing source
+   `calls` evidence: one stable `tree` predecessor per non-root node forms the
+   readable backbone, remaining relations are `cross`, and an edge with an
+   alternate public path is `shortcut`. Эти роли не создают визуальные типы:
+   все связи используют один spline style. Every source edge stays addressable
+   through the layout ID map.
+8. Каждый relation получает собственные source/target route ports. Ports одного
+   node+role распределяются детерминированно по ширине карточки; совпадающие
+   endpoints, общие trunks и физический bundling запрещены.
+9. Default overview draws the 46-edge placement backbone so individual paths
+   remain readable. The complete 85-relation projection remains available at
+   the same exact route with `?relations=all`; this disclosure changes only
+   retained draw primitives and never reruns or mutates source geometry.

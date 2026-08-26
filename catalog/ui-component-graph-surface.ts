@@ -7,7 +7,10 @@ import {UiSurface, Z} from "@layout/core/surface"
 import type {LayoutPoint} from "@nodes/layout/types"
 import type {TopDownLayoutResult} from "@nodes/layout/top-down"
 import type {UiComponentGraphNode} from "../scripts/ui-component-graph.ts"
-import {createUiComponentGraphLayout, type UiComponentGraphLayout} from "./ui-component-graph-model.ts"
+import {
+  createUiComponentGraphLayout,
+  type UiComponentGraphLayout,
+} from "./ui-component-graph-model.ts"
 import type {UiGraphStoryPreview} from "./ui-story-adapter.ts"
 
 type Rect = Readonly<{x: number; y: number; w: number; h: number}>
@@ -24,13 +27,14 @@ const GRAPH_PADDING = 28
 const NODE_HEADER_HEIGHT = 42
 const NODE_INSET = 7
 const NODE_RADIUS = 5
-const EDGE_COLOR = new Color(0.26, 0.63, 0.76, 0.74)
+const EDGE_COLOR = new Color(0.68, 0.72, 0.75, 0.86)
 const ELEMENT_HEADER = new Color(0.18, 0.39, 0.46, 0.94)
 const COMPONENT_HEADER = new Color(0.34, 0.25, 0.48, 0.94)
 
 export class UiComponentGraphSurface extends UiSurface {
   readonly #layout: UiComponentGraphLayout
   readonly #previews: ReadonlyMap<string, UiGraphStoryPreview>
+  readonly #showAllRelations: boolean
   readonly #contentRoot: Object3D
   #materialized = false
   #materializedFont: unknown = null
@@ -41,10 +45,12 @@ export class UiComponentGraphSurface extends UiSurface {
   constructor(
     graph: UiComponentGraphLayout["graph"],
     previews: ReadonlyMap<string, UiGraphStoryPreview>,
+    options: Readonly<{showAllRelations?: boolean}> = {},
   ) {
     super({bgColor: palette.bg, borderColor: null})
     this.#layout = createUiComponentGraphLayout(graph)
     this.#previews = previews
+    this.#showAllRelations = options.showAllRelations === true
     this.node.name = "UiComponentGraphSurface"
     this.#contentRoot = this.createRetainedParent()
     this.#contentRoot.name = "UiComponentGraphSurface.contentRoot"
@@ -53,6 +59,7 @@ export class UiComponentGraphSurface extends UiSurface {
   get diagnostics(): Readonly<{
     nodes: number
     edges: number
+    visibleEdges: number
     livePreviews: number
     missingPreviews: number
     failedPreviews: number
@@ -64,6 +71,9 @@ export class UiComponentGraphSurface extends UiSurface {
     return Object.freeze({
       nodes: this.#layout.graph.nodes.length,
       edges: this.#layout.graph.edges.length,
+      visibleEdges: this.#showAllRelations
+        ? this.#layout.graph.edges.length
+        : [...this.#layout.edgeKindByLayoutId.values()].filter((kind) => kind === "tree").length,
       ...previewDiagnostics,
       fitScale: this.#fitScale,
       bounds: this.#layout.result.bounds,
@@ -94,7 +104,7 @@ export class UiComponentGraphSurface extends UiSurface {
         style: {background: palette.bg, borderColor: "border", borderWidth: 1, borderRadius: 0},
       })
       Typography(this, 12, 0, Math.max(1, this.rectW - 24), HEADER_HEIGHT, {
-        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.#layout.graph.edges.length} связей · dependency → consumer · fit ${(this.#fitScale * 100).toFixed(0)}%`,
+        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.diagnostics.visibleEdges}/${this.#layout.graph.edges.length} связей · spline · fit ${(this.#fitScale * 100).toFixed(0)}%`,
         variant: "caption",
         color: "muted",
       })
@@ -113,12 +123,14 @@ export class UiComponentGraphSurface extends UiSurface {
   }
 
   #drawGraph(): void {
-    for (const edge of this.#layout.result.edges) {
-      const section = edge.sections[0]
-      if (section === undefined) continue
-      const points = [section.startPoint, ...section.bendPoints, section.endPoint]
-      this.drawPolyline(points, EDGE_COLOR, 1.5)
-      drawArrow(this, points, 7)
+    const edges = this.#layout.result.edges
+      .filter(({id}) => this.#showAllRelations || this.#layout.edgeKindByLayoutId.get(id) === "tree")
+      .sort((left, right) => left.id.localeCompare(right.id))
+    for (const edge of edges) {
+      const points = separateSemanticEdge(uiComponentEdgePoints(edge.curves), edge.id, 10)
+      this.drawPolyline(points, EDGE_COLOR, 1.6)
+      const tip = points.at(-1)!
+      drawArrow(this, points, 7, EDGE_COLOR)
     }
 
     for (const resultNode of this.#layout.result.nodes) {
@@ -210,6 +222,35 @@ export class UiComponentGraphSurface extends UiSurface {
   }
 }
 
+function separateSemanticEdge(
+  points: readonly LayoutPoint[],
+  edgeId: string,
+  maximumOffset: number,
+): readonly LayoutPoint[] {
+  if (points.length < 3) return points
+  const offset = (stableUnit(edgeId) - 0.5) * maximumOffset * 2
+  return points.map((value, index) => {
+    if (index === 0 || index === points.length - 1) return value
+    const before = points[index - 1]!
+    const after = points[index + 1]!
+    const dx = after.x - before.x
+    const dy = after.y - before.y
+    const length = Math.hypot(dx, dy)
+    if (length === 0) return value
+    const taper = Math.sin(Math.PI * index / (points.length - 1))
+    return {x: value.x - dy / length * offset * taper, y: value.y + dx / length * offset * taper}
+  })
+}
+
+function stableUnit(value: string): number {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0) / 0xffffffff
+}
+
 export function summarizeUiComponentGraphPreviews(
   previews: ReadonlyMap<string, UiGraphStoryPreview>,
   renderErrors: ReadonlyMap<string, string>,
@@ -249,7 +290,23 @@ export function fitUiComponentGraphBounds(
   })
 }
 
-function drawArrow(surface: UiSurface, points: readonly LayoutPoint[], size: number): void {
+export function uiComponentEdgePoints(
+  curves: TopDownLayoutResult["edges"][number]["curves"],
+): readonly LayoutPoint[] {
+  return curves.flatMap((curve, curveIndex) => Array.from({length: 25}, (_, index) => {
+    if (curveIndex > 0 && index === 0) return null
+    const t = index / 24
+    const u = 1 - t
+    return {
+      x: u ** 3 * curve.startPoint.x + 3 * u ** 2 * t * curve.controlPoints[0].x +
+        3 * u * t ** 2 * curve.controlPoints[1].x + t ** 3 * curve.endPoint.x,
+      y: u ** 3 * curve.startPoint.y + 3 * u ** 2 * t * curve.controlPoints[0].y +
+        3 * u * t ** 2 * curve.controlPoints[1].y + t ** 3 * curve.endPoint.y,
+    }
+  }).filter((point): point is LayoutPoint => point !== null))
+}
+
+function drawArrow(surface: UiSurface, points: readonly LayoutPoint[], size: number, color: Color): void {
   const tip = points.at(-1)
   const previous = points.at(-2)
   if (tip === undefined || previous === undefined) return
@@ -263,8 +320,8 @@ function drawArrow(surface: UiSurface, points: readonly LayoutPoint[], size: num
   const py = ux
   const baseX = tip.x - ux * size
   const baseY = tip.y - uy * size
-  surface.drawLine(tip.x, tip.y, baseX + px * size * 0.45, baseY + py * size * 0.45, EDGE_COLOR, 1.2)
-  surface.drawLine(tip.x, tip.y, baseX - px * size * 0.45, baseY - py * size * 0.45, EDGE_COLOR, 1.2)
+  surface.drawLine(tip.x, tip.y, baseX + px * size * 0.45, baseY + py * size * 0.45, color, 1.2)
+  surface.drawLine(tip.x, tip.y, baseX - px * size * 0.45, baseY - py * size * 0.45, color, 1.2)
 }
 
 function errorText(error: unknown): string {

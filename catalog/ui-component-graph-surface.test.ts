@@ -6,6 +6,7 @@ import {loadUiGraphStories} from "./ui-story-adapter.ts"
 import {
   fitUiComponentGraphBounds,
   summarizeUiComponentGraphPreviews,
+  uiComponentEdgePoints,
 } from "./ui-component-graph-surface.ts"
 
 const layout = createUiComponentGraphLayout(graph as unknown as UiComponentGraph)
@@ -34,6 +35,33 @@ describe("UI component graph fit-only presentation", () => {
     expect(small.scale).toBeLessThan(large.scale)
     expect(layout.result.nodes.length).toBe(graph.nodes.length)
     expect(layout.result.edges.length).toBe(graph.edges.length)
+  })
+
+  test("publishes the dense graph as tree, cross and shortcut presentation types", () => {
+    const kinds = [...layout.edgeKindByLayoutId.values()]
+    expect(kinds.filter((kind) => kind === "tree")).toHaveLength(46)
+    expect(kinds.filter((kind) => kind === "cross")).toHaveLength(32)
+    expect(kinds.filter((kind) => kind === "shortcut")).toHaveLength(7)
+    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 5622.189973, height: 3282.000007})
+  })
+
+  test("keeps every spline connection outside unrelated node interiors", () => {
+    const inputEdgeById = new Map(layout.input.edges.map((edge) => [edge.id, edge]))
+    const portById = new Map(layout.input.ports.map((port) => [port.id, port]))
+    for (const edge of layout.result.edges) {
+      const input = inputEdgeById.get(edge.id)!
+      const sourceNodeId = portById.get(input.sourcePortId)!.nodeId
+      const targetNodeId = portById.get(input.targetPortId)!.nodeId
+      const points = uiComponentEdgePoints(edge.curves)
+      expect(points[0]).toEqual(edge.curves[0]!.startPoint)
+      expect(points.at(-1)).toEqual(edge.curves.at(-1)!.endPoint)
+      for (const point of points.slice(1, -1)) {
+        expect(layout.result.nodes.some((node) =>
+          node.id !== sourceNodeId && node.id !== targetNodeId &&
+          point.x > node.x && point.x < node.x + node.width &&
+          point.y > node.y && point.y < node.y + node.height)).toBeFalse()
+      }
+    }
   })
 
   test("counts a caught node render failure instead of reporting it live", async () => {
