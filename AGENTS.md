@@ -13,6 +13,16 @@
 - Work in the supplied branch and checkout. Do not create branches, clones, or
   worktrees without a direct request from zavx0z.
 
+## Catalog lifecycle
+
+- Use `$catalog-dev` from `.agents/skills/catalog-dev` for the webxr-space
+  component-graph Storybook lifecycle and browser target.
+- A user-facing request to "запусти", "открой", or "покажи" this Storybook is
+  incomplete until both conditions hold: the exact owned server responds and
+  the canonical route is open and activated in one exact CDP target. HTTP 200
+  alone is not completion.
+- Internal checks and builds do not implicitly open or focus a browser target.
+
 ## Submodules
 
 - Before changing a child repository, inspect its own `AGENTS.md`, status,
