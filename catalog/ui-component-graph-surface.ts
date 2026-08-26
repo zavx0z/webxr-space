@@ -5,7 +5,7 @@ import {div} from "@ui/elements/div"
 import {palette} from "@ui/elements/theme"
 import {UiSurface, Z} from "@layout/core/surface"
 import type {LayoutPoint} from "@nodes/layout/types"
-import type {TopDownLayoutResult} from "@nodes/layout/top-down"
+import type {CoffmanGrahamLayoutResult} from "@nodes/layout/coffman-graham"
 import type {UiComponentGraphNode} from "../scripts/ui-component-graph.ts"
 import {
   createUiComponentGraphLayout,
@@ -62,7 +62,7 @@ export class UiComponentGraphSurface extends UiSurface {
     failedPreviews: number
     renderErrors: Readonly<Record<string, string>>
     fitScale: number
-    bounds: TopDownLayoutResult["bounds"]
+    bounds: CoffmanGrahamLayoutResult["bounds"]
   }> {
     const previewDiagnostics = summarizeUiComponentGraphPreviews(this.#previews, this.#renderErrors)
     return Object.freeze({
@@ -99,7 +99,7 @@ export class UiComponentGraphSurface extends UiSurface {
         style: {background: palette.bg, borderColor: "border", borderWidth: 1, borderRadius: 0},
       })
       Typography(this, 12, 0, Math.max(1, this.rectW - 24), HEADER_HEIGHT, {
-        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.diagnostics.visibleEdges}/${this.#layout.graph.edges.length} связей · spline · fit ${(this.#fitScale * 100).toFixed(0)}%`,
+        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.diagnostics.visibleEdges}/${this.#layout.graph.edges.length} связей · COFFMAN–GRAHAM LAYERED · fit ${(this.#fitScale * 100).toFixed(0)}%`,
         variant: "caption",
         color: "muted",
       })
@@ -236,7 +236,7 @@ export function summarizeUiComponentGraphPreviews(
 }
 
 export function fitUiComponentGraphBounds(
-  bounds: TopDownLayoutResult["bounds"],
+  bounds: CoffmanGrahamLayoutResult["bounds"],
   viewport: Rect,
   padding = GRAPH_PADDING,
 ): UiComponentGraphFit {
@@ -255,7 +255,7 @@ export function fitUiComponentGraphBounds(
 }
 
 export function uiComponentEdgePoints(
-  curves: TopDownLayoutResult["edges"][number]["curves"],
+  curves: CoffmanGrahamLayoutResult["edges"][number]["curves"],
 ): readonly LayoutPoint[] {
   return curves.flatMap((curve, curveIndex) => Array.from({length: 25}, (_, index) => {
     if (curveIndex > 0 && index === 0) return null

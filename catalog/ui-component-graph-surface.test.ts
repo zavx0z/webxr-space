@@ -37,10 +37,14 @@ describe("UI component graph fit-only presentation", () => {
     expect(layout.result.edges.length).toBe(graph.edges.length)
   })
 
-  test("publishes every dense relation through one rounded edge pipeline", () => {
+  test("publishes every dense relation through one downward cubic edge pipeline", () => {
     expect(layout.result.edges).toHaveLength(graph.edges.length)
     expect(JSON.stringify(layout.input.edges)).not.toMatch(/tree|cross|shortcut|constraint/)
     expect(layout.result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
+    expect(layout.result.edges.every(({curves}) => curves.every((curve) =>
+      curve.startPoint.y < curve.controlPoints[0].y &&
+      curve.controlPoints[0].y < curve.controlPoints[1].y &&
+      curve.controlPoints[1].y < curve.endPoint.y))).toBeTrue()
   })
 
   test("keeps every spline connection outside unrelated node interiors", () => {

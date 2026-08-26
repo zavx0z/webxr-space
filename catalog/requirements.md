@@ -23,9 +23,10 @@ superproject.
 
 ## Live presentation
 
-1. Top-down placement uses only `@nodes/layout/top-down`. The source snapshot
-   retains `consumer → dependency`; the visual adapter explicitly reverses it
-   to `dependency → consumer` so lower-level owners appear above consumers.
+1. The complete UI graph uses only the width-bounded
+   `@nodes/layout/coffman-graham` policy. The source snapshot retains
+   `consumer → dependency`; the visual adapter explicitly reverses it to
+   `dependency → consumer` so lower-level owners appear above consumers.
 2. The graph page owns one `UiRuntime` and one `UiSurface`. It imports pinned UI
    story registries only through a webxr-space adapter, lazily loads one
    representative route, and calls the real story module with immutable
@@ -42,14 +43,18 @@ superproject.
 6. The page has no zoom control. It materializes the intrinsic graph once, then
    initially fits and centers the entire graph through one retained-root
    transform. Viewport resize updates only that transform; it does not rerun the
-   top-down solver or mutate the source projection.
+   Coffman–Graham solver or mutate the source projection.
 7. Presentation does not derive `tree`, `cross`, `shortcut`, `constraint` or
-   any other placement subtype. Every source relation participates in the same
-   Dagre ranking and rounded cubic pipeline and stays addressable through the
-   layout ID map.
+   any other placement subtype. Every source relation participates in one
+   Coffman–Graham layering pass with at most four real nodes per layer and one
+   rounded-corner cubic pipeline, and stays addressable through the layout ID
+   map.
 8. Каждый relation получает собственные source/target route ports. Ports одного
    node+role распределяются детерминированно по ширине карточки; совпадающие
    endpoints, общие trunks и физический bundling запрещены.
 9. The exact route always draws the complete 85-relation projection. Query
    parameters do not hide a backbone subset or select another edge renderer;
    filtering belongs to a future explicit product interaction, not layout.
+10. The catalog imports the production solver and public geometry types only
+    from `@nodes/layout/coffman-graham`. Its browser bundle contains that exact
+    policy and excludes the Dagre top-down implementation.

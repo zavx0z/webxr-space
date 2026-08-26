@@ -39,7 +39,8 @@ bun run check
 ## Live UI dependency graph
 
 The development catalog derives a symbol-level `may-call` graph from the
-pinned UI sources and places its nodes with the public top-down Node layout.
+pinned UI sources and places its nodes with the public width-bounded
+Coffman–Graham Node layout.
 Each graph node loads the matching UI story lazily and renders the real
 Element or Component on the shared WebGPU surface.
 

@@ -1,8 +1,8 @@
 import {
-  layoutTopDown,
-  type TopDownLayoutGraph,
-  type TopDownLayoutResult,
-} from "@nodes/layout/top-down"
+  layoutCoffmanGraham,
+  type CoffmanGrahamLayoutGraph,
+  type CoffmanGrahamLayoutResult,
+} from "@nodes/layout/coffman-graham"
 import type {
   UiComponentGraph,
   UiComponentGraphEdge,
@@ -11,8 +11,8 @@ import type {
 
 export type UiComponentGraphLayout = Readonly<{
   graph: UiComponentGraph
-  input: TopDownLayoutGraph
-  result: TopDownLayoutResult
+  input: CoffmanGrahamLayoutGraph
+  result: CoffmanGrahamLayoutResult
   nodeById: ReadonlyMap<string, UiComponentGraphNode>
   sourceEdgeByLayoutId: ReadonlyMap<string, UiComponentGraphEdge>
 }>
@@ -25,8 +25,8 @@ export const UI_GRAPH_NODE_SIZE = Object.freeze({
 export function createUiComponentGraphLayout(graph: UiComponentGraph): UiComponentGraphLayout {
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node] as const))
   const sourceEdgeByLayoutId = new Map<string, UiComponentGraphEdge>()
-  const portById = new Map<string, TopDownLayoutGraph["ports"][number]>()
-  const edges: TopDownLayoutGraph["edges"][number][] = []
+  const portById = new Map<string, CoffmanGrahamLayoutGraph["ports"][number]>()
+  const edges: CoffmanGrahamLayoutGraph["edges"][number][] = []
   const visualEdges = graph.edges.map((edge) => {
     if (!nodeById.has(edge.from) || !nodeById.has(edge.to)) {
       throw new Error(`UI component graph edge references an unknown node: ${edge.from} -> ${edge.to}`)
@@ -44,7 +44,7 @@ export function createUiComponentGraphLayout(graph: UiComponentGraph): UiCompone
     edges.push({id, sourcePortId, targetPortId})
     sourceEdgeByLayoutId.set(id, edge)
   }
-  const input: TopDownLayoutGraph = Object.freeze({
+  const input: CoffmanGrahamLayoutGraph = Object.freeze({
     nodes: Object.freeze(graph.nodes.map((node) => Object.freeze({
       id: node.id,
       ...UI_GRAPH_NODE_SIZE[node.layer],
@@ -52,6 +52,7 @@ export function createUiComponentGraphLayout(graph: UiComponentGraph): UiCompone
     ports: Object.freeze([...portById.values()].sort((left, right) => left.id.localeCompare(right.id))),
     edges: Object.freeze(edges),
     layoutOptions: Object.freeze({
+      maxNodesPerLayer: 4,
       nodeSpacing: 44,
       layerSpacing: 72,
       edgeSpacing: 12,
@@ -61,14 +62,14 @@ export function createUiComponentGraphLayout(graph: UiComponentGraph): UiCompone
   return Object.freeze({
     graph,
     input,
-    result: layoutTopDown(input),
+    result: layoutCoffmanGraham(input),
     nodeById,
     sourceEdgeByLayoutId,
   })
 }
 
 function registerRoutePort(
-  portById: Map<string, TopDownLayoutGraph["ports"][number]>,
+  portById: Map<string, CoffmanGrahamLayoutGraph["ports"][number]>,
   node: UiComponentGraphNode,
   id: string,
   ratio: number,
