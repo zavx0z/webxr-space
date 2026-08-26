@@ -1,7 +1,5 @@
 import type {TopDownLayoutGraph} from "@nodes/layout/top-down"
 
-export type TopDownStoryEdgeKind = "tree" | "cross" | "shortcut"
-
 export const TOP_DOWN_REFERENCE_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "scr-area": "ScrArea\nArea — место под Editor",
   "space-type": "SpaceType\nтип редактора",
@@ -78,7 +76,6 @@ const edges = links.map(([source, target], index) => {
   registerPort(targetPortId, target, targetRatio(index))
   return {
     id: `flow-${String(index + 1).padStart(2, "0")}-${source}-${target}`,
-    constraint: index !== 11 && index !== 14,
     sourcePortId,
     targetPortId,
   }
@@ -88,17 +85,8 @@ export const TOP_DOWN_REFERENCE_GRAPH: TopDownLayoutGraph = Object.freeze({
   nodes,
   ports: [...portById.values()],
   edges,
-  layoutOptions: {nodeSpacing: 104, layerSpacing: 64, edgeSpacing: 14, padding: 28},
+  layoutOptions: {nodeSpacing: 50, layerSpacing: 50, edgeSpacing: 20, padding: 8},
 })
-
-export const TOP_DOWN_REFERENCE_EDGE_KINDS: Readonly<Record<string, TopDownStoryEdgeKind>> =
-  Object.freeze(Object.fromEntries(TOP_DOWN_REFERENCE_GRAPH.edges.map(({id}) => {
-    const kind: TopDownStoryEdgeKind =
-      id === "flow-15-space-link-b-node-tree" || id === "flow-12-ui-layout-panel-ui-button"
-      ? "cross"
-      : "tree"
-    return [id, kind] as const
-  })))
 
 function sourcePort(index: number, nodeId: string): string {
   return [0, 1, 2, 4, 5, 6, 15, 16].includes(index) ? `${nodeId}/out/${index}` : `${nodeId}/out`

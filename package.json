@@ -1,19 +1,15 @@
 {
   "name": "@nodes/layout",
   "version": "0.0.1",
-  "description": "Isolated high-performance compound and top-down graph layout policies. Built for MetaFor.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/node.git",
     "directory": "packages/layout"
   },
-  "homepage": "https://zavx0z.github.io/node/layout/",
-  "license": "MIT",
-  "type": "module",
-  "private": true,
-  "metafor": "https://github.com/zavx0z/metafor",
   "main": "src/index.ts",
-  "types": "src/index.ts",
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -36,15 +32,15 @@
       "default": "./types/index.ts"
     }
   },
+  "description": "Isolated high-performance compound and top-down graph layout policies. Built for MetaFor.",
+  "homepage": "https://zavx0z.github.io/node/layout/",
+  "license": "MIT",
+  "metafor": "https://github.com/zavx0z/metafor",
+  "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false",
     "benchmark:top-down": "bun benchmarks/top-down.ts"
   },
-  "dependencies": {
-    "d3-flextree": "2.1.2",
-    "webcola": "3.4.0"
-  },
-  "devDependencies": {
-    "@types/d3-flextree": "2.1.4"
-  }
+  "type": "module",
+  "types": "src/index.ts"
 }

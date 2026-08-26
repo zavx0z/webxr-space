@@ -70,15 +70,15 @@ policy-сборки. Геометрические законы остаются 
 
 Принятый запуск `bun run --cwd packages/layout benchmark:top-down` на Bun 1.4.0,
 macOS x64, source hash
-`7dc39f9d10e2e4d9c301edcf0f68374abe3f2aad35b8f792c8269d99513d5031`:
+`ac2091f25183edb82056200bcb921435ea8348e35ee820412c360d165b76e46f`:
 
 | Fixture | Nodes / edges | Median | p95 |
 | --- | ---: | ---: | ---: |
-| Blender reference | 19 / 20 | 18.20 ms | 29.30 ms |
-| Dense independent edges | 54 / 85 | 319.70 ms | 328.00 ms |
-| Layered budget | 96 / 87 | 80.39 ms | 83.93 ms |
+| Blender reference | 19 / 20 | 4.28 ms | 5.76 ms |
+| Dense independent edges | 54 / 85 | 26.57 ms | 29.68 ms |
+| Layered budget | 96 / 87 | 20.11 ms | 21.80 ms |
 
-Top-down browser solver artifact имеет отдельный gate `107437` raw / `33253`
-gzip bytes; Worker executor — `107895` / `33449`. Fixed/adaptive bytes и hashes
+Top-down browser solver artifact имеет отдельный gate `59055` raw / `20479`
+gzip bytes; Worker executor — `59513` / `20652`. Fixed/adaptive bytes и hashes
 остаются прежними. Новая toolchain или geometry меняет baseline только вместе с
 повторным frozen benchmark и package-boundary evidence.

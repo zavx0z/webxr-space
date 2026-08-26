@@ -8,8 +8,8 @@ import {
   type TopDownLayoutResult,
 } from "./top-down.ts"
 
-describe("non-layered top-down spline policy", () => {
-  test("lays out the reference as a tidy variable-size forest with one spline type", () => {
+describe("Codex-compatible Dagre top-down policy", () => {
+  test("uses one independent rounded cubic pipeline for the reference", () => {
     const result = layoutTopDown(TOP_DOWN_REFERENCE_GRAPH)
     const inputEdgeById = new Map(TOP_DOWN_REFERENCE_GRAPH.edges.map((edge) => [edge.id, edge]))
     const portById = new Map(result.ports.map((port) => [port.id, port]))
@@ -17,10 +17,15 @@ describe("non-layered top-down spline policy", () => {
     expect(result.direction).toBe("DOWN")
     expect(result.nodes).toHaveLength(19)
     expect(result.edges).toHaveLength(20)
+    expect(result.ports).toHaveLength(40)
     expect(result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
+    expect(result.edges.some(({curves}) => curves.length > 1)).toBeTrue()
     expect(nodeOverlaps(result)).toEqual([])
     expect(curveNodeCrossings(result, TOP_DOWN_REFERENCE_GRAPH)).toEqual([])
+    expect(collinearEdgeOverlaps(result)).toEqual([])
 
+    const sourceEndpoints = new Set<string>()
+    const targetEndpoints = new Set<string>()
     for (const edge of result.edges) {
       const input = inputEdgeById.get(edge.id)!
       const source = portById.get(input.sourcePortId)!
@@ -28,13 +33,13 @@ describe("non-layered top-down spline policy", () => {
       expect(edge.curves[0]!.startPoint).toEqual({x: source.x, y: source.y})
       expect(edge.curves.at(-1)!.endPoint).toEqual({x: target.x, y: target.y})
       expect(target.y).toBeGreaterThan(source.y)
-      expect(isContinuousSpline(edge.curves)).toBeTrue()
-      expect(edge.curves[0]!.controlPoints[0].x).toBeCloseTo(source.x, 6)
-      expect(edge.curves.at(-1)!.controlPoints[1].x).toBeCloseTo(target.x, 6)
+      expect(isContinuousCubicChain(edge.curves)).toBeTrue()
+      sourceEndpoints.add(JSON.stringify(edge.curves[0]!.startPoint))
+      targetEndpoints.add(JSON.stringify(edge.curves.at(-1)!.endPoint))
     }
-
-    const distinctTops = new Set(result.nodes.map(({y}) => y))
-    expect(distinctTops.size).toBeGreaterThan(7)
+    expect(sourceEndpoints.size).toBe(result.edges.length)
+    expect(targetEndpoints.size).toBe(result.edges.length)
+    expect(new Set(result.nodes.map(({y}) => y)).size).toBeGreaterThan(7)
   })
 
   test("is invariant to node, port and edge input order", () => {
@@ -49,129 +54,59 @@ describe("non-layered top-down spline policy", () => {
     expect(permuted).toEqual(first)
   })
 
-  test("uses overlay relations as weak flow constraints without restoring global ranks", () => {
-    const base: TopDownLayoutGraph = {
-      nodes: [
-        {id: "root", width: 120, height: 50},
-        {id: "short", width: 100, height: 40},
-        {id: "tall", width: 100, height: 90},
-        {id: "short-leaf", width: 100, height: 40},
-        {id: "tall-leaf", width: 100, height: 40},
-      ],
-      ports: [
-        {id: "root/short", nodeId: "root", x: 45},
-        {id: "root/tall", nodeId: "root", x: 75},
-        {id: "short/in", nodeId: "short", x: 50},
-        {id: "short/out", nodeId: "short", x: 50},
-        {id: "short/overlay", nodeId: "short", x: 65},
-        {id: "tall/in", nodeId: "tall", x: 50},
-        {id: "tall/out", nodeId: "tall", x: 50},
-        {id: "short-leaf/in", nodeId: "short-leaf", x: 50},
-        {id: "tall-leaf/in", nodeId: "tall-leaf", x: 50},
-        {id: "tall-leaf/overlay-in", nodeId: "tall-leaf", x: 65},
-      ],
-      edges: [
-        {constraint: true, id: "root-short", sourcePortId: "root/short", targetPortId: "short/in"},
-        {constraint: true, id: "root-tall", sourcePortId: "root/tall", targetPortId: "tall/in"},
-        {constraint: true, id: "short-leaf", sourcePortId: "short/out", targetPortId: "short-leaf/in"},
-        {constraint: true, id: "tall-leaf", sourcePortId: "tall/out", targetPortId: "tall-leaf/in"},
-      ],
-      layoutOptions: {nodeSpacing: 32, layerSpacing: 48, edgeSpacing: 12, padding: 24},
-    }
-    const tree = layoutTopDown(base)
-    const overlay = layoutTopDown({
-      ...base,
-      edges: [...base.edges, {
-        constraint: false,
-        id: "overlay",
-        sourcePortId: "short/overlay",
-        targetPortId: "tall-leaf/overlay-in",
-      }],
-    })
-
-    expect(nodeOverlaps(overlay)).toEqual([])
-    expect(new Set(overlay.nodes.map(({y}) => y)).size).toBeGreaterThan(3)
-    expect(tree.nodes.find(({id}) => id === "short-leaf")!.y)
-      .toBeLessThan(tree.nodes.find(({id}) => id === "tall-leaf")!.y)
-    const overlayEdge = overlay.edges.find(({id}) => id === "overlay")!
-    expect(overlayEdge.curves.at(-1)!.endPoint.y).toBeGreaterThan(overlayEdge.curves[0]!.startPoint.y)
-  })
-
-  test("routes blocked fan-out through smooth obstacle-free spline chains", () => {
-    const graph: TopDownLayoutGraph = {
-      nodes: [
-        {id: "root", width: 140, height: 60},
-        {id: "blocker", width: 360, height: 100},
-        {id: "left", width: 100, height: 50},
-        {id: "right", width: 100, height: 50},
-      ],
-      ports: [
-        {id: "root/tree", nodeId: "root", x: 70},
-        {id: "root/overlay-left", nodeId: "root", x: 45},
-        {id: "root/overlay-right", nodeId: "root", x: 95},
-        {id: "blocker/in", nodeId: "blocker", x: 180},
-        {id: "blocker/left", nodeId: "blocker", x: 130},
-        {id: "blocker/right", nodeId: "blocker", x: 230},
-        {id: "left/tree-in", nodeId: "left", x: 40},
-        {id: "left/overlay-in", nodeId: "left", x: 65},
-        {id: "right/tree-in", nodeId: "right", x: 40},
-        {id: "right/overlay-in", nodeId: "right", x: 65},
-      ],
-      edges: [
-        {constraint: true, id: "root-blocker", sourcePortId: "root/tree", targetPortId: "blocker/in"},
-        {constraint: true, id: "blocker-left", sourcePortId: "blocker/left", targetPortId: "left/tree-in"},
-        {constraint: true, id: "blocker-right", sourcePortId: "blocker/right", targetPortId: "right/tree-in"},
-        {constraint: false, id: "overlay-left", sourcePortId: "root/overlay-left", targetPortId: "left/overlay-in"},
-        {constraint: false, id: "overlay-right", sourcePortId: "root/overlay-right", targetPortId: "right/overlay-in"},
-      ],
-      layoutOptions: {nodeSpacing: 32, layerSpacing: 48, edgeSpacing: 12, padding: 24},
-    }
-    const result = layoutTopDown(graph)
-    const overlays = result.edges.filter(({id}) => id.startsWith("overlay"))
-
-    expect(overlays.every(({curves}) => curves.length > 0 && isContinuousSpline(curves))).toBeTrue()
-    expect(new Set(overlays.map(({curves}) => JSON.stringify(curves[0]!.startPoint))).size).toBe(2)
-    expect(curveNodeCrossings(result, graph)).toEqual([])
-  })
-
-  test("rejects multiple constrained parents instead of silently choosing one", () => {
+  test("supports ordinary fan-in without relation subtypes", () => {
     const graph: TopDownLayoutGraph = {
       nodes: [
         {id: "a", width: 80, height: 40},
         {id: "b", width: 80, height: 40},
-        {id: "target", width: 80, height: 40},
+        {id: "target", width: 100, height: 50},
+        {id: "leaf", width: 80, height: 40},
       ],
       ports: [
         {id: "a/out", nodeId: "a", x: 40},
         {id: "b/out", nodeId: "b", x: 40},
-        {id: "target/a-in", nodeId: "target", x: 25},
-        {id: "target/b-in", nodeId: "target", x: 55},
+        {id: "target/a-in", nodeId: "target", x: 30},
+        {id: "target/b-in", nodeId: "target", x: 70},
+        {id: "target/out", nodeId: "target", x: 50},
+        {id: "leaf/in", nodeId: "leaf", x: 40},
       ],
       edges: [
-        {constraint: true, id: "a-target", sourcePortId: "a/out", targetPortId: "target/a-in"},
-        {constraint: true, id: "b-target", sourcePortId: "b/out", targetPortId: "target/b-in"},
+        {id: "a-target", sourcePortId: "a/out", targetPortId: "target/a-in"},
+        {id: "b-target", sourcePortId: "b/out", targetPortId: "target/b-in"},
+        {id: "target-leaf", sourcePortId: "target/out", targetPortId: "leaf/in"},
       ],
     }
+    const result = layoutTopDown(graph)
 
-    expect(() => layoutTopDown(graph)).toThrow("multiple parents")
+    expect(nodeOverlaps(result)).toEqual([])
+    expect(curveNodeCrossings(result, graph)).toEqual([])
+    expect(result.edges.map(({id}) => id)).toEqual(["a-target", "b-target", "target-leaf"])
+    expect(result.nodes.find(({id}) => id === "target")!.y)
+      .toBeGreaterThan(result.nodes.find(({id}) => id === "a")!.y)
+    expect(result.nodes.find(({id}) => id === "leaf")!.y)
+      .toBeGreaterThan(result.nodes.find(({id}) => id === "target")!.y)
   })
 
-  test("rejects a duplicate constrained parent relation", () => {
+  test("keeps parallel semantic edges independent in the Dagre multigraph", () => {
     const graph: TopDownLayoutGraph = {
-      nodes: [{id: "a", width: 80, height: 40}, {id: "b", width: 80, height: 40}],
+      nodes: [{id: "a", width: 100, height: 50}, {id: "b", width: 100, height: 50}],
       ports: [
-        {id: "a/first", nodeId: "a", x: 25},
-        {id: "a/second", nodeId: "a", x: 55},
-        {id: "b/first", nodeId: "b", x: 25},
-        {id: "b/second", nodeId: "b", x: 55},
+        {id: "a/first", nodeId: "a", x: 30},
+        {id: "a/second", nodeId: "a", x: 70},
+        {id: "b/first", nodeId: "b", x: 30},
+        {id: "b/second", nodeId: "b", x: 70},
       ],
       edges: [
-        {constraint: true, id: "first", sourcePortId: "a/first", targetPortId: "b/first"},
-        {constraint: true, id: "second", sourcePortId: "a/second", targetPortId: "b/second"},
+        {id: "first", sourcePortId: "a/first", targetPortId: "b/first"},
+        {id: "second", sourcePortId: "a/second", targetPortId: "b/second"},
       ],
     }
+    const result = layoutTopDown(graph)
 
-    expect(() => layoutTopDown(graph)).toThrow("multiple parents")
+    expect(result.edges).toHaveLength(2)
+    expect(result.edges[0]!.curves).not.toEqual(result.edges[1]!.curves)
+    expect(new Set(result.edges.map(({curves}) => JSON.stringify(curves[0]!.startPoint))).size).toBe(2)
+    expect(new Set(result.edges.map(({curves}) => JSON.stringify(curves.at(-1)!.endPoint))).size).toBe(2)
   })
 
   test("rejects a cycle before placement with a stable witness", () => {
@@ -190,9 +125,9 @@ describe("non-layered top-down spline policy", () => {
         {id: "downstream/in", nodeId: "downstream", x: 40},
       ],
       edges: [
-        {constraint: true, id: "a-b", sourcePortId: "a/out", targetPortId: "b/in"},
-        {constraint: true, id: "b-a", sourcePortId: "b/to-a", targetPortId: "a/in"},
-        {constraint: false, id: "b-downstream", sourcePortId: "b/to-downstream", targetPortId: "downstream/in"},
+        {id: "a-b", sourcePortId: "a/out", targetPortId: "b/in"},
+        {id: "b-a", sourcePortId: "b/to-a", targetPortId: "a/in"},
+        {id: "b-downstream", sourcePortId: "b/to-downstream", targetPortId: "downstream/in"},
       ],
     }
 
@@ -207,7 +142,7 @@ describe("non-layered top-down spline policy", () => {
     }
   })
 
-  test("fails closed for invalid offsets, endpoints and mixed port roles", () => {
+  test("fails closed for legacy edge classes, invalid endpoints and reused ports", () => {
     expect(() => layoutTopDown({
       nodes: [{id: "a", width: 80, height: 40}],
       ports: [{id: "a/out", nodeId: "a", x: 81}],
@@ -216,14 +151,14 @@ describe("non-layered top-down spline policy", () => {
     expect(() => layoutTopDown({
       nodes: [{id: "a", width: 80, height: 40}],
       ports: [],
-      edges: [{constraint: true, id: "missing", sourcePortId: "missing/out", targetPortId: "missing/in"}],
+      edges: [{id: "missing", sourcePortId: "missing/out", targetPortId: "missing/in"}],
     })).toThrow("Unknown top-down source port")
     expect(() => layoutTopDown({
       nodes: [{id: "a", width: 80, height: 40}, {id: "b", width: 80, height: 40}],
       ports: [{id: "shared", nodeId: "a", x: 40}, {id: "b/in", nodeId: "b", x: 40}],
       edges: [
-        {constraint: true, id: "forward", sourcePortId: "shared", targetPortId: "b/in"},
-        {constraint: false, id: "reverse", sourcePortId: "b/in", targetPortId: "shared"},
+        {id: "forward", sourcePortId: "shared", targetPortId: "b/in"},
+        {id: "reverse", sourcePortId: "b/in", targetPortId: "shared"},
       ],
     })).toThrow("conflicting edge roles")
     expect(() => layoutTopDown({
@@ -238,10 +173,15 @@ describe("non-layered top-down spline policy", () => {
         {id: "right/in", nodeId: "right", x: 40},
       ],
       edges: [
-        {constraint: true, id: "left", sourcePortId: "source/out", targetPortId: "left/in"},
-        {constraint: true, id: "right", sourcePortId: "source/out", targetPortId: "right/in"},
+        {id: "left", sourcePortId: "source/out", targetPortId: "left/in"},
+        {id: "right", sourcePortId: "source/out", targetPortId: "right/in"},
       ],
     })).toThrow("reused by multiple edges")
+    expect(() => layoutTopDown({
+      nodes: [{id: "a", width: 80, height: 40}, {id: "b", width: 80, height: 40}],
+      ports: [{id: "a/out", nodeId: "a", x: 40}, {id: "b/in", nodeId: "b", x: 40}],
+      edges: [{constraint: true, id: "legacy", sourcePortId: "a/out", targetPortId: "b/in"}],
+    } as unknown as TopDownLayoutGraph)).toThrow("one semantic type")
   })
 
   test("rejects graphs outside the frozen production budget before placement", () => {
@@ -278,11 +218,11 @@ function curveNodeCrossings(result: TopDownLayoutResult, graph: TopDownLayoutGra
     const targetNodeId = inputPortById.get(input.targetPortId)!.nodeId
     for (const curve of edge.curves) {
       for (let sample = 1; sample < 24; sample += 1) {
-        const point = cubicPoint(curve, sample / 24)
+        const curvePoint = cubicPoint(curve, sample / 24)
         for (const node of result.nodes) {
           if (node.id === sourceNodeId || node.id === targetNodeId) continue
-          if (point.x > node.x && point.x < node.x + node.width &&
-              point.y > node.y && point.y < node.y + node.height) {
+          if (curvePoint.x > node.x && curvePoint.x < node.x + node.width &&
+              curvePoint.y > node.y && curvePoint.y < node.y + node.height) {
             crossings.push(`${edge.id}/${node.id}`)
           }
         }
@@ -292,11 +232,33 @@ function curveNodeCrossings(result: TopDownLayoutResult, graph: TopDownLayoutGra
   return [...new Set(crossings)].sort()
 }
 
-function isContinuousSpline(curves: readonly TopDownCurveSegment[]): boolean {
+function collinearEdgeOverlaps(result: TopDownLayoutResult): string[] {
+  const lines = result.edges.flatMap((edge) => edge.curves
+    .filter((curve) => curveFlatness(curve) < 1e-5)
+    .map((curve) => ({edgeId: edge.id, start: curve.startPoint, end: curve.endPoint})))
+  const overlaps: string[] = []
+  for (let leftIndex = 0; leftIndex < lines.length; leftIndex += 1) {
+    const left = lines[leftIndex]!
+    for (let rightIndex = leftIndex + 1; rightIndex < lines.length; rightIndex += 1) {
+      const right = lines[rightIndex]!
+      if (left.edgeId === right.edgeId || !collinear(left.start, left.end, right.start) ||
+          !collinear(left.start, left.end, right.end)) continue
+      const horizontal = Math.abs(left.end.x - left.start.x) >= Math.abs(left.end.y - left.start.y)
+      const leftRange = horizontal ? [left.start.x, left.end.x] : [left.start.y, left.end.y]
+      const rightRange = horizontal ? [right.start.x, right.end.x] : [right.start.y, right.end.y]
+      const overlap = Math.min(Math.max(...leftRange), Math.max(...rightRange)) -
+        Math.max(Math.min(...leftRange), Math.min(...rightRange))
+      if (overlap > 1e-5) overlaps.push(`${left.edgeId}/${right.edgeId}`)
+    }
+  }
+  return [...new Set(overlaps)].sort()
+}
+
+function isContinuousCubicChain(curves: readonly TopDownCurveSegment[]): boolean {
   for (let index = 1; index < curves.length; index += 1) {
     const previous = curves[index - 1]!
     const current = curves[index]!
-    if (previous.endPoint.x !== current.startPoint.x || previous.endPoint.y !== current.startPoint.y) return false
+    if (!samePoint(previous.endPoint, current.startPoint)) return false
     const incoming = {
       x: previous.endPoint.x - previous.controlPoints[1].x,
       y: previous.endPoint.y - previous.controlPoints[1].y,
@@ -305,7 +267,7 @@ function isContinuousSpline(curves: readonly TopDownCurveSegment[]): boolean {
       x: current.controlPoints[0].x - current.startPoint.x,
       y: current.controlPoints[0].y - current.startPoint.y,
     }
-    if (Math.abs(incoming.x - outgoing.x) > 1e-6 || Math.abs(incoming.y - outgoing.y) > 1e-6) return false
+    if (!samePoint(incoming, outgoing, 1e-5)) return false
   }
   return true
 }
@@ -318,4 +280,27 @@ function cubicPoint(curve: TopDownCurveSegment, t: number) {
     y: u ** 3 * curve.startPoint.y + 3 * u ** 2 * t * curve.controlPoints[0].y +
       3 * u * t ** 2 * curve.controlPoints[1].y + t ** 3 * curve.endPoint.y,
   }
+}
+
+function curveFlatness(curve: TopDownCurveSegment): number {
+  const dx = curve.endPoint.x - curve.startPoint.x
+  const dy = curve.endPoint.y - curve.startPoint.y
+  const length = Math.hypot(dx, dy) || 1
+  const distance = (curvePoint: Readonly<{x: number; y: number}>): number =>
+    Math.abs(dy * curvePoint.x - dx * curvePoint.y +
+      curve.endPoint.x * curve.startPoint.y - curve.endPoint.y * curve.startPoint.x) / length
+  return Math.max(distance(curve.controlPoints[0]), distance(curve.controlPoints[1]))
+}
+
+function collinear(first: Readonly<{x: number; y: number}>, second: Readonly<{x: number; y: number}>, third: Readonly<{x: number; y: number}>): boolean {
+  return Math.abs((second.x - first.x) * (third.y - first.y) -
+    (second.y - first.y) * (third.x - first.x)) < 1e-5
+}
+
+function samePoint(
+  left: Readonly<{x: number; y: number}>,
+  right: Readonly<{x: number; y: number}>,
+  epsilon = 1e-7,
+): boolean {
+  return Math.abs(left.x - right.x) <= epsilon && Math.abs(left.y - right.y) <= epsilon
 }

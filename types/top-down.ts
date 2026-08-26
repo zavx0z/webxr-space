@@ -29,23 +29,21 @@ export type TopDownLayoutPort = Readonly<{
 }>
 
 /**
-One relation and its participation in the tidy forest.
+One semantic relation.
 
-`constraint=true` means the edge is the single parent relation of its target
-and therefore owns node placement. `constraint=false` preserves the semantic
-relation but overlays it without forcing unrelated nodes onto common levels.
+All relations participate in the same Dagre ranking, ordering, placement and
+rounded-path pipeline. The top-down policy intentionally has no edge subtype,
+constraint flag or alternate router.
 */
-export type TopDownLayoutEdge = Readonly<LayoutEdge & {
-  constraint: boolean
-}>
+export type TopDownLayoutEdge = Readonly<LayoutEdge>
 
 /** Bounded spacing controls in logical pixels. */
 export type TopDownLayoutOptions = Readonly<{
-  /** Horizontal clearance between adjacent subtrees. */
+  /** Horizontal clearance between adjacent nodes on one rank. */
   nodeSpacing?: number
-  /** Minimum vertical clearance between a parent and its children. */
+  /** Vertical clearance between adjacent Dagre ranks. */
   layerSpacing?: number
-  /** Distance between independent external spline rails. */
+  /** Clearance Dagre reserves between independent semantic edges. */
   edgeSpacing?: number
   /** Empty content boundary around nodes and routes. */
   padding?: number
@@ -73,14 +71,19 @@ export type TopDownPortGeometry = Readonly<{
   side: TopDownPortSide
 }>
 
-/** One cubic segment of the single top-down spline connection type. */
+/** One cubic Bézier segment in the uniform rounded-edge representation. */
 export type TopDownCurveSegment = Readonly<{
   startPoint: LayoutPoint
   controlPoints: readonly [LayoutPoint, LayoutPoint]
   endPoint: LayoutPoint
 }>
 
-/** Routed semantic edge expressed only as a continuous cubic spline chain. */
+/**
+One independent Dagre edge encoded only as cubic Bézier segments.
+
+Straight Mermaid `L` sections use degenerate cubics and rounded Mermaid `Q`
+corners use mathematically equivalent cubics, so consumers need one primitive.
+*/
 export type TopDownEdgeGeometry = Readonly<{
   id: string
   curves: readonly [TopDownCurveSegment, ...TopDownCurveSegment[]]

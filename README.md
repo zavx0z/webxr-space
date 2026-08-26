@@ -44,11 +44,12 @@ assignments, а каждый candidate передаёт тому же общем
 `@nodes/layout/top-down` — третий, физически независимый entrypoint для плоских
 ацикличных схем сверху вниз. Он принимает horizontal offset точного порта,
 разрешает source=`SOUTH`, target=`NORTH` и использует отдельный pipeline:
-variable-size tidy-tree или Sugiyama seed, bounded WebCola flow/overlap
-refinement и obstacle-aware spline routing. Edge field `constraint` выбирает
-placement-parent либо weak overlay, но result и renderer имеют один cubic
-connection type. Top-down не импортирует compound solver или adaptive candidate
-search; fixed/adaptive также не импортируют top-down implementation.
+один Dagre/Sugiyama placement, отдельную Dagre point chain каждого named edge и
+одно Mermaid-подобное скругление поворотов радиусом `5`. У edges нет
+`constraint`, `tree/cross/shortcut` или выбора router-а. Прямые и quadratic
+sections кодируются единым cubic connection type. Top-down не импортирует
+compound solver или adaptive candidate search; fixed/adaptive также не
+импортируют top-down implementation.
 
 ## Протокол
 

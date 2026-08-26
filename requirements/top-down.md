@@ -1,101 +1,95 @@
 # Алгоритмические требования top-down
 
 Этот документ владеет отдельной policy `@nodes/layout/top-down`. Она строит
-плоскую причинную DAG-схему сверху вниз и не является responsive-режимом `DOWN`
-compound solver-а fixed/adaptive.
+плоскую причинную DAG-схему сверху вниз и повторяет узкий pipeline обычного
+Codex Mermaid flowchart: Dagre placement и одинаково скруглённые независимые
+edges. Это не responsive-режим `DOWN` compound solver-а fixed/adaptive.
 
 ## Публичная граница
 
 1. Input содержит заранее измеренные leaf-ноды, точные horizontal offsets
    портов и semantic edges. Viewport, renderer state, ручные coordinates,
    ranks, bends и lanes в contract не входят.
-2. Каждый edge обязан явно задать `constraint`:
-   - `true` — единственная parent-связь target в placement forest;
-   - `false` — слабая flow-связь, участвующая в уплотнении и маршрутизации, но
-     не создающая второго parent.
-   Это внутренняя роль размещения, а не второй визуальный или source-тип связи.
-3. Подграф `constraint=true` является forest: у target не более одной такой
-   связи. Повторная parent-связь, даже от того же source, отклоняется.
-4. Полный graph обязан быть DAG. Cycle отклоняется до placement с typed
+2. У edge есть ровно один semantic type: `id`, `sourcePortId` и
+   `targetPortId`. `constraint`, `tree`, `cross`, `shortcut`, выбор router-а и
+   другие классы связи запрещены. Все edges участвуют в одном pipeline.
+3. Полный graph обязан быть DAG. Cycle отклоняется до placement с typed
    `CYCLE_DETECTED` witness; policy не разворачивает edge и не запускает другой
    solver как fallback.
-5. Source-port разрешается в `SOUTH`, target-port — в `NORTH`. Один exact port
+4. Source-port разрешается в `SOUTH`, target-port — в `NORTH`. Один exact port
    принадлежит ровно одному semantic edge и не может использоваться повторно
-   или играть обе роли. Fan-in/fan-out получают отдельные разнесённые endpoints.
-6. Intrinsic размеры нод не меняются. Output содержит только `DOWN`, bounds,
-   rectangles, абсолютные port centers и один визуальный тип связи: непрерывную
-   цепочку cubic Bézier segments.
+   или играть обе роли. Fan-in/fan-out получают отдельные endpoints.
+5. Intrinsic размеры нод не меняются. Output содержит только `DOWN`, bounds,
+   rectangles, абсолютные port centers и один geometry type: цепочку cubic
+   Bézier segments для каждого edge.
 
-## Placement pipeline
+## Единый placement pipeline
 
-1. Для одного placement-root применяется variable-size tidy tree из
-   `d3-flextree`, реализующий non-layered алгоритм van der Ploeg на основе
-   Reingold–Tilford. Порядок детей задаётся стабильными edge IDs.
-2. Leaf, связанный слабым edge с более глубоким fan-in, может получить только
-   внутренние virtual spacing nodes. Они не появляются в result и позволяют
-   ветвям занимать разные вертикальные позиции, как в reference graph.
-3. Для нескольких roots используется crossing-free forest preorder по tree
-   depth. Это только компактный seed: последующий constraint refinement
-   размыкает общие строки, а ranks не входят в result.
-4. Seed уточняется constraint-based stress placement из WebCola с
-   `avoidOverlaps`, `flowLayout("y")` и compile-time количеством итераций.
-   Однокорневой reference получает `4 + 8` constrained/overlap iterations,
-   multi-root graph — `1 + 2`. Consumer не может увеличить budget.
-5. `constraint=true` получает полный parent separation. `constraint=false`
-   получает только слабое положительное flow separation и spring attraction.
-   Поэтому связи остаются направленными вниз, но ноды не возвращаются на общие
-   горизонтальные строки.
-6. Collision boxes включают `nodeSpacing`; фактические output rectangles
-   сохраняют исходные размеры. Tie-break в каждой фазе использует ID, поэтому
-   перестановка input collections не меняет result.
+1. Любой допустимый input — reference, dense, single-root или multi-root —
+   проходит один Dagre/Sugiyama вызов. Ветка по количеству roots, force-layout,
+   tidy-tree, forest seed и последующий refinement запрещены.
+2. Dagre graph является directed named multigraph. Каждая semantic связь
+   добавляется отдельным named edge; parallel edges не схлопываются.
+3. Конфигурация фиксирована: `rankdir="TB"`, `ranker="network-simplex"`.
+   `nodeSpacing`, `layerSpacing` и `edgeSpacing` напрямую отображаются в
+   `nodesep`, `ranksep` и `edgesep`; defaults равны `50`, `50` и `20`.
+4. Input collections нормализуются по ID до Dagre. Stable edge insertion order
+   закрепляет одинаковую ориентацию симметричных решений. Внутри Dagre order
+   phase ациклические sibling constraints следуют source-port order для fan-out
+   и target-port order для fan-in; это не отдельный placement pass.
+5. Dagre одновременно владеет ranking, crossing reduction, node placement и
+   индивидуальными point chains edges. Никакой второй placement или routing
+   policy после него не меняет ranks и coordinates нод.
 
-## Routing pipeline
+## Единый edge pipeline
 
-1. Constrained backbone маршрутизируется первым, остальные edges — после него
-   в стабильном ID-order. Все они возвращают одинаковый cubic contract и
-   рисуются одним цветом и толщиной.
-2. Свободный downward edge получает один cubic segment с вертикальной
-   касательной у `SOUTH` и `NORTH`. Adaptive cubic/rectangle subdivision
-   запрещает проход через interior чужой ноды.
-3. Заблокированный edge использует coordinate-compressed Lee/A* grid,
-   построенный один раз из expanded node rectangles и всех exact port columns.
-   Перед A* проверяется bounded набор horizontal/vertical channel candidates и
-   внешних corridors.
-4. Route objective лексикографически ставит proper edge crossings выше длины и
-   числа bends. Backbone уже занят к моменту secondary routing, поэтому новый
-   route выбирает свободный corridor, если он существует.
-5. Найденный obstacle-free polyline преобразуется в геометрически гладкую
-   cubic chain: terminal segments остаются вертикальными, corner arcs имеют
-   совпадающие направления касательных, repeated/collinear points удаляются.
-6. Каждый semantic edge материализует и рисует собственную cubic chain и
-   собственный arrow. Совпадающие trunks, junctions и renderer dedup запрещены;
-   semantic edge IDs никогда не сливаются в физическую связь.
+1. Каждый edge получает только свою point chain из Dagre. Edge-to-edge graph,
+   общий trunk, junction, bundling, renderer dedup и соединение одного edge с
+   другим edge запрещены.
+2. Все point chains проходят одну функцию `rounded` с фиксированным радиусом
+   поворота `5`, как Codex Mermaid flowchart. Прямой участок остаётся прямым;
+   каждый настоящий поворот получает tangent-aligned quadratic Bézier corner.
+   Это естественная геометрия одного renderer-а, а не разные типы edges.
+3. Production result использует только cubic primitive. Mermaid-подобный `L`
+   сериализуется как вырожденная cubic Bézier, а `Q` — как математически
+   эквивалентная cubic Bézier. Поэтому renderer не ветвится по segment type.
+4. Первый segment начинается точно в source port, последний заканчивается
+   точно в target port. Каждая связь материализует собственную cubic chain и
+   собственный arrow.
+5. Lee/A*, visibility grid, external corridors, obstacle fallback, случайные
+   bends и route scoring не входят в эту policy. Если Dagre не возвращает
+   point chain, вызов завершается ошибкой, а не другим алгоритмом.
 
 ## Ограниченная стоимость
 
-1. Нормализация, DAG validation и forest extraction выполняются до дорогих
-   фаз. Invalid graph не запускает placement или router.
-2. Tidy-tree и multi-root forest seeds линейны после сортировки. WebCola
-   iteration counts являются compile-time constants.
-3. Coordinate grid создаётся один раз на вызов. Channel enumeration и A* не
-   имеют consumer-настраиваемых exhaustive budgets; поиск ограничен конечными
-   координатами нод и портов текущего graph.
-4. Production budget закрыт: максимум `128` нод, `256` портов и `512` edges.
+1. Нормализация и DAG validation выполняются до Dagre. Invalid graph не
+   запускает placement.
+2. Production budget закрыт: максимум `128` нод, `256` портов и `512` edges.
    Превышение отклоняется до placement. Более крупный graph требует другой
-   специализированной policy или staged projection, а не скрытого роста этого
-   hot path.
-5. Result materialize только production geometry. Forest, ranks, stress state,
-   grid, occupancy и diagnostics наружу не копируются.
-6. Top-down остаётся отдельным module graph и Worker executor. Его зависимости
-   и byte budget не попадают в fixed/adaptive artifacts.
+   специализированной policy или staged projection.
+3. Consumer может менять только bounded spacing values. Ranker, количество
+   проходов, curve mode и corner radius не являются runtime options.
+4. Result materialize только production geometry. Dagre ranks, dummy nodes,
+   order state и diagnostics наружу не копируются.
+5. Top-down остаётся отдельным module graph и Worker executor. Dagre и его byte
+   budget не попадают в fixed/adaptive artifacts.
 
-## Алгоритмические источники
+## Проверяемые свойства
 
-- Reingold–Tilford, *Tidier Drawings of Trees*:
-  https://reingold.co/tidier-drawings.pdf
-- van der Ploeg implementation for variable-size non-layered trees:
-  https://github.com/Klortho/d3-flextree
-- Graphviz/DOT phases, non-constraining edges and spline routing:
-  https://graphviz.org/docs/layouts/dot/
-- WebCola flow constraints and overlap removal:
-  https://ialab.it.monash.edu/webcola/doc/classes/_layout_.layout.html
+Focused tests обязаны фиксировать:
+
+- input-order invariance;
+- exact `SOUTH`/`NORTH` endpoints;
+- отдельные endpoints и paths всех semantic edges;
+- отсутствие общих линейных trunks в reference fixture;
+- fan-in и parallel named edges без relation subtype;
+- node non-overlap и отсутствие edge/node intersections на reference;
+- stable cycle witness и fail-closed invalid inputs;
+- frozen reference/dense bounds, result hashes, bundle bytes и benchmark.
+
+## Алгоритмический источник
+
+- Dagre — directed graph layout for JavaScript:
+  https://github.com/dagrejs/dagre
+- Mermaid flowchart syntax and curve configuration:
+  https://mermaid.js.org/syntax/flowchart.html

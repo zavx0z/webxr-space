@@ -1,11 +1,9 @@
 import type {TopDownLayoutGraph} from "@nodes/layout/top-down"
-import type {TopDownStoryEdgeKind} from "./top-down-fixture.ts"
 
 const RANK_WIDTHS = [8, 9, 13, 11, 5, 7, 1] as const
 
 type MutableEdge = {
   id: string
-  kind: TopDownStoryEdgeKind
   source: string
   target: string
 }
@@ -24,17 +22,18 @@ for (let rank = 1; rank < idsByRank.length; rank += 1) {
   const sources = idsByRank[rank - 1]!
   const targets = idsByRank[rank]!
   for (let index = 0; index < targets.length; index += 1) {
-    addEdge("tree", sources[Math.floor(index * sources.length / targets.length)]!, targets[index]!)
+    addEdge(sources[Math.floor(index * sources.length / targets.length)]!, targets[index]!)
   }
 }
 
-for (let targetRank = 1; targetRank < idsByRank.length && edgeCount("cross") < 32; targetRank += 1) {
+let supplementalEdges = 0
+for (let targetRank = 1; targetRank < idsByRank.length && supplementalEdges < 32; targetRank += 1) {
   const targets = idsByRank[targetRank]!
-  for (let offset = 1; offset <= 5 && edgeCount("cross") < 32; offset += 1) {
+  for (let offset = 1; offset <= 5 && supplementalEdges < 32; offset += 1) {
     const sourceRank = Math.max(0, targetRank - 1 - (offset % Math.min(targetRank, 2)))
     const sources = idsByRank[sourceRank]!
-    for (let index = 0; index < targets.length && edgeCount("cross") < 32; index += 2) {
-      addEdge("cross", sources[(index * 3 + offset) % sources.length]!, targets[index]!)
+    for (let index = 0; index < targets.length && supplementalEdges < 32; index += 2) {
+      if (addEdge(sources[(index * 3 + offset) % sources.length]!, targets[index]!)) supplementalEdges += 1
     }
   }
 }
@@ -43,7 +42,7 @@ for (let index = 0; index < 7; index += 1) {
   const targetRank = 2 + index % (idsByRank.length - 2)
   const target = idsByRank[targetRank]![index % idsByRank[targetRank]!.length]!
   const root = idsByRank[0]![index % idsByRank[0]!.length]!
-  addEdge("shortcut", root, target)
+  addEdge(root, target)
 }
 
 if (nodes.length !== 54 || edges.length !== 85) {
@@ -64,34 +63,26 @@ export const TOP_DOWN_DENSE_GRAPH: TopDownLayoutGraph = Object.freeze({
   ports: Object.freeze([...portById.values()].sort((left, right) => left.id.localeCompare(right.id))),
   edges: Object.freeze(edges.map((edge) => ({
     id: edge.id,
-    constraint: edge.kind === "tree",
     sourcePortId: portId(edge.source, "out", edge.id),
     targetPortId: portId(edge.target, "in", edge.id),
   }))),
   layoutOptions: {nodeSpacing: 32, layerSpacing: 52, edgeSpacing: 10, padding: 24},
 })
 
-export const TOP_DOWN_DENSE_EDGE_KINDS: Readonly<Record<string, TopDownStoryEdgeKind>> =
-  Object.freeze(Object.fromEntries(edges.map(({id, kind}) => [id, kind])))
-
 export const TOP_DOWN_DENSE_LABELS: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(nodes.map(({id}) => [id, id.replaceAll("-", " ")])),
 )
 
-function addEdge(kind: TopDownStoryEdgeKind, source: string, target: string): void {
+function addEdge(source: string, target: string): boolean {
   const pair = `${source}\0${target}`
-  if (pairs.has(pair)) return
+  if (pairs.has(pair)) return false
   pairs.add(pair)
   edges.push({
-    id: `${kind}-${String(edgeCount(kind) + 1).padStart(2, "0")}-${source}-${target}`,
-    kind,
+    id: `flow-${String(edges.length + 1).padStart(3, "0")}-${source}-${target}`,
     source,
     target,
   })
-}
-
-function edgeCount(kind: TopDownStoryEdgeKind): number {
-  return edges.filter((edge) => edge.kind === kind).length
+  return true
 }
 
 function portId(nodeId: string, role: "in" | "out", edgeId: string): string {

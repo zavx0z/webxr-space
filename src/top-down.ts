@@ -49,7 +49,7 @@ Source ports leave through `SOUTH`; target ports enter through `NORTH`.
 
 @param graph - Measured leaf rectangles, exact port offsets and semantic edges.
 
-@returns Geometry-only rectangles, endpoints and cubic spline chains.
+@returns Geometry-only rectangles, endpoints and uniform rounded cubic chains.
 
 @throws {@link TopDownLayoutError} when the directed node graph contains a cycle.
 @throws `Error` when IDs, dimensions, port offsets or endpoints are invalid.
@@ -65,7 +65,7 @@ const result = layoutTopDown({
     {id: "root/out", nodeId: "root", x: 90},
     {id: "leaf/in", nodeId: "leaf", x: 80},
   ],
-  edges: [{constraint: true, id: "flow", sourcePortId: "root/out", targetPortId: "leaf/in"}],
+  edges: [{id: "flow", sourcePortId: "root/out", targetPortId: "leaf/in"}],
 })
 ```
 */

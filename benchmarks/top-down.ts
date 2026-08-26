@@ -69,12 +69,11 @@ function layeredGraph(rankCount: number, rankWidth: number): TopDownLayoutGraph 
     width: 120 + index % 5 * 8,
     height: 54 + index % 3 * 6,
   }))
-  const edgeNodes: Array<{constraint: boolean; id: string; sourceIndex: number; targetIndex: number}> = []
+  const edgeNodes: Array<{id: string; sourceIndex: number; targetIndex: number}> = []
   for (let rank = 0; rank < rankCount - 1; rank += 1) {
     for (let column = 0; column < rankWidth; column += 1) {
       const sourceIndex = rank * rankWidth + column
       edgeNodes.push({
-        constraint: true,
         id: `edge-${String(edgeNodes.length).padStart(5, "0")}`,
         sourceIndex,
         targetIndex: (rank + 1) * rankWidth + column,
@@ -83,7 +82,6 @@ function layeredGraph(rankCount: number, rankWidth: number): TopDownLayoutGraph 
   }
   for (let column = 0; column < rankWidth; column += 4) {
     edgeNodes.push({
-      constraint: false,
       id: `edge-${String(edgeNodes.length).padStart(5, "0")}`,
       sourceIndex: column,
       targetIndex: (rankCount - 1) * rankWidth + column,
@@ -92,12 +90,12 @@ function layeredGraph(rankCount: number, rankWidth: number): TopDownLayoutGraph 
   const sourceRatios = benchmarkPortRatios(edgeNodes.map(({id, sourceIndex}) => ({id, nodeIndex: sourceIndex})))
   const targetRatios = benchmarkPortRatios(edgeNodes.map(({id, targetIndex}) => ({id, nodeIndex: targetIndex})))
   const ports: TopDownLayoutGraph["ports"][number][] = []
-  const edges = edgeNodes.map(({constraint, id, sourceIndex, targetIndex}) => {
+  const edges = edgeNodes.map(({id, sourceIndex, targetIndex}) => {
     const sourcePortId = `${nodes[sourceIndex]!.id}/out/${id}`
     const targetPortId = `${nodes[targetIndex]!.id}/in/${id}`
     ports.push({id: sourcePortId, nodeId: nodes[sourceIndex]!.id, x: nodes[sourceIndex]!.width * sourceRatios.get(id)!})
     ports.push({id: targetPortId, nodeId: nodes[targetIndex]!.id, x: nodes[targetIndex]!.width * targetRatios.get(id)!})
-    return {constraint, id, sourcePortId, targetPortId}
+    return {id, sourcePortId, targetPortId}
   })
   return {
     nodes,

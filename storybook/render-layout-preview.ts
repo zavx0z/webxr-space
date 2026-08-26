@@ -57,7 +57,7 @@ export function drawLayoutPreview(
     const edges: PreviewEdge[] = result.edges.filter(({id}) => options.visibleEdgeIds?.has(id) ?? true)
     edges.sort((left, right) => left.id.localeCompare(right.id))
     for (const edge of edges) {
-      const points = separateSemanticEdge(edgePoints(edge).map(transform), edge.id, 3)
+      const points = edgePoints(edge).map(transform)
       surface.drawPolyline(points, EDGE_COLOR, Math.max(1, scale * 2))
       const tip = points.at(-1)
       if (tip !== undefined) drawArrow(surface, points, Math.max(4, scale * 9), EDGE_COLOR)
@@ -113,35 +113,6 @@ export function drawLayoutPreview(
     variant: "caption",
     color: "muted",
   })
-}
-
-function separateSemanticEdge(
-  points: readonly LayoutPoint[],
-  edgeId: string,
-  maximumOffset: number,
-): readonly LayoutPoint[] {
-  if (points.length < 3) return points
-  const offset = (stableUnit(edgeId) - 0.5) * maximumOffset * 2
-  return points.map((value, index) => {
-    if (index === 0 || index === points.length - 1) return value
-    const before = points[index - 1]!
-    const after = points[index + 1]!
-    const dx = after.x - before.x
-    const dy = after.y - before.y
-    const length = Math.hypot(dx, dy)
-    if (length === 0) return value
-    const taper = Math.sin(Math.PI * index / (points.length - 1))
-    return {x: value.x - dy / length * offset * taper, y: value.y + dx / length * offset * taper}
-  })
-}
-
-function stableUnit(value: string): number {
-  let hash = 2166136261
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) / 0xffffffff
 }
 
 function edgePoints(edge: PreviewEdge): readonly LayoutPoint[] {

@@ -15,7 +15,6 @@ import {
 import {renderLayoutSvg} from "./render-layout-svg.ts"
 import {TOP_DOWN_REFERENCE_GRAPH} from "./top-down-fixture.ts"
 import {
-  TOP_DOWN_DENSE_EDGE_KINDS,
   TOP_DOWN_DENSE_GRAPH,
 } from "./top-down-dense-fixture.ts"
 
@@ -89,7 +88,7 @@ describe("standard package-owned Layout Storybook", () => {
     expect(renderer).toContain('div} from "@ui/elements/div"')
     expect(renderer).not.toContain("drawnCurves")
     expect(renderer).not.toContain("arrowTips")
-    expect(renderer).toContain("separateSemanticEdge")
+    expect(renderer).not.toContain("separateSemanticEdge")
     expect(renderer).toContain("sampleCurveChain")
     expect(registry).toContain('body: {kind: "canvas", canvasId: "nodes-storybook-canvas"}')
     expect(registry).toContain('entrypoint: join(packagesRoot, "layout/storybook/layout.stories.ts")')
@@ -138,9 +137,7 @@ describe("standard package-owned Layout Storybook", () => {
     for (const route of LAYOUT_STORIES.index.map(({route}) => route)) {
       const module = await LAYOUT_STORIES.load(route)
       expect(module.source(module.defaultArgs)).toContain("const result = layout")
-      expect(module.controls.map(({key}) => key)).toEqual(route.startsWith("top-down/")
-        ? ["routes", "ports", "all-relations"]
-        : ["routes", "ports"])
+      expect(module.controls.map(({key}) => key)).toEqual(["routes", "ports"])
     }
   })
 
@@ -177,30 +174,28 @@ describe("standard package-owned Layout Storybook", () => {
       expect(node).not.toHaveProperty("y")
       expect(node).not.toHaveProperty("rank")
     }
-    expect(JSON.stringify(TOP_DOWN_REFERENCE_GRAPH.edges)).not.toMatch(/"(?:bendPoints|lane|rank)"/)
+    expect(JSON.stringify(TOP_DOWN_REFERENCE_GRAPH.edges)).not.toMatch(/"(?:bendPoints|constraint|lane|rank|type)"/)
     expect(result.direction).toBe("DOWN")
     expect(result.nodes).toHaveLength(19)
     expect(result.edges).toHaveLength(20)
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 1978.468181, height: 1934.6154649999999})
-    expect(hash(result)).toBe("a31364211e093a95fa747936535a4d994fd0f4b0f388c2e73cccec8059273041")
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 1296, height: 1148})
+    expect(hash(result)).toBe("b4fe857a3449b14f8739b0f7a642fe3b56bfc37544636d8ef21c3e8541eee1c7")
   })
 
-  test("runs a neutral dense DAG with explicit tree, cross and shortcut presentation roles", () => {
+  test("runs the dense DAG through the same single semantic edge type", () => {
     const result = layoutTopDown(TOP_DOWN_DENSE_GRAPH)
-    const kinds = Object.values(TOP_DOWN_DENSE_EDGE_KINDS)
     const sourceEndpoints = new Set(result.edges.map(({curves}) => JSON.stringify(curves[0]!.startPoint)))
     const targetEndpoints = new Set(result.edges.map(({curves}) => JSON.stringify(curves.at(-1)!.endPoint)))
 
     expect(result.nodes).toHaveLength(54)
     expect(result.edges).toHaveLength(85)
     expect(TOP_DOWN_DENSE_GRAPH.ports).toHaveLength(170)
-    expect(kinds.filter((kind) => kind === "tree")).toHaveLength(46)
-    expect(kinds.filter((kind) => kind === "cross")).toHaveLength(32)
-    expect(kinds.filter((kind) => kind === "shortcut")).toHaveLength(7)
+    expect(JSON.stringify(TOP_DOWN_DENSE_GRAPH.edges)).not.toContain("constraint")
     expect(sourceEndpoints.size).toBe(result.edges.length)
     expect(targetEndpoints.size).toBe(result.edges.length)
-    expect(result.bounds).toEqual({x: 0, y: 0, width: 2934.098701, height: 1297.669538})
-    expect(hash(result)).toBe("10f3d1e52f037eb960276b083bb744f665351f206c1977c6aec5b6a078e5477f")
+    expect(result.edges.every(({curves}) => curves.length > 0)).toBeTrue()
+    expect(result.bounds).toEqual({x: 0, y: 0, width: 5273.5, height: 924})
+    expect(hash(result)).toBe("2da8a883fb0137f86b723a5454f761c91f860f44c2a5d860b4f50939f680c3b3")
   })
 
   test("keeps Storybook outside production exports and splits policy implementations", async () => {

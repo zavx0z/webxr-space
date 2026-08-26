@@ -1,5 +1,11 @@
-import {flextree, type FlextreeNode} from "d3-flextree"
-import {Layout as ColaLayout, type InputNode, type Link as ColaBaseLink} from "webcola"
+import {
+  Graph,
+  layout as layoutDagre,
+  type EdgeLabel,
+  type GraphLabel,
+  type NodeLabel,
+  type OrderConstraint,
+} from "@dagrejs/dagre"
 import type {LayoutPoint} from "../../types/protocol.ts"
 import type {
   TopDownCurveSegment,
@@ -10,22 +16,20 @@ import type {
   TopDownPortGeometry,
 } from "../../types/top-down.ts"
 
-const DEFAULT_NODE_SPACING = 40
-const DEFAULT_LAYER_SPACING = 64
-const DEFAULT_EDGE_SPACING = 16
-const DEFAULT_PADDING = 32
+const DEFAULT_NODE_SPACING = 50
+const DEFAULT_LAYER_SPACING = 50
+const DEFAULT_EDGE_SPACING = 20
+const DEFAULT_PADDING = 8
+const ROUNDED_CORNER_RADIUS = 5
 const MAX_NODES = 128
 const MAX_PORTS = 256
 const MAX_EDGES = 512
-const COLA_UNCONSTRAINED_ITERATIONS = 0
-const COLA_USER_CONSTRAINT_ITERATIONS = 4
-const COLA_OVERLAP_ITERATIONS = 8
+const EPSILON = 1e-7
 
 type NormalizedNode = Readonly<{id: string; width: number; height: number}>
 type NormalizedPort = Readonly<{id: string; nodeIndex: number; offsetX: number}>
 type NormalizedEdge = Readonly<{
   id: string
-  constraint: boolean
   sourcePortIndex: number
   targetPortIndex: number
   sourceNodeIndex: number
@@ -37,39 +41,39 @@ type NormalizedGraph = Readonly<{
   edges: readonly NormalizedEdge[]
   options: Readonly<{nodeSpacing: number; layerSpacing: number; edgeSpacing: number; padding: number}>
 }>
-type FlexDatum = {
-  index: number | null
-  size: [number, number]
-  children: FlexDatum[]
-}
-type ColaNode = InputNode & {
-  id: string
-  x: number
-  y: number
-  width: number
-  height: number
-  index?: number
-}
-type ColaLink = ColaBaseLink<ColaNode | number> & {
-  constraint: boolean
-  separation: number
-}
 type Placement = Readonly<{
   nodeX: Float64Array
   nodeY: Float64Array
   portX: Float64Array
   portY: Float64Array
+  edgePoints: ReadonlyMap<string, readonly LayoutPoint[]>
+}>
+type RoundedPrimitive = Readonly<{
+  kind: "line"
+  start: LayoutPoint
+  end: LayoutPoint
+}> | Readonly<{
+  kind: "quadratic"
+  start: LayoutPoint
+  control: LayoutPoint
+  end: LayoutPoint
 }>
 
+/**
+Runs the single Codex-compatible top-down pipeline.
+
+Every graph uses one Dagre/Sugiyama pass. Every semantic edge then uses the
+same rounded-corner conversion over its own Dagre point chain. No edge can
+select another placement or routing algorithm.
+*/
 export function solveTopDownCurves(
   input: TopDownLayoutGraph,
   cycleError: (witness: TopDownCycleWitness) => Error,
 ): TopDownLayoutResult {
   const graph = normalizeGraph(input)
   validateDag(graph, cycleError)
-  const forest = buildForest(graph)
-  const placed = placeForest(graph, forest)
-  const routed = routeEdges(graph, placed)
+  const placed = placeWithDagre(graph)
+  const routed = routeRoundedEdges(graph, placed)
   return materialize(graph, placed, routed)
 }
 
@@ -115,7 +119,9 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
     requireId(edge.id, "edge")
     if (edgeIds.has(edge.id)) throw new Error(`Duplicate top-down edge: ${edge.id}`)
     edgeIds.add(edge.id)
-    if (typeof edge.constraint !== "boolean") throw new Error(`Top-down edge constraint must be boolean: ${edge.id}`)
+    if (Object.prototype.hasOwnProperty.call(edge, "constraint")) {
+      throw new Error(`Top-down edges have one semantic type and do not accept constraint: ${edge.id}`)
+    }
     const sourcePortIndex = portIndexById.get(edge.sourcePortId)
     const targetPortIndex = portIndexById.get(edge.targetPortId)
     if (sourcePortIndex === undefined) throw new Error(`Unknown top-down source port: ${edge.id}/${edge.sourcePortId}`)
@@ -124,7 +130,6 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
     setRole(roles, targetPortIndex, 2, edge.id, ports[targetPortIndex]!.id)
     return {
       id: edge.id,
-      constraint: edge.constraint,
       sourcePortIndex,
       targetPortIndex,
       sourceNodeIndex: ports[sourcePortIndex]!.nodeIndex,
@@ -161,751 +166,240 @@ function validateDag(graph: NormalizedGraph, cycleError: (witness: TopDownCycleW
   throw cycleError(findCycleWitness(graph, outgoing, unresolved))
 }
 
-function buildForest(graph: NormalizedGraph): Readonly<{
-  roots: readonly number[]
-  children: readonly (readonly number[])[]
-  delayByNode: Int32Array
-}> {
-  const parent = new Int32Array(graph.nodes.length)
-  parent.fill(-1)
-  const children = Array.from({length: graph.nodes.length}, () => [] as number[])
-  const childOrder = new Map<string, string>()
-  for (const edge of graph.edges) {
-    if (!edge.constraint) continue
-    const previous = parent[edge.targetNodeIndex]!
-    if (previous >= 0) {
-      throw new Error(`Top-down constrained target has multiple parents: ${graph.nodes[edge.targetNodeIndex]!.id}`)
-    }
-    parent[edge.targetNodeIndex] = edge.sourceNodeIndex
-    children[edge.sourceNodeIndex]!.push(edge.targetNodeIndex)
-    childOrder.set(`${edge.sourceNodeIndex}\0${edge.targetNodeIndex}`, edge.id)
-  }
-  for (let parentIndex = 0; parentIndex < children.length; parentIndex += 1) {
-    children[parentIndex]!.sort((left, right) =>
-      childOrder.get(`${parentIndex}\0${left}`)!.localeCompare(childOrder.get(`${parentIndex}\0${right}`)!) ||
-      compareIds(graph.nodes[left]!, graph.nodes[right]!))
-  }
-  const roots = graph.nodes.map((_, index) => index).filter((index) => parent[index] === -1)
-  const depth = new Int32Array(graph.nodes.length)
-  const queue = [...roots]
-  while (queue.length > 0) {
-    const source = queue.shift()!
-    for (const target of children[source]!) {
-      depth[target] = depth[source]! + 1
-      queue.push(target)
-    }
-  }
-  const overlayTargets = Array.from({length: graph.nodes.length}, () => [] as number[])
-  for (const edge of graph.edges) {
-    if (!edge.constraint) overlayTargets[edge.sourceNodeIndex]!.push(edge.targetNodeIndex)
-  }
-  const delayByNode = new Int32Array(graph.nodes.length)
-  for (let index = 0; index < graph.nodes.length; index += 1) {
-    const targets = overlayTargets[index]!
-    if (parent[index] === -1 || children[index]!.length > 0 || targets.length === 0) continue
-    const available = targets.map((target) => depth[target]! - depth[index]! - 1)
-    if (available.every((delay) => delay > 0)) delayByNode[index] = Math.min(...available)
-  }
-  return {
-    roots,
-    children,
-    delayByNode,
-  }
-}
-
-function placeForest(
-  graph: NormalizedGraph,
-  forest: Readonly<{
-    roots: readonly number[]
-    children: readonly (readonly number[])[]
-    delayByNode: Int32Array
-  }>,
-): Placement {
-  const heights = graph.nodes.map(({height}) => height).sort((left, right) => left - right)
-  const virtualStep = heights[Math.floor(heights.length / 2)]! + graph.options.layerSpacing
-  let nodeX: Float64Array
-  let nodeY: Float64Array
-  if (forest.roots.length > 1) {
-    const seed = layeredSeed(graph, forest)
-    nodeX = seed.nodeX
-    nodeY = seed.nodeY
-  } else {
-    const delayed = (index: number): FlexDatum => {
-      let branch = datum(index)
-      for (let remaining = forest.delayByNode[index]!; remaining > 0; remaining -= 1) {
-        branch = {index: null, size: [0, virtualStep], children: [branch]}
-      }
-      return branch
-    }
-    const datum = (index: number): FlexDatum => ({
-      index,
-      size: [graph.nodes[index]!.width, graph.nodes[index]!.height + graph.options.layerSpacing],
-      children: forest.children[index]!.map(delayed),
-    })
-    const synthetic: FlexDatum = {index: null, size: [0, 0], children: forest.roots.map(datum)}
-    const layout = flextree<FlexDatum>({
-      children: (entry) => entry.children,
-      nodeSize: (entry) => entry.data.size,
-      spacing: () => graph.options.nodeSpacing,
-    })
-    const tree = layout(layout.hierarchy(synthetic))
-    const entries: FlextreeNode<FlexDatum>[] = []
-    const visit = (entry: FlextreeNode<FlexDatum>): void => {
-      if (entry.data.index !== null) entries.push(entry)
-      for (const child of entry.children ?? []) visit(child)
-    }
-    visit(tree)
-    const minLeft = Math.min(0, ...entries.map((entry) => entry.x - graph.nodes[entry.data.index!]!.width / 2))
-    const minTop = Math.min(0, ...entries.map((entry) => entry.y))
-    nodeX = new Float64Array(graph.nodes.length)
-    nodeY = new Float64Array(graph.nodes.length)
-    for (const entry of entries) {
-      const index = entry.data.index!
-      nodeX[index] = entry.x - graph.nodes[index]!.width / 2 - minLeft
-      nodeY[index] = entry.y - minTop
-    }
-  }
-  const routerNodes: ColaNode[] = graph.nodes.map((node, index) => ({
-    id: node.id,
-    width: node.width + graph.options.nodeSpacing,
-    height: node.height + graph.options.nodeSpacing,
-    x: nodeX[index]! + node.width / 2,
-    y: nodeY[index]! + node.height / 2,
-  }))
-  const routerLinks: ColaLink[] = graph.edges.map((edge) => {
-    const source = graph.nodes[edge.sourceNodeIndex]!
-    const target = graph.nodes[edge.targetNodeIndex]!
-    const baseSeparation = (source.height + target.height) / 2 + graph.options.layerSpacing
-    return {
-      source: edge.sourceNodeIndex,
-      target: edge.targetNodeIndex,
-      constraint: edge.constraint,
-      separation: edge.constraint
-        ? baseSeparation + forest.delayByNode[edge.targetNodeIndex]! * virtualStep
-        : Math.max(1, graph.options.layerSpacing / 4),
-      length: baseSeparation + graph.options.nodeSpacing,
-    }
+function placeWithDagre(graph: NormalizedGraph): Placement {
+  const dagre = new Graph<GraphLabel, NodeLabel, EdgeLabel>({
+    directed: true,
+    multigraph: true,
+    compound: false,
   })
-  const router = new ColaLayout()
-    .size([Math.max(1, ...routerNodes.map(({x}) => x)), Math.max(1, ...routerNodes.map(({y}) => y))])
-    .nodes(routerNodes)
-    .links(routerLinks)
-    .avoidOverlaps(true)
-    .handleDisconnected(true)
-    .flowLayout("y", (link: ColaLink) => link.separation)
-    .linkDistance((link) => (link as ColaLink).length ?? graph.options.layerSpacing)
-    .convergenceThreshold(1e-5)
-  router.start(
-    COLA_UNCONSTRAINED_ITERATIONS,
-    forest.roots.length > 1 ? 1 : COLA_USER_CONSTRAINT_ITERATIONS,
-    forest.roots.length > 1 ? 2 : COLA_OVERLAP_ITERATIONS,
-    0,
-    false,
-    false,
-  )
-  for (let index = 0; index < routerNodes.length; index += 1) {
-    const node = routerNodes[index]!
-    nodeX[index] = clean(node.x - graph.nodes[index]!.width / 2)
-    nodeY[index] = clean(node.y - graph.nodes[index]!.height / 2)
+  dagre.setGraph({
+    rankdir: "TB",
+    ranker: "network-simplex",
+    nodesep: graph.options.nodeSpacing,
+    ranksep: graph.options.layerSpacing,
+    edgesep: graph.options.edgeSpacing,
+    marginx: 0,
+    marginy: 0,
+  })
+  dagre.setDefaultEdgeLabel(() => ({}))
+  const layoutNodeOrder: number[] = []
+  const insertedNodes = new Set<number>()
+  const insertNode = (nodeIndex: number): void => {
+    if (insertedNodes.has(nodeIndex)) return
+    insertedNodes.add(nodeIndex)
+    layoutNodeOrder.push(nodeIndex)
   }
+  for (const edge of graph.edges) {
+    insertNode(edge.sourceNodeIndex)
+    insertNode(edge.targetNodeIndex)
+  }
+  for (let index = 0; index < graph.nodes.length; index += 1) insertNode(index)
+  for (const index of layoutNodeOrder) {
+    const node = graph.nodes[index]!
+    dagre.setNode(node.id, {width: node.width, height: node.height})
+  }
+  for (const edge of [...graph.edges].reverse()) {
+    dagre.setEdge(
+      graph.nodes[edge.sourceNodeIndex]!.id,
+      graph.nodes[edge.targetNodeIndex]!.id,
+      {height: 0, minlen: 1, weight: 1, width: 0},
+      edge.id,
+    )
+  }
+  const desiredOrder = portOrderConstraints(graph)
+  layoutDagre(dagre, {
+    customOrder(layoutGraph, order) {
+      const constraints = acyclicOrderConstraints(desiredOrder.filter(({left, right}) =>
+        layoutGraph.node(left)?.rank === layoutGraph.node(right)?.rank))
+      order(layoutGraph, {constraints: [...constraints]})
+    },
+  })
+
+  const nodeX = new Float64Array(graph.nodes.length)
+  const nodeY = new Float64Array(graph.nodes.length)
+  for (let index = 0; index < graph.nodes.length; index += 1) {
+    const node = graph.nodes[index]!
+    const geometry = dagre.node(node.id)
+    if (!Number.isFinite(geometry.x) || !Number.isFinite(geometry.y)) {
+      throw new Error(`Dagre did not place top-down node: ${node.id}`)
+    }
+    nodeX[index] = clean(geometry.x! - node.width / 2)
+    nodeY[index] = clean(geometry.y! - node.height / 2)
+  }
+
   const portX = new Float64Array(graph.ports.length)
   const portY = new Float64Array(graph.ports.length)
   const sourcePorts = new Set(graph.edges.map(({sourcePortIndex}) => sourcePortIndex))
   for (let index = 0; index < graph.ports.length; index += 1) {
     const port = graph.ports[index]!
-    portX[index] = nodeX[port.nodeIndex]! + port.offsetX
-    portY[index] = sourcePorts.has(index)
+    portX[index] = clean(nodeX[port.nodeIndex]! + port.offsetX)
+    portY[index] = clean(sourcePorts.has(index)
       ? nodeY[port.nodeIndex]! + graph.nodes[port.nodeIndex]!.height
-      : nodeY[port.nodeIndex]!
+      : nodeY[port.nodeIndex]!)
   }
-  return {nodeX, nodeY, portX, portY}
+
+  const edgePoints = new Map<string, readonly LayoutPoint[]>()
+  for (const edge of graph.edges) {
+    const label = dagre.edge(
+      graph.nodes[edge.sourceNodeIndex]!.id,
+      graph.nodes[edge.targetNodeIndex]!.id,
+      edge.id,
+    )
+    const points = label.points?.map(({x, y}) => point(x, y)) ?? []
+    if (points.length < 2) throw new Error(`Dagre did not route top-down edge: ${edge.id}`)
+    edgePoints.set(edge.id, points)
+  }
+  return {nodeX, nodeY, portX, portY, edgePoints}
 }
 
-function layeredSeed(
-  graph: NormalizedGraph,
-  forest: Readonly<{roots: readonly number[]; children: readonly (readonly number[])[]}>,
-): Readonly<{nodeX: Float64Array; nodeY: Float64Array}> {
-  const ranks = new Int32Array(graph.nodes.length)
-  let maximumRank = 0
-  const queue = [...forest.roots]
-  for (let head = 0; head < queue.length; head += 1) {
-    const source = queue[head]!
-    for (const target of forest.children[source]!) {
-      ranks[target] = ranks[source]! + 1
-      maximumRank = Math.max(maximumRank, ranks[target]!)
-      queue.push(target)
+function portOrderConstraints(graph: NormalizedGraph): readonly OrderConstraint[] {
+  const outgoing = new Map<number, NormalizedEdge[]>()
+  const incoming = new Map<number, NormalizedEdge[]>()
+  for (const edge of graph.edges) {
+    const sourceEdges = outgoing.get(edge.sourceNodeIndex) ?? []
+    sourceEdges.push(edge)
+    outgoing.set(edge.sourceNodeIndex, sourceEdges)
+    const targetEdges = incoming.get(edge.targetNodeIndex) ?? []
+    targetEdges.push(edge)
+    incoming.set(edge.targetNodeIndex, targetEdges)
+  }
+  const constraints: OrderConstraint[] = []
+  for (const edges of outgoing.values()) {
+    edges.sort((left, right) =>
+      graph.ports[left.sourcePortIndex]!.offsetX - graph.ports[right.sourcePortIndex]!.offsetX ||
+      left.id.localeCompare(right.id))
+    for (let index = 1; index < edges.length; index += 1) {
+      const left = graph.nodes[edges[index - 1]!.targetNodeIndex]!.id
+      const right = graph.nodes[edges[index]!.targetNodeIndex]!.id
+      if (left !== right) constraints.push({left, right})
     }
   }
-  const preorder: number[] = []
-  const stack = [...forest.roots].reverse()
-  while (stack.length > 0) {
-    const nodeIndex = stack.pop()!
-    preorder.push(nodeIndex)
-    const children = forest.children[nodeIndex]!
-    for (let index = children.length - 1; index >= 0; index -= 1) stack.push(children[index]!)
-  }
-  const preorderPosition = new Int32Array(graph.nodes.length)
-  for (let index = 0; index < preorder.length; index += 1) preorderPosition[preorder[index]!] = index
-  const layers = Array.from({length: maximumRank + 1}, () => [] as number[])
-  for (let index = 0; index < graph.nodes.length; index += 1) layers[ranks[index]!]!.push(index)
-  for (const layer of layers) layer.sort((left, right) => preorderPosition[left]! - preorderPosition[right]!)
-  const layerWidths = layers.map((layer) => layer.reduce((total, index) =>
-    total + graph.nodes[index]!.width, Math.max(0, layer.length - 1) * graph.options.nodeSpacing))
-  const contentWidth = Math.max(0, ...layerWidths)
-  const nodeX = new Float64Array(graph.nodes.length)
-  const nodeY = new Float64Array(graph.nodes.length)
-  let top = 0
-  for (let rank = 0; rank < layers.length; rank += 1) {
-    const layer = layers[rank]!
-    const height = Math.max(0, ...layer.map((index) => graph.nodes[index]!.height))
-    let left = (contentWidth - layerWidths[rank]!) / 2
-    for (const index of layer) {
-      nodeX[index] = left
-      nodeY[index] = top + (height - graph.nodes[index]!.height) / 2
-      left += graph.nodes[index]!.width + graph.options.nodeSpacing
+  for (const edges of incoming.values()) {
+    edges.sort((left, right) =>
+      graph.ports[left.targetPortIndex]!.offsetX - graph.ports[right.targetPortIndex]!.offsetX ||
+      left.id.localeCompare(right.id))
+    for (let index = 1; index < edges.length; index += 1) {
+      const left = graph.nodes[edges[index - 1]!.sourceNodeIndex]!.id
+      const right = graph.nodes[edges[index]!.sourceNodeIndex]!.id
+      if (left !== right) constraints.push({left, right})
     }
-    top += height + graph.options.layerSpacing
   }
-  return {nodeX, nodeY}
+  return constraints
 }
 
-function routeEdges(
-  graph: NormalizedGraph,
-  placed: Placement,
-): readonly TopDownEdgeGeometry[] {
-  const router = createObstacleRouter(graph, placed)
-  const occupied: OccupiedSegment[] = []
-  const resultById = new Map<string, TopDownEdgeGeometry>()
-  const schedule = graph.edges.map((_, index) => index).sort((left, right) => {
-    const leftEdge = graph.edges[left]!
-    const rightEdge = graph.edges[right]!
-    if (leftEdge.targetNodeIndex === rightEdge.targetNodeIndex) {
-      return placed.portX[leftEdge.sourcePortIndex]! - placed.portX[rightEdge.sourcePortIndex]! ||
-        placed.portX[leftEdge.targetPortIndex]! - placed.portX[rightEdge.targetPortIndex]! ||
-        compareIds(leftEdge, rightEdge)
+function acyclicOrderConstraints(values: readonly OrderConstraint[]): readonly OrderConstraint[] {
+  const adjacency = new Map<string, Set<string>>()
+  const result: OrderConstraint[] = []
+  const reaches = (source: string, target: string): boolean => {
+    const pending = [source]
+    const seen = new Set(pending)
+    while (pending.length > 0) {
+      const current = pending.shift()!
+      if (current === target) return true
+      for (const next of adjacency.get(current) ?? []) {
+        if (seen.has(next)) continue
+        seen.add(next)
+        pending.push(next)
+      }
     }
-    return Number(rightEdge.constraint) - Number(leftEdge.constraint) || compareIds(leftEdge, rightEdge)
-  })
-  for (const edgeIndex of schedule) {
-    const edge = graph.edges[edgeIndex]!
+    return false
+  }
+  for (const constraint of values) {
+    if (reaches(constraint.right, constraint.left)) continue
+    const targets = adjacency.get(constraint.left) ?? new Set<string>()
+    targets.add(constraint.right)
+    adjacency.set(constraint.left, targets)
+    result.push(constraint)
+  }
+  return result
+}
+
+function routeRoundedEdges(graph: NormalizedGraph, placed: Placement): readonly TopDownEdgeGeometry[] {
+  return graph.edges.map((edge): TopDownEdgeGeometry => {
     const start = point(placed.portX[edge.sourcePortIndex]!, placed.portY[edge.sourcePortIndex]!)
     const end = point(placed.portX[edge.targetPortIndex]!, placed.portY[edge.targetPortIndex]!)
-    const direct = directCurve(start, end)
-    const directPoints = sampleCurves([direct])
-    const directAllowed = end.y > start.y && curveClearsNodes(graph, placed, edge, direct)
-    const directScore = directAllowed ? routedPathScore(directPoints, occupied) : Number.POSITIVE_INFINITY
-    let curves: readonly [TopDownCurveSegment, ...TopDownCurveSegment[]]
-    let routingPoints: readonly LayoutPoint[]
-    if (directAllowed && directScore < 1_000_000) {
-      curves = [direct]
-      routingPoints = directPoints
-    } else {
-      const path = obstaclePath(router, edge, start, end, occupied)
-      const routedCurves = roundedPathCurves(path, router.clearance * 0.8)
-      const routedScore = routedPathScore(path, occupied)
-      if (directScore <= routedScore) {
-        curves = [direct]
-        routingPoints = directPoints
-      } else {
-        curves = routedCurves
-        routingPoints = path
-      }
-    }
-    for (const segment of pathSegments(routingPoints)) {
-      occupied.push(segment)
-    }
-    resultById.set(edge.id, {id: edge.id, curves})
-  }
-  return graph.edges.map(({id}) => resultById.get(id)!)
+    const dagrePoints = placed.edgePoints.get(edge.id)!
+    const terminalLength = Math.min(graph.options.layerSpacing / 2, Math.max(0, end.y - start.y) / 2)
+    const sourceTerminal = point(start.x, start.y + terminalLength)
+    const targetTerminal = point(end.x, end.y - terminalLength)
+    const interior = dagrePoints.slice(1, -1).filter(({y}) =>
+      y >= sourceTerminal.y - EPSILON && y <= targetTerminal.y + EPSILON)
+    const path = simplifyPath([start, sourceTerminal, ...interior, targetTerminal, end])
+    const primitives = roundedPrimitives(path, ROUNDED_CORNER_RADIUS)
+    const curves = primitivesToCubics(primitives)
+    if (curves.length === 0) throw new Error(`Top-down edge has no rounded path: ${edge.id}`)
+    return {id: edge.id, curves: [curves[0]!, ...curves.slice(1)]}
+  })
 }
 
-function directCurve(start: LayoutPoint, end: LayoutPoint): TopDownCurveSegment {
-  const control = Math.max(0, end.y - start.y) * 0.42
-  return {
-    startPoint: start,
-    controlPoints: [
-      point(start.x, start.y + control),
-      point(end.x, end.y - control),
-    ],
-    endPoint: end,
-  }
-}
-
-function obstaclePath(
-  router: ObstacleRouter,
-  edge: NormalizedEdge,
-  start: LayoutPoint,
-  end: LayoutPoint,
-  occupied: readonly OccupiedSegment[],
-): readonly LayoutPoint[] {
-  const sourceProbe = point(start.x, start.y + router.clearance)
-  const targetProbe = point(end.x, end.y - router.clearance)
-  const route = routeOrthogonalVisibility(
-    router,
-    sourceProbe,
-    targetProbe,
-    occupied,
-  )
-  if (route === null) throw new Error(`Top-down obstacle router found no path: ${edge.id}`)
-  return simplifyPath([start, ...route, end])
-}
-
-type ObstacleRouter = Readonly<{
-  clearance: number
-  obstacles: readonly RectangleBounds[]
-  xs: readonly number[]
-  ys: readonly number[]
-  xIndex: ReadonlyMap<number, number>
-  yIndex: ReadonlyMap<number, number>
-  valid: Uint8Array
-  horizontal: Uint8Array
-  vertical: Uint8Array
-}>
-type OccupiedSegment = Readonly<{
-  start: LayoutPoint
-  end: LayoutPoint
-}>
-
-function createObstacleRouter(graph: NormalizedGraph, placed: Placement): ObstacleRouter {
-  const clearance = graph.options.edgeSpacing
-  const obstacles = graph.nodes.map((node, index): RectangleBounds => ({
-    left: placed.nodeX[index]! - clearance,
-    right: placed.nodeX[index]! + node.width + clearance,
-    top: placed.nodeY[index]! - clearance,
-    bottom: placed.nodeY[index]! + node.height + clearance,
-  }))
-  const margin = graph.options.edgeSpacing * 2
-  const outerLeft = Math.min(...obstacles.map(({left}) => left)) - margin
-  const outerRight = Math.max(...obstacles.map(({right}) => right)) + margin
-  const outerTop = Math.min(...obstacles.map(({top}) => top)) - margin
-  const outerBottom = Math.max(...obstacles.map(({bottom}) => bottom)) + margin
-  const xs = uniqueSorted([
-    outerLeft,
-    outerRight,
-    ...obstacles.flatMap(({left, right}) => [left, right]),
-    ...graph.ports.map((_, index) => placed.portX[index]!),
-  ])
-  const ys = uniqueSorted([
-    outerTop,
-    outerBottom,
-    ...obstacles.flatMap(({top, bottom}) => [top, bottom]),
-  ])
-  const width = xs.length
-  const vertexCount = width * ys.length
-  const valid = new Uint8Array(vertexCount)
-  for (let yIndex = 0; yIndex < ys.length; yIndex += 1) {
-    for (let xIndex = 0; xIndex < width; xIndex += 1) {
-      valid[yIndex * width + xIndex] = pointInsideAny(xs[xIndex]!, ys[yIndex]!, obstacles) ? 0 : 1
-    }
-  }
-  const horizontal = new Uint8Array(vertexCount)
-  const vertical = new Uint8Array(vertexCount)
-  for (let yIndex = 0; yIndex < ys.length; yIndex += 1) {
-    for (let xIndex = 0; xIndex < width; xIndex += 1) {
-      const vertex = yIndex * width + xIndex
-      if (valid[vertex] === 0) continue
-      if (xIndex + 1 < width && valid[vertex + 1] === 1 &&
-          !pointInsideAny((xs[xIndex]! + xs[xIndex + 1]!) / 2, ys[yIndex]!, obstacles)) horizontal[vertex] = 1
-      if (yIndex + 1 < ys.length && valid[vertex + width] === 1 &&
-          !pointInsideAny(xs[xIndex]!, (ys[yIndex]! + ys[yIndex + 1]!) / 2, obstacles)) vertical[vertex] = 1
-    }
-  }
-  return {
-    clearance,
-    obstacles,
-    xs,
-    ys,
-    xIndex: new Map(xs.map((value, index) => [value, index])),
-    yIndex: new Map(ys.map((value, index) => [value, index])),
-    valid,
-    horizontal,
-    vertical,
-  }
-}
-
-function routeOrthogonalVisibility(
-  router: ObstacleRouter,
-  start: LayoutPoint,
-  end: LayoutPoint,
-  occupied: readonly OccupiedSegment[],
-): readonly LayoutPoint[] | null {
-  const simple = routeSimpleChannels(router, start, end, occupied)
-  if (simple !== null) return simple
-  const startX = router.xIndex.get(start.x)
-  const startY = router.yIndex.get(start.y)
-  const endX = router.xIndex.get(end.x)
-  const endY = router.yIndex.get(end.y)
-  if (startX === undefined || startY === undefined || endX === undefined || endY === undefined) return null
-  const width = router.xs.length
-  const startVertex = startY * width + startX
-  const endVertex = endY * width + endX
-  if (router.valid[startVertex] === 0 || router.valid[endVertex] === 0) return null
-  const distance = new Float64Array(router.valid.length * 2)
-  distance.fill(Number.POSITIVE_INFINITY)
-  const previous = new Int32Array(distance.length)
-  previous.fill(-1)
-  const heap = new RouteMinHeap()
-  for (const axis of [0, 1] as const) {
-    const state = startVertex * 2 + axis
-    distance[state] = 0
-    heap.push(state, manhattan(start, end), 0)
-  }
-  let finalState = -1
-  while (heap.size > 0) {
-    const current = heap.pop()
-    if (current.cost !== distance[current.state]) continue
-    const vertex = Math.floor(current.state / 2)
-    const axis = current.state % 2
-    if (vertex === endVertex) {
-      finalState = current.state
-      break
-    }
-    const xIndex = vertex % width
-    const yIndex = Math.floor(vertex / width)
-    for (const [nextVertex, nextAxis, clear] of [
-      [vertex - 1, 0, xIndex > 0 && router.horizontal[vertex - 1] === 1],
-      [vertex + 1, 0, xIndex + 1 < width && router.horizontal[vertex] === 1],
-      [vertex - width, 1, yIndex > 0 && router.vertical[vertex - width] === 1],
-      [vertex + width, 1, yIndex + 1 < router.ys.length && router.vertical[vertex] === 1],
-    ] as const) {
-      if (!clear) continue
-      const nextState = nextVertex * 2 + nextAxis
-      const nextPoint = point(router.xs[nextVertex % width]!, router.ys[Math.floor(nextVertex / width)]!)
-      const step = manhattan(point(router.xs[xIndex]!, router.ys[yIndex]!), nextPoint) + (axis === nextAxis ? 0 : 12)
-      const nextDistance = current.cost + step
-      if (nextDistance >= distance[nextState]!) continue
-      distance[nextState] = nextDistance
-      previous[nextState] = current.state
-      heap.push(nextState, nextDistance + manhattan(nextPoint, end), nextDistance)
-    }
-  }
-  if (finalState < 0) return null
-  const reversed: LayoutPoint[] = []
-  for (let state = finalState; state >= 0; state = previous[state]!) {
-    const vertex = Math.floor(state / 2)
-    reversed.push(point(router.xs[vertex % width]!, router.ys[Math.floor(vertex / width)]!))
-    if (vertex === startVertex) break
-  }
-  return simplifyPath(reversed.reverse())
-}
-
-function routeSimpleChannels(
-  router: ObstacleRouter,
-  start: LayoutPoint,
-  end: LayoutPoint,
-  occupied: readonly OccupiedSegment[],
-): readonly LayoutPoint[] | null {
-  let best: Readonly<{score: number; path: readonly LayoutPoint[]}> | null = null
-  const consider = (path: readonly LayoutPoint[]): void => {
-    const simplified = simplifyPath(path)
-    if (!orthogonalPathClears(simplified, router.obstacles)) return
-    const score = routedPathScore(simplified, occupied)
-    if (best === null || score < best.score) best = {score, path: simplified}
-  }
-  consider([start, point(start.x, end.y), end])
-  consider([start, point(end.x, start.y), end])
-  for (const x of router.xs) consider([start, point(x, start.y), point(x, end.y), end])
-  for (const y of router.ys) consider([start, point(start.x, y), point(end.x, y), end])
-  if (best !== null && (best as Readonly<{score: number}>).score < 1_000_000) {
-    return (best as Readonly<{score: number; path: readonly LayoutPoint[]}>).path
-  }
-  for (const outerX of [router.xs[0]!, router.xs.at(-1)!]) {
-    const exits = router.ys.flatMap((y) => {
-      const path = simplifyPath([start, point(start.x, y), point(outerX, y)])
-      return orthogonalPathClears(path, router.obstacles) ? [{y, path}] : []
-    })
-    const entries = router.ys.flatMap((y) => {
-      const path = simplifyPath([point(outerX, y), point(end.x, y), end])
-      return orthogonalPathClears(path, router.obstacles) ? [{y, path}] : []
-    })
-    for (const exit of exits) {
-      for (const entry of entries) {
-        const path = simplifyPath([...exit.path, point(outerX, entry.y), ...entry.path.slice(1)])
-        const score = routedPathScore(path, occupied)
-        if (best === null || score < best.score) best = {score, path}
-      }
-    }
-  }
-  for (const outerY of [router.ys[0]!, router.ys.at(-1)!]) {
-    const exits = router.xs.flatMap((x) => {
-      const path = simplifyPath([start, point(x, start.y), point(x, outerY)])
-      return orthogonalPathClears(path, router.obstacles) ? [{x, path}] : []
-    })
-    const entries = router.xs.flatMap((x) => {
-      const path = simplifyPath([point(x, outerY), point(x, end.y), end])
-      return orthogonalPathClears(path, router.obstacles) ? [{x, path}] : []
-    })
-    for (const exit of exits) {
-      for (const entry of entries) {
-        const path = simplifyPath([...exit.path, point(entry.x, outerY), ...entry.path.slice(1)])
-        const score = routedPathScore(path, occupied)
-        if (best === null || score < best.score) best = {score, path}
-      }
-    }
-  }
-  return best === null ? null : (best as Readonly<{score: number; path: readonly LayoutPoint[]}>).path
-}
-
-function routePathScore(path: readonly LayoutPoint[]): number {
-  return path.slice(1).reduce((total, current, index) =>
-    total + manhattan(path[index]!, current), 0) + Math.max(0, path.length - 2) * 12
-}
-
-function routedPathScore(
-  path: readonly LayoutPoint[],
-  occupied: readonly OccupiedSegment[],
-): number {
-  let crossings = 0
-  let unrelatedOverlaps = 0
-  for (const candidate of pathSegments(path)) {
-    for (const existing of occupied) {
-      if (properSegmentIntersection(candidate.start, candidate.end, existing.start, existing.end)) crossings += 1
-      if (collinearInteriorOverlap(candidate.start, candidate.end, existing.start, existing.end)) {
-        unrelatedOverlaps += 1
-      }
-    }
-  }
-  return unrelatedOverlaps * 100_000_000 + crossings * 1_000_000 + routePathScore(path)
-}
-
-function pathSegments(path: readonly LayoutPoint[]): Array<Readonly<{start: LayoutPoint; end: LayoutPoint}>> {
-  const segments: Array<Readonly<{start: LayoutPoint; end: LayoutPoint}>> = []
-  for (let index = 1; index < path.length; index += 1) {
-    const start = path[index - 1]!
-    const end = path[index]!
-    if (!samePoint(start, end)) segments.push({start, end})
-  }
-  return segments
-}
-
-function sampleCurves(curves: readonly TopDownCurveSegment[]): readonly LayoutPoint[] {
-  const points: LayoutPoint[] = []
-  for (const curve of curves) {
-    for (let sample = 0; sample <= 8; sample += 1) {
-      if (points.length > 0 && sample === 0) continue
-      points.push(cubicPoint(curve, sample / 8))
-    }
-  }
-  return points
-}
-
-function properSegmentIntersection(
-  firstStart: LayoutPoint,
-  firstEnd: LayoutPoint,
-  secondStart: LayoutPoint,
-  secondEnd: LayoutPoint,
-): boolean {
-  const firstX = firstEnd.x - firstStart.x
-  const firstY = firstEnd.y - firstStart.y
-  const secondX = secondEnd.x - secondStart.x
-  const secondY = secondEnd.y - secondStart.y
-  const denominator = firstX * secondY - firstY * secondX
-  if (Math.abs(denominator) < 1e-9) return false
-  const offsetX = secondStart.x - firstStart.x
-  const offsetY = secondStart.y - firstStart.y
-  const firstRatio = (offsetX * secondY - offsetY * secondX) / denominator
-  const secondRatio = (offsetX * firstY - offsetY * firstX) / denominator
-  const epsilon = 1e-7
-  return firstRatio > epsilon && firstRatio < 1 - epsilon &&
-    secondRatio > epsilon && secondRatio < 1 - epsilon
-}
-
-function collinearInteriorOverlap(
-  firstStart: LayoutPoint,
-  firstEnd: LayoutPoint,
-  secondStart: LayoutPoint,
-  secondEnd: LayoutPoint,
-): boolean {
-  const firstX = firstEnd.x - firstStart.x
-  const firstY = firstEnd.y - firstStart.y
-  const secondX = secondEnd.x - secondStart.x
-  const secondY = secondEnd.y - secondStart.y
-  if (Math.abs(firstX * secondY - firstY * secondX) > 1e-7) return false
-  const offsetX = secondStart.x - firstStart.x
-  const offsetY = secondStart.y - firstStart.y
-  if (Math.abs(firstX * offsetY - firstY * offsetX) > 1e-7) return false
-  const horizontal = Math.abs(firstX) >= Math.abs(firstY)
-  const firstMin = Math.min(horizontal ? firstStart.x : firstStart.y, horizontal ? firstEnd.x : firstEnd.y)
-  const firstMax = Math.max(horizontal ? firstStart.x : firstStart.y, horizontal ? firstEnd.x : firstEnd.y)
-  const secondMin = Math.min(horizontal ? secondStart.x : secondStart.y, horizontal ? secondEnd.x : secondEnd.y)
-  const secondMax = Math.max(horizontal ? secondStart.x : secondStart.y, horizontal ? secondEnd.x : secondEnd.y)
-  return Math.max(firstMin, secondMin) < Math.min(firstMax, secondMax) - 1e-7
-}
-
-function orthogonalPathClears(
-  path: readonly LayoutPoint[],
-  obstacles: readonly RectangleBounds[],
-): boolean {
-  for (let index = 1; index < path.length; index += 1) {
-    const start = path[index - 1]!
-    const end = path[index]!
-    if (start.x !== end.x && start.y !== end.y) return false
-    if (start.y === end.y) {
-      const left = Math.min(start.x, end.x)
-      const right = Math.max(start.x, end.x)
-      for (const rectangle of obstacles) {
-        if (start.y > rectangle.top && start.y < rectangle.bottom &&
-            Math.max(left, rectangle.left) < Math.min(right, rectangle.right)) return false
-      }
-    } else {
-      const top = Math.min(start.y, end.y)
-      const bottom = Math.max(start.y, end.y)
-      for (const rectangle of obstacles) {
-        if (start.x > rectangle.left && start.x < rectangle.right &&
-            Math.max(top, rectangle.top) < Math.min(bottom, rectangle.bottom)) return false
-      }
-    }
-  }
-  return true
-}
-
-function uniqueSorted(values: readonly number[]): number[] {
-  return [...new Set(values)].sort((left, right) => left - right)
-}
-
-function pointInsideAny(
-  x: number,
-  y: number,
-  obstacles: readonly RectangleBounds[],
-): boolean {
-  for (const rectangle of obstacles) {
-    if (x > rectangle.left && x < rectangle.right && y > rectangle.top && y < rectangle.bottom) return true
-  }
-  return false
-}
-
-function manhattan(left: LayoutPoint, right: LayoutPoint): number {
-  return Math.abs(right.x - left.x) + Math.abs(right.y - left.y)
-}
-
-class RouteMinHeap {
-  readonly #values: Array<Readonly<{state: number; priority: number; cost: number}>> = []
-
-  get size(): number {
-    return this.#values.length
-  }
-
-  push(state: number, priority: number, cost: number): void {
-    const value = {state, priority, cost}
-    this.#values.push(value)
-    let index = this.#values.length - 1
-    while (index > 0) {
-      const parent = (index - 1) >> 1
-      if (compareRouteHeap(this.#values[parent]!, value) <= 0) break
-      this.#values[index] = this.#values[parent]!
-      index = parent
-    }
-    this.#values[index] = value
-  }
-
-  pop(): Readonly<{state: number; priority: number; cost: number}> {
-    const root = this.#values[0]!
-    const tail = this.#values.pop()!
-    if (this.#values.length === 0) return root
-    let index = 0
-    while (true) {
-      const left = index * 2 + 1
-      if (left >= this.#values.length) break
-      const right = left + 1
-      const child = right < this.#values.length &&
-        compareRouteHeap(this.#values[right]!, this.#values[left]!) < 0 ? right : left
-      if (compareRouteHeap(tail, this.#values[child]!) <= 0) break
-      this.#values[index] = this.#values[child]!
-      index = child
-    }
-    this.#values[index] = tail
-    return root
-  }
-}
-
-function compareRouteHeap(
-  left: Readonly<{state: number; priority: number; cost: number}>,
-  right: Readonly<{state: number; priority: number; cost: number}>,
-): number {
-  return left.priority - right.priority || left.cost - right.cost || left.state - right.state
-}
-
-function roundedPathCurves(
-  path: readonly LayoutPoint[],
-  radius: number,
-): readonly [TopDownCurveSegment, ...TopDownCurveSegment[]] {
-  if (path.length === 2) return [straightCurve(path[0]!, path[1]!)]
-  const curves: TopDownCurveSegment[] = []
-  let current = path[0]!
-  let startTangent: LayoutPoint | null = null
+function roundedPrimitives(path: readonly LayoutPoint[], radius: number): readonly RoundedPrimitive[] {
+  if (path.length < 2) return []
+  const primitives: RoundedPrimitive[] = []
+  let cursor = path[0]!
   for (let index = 1; index < path.length - 1; index += 1) {
+    const previous = path[index - 1]!
     const corner = path[index]!
     const next = path[index + 1]!
-    const incomingLength = Math.hypot(corner.x - current.x, corner.y - current.y)
-    const outgoingLength = Math.hypot(next.x - corner.x, next.y - corner.y)
-    const localRadius = Math.min(radius, incomingLength / 2, outgoingLength / 2)
-    const before = moveTowards(corner, current, localRadius)
-    const after = moveTowards(corner, next, localRadius)
-    const incomingTangent = point(corner.x - before.x, corner.y - before.y)
-    if (!samePoint(current, before)) curves.push(tangentLineCurve(current, before, startTangent, incomingTangent))
-    if (!samePoint(before, after)) {
-      curves.push({startPoint: before, controlPoints: [corner, corner], endPoint: after})
+    if (sameDirection(previous, corner, next)) continue
+    const cornerRadius = Math.min(radius, distance(previous, corner) / 2, distance(corner, next) / 2)
+    if (cornerRadius <= EPSILON) continue
+    const entry = moveTowards(corner, previous, cornerRadius)
+    const exit = moveTowards(corner, next, cornerRadius)
+    pushLine(primitives, cursor, entry)
+    primitives.push({kind: "quadratic", start: entry, control: corner, end: exit})
+    cursor = exit
+  }
+  pushLine(primitives, cursor, path.at(-1)!)
+  return primitives
+}
+
+function primitivesToCubics(primitives: readonly RoundedPrimitive[]): readonly TopDownCurveSegment[] {
+  return primitives.map((primitive, index): TopDownCurveSegment => {
+    if (primitive.kind === "quadratic") {
+      return {
+        startPoint: primitive.start,
+        controlPoints: [
+          interpolate(primitive.start, primitive.control, 2 / 3),
+          interpolate(primitive.end, primitive.control, 2 / 3),
+        ],
+        endPoint: primitive.end,
+      }
     }
-    current = after
-    startTangent = point(after.x - corner.x, after.y - corner.y)
-  }
-  const end = path.at(-1)!
-  if (!samePoint(current, end)) curves.push(tangentLineCurve(current, end, startTangent, null))
-  return [curves[0] ?? straightCurve(path[0]!, end), ...curves.slice(1)]
+    const previous = primitives[index - 1]
+    const next = primitives[index + 1]
+    const startHandle = previous?.kind === "quadratic"
+      ? subtract(previous.end, previousCubicControl2(previous))
+      : scale(subtract(primitive.end, primitive.start), 1 / 3)
+    const endHandle = next?.kind === "quadratic"
+      ? subtract(nextCubicControl1(next), next.start)
+      : scale(subtract(primitive.end, primitive.start), 1 / 3)
+    return {
+      startPoint: primitive.start,
+      controlPoints: [
+        add(primitive.start, startHandle),
+        subtract(primitive.end, endHandle),
+      ],
+      endPoint: primitive.end,
+    }
+  })
 }
 
-function tangentLineCurve(
-  start: LayoutPoint,
-  end: LayoutPoint,
-  startTangent: LayoutPoint | null,
-  endTangent: LayoutPoint | null,
-): TopDownCurveSegment {
-  const defaultTangent = point((end.x - start.x) / 3, (end.y - start.y) / 3)
-  const startOffset = startTangent ?? defaultTangent
-  const endOffset = endTangent ?? defaultTangent
-  return {
-    startPoint: start,
-    controlPoints: [
-      point(start.x + startOffset.x, start.y + startOffset.y),
-      point(end.x - endOffset.x, end.y - endOffset.y),
-    ],
-    endPoint: end,
-  }
+function previousCubicControl2(primitive: Extract<RoundedPrimitive, {kind: "quadratic"}>): LayoutPoint {
+  return interpolate(primitive.end, primitive.control, 2 / 3)
 }
 
-function straightCurve(start: LayoutPoint, end: LayoutPoint): TopDownCurveSegment {
-  return {
-    startPoint: start,
-    controlPoints: [
-      point(start.x + (end.x - start.x) / 3, start.y + (end.y - start.y) / 3),
-      point(start.x + (end.x - start.x) * 2 / 3, start.y + (end.y - start.y) * 2 / 3),
-    ],
-    endPoint: end,
-  }
+function nextCubicControl1(primitive: Extract<RoundedPrimitive, {kind: "quadratic"}>): LayoutPoint {
+  return interpolate(primitive.start, primitive.control, 2 / 3)
 }
 
-function curveClearsNodes(
-  graph: NormalizedGraph,
-  placed: Readonly<{nodeX: Float64Array; nodeY: Float64Array}>,
-  edge: NormalizedEdge,
-  curve: TopDownCurveSegment,
-): boolean {
-  for (let nodeIndex = 0; nodeIndex < graph.nodes.length; nodeIndex += 1) {
-    if (nodeIndex === edge.sourceNodeIndex || nodeIndex === edge.targetNodeIndex) continue
-    const node = graph.nodes[nodeIndex]!
-    if (cubicIntersectsRectangle(curve, {
-      left: placed.nodeX[nodeIndex]!,
-      right: placed.nodeX[nodeIndex]! + node.width,
-      top: placed.nodeY[nodeIndex]!,
-      bottom: placed.nodeY[nodeIndex]! + node.height,
-    })) return false
-  }
-  return true
+function pushLine(primitives: RoundedPrimitive[], start: LayoutPoint, end: LayoutPoint): void {
+  if (samePoint(start, end)) return
+  primitives.push({kind: "line", start, end})
 }
 
 function materialize(
   graph: NormalizedGraph,
-  placed: Readonly<{nodeX: Float64Array; nodeY: Float64Array; portX: Float64Array; portY: Float64Array}>,
+  placed: Placement,
   routed: readonly TopDownEdgeGeometry[],
 ): TopDownLayoutResult {
   const rawBounds = geometryBounds(graph, placed, routed)
@@ -927,8 +421,8 @@ function materialize(
   for (const index of [...usedPorts].sort((left, right) => compareIds(graph.ports[left]!, graph.ports[right]!))) {
     ports.push({
       id: graph.ports[index]!.id,
-      x: placed.portX[index]! + shiftX,
-      y: placed.portY[index]! + shiftY,
+      x: clean(placed.portX[index]! + shiftX),
+      y: clean(placed.portY[index]! + shiftY),
       side: sourcePorts.has(index) ? "SOUTH" : "NORTH",
     })
   }
@@ -937,13 +431,13 @@ function materialize(
     bounds: {
       x: 0,
       y: 0,
-      width: rawBounds.width + graph.options.padding * 2,
-      height: rawBounds.height + graph.options.padding * 2,
+      width: clean(rawBounds.width + graph.options.padding * 2),
+      height: clean(rawBounds.height + graph.options.padding * 2),
     },
     nodes: graph.nodes.map((node, index) => ({
       id: node.id,
-      x: placed.nodeX[index]! + shiftX,
-      y: placed.nodeY[index]! + shiftY,
+      x: clean(placed.nodeX[index]! + shiftX),
+      y: clean(placed.nodeY[index]! + shiftY),
       width: node.width,
       height: node.height,
     })),
@@ -963,11 +457,11 @@ function geometryBounds(
   let bottom = Math.max(0, ...graph.nodes.map((node, index) => placed.nodeY[index]! + node.height))
   for (const edge of edges) {
     for (const curve of edge.curves) {
-      for (const point of [curve.startPoint, ...curve.controlPoints, curve.endPoint]) {
-        left = Math.min(left, point.x)
-        top = Math.min(top, point.y)
-        right = Math.max(right, point.x)
-        bottom = Math.max(bottom, point.y)
+      for (const curvePoint of [curve.startPoint, ...curve.controlPoints, curve.endPoint]) {
+        left = Math.min(left, curvePoint.x)
+        top = Math.min(top, curvePoint.y)
+        right = Math.max(right, curvePoint.x)
+        bottom = Math.max(bottom, curvePoint.y)
       }
     }
   }
@@ -996,8 +490,7 @@ function findCycleWitness(
       }
       const edgeIndex = edges[frame.nextEdge]!
       frame.nextEdge += 1
-      const edge = graph.edges[edgeIndex]!
-      const target = edge.targetNodeIndex
+      const target = graph.edges[edgeIndex]!.targetNodeIndex
       if (!unresolved.has(target)) continue
       if (state[target] === 0) {
         state[target] = 1
@@ -1006,151 +499,94 @@ function findCycleWitness(
         continue
       }
       if (state[target] !== 1) continue
-      const nodes = new Set<number>([target])
-      const edgesInCycle = new Set<number>([edgeIndex])
-      let current = frame.nodeIndex
-      while (current !== target) {
-        nodes.add(current)
-        const parent = parentEdge[current]!
-        if (parent < 0) break
-        edgesInCycle.add(parent)
-        current = graph.edges[parent]!.sourceNodeIndex
+      const edgeIds = [graph.edges[edgeIndex]!.id]
+      const nodeIds = [graph.nodes[target]!.id]
+      let cursor = frame.nodeIndex
+      while (cursor !== target) {
+        nodeIds.push(graph.nodes[cursor]!.id)
+        const incoming = parentEdge[cursor]!
+        if (incoming < 0) throw new Error("Top-down cycle witness reconstruction failed")
+        edgeIds.push(graph.edges[incoming]!.id)
+        cursor = graph.edges[incoming]!.sourceNodeIndex
       }
+      nodeIds.reverse()
+      edgeIds.reverse()
+      const pairs = nodeIds.map((nodeId, index) => ({nodeId, edgeId: edgeIds[index]!}))
+      pairs.sort((left, right) => left.nodeId.localeCompare(right.nodeId))
+      const firstNode = pairs[0]!.nodeId
+      const rotation = nodeIds.indexOf(firstNode)
+      const rotatedNodeIds = [...nodeIds.slice(rotation), ...nodeIds.slice(0, rotation)]
       return {
-        nodeIds: [...nodes].map((index) => graph.nodes[index]!.id).sort(),
-        edgeIds: [...edgesInCycle].map((index) => graph.edges[index]!.id).sort(),
+        nodeIds: rotatedNodeIds,
+        edgeIds: rotatedNodeIds.map((sourceId, index) => {
+          const targetId = rotatedNodeIds[(index + 1) % rotatedNodeIds.length]!
+          return graph.edges.find((edge) =>
+            graph.nodes[edge.sourceNodeIndex]!.id === sourceId &&
+            graph.nodes[edge.targetNodeIndex]!.id === targetId)!.id
+        }),
       }
     }
   }
-  return {
-    nodeIds: [...unresolved].map((index) => graph.nodes[index]!.id).sort(),
-    edgeIds: graph.edges.filter((edge) =>
-      unresolved.has(edge.sourceNodeIndex) && unresolved.has(edge.targetNodeIndex)).map(({id}) => id).sort(),
-  }
-}
-
-type RectangleBounds = Readonly<{left: number; right: number; top: number; bottom: number}>
-
-function cubicPoint(curve: TopDownCurveSegment, t: number): LayoutPoint {
-  const u = 1 - t
-  return point(
-    u ** 3 * curve.startPoint.x + 3 * u ** 2 * t * curve.controlPoints[0].x +
-      3 * u * t ** 2 * curve.controlPoints[1].x + t ** 3 * curve.endPoint.x,
-    u ** 3 * curve.startPoint.y + 3 * u ** 2 * t * curve.controlPoints[0].y +
-      3 * u * t ** 2 * curve.controlPoints[1].y + t ** 3 * curve.endPoint.y,
-  )
-}
-
-function cubicIntersectsRectangle(
-  curve: TopDownCurveSegment,
-  rectangle: RectangleBounds,
-  depth = 0,
-): boolean {
-  const points = [curve.startPoint, ...curve.controlPoints, curve.endPoint]
-  const left = Math.min(...points.map(({x}) => x))
-  const right = Math.max(...points.map(({x}) => x))
-  const top = Math.min(...points.map(({y}) => y))
-  const bottom = Math.max(...points.map(({y}) => y))
-  if (right < rectangle.left || left > rectangle.right || bottom < rectangle.top || top > rectangle.bottom) {
-    return false
-  }
-  if (depth >= 12 || cubicFlatness(curve) <= 0.25) {
-    return segmentIntersectsRectangle(curve.startPoint, curve.endPoint, rectangle)
-  }
-  const [first, second] = splitCubic(curve)
-  return cubicIntersectsRectangle(first, rectangle, depth + 1) ||
-    cubicIntersectsRectangle(second, rectangle, depth + 1)
-}
-
-function splitCubic(curve: TopDownCurveSegment): readonly [TopDownCurveSegment, TopDownCurveSegment] {
-  const [controlA, controlB] = curve.controlPoints
-  const a = midpoint(curve.startPoint, controlA)
-  const b = midpoint(controlA, controlB)
-  const c = midpoint(controlB, curve.endPoint)
-  const d = midpoint(a, b)
-  const e = midpoint(b, c)
-  const split = midpoint(d, e)
-  return [
-    {startPoint: curve.startPoint, controlPoints: [a, d], endPoint: split},
-    {startPoint: split, controlPoints: [e, c], endPoint: curve.endPoint},
-  ]
-}
-
-function cubicFlatness(curve: TopDownCurveSegment): number {
-  return Math.max(
-    pointLineDistance(curve.controlPoints[0], curve.startPoint, curve.endPoint),
-    pointLineDistance(curve.controlPoints[1], curve.startPoint, curve.endPoint),
-  )
-}
-
-function pointLineDistance(pointValue: LayoutPoint, start: LayoutPoint, end: LayoutPoint): number {
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  const length = Math.hypot(dx, dy)
-  if (length === 0) return Math.hypot(pointValue.x - start.x, pointValue.y - start.y)
-  return Math.abs(dy * pointValue.x - dx * pointValue.y + end.x * start.y - end.y * start.x) / length
-}
-
-function segmentIntersectsRectangle(start: LayoutPoint, end: LayoutPoint, rectangle: RectangleBounds): boolean {
-  let lower = 0
-  let upper = 1
-  const dx = end.x - start.x
-  const dy = end.y - start.y
-  for (const [p, q] of [
-    [-dx, start.x - rectangle.left],
-    [dx, rectangle.right - start.x],
-    [-dy, start.y - rectangle.top],
-    [dy, rectangle.bottom - start.y],
-  ] as const) {
-    if (p === 0) {
-      if (q < 0) return false
-      continue
-    }
-    const ratio = q / p
-    if (p < 0) lower = Math.max(lower, ratio)
-    else upper = Math.min(upper, ratio)
-    if (lower > upper) return false
-  }
-  return true
+  throw new Error("Top-down cycle witness was not found")
 }
 
 function simplifyPath(values: readonly LayoutPoint[]): readonly LayoutPoint[] {
-  const result: LayoutPoint[] = []
+  const deduplicated: LayoutPoint[] = []
   for (const value of values) {
-    if (!Number.isFinite(value.x) || !Number.isFinite(value.y)) continue
-    const candidate = point(value.x, value.y)
-    if (samePoint(result.at(-1), candidate)) continue
-    const before = result.at(-2)
-    const previous = result.at(-1)
-    if (before !== undefined && previous !== undefined && collinear(before, previous, candidate)) {
-      result[result.length - 1] = candidate
-    } else result.push(candidate)
+    const current = point(value.x, value.y)
+    if (!samePoint(deduplicated.at(-1), current)) deduplicated.push(current)
   }
-  return result.length >= 2 ? result : [values[0]!, values.at(-1)!]
+  if (deduplicated.length < 3) return deduplicated
+  const result = [deduplicated[0]!]
+  for (let index = 1; index < deduplicated.length - 1; index += 1) {
+    const previous = result.at(-1)!
+    const current = deduplicated[index]!
+    const next = deduplicated[index + 1]!
+    if (!sameDirection(previous, current, next)) result.push(current)
+  }
+  result.push(deduplicated.at(-1)!)
+  return result
 }
 
-function collinear(first: LayoutPoint, second: LayoutPoint, third: LayoutPoint): boolean {
-  return Math.abs((second.x - first.x) * (third.y - second.y) -
-    (second.y - first.y) * (third.x - second.x)) < 1e-7
+function sameDirection(first: LayoutPoint, second: LayoutPoint, third: LayoutPoint): boolean {
+  const ax = second.x - first.x
+  const ay = second.y - first.y
+  const bx = third.x - second.x
+  const by = third.y - second.y
+  return Math.abs(ax * by - ay * bx) <= EPSILON && ax * bx + ay * by >= 0
 }
 
-function moveTowards(from: LayoutPoint, to: LayoutPoint, distance: number): LayoutPoint {
+function moveTowards(from: LayoutPoint, to: LayoutPoint, amount: number): LayoutPoint {
   const dx = to.x - from.x
   const dy = to.y - from.y
   const length = Math.hypot(dx, dy)
-  if (length === 0 || distance === 0) return from
-  const ratio = Math.min(1, distance / length)
-  return point(from.x + dx * ratio, from.y + dy * ratio)
+  if (length <= EPSILON) return from
+  return point(from.x + dx / length * amount, from.y + dy / length * amount)
+}
+
+function interpolate(from: LayoutPoint, to: LayoutPoint, ratio: number): LayoutPoint {
+  return point(from.x + (to.x - from.x) * ratio, from.y + (to.y - from.y) * ratio)
+}
+
+function add(left: LayoutPoint, right: LayoutPoint): LayoutPoint {
+  return point(left.x + right.x, left.y + right.y)
+}
+
+function subtract(left: LayoutPoint, right: LayoutPoint): LayoutPoint {
+  return point(left.x - right.x, left.y - right.y)
+}
+
+function scale(value: LayoutPoint, factor: number): LayoutPoint {
+  return point(value.x * factor, value.y * factor)
+}
+
+function distance(left: LayoutPoint, right: LayoutPoint): number {
+  return Math.hypot(right.x - left.x, right.y - left.y)
 }
 
 function samePoint(left: LayoutPoint | undefined, right: LayoutPoint): boolean {
-  return left !== undefined && Math.abs(left.x - right.x) < 1e-7 && Math.abs(left.y - right.y) < 1e-7
+  return left !== undefined && Math.abs(left.x - right.x) <= EPSILON && Math.abs(left.y - right.y) <= EPSILON
 }
-
-function midpoint(left: LayoutPoint, right: LayoutPoint): LayoutPoint {
-  return point((left.x + right.x) / 2, (left.y + right.y) / 2)
-}
-
 
 function setRole(roles: Int8Array, index: number, role: 1 | 2, edgeId: string, portId: string): void {
   const previous = roles[index]!
@@ -1183,14 +619,14 @@ function requireId(id: string, kind: string): void {
 }
 
 function point(x: number, y: number): LayoutPoint {
-  return {x: Object.is(x, -0) ? 0 : x, y: Object.is(y, -0) ? 0 : y}
+  return {x: clean(x), y: clean(y)}
 }
 
 function clean(value: number): number {
-  const rounded = Math.round(value * 1_000_000) / 1_000_000
+  const rounded = Math.round(value * 1e7) / 1e7
   return Object.is(rounded, -0) ? 0 : rounded
 }
 
 function compareIds(left: Readonly<{id: string}>, right: Readonly<{id: string}>): number {
-  return left.id < right.id ? -1 : left.id > right.id ? 1 : 0
+  return left.id.localeCompare(right.id)
 }
