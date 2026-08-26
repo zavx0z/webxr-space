@@ -43,10 +43,12 @@ assignments, а каждый candidate передаёт тому же общем
 
 `@nodes/layout/top-down` — третий, физически независимый entrypoint для плоских
 ацикличных схем сверху вниз. Он принимает horizontal offset точного порта,
-разрешает source=`SOUTH`, target=`NORTH` и использует отдельные bounded
-ranking/placement/routing фазы. Top-down не импортирует compound solver,
-visibility A* или adaptive candidate search; fixed/adaptive также не импортируют
-top-down implementation.
+разрешает source=`SOUTH`, target=`NORTH` и использует отдельный pipeline:
+variable-size tidy-tree или Sugiyama seed, bounded WebCola flow/overlap
+refinement и obstacle-aware spline routing. Edge field `constraint` выбирает
+placement-parent либо weak overlay, но result и renderer имеют один cubic
+connection type. Top-down не импортирует compound solver или adaptive candidate
+search; fixed/adaptive также не импортируют top-down implementation.
 
 ## Протокол
 
@@ -248,6 +250,9 @@ tree и static build. Shared Workbench использует точные UI Elem
 product renderer не входят в страницу. Storybook не экспортируется из
 `@nodes/layout` и не входит в его production dependencies. Frozen geometry и
 SVG baselines fixed/adaptive проверяются отдельно от WebGPU presentation.
+Top-down дополнительно содержит нейтральный dense stress route
+`/layout/top-down/dense/default`: 54 ноды, 85 semantic edges, 170 разнесённых
+independent endpoints и внутренние placement-роли без UI-domain vocabulary.
 
 Полный consumer-путь `NodeTree → projection → NodeEditor` отдельно показывает
 центральная WebGPU page `/editor/live-node-tree` того же `bun run nodes:storybook`.

@@ -1,5 +1,7 @@
 import type {TopDownLayoutGraph} from "@nodes/layout/top-down"
 
+export type TopDownStoryEdgeKind = "tree" | "cross" | "shortcut"
+
 export const TOP_DOWN_REFERENCE_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "scr-area": "ScrArea\nArea — место под Editor",
   "space-type": "SpaceType\nтип редактора",
@@ -67,20 +69,54 @@ const links = [
   ["ui-layout-node", "ui-button"],
 ] as const
 
-const sourceIds = new Set<string>(links.map(([source]) => source))
-const targetIds = new Set<string>(links.map(([, target]) => target))
-const widthById = new Map(nodes.map(({id, width}) => [id, width]))
+const widthById = new Map<string, number>(nodes.map(({id, width}) => [id, width]))
+const portById = new Map<string, TopDownLayoutGraph["ports"][number]>()
+const edges = links.map(([source, target], index) => {
+  const sourcePortId = sourcePort(index, source)
+  const targetPortId = targetPort(index, target)
+  registerPort(sourcePortId, source, sourceRatio(index))
+  registerPort(targetPortId, target, targetRatio(index))
+  return {
+    id: `flow-${String(index + 1).padStart(2, "0")}-${source}-${target}`,
+    constraint: index !== 11 && index !== 14,
+    sourcePortId,
+    targetPortId,
+  }
+})
 
 export const TOP_DOWN_REFERENCE_GRAPH: TopDownLayoutGraph = Object.freeze({
   nodes,
-  ports: nodes.flatMap(({id}) => [
-    ...(targetIds.has(id) ? [{id: `${id}/in`, nodeId: id, x: widthById.get(id)! / 2}] : []),
-    ...(sourceIds.has(id) ? [{id: `${id}/out`, nodeId: id, x: widthById.get(id)! / 2}] : []),
-  ]),
-  edges: links.map(([source, target], index) => ({
-    id: `flow-${String(index + 1).padStart(2, "0")}-${source}-${target}`,
-    sourcePortId: `${source}/out`,
-    targetPortId: `${target}/in`,
-  })),
-  layoutOptions: {nodeSpacing: 44, layerSpacing: 64, edgeSpacing: 14, padding: 28},
+  ports: [...portById.values()],
+  edges,
+  layoutOptions: {nodeSpacing: 104, layerSpacing: 64, edgeSpacing: 14, padding: 28},
 })
+
+export const TOP_DOWN_REFERENCE_EDGE_KINDS: Readonly<Record<string, TopDownStoryEdgeKind>> =
+  Object.freeze(Object.fromEntries(TOP_DOWN_REFERENCE_GRAPH.edges.map(({id}) => {
+    const kind: TopDownStoryEdgeKind =
+      id === "flow-15-space-link-b-node-tree" || id === "flow-12-ui-layout-panel-ui-button"
+      ? "cross"
+      : "tree"
+    return [id, kind] as const
+  })))
+
+function sourcePort(index: number, nodeId: string): string {
+  return [0, 1, 2, 4, 5, 6, 15, 16].includes(index) ? `${nodeId}/out/${index}` : `${nodeId}/out`
+}
+
+function targetPort(index: number, nodeId: string): string {
+  return [11, 13, 14, 19].includes(index) ? `${nodeId}/in/${index}` : `${nodeId}/in`
+}
+
+function sourceRatio(index: number): number {
+  return ({0: 0.2, 1: 0.5, 2: 0.74, 4: 0.2, 5: 0.5, 6: 0.8, 15: 0.35, 16: 0.65} as Record<number, number>)[index] ?? 0.5
+}
+
+function targetRatio(index: number): number {
+  return ({11: 0.35, 13: 0.8, 14: 0.2, 19: 0.65} as Record<number, number>)[index] ?? 0.5
+}
+
+function registerPort(id: string, nodeId: string, ratio: number): void {
+  if (portById.has(id)) return
+  portById.set(id, {id, nodeId, x: widthById.get(nodeId)! * ratio})
+}

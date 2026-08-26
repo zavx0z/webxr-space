@@ -18,3 +18,8 @@ export const LAYOUT_STORYBOOK_TOP_DOWN_PATH = storybookRouteTreeUrl(
   "top-down/blender-area/default",
   {basePath: LAYOUT_STORYBOOK_BASE_PATH},
 )
+export const LAYOUT_STORYBOOK_TOP_DOWN_DENSE_PATH = storybookRouteTreeUrl(
+  LAYOUT_STORYBOOK_ROUTE_TREE,
+  "top-down/dense/default",
+  {basePath: LAYOUT_STORYBOOK_BASE_PATH},
+)

@@ -6,7 +6,10 @@
 export * from "./protocol.ts"
 export type {
   TopDownCycleWitness,
+  TopDownCurveSegment,
+  TopDownEdgeGeometry,
   TopDownLayoutErrorCode,
+  TopDownLayoutEdge,
   TopDownLayoutGraph,
   TopDownLayoutNode,
   TopDownLayoutOptions,

@@ -39,5 +39,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false",
     "benchmark:top-down": "bun benchmarks/top-down.ts"
+  },
+  "dependencies": {
+    "d3-flextree": "2.1.2",
+    "webcola": "3.4.0"
+  },
+  "devDependencies": {
+    "@types/d3-flextree": "2.1.4"
   }
 }

@@ -13,6 +13,7 @@ export type LayoutStoryRoute =
   | "adaptive/compound/right"
   | "adaptive/compound/down"
   | "top-down/blender-area/default"
+  | "top-down/dense/default"
 
 const loadFixed = (fixtureId: string) => async (): Promise<StorybookStoryModule> => {
   const {createFixedLayoutStory} = await import("./stories/fixed.ts")
@@ -24,9 +25,9 @@ const loadAdaptive = (fixtureId: string) => async (): Promise<StorybookStoryModu
   return createAdaptiveLayoutStory(fixtureId)
 }
 
-const loadTopDown = async (): Promise<StorybookStoryModule> => {
+const loadTopDown = (scenario: "reference" | "dense") => async (): Promise<StorybookStoryModule> => {
   const {createTopDownLayoutStory} = await import("./stories/top-down.ts")
-  return createTopDownLayoutStory()
+  return createTopDownLayoutStory(scenario)
 }
 
 export const LAYOUT_STORIES = defineStorybookStories({
@@ -83,16 +84,28 @@ export const LAYOUT_STORIES = defineStorybookStories({
         label: "Сверху вниз",
         apiName: "layoutTopDown",
         tags: ["dag", "south", "north", "causal"],
-        sections: [{
-          id: "blender-area",
-          label: "Blender Area",
-          variants: [{
-            id: "default",
-            label: "Полная схема",
-            title: "Top-down · Blender Area",
-            load: loadTopDown,
-          }],
-        }],
+        sections: [
+          {
+            id: "blender-area",
+            label: "Blender Area",
+            variants: [{
+              id: "default",
+              label: "Полная схема",
+              title: "Top-down · Blender Area",
+              load: loadTopDown("reference"),
+            }],
+          },
+          {
+            id: "dense",
+            label: "Dense DAG",
+            variants: [{
+              id: "default",
+              label: "54 / 85",
+              title: "Top-down · Dense DAG 54 / 85",
+              load: loadTopDown("dense"),
+            }],
+          },
+        ],
       }],
     },
   ],

@@ -1,13 +1,19 @@
 import type {
   TopDownCycleWitness,
+  TopDownCurveSegment,
+  TopDownEdgeGeometry,
   TopDownLayoutErrorCode,
+  TopDownLayoutEdge,
   TopDownLayoutGraph,
   TopDownLayoutResult,
 } from "../types/top-down.ts"
-import {solveTopDownLayout} from "./top-down/solver.ts"
+import {solveTopDownCurves} from "./top-down/curve-solver.ts"
 
 export type {
   TopDownCycleWitness,
+  TopDownCurveSegment,
+  TopDownEdgeGeometry,
+  TopDownLayoutEdge,
   TopDownLayoutErrorCode,
   TopDownLayoutGraph,
   TopDownLayoutNode,
@@ -43,7 +49,7 @@ Source ports leave through `SOUTH`; target ports enter through `NORTH`.
 
 @param graph - Measured leaf rectangles, exact port offsets and semantic edges.
 
-@returns Geometry-only rectangles, endpoints and orthogonal routes.
+@returns Geometry-only rectangles, endpoints and cubic spline chains.
 
 @throws {@link TopDownLayoutError} when the directed node graph contains a cycle.
 @throws `Error` when IDs, dimensions, port offsets or endpoints are invalid.
@@ -59,10 +65,10 @@ const result = layoutTopDown({
     {id: "root/out", nodeId: "root", x: 90},
     {id: "leaf/in", nodeId: "leaf", x: 80},
   ],
-  edges: [{id: "flow", sourcePortId: "root/out", targetPortId: "leaf/in"}],
+  edges: [{constraint: true, id: "flow", sourcePortId: "root/out", targetPortId: "leaf/in"}],
 })
 ```
 */
 export function layoutTopDown(graph: TopDownLayoutGraph): TopDownLayoutResult {
-  return solveTopDownLayout(graph, (witness) => new TopDownLayoutError("CYCLE_DETECTED", witness))
+  return solveTopDownCurves(graph, (witness) => new TopDownLayoutError("CYCLE_DETECTED", witness))
 }

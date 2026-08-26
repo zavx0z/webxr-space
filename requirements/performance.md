@@ -31,9 +31,10 @@ policy-сборки. Геометрические законы остаются 
    DOM/WebGPU, Worker API, часы, случайность, JSON clone/serialization и чтение
    предыдущего результата.
 2. Вход нормализуется один раз. После нормализации горячие фазы используют
-   индексированные массивы и maps, созданные до вложенных проходов; повторный
-   поиск объектов по исходным массивам в inner loop запрещён.
-3. Полный перебор перестановок, сторон, routes или candidate geometry запрещён.
+   индексированные массивы и maps, созданные до вложенных проходов. Исключение
+   допускается только для bounded obstacle/crossing score конкретной policy и
+   обязано иметь frozen benchmark.
+3. Полный перебор перестановок, сторон или произвольной candidate geometry запрещён.
    Число refinement/sweep проходов является константой конкретной policy и не
    открывается consumer-опцией без жёсткой верхней границы.
 4. Ошибки структуры обнаруживаются до placement/routing. Невалидный graph,
@@ -45,6 +46,9 @@ policy-сборки. Геометрические законы остаются 
 6. Viewport, pan, zoom и presentation state не входят в policy, если не влияют
    на её геометрию. Изменение только вида не должно инвалидировать глобальную
    раскладку.
+7. Известный внешний алгоритм разрешён только внутри точного policy entrypoint.
+   Его dependency bytes, фиксированные iteration budgets и отсутствие в других
+   policy bundles закрепляются package-boundary tests.
 
 ## Доказательство
 
@@ -61,3 +65,20 @@ policy-сборки. Геометрические законы остаются 
 5. Заявление о максимальной или сравнительной производительности допустимо
    только с измерением. Архитектурная изоляция и ограниченная сложность являются
    проверяемыми свойствами, но не заменяют benchmark.
+
+## Frozen top-down baseline
+
+Принятый запуск `bun run --cwd packages/layout benchmark:top-down` на Bun 1.4.0,
+macOS x64, source hash
+`7dc39f9d10e2e4d9c301edcf0f68374abe3f2aad35b8f792c8269d99513d5031`:
+
+| Fixture | Nodes / edges | Median | p95 |
+| --- | ---: | ---: | ---: |
+| Blender reference | 19 / 20 | 18.20 ms | 29.30 ms |
+| Dense independent edges | 54 / 85 | 319.70 ms | 328.00 ms |
+| Layered budget | 96 / 87 | 80.39 ms | 83.93 ms |
+
+Top-down browser solver artifact имеет отдельный gate `107437` raw / `33253`
+gzip bytes; Worker executor — `107895` / `33449`. Fixed/adaptive bytes и hashes
+остаются прежними. Новая toolchain или geometry меняет baseline только вместе с
+повторным frozen benchmark и package-boundary evidence.

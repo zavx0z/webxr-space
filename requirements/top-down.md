@@ -4,62 +4,98 @@
 плоскую причинную DAG-схему сверху вниз и не является responsive-режимом `DOWN`
 compound solver-а fixed/adaptive.
 
-## Граница
+## Публичная граница
 
 1. Input содержит заранее измеренные leaf-ноды, точные horizontal offsets
-   портов, semantic edges и числовые интервалы. Containment, compound gateways,
-   parameter rows, viewport и renderer state не входят в contract.
-2. Каждый source-port разрешается в `SOUTH`, каждый target-port — в `NORTH`.
-   Один exact port не может одновременно играть обе topology roles.
-3. Graph обязан быть ацикличным. Cycle отклоняется до placement с typed
+   портов и semantic edges. Viewport, renderer state, ручные coordinates,
+   ranks, bends и lanes в contract не входят.
+2. Каждый edge обязан явно задать `constraint`:
+   - `true` — единственная parent-связь target в placement forest;
+   - `false` — слабая flow-связь, участвующая в уплотнении и маршрутизации, но
+     не создающая второго parent.
+   Это внутренняя роль размещения, а не второй визуальный или source-тип связи.
+3. Подграф `constraint=true` является forest: у target не более одной такой
+   связи. Повторная parent-связь, даже от того же source, отклоняется.
+4. Полный graph обязан быть DAG. Cycle отклоняется до placement с typed
    `CYCLE_DETECTED` witness; policy не разворачивает edge и не запускает другой
    solver как fallback.
-4. Intrinsic размеры нод не меняются. Output содержит только `DOWN`, bounds,
-   rectangles нод, абсолютные центры портов и одну ортогональную section каждого
-   semantic edge.
+5. Source-port разрешается в `SOUTH`, target-port — в `NORTH`. Один exact port
+   принадлежит ровно одному semantic edge и не может использоваться повторно
+   или играть обе роли. Fan-in/fan-out получают отдельные разнесённые endpoints.
+6. Intrinsic размеры нод не меняются. Output содержит только `DOWN`, bounds,
+   rectangles, абсолютные port centers и один визуальный тип связи: непрерывную
+   цепочку cubic Bézier segments.
 
-## Placement
+## Placement pipeline
 
-1. Rank вычисляется longest-path проходом по устойчивому topological order.
-   Каждый target находится минимум на один rank ниже source; длинная связь не
-   создаёт materialized dummy-ноды.
-2. Порядок внутри rank уточняется фиксированным числом median/barycenter sweeps.
-   Tie-break всегда использует semantic ID; порядок input-массивов не является
-   сигналом.
-3. Ноды одного rank располагаются слева направо без overlap с одним
-   `nodeSpacing`. Rank центрируется относительно самой широкой строки, поэтому
-   одинокий root остаётся над общей структурой без viewport-зависимого relayout.
-4. Высота rank равна максимальной intrinsic height его нод. Между ranks
-   резервируется только фактически нужный набор route tracks, но не меньше
-   `layerSpacing`.
+1. Для одного placement-root применяется variable-size tidy tree из
+   `d3-flextree`, реализующий non-layered алгоритм van der Ploeg на основе
+   Reingold–Tilford. Порядок детей задаётся стабильными edge IDs.
+2. Leaf, связанный слабым edge с более глубоким fan-in, может получить только
+   внутренние virtual spacing nodes. Они не появляются в result и позволяют
+   ветвям занимать разные вертикальные позиции, как в reference graph.
+3. Для нескольких roots используется crossing-free forest preorder по tree
+   depth. Это только компактный seed: последующий constraint refinement
+   размыкает общие строки, а ranks не входят в result.
+4. Seed уточняется constraint-based stress placement из WebCola с
+   `avoidOverlaps`, `flowLayout("y")` и compile-time количеством итераций.
+   Однокорневой reference получает `4 + 8` constrained/overlap iterations,
+   multi-root graph — `1 + 2`. Consumer не может увеличить budget.
+5. `constraint=true` получает полный parent separation. `constraint=false`
+   получает только слабое положительное flow separation и spring attraction.
+   Поэтому связи остаются направленными вниз, но ноды не возвращаются на общие
+   горизонтальные строки.
+6. Collision boxes включают `nodeSpacing`; фактические output rectangles
+   сохраняют исходные размеры. Tie-break в каждой фазе использует ID, поэтому
+   перестановка input collections не меняет result.
 
-## Routing
+## Routing pipeline
 
-1. Edge выходит вертикально из exact `SOUTH` center и входит вертикально в exact
-   `NORTH` center. Все промежуточные segments ортогональны.
-2. Edge между соседними ranks использует только их межслойный corridor. Каждый
-   несовпадающий horizontal run получает устойчивый track с `edgeSpacing`.
-3. Edge, пропускающий один или несколько ranks, сначала использует ближайший
-   свободный вертикальный канал между промежуточными нодами. Канал обязан иметь
-   `edgeSpacing` до node rectangles и ранее занятых несвязанных channels.
-4. Внешняя левая или правая lane является только fallback, когда локального
-   канала нет. Выбор стороны минимизирует горизонтальный detour; вертикальная
-   часть fallback-lane проходит вне всех node rows.
-5. Проверка локального канала не создаёт dummy objects на каждый промежуточный
-   rank. Production output и постоянная память не зависят от суммы длин edges
-   по ranks.
-6. Связи одного exact source или target могут иметь общий terminal segment, но
-   остаются разными semantic edges. Несвязанные horizontal tracks и внешние
-   lanes не overlap.
-7. Repeated и коллинеарные точки удаляются без изменения exact endpoints.
+1. Constrained backbone маршрутизируется первым, остальные edges — после него
+   в стабильном ID-order. Все они возвращают одинаковый cubic contract и
+   рисуются одним цветом и толщиной.
+2. Свободный downward edge получает один cubic segment с вертикальной
+   касательной у `SOUTH` и `NORTH`. Adaptive cubic/rectangle subdivision
+   запрещает проход через interior чужой ноды.
+3. Заблокированный edge использует coordinate-compressed Lee/A* grid,
+   построенный один раз из expanded node rectangles и всех exact port columns.
+   Перед A* проверяется bounded набор horizontal/vertical channel candidates и
+   внешних corridors.
+4. Route objective лексикографически ставит proper edge crossings выше длины и
+   числа bends. Backbone уже занят к моменту secondary routing, поэтому новый
+   route выбирает свободный corridor, если он существует.
+5. Найденный obstacle-free polyline преобразуется в геометрически гладкую
+   cubic chain: terminal segments остаются вертикальными, corner arcs имеют
+   совпадающие направления касательных, repeated/collinear points удаляются.
+6. Каждый semantic edge материализует и рисует собственную cubic chain и
+   собственный arrow. Совпадающие trunks, junctions и renderer dedup запрещены;
+   semantic edge IDs никогда не сливаются в физическую связь.
 
-## Ограниченная сложность
+## Ограниченная стоимость
 
-1. Нормализация и topological ranking имеют стоимость `O(V + E)` после
-   стабильной сортировки IDs.
-2. Crossing reduction выполняет константное число sweeps; стоимость каждого
-   ограничена сортировкой нод внутри ranks и обходом adjacency.
-3. Placement и routing materialize `O(V + E)` production objects. Алгоритм не
-   создаёт `O(E × ranks)` dummy graph и не использует visibility A*.
-4. Consumer не может увеличить число sweeps или включить exhaustive search
-   через layout options.
+1. Нормализация, DAG validation и forest extraction выполняются до дорогих
+   фаз. Invalid graph не запускает placement или router.
+2. Tidy-tree и multi-root forest seeds линейны после сортировки. WebCola
+   iteration counts являются compile-time constants.
+3. Coordinate grid создаётся один раз на вызов. Channel enumeration и A* не
+   имеют consumer-настраиваемых exhaustive budgets; поиск ограничен конечными
+   координатами нод и портов текущего graph.
+4. Production budget закрыт: максимум `128` нод, `256` портов и `512` edges.
+   Превышение отклоняется до placement. Более крупный graph требует другой
+   специализированной policy или staged projection, а не скрытого роста этого
+   hot path.
+5. Result materialize только production geometry. Forest, ranks, stress state,
+   grid, occupancy и diagnostics наружу не копируются.
+6. Top-down остаётся отдельным module graph и Worker executor. Его зависимости
+   и byte budget не попадают в fixed/adaptive artifacts.
+
+## Алгоритмические источники
+
+- Reingold–Tilford, *Tidier Drawings of Trees*:
+  https://reingold.co/tidier-drawings.pdf
+- van der Ploeg implementation for variable-size non-layered trees:
+  https://github.com/Klortho/d3-flextree
+- Graphviz/DOT phases, non-constraining edges and spline routing:
+  https://graphviz.org/docs/layouts/dot/
+- WebCola flow constraints and overlap removal:
+  https://ialab.it.monash.edu/webcola/doc/classes/_layout_.layout.html
