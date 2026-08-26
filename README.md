@@ -25,8 +25,37 @@ the UI stack consumes them.
 ```bash
 git clone --recurse-submodules git@github.com:zavx0z/webxr-space.git
 cd webxr-space
+(cd projects/engine/packages/core && bun link)
+(cd projects/layout/packages/core && bun link)
+(cd projects/ui/packages/elements && bun link)
+(cd projects/ui/packages/components && bun link)
+(cd projects/node/packages/layout && bun link)
+(cd ../highlighter && bun link)
+(cd ../storybook && bun link)
+bun install --frozen-lockfile
 bun run check
 ```
+
+## Live UI dependency graph
+
+The development catalog derives a symbol-level `may-call` graph from the
+pinned UI sources and places its nodes with the public top-down Node layout.
+Each graph node loads the matching UI story lazily and renders the real
+Element or Component on the shared WebGPU surface.
+
+```bash
+bun run catalog
+```
+
+Open `http://127.0.0.1:4015/ui/component-graph`.
+
+`bun run graph:ui` refreshes the deterministic projection in
+`graphs/ui-component-graph.json`. The snapshot records the exact UI revision,
+dirty bit, digest, declarations, and call-chain evidence; it is never a second
+canonical source.
+
+The local catalog resolves independently owned Highlighter and Storybook
+through the Bun links above, not through submodules.
 
 For an existing checkout:
 

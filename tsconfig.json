@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun", "@webgpu/types"]
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "catalog/**/*.ts",
+    "graphs/**/*.json"
+  ],
+  "exclude": ["projects/**", "dist/**"]
+}
