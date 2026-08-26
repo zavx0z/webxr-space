@@ -16,7 +16,7 @@ const graph = (): TopDownLayoutGraph => ({
     {id: "source/out", nodeId: "source", x: 60},
     {id: "target/in", nodeId: "target", x: 50},
   ],
-  edges: [{id: "flow", sourcePortId: "source/out", targetPortId: "target/in"}],
+  edges: [{constraint: true, id: "flow", sourcePortId: "source/out", targetPortId: "target/in"}],
 })
 
 describe("top-down layout Worker protocol", () => {
@@ -45,8 +45,8 @@ describe("top-down layout Worker protocol", () => {
         {id: "b/out", nodeId: "b", x: 40},
       ],
       edges: [
-        {id: "a-b", sourcePortId: "a/out", targetPortId: "b/in"},
-        {id: "b-a", sourcePortId: "b/out", targetPortId: "a/in"},
+        {constraint: true, id: "a-b", sourcePortId: "a/out", targetPortId: "b/in"},
+        {constraint: true, id: "b-a", sourcePortId: "b/out", targetPortId: "a/in"},
       ],
     }
     const endpoint = new TopDownFakeWorkerEndpoint()

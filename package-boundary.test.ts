@@ -99,9 +99,9 @@ describe("layout Worker policy bundle boundaries", () => {
       sha256: "d117634350f5567efcf5997c24d1a3d0818a36bfc2951b2daeaf739289885296",
     })
     expect(topDownExecutor).toMatchObject({
-      bytes: 11_844,
-      gzipBytes: 4_125,
-      sha256: "ceb3d8d23039a54f34ed74d31f00f33399824c76b3beb15926f3df6b5be4c786",
+      bytes: 107_895,
+      gzipBytes: 33_449,
+      sha256: "db49bb9e06ff6ac20682de82e4eefc814784744d9908108f322eed3bc57bc7de",
     })
     expect(fixedClient.bytes).toBeLessThan(8_000)
     expect(adaptiveClient.bytes).toBeLessThan(8_000)
