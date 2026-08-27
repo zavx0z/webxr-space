@@ -9,6 +9,8 @@
 //   radii tl/tr/br/bl [offsetFloats + 44 .. +47]
 //   borderWidth + opacity + shadowBlur + shadowSpread [offsetFloats + 48 .. +51]
 //   clipBounds      [offsetFloats + 52 .. +55] (xMin, yMin, xMax, yMax screen-px)
+//   presentationClipRange [offsetFloats + 56 .. +59]
+//   borderWidths top/right/bottom/left [offsetFloats + 60 .. +63]
 //
 // Антиалиасинг — fwidth(sdf) даёт screen-correct ширину перехода в 1 px
 // независимо от размера меша и DPR.
@@ -30,6 +32,7 @@ struct PerObjectUniforms {
     params: vec4<f32>,
     clipBounds: vec4<f32>,
     presentationClipRange: vec4<f32>,
+    borderWidths: vec4<f32>,
 };
 @binding(0) @group(1) var<uniform> perObject: PerObjectUniforms;
 
@@ -95,6 +98,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let radii = clamp(perObject.radii, vec4<f32>(0.0), vec4<f32>(rMax));
 
     let borderWidth = perObject.params.x;
+    let borderWidths = max(perObject.borderWidths, vec4<f32>(0.0));
     let opacity = perObject.params.y;
     let shadowBlur = perObject.params.z;
     let shadowSpread = perObject.params.w;
@@ -126,18 +130,45 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         return vec4<f32>(perObject.fill.rgb, a);
     }
 
-    if (borderWidth <= 0.0) {
+    if (!any(borderWidths > vec4<f32>(0.0))) {
         // Только заливка — без border.
         let a = perObject.fill.a * outerMask * opacity * presentationCoverage;
         if (a <= 0.0) { discard; }
         return vec4<f32>(perObject.fill.rgb, a);
     }
 
-    // Внутренняя граница — тот же rect, уменьшенный на borderWidth.
-    let innerHalf = max(halfSize - vec2<f32>(borderWidth), vec2<f32>(0.0));
-    let innerRadii = max(radii - vec4<f32>(borderWidth), vec4<f32>(0.0));
-    let dInner = sdRoundBox(p, innerHalf, innerRadii);
-    let innerMask = 1.0 - smoothstep(-aa, aa, dInner);
+    var innerMask: f32;
+    let uniformBorderWidths = all(borderWidths == vec4<f32>(borderWidth));
+    if (uniformBorderWidths) {
+        // Existing rounded path for the scalar uniform shorthand.
+        let innerHalf = max(halfSize - vec2<f32>(borderWidth), vec2<f32>(0.0));
+        let innerRadii = max(radii - vec4<f32>(borderWidth), vec4<f32>(0.0));
+        let dInner = sdRoundBox(p, innerHalf, innerRadii);
+        innerMask = 1.0 - smoothstep(-aa, aa, dInner);
+    } else {
+        // Exact asymmetric inner rectangle. CPU validation admits this branch
+        // only when every outer corner radius is zero.
+        let innerMin = vec2<f32>(
+            -halfSize.x + borderWidths.w,
+            -halfSize.y + borderWidths.z
+        );
+        let innerMax = vec2<f32>(
+            halfSize.x - borderWidths.y,
+            halfSize.y - borderWidths.x
+        );
+        if (all(innerMax > innerMin)) {
+            let innerCenter = (innerMin + innerMax) * 0.5;
+            let innerHalf = (innerMax - innerMin) * 0.5;
+            let dInner = sdRoundBox(
+                p - innerCenter,
+                innerHalf,
+                vec4<f32>(0.0)
+            );
+            innerMask = 1.0 - smoothstep(-aa, aa, dInner);
+        } else {
+            innerMask = 0.0;
+        }
+    }
 
     // border region = outer ∧ ¬inner
     let borderStrength = max(outerMask - innerMask, 0.0);

@@ -4,7 +4,7 @@
 Production-пакет их не экспортирует и не включает в свой TypeScript project.
 
 Приватное приложение `@engine/storybook` собирает этот каталог через
-`@zavx0z/storybook/stories`. Метаданные загружаются сразу, а каждый scene-модуль
+`@zavx0z/storybook/catalog`. Метаданные загружаются сразу, а каждый scene-модуль
 — отдельным dynamic import только для точного detail route:
 
 - `space/coordinate-system/z-up`
@@ -13,5 +13,5 @@ Production-пакет их не экспортирует и не включае�
 - `thin-film-material/geometry/sphere`
 - `text/presentation-clip/stencil`
 
-Overview может показать первый принадлежащий ему detail только после успешного
-поиска самого overview в route tree. Неизвестный путь не выбирает fallback story.
+Каждый overview показывает собственную semantic DOM presentation и не загружает
+скрытый первый detail. Неизвестный путь не выбирает fallback story.

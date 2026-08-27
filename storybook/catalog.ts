@@ -1,7 +1,7 @@
 import type {
-  StorybookStoryGroupInput,
-  StorybookStoryPath,
-} from "@zavx0z/storybook/stories"
+  StorybookDomCatalogGroup,
+  StorybookDomCatalogPath,
+} from "@zavx0z/storybook/catalog"
 import {
   coordinateSpaceStoryMetadata,
   holographicTorusStoryMetadata,
@@ -146,10 +146,10 @@ export const ENGINE_STORYBOOK_GROUPS = [
       },
     ],
   },
-] as const satisfies readonly StorybookStoryGroupInput<unknown>[]
+] as const satisfies readonly StorybookDomCatalogGroup<unknown>[]
 
 export const ENGINE_STORYBOOK_REPRESENTATIVE = Object.freeze({
   component: "space",
   section: "coordinate-system",
   variant: "z-up",
-}) satisfies StorybookStoryPath
+}) satisfies StorybookDomCatalogPath

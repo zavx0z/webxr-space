@@ -58,11 +58,46 @@ record budget is derived from the device's storage-binding and buffer limits.
 Over-depth chains and chains that cannot fit whole share one invalid record and
 fail closed; Renderer never truncates a chain or silently removes its clip.
 
+## ViewPoint control ownership
+
+`ViewPoint` owns the trackball orbit, view-plane pan and anchored zoom
+operations that change its position, target and up vector. Its built-in browser
+listeners use the same public operations. A composition host with several
+input owners may dispose those listeners, route the browser event itself, and
+then call `orbit()`, `pan()` or `zoom()` only after semantic content has declined
+the gesture. Engine does not decide which UI, plane or product mode receives an
+event.
+
+Renderer converts CSS size to the canvas backing store exactly once through
+`pixelRatio`. Every render pass then uses the complete physical backing width
+and height for its viewport and scissor. Camera aspect and document layout stay
+in CSS/logical units; consumers never multiply world density by DPR.
+
 ## Soft SDF shadow
 
 A rounded interface shadow is analytical presentation of the same local rectangle, not a separate texture or geometric blur ring. One expanded quad evaluates rounded distance and smooth falloff in a single fragment pass. A normal interface shadow does not use an offscreen framebuffer, blur texture, repeated bands, or post-processing.
 
 Source shape size, corner radii, spread, and blur are expressed in local units and continuously inherit the parent's `matrixWorld`. Pure pan or zoom does not rematerialize shadow geometry. Color and opacity are controlled presentation inputs and do not introduce hidden selection state into Engine.
+
+## Rounded rectangle borders
+
+`RoundedRectMaterial.borderWidths` is the canonical local-unit tuple in exact
+`[top, right, bottom, left]` order. `borderWidth` remains the uniform authoring
+shorthand used by existing consumers: assigning it replaces all four edges;
+reading it returns the shared width when the tuple is uniform and `NaN` when no
+single width can represent the canonical state.
+
+Uniform widths retain the existing rounded inner-SDF path. Non-uniform widths
+are supported only when all four corner radii are zero. That bounded path forms
+an exact asymmetric inner rectangle by moving its top, right, bottom and left
+bounds independently. Engine keeps one uniform border color; per-edge color is
+not implied by per-edge geometry.
+
+Canonical widths are transported in the final previously unused per-object
+uniform vec4 at float offsets 60 through 63. Invalid, negative or non-finite
+tuples and non-uniform widths combined with rounded corners fail before the
+per-object block is changed or submitted. Engine never selects one edge,
+averages widths or silently presents a lossy rounded asymmetric border.
 
 ## Analytical color picker
 

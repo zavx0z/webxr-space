@@ -189,6 +189,38 @@ export class ViewPoint {
   }
 
   /**
+   * Applies one trackball-orbit delta without claiming a browser event.
+   *
+   * Composition owners use this operation after they have routed pointer
+   * input between semantic content and camera navigation.
+   */
+  public orbit(deltaX: number, deltaY: number): void {
+    finiteControlDelta(deltaX, "orbit deltaX")
+    finiteControlDelta(deltaY, "orbit deltaY")
+    this.handleRotation(deltaX, deltaY)
+    this.update()
+  }
+
+  /** Moves both camera position and target in the current view plane. */
+  public pan(deltaX: number, deltaY: number): void {
+    finiteControlDelta(deltaX, "pan deltaX")
+    finiteControlDelta(deltaY, "pan deltaY")
+    this.handlePan(deltaX, deltaY)
+    this.update()
+  }
+
+  /** Changes target distance while optionally preserving one client anchor. */
+  public zoom(delta: number, anchor?: {clientX: number; clientY: number}): void {
+    finiteControlDelta(delta, "zoom delta")
+    if (anchor !== undefined) {
+      finiteControlDelta(anchor.clientX, "zoom anchor clientX")
+      finiteControlDelta(anchor.clientY, "zoom anchor clientY")
+    }
+    this.handleZoom(delta, anchor)
+    this.update()
+  }
+
+  /**
    * Освобождает ресурсы.
    * Удаляет слушатели событий с DOM-элемента и документа.
    */
@@ -240,12 +272,11 @@ export class ViewPoint {
     const deltaX = event.clientX - this.lastX
     const deltaY = event.clientY - this.lastY
 
-    if (this.isRotating) this.handleRotation(deltaX, deltaY)
-    else if (this.isPanning) this.handlePan(deltaX, deltaY)
+    if (this.isRotating) this.orbit(deltaX, deltaY)
+    else if (this.isPanning) this.pan(deltaX, deltaY)
 
     this.lastX = event.clientX
     this.lastY = event.clientY
-    this.update()
   }
 
   private onMouseUp = () => {
@@ -286,10 +317,9 @@ export class ViewPoint {
     if (touches.length === 1 && this.isRotating) {
       const deltaX = touches[0]!.clientX - this.lastX
       const deltaY = touches[0]!.clientY - this.lastY
-      this.handleRotation(deltaX, deltaY)
+      this.orbit(deltaX, deltaY)
       this.lastX = touches[0]!.clientX
       this.lastY = touches[0]!.clientY
-      this.update()
     } else if (touches.length === 2 && this.isPanning) {
       // Зум
       const dx = touches[0]!.clientX - touches[1]!.clientX
@@ -299,7 +329,7 @@ export class ViewPoint {
       const currentMidY = (touches[0]!.clientY + touches[1]!.clientY) / 2
       if (this.lastTouchDistance !== null) {
         const deltaDistance = currentTouchDistance - this.lastTouchDistance
-        this.handleZoom(deltaDistance, {clientX: currentMidX, clientY: currentMidY})
+        this.zoom(deltaDistance, {clientX: currentMidX, clientY: currentMidY})
       }
       this.lastTouchDistance = currentTouchDistance
 
@@ -307,11 +337,10 @@ export class ViewPoint {
       const deltaX = currentMidX - this.lastX
       const deltaY = currentMidY - this.lastY
       // Для тачскринов инвертируем панорамирование, чтобы создать эффект "перетаскивания"
-      this.handlePan(-deltaX, -deltaY)
+      this.pan(-deltaX, -deltaY)
       this.lastX = currentMidX
       this.lastY = currentMidY
 
-      this.update()
     }
   }
 
@@ -352,11 +381,10 @@ export class ViewPoint {
   private onWheel = (event: WheelEvent) => {
     event.preventDefault()
     if (event.ctrlKey) {
-      this.handleZoom(-event.deltaY, {clientX: event.clientX, clientY: event.clientY})
+      this.zoom(-event.deltaY, {clientX: event.clientX, clientY: event.clientY})
     } else {
-      this.handlePan(event.deltaX, event.deltaY)
+      this.pan(event.deltaX, event.deltaY)
     }
-    this.update()
   }
 
   private handleRotation(deltaX: number, deltaY: number) {
@@ -476,6 +504,11 @@ export class ViewPoint {
 
 function isFiniteVector(v: Vector3): boolean {
   return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z)
+}
+
+function finiteControlDelta(value: number, label: string): number {
+  if (!Number.isFinite(value)) throw new RangeError(`ViewPoint ${label} must be finite`)
+  return value
 }
 
 function fallbackBackDirection(up: Vector3): Vector3 {

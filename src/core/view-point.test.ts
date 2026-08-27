@@ -54,7 +54,7 @@ describe("ViewPoint zoom", () => {
       target: { x: 0, y: 0, z: 0 },
     })
 
-    ;(viewPoint as unknown as { handleZoom(delta: number): void }).handleZoom(20)
+    viewPoint.zoom(20)
 
     expect(getRadius(viewPoint)).toBeLessThan(0.18)
   })
@@ -67,7 +67,7 @@ describe("ViewPoint zoom", () => {
       target: { x: 0, y: 0, z: 0 },
     })
 
-    ;(viewPoint as unknown as { handleZoom(delta: number): void }).handleZoom(100)
+    viewPoint.zoom(100)
 
     expect(getRadius(viewPoint)).toBeLessThan(0.1)
   })
@@ -80,15 +80,13 @@ describe("ViewPoint zoom", () => {
       target: { x: 0, y: 0, z: 0 },
     })
     const privateViewPoint = viewPoint as unknown as {
-      handleZoom(delta: number, anchor?: {clientX: number; clientY: number}): void
       targetPlanePointForClient(clientX: number, clientY: number): Vector3 | null
     }
     const anchor = {clientX: 960, clientY: 360}
     const before = privateViewPoint.targetPlanePointForClient(anchor.clientX, anchor.clientY)
     expect(before).not.toBeNull()
 
-    privateViewPoint.handleZoom(40, anchor)
-    viewPoint.update()
+    viewPoint.zoom(40, anchor)
 
     const after = privateViewPoint.targetPlanePointForClient(anchor.clientX, anchor.clientY)
     expect(after).not.toBeNull()
@@ -103,7 +101,7 @@ describe("ViewPoint zoom", () => {
       target: { x: 0, y: 0, z: 0 },
     })
 
-    ;(viewPoint as unknown as { handleRotation(deltaX: number, deltaY: number): void }).handleRotation(0, 40)
+    viewPoint.orbit(0, 40)
     expect(viewPoint.getUp().z).toBeLessThan(0.999)
 
     viewPoint.alignUpToWorldZ()
@@ -150,5 +148,37 @@ describe("ViewPoint zoom", () => {
 
     expect(getRadius(viewPoint)).toBeGreaterThan(0)
     expect(Math.abs(viewPoint.viewMatrix.determinant())).toBeGreaterThan(0.99)
+  })
+
+  test("даёт composition owner маршрутизировать orbit и pan без browser event", () => {
+    const viewPoint = new ViewPoint({
+      element: createElementStub(),
+      near: 1,
+      position: { x: 0, y: -10, z: 0 },
+      target: { x: 0, y: 0, z: 0 },
+    })
+    viewPoint.dispose()
+    const radius = getRadius(viewPoint)
+
+    viewPoint.orbit(20, -10)
+    const orbitPosition = viewPoint.position.clone()
+    viewPoint.pan(12, -8)
+
+    expect(getRadius(viewPoint)).toBeCloseTo(radius, 8)
+    expect(viewPoint.position).not.toEqual(orbitPosition)
+    expect(Math.abs(viewPoint.viewMatrix.determinant())).toBeGreaterThan(0.99)
+  })
+
+  test("отклоняет нечисловые routed camera deltas", () => {
+    const viewPoint = new ViewPoint({
+      element: createElementStub(),
+      near: 1,
+      position: { x: 0, y: -10, z: 0 },
+      target: { x: 0, y: 0, z: 0 },
+    })
+
+    expect(() => viewPoint.orbit(Number.NaN, 0)).toThrow(RangeError)
+    expect(() => viewPoint.pan(0, Number.POSITIVE_INFINITY)).toThrow(RangeError)
+    expect(() => viewPoint.zoom(1, {clientX: Number.NaN, clientY: 0})).toThrow(RangeError)
   })
 })

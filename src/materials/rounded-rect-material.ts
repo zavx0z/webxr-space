@@ -10,7 +10,9 @@ import { Material, type MaterialParameters } from "./material"
  * а сам quad симметрично расширяется на `shadowSpread + shadowBlur`.
  *
  * `radius` — единое значение либо per-corner кортеж {tl, tr, br, bl}.
- * `borderWidth` = 0 даёт чистую заливку без рамки.
+ * `borderWidth` — uniform shorthand. `borderWidths` — canonical tuple
+ * `[top, right, bottom, left]`. Non-uniform widths are supported only when all
+ * corner radii are zero; a rounded asymmetric inner contour is not claimed.
  *
  * Антиалиасинг работает через fwidth() в фрагментном шейдере — независим
  * от размера меша и pixelRatio, даёт стабильный 1-px переход на любой DPR.
@@ -27,6 +29,8 @@ export interface RoundedRectMaterialParameters extends MaterialParameters {
   border?: Color | number | null
   /** Толщина рамки в world-units. Default 0. */
   borderWidth?: number
+  /** Canonical per-edge widths `[top, right, bottom, left]` in world-units. */
+  borderWidths?: RoundedRectBorderWidths
   /** 0..1, домножается на alpha. Default 1. */
   opacity?: number
   /** Local half-width of the analytical shadow fade. Default 0. */
@@ -34,6 +38,13 @@ export interface RoundedRectMaterialParameters extends MaterialParameters {
   /** Local solid expansion before the analytical shadow fade. Default 0. */
   shadowSpread?: number
 }
+
+export type RoundedRectBorderWidths = readonly [
+  top: number,
+  right: number,
+  bottom: number,
+  left: number,
+]
 
 const finiteNonNegative = (value: number | undefined): number =>
   value !== undefined && Number.isFinite(value) ? Math.max(0, value) : 0
@@ -47,7 +58,7 @@ export class RoundedRectMaterial extends Material {
   public radii: [number, number, number, number]
   public fill: Color
   public border: Color
-  public borderWidth: number
+  private edgeBorderWidths: [number, number, number, number] = [0, 0, 0, 0]
   public opacity: number
   public shadowBlur: number
   public shadowSpread: number
@@ -77,9 +88,63 @@ export class RoundedRectMaterial extends Material {
       this.border.a = 0
     }
 
-    this.borderWidth = Math.max(0, parameters.borderWidth ?? 0)
+    if (parameters.borderWidths !== undefined) this.borderWidths = parameters.borderWidths
+    else this.borderWidth = finiteNonNegative(parameters.borderWidth)
     this.opacity = parameters.opacity ?? 1
     this.shadowBlur = finiteNonNegative(parameters.shadowBlur)
     this.shadowSpread = finiteNonNegative(parameters.shadowSpread)
+  }
+
+  /** Canonical `[top, right, bottom, left]` border widths. */
+  get borderWidths(): RoundedRectBorderWidths {
+    return this.edgeBorderWidths
+  }
+
+  set borderWidths(value: RoundedRectBorderWidths) {
+    const widths = validatedBorderWidths(value)
+    assertRoundedBorderCompatibility(widths, this.radii)
+    this.edgeBorderWidths = widths
+  }
+
+  /**
+   * Uniform authoring shorthand retained for existing consumers.
+   *
+   * Assigning it replaces all four canonical edges. Reading a non-uniform
+   * tuple returns `NaN` rather than choosing one edge lossily.
+   */
+  get borderWidth(): number {
+    const [top, right, bottom, left] = this.edgeBorderWidths
+    return top === right && top === bottom && top === left ? top : Number.NaN
+  }
+
+  set borderWidth(value: number) {
+    const width = finiteNonNegative(value)
+    this.edgeBorderWidths = [width, width, width, width]
+  }
+}
+
+const validatedBorderWidths = (
+  value: RoundedRectBorderWidths,
+): [number, number, number, number] => {
+  if (!Array.isArray(value) || value.length !== 4) {
+    throw new TypeError("RoundedRectMaterial.borderWidths must contain top/right/bottom/left")
+  }
+  const widths = [...value] as [number, number, number, number]
+  if (widths.some(width => !Number.isFinite(width) || width < 0)) {
+    throw new RangeError("RoundedRectMaterial.borderWidths must be finite and non-negative")
+  }
+  return widths
+}
+
+const assertRoundedBorderCompatibility = (
+  widths: RoundedRectBorderWidths,
+  radii: readonly number[],
+): void => {
+  const [top, right, bottom, left] = widths
+  const uniform = top === right && top === bottom && top === left
+  if (!uniform && radii.some(radius => radius !== 0)) {
+    throw new RangeError(
+      "RoundedRectMaterial non-uniform border widths require zero corner radii",
+    )
   }
 }

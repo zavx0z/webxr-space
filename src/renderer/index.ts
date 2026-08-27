@@ -1586,6 +1586,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       },
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
+    this.configurePassViewport(passEncoder)
     passEncoder.setBindGroup(0, this.globalBindGroup!)
 
     // Рендерим обычные объекты
@@ -1612,9 +1613,19 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         storeOp: "store",
       }],
     })
+    this.configurePassViewport(overlayPass)
     overlayPass.setBindGroup(0, this.globalBindGroup!)
     this.renderObjectList(overlayPass, overlayLines, renderIndexByItem)
     overlayPass.end()
+  }
+
+  /** Keeps every pass in physical backing pixels after a CSS/DPR resize. */
+  private configurePassViewport(passEncoder: GPURenderPassEncoder): void {
+    if (!this.canvas) return
+    const width = Math.max(1, Math.floor(this.canvas.width))
+    const height = Math.max(1, Math.floor(this.canvas.height))
+    passEncoder.setViewport(0, 0, width, height, 0, 1)
+    passEncoder.setScissorRect(0, 0, width, height)
   }
 
 
@@ -1791,6 +1802,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   private updateMeshData(mesh: Mesh, worldMatrix: Matrix4, offsetFloats: number): void {
     const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
     if (!material || !material.visible) return
+    const roundedBorder = material instanceof RoundedRectMaterial
+      ? validateRoundedBorderUpload(material)
+      : null
 
     const normalMatrix = this.meshNormalMatrix.copy(worldMatrix).invert().transpose()
 
@@ -1864,6 +1878,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.perObjectDataCPU!.set(material.glowAParams, offsetFloats + 48)
       this.perObjectDataCPU!.set(material.glowBParams, offsetFloats + 52)
     } else if (material instanceof RoundedRectMaterial) {
+      if (roundedBorder === null) throw new Error("RoundedRectMaterial border upload is unavailable")
       // fill rgba @ 32..35
       this.writePerObjectRgba(offsetFloats + 32, material.fill)
       // border rgba @ 36..39
@@ -1879,7 +1894,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       // params: borderWidth, opacity, shadowBlur, shadowSpread @ 48..51
       this.writePerObjectVec4(
         offsetFloats + 48,
-        material.borderWidth,
+        roundedBorder.uniformWidth,
         clamp01(material.opacity),
         material.shadowBlur,
         material.shadowSpread,
@@ -1888,6 +1903,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       if (material.clipBounds !== null) {
         this.perObjectDataCPU!.set(material.clipBounds, offsetFloats + 52)
       }
+      // Canonical top/right/bottom/left widths @ 60..63.
+      this.perObjectDataCPU!.set(roundedBorder.widths, offsetFloats + 60)
     } else if (material instanceof ImageMaterial) {
       this.writePerObjectRgba(offsetFloats + 32, material.tint)
       if (material.clipBounds !== null) {
@@ -2603,6 +2620,30 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 function clamp01(value: number): number {
   if (!Number.isFinite(value)) return 1
   return Math.min(1, Math.max(0, value))
+}
+
+function validateRoundedBorderUpload(material: RoundedRectMaterial): Readonly<{
+  widths: readonly [number, number, number, number]
+  uniformWidth: number
+}> {
+  const widths = material.borderWidths
+  if (!Array.isArray(widths) || widths.length !== 4) {
+    throw new TypeError("RoundedRectMaterial.borderWidths must contain top/right/bottom/left")
+  }
+  const [top, right, bottom, left] = widths
+  if ([top, right, bottom, left].some(width => !Number.isFinite(width) || width < 0)) {
+    throw new RangeError("RoundedRectMaterial.borderWidths must be finite and non-negative")
+  }
+  const uniform = top === right && top === bottom && top === left
+  if (!uniform && material.radii.some(radius => radius !== 0)) {
+    throw new RangeError(
+      "RoundedRectMaterial non-uniform border widths require zero corner radii",
+    )
+  }
+  return Object.freeze({
+    widths: Object.freeze([top, right, bottom, left] as const),
+    uniformWidth: uniform ? top : 0,
+  })
 }
 
 function colorPickerModeCode(mode: ColorPickerMaterial["mode"]): number {

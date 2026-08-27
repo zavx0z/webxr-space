@@ -69,6 +69,22 @@ describe("presentation clip WebGPU pixels", () => {
     expect(opaquePixelCount(pixels)).toBe(0)
   })
 
+  test("renders exact asymmetric zero-radius border edges", async () => {
+    const pixels = await renderRounded(device, [0.5, 0.25, 0.125, 0.375])
+
+    expect(pixel(pixels, 16, 16)).toMatchObject([255, 0, 0, 255])
+    for (const [x, y] of [[16, 3], [29, 16], [16, 30], [3, 16]] as const) {
+      const sample = pixel(pixels, x, y)
+      expect(sample[1]).toBeGreaterThan(sample[0])
+      expect(sample[3]).toBeGreaterThan(200)
+    }
+    for (const [x, y] of [[16, 9], [26, 16], [16, 27], [7, 16]] as const) {
+      const sample = pixel(pixels, x, y)
+      expect(sample[0]).toBeGreaterThan(sample[1])
+      expect(sample[3]).toBeGreaterThan(200)
+    }
+  })
+
   test("compiles every composed UiSurface material pipeline", async () => {
     const global = device.createBindGroupLayout({
       entries: [
@@ -180,6 +196,36 @@ async function renderMeshBasic(device: GPUDevice, clips: Float32Array): Promise<
   return renderSinglePass(device, pipeline, layouts, clips)
 }
 
+async function renderRounded(
+  device: GPUDevice,
+  borderWidths: readonly [number, number, number, number],
+): Promise<Uint8Array> {
+  const module = device.createShaderModule({code: roundedShader})
+  const layouts = createLayouts(device, false)
+  const pipeline = await device.createRenderPipelineAsync({
+    layout: device.createPipelineLayout({bindGroupLayouts: [layouts.global, layouts.perObject]}),
+    vertex: {
+      module,
+      entryPoint: "vs_main",
+      buffers: [
+        {arrayStride: 12, attributes: [{shaderLocation: 0, offset: 0, format: "float32x3"}]},
+        {arrayStride: 12, attributes: [{shaderLocation: 1, offset: 0, format: "float32x3"}]},
+      ],
+    },
+    fragment: {module, entryPoint: "fs_main", targets: [{format: "rgba8unorm"}]},
+    primitive: {topology: "triangle-list", cullMode: "none"},
+  })
+  const objectData = new Float32Array(64)
+  objectData[0] = objectData[5] = objectData[10] = objectData[15] = 1
+  objectData[16] = objectData[21] = objectData[26] = objectData[31] = 1
+  objectData.set([1, 0, 0, 1], 32)
+  objectData.set([0, 1, 0, 1], 36)
+  objectData.set([2, 2, 0, 0], 40)
+  objectData.set([0, 1, 0, 0], 48)
+  objectData.set(borderWidths, 60)
+  return renderSinglePass(device, pipeline, layouts, new Float32Array(24), objectData)
+}
+
 async function renderTextStencilAndCover(device: GPUDevice, clips: Float32Array): Promise<Uint8Array> {
   const module = device.createShaderModule({code: textShader})
   const layouts = createLayouts(device, true)
@@ -263,8 +309,9 @@ async function renderSinglePass(
   pipeline: GPURenderPipeline,
   layouts: Layouts,
   clips: Float32Array,
+  objectData?: Float32Array,
 ): Promise<Uint8Array> {
-  const resources = createRenderResources(device, layouts, clips)
+  const resources = createRenderResources(device, layouts, clips, objectData)
   const encoder = device.createCommandEncoder()
   const pass = encoder.beginRenderPass({
     colorAttachments: [{
@@ -324,7 +371,12 @@ type RenderResources = {
   readback: GPUBuffer
 }
 
-function createRenderResources(device: GPUDevice, layouts: Layouts, clips: Float32Array): RenderResources {
+function createRenderResources(
+  device: GPUDevice,
+  layouts: Layouts,
+  clips: Float32Array,
+  suppliedObjectData?: Float32Array,
+): RenderResources {
   const positions = new Float32Array([
     -1, -1, 0, 1, -1, 0, 1, 1, 0,
     -1, -1, 0, 1, 1, 0, -1, 1, 0,
@@ -337,12 +389,14 @@ function createRenderResources(device: GPUDevice, layouts: Layouts, clips: Float
   globalData[0] = globalData[5] = globalData[10] = globalData[15] = 1
   const globalBuffer = gpuBuffer(device, globalData, GPUBufferUsage.UNIFORM)
   const sceneBuffer = layouts.hasScene ? gpuBuffer(device, new Float32Array(64), GPUBufferUsage.UNIFORM) : null
-  const objectData = new Float32Array(64)
-  objectData[0] = objectData[5] = objectData[10] = objectData[15] = 1
-  objectData[16] = objectData[21] = objectData[26] = objectData[31] = 1
-  objectData.set([1, 0.15, 0.05, 1], 32)
-  objectData[PRESENTATION_CLIP_RANGE_FLOAT_OFFSET] = 0
-  objectData[PRESENTATION_CLIP_RANGE_FLOAT_OFFSET + 1] = clips.length / 24
+  const objectData = suppliedObjectData ?? new Float32Array(64)
+  if (suppliedObjectData === undefined) {
+    objectData[0] = objectData[5] = objectData[10] = objectData[15] = 1
+    objectData[16] = objectData[21] = objectData[26] = objectData[31] = 1
+    objectData.set([1, 0.15, 0.05, 1], 32)
+    objectData[PRESENTATION_CLIP_RANGE_FLOAT_OFFSET] = 0
+    objectData[PRESENTATION_CLIP_RANGE_FLOAT_OFFSET + 1] = clips.length / 24
+  }
   const objectBuffer = gpuBuffer(device, objectData, GPUBufferUsage.UNIFORM)
   const clipBuffer = gpuBuffer(device, clips, GPUBufferUsage.STORAGE)
   const globalEntries: GPUBindGroupEntry[] = [{binding: 0, resource: {buffer: globalBuffer}}]
