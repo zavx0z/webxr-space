@@ -11,6 +11,7 @@ import {
 import type {EnumInputStoryVariant} from "../stories.ts"
 import {uiIcons} from "@ui/elements/icons"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {componentStorySource} from "../source.ts"
 
 type EnumInputStoryArgs = StorybookStoryArgs & Readonly<{
   value: string
@@ -151,7 +152,7 @@ export function createEnumInputStory(variant: EnumInputStoryVariant): StorybookS
       )
     },
     source(args) {
-      return enumInputSource(args)
+      return componentStorySource({component: "enum-input", variant}, args, enumInputSource(args))
     },
   })
 }

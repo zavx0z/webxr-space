@@ -7,6 +7,7 @@ import {
   type StorybookStoryArgs,
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
+import {componentStorySource} from "../source.ts"
 
 type ControlGroupStoryArgs = StorybookStoryArgs & Readonly<{
   rows: number
@@ -47,7 +48,11 @@ export function createControlGroupStory(): StorybookStoryModule {
       })
     },
     source(args) {
-      return controlGroupSource(controlGroupRows(args.rows))
+      return componentStorySource(
+        {component: "control-group", section: "basic", variant: "default"},
+        args,
+        controlGroupSource(controlGroupRows(args.rows)),
+      )
     },
   })
 }

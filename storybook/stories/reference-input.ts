@@ -8,6 +8,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {componentStorySource} from "../source.ts"
 
 type ReferenceInputStoryArgs = StorybookStoryArgs & Readonly<{
   value: ReferenceInputValue | null
@@ -84,7 +85,11 @@ export function createReferenceInputStory(): StorybookStoryModule {
       )
     },
     source(args) {
-      return referenceInputSource(args)
+      return componentStorySource(
+        {component: "reference-input", section: "basic", variant: "default"},
+        args,
+        referenceInputSource(args),
+      )
     },
   })
 }

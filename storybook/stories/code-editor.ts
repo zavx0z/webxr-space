@@ -4,6 +4,7 @@ import {
   type StorybookStoryArgs,
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
+import {componentStorySource} from "../source.ts"
 
 type CodeEditorStoryArgs = StorybookStoryArgs & Readonly<{
   "show-line-numbers": boolean
@@ -52,7 +53,7 @@ export function createCodeEditorStory(): StorybookStoryModule {
       })
     },
     source(args) {
-      return [
+      const typescript = [
         'import {CodeEditor} from "@ui/components/code-editor"',
         "",
         "CodeEditor(surface, x, y, width, height, {",
@@ -63,6 +64,7 @@ export function createCodeEditorStory(): StorybookStoryModule {
         `  showLineNumbers: ${args["show-line-numbers"]},`,
         "})",
       ].join("\n")
+      return componentStorySource({component: "code-editor", section: "state", variant: "read-only"}, args, typescript)
     },
   })
 }

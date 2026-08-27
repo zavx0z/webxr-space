@@ -159,6 +159,11 @@ const loadCodeEditorStory = async (): Promise<StorybookStoryModule> => {
   return createCodeEditorStory()
 }
 
+const loadInspectorStory = async (): Promise<StorybookStoryModule> => {
+  const {createInspectorStory} = await import("./stories/inspector.ts")
+  return createInspectorStory()
+}
+
 const singleVariant = (
   component: SimpleComponentStory,
   title: string,
@@ -474,6 +479,22 @@ export const COMPONENT_STORIES = defineStorybookStories({
       id: "data",
       label: "Данные",
       components: [
+        {
+          id: "inspector",
+          label: "Инспектор",
+          apiName: "Inspector",
+          tags: ["editor", "panel", "sections", "search"],
+          sections: [{
+            id: "basic",
+            label: "Основной",
+            variants: [{
+              id: "default",
+              label: "Панель",
+              title: "Inspector · Панель свойств",
+              load: loadInspectorStory,
+            }],
+          }],
+        },
         {
           id: "code-editor",
           label: "Редактор кода",

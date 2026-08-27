@@ -12,6 +12,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {StandaloneInputStory} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type StandaloneInputArgs = StorybookStoryArgs & Readonly<{
   value: unknown
@@ -93,7 +94,8 @@ export function createStandaloneInputStory(component: StandaloneInputStory): Sto
       )
     },
     source(args) {
-      return component === "vector-input" ? vectorSource(args) : matrixSource(args)
+      const typescript = component === "vector-input" ? vectorSource(args) : matrixSource(args)
+      return componentStorySource({component, section: "basic", variant: "default"}, args, typescript)
     },
   })
 }

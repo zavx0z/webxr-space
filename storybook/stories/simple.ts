@@ -18,6 +18,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {SimpleComponentStory} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type SimpleStoryArgs = StorybookStoryArgs & Readonly<{
   label: string
@@ -54,7 +55,7 @@ export function createSimpleComponentStory(options: Readonly<{
       renderSimpleStory(surface, args, frame, options)
     },
     source(args) {
-      return simpleStorySource(options, args)
+      return componentStorySource(options, args, simpleStorySource(options, args))
     },
   })
 }
@@ -142,9 +143,9 @@ function renderSimpleStory(
     return
   }
   if (options.component === "typography") {
-    Typography(surface, centerX - 260, centerY - 70, 520, 34, {children: args.label, variant: "title", sx: {textAlign: "center"}})
-    Typography(surface, centerX - 260, centerY - 18, 520, 28, {children: "Основной текст компонента Typography", variant: "body", sx: {textAlign: "center"}})
-    Typography(surface, centerX - 260, centerY + 26, 520, 24, {children: "Подпись", variant: "caption", color: "muted", sx: {textAlign: "center"}})
+    Typography(surface, centerX - 260, centerY - 70, 520, 34, {children: args.label, variant: "title", style: {textAlign: "center"}})
+    Typography(surface, centerX - 260, centerY - 18, 520, 28, {children: "Основной текст компонента Typography", variant: "body", style: {textAlign: "center"}})
+    Typography(surface, centerX - 260, centerY + 26, 520, 24, {children: "Подпись", variant: "caption", color: "muted", style: {textAlign: "center"}})
     return
   }
   if (options.component === "divider") {
@@ -194,13 +195,13 @@ function renderSimpleStory(
     children: "Noti пока не опубликован в рабочем API",
     variant: "subtitle",
     color: "muted",
-    sx: {textAlign: "center"},
+    style: {textAlign: "center"},
   })
   Typography(surface, centerX - 300, centerY + 14, 600, 26, {
     children: "Запись явно сохранена в каталоге и не скрыта недоступным маршрутом.",
     variant: "caption",
     color: "muted",
-    sx: {textAlign: "center"},
+    style: {textAlign: "center"},
   })
 }
 

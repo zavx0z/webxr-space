@@ -20,6 +20,7 @@ type HitCall = Parameters<UiSurface["hit"]>
 type RoundedRectCall = Parameters<UiSurface["drawRoundedRect"]>
 type TextCall = Parameters<UiSurface["drawText"]>
 type CenteredTextCall = Parameters<UiSurface["drawTextCentered"]>
+type ImageCall = Parameters<UiSurface["drawImage"]>
 
 class StoryActionSurface extends BaseUiSurface {
   readonly hits: HitCall[] = []
@@ -28,6 +29,7 @@ class StoryActionSurface extends BaseUiSurface {
   override drawRoundedRect(..._args: RoundedRectCall): void {}
   override drawText(..._args: TextCall): number { return 0 }
   override drawTextCentered(..._args: CenteredTextCall): number { return 0 }
+  override drawImage(..._args: ImageCall): void {}
   override hit(...args: HitCall): void { this.hits.push(args) }
   override registerRenderKey(key: string): void { this.renderKeys.push(key) }
   override pushClip(): void {}
@@ -102,6 +104,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       "switcher",
       "progress-checkbox",
       "slider-control",
+      "inspector",
       "code-editor",
       "list",
       "table",
@@ -130,6 +133,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       "Переключатель",
       "Флажок прогресса",
       "Слайдер",
+      "Инспектор",
       "Редактор кода",
       "Список",
       "Таблица",
@@ -149,6 +153,54 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(componentVariantItems("button/color/error").map(({id}) => id)).toEqual([
       "primary", "success", "warning", "error", "neutral",
     ])
+    expect(COMPONENT_STORY_ROUTES).toContain("inspector/basic/default")
+  })
+
+  test("publishes native HTML, raw CSS owner chains and exact TypeScript for every detail route", async () => {
+    for (const route of COMPONENT_STORY_ROUTES) {
+      const index = COMPONENT_STORIES.find(route)
+      expect(index).toBeDefined()
+      const source = (await COMPONENT_STORIES.load(route)).source(
+        (await COMPONENT_STORIES.load(route)).defaultArgs,
+      )
+      expect(source.html.trim().startsWith("<")).toBeTrue()
+      expect(source.html).not.toContain("html`")
+      expect(source.html).not.toContain("surface,")
+      expect(source.css).toMatch(/^\.[a-z-]+ \{/)
+      expect(source.css).toContain("/* Полная CSS-цепочка:")
+      expect(source.css).toContain("Задано в")
+      expect(source.css).not.toContain("const style")
+      expect(source.css).not.toContain("Preview frame")
+      expect(source.typescript.length).toBeGreaterThan(24)
+      if (index!.componentId === "noti") {
+        expect(source.typescript).toContain("Noti пока не опубликован")
+      } else {
+        expect(source.typescript).toMatch(/@ui\/(?:components|elements)\//)
+      }
+      assertComponentStateBranches(index!.componentId, source.css)
+    }
+  })
+
+  test("documents Inspector through its exact owner and native aside structure", async () => {
+    const inspector = await COMPONENT_STORIES.load("inspector/basic/default")
+    const source = inspector.source(inspector.defaultArgs)
+    expect(source.typescript).toContain('from "@ui/components/inspector"')
+    expect(source.html).toContain('<aside class="inspector">')
+    expect(source.html).toContain('<nav class="rail"')
+    expect(source.html).toContain('type="search"')
+    expect(source.css).toContain("@ui/components/inspector#Inspector")
+    expect(source.css).toContain("& .section-header {")
+    expect(source.css).toContain('&[aria-expanded="true"]')
+    const surface = new StoryActionSurface()
+    try {
+      inspector.render(surface, inspector.defaultArgs, {x: 0, y: 0, w: 720, h: 760})
+      expect(surface.hits.some((hit) => {
+        const options = hit[5]
+        return typeof options === "object" && options !== null && options.key === "components-story-inspector:section:html"
+      })).toBeTrue()
+    } finally {
+      surface.dispose()
+    }
   })
 
   test("catalogs every exact public input leaf as its own component", async () => {
@@ -175,29 +227,29 @@ describe("@ui/components package-owned Workbench stories", () => {
 
     const controlGroup = await COMPONENT_STORIES.load("control-group/basic/default")
     expect(controlGroup.defaultArgs).toEqual({rows: 3})
-    expect(controlGroup.source(controlGroup.defaultArgs)).toContain('from "@ui/components/control-group"')
-    expect(controlGroup.source(controlGroup.defaultArgs)).toContain("ControlGroup(surface, x, y, 146, 66")
+    expect(controlGroup.source(controlGroup.defaultArgs).typescript).toContain('from "@ui/components/control-group"')
+    expect(controlGroup.source(controlGroup.defaultArgs).typescript).toContain("ControlGroup(surface, x, y, 146, 66")
 
     const vector = await COMPONENT_STORIES.load("vector-input/basic/default")
     expect(vector.defaultArgs).toEqual({value: [1, 2, 3], density: "regular", disabled: false})
 
     const integer = await COMPONENT_STORIES.load("integer-input/basic/labeled")
     expect(integer.defaultArgs).toEqual({label: "Iterations", value: 3, disabled: false, "read-only": false})
-    expect(integer.source(integer.defaultArgs)).toContain('from "@ui/components/integer-input"')
-    expect(integer.source(integer.defaultArgs)).toContain('label: "Iterations"')
+    expect(integer.source(integer.defaultArgs).typescript).toContain('from "@ui/components/integer-input"')
+    expect(integer.source(integer.defaultArgs).typescript).toContain('label: "Iterations"')
 
     const integerField = await COMPONENT_STORIES.load("field/integer/input")
     expect(integerField.defaultArgs).toMatchObject({value: 3, density: "regular", disabled: false})
-    expect(integerField.source(integerField.defaultArgs)).toContain('kind: "integer"')
+    expect(integerField.source(integerField.defaultArgs).typescript).toContain('kind: "integer"')
     expect(vector.controls.map(({key, label}) => [key, label])).toEqual([
       ["value", "Координаты"],
       ["density", "Плотность"],
       ["disabled", "Недоступно"],
     ])
-    expect(vector.source({...vector.defaultArgs, value: [4, 5, 6], density: "compact"})).toContain(
+    expect(vector.source({...vector.defaultArgs, value: [4, 5, 6], density: "compact"}).typescript).toContain(
       'from "@ui/components/vector-input"',
     )
-    expect(vector.source({...vector.defaultArgs, value: [4, 5, 6], density: "compact"})).toContain(
+    expect(vector.source({...vector.defaultArgs, value: [4, 5, 6], density: "compact"}).typescript).toContain(
       'value: [4,5,6],\n  dimensions: 3,\n  density: "compact"',
     )
 
@@ -208,7 +260,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       ["density", "Плотность"],
       ["disabled", "Недоступно"],
     ])
-    const matrixSource = matrix.source({...matrix.defaultArgs, value: [[1, 2], [3, 4]], disabled: true})
+    const matrixSource = matrix.source({...matrix.defaultArgs, value: [[1, 2], [3, 4]], disabled: true}).typescript
     expect(matrixSource).toContain('from "@ui/components/matrix-input"')
     expect(matrixSource).toContain('value: [[1,2],[3,4]],\n  density: "regular",\n  disabled: true')
 
@@ -227,7 +279,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       ["readonly", "Только чтение"],
       ["event", "Последнее событие"],
     ])
-    const referenceSource = reference.source({...reference.defaultArgs, value: null, readonly: true})
+    const referenceSource = reference.source({...reference.defaultArgs, value: null, readonly: true}).typescript
     expect(referenceSource).toContain('from "@ui/components/reference-input"')
     expect(referenceSource).toContain("let value: ReferenceInputValue | null = null")
     expect(referenceSource).toContain("readOnly: true")
@@ -248,10 +300,10 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(closedColor.defaultArgs).toMatchObject({open: false, disabled: false, readonly: false})
     expect(openColor.defaultArgs).toMatchObject({open: true, disabled: false, readonly: false})
     expect(expandedColor.defaultArgs).toMatchObject({presentation: "expanded", open: false})
-    expect(openColor.source(openColor.defaultArgs)).toContain('from "@ui/components/color-input"')
-    expect(openColor.source(openColor.defaultArgs)).toContain("let open = true")
-    expect(openColor.source(openColor.defaultArgs)).toContain("  open,")
-    expect(expandedColor.source(expandedColor.defaultArgs)).toContain('presentation: "expanded"')
+    expect(openColor.source(openColor.defaultArgs).typescript).toContain('from "@ui/components/color-input"')
+    expect(openColor.source(openColor.defaultArgs).typescript).toContain("let open = true")
+    expect(openColor.source(openColor.defaultArgs).typescript).toContain("  open,")
+    expect(expandedColor.source(expandedColor.defaultArgs).typescript).toContain('presentation: "expanded"')
 
     expect(componentSectionItems("enum-input/presentation/cycle").map(({id}) => id)).toEqual([
       "presentation", "value", "exception", "state",
@@ -288,46 +340,46 @@ describe("@ui/components package-owned Workbench stories", () => {
       ["open", "Раскрыто"],
       ["event", "Последнее событие"],
     ])
-    const cycleSource = enumCycle.source(enumCycle.defaultArgs)
+    const cycleSource = enumCycle.source(enumCycle.defaultArgs).typescript
     expect(cycleSource).toContain('from "@ui/components/enum-input"')
     expect(cycleSource).toContain('description":"Умножить входные значения"')
     expect(cycleSource).toContain('presentation: "cycle"')
 
     const enumSelected = await COMPONENT_STORIES.load("enum-input/value/selected-description")
     expect(enumSelected.defaultArgs).toMatchObject({value: "multiply", presentation: "cycle"})
-    expect(enumSelected.source(enumSelected.defaultArgs)).toContain('description":"Умножить входные значения"')
+    expect(enumSelected.source(enumSelected.defaultArgs).typescript).toContain('description":"Умножить входные значения"')
 
     const enumHeaderIcons = await COMPONENT_STORIES.load("enum-input/value/header-icons")
     expect(enumHeaderIcons.defaultArgs).toMatchObject({icons: "all", open: true})
-    expect(enumHeaderIcons.source(enumHeaderIcons.defaultArgs)).toContain('popupLabel: "Операция"')
-    expect(enumHeaderIcons.source(enumHeaderIcons.defaultArgs)).toContain("iconSrc: uiIcons.apply")
+    expect(enumHeaderIcons.source(enumHeaderIcons.defaultArgs).typescript).toContain('popupLabel: "Операция"')
+    expect(enumHeaderIcons.source(enumHeaderIcons.defaultArgs).typescript).toContain("iconSrc: uiIcons.apply")
     const enumMixedIcons = await COMPONENT_STORIES.load("enum-input/value/mixed-icons")
     expect(enumMixedIcons.defaultArgs).toMatchObject({icons: "mixed", open: true})
-    expect(enumMixedIcons.source(enumMixedIcons.defaultArgs)).not.toContain("iconSrc: uiIcons.apply")
+    expect(enumMixedIcons.source(enumMixedIcons.defaultArgs).typescript).not.toContain("iconSrc: uiIcons.apply")
 
     const enumExpanded = await COMPONENT_STORIES.load("enum-input/presentation/expanded")
     expect(enumExpanded.defaultArgs).toMatchObject({presentation: "expanded", value: "multiply"})
-    expect(enumExpanded.source(enumExpanded.defaultArgs)).toContain('presentation: "expanded"')
+    expect(enumExpanded.source(enumExpanded.defaultArgs).typescript).toContain('presentation: "expanded"')
 
     const enumInvalid = await COMPONENT_STORIES.load("enum-input/value/invalid-legacy")
     expect(enumInvalid.defaultArgs).toMatchObject({value: "missing", presentation: "cycle"})
-    expect(enumInvalid.source(enumInvalid.defaultArgs)).toContain('value: "missing"')
+    expect(enumInvalid.source(enumInvalid.defaultArgs).typescript).toContain('value: "missing"')
 
     const enumNoItems = await COMPONENT_STORIES.load("enum-input/exception/no-items")
     expect(enumNoItems.defaultArgs).toMatchObject({options: "empty"})
-    expect(enumNoItems.source(enumNoItems.defaultArgs)).toContain("const options: readonly EnumInputOption[] = []")
+    expect(enumNoItems.source(enumNoItems.defaultArgs).typescript).toContain("const options: readonly EnumInputOption[] = []")
     const enumUndefined = await COMPONENT_STORIES.load("enum-input/exception/menu-undefined")
     expect(enumUndefined.defaultArgs).toMatchObject({options: "undefined"})
-    expect(enumUndefined.source(enumUndefined.defaultArgs)).not.toContain("  options,")
+    expect(enumUndefined.source(enumUndefined.defaultArgs).typescript).not.toContain("  options,")
     const enumError = await COMPONENT_STORIES.load("enum-input/exception/menu-error")
     expect(enumError.defaultArgs).toMatchObject({state: "error"})
-    expect(enumError.source(enumError.defaultArgs)).toContain('state: "error"')
+    expect(enumError.source(enumError.defaultArgs).typescript).toContain('state: "error"')
     const enumDisabled = await COMPONENT_STORIES.load("enum-input/state/disabled")
     expect(enumDisabled.defaultArgs).toMatchObject({disabled: true})
-    expect(enumDisabled.source(enumDisabled.defaultArgs)).toContain("disabled: true")
+    expect(enumDisabled.source(enumDisabled.defaultArgs).typescript).toContain("disabled: true")
     const enumReadonly = await COMPONENT_STORIES.load("enum-input/state/readonly")
     expect(enumReadonly.defaultArgs).toMatchObject({readonly: true})
-    expect(enumReadonly.source(enumReadonly.defaultArgs)).toContain("readOnly: true")
+    expect(enumReadonly.source(enumReadonly.defaultArgs).typescript).toContain("readOnly: true")
 
     const enumImplementation = await Bun.file(join(storybookRoot, "stories", "enum-input.ts")).text()
     expect(enumImplementation).toContain('from "@ui/components/enum-input"')
@@ -367,7 +419,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       ["readonly", "Только чтение"],
       ["event", "Последнее событие"],
     ])
-    const collectionSource = collection.source({...collection.defaultArgs, "visible-rows": 2, density: "compact"})
+    const collectionSource = collection.source({...collection.defaultArgs, "visible-rows": 2, density: "compact"}).typescript
     expect(collectionSource).toContain('from "@ui/components/collection-input"')
     expect(collectionSource).toContain('selectedId: "rotation"')
     expect(collectionSource).toContain("visibleRows: 2")
@@ -447,7 +499,7 @@ describe("@ui/components package-owned Workbench stories", () => {
       ["readonly", "Только чтение"],
       ["event", "Последнее событие"],
     ])
-    const pathSource = path.source({...path.defaultArgs, density: "compact", readonly: true})
+    const pathSource = path.source({...path.defaultArgs, density: "compact", readonly: true}).typescript
     expect(pathSource).toContain('from "@ui/components/path-input"')
     expect(pathSource).toContain('let value = "/textures/source.exr"')
     expect(pathSource).toContain('density: "compact"')
@@ -485,15 +537,15 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(pathCompact.defaultArgs).toMatchObject({density: "compact"})
 
     const referenceField = await COMPONENT_STORIES.load("field/reference/default")
-    expect(referenceField.source(referenceField.defaultArgs)).toContain('from "@ui/components/field"')
-    expect(referenceField.source(referenceField.defaultArgs)).toContain('kind: "reference"')
+    expect(referenceField.source(referenceField.defaultArgs).typescript).toContain('from "@ui/components/field"')
+    expect(referenceField.source(referenceField.defaultArgs).typescript).toContain('kind: "reference"')
     const collectionField = await COMPONENT_STORIES.load("field/collection/default")
-    expect(collectionField.source(collectionField.defaultArgs)).toContain('kind: "collection"')
-    expect(collectionField.source(collectionField.defaultArgs)).toContain("onSelect: setSelectedId")
+    expect(collectionField.source(collectionField.defaultArgs).typescript).toContain('kind: "collection"')
+    expect(collectionField.source(collectionField.defaultArgs).typescript).toContain("onSelect: setSelectedId")
     const pathField = await COMPONENT_STORIES.load("field/path/default")
-    expect(pathField.source(pathField.defaultArgs)).toContain('kind: "path"')
-    expect(pathField.source(pathField.defaultArgs)).toContain("onChange: setValue")
-    expect(pathField.source(pathField.defaultArgs)).toContain("onBrowse: openPathPicker")
+    expect(pathField.source(pathField.defaultArgs).typescript).toContain('kind: "path"')
+    expect(pathField.source(pathField.defaultArgs).typescript).toContain("onChange: setValue")
+    expect(pathField.source(pathField.defaultArgs).typescript).toContain("onBrowse: openPathPicker")
   })
 
   test("reorders CollectionInput story items immutably and preserves the controlled selection", async () => {
@@ -554,32 +606,34 @@ describe("@ui/components package-owned Workbench stories", () => {
 
   test("loads exact public Button, Pane and Field stories lazily", async () => {
     const button = await COMPONENT_STORIES.load("button/icon-label/right")
-    expect(button.source(button.defaultArgs)).toContain('from "@ui/components/button"')
+    expect(button.source(button.defaultArgs).typescript).toContain('from "@ui/components/button"')
     expect(button.defaultArgs).toMatchObject({icon: "apply", iconPosition: "end"})
 
     const pane = await COMPONENT_STORIES.load("pane/variants/outlined")
-    expect(pane.source(pane.defaultArgs)).toContain('from "@ui/components/pane"')
+    expect(pane.source(pane.defaultArgs).typescript).toContain('from "@ui/components/pane"')
     expect(pane.defaultArgs).toMatchObject({variant: "outlined"})
+    expect(pane.controls.map(({key}) => key)).toEqual(["variant"])
+    expect(pane.source(pane.defaultArgs).typescript).not.toContain("borderRadius")
 
     const number = await COMPONENT_STORIES.load("field/number/input")
-    expect(number.source(number.defaultArgs)).toContain('from "@ui/components/field"')
-    expect(number.source(number.defaultArgs)).toContain('presentation: "input"')
+    expect(number.source(number.defaultArgs).typescript).toContain('from "@ui/components/field"')
+    expect(number.source(number.defaultArgs).typescript).toContain('presentation: "input"')
     expect(number.defaultArgs).toMatchObject({value: 0.625, density: "regular", disabled: false})
 
     const color = await COMPONENT_STORIES.load("field/color/input")
-    expect(color.source(color.defaultArgs)).toContain('kind: "color"')
+    expect(color.source(color.defaultArgs).typescript).toContain('kind: "color"')
     expect(color.defaultArgs.value).toEqual({r: 0.18, g: 0.58, b: 0.92, a: 1})
 
     const rotation = await COMPONENT_STORIES.load("field/rotation/default")
-    expect(rotation.source(rotation.defaultArgs)).toContain('kind: "rotation"')
-    expect(rotation.source(rotation.defaultArgs)).not.toContain('unit: "°"')
+    expect(rotation.source(rotation.defaultArgs).typescript).toContain('kind: "rotation"')
+    expect(rotation.source(rotation.defaultArgs).typescript).not.toContain('unit: "°"')
 
     const noti = await COMPONENT_STORIES.load("noti/status/unavailable")
-    expect(noti.source(noti.defaultArgs)).toContain("не опубликован в рабочем API")
+    expect(noti.source(noti.defaultArgs).typescript).toContain("не опубликован в рабочем API")
 
     const codeEditor = await COMPONENT_STORIES.load("code-editor/state/read-only")
-    expect(codeEditor.source(codeEditor.defaultArgs)).toContain('from "@ui/components/code-editor"')
-    expect(codeEditor.source(codeEditor.defaultArgs)).toContain("readOnly: true")
+    expect(codeEditor.source(codeEditor.defaultArgs).typescript).toContain('from "@ui/components/code-editor"')
+    expect(codeEditor.source(codeEditor.defaultArgs).typescript).toContain("readOnly: true")
     expect(codeEditor.defaultArgs).toEqual({"show-line-numbers": true})
   })
 
@@ -645,6 +699,7 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(entry!.source).not.toContain("function createPathInputStory")
     expect(entry!.source).not.toContain("function createIntegerInputStory")
     expect(entry!.source).not.toContain("function createCodeEditorStory")
+    expect(entry!.source).not.toContain("function createInspectorStory")
     expect(entry!.source).not.toContain('@ui/components/vector-input')
     expect(entry!.source).not.toContain('@ui/components/matrix-input')
     expect(entry!.source).not.toContain('@ui/components/reference-input')
@@ -657,6 +712,9 @@ describe("@ui/components package-owned Workbench stories", () => {
     const codeEditorChunk = outputs.find(({source}) => source.includes("function createCodeEditorStory"))
     expect(codeEditorChunk).toBeDefined()
     expect(codeEditorChunk!.source).toContain('@ui/components/code-editor')
+    const inspectorChunk = outputs.find(({source}) => source.includes("function createInspectorStory"))
+    expect(inspectorChunk).toBeDefined()
+    expect(inspectorChunk!.source).toContain('@ui/components/inspector')
     const integerInputChunk = outputs.find(({source}) => source.includes("function createIntegerInputStory"))
     expect(integerInputChunk).toBeDefined()
     expect(integerInputChunk!.source).toContain('@ui/components/integer-input')
@@ -695,3 +753,32 @@ describe("@ui/components package-owned Workbench stories", () => {
     expect(pages).toContain('home: {path: "/", label: "Главная"')
   })
 })
+
+function assertComponentStateBranches(component: string, css: string): void {
+  const interactive = new Set([
+    "button",
+    "checkbox",
+    "switcher",
+    "progress-checkbox",
+    "field",
+    "text-field",
+    "number-input",
+    "integer-input",
+    "enum-input",
+    "color-input",
+    "vector-input",
+    "matrix-input",
+    "reference-input",
+    "collection-input",
+    "path-input",
+    "slider-control",
+    "list",
+    "table",
+    "scrollbar",
+    "inspector",
+  ])
+  if (!interactive.has(component)) return
+  for (const selector of ["&:hover {", "&:active {", "&:disabled,"]) {
+    expect(css).toContain(selector)
+  }
+}

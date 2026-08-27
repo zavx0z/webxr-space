@@ -6,6 +6,7 @@ import {
 } from "@zavx0z/storybook/stories"
 import type {PathInputStoryVariant} from "../stories.ts"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {componentStorySource} from "../source.ts"
 
 type PathInputStoryArgs = StorybookStoryArgs & Readonly<{
   value: string
@@ -67,7 +68,7 @@ export function createPathInputStory(variant: PathInputStoryVariant): StorybookS
       )
     },
     source(args) {
-      return pathInputSource(args)
+      return componentStorySource({component: "path-input", variant}, args, pathInputSource(args))
     },
   })
 }

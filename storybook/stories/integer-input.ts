@@ -6,6 +6,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {IntegerInputStoryVariant} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type IntegerInputStoryArgs = StorybookStoryArgs & Readonly<{
   label: string
@@ -45,7 +46,7 @@ export function createIntegerInputStory(variant: IntegerInputStoryVariant): Stor
       )
     },
     source(args) {
-      return [
+      const typescript = [
         'import {IntegerInput} from "@ui/components/integer-input"',
         "",
         "IntegerInput(surface, x, y, 146, 24, {",
@@ -59,6 +60,7 @@ export function createIntegerInputStory(variant: IntegerInputStoryVariant): Stor
         "  onChange: setIterations,",
         "})",
       ].join("\n")
+      return componentStorySource({component: "integer-input", variant}, args, typescript)
     },
   })
 }

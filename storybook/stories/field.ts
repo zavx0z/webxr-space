@@ -12,6 +12,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {FieldStoryKind} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type FieldStoryArgs = StorybookStoryArgs & Readonly<{
   value: unknown
@@ -57,13 +58,14 @@ export function createFieldStory(options: Readonly<{
     },
     source(args) {
       const definition = sourceFieldDefinition(options, args)
-      return [
+      const typescript = [
         'import {Field, type FieldDefinition} from "@ui/components/field"',
         "",
         `const field: FieldDefinition = ${definition}`,
         "",
         `Field(surface, x, y, width, field, {density: ${JSON.stringify(args.density)}})`,
       ].join("\n")
+      return componentStorySource({component: "field", section: options.kind, variant: options.presentation}, args, typescript)
     },
   })
 }

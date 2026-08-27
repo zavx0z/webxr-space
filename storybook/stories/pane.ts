@@ -5,15 +5,15 @@ import {
   type StorybookStoryArgs,
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
+import {componentStorySource} from "../source.ts"
 
 type PaneStoryArgs = StorybookStoryArgs & Readonly<{
   variant: PaneVariant
-  radius: "rounded" | "compact"
 }>
 
 export function createPaneStory(variant: PaneVariant): StorybookStoryModule {
   return defineStorybookStoryModule<PaneStoryArgs>({
-    defaultArgs: {variant, radius: "rounded"},
+    defaultArgs: {variant},
     controls: [
       {
         key: "variant",
@@ -26,16 +26,6 @@ export function createPaneStory(variant: PaneVariant): StorybookStoryModule {
           {value: "filled", label: "Заполненная"},
         ],
       },
-      {
-        key: "radius",
-        label: "Скругление",
-        group: "Внешний вид",
-        kind: "select",
-        options: [
-          {value: "rounded", label: "Крупное"},
-          {value: "compact", label: "Компактное"},
-        ],
-      },
     ],
     render(surface, args, frame) {
       const width = Math.min(430, Math.max(260, frame.w * 0.48))
@@ -44,29 +34,28 @@ export function createPaneStory(variant: PaneVariant): StorybookStoryModule {
       const y = frame.y + (frame.h - height) / 2 + 24
       Pane(surface, x, y, width, height, {
         variant: args.variant,
-        sx: {borderRadius: args.radius === "rounded" ? 30 : 14},
       })
       Typography(surface, x + 28, y + 54, width - 56, 34, {
         children: "Рабочий компонент Pane",
         variant: "title",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
       Typography(surface, x + 28, y + 102, width - 56, 28, {
-        children: `${args.variant} · ${args.radius}`,
+        children: `${args.variant} · Blender panel radius`,
         variant: "caption",
         color: "muted",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
     },
     source(args) {
-      return [
+      const typescript = [
         'import {Pane} from "@ui/components/pane"',
         "",
         "Pane(surface, x, y, w, h, {",
         `  variant: ${JSON.stringify(args.variant)},`,
-        `  sx: {borderRadius: ${args.radius === "rounded" ? 30 : 14}},`,
         "})",
       ].join("\n")
+      return componentStorySource({component: "pane", section: "variants", variant}, args, typescript)
     },
   })
 }

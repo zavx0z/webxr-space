@@ -11,6 +11,7 @@ import {
 } from "@zavx0z/storybook/stories"
 import {uiShapeMetrics} from "@ui/elements/shape"
 import type {CollectionInputStoryVariant} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type CollectionInputStoryArgs = StorybookStoryArgs & Readonly<{
   items: readonly CollectionInputItem[]
@@ -112,7 +113,7 @@ export function createCollectionInputStory(variant: CollectionInputStoryVariant)
       )
     },
     source(args) {
-      return collectionInputSource(args)
+      return componentStorySource({component: "collection-input", variant}, args, collectionInputSource(args))
     },
   })
 }

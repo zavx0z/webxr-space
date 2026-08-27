@@ -11,6 +11,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {ColorInputStoryVariant} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type ColorInputStoryArgs = StorybookStoryArgs & Readonly<{
   value: ColorInputValue
@@ -89,7 +90,7 @@ export function createColorInputStory(variant: ColorInputStoryVariant): Storyboo
         ...(args.disabled ? ["  disabled: true,"] : []),
         ...(args.readonly ? ["  readOnly: true,"] : []),
       ]
-      return [
+      const typescript = [
         'import {ColorInput, type ColorInputValue} from "@ui/components/color-input"',
         "",
         `let value: ColorInputValue = ${JSON.stringify(colorValue(args.value))}`,
@@ -102,6 +103,7 @@ export function createColorInputStory(variant: ColorInputStoryVariant): Storyboo
         "  onOpenChange: setOpen,",
         "})",
       ].join("\n")
+      return componentStorySource({component: "color-input", variant}, args, typescript)
     },
   })
 }

@@ -11,6 +11,7 @@ import {
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
 import type {ButtonStorySection, ButtonStoryVariant} from "../stories.ts"
+import {componentStorySource} from "../source.ts"
 
 type ButtonStoryArgs = StorybookStoryArgs & Readonly<{
   label: string
@@ -110,7 +111,7 @@ export function createButtonStory(options: Readonly<{
         ] : []),
         ...(args.disabled ? ["  disabled: true,"] : []),
       ]
-      return [
+      const typescript = [
         'import {Button} from "@ui/components/button"',
         ...(args.icon === "apply" ? ['import {uiIcons} from "@ui/elements/icons"'] : []),
         "",
@@ -118,6 +119,7 @@ export function createButtonStory(options: Readonly<{
         ...properties,
         "})",
       ].join("\n")
+      return componentStorySource({component: "button", section: options.section, variant: options.variant}, args, typescript)
     },
   })
 }
