@@ -1,5 +1,9 @@
 import {UiRuntime} from "@layout/core/runtime"
 import {waitForStorybookFrameBoundary} from "@zavx0z/storybook/environment"
+import {
+  StorybookStatusBarSurface,
+  planStorybookStatusBarShell,
+} from "@zavx0z/storybook/workbench"
 import {UiComponentGraphSurface} from "./preview.ts"
 import {UiComponentGraphLabState} from "./state/lab-state.ts"
 
@@ -18,13 +22,18 @@ async function startStorybook(): Promise<void> {
       virtualDisplay: {initial: "near", surfaceDisplay: true, grid: false},
     })
     const surface = new UiComponentGraphSurface(state.graph, state.previews)
-    runtime.addSurface(surface, ({w, h}) => ({x: 0, y: 0, w, h}))
+    const statusBar = new StorybookStatusBarSurface()
+    const frames = (w: number, h: number) => planStorybookStatusBarShell(w, h)
+    runtime.addSurface(surface, ({w, h}) => frames(w, h).content)
+    runtime.addSurface(statusBar, ({w, h}) => frames(w, h).status)
     globalThis.__webxrSpaceCapturePresentedFrame = () => runtime.renderer.captureLastPresentedFramePng()
     globalThis.__webxrSpaceStorybookSnapshot = () => Object.freeze({
       source: state.graph.source,
       ...surface.diagnostics,
     })
     const publish = (): void => {
+      surface.flushPendingRender()
+      statusBar.flushPendingRender()
       document.documentElement.dataset.webxrSpaceGraphSource = state.graph.source.revision
       document.documentElement.dataset.webxrSpaceGraphDirty = String(state.graph.source.dirty)
       document.documentElement.dataset.webxrSpaceGraphNodes = String(surface.diagnostics.nodes)

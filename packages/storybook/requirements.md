@@ -27,10 +27,12 @@ the superproject.
    `@nodes/layout/coffman-graham` policy. The source snapshot retains
    `consumer → dependency`; the visual adapter explicitly reverses it to
    `dependency → consumer` so lower-level owners appear above consumers.
-2. The graph page owns one `UiRuntime` and one `UiSurface`. It imports pinned UI
-   story registries only through a webxr-space adapter, lazily loads one
-   representative route, and calls the real story module with immutable
-   default args inside the node frame.
+2. The graph page owns one `UiRuntime`, one graph `UiSurface` and the shared
+   passive `StorybookStatusBarSurface`. `planStorybookStatusBarShell` reserves
+   sibling content/status frames, so the lower owner text never overlays the
+   graph. The page imports pinned UI story registries only through a
+   webxr-space adapter, lazily loads one representative route, and calls the
+   real story module with immutable default args inside the node frame.
 3. Existing UI story registries remain private development sources, not new
    `@ui/*` exports. The adapter must not copy their descriptors or make UI
    depend on Node or webxr-space.

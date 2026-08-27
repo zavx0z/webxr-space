@@ -19,6 +19,11 @@ describe("@webxr-space/storybook", () => {
       "page/fixtures/graph.ts",
       "page/state/lab-state.ts",
     ]) expect(await Bun.file(new URL(path, import.meta.url)).exists(), path).toBeTrue()
+    const entry = await Bun.file(new URL("./page/entry.ts", import.meta.url)).text()
+    expect(entry).toContain("new StorybookStatusBarSurface()")
+    expect(entry).toContain("planStorybookStatusBarShell(w, h)")
+    expect(entry).toContain("frames(w, h).content")
+    expect(entry).toContain("frames(w, h).status")
   })
 
   test("uses an automatic-port package server without consumer port knowledge", async () => {
@@ -35,5 +40,9 @@ describe("@webxr-space/storybook", () => {
     const app = createStorybookApp()
     const html = await createStorybookPage(app, app.pages[0]!).htmlResponse().then((response) => response.text())
     expect(html).toContain("--storybook-shell-background: #1d1d1d")
+    expect(html).toContain('<meta name="storybook-status-bar-lead" content="Создано для">')
+    expect(html).toContain('<meta name="storybook-status-bar-owner" content="webxr-space">')
+    expect(html).toContain('<meta name="storybook-status-bar-detail" content="живой UI component graph">')
+    expect(html).not.toContain("data-storybook-footer")
   })
 })
