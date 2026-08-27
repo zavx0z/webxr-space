@@ -14,7 +14,10 @@ describe("layout Worker policy bundle boundaries", () => {
       exports?: Record<string, string>
     }
     expect(manifest.name).toBe("@nodes/worker")
-    expect(manifest.dependencies).toEqual({"@nodes/layout": "workspace:*"})
+    expect(manifest.dependencies).toEqual({
+      "@nodes/layout": "workspace:*",
+      "@zavx0z/dom": "link:@zavx0z/dom",
+    })
     expect(Object.keys(manifest.exports ?? {}).sort()).toEqual([
       ".",
       "./adaptive/client",

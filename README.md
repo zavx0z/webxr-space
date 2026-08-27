@@ -17,7 +17,9 @@ retained.
 Dev-only lazy stories принадлежат `@nodes/worker` и находятся в
 `packages/worker/storybook`. Репозиторный `@nodes/storybook` показывает их в
 разделе `Worker` одного общего Workbench и владеет entrypoint, canvas, runtime,
-процессом, route tree и static build. Каждый story рендерит точный
-request/result/error contract выбранной policy в общей preview Surface.
+процессом, route tree и static build. Каждый story выполняет точный executor и
+показывает structured-clone-safe request/result/error envelope через
+package-private standard DOM controller; generic Layout runtime и UI Elements
+не участвуют.
 Storybook не экспортируется из `@nodes/worker` и не входит в его production
 dependencies.
