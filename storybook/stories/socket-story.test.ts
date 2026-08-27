@@ -35,15 +35,4 @@ describe("Node Socket package-owned story boundary", () => {
     expect(story).not.toContain('from "../../node.ts"')
   })
 
-  test("uses one code/copy panel for every Node storybook route", async () => {
-    const client = await Bun.file(join(uiStorybookRoot, "node-editor.stories.ts")).text()
-    const layout = await Bun.file(join(uiStorybookRoot, "ui-workbench-layout.ts")).text()
-    expect(client).toContain("new StorybookStoryPanelSurface(storyPanelOptions())")
-    expect(client).toContain("loadNodeStorybookStory(storyRoute)")
-    expect(client).toContain("storyPreview.setStory(index, loaded, storyArgs)")
-    expect(client).not.toContain("StorybookInfoSurface")
-    expect(client).not.toContain("new SocketCatalogSurface")
-    expect(layout).toContain("const story = compact ? hidden() : shell.info")
-    expect(layout).not.toContain("nodeStorybookIsOverview")
-  })
 })

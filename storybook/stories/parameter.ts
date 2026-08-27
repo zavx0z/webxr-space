@@ -16,6 +16,7 @@ import type {
   NodeParameterFieldKind,
   NodeParameterVariant,
 } from "../parameter-catalog.ts"
+import {parameterStorySource} from "../story-source.ts"
 
 type ParameterStoryArgs = StorybookStoryArgs & Readonly<{
   kind: NodeParameterFieldKind
@@ -80,7 +81,7 @@ export function createParameterStory(
     },
     source(args) {
       const fixture = createParameterStoryFixture(args.kind, args.variant, {x: 80, y: 80, w: 360, h: 320})
-      return [
+      const typescript = [
         'import {parameterRenderer, type ParameterPlan} from "@nodes/ui/parameter"',
         'import {linkRenderer, socketRenderer, type LinkView, type SocketView} from "@nodes/ui/node"',
         'import type {PositionedLink, PositionedSocket} from "@nodes/ui/node-editor"',
@@ -107,6 +108,7 @@ export function createParameterStory(
         "  })",
         "}",
       ].join("\n")
+      return parameterStorySource({kind: args.kind, variant: args.variant, typescript})
     },
   })
 }

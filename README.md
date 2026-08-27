@@ -28,4 +28,9 @@ Public view presets use neutral names: `NodeView`, `SocketView`, `FrameView`, `L
 
 The normative contracts remain in [`requirements.md`](./requirements.md).
 
-Dev-only examples belong to `@nodes/ui` and live in [`storybook/`](./storybook/). The repository-owned [`@nodes/storybook`](../storybook/README.md) composes their routes, entrypoint, style, accepted evidence, and `/ui/` delivery. Shared `@zavx0z/storybook/*` imports stay inside this development boundary: they are neither production exports nor production dependencies of `@nodes/ui`.
+Dev-only examples belong to `@nodes/ui` and live in [`storybook/`](./storybook/).
+They own exact story metadata, fixtures, adapters and accepted evidence. The
+repository-owned [`@nodes/storybook`](../storybook/README.md) composes them into
+the Node UI sections of its one entrypoint, canvas, runtime and Workbench.
+Shared `@zavx0z/storybook/*` imports stay inside this development boundary: they
+are neither production exports nor production dependencies of `@nodes/ui`.

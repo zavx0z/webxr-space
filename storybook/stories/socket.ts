@@ -12,7 +12,8 @@ import {
   type StorybookStoryArgs,
   type StorybookStoryModule,
 } from "@zavx0z/storybook/stories"
-import type {NodeSocketDirection, NodeSocketKind} from "../ui-story-catalog.ts"
+import type {NodeSocketDirection, NodeSocketKind} from "../socket-catalog.ts"
+import {socketStorySource} from "../story-source.ts"
 
 type SocketStoryArgs = StorybookStoryArgs & Readonly<{
   kind: NodeSocketKind
@@ -64,17 +65,17 @@ export function createSocketStory(options: Readonly<{
       const cardH = Math.min(260, Math.max(190, frame.h * 0.36))
       const cardX = frame.x + (frame.w - cardW) / 2
       const cardY = frame.y + (frame.h - cardH) / 2 + 24
-      Pane(surface, cardX, cardY, cardW, cardH, {variant: "outlined", sx: {borderRadius: 18}})
+      Pane(surface, cardX, cardY, cardW, cardH, {variant: "outlined", style: {borderRadius: 18}})
       Typography(surface, cardX + 28, cardY + 24, cardW - 56, 32, {
         children: preset.label,
         variant: "title",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
       Typography(surface, cardX + 28, cardY + 62, cardW - 56, 24, {
         children: `${args.kind} · ${args.direction} · ${args.shape}`,
         variant: "caption",
         color: "muted",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
       const socket: SocketView = {
         id: `story-${args.kind}-${args.direction}`,
@@ -97,12 +98,12 @@ export function createSocketStory(options: Readonly<{
         children: args.selected ? "Выбранное состояние" : "Обычное состояние",
         variant: "caption",
         color: args.selected ? "cyan" : "text",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
     },
     source(args) {
       const side = args.direction === "output" ? "right" : "left"
-      return [
+      const typescript = [
         "import {",
         "  socketRenderer,",
         "  type SocketView,",
@@ -127,6 +128,13 @@ export function createSocketStory(options: Readonly<{
         '  nodeId: "socket-story",',
         "})",
       ].join("\n")
+      return socketStorySource({
+        kind: args.kind,
+        direction: args.direction,
+        shape: args.shape,
+        selected: args.selected,
+        typescript,
+      })
     },
   })
 }

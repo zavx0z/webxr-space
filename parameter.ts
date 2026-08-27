@@ -56,7 +56,7 @@ export const parameterRenderer: ParameterRenderer = Object.freeze({
     Typography(host, labelRect.x, labelRect.y, labelRect.w, labelRect.h, {
       children: parameterLabel(parameter.label, side),
       fontPx: 11,
-      sx: {textAlign: side ?? "center"},
+      style: {textAlign: side ?? "center"},
     })
   },
 })

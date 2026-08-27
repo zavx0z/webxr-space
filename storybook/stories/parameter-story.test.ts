@@ -88,9 +88,11 @@ describe("Node Parameter package-owned story boundary", () => {
         const story = await NODE_COMPONENT_STORIES.load(route)
         expect(story.defaultArgs).toEqual({kind, variant})
         const source = story.source(story.defaultArgs)
-        expect(source, route).toContain('type ParameterPlan} from "@nodes/ui/parameter"')
-        expect(source, route).toContain("parameterRenderer.render")
-        expect(source, route).toContain('nodeId: "parameter-story"')
+        expect(source.html, route).toContain("<node-parameter")
+        expect(source.css, route).toContain(".node-parameter-story")
+        expect(source.typescript, route).toContain('type ParameterPlan} from "@nodes/ui/parameter"')
+        expect(source.typescript, route).toContain("parameterRenderer.render")
+        expect(source.typescript, route).toContain('nodeId: "parameter-story"')
       }
     }
   })

@@ -1,8 +1,7 @@
 import {describe, expect, test} from "bun:test"
-import {basename, join} from "node:path"
+import {join} from "node:path"
 import {fileURLToPath} from "node:url"
 import {FIELD_KINDS} from "@ui/components/field"
-import {resolveStorybookRouteTree} from "@zavx0z/storybook/route-tree"
 import {SOCKET_KINDS, SOCKET_PRESETS, SOCKET_SHAPES} from "@nodes/ui/node"
 import {validatePositionedNodeTree} from "@nodes/ui/node-editor"
 import {
@@ -15,30 +14,26 @@ import {
   NODE_PARAMETER_VARIANTS,
 } from "./parameter-catalog.ts"
 import {
-  NODE_STORYBOOK_CATALOG,
-  NODE_STORYBOOK_ROUTE_TREE,
-  NODE_STORYBOOK_ROUTES,
-  nodeStorybookCatalog,
-  nodeStorybookDockItems,
-  nodeStorybookGroup,
-  nodeStorybookSections,
-  nodeStorybookWorkbenchStoryRoute,
-} from "./ui-navigation.ts"
-import {
   NODE_COMPONENT_STORIES,
   NODE_COMPONENT_STORY_ROUTES,
   NODE_EDITOR_STORY_NODE_IDS,
-  NODE_SOCKET_DIRECTIONS,
-  NODE_SOCKET_KINDS,
   NODE_SOCKET_STORIES,
+  NODE_SOCKET_STORY_ROUTES,
+  nodeComponentSectionItems,
+  nodeComponentVariantItems,
   nodeEditorStoryRoute,
   nodeEditorStoryState,
+  nodeSocketSectionItems,
   nodeSocketStoryIndex,
+  nodeSocketVariantItems,
 } from "./ui-story-catalog.ts"
+import {
+  NODE_SOCKET_DIRECTIONS,
+  NODE_SOCKET_KINDS,
+} from "./socket-catalog.ts"
 import {applyNodeEditorStoryState} from "./state/node-editor-story-state.ts"
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
-const nodesStorybookRoot = fileURLToPath(new URL("../../storybook/", import.meta.url))
 
 describe("Node component storybook", () => {
   test("imports universal fields only inside Node composition", async () => {
@@ -55,131 +50,31 @@ describe("Node component storybook", () => {
     expect(surfaces).not.toContain("createStandaloneFields")
   })
 
-  test("opens package, Parameter and Socket prefixes before exact detail stories", () => {
-    expect(NODE_STORYBOOK_CATALOG.map(({route}) => route)).toEqual([
-      "node-editor",
-      "frame",
-      "link",
-      "parameter",
-      "socket",
-      "comparison",
-    ])
-    expect(NODE_STORYBOOK_CATALOG.map(({group}) => group?.id)).toEqual([
-      "editor",
-      "editor",
-      "editor",
-      "components",
-      "components",
-      "comparison",
-    ])
-    expect(nodeStorybookCatalog("comparison/reference/default", new Set(["editor"])).map(({group}) => group?.collapsed === true)).toEqual([
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-    ])
-    expect(nodeStorybookCatalog("parameter/text/field", new Set(["components"])).map(({group}) => group?.collapsed === true)).toEqual([
-      false,
-      false,
-      false,
-      true,
-      true,
-      false,
-    ])
-    expect(NODE_STORYBOOK_ROUTES.slice(0, NODE_COMPONENT_STORY_ROUTES.length)).toEqual([...NODE_COMPONENT_STORY_ROUTES])
-    expect(NODE_STORYBOOK_ROUTES).toHaveLength(NODE_COMPONENT_STORY_ROUTES.length + SOCKET_KINDS.length * NODE_SOCKET_DIRECTIONS.length)
+  test("publishes owner metadata for root overviews and exact detail stories", () => {
+    expect(NODE_SOCKET_STORY_ROUTES).toHaveLength(SOCKET_KINDS.length * NODE_SOCKET_DIRECTIONS.length)
     expect(NODE_COMPONENT_STORY_ROUTES.filter((route) => route.startsWith("parameter/"))).toHaveLength(
       NODE_PARAMETER_FIELD_KINDS.length * NODE_PARAMETER_VARIANTS.length,
     )
-    expect(NODE_STORYBOOK_ROUTES).not.toContain("socket/types" as never)
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "overview", path: ""}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "overview", path: "parameter"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/text/"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "overview", path: "parameter/text"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/text/input"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "leaf", path: "parameter/text/input"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/socket/"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "overview", path: "socket"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/socket/boolean/"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "overview", path: "socket/boolean"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/socket/boolean/input"},
-      {basePath: "/ui"},
-    )).toMatchObject({kind: "match", node: {kind: "leaf", path: "socket/boolean/input"}, redirect: false})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/composition/field"},
-      {basePath: "/ui"},
-    )).toEqual({kind: "not-found"})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/connection/connected"},
-      {basePath: "/ui"},
-    )).toEqual({kind: "not-found"})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/parameter/missing"},
-      {basePath: "/ui"},
-    )).toEqual({kind: "not-found"})
-    expect(resolveStorybookRouteTree(
-      NODE_STORYBOOK_ROUTE_TREE,
-      {pathname: "/ui/socket/missing"},
-      {basePath: "/ui"},
-    )).toEqual({kind: "not-found"})
-    expect(nodeStorybookWorkbenchStoryRoute("")).toBe("parameter/text/field")
-    expect(nodeStorybookWorkbenchStoryRoute("node-editor")).toBe("node-editor/scene/default")
-    expect(nodeStorybookWorkbenchStoryRoute("parameter")).toBe("parameter/text/field")
-    expect(nodeStorybookWorkbenchStoryRoute("parameter/text")).toBe("parameter/text/field")
-    expect(nodeStorybookWorkbenchStoryRoute("parameter/vector")).toBe("parameter/vector/field")
-    expect(nodeStorybookWorkbenchStoryRoute("socket")).toBe("socket/boolean/input")
-    expect(nodeStorybookWorkbenchStoryRoute("socket/boolean")).toBe("socket/boolean/input")
-    expect(nodeStorybookWorkbenchStoryRoute("socket/boolean/output")).toBe("socket/boolean/output")
-    expect(nodeStorybookGroup("node-editor/scene/default")).toBe("editor")
-    expect(nodeStorybookGroup("parameter/text/field")).toBe("parameter")
-    expect(nodeStorybookGroup("socket/boolean/input")).toBe("socket")
-    expect(nodeStorybookGroup("comparison/reference/default")).toBe("comparison")
-    expect(nodeStorybookSections("parameter").map(({id}) => id)).toEqual([...NODE_PARAMETER_FIELD_KINDS])
-    expect(nodeStorybookDockItems("parameter/text").map(({id}) => id)).toEqual([...NODE_PARAMETER_VARIANTS])
-    expect(nodeStorybookDockItems("parameter/collection").map(({id}) => id)).toEqual([...NODE_PARAMETER_VARIANTS])
-    expect(nodeStorybookSections("socket").map(({id}) => id)).toEqual([...SOCKET_KINDS])
-    expect(nodeStorybookSections("socket").map(({label}) => label)).toEqual(
+    expect(NODE_SOCKET_STORY_ROUTES).not.toContain("socket/types" as never)
+    expect(nodeComponentSectionItems("parameter/text/field").map(({id}) => id)).toEqual([...NODE_PARAMETER_FIELD_KINDS])
+    expect(nodeComponentVariantItems("parameter/text/field").map(({id}) => id)).toEqual([...NODE_PARAMETER_VARIANTS])
+    expect(nodeComponentVariantItems("parameter/collection/field").map(({id}) => id)).toEqual([...NODE_PARAMETER_VARIANTS])
+    expect(nodeSocketSectionItems("socket/boolean/input").map(({id}) => id)).toEqual([...SOCKET_KINDS])
+    expect(nodeSocketSectionItems("socket/boolean/input").map(({label}) => label)).toEqual(
       SOCKET_KINDS.map((kind) => SOCKET_PRESETS[kind].label),
     )
-    expect(nodeStorybookDockItems("socket/boolean").map(({id}) => id)).toEqual([...NODE_SOCKET_DIRECTIONS])
+    expect(nodeSocketVariantItems("socket/boolean/input").map(({id}) => id)).toEqual([...NODE_SOCKET_DIRECTIONS])
   })
 
   test("loads lazy source modules for the remaining production Node components", async () => {
     const frame = await NODE_COMPONENT_STORIES.load("frame/nested/default")
-    expect(frame.source(frame.defaultArgs)).toContain('from "@nodes/ui/node-editor"')
+    expect(frame.source(frame.defaultArgs).typescript).toContain('from "@nodes/ui/node-editor"')
     const parameter = await NODE_COMPONENT_STORIES.load("parameter/text/field")
-    expect(parameter.source(parameter.defaultArgs)).toContain('from "@nodes/ui/parameter"')
+    expect(parameter.source(parameter.defaultArgs).typescript).toContain('from "@nodes/ui/parameter"')
     const link = await NODE_COMPONENT_STORIES.load("link/orthogonal/selected")
-    expect(link.source(link.defaultArgs)).toContain('from "@nodes/ui/link-curve"')
+    expect(link.source(link.defaultArgs).typescript).toContain('from "@nodes/ui/link-curve"')
     const comparison = await NODE_COMPONENT_STORIES.load("comparison/reference/default")
-    expect(comparison.source(comparison.defaultArgs)).toContain("comparisonTree")
+    expect(comparison.source(comparison.defaultArgs).typescript).toContain("comparisonTree")
   })
 
   test("publishes one controlled route, args and source state for expanded and collapsed Nodes", async () => {
@@ -203,12 +98,12 @@ describe("Node component storybook", () => {
       "node-editor/collapsed/default",
       "node-editor/collapsed/selected",
     ])
-    expect(nodeStorybookSections("node-editor/scene/default").map(({id}) => id)).toEqual(["scene", "preview", "collapsed", "popup"])
-    expect(nodeStorybookDockItems("node-editor/scene/default").map(({id}) => id)).toEqual([
+    expect(nodeComponentSectionItems("node-editor/scene/default").map(({id}) => id)).toEqual(["scene", "preview", "collapsed", "popup"])
+    expect(nodeComponentVariantItems("node-editor/scene/default").map(({id}) => id)).toEqual([
       "default", "selected", "rotation-linked", "translation-unlinked", "output-only", "mixed-sides", "color-unlinked", "inventory",
     ])
-    expect(nodeStorybookDockItems("node-editor/collapsed/selected").map(({id}) => id)).toEqual(["default", "selected"])
-    expect(nodeStorybookDockItems("node-editor/popup/select-open").map(({id}) => id)).toEqual(["select-open"])
+    expect(nodeComponentVariantItems("node-editor/collapsed/selected").map(({id}) => id)).toEqual(["default", "selected"])
+    expect(nodeComponentVariantItems("node-editor/popup/select-open").map(({id}) => id)).toEqual(["select-open"])
 
     const cases = [
       {route: "node-editor/scene/default", target: "expanded", selected: false, nodeId: "scalar"},
@@ -234,9 +129,11 @@ describe("Node component storybook", () => {
       })
       expect(nodeEditorStoryRoute(state.target, state.selected)).toBe(expected.route)
       const source = story.source(story.defaultArgs)
-      expect(source).toContain('from "@nodes/ui/node-editor"')
-      expect(source).toContain(`const targetNodeId = ${JSON.stringify(expected.nodeId)}`)
-      expect(source).toContain(expected.selected
+      expect(source.html).toContain("<node-editor")
+      expect(source.css).toContain(".node-component-story")
+      expect(source.typescript).toContain('from "@nodes/ui/node-editor"')
+      expect(source.typescript).toContain(`const targetNodeId = ${JSON.stringify(expected.nodeId)}`)
+      expect(source.typescript).toContain(expected.selected
         ? 'editor.select({kind: "node", id: targetNodeId})'
         : "editor.select(null)")
     }
@@ -254,7 +151,7 @@ describe("Node component storybook", () => {
   })
 
   test("publishes controlled Node Preview routes without changing the ordinary Node model", async () => {
-    expect(nodeStorybookDockItems("node-editor/preview/open").map(({id}) => id)).toEqual([
+    expect(nodeComponentVariantItems("node-editor/preview/open").map(({id}) => id)).toEqual([
       "closed", "open", "global-hidden", "alternate", "missing", "zero", "multiple", "non-previewable",
     ])
     const closed = await NODE_COMPONENT_STORIES.load("node-editor/preview/closed")
@@ -428,11 +325,13 @@ describe("Node component storybook", () => {
     })
     expect(story.controls.map(({key}) => key)).toEqual(["shape", "selected"])
     const source = story.source({...story.defaultArgs, shape: "square-dot", selected: true})
-    expect(source).toContain('from "@nodes/ui/node"')
-    expect(source).toContain('direction: "bidirectional"')
-    expect(source).toContain('socketType: "rotation"')
-    expect(source).toContain('shape: "square-dot"')
-    expect(source).toContain("selected: true")
+    expect(source.html).toContain("<node-socket")
+    expect(source.css).toContain(".node-socket-story")
+    expect(source.typescript).toContain('from "@nodes/ui/node"')
+    expect(source.typescript).toContain('direction: "bidirectional"')
+    expect(source.typescript).toContain('socketType: "rotation"')
+    expect(source.typescript).toContain('shape: "square-dot"')
+    expect(source.typescript).toContain("selected: true")
   })
 
   test("catalogs nineteen socket types, eight shapes and a valid positioned NodeTree", () => {
@@ -468,101 +367,4 @@ describe("Node component storybook", () => {
     expect(noise.sockets.find(({socket}) => socket.id === "vector")?.center).toBeDefined()
   })
 
-  test("uses one Card-free WebGPU component graph and disables HMR", async () => {
-    const server = await Bun.file(join(nodesStorybookRoot, "server.ts")).text()
-    const pageRegistry = await Bun.file(join(nodesStorybookRoot, "server/page-registry.ts")).text()
-    const surfaces = await Bun.file(join(storybookRoot, "surfaces/reference-surfaces.ts")).text()
-    expect(server).toContain("startStorybookPackageServer")
-    expect(pageRegistry).toContain("ui: pageFiles({")
-    expect(pageRegistry).toContain('canvasId: "nodes-storybook-canvas"')
-    expect(server).toContain("/references/blender-4.5.5-reference.png")
-    expect(surfaces).toContain("/references/blender-4.5.5-reference.png")
-    expect(`${server}\n${surfaces}`).not.toContain(["", "node-system-dev"].join("/"))
-    expect(await Bun.file(join(nodesStorybookRoot, "assets/references/blender-4.5.5-reference.png")).exists()).toBeTrue()
-    const build = await Bun.build({
-      entrypoints: [join(storybookRoot, "node-editor.stories.ts")],
-      target: "browser",
-      format: "esm",
-      splitting: true,
-      loader: {".wgsl": "text"},
-      minify: true,
-      sourcemap: "none",
-    })
-    expect(build.success, build.logs.map(({message}) => message).join("\n")).toBeTrue()
-    const outputs = await Promise.all(build.outputs.map(async (output) => ({
-      name: basename(output.path),
-      source: await output.text(),
-    })))
-    const entry = outputs.find(({name}) => name === "node-editor.stories.js")
-    expect(entry).toBeDefined()
-    const source = outputs.map(({source}) => source).join("\n")
-    for (const forbidden of [
-      "NodeSystemSurface",
-      "NodeSystemCard",
-      "planNodeSystemCard",
-      "Card title must be non-empty",
-      "NodeSystemCardFact",
-      "Hamiltonian",
-      "Bulk",
-    ]) expect(source).not.toContain(forbidden)
-    expect(source).toContain("NodeEditor")
-    expect(source).toContain("StorybookNavigationSurface")
-    expect(source).toContain("StorybookStoryPanelSurface")
-    expect(source).toContain("NodeStoryPreviewSurface")
-    expect(source).toContain("AcceptedReferenceSurface")
-    expect(source).toContain("import(")
-    expect(entry!.source).not.toContain("NodeEditor story requires an exact target")
-    expect(outputs.some(({source}) => source.includes("NodeEditor story requires an exact target"))).toBeTrue()
-    expect(await Bun.file(join(storybookRoot, "node-editor.stories.ts")).text()).not.toContain("new SocketCatalogSurface")
-    expect(await Bun.file(join(storybookRoot, "node-editor.stories.ts")).text()).not.toContain("StorybookInfoSurface")
-    expect(source).not.toContain("FieldCatalogSurface")
-  })
-
-  test("publishes global and comparison readiness only after the reference texture frame", async () => {
-    const client = await Bun.file(join(storybookRoot, "node-editor.stories.ts")).text()
-    const textureWait = client.indexOf("void waitForReferenceFrame")
-    const referenceReady = client.indexOf('dataset.nodeReferenceReady = "ready"')
-    const globalReady = client.indexOf('dataset.nodeComponentStorybook = "ready"')
-
-    expect(textureWait).toBeGreaterThan(-1)
-    expect(referenceReady).toBeGreaterThan(textureWait)
-    expect(globalReady).toBeGreaterThan(referenceReady)
-    expect(client).toContain("TextureLoader.status(ACCEPTED_REFERENCE_SRC)")
-    expect(client).toContain("runtime.renderer.renderFrame(runtime.space, runtime.hud, runtime.viewPoint)")
-    expect(client).toContain('dataset.nodeReferenceReady = "error"')
-    expect(client).toContain("planned.reference.visible !== false")
-    expect(client).toContain("reference: {x: 0, y: 0, w: 1, h: 1}")
-  })
-
-  test("keeps retained observation dev-only and declares exact browser evidence in the typed app", async () => {
-    const client = await Bun.file(join(storybookRoot, "node-editor.stories.ts")).text()
-    const observer = await Bun.file(join(storybookRoot, "evidence/retained-observer.ts")).text()
-    const production = await Bun.file(join(storybookRoot, "../node-editor.ts")).text()
-    const pageRegistry = await Bun.file(join(nodesStorybookRoot, "server/page-registry.ts")).text()
-
-    expect(client).toContain("createStorybookRetainedObserver(editor)")
-    expect(observer).toContain("NodeCanvas.contentRoot")
-    expect(observer).toContain("readRibbonEndpointCenters")
-    expect(observer).toContain("worldScaleRatioToContentRoot")
-    expect(production).not.toContain("__nodeComponentRetainedObserver")
-    expect(pageRegistry).toContain('readiness: {dataset: "nodesStorybook", value: "ready"}')
-    expect(pageRegistry).toContain('...(capability === "webgpu" ? {touch: true} : {})')
-    expect(pageRegistry).toContain('canvas: {id: canvasId, evidence: "non-black" as const}')
-    expect(client).toContain("new StorybookRouteTreeRouter(NODE_STORYBOOK_ROUTE_TREE, {")
-    expect(client).toContain('basePath: storybookPublicPath("node", NODE_UI_STORYBOOK_BASE_PATH)')
-    expect(client).toContain("nodeStorybookWorkbenchStoryRoute(route)")
-    expect(client).not.toContain("StorybookOverviewSurface")
-    expect(client).not.toContain("nodeStorybookHash")
-    expect(client).not.toContain("window.location.hash")
-    const applyRoute = client.slice(client.indexOf("const applyRoute"), client.indexOf("router.subscribe((node)"))
-    expect(applyRoute).toContain("renderStorybookFrame()")
-    expect(applyRoute).not.toContain("runtime.handleResize()")
-    expect(client).toContain("runtime.handleResize()\n  await applyRoute(currentRoute())")
-    expect(client).toContain("new StorybookStoryPanelSurface(storyPanelOptions())")
-    expect(client).toContain("applyNodeEditorStoryState(storyArgs")
-    expect(client).toContain("dataset.nodeStoryTargetId = state.nodeId")
-    expect(client).toContain('dataset.selectedId = state.selection?.id ?? ""')
-    expect(client).toContain("nodeEditorStoryRoute(state.target, state.selected)")
-    expect(client).not.toContain("new SocketCatalogSurface")
-  })
 })

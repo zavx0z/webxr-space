@@ -552,7 +552,7 @@ export class NodeCanvas<
       Typography(this, content.x, content.y, content.w, content.h, {
         children: this.#emptyMessage,
         color: "muted",
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })
     }
     this.#syncContentTransform()
@@ -933,7 +933,7 @@ export class NodeCanvas<
           children: this.#interactionHint,
           variant: "caption",
           color: "muted",
-          sx: {textAlign: "right"},
+          style: {textAlign: "right"},
         })},
       ],
     })

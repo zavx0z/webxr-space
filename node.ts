@@ -553,7 +553,7 @@ export const frameRenderer: FrameRenderer<FrameView> = Object.freeze({
           children: entry.frame.label,
           fontPx: entry.frame.labelSize ?? 17,
           color: selected ? "orange" : "text",
-          sx: {textAlign: "center"},
+          style: {textAlign: "center"},
         }),
       }],
     })
@@ -646,7 +646,7 @@ export const nodeRenderer: NodeRenderer<NodeView, SocketView, NodePlan> = Object
               size: "small",
               selected: node.preview!.enabled,
               disabled: node.preview!.onToggle === undefined,
-              sx: {background: null, borderColor: null},
+              style: {background: null, borderColor: null},
               onClick: () => node.preview!.onToggle?.(!node.preview!.enabled),
             },
           ),
@@ -818,7 +818,7 @@ function drawSideSocketLabel(
       {width: "1fr", height, draw: () => {}},
     ] : [
       {width: "1fr", height, draw: () => {}},
-      {width: "1fr", height, draw: (x, y, w, h) => Typography(host, x, y, w, h, {children: label, fontPx: 11, sx: {textAlign: "right"}})},
+      {width: "1fr", height, draw: (x, y, w, h) => Typography(host, x, y, w, h, {children: label, fontPx: 11, style: {textAlign: "right"}})},
     ],
   })
 }

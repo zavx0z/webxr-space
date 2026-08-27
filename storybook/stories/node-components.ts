@@ -6,6 +6,7 @@ import {
   type NodeComponentId,
   type NodeEditorStoryTarget,
 } from "../ui-story-catalog.ts"
+import {nodeComponentStorySource} from "../story-source.ts"
 
 type NodeComponentStoryArgs = StorybookStoryArgs & Readonly<{
   component: NodeComponentId
@@ -111,7 +112,7 @@ export function createNodeComponentStory(
       // Surface-based production previews остаются отдельными UiSurface owners в client.ts.
     },
     source(args) {
-      if (args.component === "comparison") return [
+      if (args.component === "comparison") return nodeComponentStorySource(component, [
         'import {NodeEditor} from "@nodes/ui/node-editor"',
         'import {createNodeRenderers} from "@nodes/ui/node"',
         "",
@@ -120,8 +121,8 @@ export function createNodeComponentStory(
         '  title: "СРАВНЕНИЕ С ЭТАЛОНОМ",',
         "})",
         "editor.setTree(comparisonTree)",
-      ].join("\n")
-      if (args.component === "link") return [
+      ].join("\n"))
+      if (args.component === "link") return nodeComponentStorySource(component, [
         'import {NodeEditor} from "@nodes/ui/node-editor"',
         'import {createNodeRenderers} from "@nodes/ui/node"',
         'import {sampleLinkBezierPath} from "@nodes/ui/link-curve"',
@@ -130,18 +131,18 @@ export function createNodeComponentStory(
         "const editor = new NodeEditor({renderers: createNodeRenderers()})",
         "editor.setTree(tree)",
         ...(args.selected ? ['editor.select({kind: "link", id: "matrix-shader"})'] : ["editor.select(null)"]),
-      ].join("\n")
-      if (args.component === "frame") return [
+      ].join("\n"))
+      if (args.component === "frame") return nodeComponentStorySource(component, [
         'import {NodeEditor} from "@nodes/ui/node-editor"',
         'import {createNodeRenderers} from "@nodes/ui/node"',
         "",
         "const editor = new NodeEditor({renderers: createNodeRenderers()})",
         "editor.setTree(tree)",
         ...(args.selected ? ['editor.select({kind: "frame", id: "data-frame"})'] : ["editor.select(null)"]),
-      ].join("\n")
+      ].join("\n"))
       if (args.component === "node-editor") {
         const state = nodeEditorStoryState(args)
-        return [
+        return nodeComponentStorySource(component, [
           'import {NodeEditor} from "@nodes/ui/node-editor"',
           'import {createNodeRenderers} from "@nodes/ui/node"',
           "",
@@ -158,9 +159,9 @@ export function createNodeComponentStory(
           ...(state.selected
             ? ['editor.select({kind: "node", id: targetNodeId})']
             : ["editor.select(null)"]),
-        ].join("\n")
+        ].join("\n"))
       }
-      return [
+      return nodeComponentStorySource(component, [
         'import {NodeEditor} from "@nodes/ui/node-editor"',
         'import {createNodeRenderers} from "@nodes/ui/node"',
         "",
@@ -169,7 +170,7 @@ export function createNodeComponentStory(
         `  title: ${JSON.stringify(COMPONENT_LABELS[component])},`,
         "})",
         "editor.setTree(tree)",
-      ].join("\n")
+      ].join("\n"))
     },
   })
 }

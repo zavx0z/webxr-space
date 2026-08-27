@@ -5,7 +5,6 @@ import {join, resolve} from "node:path"
 const storybookRoot = import.meta.dir
 const legacyRoot = resolve(storybookRoot, "../../storybook/pages/ui")
 const sharedImports = new Set([
-  "@zavx0z/storybook/route-tree",
   "@zavx0z/storybook/stories",
   "@zavx0z/storybook/workbench",
   "@zavx0z/storybook/environment",
@@ -17,13 +16,14 @@ describe("@nodes/ui Storybook owner boundary", () => {
     expect(await filesBelow(legacyRoot)).toEqual([])
     expect(await filesBelow(join(storybookRoot, ".missing-owner-root"))).toEqual([])
     expect(await filesBelow(storybookRoot)).toEqual(expect.arrayContaining([
-      "node-editor.stories.ts",
-      "ui-navigation.ts",
+      "node-ui-story.ts",
+      "socket-catalog.ts",
       "ui-story-catalog.ts",
+      "stories/socket-overview.ts",
       "fixtures/ui-fixtures.ts",
       "state/controlled-field-state.ts",
-      "surfaces/story-preview-surface.ts",
-      "evidence/retained-observer.ts",
+      "surfaces/reference-surfaces.ts",
+      "evidence/reference-readiness.ts",
     ]))
   })
 
@@ -41,7 +41,6 @@ describe("@nodes/ui Storybook owner boundary", () => {
       }
     }
     expect(usedSharedImports).toEqual(new Set([
-      "@zavx0z/storybook/route-tree",
       "@zavx0z/storybook/stories",
       "@zavx0z/storybook/workbench",
       "@zavx0z/storybook/environment",

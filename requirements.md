@@ -170,31 +170,35 @@ solver-free; explicit `projection` адаптирует живой root `NodeTre
 2. Прежний root `NodeSystem*` format удалён. Живой `@nodes/core` Parameter-store и
    `projection` являются единственным новым parent integration path;
    product consumers подключаются отдельно.
-3. Package-level tests, central UI page и editor integration page доказывают
-   разные границы и не подменяют друг друга.
+3. Package-level tests, Node UI stories и Editor integration story доказывают
+   разные границы внутри одного Workbench и не подменяют друг друга.
 4. Dev-only stories принадлежат `@nodes/ui` и живут в `storybook/`
-   рядом с production owner. Repository Storybook собирает их entry,
-   style, routes и evidence на mount `/ui/`; его exact lifecycle маршрутизирует
-   один global `$storybook` target для `@nodes/storybook`. Общие routes, stories и Workbench
-   импортируются только из точных subpaths `@zavx0z/storybook/*`.
+   рядом с production owner. Они владеют metadata, fixtures, lazy modules,
+   preview adapters и evidence. Repository Storybook владеет единственными
+   entry, style, Router, canvas, `UiRuntime` и Workbench; owner prefix `/ui/`
+   является веткой общего route tree, а не отдельной page или mount shell. Его
+   exact lifecycle маршрутизирует один global `$storybook` target для
+   `@nodes/storybook`. Общие routes, stories и Workbench импортируются только из
+   точных subpaths `@zavx0z/storybook/*`.
    `storybook/` не входит в production exports, а `@zavx0z/storybook` не является
    production dependency `@nodes/ui`. Выбор Component
    сначала открывает его overview: `/ui/socket/` показывает все Socket types,
    `/ui/socket/boolean/` — все варианты Boolean, и только
-   `/ui/socket/boolean/input` задаёт exact detail story. Prefix overview не
-   скрывает прежний Workbench: для preview/source он использует первый detail
-   descendant, сохраняя catalog, sections, dock и code panel. Catalog группирует
-   NodeEditor, Frame и Link в `Редактор`, Parameter и Socket — в `Компоненты`,
-   где `Параметры` идут перед `Сокеты`, а comparison остаётся отдельным.
+   `/ui/socket/boolean/input` задаёт exact detail story. Каждый prefix overview
+   имеет собственные aggregate preview и source внутри того же Workbench; он не
+   подставляет первый detail descendant. Catalog показывает
+   NodeEditor, Параметры, Сокеты, Frame, Link и Сравнение как самостоятельных
+   semantic owners главной панели; disclosure-only группы не являются routes.
    `/ui/parameter/` является каноническим overview публичного Parameter API;
    его sections точно повторяют все public Field kinds, а каждый kind показывает
    `field | input | output | both | connected` без нового Parameter vocabulary. Для
-   выбранного Socket вторая панель перечисляет все concrete Socket type presets,
-   center показывает один production detail preview, dock — независимые
-   `input | output | bidirectional` variants, а правая панель постоянно хранит
-   exact TypeScript/copy и controls/events того же story state. Aggregate
-   inventory типов, форм или состояний допустим только отдельной documentation
-   story и не заменяет detail route. Story metadata и lazy implementation
+   выбранного раздела `Сокеты` вторая панель перечисляет все concrete Socket
+   type presets. На `/ui/socket/` ни один type не выбран, dock пуст, а center
+   показывает все production Socket kinds. На `/ui/socket/boolean/` выбран
+   Boolean, dock перечисляет `input | output | bidirectional`, но ни один detail
+   ещё не выбран; center показывает все три направления. Exact leaf показывает
+   один production detail preview, а правая панель хранит TypeScript/copy и
+   controls/events того же presentation state. Story metadata и lazy implementation
    принадлежат package consumer и импортируют production через exact public
    subpath; общий Workbench не получает Node vocabulary. Standalone Fields
    принадлежат storybook `@ui/components`; Nodes catalog показывает те же
