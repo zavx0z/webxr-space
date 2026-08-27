@@ -741,8 +741,9 @@ describe("@ui/components package-owned Workbench stories", () => {
 
   test("uses public full-viewport Workbench geometry and the central UI hub", async () => {
     const desktop = planStorybookShell(1920, 1080, {responsive: UI_STORYBOOK_RESPONSIVE_POLICY})
-    expect(desktop.preview).toEqual({x: 375, y: 3, w: 1101, h: 1049})
-    expect(desktop.info).toEqual({x: 1477, y: 3, w: 440, h: 1074})
+    expect(desktop.preview).toEqual({x: 375, y: 3, w: 1101, h: 1025})
+    expect(desktop.info).toEqual({x: 1477, y: 3, w: 440, h: 1050})
+    expect(desktop.status).toEqual({x: 0, y: 1056, w: 1920, h: 24})
     const server = await Bun.file(join(storybookRoot, "../../storybook/app/server.ts")).text()
     const pages = await Bun.file(join(storybookRoot, "../../storybook/app/server/page-registry.ts")).text()
     expect(server).toContain("startStorybookPackageServer")
