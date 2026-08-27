@@ -14,8 +14,10 @@ retained.
 
 ## Dev Storybook
 
-Dev-only DOM stories принадлежат `@nodes/worker` и находятся в
-`packages/worker/storybook`. Репозиторный `@nodes/storybook` собирает их в
-страницу `/worker/` и владеет общим процессом, маршрутом и static build.
+Dev-only lazy stories принадлежат `@nodes/worker` и находятся в
+`packages/worker/storybook`. Репозиторный `@nodes/storybook` показывает их в
+разделе `Worker` одного общего Workbench и владеет entrypoint, canvas, runtime,
+процессом, route tree и static build. Каждый story рендерит точный
+request/result/error contract выбранной policy в общей preview Surface.
 Storybook не экспортируется из `@nodes/worker` и не входит в его production
 dependencies.
