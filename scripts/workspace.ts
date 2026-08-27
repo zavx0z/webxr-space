@@ -48,7 +48,7 @@ export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze(
   {
     name: "@zavx0z/storybook",
     path: "../storybook",
-    revision: "9316b9567ded965147db4ffce07f71ce5dc3b581",
+    revision: "088702876a4fa116f5aaef339d518a7fbcce36fc",
   },
 ])
 
