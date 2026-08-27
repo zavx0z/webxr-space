@@ -23,9 +23,13 @@ describe("superproject workspace contract", () => {
   test("owns only relative, uniquely named package links", () => {
     expect(workspaceLinks.map(({name}) => name)).toEqual([
       "@engine/core",
-      "@layout/core",
+      "@zavx0z/dom",
+      "@zavx0z/renderer",
+      "@zavx0z/renderer-browser",
+      "@zavx0z/renderer-webgpu",
+      "@zavx0z/dom-react",
+      "@zavx0z/dom-devtools",
       "@zavx0z/highlighter",
-      "@ui/elements",
       "@ui/components",
       "@nodes/layout",
       "@zavx0z/storybook",
@@ -37,6 +41,11 @@ describe("superproject workspace contract", () => {
   test("pins the independent tool repositories to exact revisions", () => {
     expect(workspaceLinks.filter(({revision}) => revision !== undefined)).toEqual([
       {
+        name: "@zavx0z/dom",
+        path: "../renderer/packages/dom",
+        revision: "d48ab1f561323925fb4a0fa61791f24e5812ea3e",
+      },
+      {
         name: "@zavx0z/highlighter",
         path: "../highlighter",
         revision: "565d9a5fe54e0abc83ecb328edb1ff460eaa28dd",
@@ -44,7 +53,7 @@ describe("superproject workspace contract", () => {
       {
         name: "@zavx0z/storybook",
         path: "../storybook",
-        revision: "a29e6dd10815b5742367a5611c5351059708ffc5",
+        revision: "9316b9567ded965147db4ffce07f71ce5dc3b581",
       },
     ])
   })
@@ -53,7 +62,6 @@ describe("superproject workspace contract", () => {
     expect(workspaceConsumerPaths).toEqual([
       ".",
       "projects/engine",
-      "projects/layout",
       "projects/ui",
       "projects/node",
     ])
@@ -110,38 +118,27 @@ describe("superproject workspace contract", () => {
     const expected = new Map<string, string[]>([
       [".", [
         "@engine/core",
-        "@layout/core",
         "@nodes/layout",
         "@ui/components",
-        "@ui/elements",
         "@zavx0z/highlighter",
         "@zavx0z/storybook",
       ]],
       ["projects/engine", [
-        "@layout/core",
-        "@ui/components",
-        "@ui/elements",
-        "@zavx0z/highlighter",
-        "@zavx0z/storybook",
-      ]],
-      ["projects/layout", [
-        "@ui/components",
-        "@ui/elements",
-        "@zavx0z/highlighter",
+        "@zavx0z/dom",
+        "@zavx0z/renderer",
+        "@zavx0z/renderer-browser",
+        "@zavx0z/renderer-webgpu",
         "@zavx0z/storybook",
       ]],
       ["projects/ui", [
-        "@engine/core",
-        "@layout/core",
-        "@zavx0z/highlighter",
         "@zavx0z/storybook",
       ]],
       ["projects/node", [
         "@engine/core",
-        "@layout/core",
-        "@ui/components",
-        "@ui/elements",
-        "@zavx0z/highlighter",
+        "@zavx0z/dom",
+        "@zavx0z/renderer",
+        "@zavx0z/renderer-browser",
+        "@zavx0z/renderer-webgpu",
         "@zavx0z/storybook",
       ]],
     ])
@@ -151,23 +148,17 @@ describe("superproject workspace contract", () => {
     }
   })
 
-  test("discovers every declared workspace package including Layout Engine consumers", async () => {
+  test("discovers every repository-owned package", async () => {
     const manifests = (await Promise.all(workspaceConsumerPaths.map((consumerPath) =>
       discoverConsumerManifests(root, consumerPath)
     ))).flat()
     expect(manifests.map(({path}) => path)).toEqual([
       ".",
-      "packages/storybook",
       "projects/engine",
       "projects/engine/packages/core",
       "projects/engine/packages/storybook",
-      "projects/layout",
-      "projects/layout/packages/core",
-      "projects/layout/packages/storybook",
       "projects/ui",
       "projects/ui/packages/components",
-      "projects/ui/packages/elements",
-      "projects/ui/packages/hud",
       "projects/ui/packages/storybook",
       "projects/node",
       "projects/node/packages/core",
@@ -176,10 +167,6 @@ describe("superproject workspace contract", () => {
       "projects/node/packages/storybook",
       "projects/node/packages/ui",
       "projects/node/packages/worker",
-    ])
-    const layoutCore = manifests.find(({path}) => path === "projects/layout/packages/core")!
-    expect(collectOwnedLinkDependencies(layoutCore.manifest, layoutCore.path)).toEqual([
-      "@engine/core",
     ])
     for (const record of manifests) {
       expect(() => collectOwnedLinkDependencies(record.manifest, record.path)).not.toThrow()

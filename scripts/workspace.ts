@@ -5,7 +5,6 @@ import {dirname, isAbsolute, join, relative, resolve, sep} from "node:path"
 
 export const gitlinkPaths = Object.freeze([
   "projects/engine",
-  "projects/layout",
   "projects/ui",
   "projects/node",
 ] as const)
@@ -29,19 +28,27 @@ export type ConsumerManifestRecord = Readonly<{
 
 export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze([
   {name: "@engine/core", path: "projects/engine/packages/core"},
-  {name: "@layout/core", path: "projects/layout/packages/core"},
+  {
+    name: "@zavx0z/dom",
+    path: "../renderer/packages/dom",
+    revision: "d48ab1f561323925fb4a0fa61791f24e5812ea3e",
+  },
+  {name: "@zavx0z/renderer", path: "../renderer/packages/core"},
+  {name: "@zavx0z/renderer-browser", path: "../renderer/packages/browser"},
+  {name: "@zavx0z/renderer-webgpu", path: "../renderer/packages/webgpu"},
+  {name: "@zavx0z/dom-react", path: "../renderer/packages/react"},
+  {name: "@zavx0z/dom-devtools", path: "../renderer/packages/devtools"},
   {
     name: "@zavx0z/highlighter",
     path: "../highlighter",
     revision: "565d9a5fe54e0abc83ecb328edb1ff460eaa28dd",
   },
-  {name: "@ui/elements", path: "projects/ui/packages/elements"},
   {name: "@ui/components", path: "projects/ui/packages/components"},
   {name: "@nodes/layout", path: "projects/node/packages/layout"},
   {
     name: "@zavx0z/storybook",
     path: "../storybook",
-    revision: "a29e6dd10815b5742367a5611c5351059708ffc5",
+    revision: "9316b9567ded965147db4ffce07f71ce5dc3b581",
   },
 ])
 

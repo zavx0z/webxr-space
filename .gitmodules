@@ -2,10 +2,6 @@
 	path = projects/engine
 	url = ../engine.git
 	branch = main
-[submodule "layout"]
-	path = projects/layout
-	url = ../layout.git
-	branch = main
 [submodule "ui"]
 	path = projects/ui
 	url = ../ui.git

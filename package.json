@@ -1,20 +1,17 @@
 {
   "name": "@zavx0z/webxr-space",
   "version": "0.1.0",
-  "description": "Development superproject for the retained WebGPU/XR interface stack.",
+  "description": "Development superproject for the DOM-driven WebGPU/XR interface stack.",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
-  "workspaces": ["packages/*"],
   "scripts": {
     "bootstrap": "bun scripts/workspace.ts bootstrap",
     "links:check": "bun scripts/workspace.ts links-check",
     "gitlinks:check": "bun scripts/workspace.ts gitlinks-check",
     "status": "bun scripts/status.ts",
-    "graph:ui": "bun scripts/ui-component-graph.ts --write",
-    "graph:ui:check": "bun scripts/ui-component-graph.ts --check",
     "test": "bun test scripts/workspace.test.ts",
-    "check": "bun scripts/check.ts && bun run test && bun run --cwd packages/storybook check"
+    "check": "bun scripts/check.ts && bun run test"
   },
   "repository": {
     "type": "git",
@@ -23,11 +20,9 @@
   "license": "MIT",
   "devDependencies": {
     "@engine/core": "link:@engine/core",
-    "@layout/core": "link:@layout/core",
     "@nodes/layout": "link:@nodes/layout",
     "@types/bun": "^1.4.0",
     "@ui/components": "link:@ui/components",
-    "@ui/elements": "link:@ui/elements",
     "@webgpu/types": "^0.1.68",
     "@zavx0z/highlighter": "link:@zavx0z/highlighter",
     "@zavx0z/storybook": "link:@zavx0z/storybook",

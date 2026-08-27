@@ -10,10 +10,6 @@
     "skipLibCheck": true,
     "types": ["bun", "@webgpu/types"]
   },
-  "include": [
-    "scripts/**/*.ts",
-    "packages/storybook/**/*.ts",
-    "graphs/**/*.json"
-  ],
+  "include": ["scripts/**/*.ts"],
   "exclude": ["projects/**", "dist/**"]
 }

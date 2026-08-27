@@ -4,7 +4,7 @@
 
 - This repository is a development-only superproject. It is not a production
   package and must never become a production dependency of a child repository.
-- `projects/engine`, `projects/layout`, `projects/ui`, and `projects/node` are
+- `projects/engine`, `projects/ui`, and `projects/node` are
   the only Git submodules and retain independent ownership, histories, checks,
   releases, and deployment decisions.
 - Libraries and development tools such as highlighters, Storybook
@@ -15,16 +15,12 @@
 
 ## Storybook lifecycle
 
-- Use the globally installed `$storybook` with exact package identity
-  `@webxr-space/storybook`; do not recreate a repository-local lifecycle skill.
-- A user-facing request to "запусти", "открой", or "покажи" this Storybook is
-  incomplete until both conditions hold: the exact owned server responds and
-  the canonical route is open and activated in one exact CDP target. HTTP 200
-  alone is not completion. The first package launch performs that open/activate
-  by default and repeated `ensure` must not create another target.
-- A `restart` reuses and navigates the recorded exact target in the background;
-  it must not activate the tab, focus Chrome, or create another target.
-- Internal checks and builds do not implicitly open or focus a browser target.
+- This superproject owns no aggregate Storybook. Use the globally installed
+  `$storybook` with the exact repository package identity such as
+  `@engine/storybook`, `@ui/storybook` or `@nodes/storybook`.
+- Do not rebuild an umbrella component catalog from child implementation
+  sources. Each repository owns its stories and `@zavx0z/storybook` owns only
+  shared lifecycle and semantic DOM Workbench mechanics.
 
 ## Submodules
 
