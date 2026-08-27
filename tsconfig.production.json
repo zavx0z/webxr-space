@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": [
+    "field.ts",
+    "code-editor.ts",
+    "hud.ts",
+    "icons.ts",
+    "syntax-theme.ts",
+    "inspector.ts"
+  ]
+}

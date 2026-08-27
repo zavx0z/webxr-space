@@ -1,48 +1,23 @@
 {
   "name": "@ui/components",
   "version": "0.0.1",
-  "description": "Composable visual WebGPU controls built on @ui/elements. Built for MetaFor and reusable in immersive interfaces.",
+  "description": "DOM and CSS components for the document renderer. Built for MetaFor and reusable in immersive interfaces.",
   "type": "module",
   "private": true,
-  "main": "index.ts",
-  "types": "index.ts",
   "exports": {
-    ".": "./index.ts",
-    "./button": "./button.ts",
     "./field": "./field.ts",
-    "./pane": "./pane.ts",
-    "./checkbox": "./checkbox.ts",
-    "./badge": "./badge.ts",
-    "./typography": "./typography.ts",
-    "./text-field": "./text-field.ts",
-    "./control-group": "./control-group.ts",
-    "./number-input": "./number-input.ts",
-    "./integer-input": "./integer-input.ts",
-    "./color-input": "./color-input.ts",
-    "./vector-input": "./vector-input.ts",
-    "./matrix-input": "./matrix-input.ts",
-    "./reference-input": "./reference-input.ts",
-    "./enum-input": "./enum-input.ts",
-    "./collection-input": "./collection-input.ts",
-    "./path-input": "./path-input.ts",
-    "./switcher": "./switcher.ts",
-    "./progress-checkbox": "./progress-checkbox.ts",
-    "./slider-control": "./slider-control.ts",
-    "./divider": "./divider.ts",
-    "./list": "./list.ts",
-    "./table": "./table.ts",
     "./code-editor": "./code-editor.ts",
-    "./inspector": "./inspector.ts"
+    "./inspector": "./inspector.ts",
+    "./hud": "./hud.ts",
+    "./icons": "./icons.ts",
+    "./syntax-theme": "./syntax-theme.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --pretty false",
-    "typecheck:storybook": "tsc --noEmit --pretty false --project storybook/tsconfig.json"
+    "typecheck": "tsc --noEmit --pretty false --project tsconfig.production.json"
   },
   "dependencies": {
-    "@engine/core": "link:@engine/core",
-    "@layout/core": "link:@layout/core",
-    "@zavx0z/highlighter": "link:@zavx0z/highlighter",
-    "@ui/elements": "workspace:*"
+    "@zavx0z/dom": "link:@zavx0z/dom",
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter"
   },
   "repository": {
     "type": "git",

@@ -1,608 +1,601 @@
-import {flexColumn, flexRow} from "@layout/core/flex"
-import {Z, type UiSurface} from "@layout/core/surface"
-import {div, divScrollPosition} from "@ui/elements/div"
-import {drawIconCentered} from "@ui/elements/icon"
-import {uiIcons} from "@ui/elements/icons"
-import {uiShapeMetrics} from "@ui/elements/shape"
-import {boxPadding, px, type StyleProps} from "@ui/elements/style"
-import {IconButton} from "./button.ts"
-import {Pane} from "./pane.ts"
-import {TextField} from "./text-field.ts"
-import {Typography} from "./typography.ts"
+import type {
+  Document,
+  HTMLButtonElement,
+  HTMLElement,
+  HTMLInputElement,
+  Node,
+} from "@zavx0z/dom"
 
-export type InspectorCategory = Readonly<{
+export type InspectorDomContent = string | Node | readonly Node[]
+
+export type InspectorDomCategory = Readonly<{
   id: string
   label: string
-  iconSrc: string
+  title?: string
   disabled?: boolean
-  dividerBefore?: boolean
+  groupStart?: boolean
   sectionIds?: readonly string[]
 }>
 
-export type InspectorAction = Readonly<{
+export type InspectorDomSection = Readonly<{
   id: string
   label: string
-  iconSrc: string
-  disabled?: boolean
-  selected?: boolean
-  action?(): void
-}>
-
-export type InspectorContextRow = Readonly<{
-  label: string
-  iconSrc?: string
-  actions?: readonly InspectorAction[]
-}>
-
-export type InspectorContext = InspectorContextRow & Readonly<{
-  secondary?: InspectorContextRow
-}>
-
-export type InspectorSectionRect = Readonly<{x: number; y: number; w: number; h: number}>
-
-export type InspectorSection = Readonly<{
-  id: string
-  label: string
+  title?: string
   expanded: boolean
-  contentHeight: number
-  actions?: readonly InspectorAction[]
-  render(surface: UiSurface, rect: InspectorSectionRect): void
+  disabled?: boolean
+  content?: InspectorDomContent
 }>
 
-export type InspectorScrollPosition = Readonly<{left: number; top: number}>
+export type InspectorDomContext = Readonly<{
+  label: string
+  title?: string
+}>
 
-export type InspectorProps = Readonly<{
-  key: string
-  categories: readonly InspectorCategory[]
+export type InspectorDomProps = Readonly<{
+  ariaLabel?: string
+  categoriesLabel?: string
+  categories: readonly InspectorDomCategory[]
   selectedCategoryId: string
-  sections: readonly InspectorSection[]
-  query?: string
+  sections: readonly InspectorDomSection[]
+  query: string
+  searchLabel?: string
   searchPlaceholder?: string
-  toolbarLeadingActions?: readonly InspectorAction[]
-  toolbarActions?: readonly InspectorAction[]
-  context?: InspectorContext
-  style?: StyleProps
+  context?: InspectorDomContext
   onCategoryChange?(id: string): void
   onQueryChange?(query: string): void
   onSectionToggle?(id: string, expanded: boolean): void
-  onSectionsScrollChange?(position: InspectorScrollPosition): void
 }>
 
-export type InspectorPlannedCategory = Readonly<{id: string; frame: InspectorSectionRect}>
-
-export type InspectorPlannedSection = Readonly<{
-  id: string
-  frame: InspectorSectionRect
-  header: InspectorSectionRect
-  content: InspectorSectionRect | null
+export type InspectorDomRefs = Readonly<{
+  root: HTMLElement
+  toolbar: HTMLElement
+  search: HTMLInputElement
+  body: HTMLElement
+  rail: HTMLElement
+  content: HTMLElement
+  context: HTMLElement
+  sections: HTMLElement
+  categoryButtons: ReadonlyMap<string, HTMLButtonElement>
+  sectionElements: ReadonlyMap<string, HTMLElement>
+  sectionButtons: ReadonlyMap<string, HTMLButtonElement>
+  sectionContents: ReadonlyMap<string, HTMLElement>
 }>
 
-export type InspectorPlan = Readonly<{
-  toolbar: InspectorSectionRect
-  rail: InspectorSectionRect
-  context: InspectorSectionRect | null
-  contextSecondary: InspectorSectionRect | null
-  sectionsFrame: InspectorSectionRect
-  sectionsViewport: InspectorSectionRect
-  sectionsContentHeight: number
-  sectionsScrollTop: number
-  categories: readonly InspectorPlannedCategory[]
-  sections: readonly InspectorPlannedSection[]
+export type InspectorDomController = Readonly<{
+  element: HTMLElement
+  refs: InspectorDomRefs
+  update(props: InspectorDomProps): void
+  dispose(): void
 }>
 
-export const inspectorMetrics = Object.freeze({
-  railWidth: 30,
-  toolbarHeight: 30,
-  contextHeight: 28,
-  contextSecondaryHeight: 24,
-  categoryHeight: 28,
-  categoryGap: 1,
-  sectionHeaderHeight: 26,
-  sectionGap: 2,
-  sectionContentInset: 6,
-  contentInset: 7,
-  actionSize: 22,
-  iconSize: 16,
-  searchWidth: 115,
-  scrollbarWidth: 4,
-})
+type CategoryEntry = {
+  button: HTMLButtonElement
+  onClick: () => void
+}
 
-const INSPECTOR_BACK = "rgba(45, 45, 45, 1)" as const
-const INSPECTOR_TOOLBAR = "rgba(45, 45, 45, 1)" as const
-const INSPECTOR_RAIL = "rgba(24, 24, 24, 1)" as const
-const INSPECTOR_TAB = "rgba(29, 29, 29, 1)" as const
-const INSPECTOR_TAB_ACTIVE = "rgba(48, 48, 48, 1)" as const
-const INSPECTOR_SECTION = "rgba(61, 61, 61, 1)" as const
-const INSPECTOR_RULE = "rgba(22, 22, 22, 1)" as const
+type SectionEntry = {
+  element: HTMLElement
+  button: HTMLButtonElement
+  content: HTMLElement
+  onClick: () => void
+}
 
-type InspectorPlanProps = Pick<
-  InspectorProps,
-  "categories" | "selectedCategoryId" | "sections" | "query" | "context" | "style"
->
+export const inspectorCss = String.raw`
+.ui-inspector {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgb(22, 22, 22);
+  border-radius: 6px;
+  background: rgb(48, 48, 48);
+  color: rgb(224, 224, 224);
+  font-size: 12px;
+}
 
-/** Pure owner geometry used by immediate rendering and retained consumers. */
-export function planInspector(
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  props: InspectorPlanProps,
-  scrollTop = 0,
-): InspectorPlan {
-  validateInspectorIdentity(props.categories, props.sections)
-  const outerStyle = inspectorOuterStyle(props.style)
-  const border = outerStyle.borderColor === null ? 0 : px(outerStyle.borderWidth, uiShapeMetrics.borderWidth)
-  const padding = boxPadding(outerStyle)
-  const inner: InspectorSectionRect = {
-    x: x + border + padding.left,
-    y: y + border + padding.top,
-    w: Math.max(0, width - border * 2 - padding.left - padding.right),
-    h: Math.max(0, height - border * 2 - padding.top - padding.bottom),
+.ui-inspector__toolbar {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 30px;
+  padding: 4px;
+  background: rgb(48, 48, 48);
+}
+
+.ui-inspector__search {
+  box-sizing: border-box;
+  width: 115px;
+  height: 22px;
+  padding: 2px 8px;
+  border: 1px solid rgb(22, 22, 22);
+  border-radius: 4px;
+  background: rgb(36, 36, 36);
+  color: rgb(224, 224, 224);
+}
+
+.ui-inspector__body {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.ui-inspector__rail {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 30px;
+  height: 100%;
+  gap: 0;
+  padding: 8px 0;
+  background: rgb(29, 29, 29);
+}
+
+.ui-inspector__category {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 28px;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgb(192, 192, 192);
+}
+
+.ui-inspector__category--group-start {
+  margin-top: 8px;
+}
+
+.ui-inspector__category[aria-pressed="true"] {
+  border-radius: 4px 0 0 4px;
+  background: rgb(48, 48, 48);
+  color: rgb(240, 240, 240);
+}
+
+.ui-inspector__category[disabled] {
+  opacity: 0.5;
+}
+
+.ui-inspector__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  background: rgb(48, 48, 48);
+}
+
+.ui-inspector__context {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 28px;
+  padding: 6px;
+  background: rgb(48, 48, 48);
+}
+
+.ui-inspector__sections {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  flex-grow: 1;
+  gap: 2px;
+  padding: 7px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  background: rgb(48, 48, 48);
+}
+
+.ui-inspector__section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgb(61, 61, 61);
+}
+
+.ui-inspector__section-header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 26px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 4px;
+  background: rgb(61, 61, 61);
+  color: rgb(224, 224, 224);
+}
+
+.ui-inspector__section-header[aria-expanded="true"] {
+  border-radius: 4px 4px 0 0;
+}
+
+.ui-inspector__section-content {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 6px;
+  background: rgb(61, 61, 61);
+}
+
+.ui-inspector [hidden] {
+  display: none;
+}
+`
+
+export function createInspector(
+  document: Document,
+  initialProps: InspectorDomProps,
+): InspectorDomController {
+  validateInspectorProps(initialProps)
+  validateInspectorContents(initialProps.sections)
+
+  const root = createElement(document, "aside", "ui-inspector")
+  const toolbar = createElement(document, "header", "ui-inspector__toolbar")
+  const search = document.createElement("input")
+  search.className = "ui-inspector__search"
+  const body = createElement(document, "div", "ui-inspector__body")
+  const rail = createElement(document, "nav", "ui-inspector__rail")
+  const content = createElement(document, "main", "ui-inspector__content")
+  const context = createElement(document, "div", "ui-inspector__context")
+  const sections = createElement(document, "div", "ui-inspector__sections")
+
+  toolbar.appendChild(search)
+  body.appendChild(rail)
+  body.appendChild(content)
+  content.appendChild(context)
+  content.appendChild(sections)
+  root.appendChild(toolbar)
+  root.appendChild(body)
+
+  const categoryEntries = new Map<string, CategoryEntry>()
+  const sectionEntries = new Map<string, SectionEntry>()
+  const categoryButtons = new Map<string, HTMLButtonElement>()
+  const sectionElements = new Map<string, HTMLElement>()
+  const sectionButtons = new Map<string, HTMLButtonElement>()
+  const sectionContents = new Map<string, HTMLElement>()
+  let currentProps = initialProps
+  let disposed = false
+
+  const onSearchInput = (): void => {
+    currentProps.onQueryChange?.(search.value)
+  }
+  search.addEventListener("input", onSearchInput)
+
+  const refs: InspectorDomRefs = Object.freeze({
+    root,
+    toolbar,
+    search,
+    body,
+    rail,
+    content,
+    context,
+    sections,
+    categoryButtons,
+    sectionElements,
+    sectionButtons,
+    sectionContents,
+  })
+
+  const update = (nextProps: InspectorDomProps): void => {
+    if (disposed) throw new Error("Inspector DOM controller is disposed")
+    validateInspectorProps(nextProps)
+    validateInspectorContents(nextProps.sections)
+    currentProps = nextProps
+    document.transaction(() => {
+      syncAttribute(root, "aria-label", nextProps.ariaLabel ?? "Inspector")
+      syncAttribute(rail, "aria-label", nextProps.categoriesLabel ?? "Categories")
+      syncSearch(search, nextProps)
+      syncContext(context, nextProps.context)
+      syncCategories(document, rail, categoryEntries, categoryButtons, () => currentProps, nextProps.categories)
+      syncSections(
+        document,
+        sections,
+        sectionEntries,
+        sectionElements,
+        sectionButtons,
+        sectionContents,
+        () => currentProps,
+        nextProps.sections,
+      )
+      syncSectionVisibility(sectionEntries, nextProps)
+    })
   }
 
-  let toolbar: InspectorSectionRect = {x: inner.x, y: inner.y, w: inner.w, h: 0}
-  let body: InspectorSectionRect = {x: inner.x, y: inner.y, w: inner.w, h: inner.h}
-  const toolbarHeight = Math.min(inspectorMetrics.toolbarHeight, inner.h)
-  flexColumn({
-    x: inner.x,
-    y: inner.y,
-    w: inner.w,
-    h: inner.h,
-    gap: 0,
-    items: [
-      {height: toolbarHeight, draw: (x, y, w, h) => { toolbar = {x, y, w, h} }},
-      {height: "grow", draw: (x, y, w, h) => { body = {x, y, w, h} }},
-    ],
-  })
-
-  let rail: InspectorSectionRect = {x: body.x, y: body.y, w: 0, h: body.h}
-  let content: InspectorSectionRect = {x: body.x, y: body.y, w: body.w, h: body.h}
-  flexRow({
-    x: body.x,
-    y: body.y,
-    w: body.w,
-    h: body.h,
-    gap: 0,
-    alignItems: "stretch",
-    items: [
-      {width: Math.min(inspectorMetrics.railWidth, body.w), height: body.h, draw: (x, y, w, h) => { rail = {x, y, w, h} }},
-      {width: "grow", height: body.h, draw: (x, y, w, h) => { content = {x, y, w, h} }},
-    ],
-  })
-
-  let context: InspectorSectionRect | null = null
-  let contextSecondary: InspectorSectionRect | null = null
-  let sectionsFrame: InspectorSectionRect = {x: content.x, y: content.y, w: content.w, h: content.h}
-  const contextHeight = props.context === undefined ? 0 : Math.min(inspectorMetrics.contextHeight, content.h)
-  const secondaryHeight = props.context?.secondary === undefined
-    ? 0
-    : Math.min(inspectorMetrics.contextSecondaryHeight, Math.max(0, content.h - contextHeight))
-  flexColumn({
-    x: content.x,
-    y: content.y,
-    w: content.w,
-    h: content.h,
-    gap: 0,
-    items: [
-      props.context === undefined ? false : {height: contextHeight, draw: (x, y, w, h) => { context = {x, y, w, h} }},
-      props.context?.secondary === undefined ? false : {height: secondaryHeight, draw: (x, y, w, h) => { contextSecondary = {x, y, w, h} }},
-      {height: "grow", draw: (x, y, w, h) => { sectionsFrame = {x, y, w, h} }},
-    ],
-  })
-
-  const visibleSections = visibleInspectorSections(props)
-  const sectionHeights = visibleSections.map(inspectorSectionHeight)
-  const sectionsContentHeight = inspectorMetrics.contentInset * 2 +
-    sectionHeights.reduce((sum, value) => sum + value, 0) +
-    inspectorMetrics.sectionGap * Math.max(0, visibleSections.length - 1)
-  const showScrollbar = sectionsContentHeight > sectionsFrame.h
-  const sectionsViewport: InspectorSectionRect = {
-    x: sectionsFrame.x,
-    y: sectionsFrame.y,
-    w: Math.max(0, sectionsFrame.w - (showScrollbar ? inspectorMetrics.scrollbarWidth : 0)),
-    h: sectionsFrame.h,
-  }
-  const maxScrollTop = Math.max(0, sectionsContentHeight - sectionsViewport.h)
-  const sectionsScrollTop = clamp(scrollTop, 0, maxScrollTop)
-  const sections: InspectorPlannedSection[] = []
-  flexColumn({
-    x: sectionsViewport.x + inspectorMetrics.contentInset,
-    y: sectionsViewport.y + inspectorMetrics.contentInset - sectionsScrollTop,
-    w: Math.max(0, sectionsViewport.w - inspectorMetrics.contentInset * 2),
-    h: Math.max(0, sectionsContentHeight - inspectorMetrics.contentInset * 2),
-    gap: inspectorMetrics.sectionGap,
-    alignItems: "stretch",
-    items: visibleSections.map((section, index) => ({
-      height: sectionHeights[index] ?? inspectorMetrics.sectionHeaderHeight,
-      draw: (x, y, w, h) => sections.push(planInspectorSection(section, {x, y, w, h})),
-    })),
-  })
-
-  return Object.freeze({
-    toolbar: freezeRect(toolbar),
-    rail: freezeRect(rail),
-    context: context === null ? null : freezeRect(context),
-    contextSecondary: contextSecondary === null ? null : freezeRect(contextSecondary),
-    sectionsFrame: freezeRect(sectionsFrame),
-    sectionsViewport: freezeRect(sectionsViewport),
-    sectionsContentHeight,
-    sectionsScrollTop,
-    categories: planInspectorCategories(rail, props.categories),
-    sections: Object.freeze(sections),
-  })
-}
-
-/** Controlled inspector whose semantic content remains consumer-owned. */
-export function Inspector(surface: UiSurface, x: number, y: number, width: number, height: number, props: InspectorProps): void {
-  if (width <= 0 || height <= 0) return
-  const outerStyle = inspectorOuterStyle(props.style)
-  const scrollTop = divScrollPosition(surface, `${props.key}:sections`).top
-  const plan = planInspector(x, y, width, height, props, scrollTop)
-  Pane(surface, x, y, width, height, {
-    appearance: "panel",
-    key: props.key,
-    style: outerStyle,
-    children: () => {
-      drawInspectorToolbar(surface, plan.toolbar, props)
-      drawInspectorRail(surface, plan.rail, plan.categories, props)
-      if (plan.context !== null && props.context !== undefined) drawInspectorContext(surface, plan.context, props.context)
-      if (plan.contextSecondary !== null && props.context?.secondary !== undefined) {
-        drawInspectorContext(surface, plan.contextSecondary, props.context.secondary)
-      }
-      drawInspectorSections(surface, plan.sectionsFrame, x, y, width, height, props)
-    },
-  })
-}
-
-function drawInspectorToolbar(surface: UiSurface, frame: InspectorSectionRect, props: InspectorProps): void {
-  div(surface, frame.x, frame.y, frame.w, frame.h, {
-    style: {background: INSPECTOR_TOOLBAR, borderColor: null, borderRadius: 0, zIndex: Z.CONTAINER + 0.02},
-  })
-  const leading = props.toolbarLeadingActions ?? []
-  const trailing = props.toolbarActions ?? []
-  const actionGap = 2
-  const leadingWidth = leading.length * inspectorMetrics.actionSize + Math.max(0, leading.length - 1) * actionGap
-  const trailingWidth = trailing.length * inspectorMetrics.actionSize + Math.max(0, trailing.length - 1) * actionGap
-  const sideWidth = Math.max(inspectorMetrics.actionSize, leadingWidth, trailingWidth)
-  const searchWidth = Math.min(inspectorMetrics.searchWidth, Math.max(0, frame.w - sideWidth * 2 - 12))
-  flexRow({
-    x: frame.x + 4,
-    y: frame.y + 4,
-    w: Math.max(0, frame.w - 8),
-    h: Math.max(0, frame.h - 8),
-    gap: 0,
-    alignItems: "stretch",
-    items: [
-      {width: sideWidth, height: Math.max(0, frame.h - 8), draw: (x, y, w, h) => drawInspectorActions(surface, {x, y, w, h}, leading, "start")},
-      {width: "grow", height: Math.max(0, frame.h - 8), draw() {}},
-      {width: searchWidth, height: Math.max(0, frame.h - 8), draw: (x, y, w, h) => drawInspectorSearch(surface, {x, y, w, h}, props)},
-      {width: "grow", height: Math.max(0, frame.h - 8), draw() {}},
-      {width: sideWidth, height: Math.max(0, frame.h - 8), draw: (x, y, w, h) => drawInspectorActions(surface, {x, y, w, h}, trailing, "end")},
-    ],
-  })
-}
-
-function drawInspectorSearch(surface: UiSurface, frame: InspectorSectionRect, props: InspectorProps): void {
-  TextField(surface, frame.x, frame.y, frame.w, frame.h, {
-    key: `${props.key}:search`,
-    value: props.query ?? "",
-    placeholder: props.searchPlaceholder ?? "",
-    controlled: true,
-    style: {borderRadius: 4, paddingLeft: 22},
-    onChange: (query) => props.onQueryChange?.(query),
-  })
-  drawIconCentered(surface, uiIcons.search, frame.x + 11, frame.y + frame.h / 2, 13, {
-    style: {opacity: 0.78, zIndex: Z.TEXT + 0.01},
-  })
-}
-
-function drawInspectorActions(
-  surface: UiSurface,
-  frame: InspectorSectionRect,
-  actions: readonly InspectorAction[],
-  align: "start" | "end",
-): void {
-  if (actions.length === 0) return
-  flexRow({
-    x: frame.x,
-    y: frame.y,
-    w: frame.w,
-    h: frame.h,
-    gap: 2,
-    justifyContent: align === "start" ? "start" : "end",
-    items: actions.map((action) => ({
-      width: inspectorMetrics.actionSize,
-      height: frame.h,
-      draw: (x, y, w, h) => drawInspectorAction(surface, {x, y, w, h}, action),
-    })),
-  })
-}
-
-function drawInspectorRail(
-  surface: UiSurface,
-  frame: InspectorSectionRect,
-  categories: readonly InspectorPlannedCategory[],
-  props: InspectorProps,
-): void {
-  div(surface, frame.x, frame.y, frame.w, frame.h, {
-    style: {background: INSPECTOR_RAIL, borderColor: INSPECTOR_RULE, borderRadius: 0, borderWidth: 1, zIndex: Z.CONTAINER + 0.01},
-  })
-  for (const [index, planned] of categories.entries()) {
-    const category = props.categories.find(({id}) => id === planned.id)
-    if (category === undefined) continue
-    if (category.dividerBefore === true && index > 0) {
-      div(surface, planned.frame.x + 5, planned.frame.y - 2, Math.max(0, planned.frame.w - 10), 1, {
-        style: {background: INSPECTOR_RULE, borderColor: null, borderRadius: 0, zIndex: Z.ELEMENT_RULE},
-      })
+  const dispose = (): void => {
+    if (disposed) return
+    disposed = true
+    search.removeEventListener("input", onSearchInput)
+    for (const {button, onClick} of categoryEntries.values()) {
+      button.removeEventListener("click", onClick)
     }
-    IconButton(surface, planned.frame.x + 2, planned.frame.y + 2, Math.max(1, planned.frame.w - 4), Math.max(1, planned.frame.h - 4), {
-      label: category.label,
-      iconSrc: category.iconSrc,
-      appearance: "toolbar-item",
-      selected: category.id === props.selectedCategoryId,
-      ...(category.disabled === undefined ? {} : {disabled: category.disabled}),
-      style: {
-        background: category.id === props.selectedCategoryId ? INSPECTOR_TAB_ACTIVE : INSPECTOR_TAB,
-        borderColor: category.id === props.selectedCategoryId ? INSPECTOR_RULE : null,
-        borderRadius: 4,
-        padding: 0,
-      },
-      onClick: () => props.onCategoryChange?.(category.id),
-    })
+    for (const {button, onClick} of sectionEntries.values()) {
+      button.removeEventListener("click", onClick)
+    }
+    categoryEntries.clear()
+    sectionEntries.clear()
+    categoryButtons.clear()
+    sectionElements.clear()
+    sectionButtons.clear()
+    sectionContents.clear()
   }
+
+  const controller: InspectorDomController = Object.freeze({
+    element: root,
+    refs,
+    update,
+    dispose,
+  })
+  update(initialProps)
+  return controller
 }
 
-function drawInspectorContext(surface: UiSurface, frame: InspectorSectionRect, context: InspectorContextRow): void {
-  div(surface, frame.x, frame.y, frame.w, frame.h, {
-    style: {background: INSPECTOR_BACK, borderColor: null, borderRadius: 0, zIndex: Z.CONTAINER + 0.02},
-  })
-  const actions = context.actions ?? []
-  flexRow({
-    x: frame.x + 6,
-    y: frame.y + 3,
-    w: Math.max(0, frame.w - 12),
-    h: Math.max(0, frame.h - 6),
-    gap: 4,
-    alignItems: "center",
-    items: [
-      context.iconSrc === undefined ? false : {
-        width: inspectorMetrics.iconSize,
-        height: inspectorMetrics.iconSize,
-        draw: (x, y, w, h) => drawIconCentered(surface, context.iconSrc!, x + w / 2, y + h / 2, Math.min(w, h)),
-      },
-      {
-        width: "grow",
-        height: Math.max(0, frame.h - 6),
-        draw: (x, y, w, h) => Typography(surface, x, y, w, h, {
-          children: context.label,
-          variant: "body",
-          style: {textAlign: "left"},
-        }),
-      },
-      ...actions.map((action) => ({
-        width: inspectorMetrics.actionSize,
-        height: Math.max(0, frame.h - 6),
-        draw: (x: number, y: number, w: number, h: number) => drawInspectorAction(surface, {x, y, w, h}, action),
-      })),
-    ],
-  })
+function syncSearch(search: HTMLInputElement, props: InspectorDomProps): void {
+  if (search.type !== "search") search.type = "search"
+  if (search.value !== props.query) search.value = props.query
+  const placeholder = props.searchPlaceholder ?? ""
+  if (search.placeholder !== placeholder) search.placeholder = placeholder
+  syncAttribute(
+    search,
+    "aria-label",
+    props.searchLabel ?? props.searchPlaceholder ?? "Search",
+  )
 }
 
-function drawInspectorSections(
-  surface: UiSurface,
-  frame: InspectorSectionRect,
-  outerX: number,
-  outerY: number,
-  outerWidth: number,
-  outerHeight: number,
-  props: InspectorProps,
+function syncContext(
+  element: HTMLElement,
+  context: InspectorDomContext | undefined,
 ): void {
-  const currentPlan = planInspector(outerX, outerY, outerWidth, outerHeight, props, divScrollPosition(surface, `${props.key}:sections`).top)
-  div(surface, frame.x, frame.y, frame.w, frame.h, {
-    key: `${props.key}:sections`,
-    scrollContentHeight: currentPlan.sectionsContentHeight,
-    style: {
-      background: INSPECTOR_BACK,
-      borderColor: null,
-      borderRadius: 0,
-      overflowY: "auto",
-      scrollbarWidth: inspectorMetrics.scrollbarWidth,
-      padding: 0,
-      zIndex: Z.CONTAINER + 0.01,
-    },
-    children: (scroll) => {
-      notifyInspectorScroll(surface, props, scroll.scrollTop)
-      const plan = planInspector(outerX, outerY, outerWidth, outerHeight, props, scroll.scrollTop)
-      for (const planned of plan.sections) {
-        const section = props.sections.find(({id}) => id === planned.id)
-        if (section !== undefined) drawInspectorSection(surface, planned, section, props)
+  syncBooleanAttribute(element, "hidden", context === undefined)
+  const label = context?.label ?? ""
+  syncText(element, label)
+  if (context === undefined) syncAttribute(element, "title", null)
+  else syncTitle(element, context.title ?? label)
+}
+
+function syncCategories(
+  document: Document,
+  rail: HTMLElement,
+  entries: Map<string, CategoryEntry>,
+  refs: Map<string, HTMLButtonElement>,
+  props: () => InspectorDomProps,
+  categories: readonly InspectorDomCategory[],
+): void {
+  const retainedIds = new Set(categories.map(({id}) => id))
+  for (const [id, entry] of entries) {
+    if (retainedIds.has(id)) continue
+    entry.button.removeEventListener("click", entry.onClick)
+    entry.button.parentNode?.removeChild(entry.button)
+    entries.delete(id)
+    refs.delete(id)
+  }
+
+  const ordered: HTMLButtonElement[] = []
+  for (const category of categories) {
+    let entry = entries.get(category.id)
+    if (entry === undefined) {
+      const button = document.createElement("button")
+      const onClick = (): void => props().onCategoryChange?.(category.id)
+      button.addEventListener("click", onClick)
+      button.setAttribute("type", "button")
+      button.setAttribute("data-category-id", category.id)
+      entry = {button, onClick}
+      entries.set(category.id, entry)
+      refs.set(category.id, button)
+    }
+    const {button} = entry
+    syncAttribute(button, "class", category.groupStart === true
+      ? "ui-inspector__category ui-inspector__category--group-start"
+      : "ui-inspector__category")
+    syncText(button, category.label)
+    syncTitle(button, category.title ?? category.label)
+    syncAttribute(button, "aria-label", category.title ?? category.label)
+    syncAttribute(button, "aria-pressed", String(category.id === props().selectedCategoryId))
+    if (button.disabled !== (category.disabled === true)) button.disabled = category.disabled === true
+    ordered.push(button)
+  }
+  reconcileChildren(rail, ordered)
+}
+
+function syncSections(
+  document: Document,
+  parent: HTMLElement,
+  entries: Map<string, SectionEntry>,
+  elementRefs: Map<string, HTMLElement>,
+  buttonRefs: Map<string, HTMLButtonElement>,
+  contentRefs: Map<string, HTMLElement>,
+  props: () => InspectorDomProps,
+  sections: readonly InspectorDomSection[],
+): void {
+  const retainedIds = new Set(sections.map(({id}) => id))
+  for (const [id, entry] of entries) {
+    if (retainedIds.has(id)) continue
+    entry.button.removeEventListener("click", entry.onClick)
+    entry.element.parentNode?.removeChild(entry.element)
+    entries.delete(id)
+    elementRefs.delete(id)
+    buttonRefs.delete(id)
+    contentRefs.delete(id)
+  }
+
+  const ordered: HTMLElement[] = []
+  for (const section of sections) {
+    let entry = entries.get(section.id)
+    if (entry === undefined) {
+      const element = createElement(document, "section", "ui-inspector__section")
+      const button = document.createElement("button")
+      const sectionContent = createElement(document, "div", "ui-inspector__section-content")
+      const onClick = (): void => {
+        const current = props().sections.find(({id}) => id === section.id)
+        if (current !== undefined) props().onSectionToggle?.(section.id, !current.expanded)
       }
-    },
-  })
+      button.className = "ui-inspector__section-header"
+      button.setAttribute("type", "button")
+      button.addEventListener("click", onClick)
+      element.setAttribute("data-section-id", section.id)
+      element.appendChild(button)
+      element.appendChild(sectionContent)
+      entry = {element, button, content: sectionContent, onClick}
+      entries.set(section.id, entry)
+      elementRefs.set(section.id, element)
+      buttonRefs.set(section.id, button)
+      contentRefs.set(section.id, sectionContent)
+    }
+    syncText(entry.button, section.label)
+    syncTitle(entry.button, section.title ?? section.label)
+    syncAttribute(entry.button, "aria-expanded", String(section.expanded))
+    if (entry.button.disabled !== (section.disabled === true)) {
+      entry.button.disabled = section.disabled === true
+    }
+    syncBooleanAttribute(entry.content, "hidden", !section.expanded)
+    syncInspectorContent(entry.content, section.content)
+    ordered.push(entry.element)
+  }
+  reconcileChildren(parent, ordered)
 }
 
-function drawInspectorSection(
-  surface: UiSurface,
-  planned: InspectorPlannedSection,
-  section: InspectorSection,
-  props: InspectorProps,
+function syncSectionVisibility(
+  entries: ReadonlyMap<string, SectionEntry>,
+  props: InspectorDomProps,
 ): void {
-  const {frame, header, content} = planned
-  div(surface, frame.x, frame.y, frame.w, frame.h, {
-    style: {background: INSPECTOR_SECTION, borderColor: null, borderRadius: 4, overflow: "hidden", zIndex: Z.CONTAINER + 0.02},
-  })
-  div(surface, header.x, header.y, header.w, header.h, {
-    key: `${props.key}:section:${section.id}`,
-    hitCursor: "pointer",
-    onClick: () => props.onSectionToggle?.(section.id, !section.expanded),
-    style: {background: INSPECTOR_SECTION, borderColor: null, borderRadius: 4, padding: 0, zIndex: Z.ELEMENT},
-    children: () => {
-      const actions = section.actions ?? []
-      flexRow({
-        x: header.x + 5,
-        y: header.y,
-        w: Math.max(0, header.w - 10),
-        h: header.h,
-        gap: 3,
-        alignItems: "center",
-        items: [
-          {
-            width: 14,
-            height: 14,
-            draw: (x, y, w, h) => drawIconCentered(
-              surface,
-              section.expanded ? uiIcons.chevronDown : uiIcons.chevronRight,
-              x + w / 2,
-              y + h / 2,
-              Math.min(w, h),
-            ),
-          },
-          {
-            width: "grow",
-            height: header.h,
-            draw: (x, y, w, h) => Typography(surface, x, y, w, h, {
-              children: section.label,
-              variant: "subtitle",
-              style: {textAlign: "left"},
-            }),
-          },
-          ...actions.map((action) => ({
-            width: inspectorMetrics.actionSize,
-            height: inspectorMetrics.actionSize,
-            draw: (x: number, y: number, w: number, h: number) => drawInspectorAction(surface, {x, y, w, h}, action),
-          })),
-        ],
-      })
-    },
-  })
-  if (content !== null) section.render(surface, content)
-}
-
-function drawInspectorAction(surface: UiSurface, frame: InspectorSectionRect, action: InspectorAction): void {
-  IconButton(surface, frame.x, frame.y, frame.w, frame.h, {
-    label: action.label,
-    iconSrc: action.iconSrc,
-    appearance: "toolbar-item",
-    ...(action.selected === undefined ? {} : {selected: action.selected}),
-    ...(action.disabled === undefined ? {} : {disabled: action.disabled}),
-    style: {background: null, borderColor: null, borderRadius: 4, padding: 0},
-    ...(action.action === undefined ? {} : {onClick: action.action}),
-  })
-}
-
-function planInspectorSection(section: InspectorSection, frame: InspectorSectionRect): InspectorPlannedSection {
-  let header: InspectorSectionRect = {x: frame.x, y: frame.y, w: frame.w, h: 0}
-  let body: InspectorSectionRect | null = null
-  flexColumn({
-    x: frame.x,
-    y: frame.y,
-    w: frame.w,
-    h: frame.h,
-    gap: 0,
-    items: [
-      {height: Math.min(inspectorMetrics.sectionHeaderHeight, frame.h), draw: (x, y, w, h) => { header = {x, y, w, h} }},
-      section.expanded ? {height: "grow", draw: (x, y, w, h) => { body = {x, y, w, h} }} : false,
-    ],
-  })
-  const bodyFrame = body as InspectorSectionRect | null
-  const content = bodyFrame === null ? null : {
-    x: bodyFrame.x + inspectorMetrics.sectionContentInset,
-    y: bodyFrame.y + inspectorMetrics.sectionContentInset,
-    w: Math.max(0, bodyFrame.w - inspectorMetrics.sectionContentInset * 2),
-    h: Math.max(0, bodyFrame.h - inspectorMetrics.sectionContentInset * 2),
-  }
-  return Object.freeze({
-    id: section.id,
-    frame: freezeRect(frame),
-    header: freezeRect(header),
-    content: content === null ? null : freezeRect(content),
-  })
-}
-
-function inspectorSectionHeight(section: InspectorSection): number {
-  if (!section.expanded) return inspectorMetrics.sectionHeaderHeight
-  return inspectorMetrics.sectionHeaderHeight + inspectorMetrics.sectionContentInset * 2 + Math.max(0, section.contentHeight)
-}
-
-function inspectorOuterStyle(style: StyleProps | undefined): StyleProps {
-  return {
-    background: INSPECTOR_BACK,
-    borderColor: INSPECTOR_RULE,
-    borderRadius: 6,
-    borderWidth: 1,
-    padding: 0,
-    overflow: "hidden",
-    zIndex: Z.CONTAINER,
-    ...style,
-  }
-}
-
-function visibleInspectorSections(props: InspectorPlanProps): readonly InspectorSection[] {
-  const query = (props.query ?? "").trim().toLocaleLowerCase()
-  const selectedCategory = props.categories.find(({id}) => id === props.selectedCategoryId)
-  const allowedSections = selectedCategory === undefined
+  const selected = props.categories.find(({id}) => id === props.selectedCategoryId)
+  const allowed = selected === undefined
     ? new Set<string>()
-    : selectedCategory.sectionIds === undefined
+    : selected.sectionIds === undefined
       ? null
-      : new Set(selectedCategory.sectionIds)
-  const categorySections = allowedSections === null
-    ? props.sections
-    : props.sections.filter(({id}) => allowedSections.has(id))
-  return query.length === 0
-    ? categorySections
-    : categorySections.filter(({label}) => label.toLocaleLowerCase().includes(query))
-}
-
-function planInspectorCategories(
-  rail: InspectorSectionRect,
-  categories: readonly InspectorCategory[],
-): readonly InspectorPlannedCategory[] {
-  const frames = new Map<string, InspectorSectionRect>()
-  const items: Array<Parameters<typeof flexColumn>[0]["items"][number]> = []
-  for (const category of categories) {
-    if (category.dividerBefore === true && items.length > 0) items.push({height: 3, width: rail.w, draw() {}})
-    items.push({
-      height: inspectorMetrics.categoryHeight,
-      width: rail.w,
-      draw: (x, y, w, h) => { frames.set(category.id, {x, y, w, h}) },
-    })
+      : new Set(selected.sectionIds)
+  const query = props.query.trim().toLocaleLowerCase()
+  for (const section of props.sections) {
+    const entry = entries.get(section.id)
+    if (entry === undefined) continue
+    const categoryVisible = allowed === null || allowed.has(section.id)
+    const queryVisible = query.length === 0 || section.label.toLocaleLowerCase().includes(query)
+    syncBooleanAttribute(entry.element, "hidden", !categoryVisible || !queryVisible)
   }
-  flexColumn({
-    x: rail.x,
-    y: rail.y + 3,
-    w: rail.w,
-    h: Math.max(0, rail.h - 6),
-    gap: inspectorMetrics.categoryGap,
-    alignItems: "stretch",
-    items,
-  })
-  return Object.freeze(categories.flatMap(({id}) => {
-    const frame = frames.get(id)
-    return frame === undefined ? [] : [Object.freeze({id, frame: freezeRect(frame)})]
-  }))
 }
 
-const inspectorScrollPositions = new WeakMap<UiSurface, Map<string, number>>()
-
-function notifyInspectorScroll(surface: UiSurface, props: InspectorProps, top: number): void {
-  let positions = inspectorScrollPositions.get(surface)
-  if (positions === undefined) {
-    positions = new Map()
-    inspectorScrollPositions.set(surface, positions)
+function syncInspectorContent(
+  element: HTMLElement,
+  content: InspectorDomContent | undefined,
+): void {
+  if (content === undefined || typeof content === "string") {
+    syncText(element, content ?? "")
+    return
   }
-  const previous = positions.get(props.key)
-  positions.set(props.key, top)
-  if (previous === undefined || previous === top) return
-  props.onSectionsScrollChange?.(Object.freeze({left: 0, top}))
+  const nodes = Array.isArray(content) ? [...content] : [content as Node]
+  reconcileChildren(element, nodes)
 }
 
-function validateInspectorIdentity(categories: readonly InspectorCategory[], sections: readonly InspectorSection[]): void {
-  assertUniqueIds("category", categories.map(({id}) => id))
-  assertUniqueIds("section", sections.map(({id}) => id))
-  const sectionIds = new Set(sections.map(({id}) => id))
-  for (const category of categories) {
-    for (const id of category.sectionIds ?? []) {
-      if (!sectionIds.has(id)) throw new Error(`Inspector category references unknown section: ${category.id}/${id}`)
+function reconcileChildren(parent: Node, ordered: readonly Node[]): void {
+  const retained = new Set(ordered)
+  for (const child of parent.childNodes) {
+    if (!retained.has(child)) parent.removeChild(child)
+  }
+
+  let reference = parent.firstChild
+  for (const child of ordered) {
+    if (child === reference) {
+      reference = reference.nextSibling
+      continue
+    }
+    parent.insertBefore(child, reference)
+  }
+}
+
+function createElement(
+  document: Document,
+  localName: string,
+  className: string,
+): HTMLElement {
+  const element = document.createElement(localName)
+  element.className = className
+  return element
+}
+
+function syncAttribute(
+  element: HTMLElement,
+  name: string,
+  value: string | null,
+): void {
+  if (value === null) {
+    if (element.hasAttribute(name)) element.removeAttribute(name)
+    return
+  }
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value)
+}
+
+function syncBooleanAttribute(
+  element: HTMLElement,
+  name: string,
+  enabled: boolean,
+): void {
+  if (enabled) {
+    if (!element.hasAttribute(name)) element.setAttribute(name, "")
+  } else if (element.hasAttribute(name)) {
+    element.removeAttribute(name)
+  }
+}
+
+function syncTitle(element: HTMLElement, title: string): void {
+  if (element.title !== title) element.title = title
+}
+
+function syncText(element: HTMLElement, text: string): void {
+  const children = element.childNodes
+  if (text === "" && children.length === 0) return
+  if (
+    children.length === 1 &&
+    children[0]?.nodeType === 3 &&
+    children[0].nodeValue === text
+  ) return
+  element.textContent = text
+}
+
+function validateInspectorProps(props: InspectorDomProps): void {
+  assertUniqueIds("category", props.categories.map(({id}) => id))
+  assertUniqueIds("section", props.sections.map(({id}) => id))
+
+  if (props.categories.length === 0) {
+    if (props.selectedCategoryId !== "") {
+      throw new Error("Inspector selected category must be empty when categories are empty")
+    }
+  } else if (!props.categories.some(({id}) => id === props.selectedCategoryId)) {
+    throw new Error(`Inspector selected category does not exist: ${props.selectedCategoryId}`)
+  }
+
+  const sectionIds = new Set(props.sections.map(({id}) => id))
+  for (const category of props.categories) {
+    for (const sectionId of category.sectionIds ?? []) {
+      if (!sectionIds.has(sectionId)) {
+        throw new Error(`Inspector category references unknown section: ${category.id}/${sectionId}`)
+      }
+    }
+  }
+}
+
+function validateInspectorContents(sections: readonly InspectorDomSection[]): void {
+  const ownedNodes = new Set<Node>()
+  for (const section of sections) {
+    const content = section.content
+    if (content === undefined || typeof content === "string") continue
+    const nodes = Array.isArray(content) ? content : [content as Node]
+    for (const node of nodes) {
+      if (ownedNodes.has(node)) {
+        throw new Error(`Inspector content node has multiple owners: ${section.id}`)
+      }
+      ownedNodes.add(node)
     }
   }
 }
@@ -614,13 +607,4 @@ function assertUniqueIds(owner: string, ids: readonly string[]): void {
     if (seen.has(id)) throw new Error(`Inspector ${owner} id must be unique: ${id}`)
     seen.add(id)
   }
-}
-
-function freezeRect(rect: InspectorSectionRect): InspectorSectionRect {
-  return Object.freeze({...rect})
-}
-
-function clamp(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) return min
-  return Math.min(max, Math.max(min, value))
 }

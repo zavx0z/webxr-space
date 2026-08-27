@@ -1,85 +1,57 @@
-import {uiShapeMetrics} from "@ui/elements/shape"
-import {div} from "@ui/elements/div"
-import {type StyleProps} from "@ui/elements/style"
-import {type UiSurface} from "@layout/core/surface"
-import {flexColumn, flexRow} from "@layout/core/flex"
-import {Button} from "./button.ts"
-import {Checkbox} from "./checkbox.ts"
-import {
-  CollectionInput,
-  measureCollectionInputHeight,
-  type CollectionInputDensity,
-  type CollectionInputItem,
-  type CollectionInputMoveDirection,
-  type CollectionInputProps,
-} from "./collection-input.ts"
-import {
-  ColorInput,
-  type ColorInputDensity,
-  type ColorInputProps,
-  type ColorInputValue,
-} from "./color-input.ts"
-import {
-  NumberInput,
-  normalizeNumberInputValue,
-  type NumberInputDensity,
-  type NumberInputProps,
-} from "./number-input.ts"
-import {
-  EnumInput,
-  type EnumInputDensity,
-  type EnumInputOption,
-  type EnumInputProps,
-} from "./enum-input.ts"
-import {
-  IntegerInput,
-  type IntegerInputProps,
-} from "./integer-input.ts"
-import {
-  MatrixInput,
-  measureMatrixInputHeight,
-  type MatrixInputDensity,
-  type MatrixInputProps,
-} from "./matrix-input.ts"
-import {
-  PathInput,
-  type PathInputDensity,
-  type PathInputProps,
-} from "./path-input.ts"
-import {
-  ReferenceInput,
-  type ReferenceInputDensity,
-  type ReferenceInputProps,
-  type ReferenceInputValue,
-} from "./reference-input.ts"
-import {SliderControl} from "./slider-control.ts"
-import {Switcher} from "./switcher.ts"
-import {TextField} from "./text-field.ts"
-import {Typography} from "./typography.ts"
-import {
-  measureVectorInputHeight,
-  measureVectorInputWidth,
-  VectorInput,
-  type VectorInputDensity,
-  type VectorInputDimension,
-  type VectorInputProps,
-} from "./vector-input.ts"
+import type {
+  Document,
+  Event as DomEvent,
+  HTMLButtonElement,
+  HTMLDivElement,
+  HTMLInputElement,
+  HTMLLabelElement,
+  HTMLLIElement,
+  HTMLOptionElement,
+  HTMLSelectElement,
+  HTMLSpanElement,
+  HTMLElement,
+  Node,
+  Text,
+} from "@zavx0z/dom"
 
-export type FieldColor = ColorInputValue
-export type FieldOption = EnumInputOption
-export type FieldReference = ReferenceInputValue
-export type FieldCollectionItem = CollectionInputItem
+export const FIELD_KINDS = Object.freeze([
+  "text",
+  "number",
+  "integer",
+  "boolean",
+  "enum",
+  "color",
+  "vector",
+  "rotation",
+  "matrix",
+  "reference",
+  "collection",
+  "path",
+  "readonly",
+] as const)
+
+export type FieldKind = typeof FIELD_KINDS[number]
+export type FieldNumberKind = "float" | "integer"
+export type FieldVectorDimension = 2 | 3 | 4
+export type FieldMatrixSize = 2 | 3 | 4
+export type FieldCollectionMoveDirection = "up" | "down"
+
+export type FieldColor = Readonly<{r: number; g: number; b: number; a: number}>
+export type FieldReference = Readonly<{id: string; label: string; kind?: string}>
+export type FieldCollectionItem = Readonly<{
+  id: string
+  label: string
+  description?: string
+  disabled?: boolean
+}>
 
 export type FieldBase = Readonly<{
   id: string
-  /** Optional render-instance identity when the same field id appears in several owners. */
-  key?: string
   label: string
-  /** Keeps the semantic label while allowing a compact control-only row. */
-  compactLabel?: "inline" | "hidden"
   description?: string
   disabled?: boolean
   readOnly?: boolean
+  className?: string
 }>
 
 export type TextFieldDefinition = FieldBase & Readonly<{
@@ -92,15 +64,10 @@ export type TextFieldDefinition = FieldBase & Readonly<{
 export type NumberFieldDefinition = FieldBase & Readonly<{
   kind: "number"
   value: number
-  numberKind?: "float" | "integer"
   presentation?: "input" | "slider"
   min?: number
   max?: number
-  softMin?: number
-  softMax?: number
   step?: number
-  precision?: number
-  unit?: string
   onChange?(value: number): void
 }>
 
@@ -109,10 +76,7 @@ export type IntegerFieldDefinition = FieldBase & Readonly<{
   value: number
   min?: number
   max?: number
-  softMin?: number
-  softMax?: number
   step?: number
-  unit?: string
   onChange?(value: number): void
 }>
 
@@ -123,13 +87,13 @@ export type BooleanFieldDefinition = FieldBase & Readonly<{
   onChange?(value: boolean): void
 }>
 
+export type FieldOption = Readonly<{value: string; label: string; disabled?: boolean}>
+
 export type EnumFieldDefinition = FieldBase & Readonly<{
   kind: "enum"
   value: string
   options: readonly FieldOption[]
-  open?: boolean
   onChange?(value: string): void
-  onOpenChange?(open: boolean): void
 }>
 
 export type ColorFieldDefinition = FieldBase & Readonly<{
@@ -141,20 +105,16 @@ export type ColorFieldDefinition = FieldBase & Readonly<{
 export type VectorFieldDefinition = FieldBase & Readonly<{
   kind: "vector"
   value: readonly number[]
-  dimensions?: VectorInputDimension
+  dimensions?: FieldVectorDimension
   axes?: readonly string[]
-  numberKind?: "float" | "integer"
+  numberKind?: FieldNumberKind
   min?: number
   max?: number
   step?: number
-  precision?: number
-  unit?: string
   onChange?(value: readonly number[]): void
 }>
 
-export type RotationFieldDefinition = Omit<VectorFieldDefinition, "kind"> & Readonly<{
-  kind: "rotation"
-}>
+export type RotationFieldDefinition = Omit<VectorFieldDefinition, "kind"> & Readonly<{kind: "rotation"}>
 
 export type MatrixFieldDefinition = FieldBase & Readonly<{
   kind: "matrix"
@@ -171,14 +131,6 @@ export type ReferenceFieldDefinition = FieldBase & Readonly<{
   onClear?(): void
 }>
 
-export type PathFieldDefinition = FieldBase & Readonly<{
-  kind: "path"
-  value: string
-  placeholder?: string
-  onChange?(value: string): void
-  onBrowse?(): void
-}>
-
 export type CollectionFieldDefinition = FieldBase & Readonly<{
   kind: "collection"
   items: readonly FieldCollectionItem[]
@@ -188,7 +140,15 @@ export type CollectionFieldDefinition = FieldBase & Readonly<{
   onSelect?(id: string): void
   onAdd?(): void
   onRemove?(id: string): void
-  onMove?(id: string, direction: CollectionInputMoveDirection): void
+  onMove?(id: string, direction: FieldCollectionMoveDirection): void
+}>
+
+export type PathFieldDefinition = FieldBase & Readonly<{
+  kind: "path"
+  value: string
+  placeholder?: string
+  onChange?(value: string): void
+  onBrowse?(): void
 }>
 
 export type ReadonlyFieldDefinition = FieldBase & Readonly<{
@@ -207,582 +167,1332 @@ export type FieldDefinition =
   | RotationFieldDefinition
   | MatrixFieldDefinition
   | ReferenceFieldDefinition
-  | PathFieldDefinition
   | CollectionFieldDefinition
+  | PathFieldDefinition
   | ReadonlyFieldDefinition
 
-export type FieldRenderOptions = Readonly<{
-  density?: "regular" | "compact"
-  style?: StyleProps
-  labelStyle?: StyleProps
-  controlStyle?: StyleProps
+export type FieldControl = HTMLInputElement | HTMLSelectElement | HTMLDivElement
+
+export type FieldRefs = Readonly<{
+  root: HTMLDivElement
+  label: HTMLLabelElement
+  labelText: Text
+  control: FieldControl
+  primary: HTMLElement
+  controlId: string
+  labelId: string
+  inputs: ReadonlyMap<string, HTMLInputElement>
+  options: ReadonlyMap<string, HTMLOptionElement>
+  buttons: ReadonlyMap<string, HTMLButtonElement>
+  items: ReadonlyMap<string, HTMLElement>
 }>
 
-export type FieldLayoutMetrics = Readonly<{
-  height: number
-  labelRowHeight: number
-  labelControlGap: number
-  controlOffsetY: number
-  controlHeight: number
-  intrinsicWidth: number | null
+export type FieldController = Readonly<{
+  element: HTMLDivElement
+  refs: FieldRefs
+  definition: FieldDefinition
+  update(definition: FieldDefinition): void
+  dispose(): void
 }>
 
-export const FIELD_KINDS = Object.freeze([
-  "text",
-  "number",
-  "integer",
-  "boolean",
-  "enum",
-  "color",
-  "vector",
-  "rotation",
-  "matrix",
-  "reference",
-  "collection",
-  "path",
-  "readonly",
+export const fieldCss = String.raw`
+.ui-field {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  gap: 8px;
+  padding: 2px 4px;
+  color: #e0e0e0;
+}
+
+.ui-field__label {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 40%;
+  min-width: 0;
+  height: 28px;
+  color: #e0e0e0;
+  font-size: 12px;
+}
+
+.ui-field__control,
+.ui-field__input,
+.ui-field__button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #161616;
+  border-radius: 4px;
+  background: #242424;
+  color: #e0e0e0;
+  font-size: 12px;
+}
+
+.ui-field__control {
+  display: block;
+  flex-grow: 1;
+}
+
+.ui-field__group,
+.ui-field__matrix,
+.ui-field__collection {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+  gap: 4px;
+}
+
+.ui-field__row,
+.ui-field__cell,
+.ui-field__actions,
+.ui-field__reference,
+.ui-field__path {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+
+.ui-field__cell { flex-grow: 1; }
+.ui-field__cell-label {
+  display: inline;
+  width: 18px;
+  color: #b0b0b0;
+  font-size: 11px;
+  text-align: center;
+}
+.ui-field__input { display: block; flex-grow: 1; height: 28px; }
+.ui-field__control--boolean {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  flex-grow: 0;
+  padding: 0;
+  border-radius: 2px;
+  color: #7edcec;
+}
+.ui-field__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  background: #3d3d3d;
+}
+.ui-field__button--primary { flex-grow: 1; justify-content: flex-start; }
+.ui-field__list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 28px;
+  max-height: 144px;
+  flex-grow: 1;
+  gap: 2px;
+  padding: 3px;
+  overflow-y: auto;
+  border: 1px solid #161616;
+  border-radius: 4px;
+  background: #242424;
+}
+.ui-field__item { display: block; min-height: 24px; }
+.ui-field__item-button {
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+}
+.ui-field__item-button[aria-selected="true"] { background: #2d6880; }
+.ui-field__empty {
+  display: block;
+  min-height: 24px;
+  padding: 4px 8px;
+  color: #b0b0b0;
+  font-size: 11px;
+}
+.ui-field__control[readonly],
+.ui-field__input[readonly],
+.ui-field__control[aria-readonly="true"],
+.ui-field__group[aria-readonly="true"] { background: #303030; color: #b0b0b0; }
+.ui-field__control[disabled],
+.ui-field__input[disabled],
+.ui-field__button[disabled],
+.ui-field__item-button[aria-disabled="true"],
+.ui-field[aria-disabled="true"] .ui-field__label { opacity: 0.5; }
+`
+
+type OwnedListener = Readonly<{
+  element: HTMLElement
+  type: string
+  listener: (event: DomEvent) => void
+}>
+type KindOwner = Readonly<{
+  control: FieldControl
+  primary: HTMLElement
+  inputs: Map<string, HTMLInputElement>
+  options: Map<string, HTMLOptionElement>
+  buttons: Map<string, HTMLButtonElement>
+  items: Map<string, HTMLElement>
+  sync(definition: FieldDefinition): FieldDefinition
+  dispose(): void
+}>
+type OptionEntry = {element: HTMLOptionElement; text: Text}
+type NumericCellEntry = {
+  element: HTMLLabelElement
+  label: HTMLSpanElement
+  labelText: Text
+  input: HTMLInputElement
+  listener: OwnedListener
+}
+type MatrixRowEntry = {element: HTMLDivElement; cells: Map<string, NumericCellEntry>}
+type CollectionEntry = {
+  element: HTMLLIElement
+  button: HTMLButtonElement
+  text: Text
+  listener: OwnedListener
+}
+
+const colorChannels = Object.freeze([
+  Object.freeze({key: "r", label: "R"}),
+  Object.freeze({key: "g", label: "G"}),
+  Object.freeze({key: "b", label: "B"}),
+  Object.freeze({key: "a", label: "A"}),
 ] as const)
+const defaultAxes = Object.freeze(["X", "Y", "Z", "W"] as const)
+let nextGeneratedFieldId = 1
 
-/** Draws one controlled universal field and returns its occupied height. */
-export function Field(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  definition: FieldDefinition,
-  options: FieldRenderOptions = {},
-): number {
-  const height = measureFieldHeight(definition, options)
-  div(host, x, y, width, height, {
-    style: {background: null, borderColor: null, borderRadius: 4, padding: 0, ...options.style},
+export function createField(document: Document, initialDefinition: FieldDefinition): FieldController {
+  const initial = normalizeDefinition(initialDefinition)
+  const root = document.createElement("div")
+  const label = document.createElement("label")
+  const labelText = document.createTextNode("")
+  const generatedId = nextGeneratedFieldId
+  nextGeneratedFieldId += 1
+  const controlIdBase = `ui-field-control-${generatedId}`
+  const labelId = `ui-field-label-${generatedId}`
+  const fieldId = initial.id
+  const fieldKind = initial.kind
+  let currentDefinition: FieldDefinition = initial
+  let disposed = false
+
+  const owner = createKindOwner(document, initial, controlIdBase, labelId, () => currentDefinition)
+  label.className = "ui-field__label"
+  label.id = labelId
+  label.htmlFor = owner.primary.id
+  label.appendChild(labelText)
+  root.append(label, owner.control)
+
+  const update = (nextDefinition: FieldDefinition): void => {
+    if (disposed) throw new Error("Field controller is disposed")
+    const next = normalizeDefinition(nextDefinition)
+    if (next.id !== fieldId) throw new Error(`Field id cannot change: ${fieldId} -> ${next.id}`)
+    if (next.kind !== fieldKind) throw new Error(`Field kind cannot change: ${fieldKind} -> ${next.kind}`)
+    root.className = next.className === undefined ? "ui-field" : `ui-field ${next.className}`
+    root.setAttribute("data-field-id", next.id)
+    root.setAttribute("data-field-kind", next.kind)
+    root.setAttribute("aria-disabled", String(next.disabled === true))
+    if (labelText.data !== next.label) labelText.data = next.label
+    syncOptionalTitle(owner.control, next.description)
+    currentDefinition = owner.sync(next)
+  }
+
+  const refs: FieldRefs = Object.freeze({
+    root,
+    label,
+    labelText,
+    control: owner.control,
+    primary: owner.primary,
+    controlId: owner.primary.id,
+    labelId,
+    inputs: owner.inputs,
+    options: owner.options,
+    buttons: owner.buttons,
+    items: owner.items,
   })
-  if (options.density === "compact") return drawCompactField(host, x, y, width, definition, options)
-  if (definition.kind === "number" && definition.presentation === "slider" && definition.max !== undefined) {
-    drawNumberSlider(host, x, y + (height - uiShapeMetrics.controlHeight) / 2, width, definition, options)
-    return height
+  const controller: FieldController = Object.freeze({
+    element: root,
+    refs,
+    get definition() { return currentDefinition },
+    update,
+    dispose() {
+      if (disposed) return
+      disposed = true
+      owner.dispose()
+    },
+  })
+  update(initial)
+  return controller
+}
+
+function createKindOwner(
+  document: Document,
+  definition: FieldDefinition,
+  controlIdBase: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  if (
+    definition.kind === "text" || definition.kind === "number" ||
+    definition.kind === "integer" || definition.kind === "boolean" ||
+    definition.kind === "readonly"
+  ) return createInputOwner(document, definition.kind, controlIdBase, labelId, readDefinition)
+  if (definition.kind === "enum") return createEnumOwner(document, controlIdBase, labelId, readDefinition)
+  if (definition.kind === "color") return createColorOwner(document, controlIdBase, labelId, readDefinition)
+  if (definition.kind === "vector" || definition.kind === "rotation") {
+    return createVectorOwner(document, definition, controlIdBase, labelId, readDefinition)
+  }
+  if (definition.kind === "matrix") return createMatrixOwner(document, definition, controlIdBase, labelId, readDefinition)
+  if (definition.kind === "reference") return createReferenceOwner(document, controlIdBase, labelId, readDefinition)
+  if (definition.kind === "collection") return createCollectionOwner(document, controlIdBase, labelId, readDefinition)
+  return createPathOwner(document, controlIdBase, labelId, readDefinition)
+}
+
+function createInputOwner(
+  document: Document,
+  kind: "text" | "number" | "integer" | "boolean" | "readonly",
+  controlId: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const input = document.createElement("input")
+  input.id = controlId
+  input.setAttribute("aria-labelledby", labelId)
+  const inputs = new Map<string, HTMLInputElement>([["value", input]])
+  const listeners: OwnedListener[] = []
+  addOwnedListener(listeners, input, kind === "boolean" ? "change" : "input", () => {
+    const current = readDefinition()
+    if (current.disabled === true || current.readOnly === true || current.kind === "readonly") return
+    if (current.kind === "text") current.onChange?.(input.value)
+    else if (current.kind === "number") {
+      if (Number.isFinite(input.valueAsNumber)) current.onChange?.(input.valueAsNumber)
+    } else if (current.kind === "integer") {
+      if (Number.isSafeInteger(input.valueAsNumber)) current.onChange?.(input.valueAsNumber)
+    } else if (current.kind === "boolean") {
+      input.setAttribute("aria-checked", String(input.checked))
+      current.onChange?.(input.checked)
+    }
+  })
+
+  return baseOwner(input, input, inputs, listeners, (definition) => {
+    if (definition.kind !== kind) throw new Error(`Expected ${kind} Field definition`)
+    input.className = `ui-field__control ui-field__control--${kind}`
+    input.setAttribute("name", definition.id)
+    input.setAttribute("aria-readonly", String(definition.readOnly === true || kind === "readonly"))
+    if (definition.kind === "text") {
+      syncInputType(input, "text")
+      syncInputValue(input, definition.value)
+      syncOptionalAttribute(input, "placeholder", definition.placeholder)
+    } else if (definition.kind === "number") {
+      syncInputType(input, definition.presentation === "slider" ? "range" : "number")
+      syncNumericAttributes(input, definition, "any")
+      syncInputNumber(input, definition.value)
+    } else if (definition.kind === "integer") {
+      syncInputType(input, "number")
+      syncNumericAttributes(input, definition, "1")
+      syncInputNumber(input, definition.value)
+    } else if (definition.kind === "boolean") {
+      syncInputType(input, "checkbox")
+      if (input.checked !== definition.value) input.checked = definition.value
+      if (definition.presentation === "switch") input.setAttribute("role", "switch")
+      else input.removeAttribute("role")
+      input.setAttribute("aria-checked", String(definition.value))
+    } else {
+      syncInputType(input, "text")
+      syncInputValue(input, String(definition.value))
+      syncOptionalAttribute(input, "placeholder", undefined)
+    }
+    const readOnly = definition.readOnly === true || definition.kind === "readonly"
+    if (definition.kind === "boolean") {
+      input.readOnly = false
+      input.disabled = definition.disabled === true || readOnly
+    } else {
+      input.readOnly = readOnly
+      input.disabled = definition.disabled === true
+    }
+    if (definition.kind === "number" && definition.presentation === "slider") {
+      return Object.freeze({...definition, value: input.valueAsNumber})
+    }
+    return definition
+  })
+}
+
+function createEnumOwner(
+  document: Document,
+  controlId: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const select = document.createElement("select")
+  select.id = controlId
+  select.setAttribute("aria-labelledby", labelId)
+  const optionEntries = new Map<string, OptionEntry>()
+  const options = new Map<string, HTMLOptionElement>()
+  const listeners: OwnedListener[] = []
+  addOwnedListener(listeners, select, "change", () => {
+    const current = readDefinition()
+    if (
+      current.kind === "enum" && current.disabled !== true && current.readOnly !== true &&
+      current.options.some(({value}) => value === select.value)
+    ) {
+      current.onChange?.(select.value)
+    }
+  })
+  return baseOwner(select, select, new Map(), listeners, (definition) => {
+    if (definition.kind !== "enum") throw new Error("Expected enum Field definition")
+    select.className = "ui-field__control ui-field__control--enum"
+    select.setAttribute("name", definition.id)
+    select.setAttribute("aria-readonly", String(definition.readOnly === true))
+    const retained = new Set(definition.options.map(({value}) => value))
+    for (const [value, entry] of optionEntries) {
+      if (retained.has(value)) continue
+      entry.element.parentNode?.removeChild(entry.element)
+      optionEntries.delete(value)
+      options.delete(value)
+    }
+    const ordered: HTMLOptionElement[] = []
+    for (const option of definition.options) {
+      let entry = optionEntries.get(option.value)
+      if (entry === undefined) {
+        const element = document.createElement("option")
+        const text = document.createTextNode("")
+        element.setAttribute("data-option-value", option.value)
+        element.appendChild(text)
+        entry = {element, text}
+        optionEntries.set(option.value, entry)
+        options.set(option.value, element)
+      }
+      entry.element.value = option.value
+      entry.element.disabled = option.disabled === true
+      if (entry.text.data !== option.label) entry.text.data = option.label
+      ordered.push(entry.element)
+    }
+    reconcileChildren(select, ordered)
+    if (select.value !== definition.value) select.value = definition.value
+    select.disabled = definition.disabled === true || definition.readOnly === true
+    return definition
+  }, {options})
+}
+
+function createColorOwner(
+  document: Document,
+  controlIdBase: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const group = document.createElement("div")
+  group.className = "ui-field__group ui-field__row ui-field__color"
+  group.setAttribute("role", "group")
+  group.setAttribute("aria-labelledby", labelId)
+  const inputs = new Map<string, HTMLInputElement>()
+  const listeners: OwnedListener[] = []
+  let primary: HTMLInputElement | null = null
+  for (const channel of colorChannels) {
+    const entry = createNumericCell(document, controlIdBase, channel.key, channel.label, labelId, () => {
+      const current = readDefinition()
+      if (current.kind !== "color" || current.disabled === true || current.readOnly === true) return
+      const value = readColorInputs(inputs)
+      if (value !== null) current.onChange?.(value)
+    })
+    inputs.set(channel.key, entry.input)
+    listeners.push(entry.listener)
+    group.appendChild(entry.element)
+    primary ??= entry.input
+  }
+  if (primary === null) throw new Error("Color Field must own one input")
+  return baseOwner(group, primary, inputs, listeners, (definition) => {
+    if (definition.kind !== "color") throw new Error("Expected color Field definition")
+    group.setAttribute("aria-readonly", String(definition.readOnly === true))
+    for (const channel of colorChannels) {
+      const input = inputs.get(channel.key)!
+      syncInputType(input, "number")
+      input.min = "0"
+      input.max = "1"
+      input.step = "0.01"
+      syncInputNumber(input, definition.value[channel.key])
+      input.readOnly = definition.readOnly === true
+      input.disabled = definition.disabled === true
+    }
+    return definition
+  })
+}
+
+function createVectorOwner(
+  document: Document,
+  initial: VectorFieldDefinition | RotationFieldDefinition,
+  controlIdBase: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const kind = initial.kind
+  const group = document.createElement("div")
+  group.className = `ui-field__group ui-field__${kind}`
+  group.setAttribute("role", "group")
+  group.setAttribute("aria-labelledby", labelId)
+  const entries = new Map<string, NumericCellEntry>()
+  const inputs = new Map<string, HTMLInputElement>()
+  const listeners: OwnedListener[] = []
+  const first = createNumericCell(
+    document,
+    controlIdBase,
+    "0",
+    initial.axes?.[0] ?? defaultAxes[0],
+    labelId,
+    () => {
+      const current = readDefinition()
+      if (current.kind !== kind || current.disabled === true || current.readOnly === true) return
+      const values = readVectorInputs(inputs, current.numberKind === "integer")
+      if (values !== null) current.onChange?.(values)
+    },
+  )
+  entries.set("0", first)
+  inputs.set("0", first.input)
+  listeners.push(first.listener)
+  group.appendChild(first.element)
+  const primary = first.input
+
+  return baseOwner(group, primary, inputs, listeners, (definition) => {
+    if (definition.kind !== kind) throw new Error(`Expected ${kind} Field definition`)
+    group.setAttribute("aria-readonly", String(definition.readOnly === true))
+    const dimensions = definition.dimensions ?? definition.value.length as FieldVectorDimension
+    const retained = new Set(Array.from({length: dimensions}, (_, index) => String(index)))
+    for (const [key, entry] of entries) {
+      if (retained.has(key)) continue
+      detachNumericEntry(key, entry, inputs, listeners)
+      entry.element.parentNode?.removeChild(entry.element)
+      entries.delete(key)
+    }
+    const ordered: HTMLLabelElement[] = []
+    for (let index = 0; index < dimensions; index += 1) {
+      const key = String(index)
+      let entry = entries.get(key)
+      if (entry === undefined) {
+        entry = createNumericCell(
+          document,
+          controlIdBase,
+          key,
+          definition.axes?.[index] ?? defaultAxes[index] ?? key,
+          labelId,
+          () => {
+            const current = readDefinition()
+            if (current.kind !== kind || current.disabled === true || current.readOnly === true) return
+            const values = readVectorInputs(inputs, current.numberKind === "integer")
+            if (values !== null) current.onChange?.(values)
+          },
+        )
+        entries.set(key, entry)
+        inputs.set(key, entry.input)
+        listeners.push(entry.listener)
+      }
+      const axis = definition.axes?.[index] ?? defaultAxes[index] ?? key
+      if (entry.labelText.data !== axis) entry.labelText.data = axis
+      syncInputType(entry.input, "number")
+      syncNumericAttributes(entry.input, definition, definition.numberKind === "integer" ? "1" : "any")
+      syncInputNumber(entry.input, definition.value[index]!)
+      entry.input.readOnly = definition.readOnly === true
+      entry.input.disabled = definition.disabled === true
+      ordered.push(entry.element)
+    }
+    reconcileChildren(group, ordered)
+    return definition
+  })
+}
+
+function createMatrixOwner(
+  document: Document,
+  _initial: MatrixFieldDefinition,
+  controlIdBase: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const matrix = document.createElement("div")
+  matrix.className = "ui-field__matrix"
+  matrix.setAttribute("role", "group")
+  matrix.setAttribute("aria-labelledby", labelId)
+  const rows = new Map<string, MatrixRowEntry>()
+  const inputs = new Map<string, HTMLInputElement>()
+  const listeners: OwnedListener[] = []
+  const firstRow: MatrixRowEntry = {element: document.createElement("div"), cells: new Map()}
+  firstRow.element.className = "ui-field__row"
+  firstRow.element.setAttribute("data-matrix-row", "0")
+  const first = createNumericCell(document, controlIdBase, "0-0", "1:1", labelId, () => {
+    const current = readDefinition()
+    if (current.kind !== "matrix" || current.disabled === true || current.readOnly === true) return
+    const value = readMatrixInputs(inputs, current.value.length)
+    if (value !== null) current.onChange?.(value)
+  })
+  firstRow.cells.set("0:0", first)
+  firstRow.element.appendChild(first.element)
+  rows.set("0", firstRow)
+  inputs.set("0:0", first.input)
+  listeners.push(first.listener)
+  matrix.appendChild(firstRow.element)
+  const primary = first.input
+
+  return baseOwner(matrix, primary, inputs, listeners, (definition) => {
+    if (definition.kind !== "matrix") throw new Error("Expected matrix Field definition")
+    matrix.setAttribute("aria-readonly", String(definition.readOnly === true))
+    const size = definition.value.length
+    const retainedRows = new Set(Array.from({length: size}, (_, row) => String(row)))
+    for (const [rowKey, rowEntry] of rows) {
+      if (retainedRows.has(rowKey)) continue
+      disposeNumericEntries(rowEntry.cells, inputs, listeners)
+      rowEntry.element.parentNode?.removeChild(rowEntry.element)
+      rows.delete(rowKey)
+    }
+    const orderedRows: HTMLDivElement[] = []
+    for (let row = 0; row < size; row += 1) {
+      const rowKey = String(row)
+      let rowEntry = rows.get(rowKey)
+      if (rowEntry === undefined) {
+        rowEntry = {element: document.createElement("div"), cells: new Map()}
+        rowEntry.element.className = "ui-field__row"
+        rowEntry.element.setAttribute("data-matrix-row", rowKey)
+        rows.set(rowKey, rowEntry)
+      }
+      const orderedCells: HTMLLabelElement[] = []
+      for (let column = 0; column < size; column += 1) {
+        const key = `${row}:${column}`
+        let entry = rowEntry.cells.get(key)
+        if (entry === undefined) {
+          entry = createNumericCell(
+            document,
+            controlIdBase,
+            key.replace(":", "-"),
+            `${row + 1}:${column + 1}`,
+            labelId,
+            () => {
+              const current = readDefinition()
+              if (current.kind !== "matrix" || current.disabled === true || current.readOnly === true) return
+              const value = readMatrixInputs(inputs, current.value.length)
+              if (value !== null) current.onChange?.(value)
+            },
+          )
+          rowEntry.cells.set(key, entry)
+          inputs.set(key, entry.input)
+          listeners.push(entry.listener)
+        }
+        syncInputType(entry.input, "number")
+        entry.input.step = "any"
+        syncInputNumber(entry.input, definition.value[row]![column]!)
+        entry.input.readOnly = definition.readOnly === true
+        entry.input.disabled = definition.disabled === true
+        orderedCells.push(entry.element)
+      }
+      for (const [key, entry] of [...rowEntry.cells]) {
+        const column = Number(key.split(":")[1])
+        if (column < size) continue
+        detachNumericEntry(key, entry, inputs, listeners)
+        rowEntry.cells.delete(key)
+      }
+      reconcileChildren(rowEntry.element, orderedCells)
+      orderedRows.push(rowEntry.element)
+    }
+    reconcileChildren(matrix, orderedRows)
+    return definition
+  }, {
+    disposeExtra() {
+      for (const row of rows.values()) disposeNumericEntries(row.cells, inputs, listeners)
+      rows.clear()
+    },
+  })
+}
+
+function createReferenceOwner(
+  document: Document,
+  controlId: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const group = document.createElement("div")
+  group.className = "ui-field__reference"
+  group.setAttribute("aria-labelledby", labelId)
+  const activate = createButton(document, controlId, "activate", "")
+  const pick = createButton(document, `${controlId}-pick`, "pick", "…")
+  const clear = createButton(document, `${controlId}-clear`, "clear", "×")
+  activate.element.className += " ui-field__button--primary"
+  group.append(activate.element, pick.element, clear.element)
+  const buttons = new Map<string, HTMLButtonElement>([
+    ["activate", activate.element],
+    ["pick", pick.element],
+    ["clear", clear.element],
+  ])
+  const listeners: OwnedListener[] = []
+  addOwnedListener(listeners, activate.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "reference") current.onActivate?.()
+  })
+  addOwnedListener(listeners, pick.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "reference") current.onPick?.()
+  })
+  addOwnedListener(listeners, clear.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "reference") current.onClear?.()
+  })
+  return baseOwner(group, activate.element, new Map(), listeners, (definition) => {
+    if (definition.kind !== "reference") throw new Error("Expected reference Field definition")
+    const blocked = definition.disabled === true || definition.readOnly === true
+    const text = definition.value?.label ?? definition.placeholder ?? "Не выбрано"
+    if (activate.text.data !== text) activate.text.data = text
+    activate.element.disabled = definition.disabled === true || definition.onActivate === undefined
+    pick.element.disabled = blocked || definition.onPick === undefined
+    clear.element.disabled = blocked || definition.value === null || definition.onClear === undefined
+    syncOptionalTitle(activate.element, definition.value?.kind ?? definition.description)
+    pick.element.title = "Выбрать"
+    clear.element.title = "Очистить"
+    group.setAttribute("aria-readonly", String(definition.readOnly === true))
+    return definition
+  }, {buttons})
+}
+
+function createPathOwner(
+  document: Document,
+  controlId: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const group = document.createElement("div")
+  group.className = "ui-field__path"
+  group.setAttribute("aria-labelledby", labelId)
+  const input = document.createElement("input")
+  input.id = controlId
+  input.className = "ui-field__input"
+  input.setAttribute("aria-labelledby", labelId)
+  const browse = createButton(document, `${controlId}-browse`, "browse", "Обзор")
+  group.append(input, browse.element)
+  const inputs = new Map<string, HTMLInputElement>([["value", input]])
+  const buttons = new Map<string, HTMLButtonElement>([["browse", browse.element]])
+  const listeners: OwnedListener[] = []
+  addOwnedListener(listeners, input, "input", () => {
+    const current = readDefinition()
+    if (current.kind === "path" && current.disabled !== true && current.readOnly !== true) current.onChange?.(input.value)
+  })
+  addOwnedListener(listeners, browse.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "path") current.onBrowse?.()
+  })
+  return baseOwner(group, input, inputs, listeners, (definition) => {
+    if (definition.kind !== "path") throw new Error("Expected path Field definition")
+    syncInputType(input, "text")
+    syncInputValue(input, definition.value)
+    syncOptionalAttribute(input, "placeholder", definition.placeholder)
+    input.readOnly = definition.readOnly === true
+    input.disabled = definition.disabled === true
+    browse.element.disabled = definition.disabled === true || definition.readOnly === true || definition.onBrowse === undefined
+    group.setAttribute("aria-readonly", String(definition.readOnly === true))
+    return definition
+  }, {buttons})
+}
+
+function createCollectionOwner(
+  document: Document,
+  controlIdBase: string,
+  labelId: string,
+  readDefinition: () => FieldDefinition,
+): KindOwner {
+  const control = document.createElement("div")
+  control.className = "ui-field__collection ui-field__row"
+  const list = document.createElement("ul")
+  list.className = "ui-field__list"
+  list.setAttribute("role", "listbox")
+  list.setAttribute("aria-labelledby", labelId)
+  const actions = document.createElement("div")
+  actions.className = "ui-field__actions"
+  const add = createButton(document, controlIdBase, "add", "+")
+  const remove = createButton(document, `${controlIdBase}-remove`, "remove", "−")
+  const up = createButton(document, `${controlIdBase}-up`, "up", "↑")
+  const down = createButton(document, `${controlIdBase}-down`, "down", "↓")
+  actions.append(add.element, remove.element, up.element, down.element)
+  control.append(list, actions)
+  const empty = document.createElement("li")
+  const emptyText = document.createTextNode("")
+  empty.className = "ui-field__empty"
+  empty.appendChild(emptyText)
+  const entries = new Map<string, CollectionEntry>()
+  const items = new Map<string, HTMLElement>()
+  const buttons = new Map<string, HTMLButtonElement>([
+    ["add", add.element],
+    ["remove", remove.element],
+    ["up", up.element],
+    ["down", down.element],
+  ])
+  const listeners: OwnedListener[] = []
+  addOwnedListener(listeners, add.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "collection") current.onAdd?.()
+  })
+  addOwnedListener(listeners, remove.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "collection" && current.selectedId !== null) current.onRemove?.(current.selectedId)
+  })
+  addOwnedListener(listeners, up.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "collection" && current.selectedId !== null) current.onMove?.(current.selectedId, "up")
+  })
+  addOwnedListener(listeners, down.element, "click", () => {
+    const current = readDefinition()
+    if (current.kind === "collection" && current.selectedId !== null) current.onMove?.(current.selectedId, "down")
+  })
+
+  return baseOwner(control, add.element, new Map(), listeners, (definition) => {
+    if (definition.kind !== "collection") throw new Error("Expected collection Field definition")
+    const blocked = definition.disabled === true || definition.readOnly === true
+    const retained = new Set(definition.items.map(({id}) => id))
+    for (const [id, entry] of entries) {
+      if (retained.has(id)) continue
+      removeOwnedListener(entry.listener)
+      entry.element.parentNode?.removeChild(entry.element)
+      entries.delete(id)
+      items.delete(id)
+      buttons.delete(`item:${id}`)
+      removeListenerEntry(listeners, entry.listener)
+    }
+    const ordered: HTMLLIElement[] = []
+    for (const item of definition.items) {
+      let entry = entries.get(item.id)
+      if (entry === undefined) {
+        const element = document.createElement("li")
+        const button = document.createElement("button")
+        const text = document.createTextNode("")
+        element.className = "ui-field__item"
+        element.setAttribute("data-item-id", item.id)
+        button.className = "ui-field__button ui-field__item-button"
+        button.setAttribute("role", "option")
+        button.appendChild(text)
+        element.appendChild(button)
+        const itemId = item.id
+        const listener = ownedListener(button, "click", () => {
+          const current = readDefinition()
+          if (current.kind === "collection") current.onSelect?.(itemId)
+        })
+        button.addEventListener(listener.type, listener.listener)
+        entry = {element, button, text, listener}
+        entries.set(item.id, entry)
+        items.set(item.id, element)
+        buttons.set(`item:${item.id}`, button)
+        listeners.push(listener)
+      }
+      if (entry.text.data !== item.label) entry.text.data = item.label
+      entry.button.setAttribute("aria-selected", String(definition.selectedId === item.id))
+      entry.button.setAttribute("aria-disabled", String(item.disabled === true))
+      entry.button.disabled = blocked || item.disabled === true || definition.onSelect === undefined
+      syncOptionalTitle(entry.button, item.description)
+      ordered.push(entry.element)
+    }
+    if (ordered.length === 0) {
+      const text = definition.emptyLabel ?? "Пусто"
+      if (emptyText.data !== text) emptyText.data = text
+      reconcileChildren(list, [empty])
+    } else reconcileChildren(list, ordered)
+
+    const selectedIndex = definition.selectedId === null
+      ? -1
+      : definition.items.findIndex(({id}) => id === definition.selectedId)
+    const selected = selectedIndex < 0 ? undefined : definition.items[selectedIndex]
+    add.element.disabled = blocked || definition.onAdd === undefined
+    remove.element.disabled = blocked || selected === undefined || selected.disabled === true || definition.onRemove === undefined
+    up.element.disabled = blocked || selected === undefined || selected.disabled === true || selectedIndex <= 0 || definition.onMove === undefined
+    down.element.disabled = blocked || selected === undefined || selected.disabled === true || selectedIndex >= definition.items.length - 1 || definition.onMove === undefined
+    list.setAttribute("aria-readonly", String(definition.readOnly === true))
+    list.setAttribute("data-visible-rows", String(definition.visibleRows ?? 3))
+    return definition
+  }, {
+    buttons,
+    items,
+    disposeExtra() { entries.clear() },
+  })
+}
+
+function baseOwner(
+  control: FieldControl,
+  primary: HTMLElement,
+  inputs: Map<string, HTMLInputElement>,
+  listeners: OwnedListener[],
+  sync: (definition: FieldDefinition) => FieldDefinition,
+  extra: Readonly<{
+    options?: Map<string, HTMLOptionElement>
+    buttons?: Map<string, HTMLButtonElement>
+    items?: Map<string, HTMLElement>
+    disposeExtra?(): void
+  }> = {},
+): KindOwner {
+  return Object.freeze({
+    control,
+    primary,
+    inputs,
+    options: extra.options ?? new Map(),
+    buttons: extra.buttons ?? new Map(),
+    items: extra.items ?? new Map(),
+    sync,
+    dispose() {
+      for (const listener of [...listeners]) removeOwnedListener(listener)
+      listeners.length = 0
+      extra.disposeExtra?.()
+    },
+  })
+}
+
+function createNumericCell(
+  document: Document,
+  controlIdBase: string,
+  key: string,
+  labelValue: string,
+  fieldLabelId: string,
+  onInput: () => void,
+): NumericCellEntry {
+  const element = document.createElement("label")
+  const label = document.createElement("span")
+  const labelText = document.createTextNode(labelValue)
+  const input = document.createElement("input")
+  const id = `${controlIdBase}-${key}`
+  const cellLabelId = `${id}-label`
+  element.className = "ui-field__cell"
+  element.htmlFor = id
+  element.setAttribute("data-field-key", key)
+  label.className = "ui-field__cell-label"
+  label.id = cellLabelId
+  label.appendChild(labelText)
+  input.id = id
+  input.className = "ui-field__input"
+  input.setAttribute("aria-labelledby", `${fieldLabelId} ${cellLabelId}`)
+  element.append(label, input)
+  const listener = ownedListener(input, "input", onInput)
+  input.addEventListener(listener.type, listener.listener)
+  return {element, label, labelText, input, listener}
+}
+
+function createButton(
+  document: Document,
+  id: string,
+  key: string,
+  label: string,
+): Readonly<{element: HTMLButtonElement; text: Text}> {
+  const element = document.createElement("button")
+  const text = document.createTextNode(label)
+  element.id = id
+  element.className = "ui-field__button"
+  element.setAttribute("data-action", key)
+  element.appendChild(text)
+  return {element, text}
+}
+
+function normalizeDefinition(definition: FieldDefinition): FieldDefinition {
+  if (typeof definition !== "object" || definition === null) {
+    throw new TypeError("Field definition must be an object")
+  }
+  const base = normalizeBase(definition)
+  if (definition.kind === "text") {
+    assertString(definition.value, "Text Field value")
+    if (definition.placeholder !== undefined) assertString(definition.placeholder, "Text Field placeholder")
+    assertOptionalFunction(definition.onChange, "Text Field onChange")
+    return Object.freeze({...base, kind: "text", value: definition.value, ...optional("placeholder", definition.placeholder), ...optional("onChange", definition.onChange)})
+  }
+  if (definition.kind === "number") {
+    const range = normalizeNumericRange(definition, "Number Field", false)
+    assertFinite(definition.value, "Number Field value")
+    if (definition.presentation !== undefined && definition.presentation !== "input" && definition.presentation !== "slider") {
+      throw new TypeError("Number Field presentation must be input or slider")
+    }
+    assertOptionalFunction(definition.onChange, "Number Field onChange")
+    return Object.freeze({...base, kind: "number", value: definition.value, presentation: definition.presentation ?? "input", ...range, ...optional("onChange", definition.onChange)})
+  }
+  if (definition.kind === "integer") {
+    const range = normalizeNumericRange(definition, "Integer Field", true)
+    assertInteger(definition.value, "Integer Field value")
+    assertOptionalFunction(definition.onChange, "Integer Field onChange")
+    return Object.freeze({...base, kind: "integer", value: definition.value, ...range, ...optional("onChange", definition.onChange)})
   }
   if (definition.kind === "boolean") {
-    drawBooleanField(host, x, y, width, height, definition, options)
-    return height
+    assertBoolean(definition.value, "Boolean Field value")
+    if (definition.presentation !== undefined && definition.presentation !== "checkbox" && definition.presentation !== "switch") {
+      throw new TypeError("Boolean Field presentation must be checkbox or switch")
+    }
+    assertOptionalFunction(definition.onChange, "Boolean Field onChange")
+    return Object.freeze({...base, kind: "boolean", value: definition.value, presentation: definition.presentation ?? "checkbox", ...optional("onChange", definition.onChange)})
   }
-  if (isScalarField(definition)) {
-    drawScalarFieldRow(host, x, y, width, height, definition, "regular", options)
-    return height
+  if (definition.kind === "enum") return normalizeEnumDefinition(base, definition)
+  if (definition.kind === "color") {
+    assertOptionalFunction(definition.onChange, "Color Field onChange")
+    return Object.freeze({...base, kind: "color", value: normalizeColor(definition.value), ...optional("onChange", definition.onChange)})
   }
-  drawGroupedField(host, x, y, width, height, definition, "regular", options)
-  return height
+  if (definition.kind === "vector" || definition.kind === "rotation") {
+    return normalizeVectorDefinition(base, definition)
+  }
+  if (definition.kind === "matrix") {
+    assertOptionalFunction(definition.onChange, "Matrix Field onChange")
+    return Object.freeze({...base, kind: "matrix", value: normalizeMatrix(definition.value), ...optional("onChange", definition.onChange)})
+  }
+  if (definition.kind === "reference") return normalizeReferenceDefinition(base, definition)
+  if (definition.kind === "collection") return normalizeCollectionDefinition(base, definition)
+  if (definition.kind === "path") {
+    assertString(definition.value, "Path Field value")
+    if (definition.placeholder !== undefined) assertString(definition.placeholder, "Path Field placeholder")
+    assertOptionalFunction(definition.onChange, "Path Field onChange")
+    assertOptionalFunction(definition.onBrowse, "Path Field onBrowse")
+    return Object.freeze({...base, kind: "path", value: definition.value, ...optional("placeholder", definition.placeholder), ...optional("onChange", definition.onChange), ...optional("onBrowse", definition.onBrowse)})
+  }
+  if (definition.kind === "readonly") {
+    if (typeof definition.value !== "string") assertFinite(definition.value, "Readonly Field value")
+    return Object.freeze({...base, kind: "readonly", value: definition.value, readOnly: true})
+  }
+  throw new Error(`Unknown Field kind: ${String((definition as {kind?: unknown}).kind)}`)
 }
 
-export function measureFieldHeight(definition: FieldDefinition, options: FieldRenderOptions = {}): number {
-  return measureFieldLayout(definition, options).height
+function normalizeEnumDefinition(base: FieldBase, definition: EnumFieldDefinition): EnumFieldDefinition {
+  assertString(definition.value, "Enum Field value")
+  if (!Array.isArray(definition.options) || definition.options.length === 0) {
+    throw new TypeError("Enum Field options must be a non-empty array")
+  }
+  const values = new Set<string>()
+  const options = definition.options.map((option) => {
+    if (typeof option !== "object" || option === null) throw new TypeError("Enum Field option must be an object")
+    assertNonEmpty(option.value, "Enum Field option value")
+    if (values.has(option.value)) throw new Error(`Enum Field option value must be unique: ${option.value}`)
+    values.add(option.value)
+    assertString(option.label, `Enum Field option ${option.value} label`)
+    if (option.disabled !== undefined) assertBoolean(option.disabled, `Enum Field option ${option.value} disabled`)
+    return Object.freeze({value: option.value, label: option.label, disabled: option.disabled === true})
+  })
+  if (!values.has(definition.value)) throw new Error(`Enum Field selected value does not exist: ${definition.value}`)
+  assertOptionalFunction(definition.onChange, "Enum Field onChange")
+  return Object.freeze({...base, kind: "enum", value: definition.value, options: Object.freeze(options), ...optional("onChange", definition.onChange)})
 }
 
-/** Measures the shared label/control composition consumed by Field and Node layout. */
-export function measureFieldLayout(definition: FieldDefinition, options: FieldRenderOptions = {}): FieldLayoutMetrics {
-  if (!isGroupedField(definition)) {
-    const height = options.density === "compact" ? uiShapeMetrics.controlHeight : uiShapeMetrics.rowHeight
-    return Object.freeze({
-      height,
-      labelRowHeight: 0,
-      labelControlGap: 0,
-      controlOffsetY: 0,
-      controlHeight: height,
-      intrinsicWidth: null,
-    })
+function normalizeVectorDefinition(
+  base: FieldBase,
+  definition: VectorFieldDefinition | RotationFieldDefinition,
+): VectorFieldDefinition | RotationFieldDefinition {
+  if (!Array.isArray(definition.value)) throw new TypeError(`${capitalize(definition.kind)} Field value must be an array`)
+  const dimensions = definition.dimensions ?? definition.value.length
+  if (dimensions !== 2 && dimensions !== 3 && dimensions !== 4) {
+    throw new RangeError(`${capitalize(definition.kind)} Field dimensions must be 2, 3 or 4`)
   }
-  const density = options.density ?? "regular"
-  const controlHeight = groupedFieldControlHeight(definition, density)
-  const labelRowHeight = density === "compact" && definition.compactLabel === "hidden"
-    ? 0
-    : uiShapeMetrics.controlHeight
-  const labelControlGap = labelRowHeight === 0 ? 0 : uiShapeMetrics.tightGap
-  const controlOffsetY = labelRowHeight + labelControlGap
+  if (definition.value.length !== dimensions) {
+    throw new RangeError(`${capitalize(definition.kind)} Field value length must equal dimensions`)
+  }
+  if (definition.axes !== undefined) {
+    if (!Array.isArray(definition.axes) || definition.axes.length !== dimensions) {
+      throw new RangeError(`${capitalize(definition.kind)} Field axes length must equal dimensions`)
+    }
+    for (const axis of definition.axes) assertNonEmpty(axis, `${capitalize(definition.kind)} Field axis`)
+  }
+  if (definition.numberKind !== undefined && definition.numberKind !== "float" && definition.numberKind !== "integer") {
+    throw new TypeError(`${capitalize(definition.kind)} Field numberKind must be float or integer`)
+  }
+  const integer = definition.numberKind === "integer"
+  const values = definition.value.map((value, index) => {
+    if (integer) assertInteger(value, `${capitalize(definition.kind)} Field value ${index}`)
+    else assertFinite(value, `${capitalize(definition.kind)} Field value ${index}`)
+    return value
+  })
+  const range = normalizeNumericRange(definition, `${capitalize(definition.kind)} Field`, integer)
+  assertOptionalFunction(definition.onChange, `${capitalize(definition.kind)} Field onChange`)
   return Object.freeze({
-    height: controlOffsetY + controlHeight,
-    labelRowHeight,
-    labelControlGap,
-    controlOffsetY,
-    controlHeight,
-    intrinsicWidth: definition.kind === "vector" || definition.kind === "rotation"
-      ? measureVectorInputWidth()
-      : null,
+    ...base,
+    kind: definition.kind,
+    value: Object.freeze(values),
+    dimensions,
+    axes: Object.freeze([...(definition.axes ?? defaultAxes.slice(0, dimensions))]),
+    numberKind: definition.numberKind ?? "float",
+    ...range,
+    ...optional("onChange", definition.onChange),
   })
 }
 
-type ScalarFieldDefinition = Exclude<
-  FieldDefinition,
-  BooleanFieldDefinition | VectorFieldDefinition | RotationFieldDefinition | MatrixFieldDefinition | CollectionFieldDefinition
->
-
-function isScalarField(definition: FieldDefinition): definition is ScalarFieldDefinition {
-  return definition.kind === "text"
-    || definition.kind === "number"
-    || definition.kind === "integer"
-    || definition.kind === "enum"
-    || definition.kind === "color"
-    || definition.kind === "reference"
-    || definition.kind === "path"
-    || definition.kind === "readonly"
+function normalizeMatrix(value: readonly (readonly number[])[]): readonly (readonly number[])[] {
+  if (!Array.isArray(value)) throw new TypeError("Matrix Field value must be an array")
+  const size = value.length
+  if (size !== 2 && size !== 3 && size !== 4) throw new RangeError("Matrix Field size must be 2, 3 or 4")
+  return Object.freeze(value.map((row, rowIndex) => {
+    if (!Array.isArray(row) || row.length !== size) throw new RangeError("Matrix Field value must be square")
+    return Object.freeze(row.map((entry, columnIndex) => {
+      assertFinite(entry, `Matrix Field value ${rowIndex}:${columnIndex}`)
+      return entry
+    }))
+  }))
 }
 
-function compactFieldHeight(definition: FieldDefinition): number {
-  return measureFieldLayout(definition, {density: "compact"}).height
-}
-
-function drawCompactField(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  field: FieldDefinition,
-  options: FieldRenderOptions,
-): number {
-  const height = compactFieldHeight(field)
-  if (isGroupedField(field)) {
-    drawGroupedField(host, x, y, width, height, field, "compact", options)
-    return height
+function normalizeReferenceDefinition(base: FieldBase, definition: ReferenceFieldDefinition): ReferenceFieldDefinition {
+  let value: FieldReference | null = null
+  if (definition.value !== null) {
+    if (typeof definition.value !== "object") throw new TypeError("Reference Field value must be an object or null")
+    assertNonEmpty(definition.value.id, "Reference Field value id")
+    assertString(definition.value.label, "Reference Field value label")
+    if (definition.value.kind !== undefined) assertString(definition.value.kind, "Reference Field value kind")
+    value = Object.freeze({id: definition.value.id, label: definition.value.label, ...optional("kind", definition.value.kind)})
   }
-  if (field.kind === "number" && field.presentation === "slider" && field.max !== undefined) {
-    drawNumberSlider(host, x, y, width, field, options)
-    return height
-  }
-  if (field.kind === "boolean") {
-    drawBooleanField(host, x, y, width, height, field, options)
-    return height
-  }
-  drawScalarFieldRow(host, x, y, width, height, field, "compact", options)
-  return height
-}
-
-function drawScalarFieldRow(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  field: Exclude<FieldDefinition, BooleanFieldDefinition | VectorFieldDefinition | RotationFieldDefinition | MatrixFieldDefinition | CollectionFieldDefinition>,
-  density: "regular" | "compact",
-  styles: FieldRenderOptions,
-): void {
-  if (field.kind === "integer") {
-    drawScalarControl(host, x, y, width, height, field, density, styles)
-    return
-  }
-  if (density === "compact" && field.compactLabel === "hidden") {
-    drawScalarControl(host, x, y, width, height, field, density, styles)
-    return
-  }
-  const labelStyle = styles.labelStyle
-  flexRow({
-    x,
-    y,
-    w: width,
-    h: height,
-    gap: uiShapeMetrics.tightGap * 2,
-    alignItems: "stretch",
-    items: [
-      {width: "2fr", height, draw: (slotX, slotY, slotW, slotH) => Typography(host, slotX, slotY, slotW, slotH, {
-        children: field.label,
-        fontPx: uiShapeMetrics.compactFontPx,
-        color: isFieldDisabled(field) ? "muted" : "text",
-        ...(labelStyle === undefined ? {} : {style: labelStyle}),
-      })},
-      {width: "3fr", height, draw: (slotX, slotY, slotW, slotH) => drawScalarControl(host, slotX, slotY, slotW, slotH, field, density, styles)},
-    ],
-  })
-}
-
-function drawScalarControl(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  field: Exclude<FieldDefinition, BooleanFieldDefinition | VectorFieldDefinition | RotationFieldDefinition | MatrixFieldDefinition | CollectionFieldDefinition>,
-  density: "regular" | "compact",
-  styles: FieldRenderOptions,
-): void {
-  const disabled = isFieldDisabled(field)
-  const controlStyle = styles.controlStyle
-  if (field.kind === "number") {
-    const props = numberInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    NumberInput(host, x, y, width, height, props)
-    return
-  }
-  if (field.kind === "integer") {
-    const props = integerInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    IntegerInput(host, x, y, width, height, props)
-    return
-  }
-  if (field.kind === "enum") {
-    const props = enumInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    EnumInput(host, x, y, width, height, props)
-    return
-  }
-  if (field.kind === "color") {
-    const props = colorInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    ColorInput(host, x, y, width, height, props)
-    return
-  }
-  if (field.kind === "reference") {
-    const props = referenceInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    ReferenceInput(host, x, y, width, height, props)
-    return
-  }
-  if (field.kind === "path") {
-    const props = pathInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    PathInput(host, x, y, width, height, props)
-    return
-  }
-  const value = field.kind === "readonly" ? String(field.value) : field.value
-  const props: Parameters<typeof TextField>[5] = {
-    key: fieldKey(field),
+  if (definition.placeholder !== undefined) assertString(definition.placeholder, "Reference Field placeholder")
+  assertOptionalFunction(definition.onActivate, "Reference Field onActivate")
+  assertOptionalFunction(definition.onPick, "Reference Field onPick")
+  assertOptionalFunction(definition.onClear, "Reference Field onClear")
+  return Object.freeze({
+    ...base,
+    kind: "reference",
     value,
-    disabled: disabled || field.kind === "readonly",
-    submitOnEnter: true,
+    ...optional("placeholder", definition.placeholder),
+    ...optional("onActivate", definition.onActivate),
+    ...optional("onPick", definition.onPick),
+    ...optional("onClear", definition.onClear),
+  })
+}
+
+function normalizeCollectionDefinition(base: FieldBase, definition: CollectionFieldDefinition): CollectionFieldDefinition {
+  if (!Array.isArray(definition.items)) throw new TypeError("Collection Field items must be an array")
+  const ids = new Set<string>()
+  const items = definition.items.map((item) => {
+    if (typeof item !== "object" || item === null) throw new TypeError("Collection Field item must be an object")
+    assertNonEmpty(item.id, "Collection Field item id")
+    if (ids.has(item.id)) throw new Error(`Collection Field item id must be unique: ${item.id}`)
+    ids.add(item.id)
+    assertString(item.label, `Collection Field item ${item.id} label`)
+    if (item.description !== undefined) assertString(item.description, `Collection Field item ${item.id} description`)
+    if (item.disabled !== undefined) assertBoolean(item.disabled, `Collection Field item ${item.id} disabled`)
+    return Object.freeze({
+      id: item.id,
+      label: item.label,
+      ...optional("description", item.description),
+      disabled: item.disabled === true,
+    })
+  })
+  if (definition.selectedId !== null) {
+    assertNonEmpty(definition.selectedId, "Collection Field selectedId")
+    if (!ids.has(definition.selectedId)) throw new Error(`Collection Field selected item does not exist: ${definition.selectedId}`)
   }
-  if (controlStyle !== undefined) props.style = controlStyle
-  if (!disabled && field.kind === "text") props.onChange = (text) => field.onChange?.(text)
-  TextField(host, x, y, width, height, props)
-}
-
-type GroupedFieldDefinition =
-  | VectorFieldDefinition
-  | RotationFieldDefinition
-  | MatrixFieldDefinition
-  | CollectionFieldDefinition
-
-function isGroupedField(definition: FieldDefinition): definition is GroupedFieldDefinition {
-  return definition.kind === "vector"
-    || definition.kind === "rotation"
-    || definition.kind === "matrix"
-    || definition.kind === "collection"
-}
-
-function groupedFieldControlHeight(
-  field: GroupedFieldDefinition,
-  density: "regular" | "compact",
-): number {
-  if (field.kind === "vector" || field.kind === "rotation") {
-    return measureVectorInputHeight(vectorInputProps(field, density))
+  if (definition.visibleRows !== undefined && (!Number.isSafeInteger(definition.visibleRows) || definition.visibleRows < 1 || definition.visibleRows > 8)) {
+    throw new RangeError("Collection Field visibleRows must be an integer from 1 to 8")
   }
-  if (field.kind === "matrix") return measureMatrixInputHeight(matrixInputProps(field, density))
-  return measureCollectionInputHeight(collectionInputProps(field, density))
+  if (definition.emptyLabel !== undefined) assertString(definition.emptyLabel, "Collection Field emptyLabel")
+  assertOptionalFunction(definition.onSelect, "Collection Field onSelect")
+  assertOptionalFunction(definition.onAdd, "Collection Field onAdd")
+  assertOptionalFunction(definition.onRemove, "Collection Field onRemove")
+  assertOptionalFunction(definition.onMove, "Collection Field onMove")
+  return Object.freeze({
+    ...base,
+    kind: "collection",
+    items: Object.freeze(items),
+    selectedId: definition.selectedId,
+    visibleRows: definition.visibleRows ?? 3,
+    ...optional("emptyLabel", definition.emptyLabel),
+    ...optional("onSelect", definition.onSelect),
+    ...optional("onAdd", definition.onAdd),
+    ...optional("onRemove", definition.onRemove),
+    ...optional("onMove", definition.onMove),
+  })
 }
 
-function drawGroupedField(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  field: GroupedFieldDefinition,
-  density: "regular" | "compact",
-  styles: FieldRenderOptions,
+function normalizeBase(definition: FieldBase): FieldBase {
+  assertNonEmpty(definition.id, "Field id")
+  assertNonEmpty(definition.label, "Field label")
+  if (definition.description !== undefined) assertString(definition.description, "Field description")
+  if (definition.disabled !== undefined) assertBoolean(definition.disabled, "Field disabled")
+  if (definition.readOnly !== undefined) assertBoolean(definition.readOnly, "Field readOnly")
+  if (definition.className !== undefined) assertString(definition.className, "Field className")
+  const className = definition.className?.trim().replace(/\s+/g, " ")
+  return Object.freeze({
+    id: definition.id,
+    label: definition.label,
+    ...optional("description", definition.description),
+    disabled: definition.disabled === true,
+    readOnly: definition.readOnly === true,
+    ...(className === undefined || className === "" ? {} : {className}),
+  })
+}
+
+function normalizeNumericRange(
+  definition: Readonly<{min?: number; max?: number; step?: number}>,
+  owner: string,
+  integer: boolean,
+): Readonly<{min?: number; max?: number; step?: number}> {
+  for (const [name, value] of [["min", definition.min], ["max", definition.max], ["step", definition.step]] as const) {
+    if (value === undefined) continue
+    if (integer) assertInteger(value, `${owner} ${name}`)
+    else assertFinite(value, `${owner} ${name}`)
+  }
+  if (definition.step !== undefined && definition.step <= 0) throw new RangeError(`${owner} step must be greater than zero`)
+  if (definition.min !== undefined && definition.max !== undefined && definition.max < definition.min) {
+    throw new RangeError(`${owner} max must be greater than or equal to min`)
+  }
+  return Object.freeze({...optional("min", definition.min), ...optional("max", definition.max), ...optional("step", definition.step)})
+}
+
+function normalizeColor(value: FieldColor): FieldColor {
+  if (typeof value !== "object" || value === null) throw new TypeError("Color Field value must be an object")
+  for (const channel of colorChannels) {
+    assertFinite(value[channel.key], `Color Field ${channel.key}`)
+    if (value[channel.key] < 0 || value[channel.key] > 1) {
+      throw new RangeError(`Color Field ${channel.key} must be from 0 to 1`)
+    }
+  }
+  return Object.freeze({r: value.r, g: value.g, b: value.b, a: value.a})
+}
+
+function readColorInputs(inputs: ReadonlyMap<string, HTMLInputElement>): FieldColor | null {
+  const value = {
+    r: inputs.get("r")!.valueAsNumber,
+    g: inputs.get("g")!.valueAsNumber,
+    b: inputs.get("b")!.valueAsNumber,
+    a: inputs.get("a")!.valueAsNumber,
+  }
+  if (Object.values(value).some((channel) => !Number.isFinite(channel) || channel < 0 || channel > 1)) return null
+  return Object.freeze(value)
+}
+
+function readVectorInputs(inputs: ReadonlyMap<string, HTMLInputElement>, integer: boolean): readonly number[] | null {
+  const value = [...inputs.entries()]
+    .sort(([left], [right]) => Number(left) - Number(right))
+    .map(([, input]) => input.valueAsNumber)
+  if (value.some((entry) => integer ? !Number.isSafeInteger(entry) : !Number.isFinite(entry))) return null
+  return Object.freeze(value)
+}
+
+function readMatrixInputs(inputs: ReadonlyMap<string, HTMLInputElement>, size: number): readonly (readonly number[])[] | null {
+  const value = Array.from({length: size}, (_, row) =>
+    Array.from({length: size}, (_, column) => inputs.get(`${row}:${column}`)!.valueAsNumber))
+  if (value.some((row) => row.some((entry) => !Number.isFinite(entry)))) return null
+  return Object.freeze(value.map((row) => Object.freeze(row)))
+}
+
+function detachNumericEntry(
+  key: string,
+  entry: NumericCellEntry,
+  inputs: Map<string, HTMLInputElement>,
+  listeners: OwnedListener[],
 ): void {
-  const layout = measureFieldLayout(field, {density})
-  const controlHeight = layout.controlHeight
-  const intrinsicWidth = layout.intrinsicWidth ?? width
-  const fieldWidth = Math.min(Math.max(0, width), intrinsicWidth)
-  const fieldX = x + (width - fieldWidth) / 2
-  if (density === "compact" && field.compactLabel === "hidden") {
-    drawGroupedFieldControl(host, fieldX, y, fieldWidth, controlHeight, field, density, styles)
+  removeOwnedListener(entry.listener)
+  inputs.delete(key)
+  removeListenerEntry(listeners, entry.listener)
+}
+
+function disposeNumericEntries(
+  entries: Map<string, NumericCellEntry>,
+  inputs: Map<string, HTMLInputElement>,
+  listeners: OwnedListener[],
+): void {
+  for (const [key, entry] of entries) detachNumericEntry(key, entry, inputs, listeners)
+  entries.clear()
+}
+
+function syncNumericAttributes(
+  input: HTMLInputElement,
+  definition: Readonly<{min?: number; max?: number; step?: number}>,
+  defaultStep: string,
+): void {
+  syncOptionalAttribute(input, "min", definition.min === undefined ? undefined : String(definition.min))
+  syncOptionalAttribute(input, "max", definition.max === undefined ? undefined : String(definition.max))
+  input.step = definition.step === undefined ? defaultStep : String(definition.step)
+}
+
+function syncInputType(input: HTMLInputElement, type: "text" | "number" | "range" | "checkbox"): void {
+  if (input.type !== type) input.type = type
+}
+
+function syncInputValue(input: HTMLInputElement, value: string): void {
+  if (input.value !== value) input.value = value
+}
+
+function syncInputNumber(input: HTMLInputElement, value: number): void {
+  if (input.valueAsNumber !== value) input.valueAsNumber = value
+}
+
+function syncOptionalTitle(element: HTMLElement, value: string | undefined): void {
+  if (value === undefined) {
+    if (element.hasAttribute("title")) element.removeAttribute("title")
     return
   }
-  flexColumn({
-    x: fieldX,
-    y,
-    w: fieldWidth,
-    h: height,
-    gap: uiShapeMetrics.tightGap,
-    items: [
-      {height: uiShapeMetrics.controlHeight, draw: (slotX, slotY, slotW, slotH) => {
-        drawFieldLabel(host, slotX, slotY, slotW, slotH, field, styles)
-      }},
-      {height: controlHeight, draw: (slotX, slotY, slotW, slotH) => {
-        drawGroupedFieldControl(host, slotX, slotY, slotW, slotH, field, density, styles)
-      }},
-    ],
-  })
+  if (element.title !== value || !element.hasAttribute("title")) element.title = value
 }
 
-function drawGroupedFieldControl(
-  host: UiSurface,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  field: GroupedFieldDefinition,
-  density: "regular" | "compact",
-  styles: FieldRenderOptions,
+function syncOptionalAttribute(element: HTMLElement, name: string, value: string | undefined): void {
+  if (value === undefined) {
+    if (element.hasAttribute(name)) element.removeAttribute(name)
+    return
+  }
+  if (element.getAttribute(name) !== value) element.setAttribute(name, value)
+}
+
+function reconcileChildren(parent: Node, ordered: readonly Node[]): void {
+  const retained = new Set(ordered)
+  for (const child of [...parent.childNodes]) {
+    if (!retained.has(child)) parent.removeChild(child)
+  }
+  let reference = parent.firstChild
+  for (const child of ordered) {
+    if (child === reference) {
+      reference = reference.nextSibling
+      continue
+    }
+    parent.insertBefore(child, reference)
+  }
+}
+
+function addOwnedListener(
+  listeners: OwnedListener[],
+  element: HTMLElement,
+  type: string,
+  listener: (event: DomEvent) => void,
 ): void {
-  const controlStyle = styles.controlStyle
-  if (field.kind === "vector" || field.kind === "rotation") {
-    const props = vectorInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    VectorInput(host, x, y, width, height, props)
-  } else if (field.kind === "matrix") {
-    const props = matrixInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    MatrixInput(host, x, y, width, height, props)
-  } else {
-    const props = collectionInputProps(field, density)
-    if (controlStyle !== undefined) props.style = controlStyle
-    CollectionInput(host, x, y, width, height, props)
-  }
+  const entry = ownedListener(element, type, listener)
+  element.addEventListener(type, listener)
+  listeners.push(entry)
 }
 
-export function normalizeNumberFieldValue(
-  value: number,
-  options: Pick<NumberFieldDefinition, "numberKind" | "min" | "max" | "step"> = {},
-): number {
-  return normalizeNumberInputValue(value, options)
+function ownedListener(
+  element: HTMLElement,
+  type: string,
+  listener: (event: DomEvent) => void,
+): OwnedListener {
+  return Object.freeze({element, type, listener})
 }
 
-function drawFieldLabel(host: UiSurface, x: number, y: number, width: number, height: number, field: FieldBase, styles: FieldRenderOptions): void {
-  const labelStyle = styles.labelStyle
-  Typography(host, x, y, width, height, {
-    children: field.label,
-    fontPx: uiShapeMetrics.compactFontPx,
-    color: isFieldDisabled(field) ? "muted" : "text",
-    ...(labelStyle === undefined ? {} : {style: labelStyle}),
-  })
+function removeOwnedListener(listener: OwnedListener): void {
+  listener.element.removeEventListener(listener.type, listener.listener)
 }
 
-function numberInputProps(field: NumberFieldDefinition, density: NumberInputDensity): NumberInputProps {
-  const props: NumberInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-  }
-  if (field.numberKind !== undefined) props.numberKind = field.numberKind
-  if (field.min !== undefined) props.min = field.min
-  if (field.max !== undefined) props.max = field.max
-  if (field.softMin !== undefined) props.softMin = field.softMin
-  if (field.softMax !== undefined) props.softMax = field.softMax
-  if (field.step !== undefined) props.step = field.step
-  if (field.precision !== undefined) props.precision = field.precision
-  if (field.unit !== undefined) props.unit = field.unit
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  return props
+function removeListenerEntry(listeners: OwnedListener[], listener: OwnedListener): void {
+  const index = listeners.indexOf(listener)
+  if (index >= 0) listeners.splice(index, 1)
 }
 
-function integerInputProps(field: IntegerFieldDefinition, density: NumberInputDensity): IntegerInputProps {
-  const props: IntegerInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-    ...(density === "compact" && field.compactLabel === "hidden" ? {} : {label: field.label}),
-  }
-  if (field.min !== undefined) props.min = field.min
-  if (field.max !== undefined) props.max = field.max
-  if (field.softMin !== undefined) props.softMin = field.softMin
-  if (field.softMax !== undefined) props.softMax = field.softMax
-  if (field.step !== undefined) props.step = field.step
-  if (field.unit !== undefined) props.unit = field.unit
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  return props
+function optional<Key extends string, Value>(key: Key, value: Value | undefined): {} | Record<Key, Value> {
+  return value === undefined ? {} : {[key]: value} as Record<Key, Value>
 }
 
-function drawNumberSlider(host: UiSurface, x: number, y: number, width: number, field: NumberFieldDefinition, styles: FieldRenderOptions): void {
-  const props: Parameters<typeof SliderControl>[4] = {
-    key: fieldKey(field),
-    label: field.label,
-    layout: "inline",
-    value: normalizeNumberFieldValue(field.value, field),
-    max: field.max!,
-    step: field.step ?? (field.numberKind === "integer" ? 1 : 0.01),
-    buttonHeight: uiShapeMetrics.controlHeight,
-    labelFontPx: uiShapeMetrics.compactFontPx,
-    valueFontPx: uiShapeMetrics.compactFontPx,
-    format: (entry) => `${entry}${field.unit ?? ""}`,
-    onChange: (entry) => {
-      if (!isFieldDisabled(field)) field.onChange?.(normalizeNumberFieldValue(entry, field))
-    },
-  }
-  const controlStyle = styles.controlStyle
-  if (controlStyle !== undefined) props.style = controlStyle
-  if (field.min !== undefined) props.min = field.min
-  SliderControl(host, x, y, width, props)
+function capitalize(value: string): string {
+  return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`
 }
 
-function drawBooleanField(host: UiSurface, x: number, y: number, width: number, height: number, field: BooleanFieldDefinition, styles: FieldRenderOptions): void {
-  const disabled = isFieldDisabled(field)
-  const onChange = !disabled && field.onChange !== undefined ? (value: boolean) => field.onChange!(value) : undefined
-  const controlWidth = field.presentation === "checkbox"
-    ? uiShapeMetrics.iconActionSlot
-    : uiShapeMetrics.iconActionSlot * 1.9
-  const labelStyle = styles.labelStyle
-  const controlStyle = styles.controlStyle
-  flexRow({
-    x,
-    y,
-    w: width,
-    h: height,
-    gap: uiShapeMetrics.tightGap * 2,
-    alignItems: "center",
-    items: [
-      {width: "grow", height, draw: (slotX, slotY, slotW, slotH) => Typography(host, slotX, slotY, slotW, slotH, {
-        children: field.label,
-        color: disabled ? "muted" : "text",
-        fontPx: uiShapeMetrics.compactFontPx,
-        ...(labelStyle === undefined ? {} : {style: labelStyle}),
-      })},
-      {width: controlWidth, height: uiShapeMetrics.controlHeight, draw: (slotX, slotY, slotW, slotH) => {
-        if (field.presentation !== "switch") {
-          const props: Parameters<typeof Checkbox>[5] = {checked: field.value, disabled}
-          if (controlStyle !== undefined) props.style = controlStyle
-          if (onChange !== undefined) props.onChange = onChange
-          Checkbox(host, slotX, slotY, slotW, slotH, props)
-        } else {
-          const props: Parameters<typeof Switcher>[5] = {checked: field.value, disabled}
-          if (controlStyle !== undefined) props.style = controlStyle
-          if (onChange !== undefined) props.onChange = onChange
-          Switcher(host, slotX, slotY, slotW, slotH, props)
-        }
-      }},
-    ],
-  })
+function assertNonEmpty(value: unknown, label: string): asserts value is string {
+  assertString(value, label)
+  if (value.trim().length === 0) throw new TypeError(`${label} must not be empty`)
 }
 
-function enumInputProps(field: EnumFieldDefinition, density: EnumInputDensity): EnumInputProps {
-  const props: EnumInputProps = {
-    value: field.value,
-    options: field.options,
-    density,
-    popupLabel: field.label,
-  }
-  if (field.description !== undefined) props.tooltip = field.description
-  if (field.open !== undefined) props.open = field.open
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  if (field.onOpenChange !== undefined) props.onOpenChange = field.onOpenChange
-  return props
+function assertString(value: unknown, label: string): asserts value is string {
+  if (typeof value !== "string") throw new TypeError(`${label} must be a string`)
 }
 
-function colorInputProps(field: ColorFieldDefinition, density: ColorInputDensity): ColorInputProps {
-  const props: ColorInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-  }
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  return props
+function assertFinite(value: unknown, label: string): asserts value is number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new TypeError(`${label} must be finite`)
 }
 
-function vectorInputProps(
-  field: VectorFieldDefinition | RotationFieldDefinition,
-  density: VectorInputDensity,
-): VectorInputProps {
-  const props: VectorInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-  }
-  if (field.dimensions !== undefined) props.dimensions = field.dimensions
-  if (field.axes !== undefined) props.axes = field.axes
-  if (field.numberKind !== undefined) props.numberKind = field.numberKind
-  if (field.min !== undefined) props.min = field.min
-  if (field.max !== undefined) props.max = field.max
-  if (field.step !== undefined) props.step = field.step
-  if (field.kind === "rotation") {
-    props.precision = field.precision ?? 0
-    props.unit = field.unit === undefined ? "°" : field.unit
-  } else {
-    if (field.precision !== undefined) props.precision = field.precision
-    if (field.unit !== undefined) props.unit = field.unit
-  }
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  return props
+function assertInteger(value: unknown, label: string): asserts value is number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new TypeError(`${label} must be an integer`)
 }
 
-function matrixInputProps(field: MatrixFieldDefinition, density: MatrixInputDensity): MatrixInputProps {
-  const props: MatrixInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-  }
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  return props
+function assertBoolean(value: unknown, label: string): asserts value is boolean {
+  if (typeof value !== "boolean") throw new TypeError(`${label} must be a boolean`)
 }
 
-function referenceInputProps(
-  field: ReferenceFieldDefinition,
-  density: ReferenceInputDensity,
-): ReferenceInputProps {
-  const props: ReferenceInputProps = {
-    value: field.value,
-    density,
-  }
-  if (field.placeholder !== undefined) props.placeholder = field.placeholder
-  if (field.description !== undefined) props.tooltip = field.description
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onActivate !== undefined) props.onActivate = field.onActivate
-  if (field.onPick !== undefined) props.onPick = field.onPick
-  if (field.onClear !== undefined) props.onClear = field.onClear
-  return props
-}
-
-function pathInputProps(
-  field: PathFieldDefinition,
-  density: PathInputDensity,
-): PathInputProps {
-  const props: PathInputProps = {
-    key: fieldKey(field),
-    value: field.value,
-    density,
-  }
-  if (field.placeholder !== undefined) props.placeholder = field.placeholder
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onChange !== undefined) props.onChange = field.onChange
-  if (field.onBrowse !== undefined) props.onBrowse = field.onBrowse
-  return props
-}
-
-function collectionInputProps(
-  field: CollectionFieldDefinition,
-  density: CollectionInputDensity,
-): CollectionInputProps {
-  const props: CollectionInputProps = {
-    key: fieldKey(field),
-    items: field.items,
-    selectedId: field.selectedId,
-    density,
-  }
-  if (field.visibleRows !== undefined) props.visibleRows = field.visibleRows
-  if (field.emptyLabel !== undefined) props.emptyLabel = field.emptyLabel
-  if (field.disabled !== undefined) props.disabled = field.disabled
-  if (field.readOnly !== undefined) props.readOnly = field.readOnly
-  if (field.onSelect !== undefined) props.onSelect = field.onSelect
-  if (field.onAdd !== undefined) props.onAdd = field.onAdd
-  if (field.onRemove !== undefined) props.onRemove = field.onRemove
-  if (field.onMove !== undefined) props.onMove = field.onMove
-  return props
-}
-
-function isFieldDisabled(field: FieldBase): boolean {
-  return field.disabled === true || field.readOnly === true
-}
-
-function fieldKey(field: FieldBase): string {
-  return `field:${field.key ?? field.id}`
+function assertOptionalFunction(value: unknown, label: string): void {
+  if (value !== undefined && typeof value !== "function") throw new TypeError(`${label} must be a function`)
 }

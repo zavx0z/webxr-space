@@ -1,145 +1,93 @@
 import {describe, expect, test} from "bun:test"
-import {rgba8ToColor, resolveWidgetColors, uiShapeMetrics} from "@ui/elements"
-import {Z, type UiSurface, UiSurface as BaseUiSurface} from "@layout/core/surface"
 import {
-  Field,
-  measureFieldLayout,
+  createDocument,
+  Event,
+  HTMLButtonElement,
+  HTMLDivElement,
+  HTMLInputElement,
+  HTMLLabelElement,
+  HTMLSelectElement,
+  HTMLOptionElement,
+  Text,
+} from "@zavx0z/dom"
+import {
+  createField,
   FIELD_KINDS,
-  measureFieldHeight,
-  normalizeNumberFieldValue,
-  type CollectionFieldDefinition,
+  fieldCss,
+  type FieldColor,
   type FieldDefinition,
-  type RotationFieldDefinition,
 } from "./field.ts"
-import {
-  formatColorInputValue,
-  normalizeColorInputValue,
-  parseColorInputValue,
-} from "./color-input.ts"
-import {nextEnumInputValue} from "./enum-input.ts"
-import {normalizeIntegerInputValue} from "./integer-input.ts"
-import {normalizeMatrixInputValue} from "./matrix-input.ts"
-import {normalizeVectorInputValue} from "./vector-input.ts"
 
-type RoundedRectCall = Parameters<UiSurface["drawRoundedRect"]>
-type TextCall = Parameters<UiSurface["drawText"]>
-type HitCall = Parameters<UiSurface["hit"]>
+const textDefinition = {id: "name", label: "Name", kind: "text", value: "Output", placeholder: "Node name"} satisfies FieldDefinition
+const numberDefinition = {id: "gain", label: "Gain", kind: "number", value: 0.5, min: 0, max: 1, step: 0.1} satisfies FieldDefinition
+const integerDefinition = {id: "iterations", label: "Iterations", kind: "integer", value: 3, min: 0, max: 10} satisfies FieldDefinition
+const booleanDefinition = {id: "enabled", label: "Enabled", kind: "boolean", value: true} satisfies FieldDefinition
+const enumDefinition = {id: "mode", label: "Mode", kind: "enum", value: "output", options: [
+  {value: "preview", label: "Preview"},
+  {value: "output", label: "Output"},
+]} satisfies FieldDefinition
+const colorDefinition = {id: "tint", label: "Tint", kind: "color", value: {r: 0.1, g: 0.2, b: 0.3, a: 1}} satisfies FieldDefinition
+const vectorDefinition = {id: "location", label: "Location", kind: "vector", value: [1, 2, 3], axes: ["X", "Y", "Z"]} satisfies FieldDefinition
+const rotationDefinition = {id: "rotation", label: "Rotation", kind: "rotation", value: [0, 0, 0], axes: ["X", "Y", "Z"]} satisfies FieldDefinition
+const matrixDefinition = {id: "transform", label: "Transform", kind: "matrix", value: [[1, 0], [0, 1]]} satisfies FieldDefinition
+const referenceDefinition = {id: "material", label: "Material", kind: "reference", value: {id: "mat", label: "Material.001"}} satisfies FieldDefinition
+const collectionDefinition = {id: "layers", label: "Layers", kind: "collection", selectedId: "front", items: [
+  {id: "front", label: "Front"},
+  {id: "back", label: "Back"},
+]} satisfies FieldDefinition
+const pathDefinition = {id: "path", label: "Path", kind: "path", value: "/output/image.png"} satisfies FieldDefinition
+const readonlyDefinition = {id: "status", label: "Status", kind: "readonly", value: "Ready"} satisfies FieldDefinition
+const definitions = [
+  textDefinition,
+  numberDefinition,
+  integerDefinition,
+  booleanDefinition,
+  enumDefinition,
+  colorDefinition,
+  vectorDefinition,
+  rotationDefinition,
+  matrixDefinition,
+  referenceDefinition,
+  collectionDefinition,
+  pathDefinition,
+  readonlyDefinition,
+] as const satisfies readonly FieldDefinition[]
 
-class RecordingSurface extends BaseUiSurface {
-  readonly roundedRects: RoundedRectCall[] = []
-  readonly texts: TextCall[] = []
-  readonly hits: HitCall[] = []
-
-  override drawRoundedRect(...args: RoundedRectCall): void { this.roundedRects.push(args) }
-  override drawText(...args: TextCall): number { this.texts.push(args); return 0 }
-  override measureText(value: string, _fontPx?: number): number { return value.length * 6 }
-  override hit(...args: HitCall): void { this.hits.push(args) }
-  override pushClip(): void {}
-  override popClip(): void {}
-  protected render(): void {}
-}
-
-describe("universal UI fields", () => {
-  test("publishes one grouped label/control layout with intrinsic Vector width", () => {
-    const rotation: RotationFieldDefinition = {id: "rotation-layout", label: "Rotation", kind: "rotation", value: [0, 45, 90]}
-    expect(measureFieldLayout(rotation, {density: "compact"})).toEqual({
-      height: 91,
-      labelRowHeight: 22,
-      labelControlGap: 3,
-      controlOffsetY: 25,
-      controlHeight: 66,
-      intrinsicWidth: 146,
-    })
-    expect(measureFieldLayout({...rotation, compactLabel: "hidden"}, {density: "compact"})).toEqual({
-      height: 66,
-      labelRowHeight: 0,
-      labelControlGap: 0,
-      controlOffsetY: 0,
-      controlHeight: 66,
-      intrinsicWidth: 146,
-    })
-  })
-  test("publishes node-independent field kinds", () => {
+describe("final production DOM Field", () => {
+  test("creates the complete final union with one stable standard label association", () => {
     expect(FIELD_KINDS).toEqual([
-      "text",
-      "number",
-      "integer",
-      "boolean",
-      "enum",
-      "color",
-      "vector",
-      "rotation",
-      "matrix",
-      "reference",
-      "collection",
-      "path",
-      "readonly",
+      "text", "number", "integer", "boolean", "enum", "color", "vector",
+      "rotation", "matrix", "reference", "collection", "path", "readonly",
     ])
-  })
+    expect(definitions.map(({kind}) => kind)).toEqual([...FIELD_KINDS])
 
-  test("maps canonical integer Field to one labeled IntegerInput control", () => {
-    const regular = new RecordingSurface()
-    Field(regular, 0, 0, 200, {id: "iterations", label: "Iterations", kind: "integer", value: 3})
-    expect(regular.texts.map(([value]) => value)).toEqual(["3", "Iterations"])
-    expect(regular.hits).toHaveLength(1)
-
-    const compactHidden = new RecordingSurface()
-    Field(compactHidden, 0, 0, 146, {
-      id: "iterations-hidden",
-      label: "Iterations",
-      compactLabel: "hidden",
-      kind: "integer",
-      value: 3,
-    }, {density: "compact"})
-    expect(compactHidden.texts.map(([value]) => value)).toEqual(["3"])
-  })
-
-  test("allows owner-scoped render keys without changing semantic field ids", () => {
-    const field: FieldDefinition = {id: "value", key: "node-a:value", label: "Value", kind: "number", value: 1}
-    expect(field.id).toBe("value")
-    expect(field.key).toBe("node-a:value")
-  })
-
-  test("keeps a semantic label when compact presentation hides it", () => {
-    const field: FieldDefinition = {
-      id: "dimensions",
-      label: "Dimensions",
-      compactLabel: "hidden",
-      kind: "enum",
-      value: "3d",
-      options: [{value: "3d", label: "3D"}],
+    for (const definition of definitions) {
+      const controller = createField(createDocument(), definition)
+      const {root, label, labelText, control, primary, controlId, labelId} = controller.refs
+      expect(controller.element).toBe(root)
+      expect(root).toBeInstanceOf(HTMLDivElement)
+      expect(root.getAttribute("data-field-id")).toBe(definition.id)
+      expect(root.getAttribute("data-field-kind")).toBe(definition.kind)
+      expect(label).toBeInstanceOf(HTMLLabelElement)
+      expect(labelText).toBeInstanceOf(Text)
+      expect(labelText.data).toBe(definition.label)
+      expect(label.id).toBe(labelId)
+      expect(label.htmlFor).toBe(controlId)
+      expect(label.control).toBe(primary)
+      expect(primary.id).toBe(controlId)
+      expect(root.childNodes).toEqual([label, control])
     }
-    expect(field.label).toBe("Dimensions")
-    expect(field.compactLabel).toBe("hidden")
-    expect(measureFieldHeight(field, {density: "compact"})).toBe(22)
   })
 
-  test("uses one dense scalar row compositor for regular and compact Fields", () => {
-    const definition: FieldDefinition = {
-      id: "mass",
-      label: "Mass",
-      kind: "number",
-      value: 1,
-      onChange() {},
-    }
-    const regular = new RecordingSurface()
-    expect(Field(regular, 0, 10, 200, definition)).toBe(uiShapeMetrics.rowHeight)
-    expect(regular.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01)).toHaveLength(1)
-    expect(regular.hits).toHaveLength(1)
-    expect(regular.roundedRects[0]?.[1]).toBe(11)
-    expect(regular.roundedRects[0]?.[2]).toBeCloseTo(116.4)
-    expect(regular.roundedRects[0]?.[3]).toBe(uiShapeMetrics.controlHeight)
-
-    const compact = new RecordingSurface()
-    expect(Field(compact, 0, 10, 200, definition, {density: "compact"})).toBe(uiShapeMetrics.controlHeight)
-    expect(compact.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01)).toHaveLength(1)
-    expect(compact.hits).toHaveLength(1)
-    expect(compact.roundedRects[0]?.[2]).toBeCloseTo(116.4)
-    expect(compact.roundedRects[0]?.[3]).toBe(uiShapeMetrics.controlHeight)
-  })
-
-  test("keeps the regular number slider visual and hit inside its measured dense row", () => {
-    const definition: FieldDefinition = {
+  test("keeps scalar values controlled while consuming native input/change activation", () => {
+    const document = createDocument()
+    const textValues: string[] = []
+    const numberValues: number[] = []
+    const integerValues: number[] = []
+    const booleanValues: boolean[] = []
+    const events: string[] = []
+    const text = createField(document, {...definitions[0]!, onChange: (value: string) => textValues.push(value)})
+    const number = createField(document, {
       id: "gain",
       label: "Gain",
       kind: "number",
@@ -147,132 +95,240 @@ describe("universal UI fields", () => {
       value: 0.5,
       min: 0,
       max: 1,
-      onChange() {},
-    }
-    const surface = new RecordingSurface()
-    const y = 10
-    const height = Field(surface, 0, y, 200, definition)
-    expect(height).toBe(uiShapeMetrics.rowHeight)
-    for (const [, rectY, , rectHeight] of surface.roundedRects) {
-      expect(rectY).toBeGreaterThanOrEqual(y)
-      expect(rectY + rectHeight).toBeLessThanOrEqual(y + height)
-    }
-    expect(surface.hits).toHaveLength(1)
-    expect(surface.hits[0]?.slice(1, 4)).toEqual([11, 200, uiShapeMetrics.controlHeight])
-  })
-
-  test("keeps explicit switch presentation rectangular inside the dense boolean row", () => {
-    const surface = new RecordingSurface()
-    const width = 200
-    const height = Field(surface, 0, 10, width, {
-      id: "enabled",
-      label: "Enabled",
-      kind: "boolean",
-      value: true,
-      presentation: "switch",
-      onChange() {},
+      step: 0.1,
+      onChange: (value) => numberValues.push(value),
     })
-    expect(height).toBe(uiShapeMetrics.rowHeight)
-    expect(surface.hits).toHaveLength(1)
-    expect(surface.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01)).toHaveLength(1)
-    expect(surface.roundedRects[0]?.[4].radius).toBe(4)
-    const [hitX, , hitWidth] = surface.hits[0]!
-    expect(hitX + hitWidth).toBeLessThanOrEqual(width)
+    const integer = createField(document, {...definitions[2]!, onChange: (value: number) => integerValues.push(value)})
+    const boolean = createField(document, {...definitions[3]!, onChange: (value: boolean) => booleanValues.push(value)})
+    const host = document.createElement("div")
+    document.appendChild(host)
+    host.append(text.element, number.element, integer.element, boolean.element)
+    host.addEventListener("input", ({target}) => events.push(`input:${(target as HTMLInputElement).getAttribute("name") ?? "group"}`))
+    host.addEventListener("change", ({target}) => events.push(`change:${(target as HTMLInputElement).getAttribute("name") ?? "group"}`))
+
+    const textInput = text.refs.primary as HTMLInputElement
+    textInput.value = "Live"
+    textInput.dispatchEvent(new Event("input", {bubbles: true}))
+    const numberInput = number.refs.primary as HTMLInputElement
+    numberInput.valueAsNumber = 0.8
+    numberInput.dispatchEvent(new Event("input", {bubbles: true}))
+    const integerInput = integer.refs.primary as HTMLInputElement
+    integerInput.valueAsNumber = 4.5
+    integerInput.dispatchEvent(new Event("input", {bubbles: true}))
+    integerInput.valueAsNumber = 4
+    integerInput.dispatchEvent(new Event("input", {bubbles: true}))
+    const checkbox = boolean.refs.primary as HTMLInputElement
+    checkbox.click()
+
+    expect(textValues).toEqual(["Live"])
+    expect(numberValues).toEqual([0.8])
+    expect(integerValues).toEqual([4])
+    expect(booleanValues).toEqual([false])
+    expect(events).toContain("input:name")
+    expect(events).toContain("input:gain")
+    expect(events).toContain("input:enabled")
+    expect(events).toContain("change:enabled")
+    expect(text.definition.kind === "text" && text.definition.value).toBe("Output")
+    expect(boolean.definition.kind === "boolean" && boolean.definition.value).toBeTrue()
+
+    text.update(text.definition)
+    boolean.update(boolean.definition)
+    expect(textInput.value).toBe("Output")
+    expect(checkbox.checked).toBeTrue()
+    expect(textValues).toHaveLength(1)
+    expect(booleanValues).toHaveLength(1)
   })
 
-  test("uses the Blender option Checkbox for the default boolean presentation", () => {
-    const surface = new RecordingSurface()
-    Field(surface, 0, 0, 200, {
-      id: "enabled-default",
-      label: "Enabled",
-      kind: "boolean",
-      value: true,
-      onChange() {},
+  test("preserves keyed Enum options and reports the current native selection", () => {
+    const values: string[] = []
+    const controller = createField(createDocument(), {...definitions[4]!, onChange: (value: string) => values.push(value)})
+    const select = controller.refs.control as HTMLSelectElement
+    const preview = controller.refs.options.get("preview")!
+    const output = controller.refs.options.get("output")!
+    const previewText = preview.firstChild
+    const outputText = output.firstChild
+
+    controller.update({
+      id: "mode",
+      label: "Mode",
+      kind: "enum",
+      value: "preview",
+      options: [
+        {value: "output", label: "Final output", disabled: true},
+        {value: "preview", label: "Live preview"},
+        {value: "capture", label: "Capture"},
+      ],
+      onChange: (value) => values.push(value),
     })
-    const colors = resolveWidgetColors("option", {selected: true})
-    expect(surface.roundedRects).toHaveLength(1)
-    expect(surface.roundedRects[0]?.[4]).toMatchObject({
-      fill: rgba8ToColor(colors.inner),
-      border: rgba8ToColor(colors.outline),
+    expect(controller.refs.options.get("preview")).toBe(preview)
+    expect(controller.refs.options.get("output")).toBe(output)
+    expect(preview).toBeInstanceOf(HTMLOptionElement)
+    expect(preview.firstChild).toBe(previewText)
+    expect(output.firstChild).toBe(outputText)
+    expect(select.childNodes).toEqual([output, preview, controller.refs.options.get("capture")!])
+    select.value = "capture"
+    select.dispatchEvent(new Event("change", {bubbles: true}))
+    expect(values).toEqual(["capture"])
+    expect(controller.definition.kind === "enum" && controller.definition.value).toBe("preview")
+  })
+
+  test("retains keyed color, vector, rotation and matrix cells across controlled shape updates", () => {
+    const colorValues: unknown[] = []
+    const vectorValues: unknown[] = []
+    const matrixValues: unknown[] = []
+    const color = createField(createDocument(), {...definitions[5]!, onChange: (value: FieldColor) => colorValues.push(value)})
+    const vector = createField(createDocument(), {...definitions[6]!, onChange: (value: readonly number[]) => vectorValues.push(value)})
+    const rotation = createField(createDocument(), definitions[7]!)
+    const matrix = createField(createDocument(), {...definitions[8]!, onChange: (value: readonly (readonly number[])[]) => matrixValues.push(value)})
+    const colorR = color.refs.inputs.get("r")!
+    const vectorX = vector.refs.inputs.get("0")!
+    const matrix00 = matrix.refs.inputs.get("0:0")!
+
+    colorR.valueAsNumber = 0.6
+    colorR.dispatchEvent(new Event("input", {bubbles: true}))
+    vectorX.valueAsNumber = 8
+    vectorX.dispatchEvent(new Event("input", {bubbles: true}))
+    matrix00.valueAsNumber = 2
+    matrix00.dispatchEvent(new Event("input", {bubbles: true}))
+    expect(colorValues).toEqual([{r: 0.6, g: 0.2, b: 0.3, a: 1}])
+    expect(vectorValues).toEqual([[8, 2, 3]])
+    expect(matrixValues).toEqual([[[2, 0], [0, 1]]])
+
+    vector.update({id: "location", label: "Location", kind: "vector", value: [4, 5, 6, 7], axes: ["A", "B", "C", "D"]})
+    matrix.update({id: "transform", label: "Transform", kind: "matrix", value: [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]})
+    expect(vector.refs.inputs.get("0")).toBe(vectorX)
+    expect(vector.refs.inputs.size).toBe(4)
+    expect(matrix.refs.inputs.get("0:0")).toBe(matrix00)
+    expect(matrix.refs.inputs.size).toBe(9)
+    expect(rotation.refs.inputs.size).toBe(3)
+
+    expect(() => color.update({id: "tint", label: "Tint", kind: "color", value: {r: 2, g: 0, b: 0, a: 1}}))
+      .toThrow("Color Field r must be from 0 to 1")
+    expect(() => matrix.update({id: "transform", label: "Transform", kind: "matrix", value: [[1, 0], [0]]}))
+      .toThrow("Matrix Field value must be square")
+    expect(color.refs.inputs.get("r")).toBe(colorR)
+    expect(matrix.refs.inputs.size).toBe(9)
+  })
+
+  test("routes reference, path and collection actions through current controlled callbacks", () => {
+    const actions: string[] = []
+    const reference = createField(createDocument(), {
+      ...definitions[9]!,
+      onActivate: () => actions.push("activate"),
+      onPick: () => actions.push("pick"),
+      onClear: () => actions.push("clear"),
     })
+    const path = createField(createDocument(), {
+      ...definitions[11]!,
+      onChange: (value: string) => actions.push(`path:${value}`),
+      onBrowse: () => actions.push("browse"),
+    })
+    const collection = createField(createDocument(), {
+      ...definitions[10]!,
+      onSelect: (id) => actions.push(`select:${id}`),
+      onAdd: () => actions.push("add"),
+      onRemove: (id) => actions.push(`remove:${id}`),
+      onMove: (id, direction) => actions.push(`move:${id}:${direction}`),
+    })
+    const front = collection.refs.items.get("front")!
+    const back = collection.refs.items.get("back")!
+    const frontText = collection.refs.buttons.get("item:front")!.firstChild
+
+    reference.refs.buttons.get("activate")!.click()
+    reference.refs.buttons.get("pick")!.click()
+    reference.refs.buttons.get("clear")!.click()
+    const pathInput = path.refs.inputs.get("value")!
+    pathInput.value = "/tmp/final.png"
+    pathInput.dispatchEvent(new Event("input", {bubbles: true}))
+    path.refs.buttons.get("browse")!.click()
+    collection.refs.buttons.get("item:back")!.click()
+    collection.refs.buttons.get("add")!.click()
+    collection.refs.buttons.get("remove")!.click()
+    collection.refs.buttons.get("down")!.click()
+    expect(actions).toEqual([
+      "activate", "pick", "clear", "path:/tmp/final.png", "browse",
+      "select:back", "add", "remove:front", "move:front:down",
+    ])
+
+    collection.update({
+      id: "layers",
+      label: "Layers",
+      kind: "collection",
+      selectedId: "back",
+      items: [{id: "back", label: "Rear"}, {id: "front", label: "Front renamed"}, {id: "fx", label: "FX"}],
+      onSelect: (id) => actions.push(`next:${id}`),
+    })
+    expect(collection.refs.items.get("front")).toBe(front)
+    expect(collection.refs.items.get("back")).toBe(back)
+    expect(collection.refs.buttons.get("item:front")!.firstChild).toBe(frontText)
+    expect(collection.refs.buttons.get("item:front")!.textContent).toBe("Front renamed")
+    expect(collection.refs.items.size).toBe(3)
+    collection.refs.buttons.get("item:front")!.click()
+    expect(actions.at(-1)).toBe("next:front")
+
+    const before = [...collection.refs.items.keys()]
+    expect(() => collection.update({id: "layers", label: "Layers", kind: "collection", selectedId: "missing", items: [{id: "front", label: "Front"}]}))
+      .toThrow("Collection Field selected item does not exist: missing")
+    expect([...collection.refs.items.keys()]).toEqual(before)
   })
 
-  test("normalizes finite integer, float, range and step contracts", () => {
-    expect(normalizeNumberFieldValue(3.1415927)).toBe(3.141593)
-    expect(normalizeNumberFieldValue(7.8, {numberKind: "integer"})).toBe(8)
-    expect(normalizeNumberFieldValue(13, {min: 0, max: 10})).toBe(10)
-    expect(normalizeNumberFieldValue(0.74, {min: 0, max: 1, step: 0.25})).toBe(0.75)
-    expect(normalizeNumberFieldValue(Number.NaN, {min: 2})).toBe(2)
-    expect(normalizeIntegerInputValue(3.8)).toBe(4)
+  test("blocks mutation controls in read-only state and removes owned listeners on dispose", () => {
+    const values: string[] = []
+    const document = createDocument()
+    const controller = createField(document, {
+      id: "path",
+      label: "Path",
+      kind: "path",
+      value: "/one",
+      readOnly: true,
+      onChange: (value) => values.push(value),
+      onBrowse: () => values.push("browse"),
+    })
+    const input = controller.refs.inputs.get("value")!
+    expect(input.readOnly).toBeTrue()
+    expect(controller.refs.buttons.get("browse")!.disabled).toBeTrue()
+    input.value = "/two"
+    input.dispatchEvent(new Event("input", {bubbles: true}))
+    expect(values).toEqual([])
+
+    const definition = controller.definition
+    const root = controller.element
+    const host = document.createElement("div")
+    document.appendChild(host)
+    host.appendChild(root)
+    expect(() => controller.update({...definition, id: "other"})).toThrow("Field id cannot change")
+    expect(() => controller.update({id: "path", label: "Path", kind: "text", value: "other"})).toThrow("Field kind cannot change")
+    controller.dispose()
+    controller.dispose()
+    input.value = "/three"
+    input.dispatchEvent(new Event("input", {bubbles: true}))
+    expect(values).toEqual([])
+    expect(root.parentNode).toBe(host)
+    expect(() => controller.update(definition)).toThrow("Field controller is disposed")
   })
 
-  test("cycles stable enum values in both directions", () => {
-    const options = [
-      {value: "one", label: "One"},
-      {value: "two", label: "Two"},
-      {value: "three", label: "Three"},
-    ]
-    expect(nextEnumInputValue("one", options)).toBe("two")
-    expect(nextEnumInputValue("one", options, -1)).toBe("three")
-    expect(nextEnumInputValue("missing", options)).toBe("two")
-    expect(nextEnumInputValue("missing", [])).toBe("missing")
-  })
-
-  test("round-trips normalized RGBA hex values", () => {
-    const color = normalizeColorInputValue({r: 1.2, g: -1, b: 0.5, a: 0.25})
-    expect(color).toEqual({r: 1, g: 0, b: 0.5, a: 0.25})
-    expect(formatColorInputValue(color)).toBe("#FF008040")
-    expect(parseColorInputValue("#FF008040")).toEqual({r: 1, g: 0, b: 128 / 255, a: 64 / 255})
-    expect(parseColorInputValue("336699")).toEqual({r: 0.2, g: 0.4, b: 0.6, a: 1})
-    expect(parseColorInputValue("bad")).toBeNull()
-  })
-
-  test("normalizes vector dimensions and square matrices", () => {
-    expect(normalizeVectorInputValue([1, 2], 4)).toEqual([1, 2, 0, 0])
-    expect(normalizeVectorInputValue([1.2, 2.8, 9], 3, {step: 1, min: 0})).toEqual([1, 3, 9])
-    expect(normalizeMatrixInputValue([[2]])).toEqual([[2, 0], [0, 1]])
-    expect(normalizeMatrixInputValue([])).toEqual([[1, 0], [0, 1]])
-  })
-
-  test("measures every discriminated field kind", () => {
-    const fields: FieldDefinition[] = [
-      {id: "text", label: "Text", kind: "text", value: "A"},
-      {id: "number", label: "Number", kind: "number", value: 1},
-      {id: "integer", label: "Integer", kind: "integer", value: 3},
-      {id: "slider", label: "Slider", kind: "number", presentation: "slider", value: 1, max: 2},
-      {id: "boolean", label: "Boolean", kind: "boolean", value: true},
-      {id: "enum", label: "Enum", kind: "enum", value: "a", options: [{value: "a", label: "A"}]},
-      {id: "color", label: "Color", kind: "color", value: {r: 1, g: 1, b: 1, a: 1}},
-      {id: "vector", label: "Vector", kind: "vector", value: [1, 2, 3]},
-      {id: "rotation", label: "Rotation", kind: "rotation", value: [0, 0, 0]},
-      {id: "matrix", label: "Matrix", kind: "matrix", value: [[1, 0], [0, 1]]},
-      {id: "reference", label: "Reference", kind: "reference", value: null},
-      {id: "collection", label: "Collection", kind: "collection", items: [], selectedId: null},
-      {id: "path", label: "Path", kind: "path", value: "/tmp/value"},
-      {id: "readonly", label: "Readonly", kind: "readonly", value: "value"},
-    ]
-    expect(fields.map((field) => measureFieldHeight(field)).every((height) => height > 0)).toBeTrue()
-    expect(measureFieldHeight(fields[1]!)).toBe(uiShapeMetrics.rowHeight)
-    expect(measureFieldHeight(fields[2]!)).toBe(uiShapeMetrics.rowHeight)
-    expect(measureFieldHeight(fields[3]!)).toBe(uiShapeMetrics.rowHeight)
-    expect(measureFieldHeight(fields[4]!)).toBe(uiShapeMetrics.rowHeight)
-    expect(measureFieldHeight(fields[1]!, {density: "compact"})).toBe(22)
-    expect(measureFieldHeight(fields[2]!, {density: "compact"})).toBe(22)
-    expect(measureFieldHeight(fields[3]!, {density: "compact"})).toBe(22)
-    expect(measureFieldHeight(fields[7]!, {density: "compact"})).toBe(91)
-    expect(measureFieldHeight(fields[9]!, {density: "compact"})).toBe(69)
-    const collection = fields[11]! as CollectionFieldDefinition
-    expect(measureFieldHeight(collection)).toBe(97)
-    expect(measureFieldHeight(collection, {density: "compact"})).toBe(97)
-    expect(measureFieldHeight({...collection, compactLabel: "hidden"}, {density: "compact"})).toBe(72)
-    expect(measureFieldHeight({...collection, visibleRows: 1})).toBe(72)
-    expect(measureFieldHeight({...collection, visibleRows: 1}, {density: "compact"})).toBe(72)
-    expect(measureFieldHeight({...collection, visibleRows: 1, compactLabel: "hidden"}, {density: "compact"})).toBe(47)
-    const reorder = {...collection, visibleRows: 1, onMove: () => {}}
-    expect(measureFieldHeight(reorder)).toBe(122)
-    expect(measureFieldHeight(reorder, {density: "compact"})).toBe(122)
-    expect(measureFieldHeight({...reorder, compactLabel: "hidden"}, {density: "compact"})).toBe(97)
-    expect(measureFieldHeight(fields[12]!)).toBe(uiShapeMetrics.rowHeight)
-    expect(measureFieldHeight(fields[12]!, {density: "compact"})).toBe(22)
+  test("publishes one exact DOM-only production leaf without aliasing the retained Field", async () => {
+    const source = await Bun.file(new URL("./field.ts", import.meta.url)).text()
+    const requirements = await Bun.file(new URL("./dom/requirements.md", import.meta.url)).text()
+    const manifest = await Bun.file(new URL("./package.json", import.meta.url)).json() as {exports: Record<string, string>}
+    expect(fieldCss).toContain(".ui-field")
+    expect(fieldCss).toContain(".ui-field__matrix")
+    expect(fieldCss).toContain('[aria-selected="true"]')
+    expect(fieldCss).not.toContain("&")
+    expect(source).toContain('from "@zavx0z/dom"')
+    for (const forbidden of [
+      "@engine/core", "@layout/core", "@ui/elements", "@ui/components",
+      "@zavx0z/renderer", ["@zavx0z", "storybook"].join("/"), "UiSurface",
+      "dispatchEvent", "labelStyle", "controlStyle", "sx", "field-stories", "-story.ts",
+    ]) expect(source).not.toContain(forbidden)
+    expect(manifest.exports["./field"]).toBe("./field.ts")
+    expect(Object.keys(manifest.exports).some((key) => key.startsWith("./dom/"))).toBeFalse()
+    expect(requirements).toContain("UI-DOM-FIELD-001")
+    expect(requirements).toContain("text | number | integer")
+    expect(requirements).toContain("reference | collection")
   })
 })

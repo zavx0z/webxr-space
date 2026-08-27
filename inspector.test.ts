@@ -1,204 +1,295 @@
 import {describe, expect, test} from "bun:test"
-import {type HitOptions, type UiSurface, UiSurface as BaseUiSurface} from "@layout/core/surface"
-import {divScrollTo} from "@ui/elements/div"
-import {uiIcons} from "@ui/elements/icons"
 import {
-  Inspector,
-  inspectorMetrics,
-  planInspector,
-  type InspectorSectionRect,
+  createDocument,
+  Event,
+  HTMLButtonElement,
+  HTMLInputElement,
+  type HTMLElement,
+} from "@zavx0z/dom"
+import {
+  createInspector,
+  inspectorCss,
+  type InspectorDomProps,
 } from "./inspector.ts"
 
-type DrawImageCall = Parameters<UiSurface["drawImage"]>
-type DrawRoundedRectCall = Parameters<UiSurface["drawRoundedRect"]>
-type DrawTextCall = Parameters<UiSurface["drawText"]>
-type DrawTextCenteredCall = Parameters<UiSurface["drawTextCentered"]>
-type HitCall = Parameters<UiSurface["hit"]>
-type ChildClipShape = Parameters<UiSurface["withChildClip"]>[0]
+describe("DOM-only Inspector", () => {
+  test("creates the standard semantic tree and HTML state attributes", () => {
+    const document = createDocument()
+    const contentNode = document.createElement("span")
+    contentNode.textContent = "Semantic content"
+    const controller = createInspector(document, fixture({contentNode}))
+    const {refs} = controller
 
-class RecordingSurface extends BaseUiSurface {
-  readonly images: DrawImageCall[] = []
-  readonly roundedRects: DrawRoundedRectCall[] = []
-  readonly texts: DrawTextCall[] = []
-  readonly centeredTexts: DrawTextCenteredCall[] = []
-  readonly hits: HitCall[] = []
-  readonly childClips: ChildClipShape[] = []
+    expect(controller.element).toBe(refs.root)
+    expect(refs.root.localName).toBe("aside")
+    expect(refs.root.className).toBe("ui-inspector")
+    expect(refs.root.children).toEqual([refs.toolbar, refs.body])
+    expect(refs.toolbar.localName).toBe("header")
+    expect(refs.toolbar.children).toEqual([refs.search])
+    expect(refs.search).toBeInstanceOf(HTMLInputElement)
+    expect(refs.search.localName).toBe("input")
+    expect(refs.search.type).toBe("search")
+    expect(refs.search.value).toBe("")
+    expect(refs.search.defaultValue).toBe("")
+    expect(refs.search.getAttribute("value")).toBeNull()
+    expect(refs.search.placeholder).toBe("Search")
+    expect(refs.body.localName).toBe("div")
+    expect(refs.body.children).toEqual([refs.rail, refs.content])
+    expect(refs.rail.localName).toBe("nav")
+    expect(refs.rail.getAttribute("aria-label")).toBe("Categories")
+    expect(refs.content.localName).toBe("main")
+    expect(refs.content.children).toEqual([refs.context, refs.sections])
 
-  override drawImage(...args: DrawImageCall): void { this.images.push(args) }
-  override drawRoundedRect(...args: DrawRoundedRectCall): void { this.roundedRects.push(args) }
-  override drawText(...args: DrawTextCall): number { this.texts.push(args); return 0 }
-  override drawTextCentered(...args: DrawTextCenteredCall): number { this.centeredTexts.push(args); return 0 }
-  override hit(...args: HitCall): void { this.hits.push(args) }
-  override withChildClip(shape: ChildClipShape, draw: () => void): void { this.childClips.push(shape); draw() }
-  override measureText(value: string, fontPx: number): number { return value.length * fontPx * 0.55 }
-  override pushClip(): void {}
-  override popClip(): void {}
-  protected render(): void {}
-}
+    const sourceButton = refs.categoryButtons.get("source")
+    const eventsButton = refs.categoryButtons.get("events")
+    expect(sourceButton).toBeInstanceOf(HTMLButtonElement)
+    expect(sourceButton?.localName).toBe("button")
+    expect(sourceButton?.title).toBe("Source files")
+    expect(sourceButton?.getAttribute("aria-pressed")).toBe("true")
+    expect(eventsButton?.title).toBe("Events")
+    expect(eventsButton?.getAttribute("aria-pressed")).toBe("false")
+    expect(eventsButton?.className).toContain("ui-inspector__category--group-start")
 
-describe("Inspector", () => {
-  test("plans a Blender-like rail, toolbar and scrollable disclosure column", () => {
-    const surface = new RecordingSurface()
-    const frames: InspectorSectionRect[] = []
-    const scrollPositions: Array<{left: number; top: number}> = []
+    const htmlSection = refs.sectionElements.get("html")!
+    const htmlButton = refs.sectionButtons.get("html")!
+    const htmlContent = refs.sectionContents.get("html")!
+    expect(htmlSection.localName).toBe("section")
+    expect(htmlSection.children).toEqual([htmlButton, htmlContent])
+    expect(htmlButton).toBeInstanceOf(HTMLButtonElement)
+    expect(htmlButton.getAttribute("aria-expanded")).toBe("true")
+    expect(htmlButton.title).toBe("HTML")
+    expect(htmlContent.children).toEqual([contentNode])
+    expect(refs.context.textContent).toBe("Button")
 
-    Inspector(surface, 10, 20, 440, 700, {
-      key: "story-inspector",
-      categories: [
-        {id: "code", label: "Код", iconSrc: uiIcons.manual},
-        {id: "events", label: "События", iconSrc: uiIcons.log, dividerBefore: true},
-      ],
-      selectedCategoryId: "code",
-      query: "",
-      context: {label: "Button", iconSrc: uiIcons.resource},
-      sections: [
-        {id: "html", label: "HTML", expanded: true, contentHeight: 120, render: (_host, rect) => frames.push(rect)},
-        {id: "css", label: "CSS", expanded: false, contentHeight: 120, render: (_host, rect) => frames.push(rect)},
-      ],
-      onSectionsScrollChange: (position) => scrollPositions.push(position),
-    })
-
-    expect(surface.roundedRects.some((call) => call[4].radius === 6)).toBeTrue()
-    expect(surface.childClips.some((shape) => shape.kind === "rounded-rect")).toBeTrue()
-    expect(frames).toHaveLength(1)
-    expect(frames[0]).toMatchObject({
-      x: 10 + 1 + inspectorMetrics.railWidth + inspectorMetrics.contentInset + inspectorMetrics.sectionContentInset,
-      h: 120,
-    })
-    expect(frames[0]!.y).toBeGreaterThan(20 + inspectorMetrics.toolbarHeight + inspectorMetrics.contextHeight)
-    expect(surface.images.length).toBeGreaterThanOrEqual(4)
-    expect(surface.hits.some((call) => hitOptions(call)?.key === "story-inspector:section:html")).toBeTrue()
-    expect(scrollPositions).toEqual([])
+    expect(inspectorCss).toContain(".ui-inspector__body")
+    expect(inspectorCss).toContain("display: flex")
+    expect(inspectorCss).toContain('[aria-pressed="true"]')
+    expect(inspectorCss).toContain("overflow-y: auto")
+    expect(inspectorCss).not.toContain("&")
   })
 
-  test("keeps category and disclosure state controlled by the consumer", () => {
-    const surface = new RecordingSurface()
+  test("dispatches click and input intent through standard DOM listeners", () => {
+    const document = createDocument()
     const categories: string[] = []
     const sections: Array<[string, boolean]> = []
-
-    Inspector(surface, 0, 0, 360, 480, {
-      key: "controlled-inspector",
-      categories: [
-        {id: "code", label: "Код", iconSrc: uiIcons.manual},
-        {id: "events", label: "События", iconSrc: uiIcons.log},
-      ],
-      selectedCategoryId: "code",
-      sections: [{id: "html", label: "HTML", expanded: true, contentHeight: 80, render() {}}],
+    const queries: string[] = []
+    const controller = createInspector(document, fixture({
       onCategoryChange: (id) => categories.push(id),
       onSectionToggle: (id, expanded) => sections.push([id, expanded]),
+      onQueryChange: (query) => queries.push(query),
+    }))
+    const bubbled: string[] = []
+    controller.element.addEventListener("click", (event) => {
+      if (event.target === controller.refs.categoryButtons.get("events")) bubbled.push("events")
     })
 
-    const eventsHit = surface.hits.find((call) => hitOptions(call)?.tooltip?.label === "События")
-    eventsHit?.[4]()
-    const sectionHit = surface.hits.find((call) => hitOptions(call)?.key === "controlled-inspector:section:html")
-    sectionHit?.[4]()
+    controller.refs.categoryButtons.get("events")?.click()
+    controller.refs.sectionButtons.get("html")?.click()
+    controller.refs.search.value = "css"
+    controller.refs.search.dispatchEvent(new Event("input", {bubbles: true}))
 
     expect(categories).toEqual(["events"])
     expect(sections).toEqual([["html", false]])
+    expect(queries).toEqual(["css"])
+    expect(bubbled).toEqual(["events"])
+    expect(controller.refs.categoryButtons.get("source")?.getAttribute("aria-pressed")).toBe("true")
+    expect(controller.refs.sectionButtons.get("html")?.getAttribute("aria-expanded")).toBe("true")
+
+    controller.update(fixture({
+      disabledCategoryId: "events",
+      onCategoryChange: (id) => categories.push(`disabled:${id}`),
+    }))
+    controller.refs.categoryButtons.get("events")?.click()
+    expect(categories).toEqual(["events"])
+
+    const sourceButton = controller.refs.categoryButtons.get("source")!
+    controller.dispose()
+    sourceButton.click()
+    controller.refs.search.value = "disposed"
+    controller.refs.search.dispatchEvent(new Event("input"))
+    expect(categories).toEqual(["events"])
+    expect(queries).toEqual(["css"])
+    expect(controller.refs.categoryButtons.size).toBe(0)
+    expect(() => controller.update(fixture())).toThrow("Inspector DOM controller is disposed")
   })
 
-  test("shares exact retained geometry and scroll translation through planInspector", () => {
-    const props = {
+  test("preserves keyed nodes across updates, reorder and controlled state changes", () => {
+    const document = createDocument()
+    const host = document.createElement("div")
+    document.appendChild(host)
+    const contentNode = document.createElement("span")
+    contentNode.textContent = "Stable"
+    const firstEvents: string[] = []
+    const controller = createInspector(document, fixture({
+      contentNode,
+      onCategoryChange: (id) => firstEvents.push(`old:${id}`),
+    }))
+    host.appendChild(controller.element)
+
+    const root = controller.element
+    const regions = {...controller.refs}
+    const sourceButton = controller.refs.categoryButtons.get("source")!
+    const eventsButton = controller.refs.categoryButtons.get("events")!
+    const htmlSection = controller.refs.sectionElements.get("html")!
+    const htmlButton = controller.refs.sectionButtons.get("html")!
+    const htmlContent = controller.refs.sectionContents.get("html")!
+    const nextEvents: string[] = []
+
+    controller.update({
+      ariaLabel: "Updated inspector",
       categories: [
-        {id: "source", label: "Исходники", iconSrc: uiIcons.manual, sectionIds: ["html", "css"]},
-        {id: "events", label: "События", iconSrc: uiIcons.log, sectionIds: ["events"]},
+        {id: "events", label: "Event log", sectionIds: ["events"]},
+        {id: "source", label: "Sources", title: "Updated source title", groupStart: true, sectionIds: ["html"]},
       ],
-      selectedCategoryId: "source",
+      selectedCategoryId: "events",
+      query: "event",
+      searchPlaceholder: "Filter",
+      context: {label: "Updated context"},
       sections: [
-        {id: "html", label: "HTML", expanded: true, contentHeight: 100, render() {}},
-        {id: "css", label: "CSS", expanded: true, contentHeight: 120, render() {}},
-        {id: "events", label: "Events", expanded: true, contentHeight: 80, render() {}},
+        {id: "events", label: "Events", expanded: true, content: "Event body"},
+        {id: "html", label: "Markup", expanded: false, content: contentNode},
       ],
-    } as const
-    const initial = planInspector(10, 20, 440, 240, props)
-    const scrolled = planInspector(10, 20, 440, 240, props, 45)
-    const clamped = planInspector(10, 20, 440, 240, props, 999)
-
-    expect(initial.categories.map(({id}) => id)).toEqual(["source", "events"])
-    expect(initial.sections.map(({id}) => id)).toEqual(["html", "css"])
-    expect(initial.sections[0]?.content?.h).toBe(100)
-    expect(scrolled.sections[0]!.frame.y).toBe(initial.sections[0]!.frame.y - 45)
-    expect(initial.sectionsViewport.x).toBe(10 + 1 + inspectorMetrics.railWidth)
-    expect(initial.sectionsViewport.w).toBe(initial.sectionsFrame.w - inspectorMetrics.scrollbarWidth)
-    expect(clamped.sectionsScrollTop).toBe(initial.sectionsContentHeight - initial.sectionsViewport.h)
-    expect(clamped.sections[0]!.frame.y).toBe(initial.sections[0]!.frame.y - clamped.sectionsScrollTop)
-  })
-
-  test("filters sections by the controlled query and keeps root style last", () => {
-    const surface = new RecordingSurface()
-    const rendered: string[] = []
-
-    Inspector(surface, 0, 0, 320, 420, {
-      key: "filtered-inspector",
-      categories: [{id: "code", label: "Код", iconSrc: uiIcons.manual, sectionIds: ["html", "css"]}],
-      selectedCategoryId: "code",
-      query: "css",
-      style: {borderRadius: 9},
-      sections: [
-        {id: "html", label: "HTML", expanded: true, contentHeight: 50, render: () => rendered.push("html")},
-        {id: "css", label: "CSS", expanded: true, contentHeight: 50, render: () => rendered.push("css")},
-        {id: "events", label: "CSS Events", expanded: true, contentHeight: 50, render: () => rendered.push("events")},
-      ],
+      onCategoryChange: (id) => nextEvents.push(id),
     })
 
-    expect(rendered).toEqual(["css"])
-    expect(surface.roundedRects
-      .filter((call) => call[0] === 0 && call[1] === 0 && call[2] === 320 && call[3] === 420)
-      .map((call) => call[4].radius)).toEqual([9])
+    expect(controller.element).toBe(root)
+    expect(controller.refs.toolbar).toBe(regions.toolbar)
+    expect(controller.refs.search).toBe(regions.search)
+    expect(controller.refs.body).toBe(regions.body)
+    expect(controller.refs.rail).toBe(regions.rail)
+    expect(controller.refs.content).toBe(regions.content)
+    expect(controller.refs.context).toBe(regions.context)
+    expect(controller.refs.sections).toBe(regions.sections)
+    expect(controller.refs.search.value).toBe("event")
+    expect(controller.refs.search.placeholder).toBe("Filter")
+    expect(controller.refs.search.getAttribute("value")).toBeNull()
+    expect(controller.refs.categoryButtons.get("source")).toBe(sourceButton)
+    expect(controller.refs.categoryButtons.get("events")).toBe(eventsButton)
+    expect(controller.refs.sectionElements.get("html")).toBe(htmlSection)
+    expect(controller.refs.sectionButtons.get("html")).toBe(htmlButton)
+    expect(controller.refs.sectionContents.get("html")).toBe(htmlContent)
+    expect(htmlContent.children).toEqual([contentNode])
+    expect(controller.refs.rail.children).toEqual([eventsButton, sourceButton])
+    expect(eventsButton.getAttribute("aria-pressed")).toBe("true")
+    expect(sourceButton.title).toBe("Updated source title")
+    expect(htmlButton.getAttribute("aria-expanded")).toBe("false")
+    expect(htmlSection.hasAttribute("hidden")).toBeTrue()
+    sourceButton.click()
+    expect(firstEvents).toEqual([])
+    expect(nextEvents).toEqual(["source"])
+
+    controller.update({
+      categories: [{id: "events", label: "Event log", sectionIds: ["events"]}],
+      selectedCategoryId: "events",
+      query: "",
+      sections: [{id: "events", label: "Events", expanded: true}],
+    })
+    sourceButton.click()
+    htmlButton.click()
+    expect(sourceButton.parentNode).toBeNull()
+    expect(htmlSection.parentNode).toBeNull()
+    expect(controller.refs.categoryButtons.has("source")).toBeFalse()
+    expect(controller.refs.sectionElements.has("html")).toBeFalse()
+    expect(nextEvents).toEqual(["source"])
   })
 
-  test("reports only actual scroll changes and clamps after content shrink", () => {
-    const surface = new RecordingSurface()
-    const positions: Array<{left: number; top: number}> = []
-    const props = {
-      key: "scroll-inspector",
-      categories: [{id: "source", label: "Source", iconSrc: uiIcons.manual, sectionIds: ["html", "css"]}],
+  test("validates identities before changing an existing tree", () => {
+    const document = createDocument()
+    const controller = createInspector(document, fixture())
+    const sourceButton = controller.refs.categoryButtons.get("source")
+    const sectionCount = controller.refs.sectionElements.size
+
+    expect(() => controller.update({
+      categories: [{id: "source", label: "A"}, {id: "source", label: "B"}],
       selectedCategoryId: "source",
-      sections: [
-        {id: "html", label: "HTML", expanded: true, contentHeight: 220, render() {}},
-        {id: "css", label: "CSS", expanded: true, contentHeight: 220, render() {}},
-      ],
-      onSectionsScrollChange: (position: {left: number; top: number}) => positions.push(position),
-    } as const
-
-    Inspector(surface, 0, 0, 320, 180, props)
-    expect(positions).toEqual([])
-    divScrollTo(surface, "scroll-inspector:sections", {top: 70})
-    Inspector(surface, 0, 0, 320, 180, props)
-    expect(positions).toEqual([{left: 0, top: 70}])
-
-    Inspector(surface, 0, 0, 320, 180, {...props, query: "missing"})
-    expect(positions.at(-1)).toEqual({left: 0, top: 0})
-  })
-
-  test("rejects duplicate and dangling public identities", () => {
-    const section = {id: "html", label: "HTML", expanded: false, contentHeight: 0, render() {}} as const
-    expect(() => planInspector(0, 0, 300, 200, {
-      categories: [{id: "source", label: "A", iconSrc: uiIcons.manual}, {id: "source", label: "B", iconSrc: uiIcons.log}],
-      selectedCategoryId: "source",
-      sections: [section],
+      query: "",
+      sections: [],
     })).toThrow("Inspector category id must be unique: source")
-    expect(() => planInspector(0, 0, 300, 200, {
-      categories: [{id: "source", label: "A", iconSrc: uiIcons.manual, sectionIds: ["missing"]}],
+    expect(() => controller.update({
+      categories: [{id: "source", label: "A", sectionIds: ["missing"]}],
       selectedCategoryId: "source",
-      sections: [section],
+      query: "",
+      sections: [],
     })).toThrow("Inspector category references unknown section: source/missing")
+    expect(() => controller.update({
+      categories: [{id: "source", label: "A"}],
+      selectedCategoryId: "missing",
+      query: "",
+      sections: [],
+    })).toThrow("Inspector selected category does not exist: missing")
+    const sharedContent = document.createElement("span")
+    expect(() => controller.update({
+      categories: [{id: "source", label: "A"}],
+      selectedCategoryId: "source",
+      query: "",
+      sections: [
+        {id: "one", label: "One", expanded: true, content: sharedContent},
+        {id: "two", label: "Two", expanded: true, content: sharedContent},
+      ],
+    })).toThrow("Inspector content node has multiple owners: two")
+
+    expect(controller.refs.categoryButtons.get("source")).toBe(sourceButton)
+    expect(controller.refs.sectionElements.size).toBe(sectionCount)
   })
 
-  test("keeps Inspector neutral and composed through Flex and UI owners", async () => {
+  test("keeps the public leaf DOM-only and wired through its exact package path", async () => {
     const source = await Bun.file(new URL("./inspector.ts", import.meta.url)).text()
-    expect(source).toContain('from "@layout/core/flex"')
-    expect(source).toContain('from "./pane.ts"')
-    expect(source).toContain('from "./text-field.ts"')
-    expect(source).toContain('overflowY: "auto"')
-    expect(source).toContain("scrollContentHeight: currentPlan.sectionsContentHeight")
-    expect(source).not.toContain("Storybook")
-    expect(source).not.toContain("Blender")
-    expect(source).not.toContain("surface.drawRect")
+    const requirements = await Bun.file(new URL("./requirements.md", import.meta.url)).text()
+    const manifest = await Bun.file(new URL("./package.json", import.meta.url)).json() as {
+      exports: Record<string, string>
+      dependencies: Record<string, string>
+    }
+
+    expect(source).toContain('from "@zavx0z/dom"')
+    expect(source).toContain("search.value")
+    expect(source).not.toContain('getAttribute("value")')
+    for (const forbidden of ["UiSurface", "@engine/core", "@layout/core", "@ui/elements", "@zavx0z/renderer"]) {
+      expect(source).not.toContain(forbidden)
+    }
+    expect(source).not.toMatch(/\b(?:x|y|width|height): number\b/)
+    expect(manifest.exports["./inspector"]).toBe("./inspector.ts")
+    expect(manifest.exports["./dom/inspector"]).toBeUndefined()
+    expect(manifest.dependencies["@zavx0z/dom"]).toBe("link:@zavx0z/dom")
+    expect(requirements).toContain("UI-DOM-INSPECTOR-001")
+    expect(requirements).toContain("HTMLInputElement")
   })
 })
 
-function hitOptions(call: HitCall): HitOptions | undefined {
-  const value = call[5]
-  return typeof value === "string" ? {cursor: value} : value
+function fixture(options: Readonly<{
+  contentNode?: HTMLElement
+  disabledCategoryId?: string
+  onCategoryChange?(id: string): void
+  onQueryChange?(query: string): void
+  onSectionToggle?(id: string, expanded: boolean): void
+}> = {}): InspectorDomProps {
+  return {
+    ariaLabel: "Inspector",
+    categories: [
+      {id: "source", label: "Source", title: "Source files", sectionIds: ["html"]},
+      {
+        id: "events",
+        label: "Events",
+        groupStart: true,
+        sectionIds: ["events"],
+        ...(options.disabledCategoryId === "events" ? {disabled: true} : {}),
+      },
+    ],
+    selectedCategoryId: "source",
+    query: "",
+    searchLabel: "Search sections",
+    searchPlaceholder: "Search",
+    context: {label: "Button"},
+    sections: [
+      {
+        id: "html",
+        label: "HTML",
+        expanded: true,
+        ...(options.contentNode === undefined ? {content: "Markup"} : {content: options.contentNode}),
+      },
+      {id: "events", label: "Events", expanded: false, content: "Event stream"},
+    ],
+    ...(options.onCategoryChange === undefined ? {} : {onCategoryChange: options.onCategoryChange}),
+    ...(options.onQueryChange === undefined ? {} : {onQueryChange: options.onQueryChange}),
+    ...(options.onSectionToggle === undefined ? {} : {onSectionToggle: options.onSectionToggle}),
+  }
 }

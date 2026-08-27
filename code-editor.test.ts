@@ -1,297 +1,190 @@
 import {describe, expect, test} from "bun:test"
-import {Color} from "@engine/core"
-import {handleActiveInputKey, surfaceHasActiveInput} from "@layout/core/text-input"
-import {UiSurface, type HitOptions, type UiSurface as UiSurfaceType} from "@layout/core/surface"
-import {divScrollTo} from "@ui/elements/div"
-import {opaqueRgba8ToColor, rgba8ToColor, uiTheme} from "@ui/elements/theme-reference"
 import {
-  CodeEditor,
-  codeEditorScrollPosition,
-  type CodeEditorSelection,
+  createDocument,
+  HTMLLIElement,
+  HTMLUListElement,
+  Text,
+} from "@zavx0z/dom"
+import {
+  codeEditorCss,
+  createCodeEditor,
 } from "./code-editor.ts"
 
-type DrawTextCall = Parameters<UiSurfaceType["drawText"]>
-type ClipCall = Parameters<UiSurfaceType["pushClip"]>
-type DrawRectCall = Parameters<UiSurfaceType["drawRect"]>
-type DrawRoundedRectCall = Parameters<UiSurfaceType["drawRoundedRect"]>
-
-class RecordingSurface extends UiSurface {
-  readonly texts: DrawTextCall[] = []
-  readonly keyedRenders: string[] = []
-  readonly hits = new Map<string, HitOptions>()
-  readonly hitRects = new Map<string, Readonly<{x: number; y: number; w: number; h: number}>>()
-  readonly clips: ClipCall[] = []
-  readonly rects: DrawRectCall[] = []
-  readonly roundedRects: DrawRoundedRectCall[] = []
-
-  override measureText(text: string, fontPx: number): number {
-    return [...text].length * fontPx * 0.6
-  }
-
-  override drawText(...args: DrawTextCall): number {
-    this.texts.push(args)
-    return this.measureText(args[0], args[3].fontPx)
-  }
-
-  override drawRoundedRect(...args: DrawRoundedRectCall): void { this.roundedRects.push(args) }
-  override drawRect(...args: DrawRectCall): void { this.rects.push(args) }
-  override pushClip(...args: ClipCall): void { this.clips.push(args) }
-  override popClip(): void {}
-  override requestKeyedRender(key: string): void { this.keyedRenders.push(key) }
-  override hit(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    _action: () => void,
-    cursorOrOptions: string | HitOptions = "pointer",
-  ): void {
-    if (typeof cursorOrOptions !== "string" && cursorOrOptions.key !== undefined) {
-      this.hits.set(cursorOrOptions.key, cursorOrOptions)
-      this.hitRects.set(cursorOrOptions.key, {x, y, w, h})
-    }
-  }
-  protected render(): void {}
-}
-
-describe("CodeEditor read-only component", () => {
-  test("composes fixed gutter and grow text slots through one Flex plan", async () => {
-    const source = await Bun.file(new URL("./code-editor.ts", import.meta.url)).text()
-
-    expect(source).toContain('import {flexRow} from "@layout/core/flex"')
-    expect(source.match(/\bflexRow\(\{/g)).toHaveLength(1)
-    expect(source).toContain("width: gutterWidth")
-    expect(source).toContain('width: "grow"')
-    expect(source).not.toContain("codeStartX")
-    expect(source).not.toContain("codeClipX")
-    expect(source).not.toContain("createRetainedParent")
-    expect(source).not.toContain("materializeRetainedParent")
-    expect(source).not.toContain("drawRoundedRect")
-  })
-
-  test("resolves TypeScript, shows line numbers and uses distinct Islands Dark materials", () => {
-    const surface = new RecordingSurface()
-    CodeEditor(surface, 0, 0, 320, 160, {
-      key: "syntax",
-      value: 'const name = "demo"\n// comment\nconst count = 42',
+describe("production semantic DOM CodeEditor", () => {
+  test("creates one standard section/gutter/pre/code tree with source-backed highlighting", () => {
+    const controller = createCodeEditor(createDocument(), {
+      value: "const output = 42\noutput.title = \"Rendered\"",
       readOnly: true,
       languageId: "typescript",
+      path: "output.ts",
+      title: "TypeScript source",
     })
-
-    expect(surface.texts.some(([text]) => text === "1")).toBeTrue()
-    expect(surface.texts.some(([text]) => text === "2")).toBeTrue()
-    expect(surface.texts.some(([text]) => text === "3")).toBeTrue()
-    expect(surface.roundedRects[0]?.[4]).toMatchObject({
-      fill: opaqueRgba8ToColor(uiTheme.spaceText.back),
-      border: rgba8ToColor(uiTheme.material.editorOutline),
-    })
-    expect(surface.rects.map((call) => call[4])).toContainEqual(rgba8ToColor(uiTheme.spaceText.gutter))
-    expect(surface.rects[0]?.slice(0, 2)).toEqual([1, 1])
-    expect(surface.texts.find(([text]) => text === "1")?.[3].material.color)
-      .toEqual(rgba8ToColor(uiTheme.spaceText.lineNumbers))
-    const keyword = surface.texts.find(([text]) => text === "const")
-    const string = surface.texts.find(([text]) => text.includes('"demo"'))
-    const comment = surface.texts.find(([text]) => text.includes("// comment"))
-    const number = surface.texts.find(([text]) => text === "42")
-    expect(keyword).toBeDefined()
-    expect(string).toBeDefined()
-    expect(comment).toBeDefined()
-    expect(number).toBeDefined()
-    expect(new Set([keyword, string, comment, number].map((call) => {
-      const color = call![3].material.color
-      return `${color.r}:${color.g}:${color.b}:${color.a}`
-    }))).toHaveLength(4)
+    const {root, gutter, viewport, code, lineNumbers, lines, tokens} = controller.refs
+    expect(controller.element).toBe(root)
+    expect(root.localName).toBe("section")
+    expect(root.getAttribute("aria-readonly")).toBe("true")
+    expect(root.getAttribute("data-language-id")).toBe("typescript")
+    expect(root.getAttribute("data-path")).toBe("output.ts")
+    expect(root.title).toBe("TypeScript source")
+    expect(root.childNodes).toEqual([gutter, viewport])
+    expect(gutter).toBeInstanceOf(HTMLUListElement)
+    expect(gutter.localName).toBe("ul")
+    expect(gutter.getAttribute("aria-hidden")).toBe("true")
+    expect(viewport.localName).toBe("pre")
+    expect(viewport.childNodes).toEqual([code])
+    expect(code.localName).toBe("code")
+    expect(lineNumbers.size).toBe(2)
+    expect(lines.size).toBe(2)
+    expect(tokens.size).toBeGreaterThan(4)
+    expect(lineNumbers.get("0")).toBeInstanceOf(HTMLLIElement)
+    expect(lineNumbers.get("0")!.textContent).toBe("1")
+    expect(lines.get("0")!.textContent).toBe("const output = 42")
+    expect([...tokens.values()].some((token) => token.getAttribute("style")?.includes("color:#"))).toBeTrue()
   })
 
-  test("gives explicit tokens precedence over language resolution", () => {
-    const surface = new RecordingSurface()
-    CodeEditor(surface, 0, 0, 240, 100, {
-      key: "explicit",
-      value: "plain",
-      readOnly: true,
-      languageId: "plaintext",
-      showLineNumbers: false,
-      tokens: [[{s: 0, e: 5, c: "d", fg: "#123456"}]],
-    })
-
-    const plain = surface.texts.find(([text]) => text === "plain")
-    expect(plain).toBeDefined()
-    expect(plain![3].material.color).toEqual(new Color("#123456"))
-  })
-
-  test("normalizes CRLF into exact source rows", () => {
-    const surface = new RecordingSurface()
-    CodeEditor(surface, 0, 0, 240, 100, {
-      key: "crlf",
-      value: "first\r\nsecond",
-      readOnly: true,
-      languageId: "plaintext",
-    })
-    expect(surface.texts.some(([text]) => text === "1")).toBeTrue()
-    expect(surface.texts.some(([text]) => text === "2")).toBeTrue()
-    expect(surface.texts.some(([text]) => text.includes("\r"))).toBeFalse()
-  })
-
-  test("selects with one pointer range and copies only that range through Cmd+C", async () => {
-    const surface = new RecordingSurface()
-    const selections: Array<CodeEditorSelection | null> = []
-    const copied: string[] = []
-    const navigatorObject = globalThis.navigator as Navigator & {clipboard?: Clipboard}
-    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigatorObject, "clipboard")
-    Object.defineProperty(navigatorObject, "clipboard", {
-      configurable: true,
-      value: {writeText: async (text: string) => { copied.push(text) }},
-    })
-
-    try {
-      CodeEditor(surface, 0, 0, 300, 120, {
-        key: "selection",
-        value: "alpha beta\nsecond",
-        readOnly: true,
-        showLineNumbers: false,
-        fontPx: 10,
-        linePx: 14,
-        onSelectionChange: (selection) => { selections.push(selection) },
-      })
-
-      const pointer = {button: 0, preventDefault() {}} as MouseEvent
-      const hit = surface.hits.get("selection")
-      expect(hit).toBeDefined()
-      hit!.onPointerDown?.(7, 10, pointer)
-      hit!.onPointerMove?.(37, 10, pointer)
-      hit!.onPointerUp?.(pointer)
-      expect(selections.at(-1)?.text).toBe("alpha")
-      expect(surfaceHasActiveInput(surface)).toBeFalse()
-
-      let prevented = 0
-      expect(handleActiveInputKey(surface, {
-        key: "c",
-        metaKey: true,
-        ctrlKey: false,
-        preventDefault: () => { prevented++ },
-      } as KeyboardEvent)).toBeTrue()
-      await Promise.resolve()
-      await Promise.resolve()
-      expect(prevented).toBe(1)
-      expect(copied).toEqual(["alpha"])
-
-      CodeEditor(surface, 0, 0, 300, 120, {
-        key: "selection",
-        value: "replacement",
-        readOnly: true,
-        showLineNumbers: false,
-        onSelectionChange: (selection) => { selections.push(selection) },
-      })
-      await Promise.resolve()
-      expect(selections.at(-1)).toBeNull()
-    } finally {
-      if (clipboardDescriptor === undefined) {
-        Object.defineProperty(navigatorObject, "clipboard", {configurable: true, value: undefined})
-      } else Object.defineProperty(navigatorObject, "clipboard", clipboardDescriptor)
-    }
-  })
-
-  test("keeps a fixed gutter while both scroll axes use the stable key", () => {
-    const surface = new RecordingSurface()
-    const value = [
-      `const horizontal = "${"x".repeat(120)}"`,
-      ...Array.from({length: 40}, (_, index) => `const line${index} = ${index}`),
-    ].join("\n")
-    const positions: Array<Readonly<{left: number; top: number}>> = []
-    const props = {
-      key: "scroll",
-      value,
+  test("gives supplied Tokens priority and preserves explicit foreground/background", () => {
+    const controller = createCodeEditor(createDocument(), {
+      value: "plain token",
       readOnly: true,
       languageId: "typescript",
-      onScrollChange: (position: Readonly<{left: number; top: number}>) => { positions.push(position) },
-    } as const
-    CodeEditor(surface, 0, 0, 180, 100, props)
-    const firstGutterX = surface.texts.find(([text]) => text === "1")?.[1]
-    const codeClip = surface.clips.at(-1)
-    expect(codeClip?.[0]).toBeGreaterThan(6)
-    CodeEditor(surface, 0, 0, 180, 100, props)
-    expect(positions).toHaveLength(1)
-    divScrollTo(surface, "scroll", {left: 180, top: 80})
-    surface.texts.length = 0
-    CodeEditor(surface, 0, 0, 180, 100, props)
-
-    expect(codeEditorScrollPosition(surface, "scroll").left).toBeGreaterThan(0)
-    expect(codeEditorScrollPosition(surface, "scroll").top).toBeGreaterThan(0)
-    expect(surface.texts.find(([text]) => text === "6")?.[1]).toBe(firstGutterX)
-    expect(positions).toHaveLength(2)
+      tokens: [[{s: 6, e: 11, c: "custom.scope", fg: "#abc", bg: "#102030"}]],
+    })
+    expect(controller.refs.root.getAttribute("data-language-id")).toBe("typescript")
+    expect(controller.refs.tokens.size).toBe(2)
+    const explicit = controller.refs.tokens.get("0:token:6:11:custom.scope")!
+    expect(explicit.textContent).toBe("token")
+    expect(explicit.getAttribute("style")).toBe("color:#aabbcc;background:#102030")
+    const gap = controller.refs.tokens.get("0:gap:0:6:plain")!
+    expect(gap.textContent).toBe("plain ")
+    expect(gap.getAttribute("data-token-category")).toBe("plain")
   })
 
-  test("keeps a partially visible first row after scrolling by one line", () => {
-    const surface = new RecordingSurface()
-    const props = {
-      key: "vertical-inset",
-      value: Array.from({length: 20}, (_, index) => `row-${index + 1}`).join("\n"),
+  test("retains keyed line, number, token and Text identities across updates", () => {
+    const controller = createCodeEditor(createDocument(), {
+      value: "alpha\nbeta",
       readOnly: true,
-      languageId: "plaintext",
-      fontPx: 10,
-      linePx: 16,
-    } as const
+      tokens: [
+        [{s: 0, e: 5, c: "k"}],
+        [{s: 0, e: 4, c: "s"}],
+      ],
+    })
+    const firstLine = controller.refs.lines.get("0")!
+    const secondLine = controller.refs.lines.get("1")!
+    const firstNumber = controller.refs.lineNumbers.get("0")!
+    const firstNumberText = firstNumber.firstChild
+    const firstToken = controller.refs.tokens.get("0:token:0:5:k")!
+    const firstTokenText = firstToken.firstChild
 
-    CodeEditor(surface, 0, 0, 180, 48, props)
-    divScrollTo(surface, "vertical-inset", {top: 16})
-    surface.texts.length = 0
-    CodeEditor(surface, 0, 0, 180, 48, props)
-
-    expect(codeEditorScrollPosition(surface, "vertical-inset").top).toBe(16)
-    expect(surface.texts.some(([text]) => text === "1")).toBeTrue()
-    expect(surface.texts.some(([text]) => text === "row-1")).toBeTrue()
-    const textHit = surface.hitRects.get("vertical-inset")
-    expect(textHit?.x).toBeGreaterThan(0)
-  })
-
-  test("maps pointer selection through both scroll axes inside the text slot", () => {
-    const surface = new RecordingSurface()
-    const selections: Array<CodeEditorSelection | null> = []
-    const props = {
-      key: "scrolled-selection",
-      value: Array.from({length: 12}, (_, index) => `${"abcdefghij".repeat(4)}-${index}`).join("\n"),
+    controller.update({
+      value: "omega\nbeta\ngamma",
       readOnly: true,
       showLineNumbers: false,
-      fontPx: 10,
-      linePx: 16,
-      onSelectionChange: (selection: CodeEditorSelection | null) => { selections.push(selection) },
-    } as const
+      tokens: [
+        [{s: 0, e: 5, c: "k"}],
+        [{s: 0, e: 4, c: "s"}],
+        [{s: 0, e: 5, c: "n"}],
+      ],
+    })
+    expect(controller.refs.lines.get("0")).toBe(firstLine)
+    expect(controller.refs.lines.get("1")).toBe(secondLine)
+    expect(controller.refs.lineNumbers.get("0")).toBe(firstNumber)
+    expect(firstNumber.firstChild).toBe(firstNumberText)
+    expect(controller.refs.tokens.get("0:token:0:5:k")).toBe(firstToken)
+    expect(firstToken.firstChild).toBe(firstTokenText)
+    expect(firstToken.textContent).toBe("omega")
+    expect(controller.refs.lines.size).toBe(3)
+    expect(controller.refs.gutter.hasAttribute("hidden")).toBeTrue()
 
-    CodeEditor(surface, 0, 0, 80, 48, props)
-    divScrollTo(surface, "scrolled-selection", {left: 12, top: 16})
-    CodeEditor(surface, 0, 0, 80, 48, props)
-
-    expect(codeEditorScrollPosition(surface, "scrolled-selection")).toEqual({left: 12, top: 16})
-    const pointer = {button: 0, preventDefault() {}} as MouseEvent
-    const hit = surface.hits.get("scrolled-selection")
-    expect(hit).toBeDefined()
-    hit!.onPointerDown?.(1, 2, pointer)
-    hit!.onPointerMove?.(31, 2, pointer)
-    hit!.onPointerUp?.(pointer)
-
-    expect(selections.at(-1)?.range.start.line).toBe(0)
-    expect(selections.at(-1)?.range.end.line).toBe(0)
-    expect(selections.at(-1)?.text).toBe("bcdef")
+    controller.update({
+      value: "final",
+      readOnly: true,
+      tokens: [[{s: 0, e: 5, c: "k"}]],
+    })
+    expect(controller.refs.lines.get("0")).toBe(firstLine)
+    expect(controller.refs.lines.has("1")).toBeFalse()
+    expect(controller.refs.tokens.has("1:token:0:4:s")).toBeFalse()
   })
 
-  test("leaves Cmd+C unhandled when the pointer selection is empty", () => {
-    const surface = new RecordingSurface()
-    CodeEditor(surface, 0, 0, 220, 90, {
-      key: "empty-selection",
+  test("normalizes line endings and resolves language from path with plaintext fallback", () => {
+    const css = createCodeEditor(createDocument(), {
+      value: "a {\r\n  color: red\r}",
+      readOnly: true,
+      path: "theme.css",
+    })
+    expect(css.props.value).toBe("a {\n  color: red\n}")
+    expect(css.refs.root.getAttribute("data-language-id")).toBe("css")
+    expect(css.refs.lines.size).toBe(3)
+
+    const swatch = createCodeEditor(createDocument(), {
+      value: ".pane { background: rgba(12, 18, 30, 0.78); }",
+      readOnly: true,
+      path: "swatch.css",
+    })
+    expect([...swatch.refs.tokens.values()].some((token) =>
+      token.getAttribute("style")?.includes("background:rgba(12, 18, 30, 0.78)"),
+    )).toBeTrue()
+
+    const plain = createCodeEditor(createDocument(), {value: "value", readOnly: true})
+    expect(plain.refs.root.getAttribute("data-language-id")).toBe("plaintext")
+  })
+
+  test("rejects invalid props and Tokens before mutating the stable tree", () => {
+    const controller = createCodeEditor(createDocument(), {
       value: "alpha",
       readOnly: true,
-      showLineNumbers: false,
+      tokens: [[{s: 0, e: 5, c: "k"}]],
     })
-    const hit = surface.hits.get("empty-selection")
-    expect(hit).toBeDefined()
-    const pointer = {button: 0, preventDefault() {}} as MouseEvent
-    hit!.onPointerDown?.(12, 12, pointer)
-    hit!.onPointerUp?.(pointer)
-    expect(handleActiveInputKey(surface, {
-      key: "c",
-      metaKey: true,
-      ctrlKey: false,
-      preventDefault() {},
-    } as KeyboardEvent)).toBeFalse()
+    const props = controller.props
+    const line = controller.refs.lines.get("0")!
+    const token = controller.refs.tokens.get("0:token:0:5:k")!
+    expect(() => controller.update({value: "alpha", readOnly: false as true}))
+      .toThrow("readOnly must be true")
+    expect(() => controller.update({value: "alpha\nbeta", readOnly: true, tokens: [[]]}))
+      .toThrow("exactly one row per line")
+    expect(() => controller.update({value: "alpha", readOnly: true, tokens: [[
+      {s: 0, e: 3, c: "k"},
+      {s: 2, e: 5, c: "s"},
+    ]]})).toThrow("tokens overlap")
+    expect(() => controller.update({value: "alpha", readOnly: true, tokens: [[
+      {s: 0, e: 5, c: "k", fg: "red"},
+    ]]})).toThrow("foreground must be a hex color")
+    expect(controller.props).toBe(props)
+    expect(controller.refs.lines.get("0")).toBe(line)
+    expect(controller.refs.tokens.get("0:token:0:5:k")).toBe(token)
+  })
+
+  test("disposes without removing the consumer-owned section", () => {
+    const document = createDocument()
+    const host = document.createElement("div")
+    const controller = createCodeEditor(document, {value: "value", readOnly: true})
+    document.appendChild(host)
+    host.appendChild(controller.element)
+    controller.dispose()
+    controller.dispose()
+    expect(controller.element.parentNode).toBe(host)
+    expect(() => controller.update({value: "next", readOnly: true}))
+      .toThrow("CodeEditor controller is disposed")
+  })
+
+  test("publishes one exact DOM-only leaf without clipboard or retained owners", async () => {
+    const source = await Bun.file(new URL("./code-editor.ts", import.meta.url)).text()
+    const requirements = await Bun.file(new URL("./dom/requirements.md", import.meta.url)).text()
+    const manifest = await Bun.file(new URL("./package.json", import.meta.url)).json() as {exports: Record<string, string>}
+    expect(codeEditorCss).toContain("overflow: auto")
+    expect(codeEditorCss).toContain(".ui-code-editor__line")
+    expect(codeEditorCss).toContain("flex-direction: row")
+    expect(codeEditorCss).toContain("flex-shrink: 0")
+    expect(codeEditorCss).toContain("scrollbar-width: thin")
+    expect(codeEditorCss).toContain("white-space: nowrap")
+    expect(codeEditorCss).not.toContain("&")
+    for (const forbidden of [
+      "@engine/core", "@layout/core", "@ui/elements", "@zavx0z/renderer",
+      ["@zavx0z", "storybook"].join("/"), "UiSurface", "textarea",
+      "clipboard", "selection", "caret", "dispatchEvent", "../code-editor",
+    ]) expect(source).not.toContain(forbidden)
+    expect(manifest.exports["./code-editor"]).toBe("./code-editor.ts")
+    expect(Object.keys(manifest.exports).some((key) => key.startsWith("./dom/"))).toBeFalse()
+    expect(requirements).toContain("UI-DOM-CODE-EDITOR-001")
+    expect(requirements).toContain("caret, selection, clipboard")
   })
 })
