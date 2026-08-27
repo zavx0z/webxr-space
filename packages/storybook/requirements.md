@@ -1,8 +1,8 @@
-# UI component graph catalog requirements
+# @webxr-space/storybook UI component graph requirements
 
-The catalog is development integration owned by `webxr-space`. It projects the
-exact pinned child revisions; no child repository imports the catalog or the
-superproject.
+The Storybook is development integration owned by `webxr-space`. It projects
+the exact pinned child revisions; no child repository imports the package or
+the superproject.
 
 ## Source projection
 
@@ -50,7 +50,9 @@ superproject.
    rounded-corner cubic pipeline, and stays addressable through the layout ID
    map.
 8. Каждый relation получает собственные source/target route ports. Ports одного
-   node+role распределяются детерминированно по ширине карточки; совпадающие
+   node+role распределяются детерминированно по ширине карточки. Coffman–Graham
+   сохраняет набор measured X-слотов и упорядочивает их edge identities по
+   соседним dummy-lanes. Совпадающие
    endpoints, общие trunks и физический bundling запрещены.
 9. The exact route always draws the complete 85-relation projection. Query
    parameters do not hide a backbone subset or select another edge renderer;
@@ -58,3 +60,12 @@ superproject.
 10. The catalog imports the production solver and public geometry types only
     from `@nodes/layout/coffman-graham`. Its browser bundle contains that exact
     policy and excludes the Dagre top-down implementation.
+11. Avoidable corridor crossings are removed by cost-aware track ordering.
+    Every residual fixed-anchor inversion arrives as one typed crossing event;
+    the under-edge is rendered with a short deterministic gap while the
+    diagonal over-edge stays continuous. Crossing presentation is not a second
+    edge type or router.
+12. The target ingress zone from the Coffman–Graham policy remains clear:
+    every avoidable port-order inversion is removed before routing, and every
+    remaining lateral transition finishes before the final straight section
+    into a node's assigned `NORTH` port.

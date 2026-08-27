@@ -12,7 +12,7 @@
   },
   "include": [
     "scripts/**/*.ts",
-    "catalog/**/*.ts",
+    "packages/storybook/**/*.ts",
     "graphs/**/*.json"
   ],
   "exclude": ["projects/**", "dist/**"]

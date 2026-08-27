@@ -1,7 +1,7 @@
 import {describe, expect, test} from "bun:test"
-import graph from "../graphs/ui-component-graph.json"
-import type {UiComponentGraph} from "../scripts/ui-component-graph.ts"
-import {loadUiGraphStories, matchUiGraphStory} from "./ui-story-adapter.ts"
+import graph from "../../../graphs/ui-component-graph.json"
+import type {UiComponentGraph} from "../../../scripts/ui-component-graph.ts"
+import {loadUiGraphStories, matchUiGraphStory} from "./stories.ts"
 
 const typedGraph = graph as unknown as UiComponentGraph
 
@@ -62,7 +62,7 @@ describe("webxr-space UI story adapter", () => {
       if (preview!.match!.kind === "api-name") {
         expect(preview!.match!.index.apiName.split(/[\s/]+/)).toContain(node.exportName)
       } else {
-        expect(preview!.module!.source(preview!.module!.defaultArgs)).toContain(node.exportName)
+        expect(preview!.module!.source(preview!.module!.defaultArgs).typescript).toContain(node.exportName)
       }
     }
   })
@@ -81,7 +81,10 @@ describe("webxr-space UI story adapter", () => {
       expect(preview.error).toBeNull()
       expect(preview.module).not.toBeNull()
       expect(Object.isFrozen(preview.module!.defaultArgs)).toBeTrue()
-      expect(preview.module!.source(preview.module!.defaultArgs).trim().length).toBeGreaterThan(0)
+      const source = preview.module!.source(preview.module!.defaultArgs)
+      expect(source.html.trim().length).toBeGreaterThan(0)
+      expect(source.css.trim().length).toBeGreaterThan(0)
+      expect(source.typescript.trim().length).toBeGreaterThan(0)
     }
   })
 })

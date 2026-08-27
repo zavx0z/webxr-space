@@ -7,7 +7,7 @@ import type {
   UiComponentGraph,
   UiComponentGraphEdge,
   UiComponentGraphNode,
-} from "../scripts/ui-component-graph.ts"
+} from "../../../scripts/ui-component-graph.ts"
 
 export type UiComponentGraphLayout = Readonly<{
   graph: UiComponentGraph

@@ -1,17 +1,26 @@
 import {describe, expect, test} from "bun:test"
-import graph from "../graphs/ui-component-graph.json"
-import type {UiComponentGraph} from "../scripts/ui-component-graph.ts"
+import {rgba8ToColor, resolveOpaqueRgba8, activeUiTheme} from "@ui/elements/theme"
+import graph from "../../../graphs/ui-component-graph.json"
+import type {UiComponentGraph} from "../../../scripts/ui-component-graph.ts"
 import {createUiComponentGraphLayout} from "./ui-component-graph-model.ts"
-import {loadUiGraphStories} from "./ui-story-adapter.ts"
+import {loadUiGraphStories} from "./stories.ts"
 import {
   fitUiComponentGraphBounds,
   summarizeUiComponentGraphPreviews,
+  UI_COMPONENT_GRAPH_BACKGROUND,
   uiComponentEdgePoints,
-} from "./ui-component-graph-surface.ts"
+} from "./preview.ts"
 
 const layout = createUiComponentGraphLayout(graph as unknown as UiComponentGraph)
 
 describe("UI component graph fit-only presentation", () => {
+  test("uses the active Blender node-editor background instead of the legacy palette", () => {
+    expect(UI_COMPONENT_GRAPH_BACKGROUND).toEqual(rgba8ToColor(resolveOpaqueRgba8(
+      activeUiTheme.spaceNode.back,
+      activeUiTheme.spaceNode.navigationBar,
+    )))
+  })
+
   test("fits the complete graph inside the initial viewport without a zoom input", () => {
     const viewport = {x: 0, y: 38, w: 1920, h: 1050}
     const padding = 28

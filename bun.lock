@@ -18,6 +18,24 @@
         "typescript-classic": "npm:typescript@6.0.3",
       },
     },
+    "packages/storybook": {
+      "name": "@webxr-space/storybook",
+      "version": "0.0.0",
+      "dependencies": {
+        "@engine/core": "link:@engine/core",
+        "@layout/core": "link:@layout/core",
+        "@nodes/layout": "link:@nodes/layout",
+        "@ui/components": "link:@ui/components",
+        "@ui/elements": "link:@ui/elements",
+        "@zavx0z/highlighter": "link:@zavx0z/highlighter",
+        "@zavx0z/storybook": "link:@zavx0z/storybook",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.4.0",
+        "@webgpu/types": "^0.1.68",
+        "typescript": "^7.0.2",
+      },
+    },
   },
   "packages": {
     "@engine/core": ["@engine/core@link:@engine/core", {}],
@@ -76,9 +94,11 @@
 
     "@webgpu/types": ["@webgpu/types@0.1.72", "", {}, "sha512-0cF7RFM2edNoiIS1ODJp0/Gzv4/xSXhwoR0YCza+OWpJWtn4wmo9DvK91aLlH9+uUnwIriP7ZiC3WitmyhuzBw=="],
 
+    "@webxr-space/storybook": ["@webxr-space/storybook@workspace:packages/storybook"],
+
     "@zavx0z/highlighter": ["@zavx0z/highlighter@link:@zavx0z/highlighter", {}],
 
-    "@zavx0z/storybook": ["@zavx0z/storybook@link:@zavx0z/storybook", {}],
+    "@zavx0z/storybook": ["@zavx0z/storybook@link:@zavx0z/storybook", { "bin": { "storybook": "./scripts/storybook.ts", "create-storybook": "./scripts/create-storybook.ts" } }],
 
     "bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
 

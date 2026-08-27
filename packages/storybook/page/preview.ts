@@ -2,16 +2,20 @@ import {Color, Object3D} from "@engine/core"
 import {Pane} from "@ui/components/pane"
 import {Typography} from "@ui/components/typography"
 import {div} from "@ui/elements/div"
-import {palette} from "@ui/elements/theme"
+import {
+  activeUiTheme,
+  rgba8ToColor,
+  resolveOpaqueRgba8,
+} from "@ui/elements/theme"
 import {UiSurface, Z} from "@layout/core/surface"
 import type {LayoutPoint} from "@nodes/layout/types"
 import type {CoffmanGrahamLayoutResult} from "@nodes/layout/coffman-graham"
-import type {UiComponentGraphNode} from "../scripts/ui-component-graph.ts"
+import type {UiComponentGraphNode} from "../../../scripts/ui-component-graph.ts"
 import {
   createUiComponentGraphLayout,
   type UiComponentGraphLayout,
 } from "./ui-component-graph-model.ts"
-import type {UiGraphStoryPreview} from "./ui-story-adapter.ts"
+import type {UiGraphStoryPreview} from "./stories.ts"
 
 type Rect = Readonly<{x: number; y: number; w: number; h: number}>
 export type UiComponentGraphFit = Readonly<{x: number; y: number; scale: number}>
@@ -30,6 +34,10 @@ const NODE_RADIUS = 5
 const EDGE_COLOR = new Color(0.68, 0.72, 0.75, 0.86)
 const ELEMENT_HEADER = new Color(0.18, 0.39, 0.46, 0.94)
 const COMPONENT_HEADER = new Color(0.34, 0.25, 0.48, 0.94)
+export const UI_COMPONENT_GRAPH_BACKGROUND = rgba8ToColor(resolveOpaqueRgba8(
+  activeUiTheme.spaceNode.back,
+  activeUiTheme.spaceNode.navigationBar,
+))
 
 export class UiComponentGraphSurface extends UiSurface {
   readonly #layout: UiComponentGraphLayout
@@ -45,7 +53,7 @@ export class UiComponentGraphSurface extends UiSurface {
     graph: UiComponentGraphLayout["graph"],
     previews: ReadonlyMap<string, UiGraphStoryPreview>,
   ) {
-    super({bgColor: palette.bg, borderColor: null})
+    super({bgColor: UI_COMPONENT_GRAPH_BACKGROUND, borderColor: null})
     this.#layout = createUiComponentGraphLayout(graph)
     this.#previews = previews
     this.node.name = "UiComponentGraphSurface"
@@ -77,7 +85,7 @@ export class UiComponentGraphSurface extends UiSurface {
 
   protected override render(): void {
     this.withLayer("underlay", () => {
-      this.drawRect(0, 0, this.rectW, this.rectH, palette.bg, Z.CONTAINER)
+      this.drawRect(0, 0, this.rectW, this.rectH, UI_COMPONENT_GRAPH_BACKGROUND, Z.CONTAINER)
     })
     const viewport: Rect = {
       x: 0,
@@ -96,10 +104,10 @@ export class UiComponentGraphSurface extends UiSurface {
     this.updateRetainedViewportClip(this.#contentRoot, viewport)
     this.withLayer("overlay", () => {
       div(this, 0, 0, this.rectW, HEADER_HEIGHT, {
-        style: {background: palette.bg, borderColor: "border", borderWidth: 1, borderRadius: 0},
+        style: {background: UI_COMPONENT_GRAPH_BACKGROUND, borderColor: "border", borderWidth: 1, borderRadius: 0},
       })
       Typography(this, 12, 0, Math.max(1, this.rectW - 24), HEADER_HEIGHT, {
-        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.diagnostics.visibleEdges}/${this.#layout.graph.edges.length} связей · COFFMAN–GRAHAM LAYERED · fit ${(this.#fitScale * 100).toFixed(0)}%`,
+        children: `UI COMPONENT GRAPH · ${this.#layout.graph.nodes.length} нод · ${this.diagnostics.visibleEdges}/${this.#layout.graph.edges.length} связей · ${this.#layout.result.crossings.length} BRIDGES · COFFMAN–GRAHAM LAYERED · fit ${(this.#fitScale * 100).toFixed(0)}%`,
         variant: "caption",
         color: "muted",
       })
@@ -119,9 +127,11 @@ export class UiComponentGraphSurface extends UiSurface {
 
   #drawGraph(): void {
     const edges = [...this.#layout.result.edges].sort((left, right) => left.id.localeCompare(right.id))
+    const crossingGaps = Map.groupBy(this.#layout.result.crossings, ({underEdgeId}) => underEdgeId)
     for (const edge of edges) {
       const points = uiComponentEdgePoints(edge.curves)
-      this.drawPolyline(points, EDGE_COLOR, 1.6)
+      const gaps = (crossingGaps.get(edge.id) ?? []).map(({point}) => point)
+      for (const run of splitPolylineAtGaps(points, gaps, 18)) this.drawPolyline(run, EDGE_COLOR, 1.6)
       const tip = points.at(-1)!
       drawArrow(this, points, 7, EDGE_COLOR)
     }
@@ -143,7 +153,7 @@ export class UiComponentGraphSurface extends UiSurface {
     Pane(this, rect.x, rect.y, rect.w, rect.h, {
       appearance: "panel",
       variant: "filled",
-      sx: {padding: 0},
+      style: {padding: 0},
     })
     div(this, rect.x, rect.y, rect.w, NODE_HEADER_HEIGHT, {
       style: {
@@ -171,7 +181,7 @@ export class UiComponentGraphSurface extends UiSurface {
     }
     div(this, body.x, body.y, body.w, body.h, {
       style: {
-        background: palette.bg,
+        background: UI_COMPONENT_GRAPH_BACKGROUND,
         borderColor: "border",
         borderRadius: 3,
         borderWidth: 1,
@@ -200,7 +210,7 @@ export class UiComponentGraphSurface extends UiSurface {
         children: preview.match.route,
         fontPx: 8,
         color: "muted",
-        sx: {textAlign: "right"},
+        style: {textAlign: "right"},
       })
     }
   }
@@ -210,7 +220,7 @@ export class UiComponentGraphSurface extends UiSurface {
       children: value,
       variant: "caption",
       color: color === "error" ? "red" : "muted",
-      sx: {textAlign: "center"},
+      style: {textAlign: "center"},
     })
   }
 }
@@ -286,6 +296,87 @@ function drawArrow(surface: UiSurface, points: readonly LayoutPoint[], size: num
   const baseY = tip.y - uy * size
   surface.drawLine(tip.x, tip.y, baseX + px * size * 0.45, baseY + py * size * 0.45, color, 1.2)
   surface.drawLine(tip.x, tip.y, baseX - px * size * 0.45, baseY - py * size * 0.45, color, 1.2)
+}
+
+function splitPolylineAtGaps(
+  points: readonly LayoutPoint[],
+  gaps: readonly LayoutPoint[],
+  radius: number,
+): readonly (readonly LayoutPoint[])[] {
+  if (points.length < 2 || gaps.length === 0) return [points]
+  const cumulative = [0]
+  for (let index = 1; index < points.length; index += 1) {
+    cumulative.push(cumulative[index - 1]! + pointDistance(points[index - 1]!, points[index]!))
+  }
+  const total = cumulative.at(-1)!
+  const intervals = gaps.map((gap) => {
+    let nearestDistance = Number.POSITIVE_INFINITY
+    let nearestOffset = 0
+    for (let index = 1; index < points.length; index += 1) {
+      const start = points[index - 1]!
+      const end = points[index]!
+      const dx = end.x - start.x
+      const dy = end.y - start.y
+      const lengthSquared = dx * dx + dy * dy
+      const ratio = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1,
+        ((gap.x - start.x) * dx + (gap.y - start.y) * dy) / lengthSquared))
+      const projected = {x: start.x + dx * ratio, y: start.y + dy * ratio}
+      const distance = pointDistance(gap, projected)
+      if (distance < nearestDistance) {
+        nearestDistance = distance
+        nearestOffset = cumulative[index - 1]! + Math.sqrt(lengthSquared) * ratio
+      }
+    }
+    return {start: Math.max(0, nearestOffset - radius), end: Math.min(total, nearestOffset + radius)}
+  }).sort((left, right) => left.start - right.start || left.end - right.end)
+  const merged: Array<{start: number; end: number}> = []
+  for (const interval of intervals) {
+    const previous = merged.at(-1)
+    if (previous !== undefined && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end)
+    else merged.push({...interval})
+  }
+  const runs: LayoutPoint[][] = []
+  let cursor = 0
+  for (const interval of merged) {
+    if (interval.start > cursor) runs.push(polylineRange(points, cumulative, cursor, interval.start))
+    cursor = Math.max(cursor, interval.end)
+  }
+  if (cursor < total) runs.push(polylineRange(points, cumulative, cursor, total))
+  return runs.filter((run) => run.length >= 2)
+}
+
+function polylineRange(
+  points: readonly LayoutPoint[],
+  cumulative: readonly number[],
+  start: number,
+  end: number,
+): LayoutPoint[] {
+  const result = [pointAtOffset(points, cumulative, start)]
+  for (let index = 1; index < points.length - 1; index += 1) {
+    if (cumulative[index]! > start && cumulative[index]! < end) result.push(points[index]!)
+  }
+  result.push(pointAtOffset(points, cumulative, end))
+  return result
+}
+
+function pointAtOffset(
+  points: readonly LayoutPoint[],
+  cumulative: readonly number[],
+  offset: number,
+): LayoutPoint {
+  let index = 1
+  while (index < cumulative.length && cumulative[index]! < offset) index += 1
+  if (index >= points.length) return points.at(-1)!
+  const startOffset = cumulative[index - 1]!
+  const endOffset = cumulative[index]!
+  const ratio = endOffset === startOffset ? 0 : (offset - startOffset) / (endOffset - startOffset)
+  const start = points[index - 1]!
+  const end = points[index]!
+  return {x: start.x + (end.x - start.x) * ratio, y: start.y + (end.y - start.y) * ratio}
+}
+
+function pointDistance(first: LayoutPoint, second: LayoutPoint): number {
+  return Math.hypot(second.x - first.x, second.y - first.y)
 }
 
 function errorText(error: unknown): string {

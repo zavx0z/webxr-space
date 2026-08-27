@@ -13,14 +13,17 @@
 - Work in the supplied branch and checkout. Do not create branches, clones, or
   worktrees without a direct request from zavx0z.
 
-## Catalog lifecycle
+## Storybook lifecycle
 
-- Use `$catalog-dev` from `.agents/skills/catalog-dev` for the webxr-space
-  component-graph Storybook lifecycle and browser target.
+- Use the globally installed `$storybook` with exact package identity
+  `@webxr-space/storybook`; do not recreate a repository-local lifecycle skill.
 - A user-facing request to "запусти", "открой", or "покажи" this Storybook is
   incomplete until both conditions hold: the exact owned server responds and
   the canonical route is open and activated in one exact CDP target. HTTP 200
-  alone is not completion.
+  alone is not completion. The first package launch performs that open/activate
+  by default and repeated `ensure` must not create another target.
+- A `restart` reuses and navigates the recorded exact target in the background;
+  it must not activate the tab, focus Chrome, or create another target.
 - Internal checks and builds do not implicitly open or focus a browser target.
 
 ## Submodules

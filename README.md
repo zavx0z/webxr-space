@@ -22,46 +22,56 @@ the UI stack consumes them.
 
 ## Checkout
 
+Keep the independent `highlighter` and `storybook` checkouts beside
+`webxr-space`; they are linked development tools, not submodules.
+
 ```bash
 git clone --recurse-submodules git@github.com:zavx0z/webxr-space.git
 cd webxr-space
-(cd projects/engine/packages/core && bun link)
-(cd projects/layout/packages/core && bun link)
-(cd projects/ui/packages/elements && bun link)
-(cd projects/ui/packages/components && bun link)
-(cd projects/node/packages/layout && bun link)
-(cd ../highlighter && bun link)
-(cd ../storybook && bun link)
-bun install --frozen-lockfile
+bun run bootstrap
 bun run check
 ```
 
+`bun run bootstrap` registers every package from a path relative to this
+checkout, including the sibling `highlighter` and `storybook` repositories,
+then performs frozen installs sequentially in the superproject, Engine,
+Layout, UI, and Node. It verifies every consumer's own `node_modules` links,
+including links resolved by each package declared through `packages/*`, not
+only the hoisted superproject links. The nearest installed dependency must be
+the exact package owner. Run bootstrap again after moving the checkout; stale
+global Bun registrations are replaced with the paths from the current
+superproject.
+
+The sibling Highlighter and Storybook revisions are pinned beside the link
+owners in `scripts/workspace.ts`. Bootstrap and link checks require those exact
+clean `HEAD`s; the delivery check additionally requires remote `main` to
+contain both revisions.
+
 ## Live UI dependency graph
 
-The development catalog derives a symbol-level `may-call` graph from the
+The package-owned `@webxr-space/storybook` derives a symbol-level `may-call` graph from the
 pinned UI sources and places its nodes with the public width-bounded
 Coffman–Graham Node layout.
 Each graph node loads the matching UI story lazily and renders the real
 Element or Component on the shared WebGPU surface.
 
-```bash
-bun run catalog
-```
-
-Open `http://127.0.0.1:4015/ui/component-graph`.
+Launch it through the global `$storybook` by the exact package name
+`@webxr-space/storybook`. The operating system allocates its port and the first
+launch opens the canonical `/ui/component-graph` route automatically.
 
 `bun run graph:ui` refreshes the deterministic projection in
 `graphs/ui-component-graph.json`. The snapshot records the exact UI revision,
 dirty bit, digest, declarations, and call-chain evidence; it is never a second
 canonical source.
 
-The local catalog resolves independently owned Highlighter and Storybook
+The package resolves independently owned Highlighter and Storybook
 through the Bun links above, not through submodules.
 
 For an existing checkout:
 
 ```bash
 git submodule update --init --recursive
+bun run bootstrap
 ```
 
 ## Development workflow
@@ -77,6 +87,12 @@ cd ../..
 git add projects/ui
 git commit -m "chore: update UI revision"
 ```
+
+Before committing a gitlink, `bun run gitlinks:check` requires the exact four
+declared submodules, clean worktrees, indexed revisions, and proof that every
+pinned commit is contained by its advertised remote `main`. The same command
+checks the pinned Highlighter and Storybook revisions and all consumer-local
+link identities. It never fetches or advances a child repository implicitly.
 
 The superproject is never imported by production packages. It owns only
 development integration, revision pins, analyzers, catalogs, budgets, and

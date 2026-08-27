@@ -2,6 +2,7 @@ import type {
   StorybookStoryIndexItem,
   StorybookStoryModule,
   StorybookStoryRegistry,
+  StorybookStorySource,
 } from "@zavx0z/storybook/stories"
 import {defineStorybookStoryModule} from "@zavx0z/storybook/stories"
 import {StatusChip} from "@ui/components/badge"
@@ -19,9 +20,14 @@ import {control} from "@ui/elements/control"
 import {uiIcons} from "@ui/elements/icons"
 import {li, ol} from "@ui/elements/list"
 import {h1, h2, h3, h4, h5, h6, hr, p} from "@ui/elements/text"
-import {ELEMENT_STORIES} from "../projects/ui/packages/elements/storybook/stories.ts"
-import {COMPONENT_STORIES} from "../projects/ui/packages/components/storybook/stories.ts"
-import type {UiComponentGraph, UiComponentGraphNode} from "../scripts/ui-component-graph.ts"
+import {defineStorybookRouteTree} from "@zavx0z/storybook/route-tree"
+import {ELEMENT_STORIES} from "../../../projects/ui/packages/elements/storybook/stories.ts"
+import {COMPONENT_STORIES} from "../../../projects/ui/packages/components/storybook/stories.ts"
+import type {UiComponentGraph, UiComponentGraphNode} from "../../../scripts/ui-component-graph.ts"
+
+export const UI_COMPONENT_GRAPH_ROUTES = defineStorybookRouteTree({
+  leaves: ["ui/component-graph"],
+})
 
 export type UiGraphStoryMatchKind = "api-name"
 
@@ -66,7 +72,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         tone: "live",
       })
     },
-    source: () => 'import {StatusChip} from "@ui/components/badge"\n\nStatusChip(surface, x, y, 150, 28, {label: "Runtime ready", indicator: true, tone: "live"})',
+    source: () => directStorySource(
+      '<output class="status-chip" role="status">Runtime ready</output>',
+      '.status-chip { display: inline-flex; align-items: center; border-radius: 4px; }',
+      'import {StatusChip} from "@ui/components/badge"\n\nStatusChip(surface, x, y, 150, 28, {label: "Runtime ready", indicator: true, tone: "live"})',
+    ),
   })],
   ["@ui/components/button#IconButton", defineStorybookStoryModule({
     defaultArgs: {},
@@ -77,14 +87,22 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         iconSrc: uiIcons.apply,
       })
     },
-    source: () => 'import {IconButton} from "@ui/components/button"\nimport {uiIcons} from "@ui/elements/icons"\n\nIconButton(surface, x, y, 40, 40, {label: "Apply", iconSrc: uiIcons.apply})',
+    source: () => directStorySource(
+      '<button class="icon-button" type="button" aria-label="Apply"><img src="apply.svg" alt=""></button>',
+      '.icon-button { display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; }',
+      'import {IconButton} from "@ui/components/button"\nimport {uiIcons} from "@ui/elements/icons"\n\nIconButton(surface, x, y, 40, 40, {label: "Apply", iconSrc: uiIcons.apply})',
+    ),
   })],
   ["@ui/components/list#ListDivider", defineStorybookStoryModule({
     defaultArgs: {},
     render(surface, _args, frame) {
       ListDivider(surface, frame.x + 16, frame.y + frame.h / 2, frame.w - 32, {middle: true})
     },
-    source: () => 'import {ListDivider} from "@ui/components/list"\n\nListDivider(surface, x, y, width, {middle: true})',
+    source: () => directStorySource(
+      '<hr class="list-divider">',
+      '.list-divider { border: 0; border-block-start: 1px solid rgb(61 61 61); }',
+      'import {ListDivider} from "@ui/components/list"\n\nListDivider(surface, x, y, width, {middle: true})',
+    ),
   })],
   ["@ui/components/list#ListItem", defineStorybookStoryModule({
     defaultArgs: {},
@@ -95,7 +113,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         icon: "1",
       })
     },
-    source: () => 'import {ListItem} from "@ui/components/list"\n\nListItem(surface, x, y, width, 58, {primary: "List item", secondary: "Secondary text", icon: "1"})',
+    source: () => directStorySource(
+      '<li class="list-item"><span class="icon">1</span><span><strong>List item</strong><small>Secondary text</small></span></li>',
+      '.list-item { display: flex; align-items: center; gap: 8px; border-radius: 4px; }',
+      'import {ListItem} from "@ui/components/list"\n\nListItem(surface, x, y, width, 58, {primary: "List item", secondary: "Secondary text", icon: "1"})',
+    ),
   })],
   ["@ui/components/list#ListItemButton", defineStorybookStoryModule({
     defaultArgs: {},
@@ -105,7 +127,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         onClick() {},
       })
     },
-    source: () => 'import {ListItemButton} from "@ui/components/list"\n\nListItemButton(surface, x, y, width, 52, {primary: "Clickable item", onClick() {}})',
+    source: () => directStorySource(
+      '<li><button class="list-item-button" type="button">Clickable item</button></li>',
+      '.list-item-button { display: flex; align-items: center; inline-size: 100%; border-radius: 4px; }',
+      'import {ListItemButton} from "@ui/components/list"\n\nListItemButton(surface, x, y, width, 52, {primary: "Clickable item", onClick() {}})',
+    ),
   })],
   ["@ui/components/list#ListItemIcon", defineStorybookStoryModule({
     defaultArgs: {},
@@ -114,7 +140,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         children: "A",
       })
     },
-    source: () => 'import {ListItemIcon} from "@ui/components/list"\n\nListItemIcon(surface, x, y, 44, 44, {children: "A"})',
+    source: () => directStorySource(
+      '<span class="list-item-icon" aria-hidden="true">A</span>',
+      '.list-item-icon { display: inline-flex; align-items: center; justify-content: center; }',
+      'import {ListItemIcon} from "@ui/components/list"\n\nListItemIcon(surface, x, y, 44, 44, {children: "A"})',
+    ),
   })],
   ["@ui/components/list#ListItemText", defineStorybookStoryModule({
     defaultArgs: {},
@@ -124,7 +154,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         secondary: "Secondary text",
       })
     },
-    source: () => 'import {ListItemText} from "@ui/components/list"\n\nListItemText(surface, x, y, width, 58, {primary: "Primary text", secondary: "Secondary text"})',
+    source: () => directStorySource(
+      '<span class="list-item-text"><strong>Primary text</strong><small>Secondary text</small></span>',
+      '.list-item-text { display: flex; flex-direction: column; justify-content: center; }',
+      'import {ListItemText} from "@ui/components/list"\n\nListItemText(surface, x, y, width, 58, {primary: "Primary text", secondary: "Secondary text"})',
+    ),
   })],
   ["@ui/components/list#ListSubheader", defineStorybookStoryModule({
     defaultArgs: {},
@@ -133,14 +167,22 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         children: "Subheader",
       })
     },
-    source: () => 'import {ListSubheader} from "@ui/components/list"\n\nListSubheader(surface, x, y, width, 34, {children: "Subheader"})',
+    source: () => directStorySource(
+      '<h3 class="list-subheader">Subheader</h3>',
+      '.list-subheader { display: flex; align-items: center; font-size: 10px; }',
+      'import {ListSubheader} from "@ui/components/list"\n\nListSubheader(surface, x, y, width, 34, {children: "Subheader"})',
+    ),
   })],
   ["@ui/components/pane#PaneTitle", defineStorybookStoryModule({
     defaultArgs: {},
     render(surface, _args, frame) {
       PaneTitle(surface, frame.x + 12, frame.y + 12, frame.w - 24, frame.h - 24, "Pane title")
     },
-    source: () => 'import {PaneTitle} from "@ui/components/pane"\n\nPaneTitle(surface, x, y, width, height, "Pane title")',
+    source: () => directStorySource(
+      '<h2 class="pane-title">Pane title</h2>',
+      '.pane-title { color: rgb(230 230 230); font-size: 14px; }',
+      'import {PaneTitle} from "@ui/components/pane"\n\nPaneTitle(surface, x, y, width, height, "Pane title")',
+    ),
   })],
   ["@ui/components/pane#Paper", defineStorybookStoryModule({
     defaultArgs: {},
@@ -150,7 +192,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         children: "Paper",
       })
     },
-    source: () => 'import {Paper} from "@ui/components/pane"\n\nPaper(surface, x, y, width, height, {variant: "filled", children: "Paper"})',
+    source: () => directStorySource(
+      '<section class="paper">Paper</section>',
+      '.paper { background: rgb(61 61 61); border: 1px solid rgb(22 22 22); border-radius: 4px; }',
+      'import {Paper} from "@ui/components/pane"\n\nPaper(surface, x, y, width, height, {variant: "filled", children: "Paper"})',
+    ),
   })],
   ["@ui/elements/control#control", defineStorybookStoryModule({
     defaultArgs: {},
@@ -160,7 +206,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         children: "Dense control",
       })
     },
-    source: () => 'import {control} from "@ui/elements/control"\n\ncontrol(surface, x, y, width, 28, {children: "Dense control"})',
+    source: () => directStorySource(
+      '<div class="control">Dense control</div>',
+      '.control { display: flex; align-items: center; border: 1px solid rgb(61 61 61); border-radius: 4px; }',
+      'import {control} from "@ui/elements/control"\n\ncontrol(surface, x, y, width, 28, {children: "Dense control"})',
+    ),
   })],
   ...([h1, h2, h3, h4, h5, h6, p] as const).map((render, index) => {
     const name = ["h1", "h2", "h3", "h4", "h5", "h6", "p"][index]!
@@ -171,7 +221,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
           children: name === "p" ? "Обычный абзац UI" : `Заголовок ${name.toUpperCase()}`,
         })
       },
-      source: () => `import {${name}} from "@ui/elements/text"\n\n${name}(surface, x, y, width, height, {children: "${name}"})`,
+      source: () => directStorySource(
+        `<${name}>${name}</${name}>`,
+        `${name} { color: rgb(230 230 230); }`,
+        `import {${name}} from "@ui/elements/text"\n\n${name}(surface, x, y, width, height, {children: "${name}"})`,
+      ),
     })] as const
   }),
   ["@ui/elements/text#hr", defineStorybookStoryModule({
@@ -179,7 +233,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
     render(surface, _args, frame) {
       hr(surface, frame.x + 14, frame.y + frame.h / 2, frame.w - 28)
     },
-    source: () => 'import {hr} from "@ui/elements/text"\n\nhr(surface, x, y, width)',
+    source: () => directStorySource(
+      '<hr>',
+      'hr { border: 0; border-block-start: 1px solid rgb(61 61 61); }',
+      'import {hr} from "@ui/elements/text"\n\nhr(surface, x, y, width)',
+    ),
   })],
   ["@ui/elements/list#ol", defineStorybookStoryModule({
     defaultArgs: {},
@@ -192,7 +250,11 @@ const DIRECT_MODULES: ReadonlyMap<string, StorybookStoryModule> = new Map([
         },
       })
     },
-    source: () => 'import {li, ol} from "@ui/elements/list"\n\nol(surface, x, y, width, height, {children(ctx) { li(surface, ctx.itemX, ctx.itemY, ctx.itemWidth, ctx.itemHeight, {children: "1. Ordered item"}) }})',
+    source: () => directStorySource(
+      '<ol><li>Ordered item</li></ol>',
+      'ol { display: flex; flex-direction: column; overflow-y: auto; }\nli { border-radius: 4px; }',
+      'import {li, ol} from "@ui/elements/list"\n\nol(surface, x, y, width, height, {children(ctx) { li(surface, ctx.itemX, ctx.itemY, ctx.itemWidth, ctx.itemHeight, {children: "1. Ordered item"}) }})',
+    ),
   })],
 ])
 
@@ -243,4 +305,8 @@ function exactApiMatch(node: UiComponentGraphNode, story: StorybookStoryIndexIte
 
 function errorText(error: unknown): string {
   return error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+}
+
+function directStorySource(html: string, css: string, typescript: string): StorybookStorySource {
+  return Object.freeze({html, css, typescript})
 }

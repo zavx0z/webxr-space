@@ -1,7 +1,7 @@
 import {describe, expect, test} from "bun:test"
 import {fileURLToPath} from "node:url"
-import graph from "../graphs/ui-component-graph.json"
-import type {UiComponentGraph} from "../scripts/ui-component-graph.ts"
+import graph from "../../../graphs/ui-component-graph.json"
+import type {UiComponentGraph} from "../../../scripts/ui-component-graph.ts"
 import {
   createUiComponentGraphLayout,
   UI_GRAPH_NODE_SIZE,
@@ -49,9 +49,10 @@ describe("UI component graph Coffman–Graham adapter", () => {
 
     expect(layout.input.layoutOptions?.maxNodesPerLayer).toBe(4)
     expect(Math.max(...[...nodesByLayer.values()].map((nodes) => nodes.length))).toBeLessThanOrEqual(4)
-    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 5734, height: 4850})
+    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 6139, height: 6789.9074913})
+    expect(layout.result.crossings).toHaveLength(112)
     expect(new Bun.CryptoHasher("sha256").update(JSON.stringify(layout.result)).digest("hex"))
-      .toBe("2dc9ef61a493268f226bc5d26aebd7fa73817f3d4314eef08d62208c27b78927")
+      .toBe("3a0ac69767fc563a88ff8e8fd853cf75f78dce86ea6e78df95252ae75681cce1")
   })
 
   test("preserves every intrinsic node and produces one cubic DOWN connection type", () => {
@@ -98,9 +99,9 @@ describe("UI component graph Coffman–Graham adapter", () => {
       gzipBytes: Bun.gzipSync(bytes).byteLength,
       sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
     }).toEqual({
-      bytes: 32_085,
-      gzipBytes: 10_961,
-      sha256: "459ed1e50e43a07221d517f7b4e0674d344d45cef016edfdb2a2f71460993af8",
+      bytes: 38_133,
+      gzipBytes: 13_111,
+      sha256: "57615e949833fe284e38cb28758e4bf44ce852c7fb2dc8c29189f9e0db0b253a",
     })
   })
 })

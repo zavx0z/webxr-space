@@ -5,16 +5,16 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
+  "workspaces": ["packages/*"],
   "scripts": {
+    "bootstrap": "bun scripts/workspace.ts bootstrap",
+    "links:check": "bun scripts/workspace.ts links-check",
+    "gitlinks:check": "bun scripts/workspace.ts gitlinks-check",
     "status": "bun scripts/status.ts",
     "graph:ui": "bun scripts/ui-component-graph.ts --write",
     "graph:ui:check": "bun scripts/ui-component-graph.ts --check",
-    "catalog": "bun run graph:ui && bun catalog/server.ts",
-    "catalog:typecheck": "tsc --noEmit --project tsconfig.json --pretty false",
-    "catalog:test": "bun test scripts/ui-component-graph.test.ts catalog/*.test.ts",
-    "catalog:build": "bun run graph:ui && bun catalog/build.ts",
-    "catalog:check": "bun run graph:ui:check && bun run catalog:typecheck && bun run catalog:test && bun run catalog:build",
-    "check": "bun scripts/check.ts && bun run catalog:check"
+    "test": "bun test scripts/workspace.test.ts",
+    "check": "bun scripts/check.ts && bun run test && bun run --cwd packages/storybook check"
   },
   "repository": {
     "type": "git",
