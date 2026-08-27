@@ -3,7 +3,7 @@ import {
   type DivProps,
 } from "@ui/elements/div"
 import {uiShapeMetrics} from "@ui/elements/shape"
-import {type StyleProps} from "@ui/elements/style"
+import {type StyleProps, type StyleStateTable} from "@ui/elements/style"
 import {h2} from "@ui/elements/text"
 import {rgba8ToColor, resolveWidgetColors, uiTheme} from "@ui/elements/theme-reference"
 import {Z, type UiSurface} from "@layout/core/surface"
@@ -19,22 +19,27 @@ export type PaneProps = {
   active?: boolean
   scrollContentWidth?: number
   scrollContentHeight?: number
-  sx?: StyleProps
+  style?: StyleProps
+  stateStyles?: StyleStateTable<"idle" | "active">
 }
 
 export function Pane(host: UiSurface, x: number, y: number, width: number, height: number, props: PaneProps = {}): void {
-  const appearance = paneAppearanceStyle(props)
+  const borderRadius = paneRadius(props.appearance)
+  const appearance = paneAppearanceStyle(props, borderRadius)
+  const defaults: StyleProps = {
+    background: props.variant === "filled" ? "bgElevated" : "glass",
+    borderColor: props.variant === "outlined" ? "borderBright" : "borderDim",
+    borderRadius,
+    padding: 20,
+    zIndex: Z.CONTAINER,
+    ...appearance,
+  }
+  const state = props.active === true ? "active" : "idle"
+  const style: StyleProps = {...defaults, ...props.style, ...props.stateStyles?.[state]}
+  const callerStyle: StyleProps = {...props.style, ...props.stateStyles?.[state]}
   const divProps: DivProps = {
     children: props.children,
-    style: {
-      background: props.variant === "filled" ? "bgElevated" : "glass",
-      borderColor: props.variant === "outlined" ? "borderBright" : "borderDim",
-      borderRadius: 30,
-      padding: 20,
-      zIndex: Z.CONTAINER,
-      ...appearance,
-      ...props.sx,
-    },
+    style,
   }
   if (props.key !== undefined) divProps.key = props.key
   if (props.scrollContentWidth !== undefined) divProps.scrollContentWidth = props.scrollContentWidth
@@ -42,27 +47,27 @@ export function Pane(host: UiSurface, x: number, y: number, width: number, heigh
   div(host, x, y, width, height, {
     ...divProps,
   })
-  if (props.appearance === "panel" && props.sx?.borderColor === undefined) {
+  if (props.appearance === "panel" && callerStyle.borderColor === undefined) {
     div(host, x, y, width, height, {
       style: {
         background: null,
         borderColor: rgba8ToColor(
           props.active === true ? uiTheme.material.editorOutlineActive : uiTheme.material.editorOutline,
         ),
-        borderRadius: uiShapeMetrics.lowRadius,
+        borderRadius: style.borderRadius ?? borderRadius,
         borderWidth: uiShapeMetrics.borderWidth,
-        zIndex: (props.sx?.zIndex ?? Z.CONTAINER) + 0.01,
+        zIndex: (style.zIndex ?? Z.CONTAINER) + 0.01,
       },
     })
   }
 }
 
-function paneAppearanceStyle(props: PaneProps): StyleProps {
+function paneAppearanceStyle(props: PaneProps, borderRadius: number): StyleProps {
   if (props.appearance === "panel") {
     return {
       background: rgba8ToColor(uiTheme.spaceNode.panel.back),
       borderColor: rgba8ToColor(uiTheme.material.editorBorder),
-      borderRadius: uiShapeMetrics.lowRadius,
+      borderRadius,
       borderWidth: uiShapeMetrics.borderWidth,
     }
   }
@@ -71,11 +76,15 @@ function paneAppearanceStyle(props: PaneProps): StyleProps {
     return {
       background: rgba8ToColor(colors.inner),
       borderColor: rgba8ToColor(colors.outline),
-      borderRadius: uiShapeMetrics.lowRadius,
+      borderRadius,
       borderWidth: uiShapeMetrics.borderWidth,
     }
   }
   return {}
+}
+
+function paneRadius(appearance: PaneAppearance | undefined): number {
+  return appearance === "panel" ? 6 : 4
 }
 
 export function Paper(host: UiSurface, x: number, y: number, width: number, height: number, props: PaneProps = {}): void {

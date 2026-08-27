@@ -9,7 +9,7 @@ export type TypographyProps = {
   color?: CssColor
   fontPx?: number
   variant?: TypographyVariant
-  sx?: StyleProps
+  style?: StyleProps
 }
 
 export function Typography(host: UiSurface, x: number, y: number, width: number, height: number, props: TypographyProps = {}): void {
@@ -17,7 +17,7 @@ export function Typography(host: UiSurface, x: number, y: number, width: number,
   const style: StyleProps = {
     color: props.color ?? defaultColor(variant),
     fontSize: props.fontPx ?? defaultFontPx(variant),
-    ...props.sx,
+    ...props.style,
   }
   span(host, x, y, width, height, {
     children: props.children ?? "",

@@ -1,4 +1,5 @@
 import {describe, expect, test} from "bun:test"
+import {Color} from "@engine/core"
 import {
   input,
   rgba8ToColor,
@@ -38,7 +39,7 @@ describe("public ControlGroup", () => {
 
     expect(PublicControlGroup).toBe(ControlGroup)
     expect(contexts[0]?.cellStyle).toEqual({
-      borderRadius: 0,
+      borderRadius: 4,
       borderWidth: 0,
       fontSize: uiShapeMetrics.compactFontPx,
     } satisfies StyleProps)
@@ -91,7 +92,7 @@ describe("public ControlGroup", () => {
     const surface = new RecordingSurface()
     ControlGroup(surface, 10, 20, 120, 66, {rows: 3, columns: 2})
 
-    const outer = surface.roundedRects.filter((call) => call[4].radius === uiShapeMetrics.lowRadius)
+    const outer = surface.roundedRects.filter((call) => call[4].radius === 4)
     const emboss = outer.find((call) => call[1] === 21)
     expect(emboss?.[4].fill).toEqual(rgba8ToColor(uiTheme.material.widgetEmboss))
     expect(outer.map((call) => ({
@@ -113,6 +114,18 @@ describe("public ControlGroup", () => {
       {x: 10, y: 63.5, width: 120, height: 1, z: Z.ELEMENT_RULE},
       {x: 69.5, y: 20, width: 1, height: 66, z: Z.ELEMENT_RULE},
     ])
+  })
+
+  test("applies explicit root style after its defaults", () => {
+    const fill = new Color(0.1, 0.2, 0.3, 0.4)
+    const border = new Color(0.5, 0.6, 0.7, 0.8)
+    const surface = new RecordingSurface()
+    ControlGroup(surface, 10, 20, 120, 22, {
+      style: {background: fill, borderColor: border, borderRadius: 9, borderWidth: 2},
+    })
+
+    expect(surface.roundedRects[0]?.[4]).toMatchObject({fill, radius: 9})
+    expect(surface.roundedRects.at(-1)?.[4]).toMatchObject({border, radius: 9, borderWidth: 2})
   })
 
   test("owns unequal grow/action tracks without a caller gap", () => {

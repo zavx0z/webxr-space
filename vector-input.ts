@@ -1,4 +1,5 @@
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {type StyleProps} from "@ui/elements/style"
 import {type UiSurface} from "@layout/core/surface"
 import {flexColumn, flexRow} from "@layout/core/flex"
 import {ControlGroup, type ControlGroupContext} from "./control-group.ts"
@@ -22,6 +23,7 @@ export type VectorInputProps = VectorInputValueOptions & {
   disabled?: boolean
   readOnly?: boolean
   density?: VectorInputDensity
+  style?: StyleProps
   onChange?(value: readonly number[]): void
 }
 
@@ -46,6 +48,7 @@ export function VectorInput(
     appearance: "number",
     disabled: props.disabled === true || props.readOnly === true,
     rows: dimensions,
+    ...(props.style === undefined ? {} : {style: props.style}),
     children: (group) => {
       flexColumn({
         x: controlX,
@@ -100,7 +103,7 @@ function drawVectorInputAxis(
 ): void {
   const numberProps = vectorAxisNumberProps(props, values, index)
   numberProps.appearance = group.cell(index, 0, {left: false}).inputAppearance
-  numberProps.sx = group.cellStyle
+  numberProps.style = group.cellStyle
   flexRow({
     x,
     y,
@@ -113,7 +116,7 @@ function drawVectorInputAxis(
         children: axes[index] ?? String(index),
         fontPx: uiShapeMetrics.compactFontPx,
         color: group.textColor,
-        sx: {textAlign: "center"},
+        style: {textAlign: "center"},
       })},
       {width: "grow", height, draw: (slotX, slotY, slotW, slotH) => {
         NumberInput(host, slotX, slotY, slotW, slotH, numberProps)

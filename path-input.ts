@@ -1,5 +1,6 @@
 import {uiIcons} from "@ui/elements/icons"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {type StyleProps} from "@ui/elements/style"
 import {type UiSurface} from "@layout/core/surface"
 import {flexRow} from "@layout/core/flex"
 import {IconButton, type IconButtonProps} from "./button.ts"
@@ -15,6 +16,7 @@ export type PathInputProps = {
   disabled?: boolean
   readOnly?: boolean
   density?: PathInputDensity
+  style?: StyleProps
   onChange?(value: string): void
   onBrowse?(): void
 }
@@ -42,6 +44,7 @@ export function PathInput(
   ControlGroup(host, x, y, width, height, {
     appearance: "text",
     columns: showBrowse ? ["grow", browseWidth] : 1,
+    ...(props.style === undefined ? {} : {style: props.style}),
     children(group) {
       flexRow({
         x,
@@ -55,7 +58,7 @@ export function PathInput(
             TextField(host, slotX, slotY, slotW, slotH, {
               ...textFieldProps,
               appearance: group.cell(0, 0).inputAppearance,
-              sx: group.cellStyle,
+              style: group.cellStyle,
             })
           }},
           showBrowse && {width: browseWidth, height, draw: (slotX, slotY, slotW, slotH) => {
@@ -64,7 +67,7 @@ export function PathInput(
               iconSrc: uiIcons.folder,
               disabled,
               action: props.onBrowse!,
-              sx: group.cellStyle,
+              style: group.cellStyle,
               appearance: group.buttonAppearance,
               groupedCell: group.cell(0, 1).groupedCell,
             }

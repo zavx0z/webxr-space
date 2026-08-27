@@ -1,4 +1,6 @@
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {div} from "@ui/elements/div"
+import {type StyleProps} from "@ui/elements/style"
 import {type UiSurface} from "@layout/core/surface"
 import {flexColumn, flexRow} from "@layout/core/flex"
 import {Button} from "./button.ts"
@@ -211,6 +213,9 @@ export type FieldDefinition =
 
 export type FieldRenderOptions = Readonly<{
   density?: "regular" | "compact"
+  style?: StyleProps
+  labelStyle?: StyleProps
+  controlStyle?: StyleProps
 }>
 
 export type FieldLayoutMetrics = Readonly<{
@@ -247,21 +252,24 @@ export function Field(
   definition: FieldDefinition,
   options: FieldRenderOptions = {},
 ): number {
-  if (options.density === "compact") return drawCompactField(host, x, y, width, definition, options)
   const height = measureFieldHeight(definition, options)
+  div(host, x, y, width, height, {
+    style: {background: null, borderColor: null, borderRadius: 4, padding: 0, ...options.style},
+  })
+  if (options.density === "compact") return drawCompactField(host, x, y, width, definition, options)
   if (definition.kind === "number" && definition.presentation === "slider" && definition.max !== undefined) {
-    drawNumberSlider(host, x, y + (height - uiShapeMetrics.controlHeight) / 2, width, definition)
+    drawNumberSlider(host, x, y + (height - uiShapeMetrics.controlHeight) / 2, width, definition, options)
     return height
   }
   if (definition.kind === "boolean") {
-    drawBooleanField(host, x, y, width, height, definition)
+    drawBooleanField(host, x, y, width, height, definition, options)
     return height
   }
   if (isScalarField(definition)) {
-    drawScalarFieldRow(host, x, y, width, height, definition, "regular")
+    drawScalarFieldRow(host, x, y, width, height, definition, "regular", options)
     return height
   }
-  drawGroupedField(host, x, y, width, height, definition, "regular")
+  drawGroupedField(host, x, y, width, height, definition, "regular", options)
   return height
 }
 
@@ -327,22 +335,22 @@ function drawCompactField(
   y: number,
   width: number,
   field: FieldDefinition,
-  _options: FieldRenderOptions,
+  options: FieldRenderOptions,
 ): number {
   const height = compactFieldHeight(field)
   if (isGroupedField(field)) {
-    drawGroupedField(host, x, y, width, height, field, "compact")
+    drawGroupedField(host, x, y, width, height, field, "compact", options)
     return height
   }
   if (field.kind === "number" && field.presentation === "slider" && field.max !== undefined) {
-    drawNumberSlider(host, x, y, width, field)
+    drawNumberSlider(host, x, y, width, field, options)
     return height
   }
   if (field.kind === "boolean") {
-    drawBooleanField(host, x, y, width, height, field)
+    drawBooleanField(host, x, y, width, height, field, options)
     return height
   }
-  drawScalarFieldRow(host, x, y, width, height, field, "compact")
+  drawScalarFieldRow(host, x, y, width, height, field, "compact", options)
   return height
 }
 
@@ -354,15 +362,17 @@ function drawScalarFieldRow(
   height: number,
   field: Exclude<FieldDefinition, BooleanFieldDefinition | VectorFieldDefinition | RotationFieldDefinition | MatrixFieldDefinition | CollectionFieldDefinition>,
   density: "regular" | "compact",
+  styles: FieldRenderOptions,
 ): void {
   if (field.kind === "integer") {
-    drawScalarControl(host, x, y, width, height, field, density)
+    drawScalarControl(host, x, y, width, height, field, density, styles)
     return
   }
   if (density === "compact" && field.compactLabel === "hidden") {
-    drawScalarControl(host, x, y, width, height, field, density)
+    drawScalarControl(host, x, y, width, height, field, density, styles)
     return
   }
+  const labelStyle = styles.labelStyle
   flexRow({
     x,
     y,
@@ -375,8 +385,9 @@ function drawScalarFieldRow(
         children: field.label,
         fontPx: uiShapeMetrics.compactFontPx,
         color: isFieldDisabled(field) ? "muted" : "text",
+        ...(labelStyle === undefined ? {} : {style: labelStyle}),
       })},
-      {width: "3fr", height, draw: (slotX, slotY, slotW, slotH) => drawScalarControl(host, slotX, slotY, slotW, slotH, field, density)},
+      {width: "3fr", height, draw: (slotX, slotY, slotW, slotH) => drawScalarControl(host, slotX, slotY, slotW, slotH, field, density, styles)},
     ],
   })
 }
@@ -389,30 +400,44 @@ function drawScalarControl(
   height: number,
   field: Exclude<FieldDefinition, BooleanFieldDefinition | VectorFieldDefinition | RotationFieldDefinition | MatrixFieldDefinition | CollectionFieldDefinition>,
   density: "regular" | "compact",
+  styles: FieldRenderOptions,
 ): void {
   const disabled = isFieldDisabled(field)
+  const controlStyle = styles.controlStyle
   if (field.kind === "number") {
-    NumberInput(host, x, y, width, height, numberInputProps(field, density))
+    const props = numberInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    NumberInput(host, x, y, width, height, props)
     return
   }
   if (field.kind === "integer") {
-    IntegerInput(host, x, y, width, height, integerInputProps(field, density))
+    const props = integerInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    IntegerInput(host, x, y, width, height, props)
     return
   }
   if (field.kind === "enum") {
-    EnumInput(host, x, y, width, height, enumInputProps(field, density))
+    const props = enumInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    EnumInput(host, x, y, width, height, props)
     return
   }
   if (field.kind === "color") {
-    ColorInput(host, x, y, width, height, colorInputProps(field, density))
+    const props = colorInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    ColorInput(host, x, y, width, height, props)
     return
   }
   if (field.kind === "reference") {
-    ReferenceInput(host, x, y, width, height, referenceInputProps(field, density))
+    const props = referenceInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    ReferenceInput(host, x, y, width, height, props)
     return
   }
   if (field.kind === "path") {
-    PathInput(host, x, y, width, height, pathInputProps(field, density))
+    const props = pathInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    PathInput(host, x, y, width, height, props)
     return
   }
   const value = field.kind === "readonly" ? String(field.value) : field.value
@@ -422,6 +447,7 @@ function drawScalarControl(
     disabled: disabled || field.kind === "readonly",
     submitOnEnter: true,
   }
+  if (controlStyle !== undefined) props.style = controlStyle
   if (!disabled && field.kind === "text") props.onChange = (text) => field.onChange?.(text)
   TextField(host, x, y, width, height, props)
 }
@@ -458,6 +484,7 @@ function drawGroupedField(
   height: number,
   field: GroupedFieldDefinition,
   density: "regular" | "compact",
+  styles: FieldRenderOptions,
 ): void {
   const layout = measureFieldLayout(field, {density})
   const controlHeight = layout.controlHeight
@@ -465,7 +492,7 @@ function drawGroupedField(
   const fieldWidth = Math.min(Math.max(0, width), intrinsicWidth)
   const fieldX = x + (width - fieldWidth) / 2
   if (density === "compact" && field.compactLabel === "hidden") {
-    drawGroupedFieldControl(host, fieldX, y, fieldWidth, controlHeight, field, density)
+    drawGroupedFieldControl(host, fieldX, y, fieldWidth, controlHeight, field, density, styles)
     return
   }
   flexColumn({
@@ -476,10 +503,10 @@ function drawGroupedField(
     gap: uiShapeMetrics.tightGap,
     items: [
       {height: uiShapeMetrics.controlHeight, draw: (slotX, slotY, slotW, slotH) => {
-        drawFieldLabel(host, slotX, slotY, slotW, slotH, field)
+        drawFieldLabel(host, slotX, slotY, slotW, slotH, field, styles)
       }},
       {height: controlHeight, draw: (slotX, slotY, slotW, slotH) => {
-        drawGroupedFieldControl(host, slotX, slotY, slotW, slotH, field, density)
+        drawGroupedFieldControl(host, slotX, slotY, slotW, slotH, field, density, styles)
       }},
     ],
   })
@@ -493,13 +520,21 @@ function drawGroupedFieldControl(
   height: number,
   field: GroupedFieldDefinition,
   density: "regular" | "compact",
+  styles: FieldRenderOptions,
 ): void {
+  const controlStyle = styles.controlStyle
   if (field.kind === "vector" || field.kind === "rotation") {
-    VectorInput(host, x, y, width, height, vectorInputProps(field, density))
+    const props = vectorInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    VectorInput(host, x, y, width, height, props)
   } else if (field.kind === "matrix") {
-    MatrixInput(host, x, y, width, height, matrixInputProps(field, density))
+    const props = matrixInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    MatrixInput(host, x, y, width, height, props)
   } else {
-    CollectionInput(host, x, y, width, height, collectionInputProps(field, density))
+    const props = collectionInputProps(field, density)
+    if (controlStyle !== undefined) props.style = controlStyle
+    CollectionInput(host, x, y, width, height, props)
   }
 }
 
@@ -510,11 +545,13 @@ export function normalizeNumberFieldValue(
   return normalizeNumberInputValue(value, options)
 }
 
-function drawFieldLabel(host: UiSurface, x: number, y: number, width: number, height: number, field: FieldBase): void {
+function drawFieldLabel(host: UiSurface, x: number, y: number, width: number, height: number, field: FieldBase, styles: FieldRenderOptions): void {
+  const labelStyle = styles.labelStyle
   Typography(host, x, y, width, height, {
     children: field.label,
     fontPx: uiShapeMetrics.compactFontPx,
     color: isFieldDisabled(field) ? "muted" : "text",
+    ...(labelStyle === undefined ? {} : {style: labelStyle}),
   })
 }
 
@@ -557,7 +594,7 @@ function integerInputProps(field: IntegerFieldDefinition, density: NumberInputDe
   return props
 }
 
-function drawNumberSlider(host: UiSurface, x: number, y: number, width: number, field: NumberFieldDefinition): void {
+function drawNumberSlider(host: UiSurface, x: number, y: number, width: number, field: NumberFieldDefinition, styles: FieldRenderOptions): void {
   const props: Parameters<typeof SliderControl>[4] = {
     key: fieldKey(field),
     label: field.label,
@@ -573,16 +610,20 @@ function drawNumberSlider(host: UiSurface, x: number, y: number, width: number, 
       if (!isFieldDisabled(field)) field.onChange?.(normalizeNumberFieldValue(entry, field))
     },
   }
+  const controlStyle = styles.controlStyle
+  if (controlStyle !== undefined) props.style = controlStyle
   if (field.min !== undefined) props.min = field.min
   SliderControl(host, x, y, width, props)
 }
 
-function drawBooleanField(host: UiSurface, x: number, y: number, width: number, height: number, field: BooleanFieldDefinition): void {
+function drawBooleanField(host: UiSurface, x: number, y: number, width: number, height: number, field: BooleanFieldDefinition, styles: FieldRenderOptions): void {
   const disabled = isFieldDisabled(field)
   const onChange = !disabled && field.onChange !== undefined ? (value: boolean) => field.onChange!(value) : undefined
   const controlWidth = field.presentation === "checkbox"
     ? uiShapeMetrics.iconActionSlot
     : uiShapeMetrics.iconActionSlot * 1.9
+  const labelStyle = styles.labelStyle
+  const controlStyle = styles.controlStyle
   flexRow({
     x,
     y,
@@ -595,14 +636,17 @@ function drawBooleanField(host: UiSurface, x: number, y: number, width: number, 
         children: field.label,
         color: disabled ? "muted" : "text",
         fontPx: uiShapeMetrics.compactFontPx,
+        ...(labelStyle === undefined ? {} : {style: labelStyle}),
       })},
       {width: controlWidth, height: uiShapeMetrics.controlHeight, draw: (slotX, slotY, slotW, slotH) => {
         if (field.presentation !== "switch") {
           const props: Parameters<typeof Checkbox>[5] = {checked: field.value, disabled}
+          if (controlStyle !== undefined) props.style = controlStyle
           if (onChange !== undefined) props.onChange = onChange
           Checkbox(host, slotX, slotY, slotW, slotH, props)
         } else {
           const props: Parameters<typeof Switcher>[5] = {checked: field.value, disabled}
+          if (controlStyle !== undefined) props.style = controlStyle
           if (onChange !== undefined) props.onChange = onChange
           Switcher(host, slotX, slotY, slotW, slotH, props)
         }

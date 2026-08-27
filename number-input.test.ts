@@ -399,7 +399,7 @@ describe("public NumberInput", () => {
       regularHeight: uiShapeMetrics.controlHeight,
     })
     expect({radius: regularStyle.radius, borderWidth: regularStyle.borderWidth}).toEqual({
-      radius: uiShapeMetrics.lowRadius,
+      radius: 4,
       borderWidth: uiShapeMetrics.borderWidth,
     })
 
@@ -409,7 +409,7 @@ describe("public NumberInput", () => {
     expect({width, height, radius: style.radius, borderWidth: style.borderWidth}).toEqual({
       width: 120,
       height: uiShapeMetrics.controlHeight,
-      radius: uiShapeMetrics.lowRadius,
+      radius: 4,
       borderWidth: uiShapeMetrics.borderWidth,
     })
     expect(style.fill).toEqual(rgba8ToColor(resolveWidgetColors("number").inner))
@@ -444,7 +444,7 @@ describe("public NumberInput", () => {
         kind: "grouped-cell",
         corners: {topLeft: false, topRight: false, bottomLeft: false, bottomRight: false},
       },
-      sx: {borderRadius: 0, borderWidth: 0},
+      style: {borderRadius: 0, borderWidth: 0},
     })
 
     expect(surface.roundedRects[0]?.slice(0, 4)).toEqual([0, 0, 100, 22])

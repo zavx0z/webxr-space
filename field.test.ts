@@ -175,7 +175,7 @@ describe("universal UI fields", () => {
     expect(height).toBe(uiShapeMetrics.rowHeight)
     expect(surface.hits).toHaveLength(1)
     expect(surface.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01)).toHaveLength(1)
-    expect(surface.roundedRects[0]?.[4].radius).toBe(uiShapeMetrics.lowRadius)
+    expect(surface.roundedRects[0]?.[4].radius).toBe(4)
     const [hitX, , hitWidth] = surface.hits[0]!
     expect(hitX + hitWidth).toBeLessThanOrEqual(width)
   })

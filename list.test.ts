@@ -45,7 +45,14 @@ describe("component ListItemButton", () => {
     const fill = new Color(0.1, 0.2, 0.3, 0.4)
     const border = new Color(0.5, 0.6, 0.7, 0.8)
     const surface = new RecordingSurface()
-    ListItemButton(surface, 0, 0, 100, 24, {primary: "Explicit", sx: {background: fill, borderColor: border}})
+    ListItemButton(surface, 0, 0, 100, 24, {primary: "Explicit", style: {background: fill, borderColor: border}})
     expect(surface.roundedRects[0]?.[4]).toMatchObject({fill, border})
+  })
+
+  test("plans list rows and item content through nested Flex owners", async () => {
+    const source = await Bun.file(new URL("./list.ts", import.meta.url)).text()
+    expect(source).toContain('import {flexColumn, flexRow} from "@layout/core/flex"')
+    expect(source).not.toContain("let rowY =")
+    expect(source).not.toContain("let cursorX =")
   })
 })

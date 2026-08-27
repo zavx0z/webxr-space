@@ -2,13 +2,14 @@ import {
   type ButtonElementState,
 } from "@ui/elements/button"
 import {drawIconCentered} from "@ui/elements/icon"
+import {div} from "@ui/elements/div"
 import {
   select,
   type SelectElementContentRect,
   type SelectElementProps,
 } from "@ui/elements/select"
 import {uiShapeMetrics} from "@ui/elements/shape"
-import {textMaterial} from "@ui/elements/style"
+import {textMaterial, type StyleProps, type StyleStateTable} from "@ui/elements/style"
 import {rgba8ToColor, resolveWidgetColors} from "@ui/elements/theme-reference"
 import {Z, type UiSurface} from "@layout/core/surface"
 import {flexRow} from "@layout/core/flex"
@@ -37,6 +38,12 @@ export type EnumInputProps = {
   readOnly?: boolean
   density?: EnumInputDensity
   open?: boolean
+  style?: StyleProps
+  triggerStyle?: StyleProps
+  triggerStyles?: StyleStateTable<ButtonElementState>
+  popupStyle?: StyleProps
+  optionStyle?: StyleProps
+  optionStyles?: StyleStateTable<"idle" | "hover" | "active" | "selected" | "disabled">
   onChange?(value: string): void
   onOpenChange?(open: boolean): void
 }
@@ -71,9 +78,21 @@ export function EnumInput(
   height: number,
   props: EnumInputProps,
 ): void {
+  div(host, x, y, width, height, {
+    style: {background: null, borderColor: null, borderRadius: 4, padding: 0, ...props.style},
+  })
   const exceptionalLabel = enumInputExceptionalLabel(props)
   if (exceptionalLabel !== undefined) {
-    select(host, x, y, width, height, {value: exceptionalLabel, disabled: true})
+    select(host, x, y, width, height, {
+      value: exceptionalLabel,
+      disabled: true,
+      ...(props.style === undefined ? {} : {style: props.style}),
+      ...(props.triggerStyle === undefined ? {} : {triggerStyle: props.triggerStyle}),
+      ...(props.triggerStyles === undefined ? {} : {triggerStyles: props.triggerStyles}),
+      ...(props.popupStyle === undefined ? {} : {popupStyle: props.popupStyle}),
+      ...(props.optionStyle === undefined ? {} : {optionStyle: props.optionStyle}),
+      ...(props.optionStyles === undefined ? {} : {optionStyles: props.optionStyles}),
+    })
     return
   }
 
@@ -89,6 +108,12 @@ export function EnumInput(
     value: props.value,
     options,
     disabled,
+    ...(props.style === undefined ? {} : {style: props.style}),
+    ...(props.triggerStyle === undefined ? {} : {triggerStyle: props.triggerStyle}),
+    ...(props.triggerStyles === undefined ? {} : {triggerStyles: props.triggerStyles}),
+    ...(props.popupStyle === undefined ? {} : {popupStyle: props.popupStyle}),
+    ...(props.optionStyle === undefined ? {} : {optionStyle: props.optionStyle}),
+    ...(props.optionStyles === undefined ? {} : {optionStyles: props.optionStyles}),
   }
   if (props.open !== undefined) selectProps.open = props.open
   if (props.onOpenChange !== undefined) selectProps.onOpenChange = props.onOpenChange
@@ -143,6 +168,18 @@ function drawExpandedEnumInput(
         const selected = option.value === props.value
         const optionDisabled = disabled || option.disabled === true
         const buttonProps = enumButtonProps(props, option.label, optionDisabled, selected)
+        if (props.optionStyle !== undefined) buttonProps.style = props.optionStyle
+        if (props.optionStyles !== undefined) {
+          const stateStyles: Partial<Record<ButtonElementState, StyleProps>> = {}
+          if (props.optionStyles.idle !== undefined) stateStyles.idle = props.optionStyles.idle
+          if (props.optionStyles.hover !== undefined) stateStyles.hover = props.optionStyles.hover
+          if (props.optionStyles.active !== undefined) stateStyles.active = props.optionStyles.active
+          if (props.optionStyles.disabled !== undefined) stateStyles.disabled = props.optionStyles.disabled
+          buttonProps.stateStyles = stateStyles
+          if (selected && props.optionStyles.selected !== undefined) {
+            buttonProps.style = {...buttonProps.style, ...props.optionStyles.selected}
+          }
+        }
         if (option.iconSrc !== undefined) buttonProps.startIcon = option.iconSrc
         const tooltip = option.description ?? (selected ? props.tooltip : undefined)
         if (tooltip !== undefined) buttonProps.tooltip = tooltip

@@ -1,5 +1,6 @@
 import {button} from "@ui/elements/button"
-import {type StyleProps} from "@ui/elements/style"
+import {type StyleProps, type StyleStateTable} from "@ui/elements/style"
+import {type ButtonElementState} from "@ui/elements/button"
 import {type Tone} from "@ui/elements/theme"
 import {type UiSurface} from "@layout/core/surface"
 
@@ -16,7 +17,8 @@ export type SwitcherProps = {
   key?: string
   tooltip?: string
   tooltipDelayMs?: number
-  sx?: StyleProps
+  style?: StyleProps
+  stateStyles?: StyleStateTable<ButtonElementState>
   onChange?: (checked: boolean) => void
   onClick?: (checked: boolean) => void
 }
@@ -41,7 +43,8 @@ export function Switcher(
       props.onClick?.(next)
     },
   }
-  if (props.sx !== undefined) elementProps.style = props.sx
+  if (props.style !== undefined) elementProps.style = props.style
+  if (props.stateStyles !== undefined) elementProps.stateStyles = props.stateStyles
   if (props.disabled !== undefined) elementProps.disabled = props.disabled
   if (props.tooltip !== undefined) elementProps.tooltip = props.tooltip
   if (props.tooltipDelayMs !== undefined) elementProps.tooltipDelayMs = props.tooltipDelayMs

@@ -28,7 +28,7 @@ export function ProgressCheckbox(host: UiSurface, x: number, y: number, width: n
     y + Math.max(0, (height - size) / 2),
     size,
     color,
-    numericStyleValue(checkboxProps.sx?.zIndex) ?? Z.ELEMENT,
+    numericStyleValue(checkboxProps.style?.zIndex) ?? Z.ELEMENT,
   )
   if (progress <= 0) return
   drawProgressBorder(
@@ -38,7 +38,7 @@ export function ProgressCheckbox(host: UiSurface, x: number, y: number, width: n
     size,
     progress,
     color,
-    numericStyleValue(checkboxProps.sx?.zIndex) ?? Z.ELEMENT,
+    numericStyleValue(checkboxProps.style?.zIndex) ?? Z.ELEMENT,
   )
 }
 

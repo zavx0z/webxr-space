@@ -46,7 +46,7 @@ describe("Checkbox Blender option", () => {
     const fill = new Color(0.1, 0.2, 0.3, 0.4)
     const border = new Color(0.5, 0.6, 0.7, 0.8)
     const surface = new RecordingSurface()
-    Checkbox(surface, 0, 0, 22, 22, {sx: {background: fill, borderColor: border}})
+    Checkbox(surface, 0, 0, 22, 22, {style: {background: fill, borderColor: border}})
     expect(surface.roundedRects.at(-1)?.[4]).toMatchObject({fill, border})
   })
 })

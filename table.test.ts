@@ -62,4 +62,12 @@ describe("table selection model", () => {
     surface.onPointerUp(pointer, 10, 35)
     expect(actions).toEqual(["cell:name"])
   })
+
+  test("uses shared Flex plans for table regions, rows and columns", async () => {
+    const source = await Bun.file(new URL("./table.ts", import.meta.url)).text()
+    expect(source).toContain('import {flexColumn, flexRow} from "@layout/core/flex"')
+    expect(source).toContain("tableColumnFrames")
+    expect(source).not.toContain("let columnX =")
+    expect(source).not.toContain("visibleIndex * rowH")
+  })
 })

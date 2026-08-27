@@ -12,11 +12,20 @@ import {
 } from "@ui/elements/theme"
 import {Z, type UiSurface} from "@layout/core/surface"
 import {Color} from "@engine/core"
+import {
+  backgroundColor,
+  boxPadding,
+  cssColor,
+  px,
+  textMaterial,
+  type StyleProps,
+} from "@ui/elements/style"
 
 export type BadgeOpts = {
   label: string
   tone?: Tone
   fontPx?: number
+  style?: StyleProps
 }
 
 export type StatusChipOpts = {
@@ -61,18 +70,32 @@ function withAlpha(color: Color, alpha: number): Color {
 /** Бейдж: tone-fill + colored top-line + label. */
 export function badge(pane: UiSurface, x: number, y: number, w: number, h: number, opts: BadgeOpts): void {
   const tone = opts.tone ?? "neutral"
-  const fontPx = opts.fontPx ?? 11
-  pane.drawRoundedRect(x, y, w, h, {
-    radius: Math.min(w, h) / 2,
-    fill: toneFill(tone),
-    border: toneBorder(tone),
+  const style: StyleProps = {
+    background: toneFill(tone),
+    borderColor: toneBorder(tone),
+    borderRadius: Math.min(w, h) / 2,
     borderWidth: 1,
-    z: Z.ELEMENT,
-  })
-  pane.drawText(opts.label, x + 8, y + (h - fontPx) / 2, {
+    fontSize: opts.fontPx ?? 11,
+    paddingX: 8,
+    zIndex: Z.ELEMENT,
+    ...opts.style,
+  }
+  const roundedOptions: Parameters<UiSurface["drawRoundedRect"]>[4] = {
+    radius: px(style.borderRadius, Math.min(w, h) / 2),
+    fill: backgroundColor(style),
+    border: style.borderColor === undefined || style.borderColor === null ? null : cssColor(style.borderColor),
+    borderWidth: px(style.borderWidth, 1),
+    z: style.zIndex ?? Z.ELEMENT,
+  }
+  if (style.opacity !== undefined) roundedOptions.opacity = style.opacity
+  pane.drawRoundedRect(x, y, w, h, roundedOptions)
+  const fontPx = px(style.fontSize, 11)
+  const padding = boxPadding(style)
+  pane.drawText(opts.label, x + padding.left, y + (h - fontPx) / 2, {
     fontPx,
-    material: pane.materials.toneText(tone),
-    maxWidthPx: w - 16,
+    material: style.color === undefined ? pane.materials.toneText(tone) : textMaterial(pane, style.color),
+    maxWidthPx: Math.max(1, w - padding.left - padding.right),
+    z: (style.zIndex ?? Z.ELEMENT) + (Z.TEXT - Z.ELEMENT),
   })
 }
 

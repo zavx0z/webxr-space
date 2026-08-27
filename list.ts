@@ -9,9 +9,15 @@ import {
 } from "@ui/elements/list"
 import {drawIconCentered} from "@ui/elements/icon"
 import {span} from "@ui/elements/span"
-import {cssColor, textMaterial, type CssColor, type StyleProps} from "@ui/elements/style"
+import {
+  cssColor,
+  textMaterial,
+  type CssColor,
+  type StyleProps,
+} from "@ui/elements/style"
 import {rgba8ToColor, resolveWidgetColors, uiTheme} from "@ui/elements/theme-reference"
 import {Z, type UiSurface} from "@layout/core/surface"
+import {flexColumn, flexRow} from "@layout/core/flex"
 import {Divider} from "./divider.ts"
 
 export type ListDense = boolean
@@ -26,7 +32,7 @@ export type ListItemTextProps = {
   disabled?: boolean
   primaryColor?: CssColor
   secondaryColor?: CssColor
-  sx?: StyleProps
+  style?: StyleProps
 }
 
 export type ListItemIconProps = {
@@ -35,7 +41,7 @@ export type ListItemIconProps = {
   disabled?: boolean
   color?: CssColor
   sizePx?: number
-  sx?: StyleProps
+  style?: StyleProps
 }
 
 export type ListItemProps = {
@@ -56,7 +62,7 @@ export type ListItemProps = {
   height?: number
   tooltip?: string
   tooltipDelayMs?: number
-  sx?: StyleProps
+  style?: StyleProps
   onClick?: () => void
 }
 
@@ -70,20 +76,21 @@ export type ListProps = {
   itemHeight?: number
   itemGap?: number
   selectedKey?: string
-  sx?: StyleProps
+  style?: StyleProps
   onItemClick?: (item: ListItemProps, index: number) => void
 }
 
 export type ListSubheaderProps = {
   children?: string | number
   inset?: boolean
-  sx?: StyleProps
+  style?: StyleProps
 }
 
 export type ListDividerProps = {
   inset?: boolean
   middle?: boolean
   light?: boolean
+  style?: StyleProps
 }
 
 const LIST_ROW_GUTTER_X = 16
@@ -112,35 +119,53 @@ export function List(host: UiSurface, x: number, y: number, width: number, heigh
       borderColor: null,
       borderRadius: 0,
       padding: 0,
-      ...props.sx,
+      ...props.style,
     },
     children: (ctx) => {
-      if (props.subheader !== undefined) {
-        ListSubheader(host, ctx.viewportX, ctx.contentY + paddingY, ctx.viewportWidth, subheaderH, {children: props.subheader})
-      }
-
-      const rowX = ctx.contentX
-      const rowW = Math.max(1, ctx.viewportWidth)
-      let rowY = ctx.contentY + paddingY + subheaderH
-      for (const [index, item] of items.entries()) {
-        const rowH = item.height ?? itemHeight
-        if (rowY + rowH < ctx.viewportY || rowY > ctx.viewportY + ctx.viewportHeight) {
-          rowY += rowH + itemGap
-          continue
-        }
-        const selected = item.selected === true || (props.selectedKey !== undefined && item.key === props.selectedKey)
-        const onClick = item.onClick ?? (props.onItemClick === undefined ? undefined : () => props.onItemClick?.(item, index))
-        const itemProps: ListItemProps = {
-          ...item,
-          selected,
-          dense: item.dense ?? dense,
-          height: rowH,
-        }
-        if (onClick !== undefined) itemProps.onClick = onClick
-        if (item.button === true || onClick !== undefined) ListItemButton(host, rowX, rowY, rowW, rowH, itemProps)
-        else ListItem(host, rowX, rowY, rowW, rowH, itemProps)
-        rowY += rowH + itemGap
-      }
+      const rowsHeight = listItemsContentHeight(items, itemHeight, itemGap, 0, 0)
+      flexColumn({
+        x: ctx.contentX,
+        y: ctx.contentY,
+        w: ctx.viewportWidth,
+        h: ctx.contentHeight,
+        paddingTop: paddingY,
+        paddingBottom: paddingY,
+        gap: 0,
+        items: [
+          props.subheader === undefined ? false : {
+            height: subheaderH,
+            draw: (slotX, slotY, slotW, slotH) => ListSubheader(host, slotX, slotY, slotW, slotH, {children: props.subheader!}),
+          },
+          {
+            height: rowsHeight,
+            draw: (rowsX, rowsY, rowsW, rowsH) => flexColumn({
+              x: rowsX,
+              y: rowsY,
+              w: rowsW,
+              h: rowsH,
+              gap: itemGap,
+              alignItems: "stretch",
+              items: items.map((item, index) => ({
+                height: item.height ?? itemHeight,
+                draw: (rowX, rowY, rowW, rowH) => {
+                  if (rowY + rowH < ctx.viewportY || rowY > ctx.viewportY + ctx.viewportHeight) return
+                  const selected = item.selected === true || (props.selectedKey !== undefined && item.key === props.selectedKey)
+                  const onClick = item.onClick ?? (props.onItemClick === undefined ? undefined : () => props.onItemClick?.(item, index))
+                  const itemProps: ListItemProps = {
+                    ...item,
+                    selected,
+                    dense: item.dense ?? dense,
+                    height: rowH,
+                  }
+                  if (onClick !== undefined) itemProps.onClick = onClick
+                  if (item.button === true || onClick !== undefined) ListItemButton(host, rowX, rowY, rowW, rowH, itemProps)
+                  else ListItem(host, rowX, rowY, rowW, rowH, itemProps)
+                },
+              })),
+            }),
+          },
+        ],
+      })
       props.children?.(ctx)
     },
   }
@@ -163,32 +188,37 @@ export function ListItemText(host: UiSurface, x: number, y: number, width: numbe
   const primaryPx = dense ? 11 : 12
   const secondaryPx = dense ? 9 : 10
   const disabledColors = resolveWidgetColors("listItem", {disabled: true, listItem: true})
+  const style = props.style ?? {}
   const primaryColor = props.disabled === true
     ? rgba8ToColor(disabledColors.text)
-    : props.primaryColor ?? props.sx?.color ?? rgba8ToColor(uiTheme.widgets.listItem.text)
+    : props.primaryColor ?? style.color ?? rgba8ToColor(uiTheme.widgets.listItem.text)
   const secondaryColor = props.disabled === true
     ? rgba8ToColor(disabledColors.text)
     : props.secondaryColor ?? withAlpha(rgba8ToColor(uiTheme.widgets.listItem.text), 0.5)
-  const textX = x + (props.inset === true ? LIST_ICON_SLOT_W : 0)
-  const textW = Math.max(1, width - (props.inset === true ? LIST_ICON_SLOT_W : 0))
-
-  if (secondary === null || secondary.length === 0) {
-    span(host, textX, y, textW, height, {
-      children: primary,
-      style: {fontSize: primaryPx, color: primaryColor, ...props.sx},
-    })
-    return
-  }
-
-  const totalH = primaryPx + secondaryPx + 8
-  const textY = y + Math.max(0, (height - totalH) / 2)
-  span(host, textX, textY, textW, primaryPx + 4, {
-    children: primary,
-    style: {fontSize: primaryPx, color: primaryColor, ...props.sx},
-  })
-  span(host, textX, textY + primaryPx + 8, textW, secondaryPx + 4, {
-    children: secondary,
-    style: {fontSize: secondaryPx, color: secondaryColor},
+  flexRow({
+    x,
+    y,
+    w: width,
+    h: height,
+    gap: 0,
+    alignItems: "stretch",
+    items: [
+      props.inset === true ? {width: LIST_ICON_SLOT_W, height, draw() {}} : false,
+      {width: "grow", height, draw: (textX, textY, textW, textH) => drawListItemTextRows(
+        host,
+        textX,
+        textY,
+        textW,
+        textH,
+        primary,
+        secondary,
+        primaryPx,
+        secondaryPx,
+        primaryColor,
+        secondaryColor,
+        props.style,
+      )},
+    ],
   })
 }
 
@@ -227,7 +257,7 @@ export function ListSubheader(host: UiSurface, x: number, y: number, width: numb
       color: rgba8ToColor(uiTheme.widgets.listItem.text),
       fontSize: 10,
       textAlign: "left",
-      ...props.sx,
+      ...props.style,
     },
   })
 }
@@ -236,6 +266,7 @@ export function ListDivider(host: UiSurface, x: number, y: number, width: number
   const inset = props.inset === true ? LIST_ROW_GUTTER_X + LIST_ICON_SLOT_W : props.middle === true ? LIST_ROW_GUTTER_X : 0
   Divider(host, x + inset, y, Math.max(1, width - inset - (props.middle === true ? LIST_ROW_GUTTER_X : 0)), {
     light: props.light ?? true,
+    ...(props.style === undefined ? {} : {style: props.style}),
   })
 }
 
@@ -245,7 +276,7 @@ function renderListItem(host: UiSurface, x: number, y: number, width: number, he
   const key = props.key ?? `component-list-item:${x}:${y}:${width}:${height}:${String(props.primary ?? "")}`
   const itemProps: LiElementProps = {
     key,
-    style: {padding: 0, ...props.sx},
+    style: {padding: 0, ...props.style},
     children: (state) => {
       drawListItemContent(host, x, y, width, rowH, props, state, dense)
       if (props.divider === true) ListDivider(host, x, y + rowH - 1, width, {inset: props.iconSrc !== undefined || props.icon !== undefined})
@@ -272,47 +303,101 @@ function drawListItemContent(
   dense: boolean,
 ): void {
   const gutter = props.disableGutters === true ? 0 : LIST_ROW_GUTTER_X
-  let cursorX = x + gutter
   const rightPad = props.disableGutters === true ? 0 : LIST_ROW_GUTTER_X
-  const actionW = props.secondaryAction === undefined ? 0 : LIST_SECONDARY_ACTION_W
   const iconValue = props.icon ?? undefined
-  if (props.iconSrc !== undefined || iconValue !== undefined) {
-    const iconProps: ListItemIconProps = {}
-    if (props.iconSrc !== undefined) iconProps.iconSrc = props.iconSrc
-    if (iconValue !== undefined) iconProps.children = iconValue
-    if (props.disabled !== undefined) iconProps.disabled = props.disabled
-    iconProps.color = rgba8ToColor(state.colors.text)
-    ListItemIcon(host, cursorX, y, LIST_ICON_SLOT_W, height, iconProps)
-    cursorX += LIST_ICON_SLOT_W
-  } else if (props.inset === true) {
-    cursorX += LIST_ICON_SLOT_W
-  }
+  const hasIconSlot = props.iconSrc !== undefined || iconValue !== undefined || props.inset === true
+  flexRow({
+    x,
+    y,
+    w: width,
+    h: height,
+    paddingLeft: gutter,
+    paddingRight: rightPad,
+    gap: 0,
+    alignItems: "stretch",
+    items: [
+      hasIconSlot ? {width: LIST_ICON_SLOT_W, height, draw: (slotX, slotY, slotW, slotH) => {
+        if (props.iconSrc === undefined && iconValue === undefined) return
+        const iconProps: ListItemIconProps = {color: rgba8ToColor(state.colors.text)}
+        if (props.iconSrc !== undefined) iconProps.iconSrc = props.iconSrc
+        if (iconValue !== undefined) iconProps.children = iconValue
+        if (props.disabled !== undefined) iconProps.disabled = props.disabled
+        ListItemIcon(host, slotX, slotY, slotW, slotH, iconProps)
+      }} : false,
+      {width: "grow", height, draw: (slotX, slotY, slotW, slotH) => {
+        const textProps: ListItemTextProps = {
+          dense,
+          primaryColor: rgba8ToColor(state.colors.text),
+          secondaryColor: withAlpha(rgba8ToColor(state.colors.text), 0.5),
+        }
+        if (props.primary !== undefined) textProps.primary = props.primary
+        if (props.secondary !== undefined) textProps.secondary = props.secondary
+        if (props.disabled !== undefined) textProps.disabled = props.disabled
+        ListItemText(host, slotX, slotY, slotW, slotH, textProps)
+      }},
+      props.secondaryAction === undefined ? false : {
+        width: LIST_SECONDARY_ACTION_W,
+        height,
+        draw: (slotX, slotY, slotW, slotH) => {
+          const actionRect = {x: slotX, y: slotY, w: slotW, h: slotH}
+          if (typeof props.secondaryAction === "function") {
+            props.secondaryAction(actionRect)
+            return
+          }
+          const material = listTextMaterial(host, withAlpha(rgba8ToColor(state.colors.text), 0.75))
+          host.drawTextCentered(String(props.secondaryAction), slotX + slotW / 2, slotY + slotH / 2, {
+            fontPx: dense ? 10 : 11,
+            material,
+            maxWidthPx: slotW,
+            z: Z.TEXT,
+          })
+        },
+      },
+    ],
+  })
+}
 
-  const textW = Math.max(1, x + width - rightPad - actionW - cursorX)
-  const textProps: ListItemTextProps = {
-    dense,
-    primaryColor: rgba8ToColor(state.colors.text),
-    secondaryColor: withAlpha(rgba8ToColor(state.colors.text), 0.5),
+function drawListItemTextRows(
+  host: UiSurface,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  primary: string,
+  secondary: string | null,
+  primaryPx: number,
+  secondaryPx: number,
+  primaryColor: CssColor,
+  secondaryColor: CssColor,
+  style: StyleProps | undefined,
+): void {
+  if (secondary === null || secondary.length === 0) {
+    span(host, x, y, width, height, {
+      children: primary,
+      style: {fontSize: primaryPx, color: primaryColor, ...style},
+    })
+    return
   }
-  if (props.primary !== undefined) textProps.primary = props.primary
-  if (props.secondary !== undefined) textProps.secondary = props.secondary
-  if (props.disabled !== undefined) textProps.disabled = props.disabled
-  ListItemText(host, cursorX, y, textW, height, textProps)
-
-  if (props.secondaryAction !== undefined) {
-    const actionRect = {x: x + width - rightPad - actionW, y, w: actionW, h: height}
-    if (typeof props.secondaryAction === "function") {
-      props.secondaryAction(actionRect)
-    } else {
-      const material = listTextMaterial(host, withAlpha(rgba8ToColor(state.colors.text), 0.75))
-      host.drawTextCentered(String(props.secondaryAction), actionRect.x + actionRect.w / 2, actionRect.y + actionRect.h / 2, {
-        fontPx: dense ? 10 : 11,
-        material,
-        maxWidthPx: actionRect.w,
-        z: Z.TEXT,
-      })
-    }
-  }
+  const totalH = primaryPx + secondaryPx + 8
+  flexColumn({
+    x,
+    y,
+    w: width,
+    h: height,
+    paddingTop: Math.max(0, (height - totalH) / 2),
+    gap: 4,
+    alignItems: "stretch",
+    items: [
+      {height: primaryPx + 4, draw: (slotX, slotY, slotW, slotH) => span(host, slotX, slotY, slotW, slotH, {
+        children: primary,
+        style: {fontSize: primaryPx, color: primaryColor, ...style},
+      })},
+      {height: secondaryPx + 4, draw: (slotX, slotY, slotW, slotH) => span(host, slotX, slotY, slotW, slotH, {
+        children: secondary,
+        style: {fontSize: secondaryPx, color: secondaryColor},
+      })},
+    ],
+  })
 }
 
 function listTextMaterial(host: UiSurface, color: CssColor): TextMaterial {

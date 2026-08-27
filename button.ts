@@ -5,10 +5,16 @@ import {
   type ButtonElementAppearance,
   type ButtonElementLayout,
   type ButtonElementProps,
+  type ButtonElementState,
 } from "@ui/elements/button"
 import {type GroupedCellAppearance} from "@ui/elements/grouped-cell"
 import {drawIconCentered} from "@ui/elements/icon"
-import {cssColor, textMaterial, type StyleProps} from "@ui/elements/style"
+import {
+  cssColor,
+  textMaterial,
+  type StyleProps,
+  type StyleStateTable,
+} from "@ui/elements/style"
 import {rgba8ToColor} from "@ui/elements/theme-reference"
 import {type UiSurface} from "@layout/core/surface"
 import {flexRow} from "@layout/core/flex"
@@ -46,7 +52,8 @@ export type ButtonProps = {
   fill?: Color
   border?: Color
   textMaterial?: TextMaterial
-  sx?: StyleProps
+  style?: StyleProps
+  stateStyles?: StyleStateTable<ButtonElementState>
   onClick?: () => void
   action?: () => void
   onHover?: () => void
@@ -72,7 +79,7 @@ export function Button(host: UiSurface, x: number, y: number, width: number, hei
     key,
     children: iconSrc === undefined && props.textMaterial === undefined
       ? label
-      : (_state, layout) => drawButtonContent(host, label, layout, props, iconSrc, iconPosition),
+      : (state, layout) => drawButtonContent(host, label, layout, props, iconSrc, iconPosition, state),
     onClick: action,
     style: buttonStyle(props),
     appearance,
@@ -80,6 +87,7 @@ export function Button(host: UiSurface, x: number, y: number, width: number, hei
     focused: props.focused === true,
   }
   if (props.size !== undefined) elementProps.size = props.size
+  if (props.stateStyles !== undefined) elementProps.stateStyles = props.stateStyles
   if (props.groupedCell !== undefined) elementProps.groupedCell = props.groupedCell
   if (props.disabled !== undefined) elementProps.disabled = props.disabled
   if (props.tooltip !== undefined) elementProps.tooltip = props.tooltip
@@ -104,12 +112,12 @@ export function IconButton(host: UiSurface, x: number, y: number, width: number,
 export {autoButtonWidth}
 
 function buttonStyle(props: ButtonProps): StyleProps {
-  const style: StyleProps = {...props.sx}
+  const style: StyleProps = {}
   if (props.fontPx !== undefined) style.fontSize = props.fontPx
   if (props.radius !== undefined) style.borderRadius = props.radius
   if (props.fill !== undefined) style.background = props.fill
   if (props.border !== undefined) style.borderColor = props.border
-  return style
+  return {...style, ...props.style}
 }
 
 function componentButtonAppearance(props: ButtonProps): ButtonElementAppearance {
@@ -126,9 +134,11 @@ function drawButtonContent(
   props: ButtonProps,
   iconSrc: string | undefined,
   iconPosition: "start" | "end",
+  state: ButtonElementState,
 ): void {
-  const fontPx = props.fontPx ?? layout.fontPx
-  const contentColor = props.sx?.color ?? rgba8ToColor(layout.colors.text)
+  const fontPx = layout.fontPx
+  const style: StyleProps = {...buttonStyle(props), ...props.stateStyles?.[state]}
+  const contentColor = style.color ?? rgba8ToColor(layout.colors.text)
   const material = props.textMaterial ?? textMaterial(host, contentColor)
   const content = layout.content
   if (iconSrc === undefined || iconSrc.length === 0) {
@@ -151,7 +161,7 @@ function drawButtonContent(
     height: iconSize,
     draw: (x: number, y: number, width: number, height: number) => drawIconCentered(host, iconSrc ?? "", x + width / 2, y + height / 2, iconSize, {
       opacity: iconOpacity,
-      tint: props.sx?.color === undefined ? rgba8ToColor(layout.colors.item) : cssColor(props.sx.color),
+      tint: style.color === undefined ? rgba8ToColor(layout.colors.item) : cssColor(style.color),
       z: Z.TEXT,
     }),
   }

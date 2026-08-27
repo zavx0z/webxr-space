@@ -28,7 +28,7 @@ describe("component TextField", () => {
         kind: "grouped-cell",
         corners: {topLeft: false, topRight: true, bottomLeft: false, bottomRight: false},
       },
-      sx: {borderRadius: 0, borderWidth: 0},
+      style: {borderRadius: 4, borderWidth: 0},
       cursorVisible: false,
     })
 

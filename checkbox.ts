@@ -5,7 +5,13 @@ import {
 } from "@ui/elements/button"
 import {drawIconCentered} from "@ui/elements/icon"
 import {uiIcons} from "@ui/elements/icons"
-import {backgroundColor, cssColor, type StyleProps} from "@ui/elements/style"
+import {
+  backgroundColor,
+  cssColor,
+  px,
+  type StyleProps,
+  type StyleStateTable,
+} from "@ui/elements/style"
 import {type Tone} from "@ui/elements/theme"
 import {rgba8ToColor, resolveWidgetColors} from "@ui/elements/theme-reference"
 import {Z, type UiSurface} from "@layout/core/surface"
@@ -22,7 +28,8 @@ export type CheckboxProps = {
   tone?: Tone
   tooltip?: string
   tooltipDelayMs?: number
-  sx?: StyleProps
+  style?: StyleProps
+  stateStyles?: StyleStateTable<ButtonElementState>
   onChange?: (checked: boolean) => void
   onClick?: (checked: boolean) => void
 }
@@ -47,7 +54,7 @@ export function Checkbox(host: UiSurface, x: number, y: number, width: number, h
       borderColor: null,
       borderRadius: 0,
       padding: 0,
-      zIndex: props.sx?.zIndex ?? Z.ELEMENT,
+      zIndex: props.style?.zIndex ?? Z.ELEMENT,
     },
   }
   if (disabled) elementProps.disabled = true
@@ -74,29 +81,30 @@ function drawCheckbox(
     selected: checked,
     disabled,
   })
-  const explicitFill = props.sx?.background !== undefined || props.sx?.backgroundColor !== undefined
-    ? backgroundColor(props.sx)
+  const style: StyleProps = {...props.style, ...props.stateStyles?.[state]}
+  const explicitFill = style.background !== undefined || style.backgroundColor !== undefined
+    ? backgroundColor(style)
     : undefined
-  const explicitBorder = props.sx?.borderColor === undefined
+  const explicitBorder = style.borderColor === undefined
     ? undefined
-    : props.sx.borderColor === null
+    : style.borderColor === null
       ? null
-      : cssColor(props.sx.borderColor)
+      : cssColor(style.borderColor)
 
   host.drawRoundedRect(x, y, size, size, {
-    radius: numericStyleValue(props.sx?.borderRadius) ?? size * 0.2,
+    radius: px(style.borderRadius, size * 0.2),
     fill: explicitFill === undefined ? rgba8ToColor(colors.inner) : explicitFill,
     border: explicitBorder === undefined ? rgba8ToColor(colors.outline) : explicitBorder,
-    borderWidth: numericStyleValue(props.sx?.borderWidth) ?? 1,
-    opacity: numericStyleValue(props.sx?.opacity) ?? 1,
-    z: numericStyleValue(props.sx?.zIndex) ?? Z.ELEMENT,
+    borderWidth: px(style.borderWidth, 1),
+    opacity: numericStyleValue(style.opacity) ?? 1,
+    z: numericStyleValue(style.zIndex) ?? Z.ELEMENT,
   })
 
   if (!checked) return
   drawIconCentered(host, uiIcons.apply, x + size / 2, y + size / 2, Math.max(10, size * 0.72), {
     opacity: 1,
     tint: rgba8ToColor(colors.item),
-    z: (numericStyleValue(props.sx?.zIndex) ?? Z.ELEMENT) + 0.04,
+    z: (numericStyleValue(style.zIndex) ?? Z.ELEMENT) + 0.04,
   })
 }
 

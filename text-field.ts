@@ -11,7 +11,7 @@ import {
   type InputNumericGesture,
   type InputType,
 } from "@ui/elements/input"
-import type {StyleProps} from "@ui/elements/style"
+import {px, type StyleProps, type StyleStateTable} from "@ui/elements/style"
 import type {UiSurface} from "@layout/core/surface"
 
 export type TextFieldProps = {
@@ -28,7 +28,8 @@ export type TextFieldProps = {
   fontPx?: number
   appearance?: InputAppearance
   type?: InputType
-  sx?: StyleProps
+  style?: StyleProps
+  stateStyles?: StyleStateTable<"idle" | "hover" | "active" | "disabled">
   onChange?: (value: string, state: TextFieldEditState) => void
   onSubmit?: (value: string, state: TextFieldEditState) => void
   submitOnEnter?: boolean
@@ -45,7 +46,8 @@ export function TextField(host: UiSurface, x: number, y: number, width: number, 
   if (props.key !== undefined) inputProps.key = props.key
   if (props.controlled !== undefined) inputProps.controlled = props.controlled
   if (props.active !== undefined) inputProps.active = props.active
-  if (props.sx !== undefined) inputProps.style = props.sx
+  if (props.style !== undefined) inputProps.style = props.style
+  if (props.stateStyles !== undefined) inputProps.stateStyles = props.stateStyles
   if (props.placeholder !== undefined) inputProps.placeholder = props.placeholder
   if (props.disabled !== undefined) inputProps.disabled = props.disabled
   if (props.cursor !== undefined) inputProps.cursor = props.cursor
@@ -58,7 +60,8 @@ export function TextField(host: UiSurface, x: number, y: number, width: number, 
   if (props.submitOnEnter !== undefined) inputProps.submitOnEnter = props.submitOnEnter
   if (props.allowTab !== undefined) inputProps.allowTab = props.allowTab
   if (props.onNumericGesture !== undefined) inputProps.onNumericGesture = props.onNumericGesture
-  const fontPx = props.fontPx ?? (props.sx?.fontSize === undefined ? undefined : Number(props.sx.fontSize))
+  const style = props.style ?? {}
+  const fontPx = props.fontPx ?? (style.fontSize === undefined ? undefined : px(style.fontSize))
   if (fontPx !== undefined) inputProps.fontPx = fontPx
   const onActivate = props.onClick ?? props.onActivate
   if (onActivate !== undefined) inputProps.onActivate = onActivate

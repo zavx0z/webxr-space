@@ -19,10 +19,12 @@ describe("Pane Blender appearance", () => {
     expect(panel.roundedRects[0]?.[4]).toMatchObject({
       fill: rgba8ToColor(uiTheme.spaceNode.panel.back),
       border: rgba8ToColor(uiTheme.material.editorBorder),
+      radius: 6,
     })
     expect(panel.roundedRects[1]?.[4]).toMatchObject({
       fill: null,
       border: rgba8ToColor(uiTheme.material.editorOutline),
+      radius: 6,
     })
 
     const active = new RecordingSurface()
@@ -36,14 +38,35 @@ describe("Pane Blender appearance", () => {
     expect(box.roundedRects[0]?.[4]).toMatchObject({
       fill: rgba8ToColor(colors.inner),
       border: rgba8ToColor(colors.outline),
+      radius: 4,
     })
+  })
+
+  test("keeps ordinary panes on panel radius and editor panels on editor-area radius", () => {
+    const ordinary = new RecordingSurface()
+    Pane(ordinary, 0, 0, 100, 80)
+    expect(ordinary.roundedRects[0]?.[4].radius).toBe(4)
+
+    const surface = new RecordingSurface()
+    Pane(surface, 0, 0, 100, 80, {appearance: "panel"})
+
+    expect(surface.roundedRects.map((call) => call[4].radius)).toEqual([
+      6,
+      6,
+    ])
   })
 
   test("keeps explicit fill and border stronger", () => {
     const fill = new Color(0.1, 0.2, 0.3, 0.4)
     const border = new Color(0.5, 0.6, 0.7, 0.8)
     const surface = new RecordingSurface()
-    Pane(surface, 0, 0, 100, 80, {appearance: "panel", sx: {background: fill, borderColor: border}})
+    Pane(surface, 0, 0, 100, 80, {appearance: "panel", style: {background: fill, borderColor: border}})
     expect(surface.roundedRects[0]?.[4]).toMatchObject({fill, border})
+  })
+
+  test("keeps explicit style radius stronger on the panel and its outline", () => {
+    const surface = new RecordingSurface()
+    Pane(surface, 0, 0, 100, 80, {appearance: "panel", style: {borderRadius: 9}})
+    expect(surface.roundedRects.map((call) => call[4].radius)).toEqual([9, 9])
   })
 })

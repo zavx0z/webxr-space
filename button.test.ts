@@ -33,7 +33,7 @@ describe("component Button Elements boundary", () => {
       y: 29,
       width: 100,
       height: uiShapeMetrics.controlHeight,
-      radius: uiShapeMetrics.lowRadius,
+      radius: 4,
       borderWidth: uiShapeMetrics.borderWidth,
     })
     expect(surface.centeredTexts[0]?.slice(0, 3)).toEqual(["Run", 60, 40])
@@ -64,18 +64,18 @@ describe("component Button Elements boundary", () => {
     }
   })
 
-  test("keeps explicit Component geometry overrides stronger than the size tier", () => {
+  test("keeps explicit style overrides stronger than aliases and the size tier", () => {
     const surface = new RecordingSurface()
     Button(surface, 10, 20, 100, 40, {
       children: "Run",
       size: "small",
       fontPx: 13,
       radius: 8,
-      sx: {height: 30, paddingX: 12, borderWidth: 2},
+      style: {height: 30, paddingX: 12, borderRadius: 9, borderWidth: 2, fontSize: 14},
     })
     expect(surface.roundedRects[0]?.slice(0, 4)).toEqual([10, 25, 100, 30])
-    expect(surface.roundedRects[0]?.[4]).toMatchObject({radius: 8, borderWidth: 2})
-    expect(surface.centeredTexts[0]?.[3]).toMatchObject({fontPx: 13, maxWidthPx: 76})
+    expect(surface.roundedRects[0]?.[4]).toMatchObject({radius: 9, borderWidth: 2})
+    expect(surface.centeredTexts[0]?.[3]).toMatchObject({fontPx: 14, maxWidthPx: 76})
     expect(surface.hits[0]?.slice(0, 4)).toEqual([10, 25, 100, 30])
   })
 

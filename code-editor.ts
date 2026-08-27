@@ -11,7 +11,13 @@ import {
   focusReadOnlyTextParticipant,
   registerReadOnlyTextParticipant,
 } from "@ui/elements/input"
-import {cssColor, textMaterial, type CssColor} from "@ui/elements/style"
+import {
+  cssColor,
+  px,
+  textMaterial,
+  type CssColor,
+  type StyleProps,
+} from "@ui/elements/style"
 import {
   orderedTextSelection,
   sameTextPosition,
@@ -67,6 +73,7 @@ export type CodeEditorProps = Readonly<{
   showLineNumbers?: boolean
   fontPx?: number
   linePx?: number
+  style?: StyleProps
   onScrollChange?(position: CodeEditorScrollPosition): void
   onSelectionChange?(selection: CodeEditorSelection | null): void
 }>
@@ -105,8 +112,18 @@ export function CodeEditor(
   props: CodeEditorProps,
 ): void {
   const state = codeEditorState(host, props)
-  const fontPx = props.fontPx ?? 12
-  const linePx = Math.max(fontPx + 2, props.linePx ?? 16)
+  const style: StyleProps = {
+    background: opaqueRgba8ToColor(uiTheme.spaceText.back),
+    borderColor: rgba8ToColor(uiTheme.material.editorOutline),
+    fontSize: props.fontPx ?? 12,
+    lineHeight: props.linePx ?? 16,
+    padding: 0,
+    overflow: "auto",
+    scrollbarWidth: 4,
+    ...props.style,
+  }
+  const fontPx = px(style.fontSize, 12)
+  const linePx = Math.max(fontPx + 2, px(style.lineHeight, 16))
   const showLineNumbers = props.showLineNumbers ?? true
   const gutterWidth = showLineNumbers
     ? Math.ceil(host.measureText("9".repeat(String(Math.max(1, state.lines.length)).length), fontPx) + GUTTER_SIDE_PAD_PX * 2)
@@ -131,13 +148,7 @@ export function CodeEditor(
     key: props.key,
     scrollContentWidth: contentWidth,
     scrollContentHeight: contentHeight,
-    sx: {
-      background: opaqueRgba8ToColor(uiTheme.spaceText.back),
-      borderColor: rgba8ToColor(uiTheme.material.editorOutline),
-      padding: 0,
-      overflow: "auto",
-      scrollbarWidth: 4,
-    },
+    style,
     children: ({scrollLeft, scrollTop, viewportX, viewportY, viewportWidth, viewportHeight}) => {
       if (state.lastScrollLeft !== scrollLeft || state.lastScrollTop !== scrollTop) {
         state.lastScrollLeft = scrollLeft

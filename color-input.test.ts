@@ -1,6 +1,6 @@
 import {describe, expect, test} from "bun:test"
 import {Color} from "@engine/core"
-import {uiTheme, select, uiShapeMetrics} from "@ui/elements"
+import {uiTheme, select} from "@ui/elements"
 import {
   Z,
   type ColorPickerPlaneDrawOptions,
@@ -229,7 +229,7 @@ describe("public ColorInput", () => {
     expect(compact.dismissables).toHaveLength(1)
     expect(compact.shadows).toHaveLength(1)
     expect(compact.shadows[0]?.[4]).toEqual({
-      radius: uiShapeMetrics.lowRadius,
+      radius: 4,
       blur: uiTheme.material.menuShadowWidth,
       spread: 0,
       color: new Color(0, 0, 0, 1),

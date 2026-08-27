@@ -20,15 +20,16 @@ export type DividerProps = {
   light?: boolean
   flexItem?: boolean
   thickness?: number
-  sx?: StyleProps
+  style?: StyleProps
   z?: number
 }
 
 export function Divider(host: UiSurface, x: number, y: number, length: number, props: DividerProps = {}): void {
   const orientation = props.orientation ?? "horizontal"
-  const thickness = props.thickness ?? px(orientation === "vertical" ? props.sx?.width : props.sx?.height, px(props.sx?.borderWidth, 1))
-  const z = props.z ?? props.sx?.zIndex
-  const color = withOpacity(resolveColor(props.color ?? "neutral"), props.light === true ? 0.56 : (props.sx?.opacity ?? 1))
+  const style = props.style ?? {}
+  const thickness = props.thickness ?? px(orientation === "vertical" ? style.width : style.height, px(style.borderWidth, 1))
+  const z = style.zIndex ?? props.z
+  const color = withOpacity(resolveColor(props.color ?? "neutral"), props.light === true ? 0.56 : (style.opacity ?? 1))
   const [startInset, endInset] = dividerInsets(length, orientation, props.variant ?? "fullWidth")
   const start = startInset
   const usableLength = Math.max(0, length - startInset - endInset)
@@ -44,7 +45,7 @@ export function Divider(host: UiSurface, x: number, y: number, length: number, p
   }
 
   const label = String(props.children)
-  const fontPx = px(props.sx?.fontSize, 11)
+  const fontPx = px(style.fontSize, 11)
   const labelPadX = 10
   const gap = 10
   const labelW = Math.min(Math.max(0, usableLength), Math.ceil(host.measureText(label, fontPx)) + labelPadX * 2)
@@ -64,7 +65,7 @@ export function Divider(host: UiSurface, x: number, y: number, length: number, p
   span(host, labelX, y - labelH / 2, labelW, labelH, {
     children: label,
     style: {
-      color: props.sx?.color ?? "muted",
+      color: style.color ?? "muted",
       fontSize: fontPx,
       textAlign: "center",
     },

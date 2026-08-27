@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {uiIcons, uiShapeMetrics} from "@ui/elements"
+import {uiIcons} from "@ui/elements"
 import {Z, type UiSurface, UiSurface as BaseUiSurface} from "@layout/core/surface"
 import {
   Field,
@@ -125,7 +125,7 @@ describe("public ReferenceInput", () => {
       {x: 80, y: 6, width: 22, height: 22},
       {x: 102, y: 6, width: 22, height: 22},
     ])
-    expect(joined.roundedRects.filter((call) => call[4].radius === uiShapeMetrics.lowRadius && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
+    expect(joined.roundedRects.filter((call) => call[4].radius === 4 && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
       [4, 6, 120, 22],
       [4, 6, 120, 22],
     ])
@@ -156,7 +156,7 @@ describe("public ReferenceInput", () => {
       const surface = new RecordingSurface()
       ReferenceInput(surface, 0, 0, 120, 28, referenceProps(events, state))
 
-      expect(surface.roundedRects.filter((call) => call[4].radius === uiShapeMetrics.lowRadius && call[4].z !== Z.CONTAINER - 0.01)).toHaveLength(2)
+      expect(surface.roundedRects.filter((call) => call[4].radius === 4 && call[4].z !== Z.CONTAINER - 0.01)).toHaveLength(2)
       for (const hit of surface.hits) trigger(hit)
       expect(events).toEqual([])
     }
@@ -165,7 +165,7 @@ describe("public ReferenceInput", () => {
   test("uses one Elements-owned regular and compact geometry with MetaFor materials", () => {
     const regular = new RecordingSurface()
     ReferenceInput(regular, 4, 6, 120, 28, referenceProps([]))
-    expect(regular.roundedRects.filter((call) => call[4].radius === uiShapeMetrics.lowRadius && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
+    expect(regular.roundedRects.filter((call) => call[4].radius === 4 && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
       [4, 6, 120, 28],
       [4, 6, 120, 28],
     ])
@@ -173,7 +173,7 @@ describe("public ReferenceInput", () => {
 
     const compact = new RecordingSurface()
     ReferenceInput(compact, 4, 6, 120, 22, referenceProps([], {density: "compact"}))
-    expect(compact.roundedRects.filter((call) => call[4].radius === uiShapeMetrics.lowRadius && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
+    expect(compact.roundedRects.filter((call) => call[4].radius === 4 && call[4].z !== Z.CONTAINER - 0.01).map((call) => call.slice(0, 4))).toEqual([
       [4, 6, 120, 22],
       [4, 6, 120, 22],
     ])

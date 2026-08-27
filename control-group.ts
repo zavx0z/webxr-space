@@ -4,7 +4,12 @@ import {
 import {div} from "@ui/elements/div"
 import {type GroupedCellAppearance} from "@ui/elements/grouped-cell"
 import {uiShapeMetrics} from "@ui/elements/shape"
-import {type CssColor, type StyleProps} from "@ui/elements/style"
+import {
+  px,
+  type CssColor,
+  type StyleProps,
+  type StyleStateTable,
+} from "@ui/elements/style"
 import {rgba8ToColor, resolveWidgetColors, type WidgetClass} from "@ui/elements/theme-reference"
 import {drawWidgetEmboss} from "@ui/elements/widget-emboss"
 import {Z, type UiSurface} from "@layout/core/surface"
@@ -37,13 +42,15 @@ export type ControlGroupProps = Readonly<{
   columns?: number | readonly ControlGroupTrack[]
   appearance?: ControlGroupAppearance
   disabled?: boolean
+  style?: StyleProps
+  stateStyles?: StyleStateTable<"idle" | "disabled">
   children?(context: ControlGroupContext): void
 }>
 
 export type ControlGroupTrack = number | "grow" | `${number}fr`
 
 const controlGroupCellStyle: Readonly<StyleProps> = Object.freeze({
-  borderRadius: 0,
+  borderRadius: 4,
   borderWidth: 0,
   fontSize: uiShapeMetrics.compactFontPx,
 })
@@ -66,14 +73,21 @@ export function ControlGroup(
   const colors = resolveWidgetColors(widgetClass, {disabled: props.disabled === true})
   const fill = rgba8ToColor(colors.inner)
   const outline = rgba8ToColor(colors.outline)
+  const defaults: StyleProps = {
+    background: fill,
+    borderColor: outline,
+    borderRadius: 4,
+    borderWidth: uiShapeMetrics.borderWidth,
+    zIndex: Z.CONTAINER,
+  }
+  const state = props.disabled === true ? "disabled" : "idle"
+  const style: StyleProps = {...defaults, ...props.style, ...props.stateStyles?.[state]}
 
   div(surface, x, y, width, height, {
     style: {
-      background: fill,
+      ...style,
       borderColor: null,
-      borderRadius: uiShapeMetrics.lowRadius,
       borderWidth: 0,
-      zIndex: Z.CONTAINER,
     },
   })
   props.children?.(controlGroupContext(
@@ -89,19 +103,21 @@ export function ControlGroup(
   drawWidgetEmboss(
     surface,
     {x, y, width, height},
-    uiShapeMetrics.lowRadius,
+    px(style.borderRadius, 4),
     true,
-    Z.CONTAINER - 0.01,
+    (style.zIndex ?? Z.CONTAINER) - 0.01,
   )
 
+  const outlineStyle: StyleProps = {
+    background: null,
+    zIndex: (style.zIndex ?? Z.CONTAINER) + (Z.ELEMENT_RULE - Z.CONTAINER),
+  }
+  if (style.borderColor !== undefined) outlineStyle.borderColor = style.borderColor
+  if (style.borderRadius !== undefined) outlineStyle.borderRadius = style.borderRadius
+  if (style.borderWidth !== undefined) outlineStyle.borderWidth = style.borderWidth
+  if (style.opacity !== undefined) outlineStyle.opacity = style.opacity
   div(surface, x, y, width, height, {
-    style: {
-      background: null,
-      borderColor: outline,
-      borderRadius: uiShapeMetrics.lowRadius,
-      borderWidth: uiShapeMetrics.borderWidth,
-      zIndex: Z.ELEMENT_RULE,
-    },
+    style: outlineStyle,
   })
 }
 

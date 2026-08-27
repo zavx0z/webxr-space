@@ -54,7 +54,7 @@ control нельзя опустить в Elements только ради повт
 1. Components package page `/components/` является desktop consumer общего Workbench
    `@ui/storybook`. Package-owned typed stories владеют metadata, concrete
    component/section/variant stories, lazy exact production imports, preview,
-   source и controls; package не копирует общий shell. Mount `/components/` и
+   raw HTML/CSS, exact TypeScript, controls и events; package не копирует общий shell. Mount `/components/` и
    каждый route prefix открывают overview непосредственных детей и оканчиваются
    `/`, а полный detail pathname — нет. Overview сохраняет полный five-panel
    Workbench и использует первый detail descendant для preview/source вместо
@@ -64,9 +64,11 @@ control нельзя опустить в Elements только ради повт
    его `id`; изменение одного value не перестраивает shell или соседние Fields.
 3. Одноразовые Button и Pane fragments могут оставаться flat внутри exact
    preview parent: у них нет отдельного transform или recurring local dirty
-   lifecycle. Справа постоянно видны exact TypeScript/copy и controls/events,
-   dock показывает variants; статический Info не заменяет code panel.
-4. Catalog и controls пишутся по-русски; API identifiers, exact public subpaths,
+   lifecycle. Справа одновременно видны raw HTML, raw CSS, exact TypeScript и
+   три независимых Copy actions; controls меняют те же args, events остаются
+   observable output. Dock показывает variants; статический Info не
+   заменяет editors.
+4. Catalog, controls и editor/event labels пишутся по-русски; API identifiers, exact public subpaths,
    pathname routes и копируемый TypeScript не переводятся. Все действующие
    Components и universal Field kinds представлены явно; отсутствующий
    production export показывается честным status, а не ложным import.
@@ -75,6 +77,31 @@ control нельзя опустить в Elements только ради повт
    storybook принадлежат разным active tasks, production result явно создаёт
    зависимый storybook slice, а следующий public leaf не сдвигает acceptance
    snapshot до его story/result. Lazy implementation остаётся вне initial entry.
+
+## Inspector
+
+1. Exact `@ui/components/inspector` владеет нейтральной editor-панелью:
+   outer editor region, vertical category rail, toolbar с controlled search,
+   optional context row и scrollable controlled disclosure sections. Component
+   не знает Storybook, HTML, CSS, TypeScript, Blender либо product vocabulary.
+2. `categories`, `selectedCategoryId`, `query` и `section.expanded` являются
+   controlled consumer state. Category может объявить exact `sectionIds`;
+   выбранная category фильтрует принадлежащие ей sections, а query дополнительно
+   фильтрует их labels. Category/section/action callbacks не создают второго
+   state owner.
+3. Rail/content, toolbar/actions и section header/content планируются nested
+   `flexRow`/`flexColumn`. Section content получает единственный authoritative
+   rect callback, а вся колонка scroll-ится через Elements `div`; ручной sibling
+   cursor не является альтернативным layout. Все внутренние visual/input owners
+   вызываются только внутри `Pane.children`, поэтому outer radius/clip/retained
+   parent действительно ограничивает весь subtree.
+4. Blender-compatible default geometry принадлежит exact Component styles:
+   outer editor radius `6`, section radius `4`, logical rail/toolbar/category/
+   section-header `30/30/28/26`, centered search width до `115` и thin rules.
+   Top toolbar проходит над всей шириной, rail начинается только под ней.
+   Caller flat `style` применяется последним к outer region.
+   Storybook использует Inspector как consumer и передаёт собственные categories,
+   sections, editors, controls и events без копирования его chrome.
 
 ## Read-only CodeEditor
 
@@ -101,9 +128,10 @@ control нельзя опустить в Elements только ради повт
 5. Pointer selection является локальным view state точного `key`. `Cmd/Ctrl+C`
    копирует только непустое выделение через один Elements-owned keyed read-only
    text participant; soft keyboard и mutating input target не создаются.
-6. Shared Storybook source panel использует тот же production `CodeEditor` с
-   TypeScript language, сохраняет отдельные title/copy/controls/events owners и
-   rematerialize-ит только source owner при scroll либо selection.
+6. Shared Storybook source panel использует три production `CodeEditor` с HTML,
+   CSS и TypeScript languages, сохраняет отдельные title/copy/scroll/selection
+   owners каждого документа, controls и events owners. Scroll либо selection
+   одного editor rematerialize-ит только его owner.
 7. Gutter и text region являются двумя semantic sibling slots одного
    `flexRow`: gutter получает fixed width, text region — grow remainder и
    собственный content inset. Ручные `codeStartX`/`codeClipX` sibling offsets
@@ -220,10 +248,34 @@ control нельзя опустить в Elements только ради повт
    kind, не копируют rendering. Новый IntegerInput leaf проходит package-owned
    story, manifest completeness, exact delivery/root build и Node INT gate до
    acceptance.
-8. Pane panel сохраняет разные material roles: `editorBorder` является base
-   border региона, а inactive/active editor outline рисуется отдельным
-   transparent overlay. ControlGroup владеет одним outer widget emboss; его
-   Button/Input cells не создают собственные emboss islands.
+8. Каждый public Component принимает единый flat `style`, наследует CSS-like
+   defaults непосредственных Elements/Components, затем задаёт или
+   переопределяет styles своего уровня и последним применяет caller `style`.
+   `sx` запрещён; удобные typed implementation props допустимы и не образуют
+   consumer DSL. Pane panel сохраняет
+   разные material roles: `editorBorder` является base border региона, а
+   inactive/active editor outline рисуется отдельным transparent overlay;
+   Blender-compatible `borderRadius` задаётся в style текущего Pane level и
+   может быть явно переопределён caller style. ControlGroup владеет одним outer
+   widget emboss; его Button/Input cells не создают собственные emboss islands.
+
+## CSS-like style contract
+
+1. Consumer presentation выражается HTML/CSS template DSL. `NestedStyle`
+   адресует внутренний exact owner через `& .part`, а visual state — через
+   `&:state`; например `& .control` может содержать собственные `&:hover`,
+   `&:active` и `&:disabled`.
+2. `@zavx0z/template` парсит syntax, `@zavx0z/renderer` разрешает data и
+   cascade, а WebXR backend один раз компилирует результат в flat typed
+   root/part/state tables. Component render не разбирает selector strings, не
+   обходит NestedStyle и не merge-ит CSS objects на каждом frame.
+3. Внутренний function-based Component API может использовать эффективные
+   typed props, numeric rect и готовые branches. Stateful Component выбирает
+   branch прямым индексом. Storybook показывает три отдельные raw literal
+   документа без tagged-template wrapper: native semantic HTML, полную
+   inherited/default/override CSS-chain с exact owner comments и всеми state
+   branches, а также exact internal TypeScript. Preview-only framing не
+   считается стилем документируемого Component.
 
 ## Источник терминов
 

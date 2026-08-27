@@ -274,8 +274,8 @@ describe("public EnumInput", () => {
     expect(compact.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01).map((call) => ({x: call[0], y: call[1], w: call[2], h: call[3]}))).toEqual([
       {x: 4, y: 6, w: 120, h: uiShapeMetrics.controlHeight},
     ])
-    expect(regular.roundedRects[0]?.[4].radius).toBe(uiShapeMetrics.lowRadius)
-    expect(compact.roundedRects[0]?.[4].radius).toBe(uiShapeMetrics.lowRadius)
+    expect(regular.roundedRects[0]?.[4].radius).toBe(4)
+    expect(compact.roundedRects[0]?.[4].radius).toBe(4)
     expect(compact.roundedRects[0]?.[4].fill).toEqual(rgba8ToColor(resolveWidgetColors("menu").inner))
     expect(compact.roundedRects[0]?.[4].border).toEqual(rgba8ToColor(resolveWidgetColors("menu").outline))
     expect(regular.roundedRects[0]?.[4].fill).toEqual(compact.roundedRects[0]?.[4].fill)

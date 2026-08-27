@@ -9,6 +9,7 @@ import {
   type PopoverProps,
 } from "@ui/elements/popover"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {type StyleProps} from "@ui/elements/style"
 import {rgba8ToColor, resolveWidgetColors, uiTheme} from "@ui/elements/theme-reference"
 import {Z, type UiSurface} from "@layout/core/surface"
 import {flexColumn, flexRow} from "@layout/core/flex"
@@ -36,6 +37,9 @@ export type ColorInputProps = {
   density?: ColorInputDensity
   presentation?: ColorInputPresentation
   open?: boolean
+  style?: StyleProps
+  triggerStyle?: StyleProps
+  popupStyle?: StyleProps
   onChange?(value: ColorInputValue): void
   onOpenChange?(open: boolean): void
 }
@@ -69,6 +73,9 @@ export function ColorInput(
   const key = props.key ?? `color-input:${x}:${y}:${width}:${height}`
   const runtime = runtimeFor(host)
   const presentation = props.presentation ?? "compact"
+  div(host, x, y, width, height, {
+    style: {background: null, borderColor: null, borderRadius: 4, padding: 0, ...props.style},
+  })
   if (presentation === "expanded") {
     drawExpandedColor(host, x, y, width, height, key, value, disabled, props.onChange, runtime, props.value)
     return
@@ -102,12 +109,24 @@ function drawCompactColor(
       props.onOpenChange?.(open)
     },
     trigger(context) {
-      drawColorBarButton(host, x, y, width, height, `${key}:swatch`, value, context.open, disabled, context.toggle)
+      drawColorBarButton(
+        host,
+        x,
+        y,
+        width,
+        height,
+        `${key}:swatch`,
+        value,
+        context.open,
+        disabled,
+        context.toggle,
+        props.triggerStyle,
+      )
     },
     content(rect) {
       const menu = resolveWidgetColors("menuBack")
       host.drawRoundedShadow(rect.x, rect.y, rect.w, rect.h, {
-        radius: uiShapeMetrics.lowRadius,
+        radius: 4,
         blur: uiTheme.material.menuShadowWidth,
         spread: 0,
         color: new Color(0, 0, 0, 1),
@@ -118,9 +137,10 @@ function drawCompactColor(
         style: {
           background: rgba8ToColor(menu.inner),
           borderColor: rgba8ToColor(menu.outline),
-          borderRadius: uiShapeMetrics.lowRadius,
+          borderRadius: 4,
           borderWidth: uiShapeMetrics.borderWidth,
           zIndex: Z.ELEMENT + 0.2,
+          ...props.popupStyle,
         },
       })
       const padding = Math.min(PICKER_PADDING, rect.w / 2, rect.h / 2)
@@ -222,6 +242,7 @@ function drawColorBarButton(
   selected: boolean,
   disabled: boolean,
   onClick: () => void,
+  style: StyleProps | undefined,
 ): void {
   const regular = resolveWidgetColors("regular", {
     ...(selected ? {pressed: true} : {}),
@@ -237,9 +258,10 @@ function drawColorBarButton(
     style: {
       background: null,
       borderColor: rgba8ToColor(regular.outline),
-      borderRadius: uiShapeMetrics.lowRadius,
+      borderRadius: 4,
       borderWidth: uiShapeMetrics.borderWidth,
       zIndex: Z.ELEMENT + 0.24,
+      ...style,
     },
   }
   button(host, x, y, width, height, buttonProps)
@@ -260,7 +282,7 @@ function drawCurrentColorBar(
     style: {
       background: null,
       borderColor: rgba8ToColor(regular.outline),
-      borderRadius: uiShapeMetrics.lowRadius,
+      borderRadius: 4,
       borderWidth: uiShapeMetrics.borderWidth,
       zIndex: Z.ELEMENT_RULE + 0.22,
     },

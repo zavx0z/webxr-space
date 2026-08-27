@@ -1,4 +1,5 @@
 import {uiIcons} from "@ui/elements/icons"
+import {div} from "@ui/elements/div"
 import {uiShapeMetrics} from "@ui/elements/shape"
 import {type StyleProps} from "@ui/elements/style"
 import {palette} from "@ui/elements/theme"
@@ -27,6 +28,9 @@ export type CollectionInputProps = {
   disabled?: boolean
   readOnly?: boolean
   density?: CollectionInputDensity
+  style?: StyleProps
+  listStyle?: StyleProps
+  actionsStyle?: StyleProps
   onSelect?(id: string): void
   onAdd?(): void
   onRemove?(id: string): void
@@ -85,6 +89,9 @@ export function CollectionInput(
   const key = props.key ?? `collection-input:${x}:${y}:${width}:${height}`
   const visibleRows = normalizeCollectionInputVisibleRows(props.visibleRows)
   const listHeight = Math.min(height, metrics.rowHeight * visibleRows)
+  div(host, x, y, width, height, {
+    style: {background: null, borderColor: null, borderRadius: 4, padding: 0, ...props.style},
+  })
 
   flexRow({
     x,
@@ -97,6 +104,7 @@ export function CollectionInput(
       {width: "grow", height: listHeight, draw: (slotX, slotY, slotW, slotH) => {
         ControlGroup(host, slotX, slotY, slotW, slotH, {
           rows: visibleRows,
+          ...(props.listStyle === undefined ? {} : {style: props.listStyle}),
           children: (group) => drawCollectionInputList(
             host,
             slotX,
@@ -113,6 +121,9 @@ export function CollectionInput(
         })
       }},
       {width: metrics.actionSize, height, draw: (slotX, slotY, slotW, slotH) => {
+        div(host, slotX, slotY, slotW, slotH, {
+          style: {background: null, borderColor: null, padding: 0, ...props.actionsStyle},
+        })
         drawCollectionInputActions(
           host,
           slotX,
@@ -167,7 +178,7 @@ function drawCollectionInputList(
     disablePadding: true,
     itemHeight: metrics.rowHeight,
     items: collectionInputListItems(props, key, blocked, group.cellStyle),
-    sx: group.cellStyle,
+    style: group.cellStyle,
   }
   if (selected !== undefined) listProps.selectedKey = `${key}:item:${selected.id}`
   List(host, x, y, width, height, listProps)
@@ -187,7 +198,7 @@ function collectionInputListItems(
       dense: true,
       button: false,
       disableGutters: false,
-      sx: cellStyle,
+      style: cellStyle,
     }]
   }
   return props.items.map((item) => {
@@ -199,7 +210,7 @@ function collectionInputListItems(
       dense: true,
       button: !disabled && props.onSelect !== undefined,
       disableGutters: false,
-      sx: cellStyle,
+      style: cellStyle,
     }
     if (item.description !== undefined) row.tooltip = item.description
     if (!disabled && props.onSelect !== undefined) row.onClick = () => props.onSelect!(item.id)

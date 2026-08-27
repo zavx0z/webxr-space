@@ -1,4 +1,5 @@
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {type StyleProps} from "@ui/elements/style"
 import {type UiSurface} from "@layout/core/surface"
 import {flexColumn, flexRow} from "@layout/core/flex"
 import {ControlGroup, type ControlGroupCellContext} from "./control-group.ts"
@@ -18,6 +19,7 @@ export type MatrixInputProps = {
   disabled?: boolean
   readOnly?: boolean
   density?: MatrixInputDensity
+  style?: StyleProps
   onChange?(value: readonly (readonly number[])[]): void
 }
 
@@ -36,6 +38,7 @@ export function MatrixInput(
     appearance: "number",
     rows: size,
     columns: size,
+    ...(props.style === undefined ? {} : {style: props.style}),
     children: (group) => {
       flexColumn({
         x,
@@ -98,7 +101,7 @@ function matrixCellProps(
     precision: 2,
     fontPx: uiShapeMetrics.compactFontPx,
     appearance: cell.inputAppearance,
-    sx: cell.cellStyle,
+    style: cell.cellStyle,
   }
   if (props.key !== undefined) numberProps.key = `${props.key}:${row}:${column}`
   if (props.disabled !== undefined) numberProps.disabled = props.disabled

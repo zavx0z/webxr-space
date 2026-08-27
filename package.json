@@ -31,7 +31,8 @@
     "./divider": "./divider.ts",
     "./list": "./list.ts",
     "./table": "./table.ts",
-    "./code-editor": "./code-editor.ts"
+    "./code-editor": "./code-editor.ts",
+    "./inspector": "./inspector.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false",

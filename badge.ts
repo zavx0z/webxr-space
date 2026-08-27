@@ -4,7 +4,7 @@ import {
   type BadgeOpts as RenderBadgeOpts,
   type StatusChipOpts,
 } from "./internal/renderers.ts"
-import type {StyleProps} from "@ui/elements/style"
+import {px, type StyleProps} from "@ui/elements/style"
 import type {Tone} from "@ui/elements/theme"
 import type {UiSurface} from "@layout/core/surface"
 
@@ -15,7 +15,7 @@ export type BadgeProps = {
   color?: BadgeColor
   tone?: Tone
   fontPx?: number
-  sx?: StyleProps
+  style?: StyleProps
 }
 
 export function Badge(host: UiSurface, x: number, y: number, width: number, height: number, props: BadgeProps): void {
@@ -23,8 +23,13 @@ export function Badge(host: UiSurface, x: number, y: number, width: number, heig
     label: props.label ?? props.children ?? "",
     tone: props.tone ?? toneFromColor(props.color ?? "neutral"),
   }
-  const fontPx = props.fontPx ?? (props.sx?.fontSize === undefined ? undefined : Number(props.sx.fontSize))
+  const style: StyleProps = {
+    ...(props.fontPx === undefined ? {} : {fontSize: props.fontPx}),
+    ...props.style,
+  }
+  const fontPx = style.fontSize === undefined ? undefined : px(style.fontSize)
   if (fontPx !== undefined) opts.fontPx = fontPx
+  if (Object.keys(style).length > 0) opts.style = style
   renderBadge(host, x, y, width, height, opts)
 }
 

@@ -36,7 +36,7 @@ export type NumberInputProps = NumberInputFormatOptions & {
   density?: NumberInputDensity
   fontPx?: number
   appearance?: InputAppearance
-  sx?: StyleProps
+  style?: StyleProps
   onChange?(value: number): void
 }
 
@@ -69,7 +69,7 @@ export function NumberInput(
   const internalLabel = (props as NumberInputProps & NumberInputInternalProps)[numberInputLabel]
   const labelPlan = internalLabel === undefined
     ? null
-    : planNumberInputLabel(host, width, height, internalLabel.text, props.fontPx, props.sx)
+    : planNumberInputLabel(host, width, height, internalLabel.text, props.fontPx, props.style)
   const textFieldProps: Parameters<typeof TextField>[5] = {
     key,
     value: formatNumberInputValue(props.value, props),
@@ -80,8 +80,8 @@ export function NumberInput(
   }
   if (props.fontPx !== undefined) textFieldProps.fontPx = props.fontPx
   if (props.appearance !== undefined) textFieldProps.appearance = props.appearance
-  if (labelPlan !== null) textFieldProps.sx = labelPlan.inputStyle
-  else if (props.sx !== undefined) textFieldProps.sx = props.sx
+  if (labelPlan !== null) textFieldProps.style = labelPlan.inputStyle
+  else if (props.style !== undefined) textFieldProps.style = props.style
   if (!disabled && props.onChange !== undefined) {
     textFieldProps.onSubmit = (text) => {
       const value = parseNumberInputValue(text, props)
@@ -131,9 +131,9 @@ function planNumberInputLabel(
   height: number,
   text: string,
   fontPx = uiShapeMetrics.compactFontPx,
-  sx: StyleProps = {},
+  style: StyleProps = {},
 ): NumberInputLabelPlan {
-  const visibleHeight = Math.min(Math.max(0, height), Math.max(0, px(sx.height, uiShapeMetrics.controlHeight)))
+  const visibleHeight = Math.min(Math.max(0, height), Math.max(0, px(style.height, uiShapeMetrics.controlHeight)))
   const handleWidth = Math.min(Math.max(0, width) / 3, visibleHeight * 0.7)
   const gap = uiShapeMetrics.tightGap
   const labelX = handleWidth + gap
@@ -143,14 +143,14 @@ function planNumberInputLabel(
     width - labelX - rightInset - gap - uiShapeMetrics.iconActionSlot,
   )
   const labelWidth = Math.min(availableLabelWidth, host.measureText(text, fontPx))
-  const padding = boxPadding(sx)
+  const padding = boxPadding(style)
   return Object.freeze({
     text,
     x: labelX,
     width: labelWidth,
     fontPx,
     inputStyle: Object.freeze({
-      ...sx,
+      ...style,
       paddingLeft: Math.max(padding.left, labelX + labelWidth + gap),
       paddingRight: Math.max(padding.right, rightInset),
     }),

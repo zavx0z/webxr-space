@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {rgba8ToColor, resolveWidgetColors, uiShapeMetrics} from "@ui/elements"
+import {rgba8ToColor, resolveWidgetColors} from "@ui/elements"
 import {UiSurface, Z, type UiSurface as UiSurfaceType} from "@layout/core/surface"
 import {Switcher} from "./switcher.ts"
 
@@ -24,7 +24,7 @@ describe("Switcher compatibility toggle", () => {
     expect(surface.roundedRects.filter((call) => call[4].z !== Z.ELEMENT - 0.01)).toHaveLength(1)
     expect(surface.roundedRects[0]?.slice(0, 4)).toEqual([0, 0, 42, 22])
     expect(surface.roundedRects[0]?.[4]).toMatchObject({
-      radius: uiShapeMetrics.lowRadius,
+      radius: 4,
       fill: rgba8ToColor(colors.inner),
       border: rgba8ToColor(colors.outline),
     })

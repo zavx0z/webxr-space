@@ -1,5 +1,6 @@
 import {uiIcons} from "@ui/elements/icons"
 import {uiShapeMetrics} from "@ui/elements/shape"
+import {type StyleProps} from "@ui/elements/style"
 import {type UiSurface} from "@layout/core/surface"
 import {flexRow} from "@layout/core/flex"
 import {Button, IconButton, type ButtonProps} from "./button.ts"
@@ -20,6 +21,7 @@ export type ReferenceInputProps = {
   disabled?: boolean
   readOnly?: boolean
   density?: ReferenceInputDensity
+  style?: StyleProps
   onActivate?(): void
   onPick?(): void
   onClear?(): void
@@ -54,6 +56,7 @@ export function ReferenceInput(
   ControlGroup(host, x, y, width, height, {
     appearance: "pointer",
     columns: actionTracks,
+    ...(props.style === undefined ? {} : {style: props.style}),
     children(group) {
       let column = 1
       flexRow({
@@ -67,7 +70,7 @@ export function ReferenceInput(
           {width: "grow", height, draw: (slotX, slotY, slotW, slotH) => {
             Button(host, slotX, slotY, slotW, slotH, {
               ...mainProps,
-              sx: group.cellStyle,
+              style: group.cellStyle,
               appearance: group.buttonAppearance,
               groupedCell: group.cell(0, 0).groupedCell,
             })
@@ -79,7 +82,7 @@ export function ReferenceInput(
               iconSrc: uiIcons.picker,
               disabled,
               action: props.onPick!,
-              sx: group.cell(0, cell).cellStyle,
+              style: group.cell(0, cell).cellStyle,
               appearance: group.buttonAppearance,
               groupedCell: group.cell(0, cell).groupedCell,
             })
@@ -91,7 +94,7 @@ export function ReferenceInput(
               iconSrc: uiIcons.close,
               disabled,
               action: props.onClear!,
-              sx: group.cell(0, cell).cellStyle,
+              style: group.cell(0, cell).cellStyle,
               appearance: group.buttonAppearance,
               groupedCell: group.cell(0, cell).groupedCell,
             })

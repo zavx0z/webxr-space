@@ -7,6 +7,7 @@ import {
 import {type StyleProps} from "@ui/elements/style"
 import {palette} from "@ui/elements/theme"
 import {Z, type DrawTextOpts, type UiSurface} from "@layout/core/surface"
+import {flexColumn, flexRow} from "@layout/core/flex"
 
 export type TableColumn<Row> = {
   key: string
@@ -44,6 +45,15 @@ export type TableHeaderContext<Row> = {
   columnIndex: number
 }
 
+type TableColumnFrame<Row> = Readonly<{
+  column: TableColumn<Row>
+  columnIndex: number
+  x: number
+  y: number
+  w: number
+  h: number
+}>
+
 export type TableSelectionGesture = {
   metaKey?: boolean
   ctrlKey?: boolean
@@ -67,7 +77,7 @@ export type TableProps<Row> = {
   headerFontPx?: number
   cellPaddingX?: number
   emptyLabel?: string
-  sx?: StyleProps
+  style?: StyleProps
   getCellText?: (ctx: TableCellContext<Row>) => string
   getCellMaterial?: (ctx: TableCellContext<Row>) => DrawTextOpts["material"]
   getHeaderMaterial?: (ctx: TableHeaderContext<Row>) => DrawTextOpts["material"]
@@ -153,7 +163,7 @@ export function Table<Row>(host: UiSurface, x: number, y: number, width: number,
       overflowX: "auto",
       overflowY: "auto",
       scrollbarWidth: 4,
-      ...props.sx,
+      ...props.style,
     },
     children: (ctx) => renderTable(host, props, ctx, rowH, headerH, key),
   })
@@ -173,19 +183,36 @@ function renderTable<Row>(
 ): void {
   const x = ctx.viewportX
   const y = ctx.viewportY
-  const bodyY = y + headerH
-  const bodyH = Math.max(1, ctx.viewportHeight - headerH)
+  let headerFrame = {x, y, w: ctx.viewportWidth, h: Math.min(headerH, ctx.viewportHeight)}
+  let bodyFrame = {x, y: y + headerFrame.h, w: ctx.viewportWidth, h: Math.max(0, ctx.viewportHeight - headerFrame.h)}
+  flexColumn({
+    x,
+    y,
+    w: ctx.viewportWidth,
+    h: ctx.viewportHeight,
+    gap: 0,
+    items: [
+      {height: Math.min(headerH, ctx.viewportHeight), draw: (slotX, slotY, slotW, slotH) => {
+        headerFrame = {x: slotX, y: slotY, w: slotW, h: slotH}
+      }},
+      {height: "grow", draw: (slotX, slotY, slotW, slotH) => {
+        bodyFrame = {x: slotX, y: slotY, w: slotW, h: slotH}
+      }},
+    ],
+  })
+  const bodyY = bodyFrame.y
+  const bodyH = Math.max(1, bodyFrame.h)
   const firstRow = Math.max(0, Math.floor(ctx.scrollTop / rowH))
   const rowOffset = ctx.scrollTop - firstRow * rowH
   const visibleRows = Math.ceil(bodyH / rowH) + 1
 
-  host.pushClip(x, bodyY, Math.max(1, ctx.viewportWidth), bodyH)
+  host.pushClip(bodyFrame.x, bodyY, Math.max(1, bodyFrame.w), bodyH)
   try {
-    renderTableBody(host, x, bodyY, bodyH, props, ctx, rowH, firstRow, rowOffset, visibleRows, key)
+    renderTableBody(host, bodyFrame.x, bodyY, bodyH, props, ctx, rowH, firstRow, rowOffset, visibleRows, key)
   } finally {
     host.popClip()
   }
-  renderTableHeader(host, x, y, props, ctx, headerH)
+  renderTableHeader(host, headerFrame, props, ctx)
 }
 
 function renderTableBody<Row>(
@@ -208,66 +235,78 @@ function renderTableBody<Row>(
       maxWidthPx: Math.max(1, ctx.viewportWidth - 20),
       z: TABLE_BODY_TEXT_Z,
     })
-    renderVerticalRules(host, ctx.contentX, bodyY, bodyH, props.columns, TABLE_BODY_RULE_Z)
+    renderVerticalRules(host, tableColumnFrames(ctx.contentX, bodyY, bodyH, props.columns), TABLE_BODY_RULE_Z, {
+      x: ctx.contentX,
+      y: bodyY,
+      h: bodyH,
+    })
     return
   }
 
-  for (let visibleIndex = 0; visibleIndex < visibleRows; visibleIndex += 1) {
-    const rowIndex = firstRow + visibleIndex
-    const row = props.rows[rowIndex]
-    if (row === undefined) continue
-    const rowY = bodyY + visibleIndex * rowH - rowOffset
-    if (rowIndex % 2 === 1) host.drawRect(x, rowY, Math.max(1, ctx.viewportWidth), rowH, TABLE_ROW_STRIPE_FILL, TABLE_BODY_BG_Z)
-    host.drawRect(x, rowY + rowH - 1, Math.max(1, ctx.viewportWidth), 1, palette.borderRule, TABLE_BODY_RULE_Z)
-    renderTableRow(host, x, rowY, rowH, props, ctx, row, rowIndex, key, bodyY, bodyH)
-  }
-  renderVerticalRules(host, ctx.contentX, bodyY, bodyH, props.columns, TABLE_BODY_RULE_Z)
+  flexColumn({
+    x,
+    y: bodyY - rowOffset,
+    w: ctx.viewportWidth,
+    h: visibleRows * rowH,
+    gap: 0,
+    items: Array.from({length: visibleRows}, (_, visibleIndex) => {
+      const rowIndex = firstRow + visibleIndex
+      const row = props.rows[rowIndex]
+      return row === undefined ? {height: rowH, draw() {}} : {
+        height: rowH,
+        draw: (rowX, rowY, rowW, plannedRowH) => {
+          if (rowIndex % 2 === 1) host.drawRect(rowX, rowY, Math.max(1, rowW), plannedRowH, TABLE_ROW_STRIPE_FILL, TABLE_BODY_BG_Z)
+          host.drawRect(rowX, rowY + plannedRowH - 1, Math.max(1, rowW), 1, palette.borderRule, TABLE_BODY_RULE_Z)
+          renderTableRow(host, rowX, rowY, plannedRowH, props, ctx, row, rowIndex, key, bodyY, bodyH)
+        },
+      }
+    }),
+  })
+  renderVerticalRules(host, tableColumnFrames(ctx.contentX, bodyY, bodyH, props.columns), TABLE_BODY_RULE_Z, {
+    x: ctx.contentX,
+    y: bodyY,
+    h: bodyH,
+  })
 }
 
 function renderTableHeader<Row>(
   host: UiSurface,
-  x: number,
-  y: number,
+  frame: Readonly<{x: number; y: number; w: number; h: number}>,
   props: TableProps<Row>,
   ctx: DivScrollContext,
-  headerH: number,
 ): void {
-  const headerW = Math.max(1, ctx.viewportWidth)
-  host.drawRect(x, y, headerW, headerH + TABLE_HEADER_EDGE_COVER_PX, TABLE_HEADER_BACKDROP_FILL, TABLE_HEADER_BACKDROP_Z)
-  host.drawRect(x, y, headerW, headerH, TABLE_HEADER_FILL, TABLE_HEADER_BG_Z)
-  let columnX = ctx.contentX
+  const headerW = Math.max(1, frame.w)
+  host.drawRect(frame.x, frame.y, headerW, frame.h + TABLE_HEADER_EDGE_COVER_PX, TABLE_HEADER_BACKDROP_FILL, TABLE_HEADER_BACKDROP_Z)
+  host.drawRect(frame.x, frame.y, headerW, frame.h, TABLE_HEADER_FILL, TABLE_HEADER_BG_Z)
   const fontPx = props.headerFontPx ?? props.fontPx ?? DEFAULT_TABLE_FONT_PX
   const padX = props.cellPaddingX ?? DEFAULT_TABLE_CELL_PAD_X
-  for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
-    const column = props.columns[columnIndex]!
-    const w = Math.max(1, column.width)
-    host.drawRect(columnX, y, 1, headerH, palette.borderRule, TABLE_HEADER_RULE_Z)
-    host.drawText(column.label ?? column.key, columnX + padX, y + 8, {
+  const columns = tableColumnFrames(ctx.contentX, frame.y, frame.h, props.columns)
+  for (const planned of columns) {
+    host.drawRect(planned.x, planned.y, 1, planned.h, palette.borderRule, TABLE_HEADER_RULE_Z)
+    host.drawText(planned.column.label ?? planned.column.key, planned.x + padX, planned.y + 8, {
       fontPx,
-      material: props.getHeaderMaterial?.({column, columnIndex}) ?? host.materials.cyan,
-      maxWidthPx: Math.max(1, w - padX * 2),
+      material: props.getHeaderMaterial?.({column: planned.column, columnIndex: planned.columnIndex}) ?? host.materials.cyan,
+      maxWidthPx: Math.max(1, planned.w - padX * 2),
       z: TABLE_HEADER_TEXT_Z,
     })
-    columnX += w
   }
-  host.drawRect(columnX, y, 1, headerH, palette.borderRule, TABLE_HEADER_RULE_Z)
-  host.drawRect(x, y + headerH - 2, Math.max(1, ctx.viewportWidth), 2, palette.borderDim, TABLE_HEADER_RULE_Z)
+  host.drawRect(tableColumnsEndX(columns, ctx.contentX), frame.y, 1, frame.h, palette.borderRule, TABLE_HEADER_RULE_Z)
+  host.drawRect(frame.x, frame.y + frame.h - 2, headerW, 2, palette.borderDim, TABLE_HEADER_RULE_Z)
 }
 
 function renderVerticalRules<Row>(
   host: UiSurface,
-  x: number,
-  y: number,
-  h: number,
-  columns: readonly TableColumn<Row>[],
+  columns: readonly TableColumnFrame<Row>[],
   z: number,
+  fallback: Readonly<{x: number; y: number; h: number}>,
 ): void {
-  let columnX = x
-  for (const column of columns) {
-    host.drawRect(columnX, y, 1, h, palette.borderRule, z)
-    columnX += Math.max(1, column.width)
+  for (const planned of columns) host.drawRect(planned.x, planned.y, 1, planned.h, palette.borderRule, z)
+  const first = columns[0]
+  if (first === undefined) {
+    host.drawRect(fallback.x, fallback.y, 1, fallback.h, palette.borderRule, z)
+    return
   }
-  host.drawRect(columnX, y, 1, h, palette.borderRule, z)
+  host.drawRect(tableColumnsEndX(columns, first.x), first.y, 1, first.h, palette.borderRule, z)
 }
 
 function renderTableRow<Row>(
@@ -283,7 +322,6 @@ function renderTableRow<Row>(
   bodyY: number,
   bodyH: number,
 ): void {
-  let columnX = ctx.contentX
   const fontPx = props.fontPx ?? DEFAULT_TABLE_FONT_PX
   const padX = props.cellPaddingX ?? DEFAULT_TABLE_CELL_PAD_X
   const rowId = tableRowId(row, rowIndex, props)
@@ -310,35 +348,41 @@ function renderTableRow<Row>(
       },
     })
   }
-  for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
-    const column = props.columns[columnIndex]!
-    const w = Math.max(1, column.width)
-    const value = tableColumnValue(row, rowIndex, column)
-    const cellCtx: TableCellContext<Row> = {row, rowIndex, rowId, selected, column, columnIndex, value}
+  const columns = tableColumnFrames(ctx.contentX, y, rowH, props.columns)
+  for (const planned of columns) {
+    const value = tableColumnValue(row, rowIndex, planned.column)
+    const cellCtx: TableCellContext<Row> = {
+      row,
+      rowIndex,
+      rowId,
+      selected,
+      column: planned.column,
+      columnIndex: planned.columnIndex,
+      value,
+    }
     const textY = y + 7
     if (textY >= bodyY + TABLE_BODY_TEXT_TOP_INSET_PX && textY < bodyY + bodyH) {
-      host.drawText(props.getCellText?.(cellCtx) ?? defaultCellText(value), columnX + padX, textY, {
+      host.drawText(props.getCellText?.(cellCtx) ?? defaultCellText(value), planned.x + padX, textY, {
         fontPx,
         material: props.getCellMaterial?.(cellCtx) ?? host.materials.text,
-        maxWidthPx: Math.max(1, w - padX * 2),
+        maxWidthPx: Math.max(1, planned.w - padX * 2),
         z: TABLE_BODY_TEXT_Z,
       })
     }
 
     if (props.onCellClick !== undefined && props.isCellInteractive?.(cellCtx) === true) {
-      const hitX = Math.max(columnX, x)
-      const hitW = Math.min(columnX + w, x + ctx.viewportWidth) - hitX
+      const hitX = Math.max(planned.x, x)
+      const hitW = Math.min(planned.x + planned.w, x + ctx.viewportWidth) - hitX
       const hitY = Math.max(y, bodyY)
       const hitH = Math.min(y + rowH, bodyY + bodyH) - hitY
       if (hitW > 0 && hitH > 0) {
         const cursor = typeof props.cellCursor === "function" ? props.cellCursor(cellCtx) : props.cellCursor
         host.hit(hitX, hitY, hitW, hitH, () => props.onCellClick?.(cellCtx), {
-          key: `${key}:cell:${rowIndex}:${column.key}`,
+          key: `${key}:cell:${rowIndex}:${planned.column.key}`,
           cursor: cursor ?? "pointer",
         })
       }
     }
-    columnX += w
   }
 }
 
@@ -362,18 +406,69 @@ function tableRowPointerContext<Row>(
   localX: number,
   event: MouseEvent | undefined,
 ): TableRowPointerContext<Row> {
-  let columnX = ctx.contentX
-  for (let columnIndex = 0; columnIndex < props.columns.length; columnIndex += 1) {
-    const column = props.columns[columnIndex]!
-    const w = Math.max(1, column.width)
-    if (localX >= columnX && localX <= columnX + w) {
-      const value = tableColumnValue(row, rowIndex, column)
-      const cell: TableCellContext<Row> = {row, rowIndex, rowId, selected, column, columnIndex, value}
-      return {row, rowIndex, rowId, selected, event, cell, column, columnIndex, value}
+  const columns = tableColumnFrames(ctx.contentX, 0, 0, props.columns)
+  for (const planned of columns) {
+    if (localX >= planned.x && localX <= planned.x + planned.w) {
+      const value = tableColumnValue(row, rowIndex, planned.column)
+      const cell: TableCellContext<Row> = {
+        row,
+        rowIndex,
+        rowId,
+        selected,
+        column: planned.column,
+        columnIndex: planned.columnIndex,
+        value,
+      }
+      return {
+        row,
+        rowIndex,
+        rowId,
+        selected,
+        event,
+        cell,
+        column: planned.column,
+        columnIndex: planned.columnIndex,
+        value,
+      }
     }
-    columnX += w
   }
   return {row, rowIndex, rowId, selected, event, cell: null, column: null, columnIndex: null, value: undefined}
+}
+
+function tableColumnFrames<Row>(
+  x: number,
+  y: number,
+  height: number,
+  columns: readonly TableColumn<Row>[],
+): readonly TableColumnFrame<Row>[] {
+  const frames: TableColumnFrame<Row>[] = []
+  const contentWidth = columns.reduce((sum, column) => sum + Math.max(1, column.width), 0)
+  flexRow({
+    x,
+    y,
+    w: contentWidth,
+    h: height,
+    gap: 0,
+    alignItems: "stretch",
+    items: columns.map((column, columnIndex) => ({
+      width: Math.max(1, column.width),
+      height,
+      draw: (slotX, slotY, slotW, slotH) => frames.push(Object.freeze({
+        column,
+        columnIndex,
+        x: slotX,
+        y: slotY,
+        w: slotW,
+        h: slotH,
+      })),
+    })),
+  })
+  return Object.freeze(frames)
+}
+
+function tableColumnsEndX<Row>(columns: readonly TableColumnFrame<Row>[], fallback: number): number {
+  const last = columns.at(-1)
+  return last === undefined ? fallback : last.x + last.w
 }
 
 function uniqueRowIds(ids: readonly TableRowId[]): TableRowId[] {

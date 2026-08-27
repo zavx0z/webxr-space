@@ -1,5 +1,4 @@
 import {describe, expect, test} from "bun:test"
-import {uiShapeMetrics} from "@ui/elements"
 import {type UiSurface, UiSurface as BaseUiSurface} from "@layout/core/surface"
 import {
   CollectionInput,
@@ -222,7 +221,7 @@ describe("public CollectionInput", () => {
     expect(regular.hits[0]?.[5]).toMatchObject({cursor: "pointer"})
     expect(regular.hits[1]?.[5]).toMatchObject({cursor: "default", tooltip: {label: "Disabled attribute"}})
     expectTextInsideRows(regular, 24)
-    expect(regular.roundedRects[0]?.[4].radius).toBe(uiShapeMetrics.lowRadius)
+    expect(regular.roundedRects[0]?.[4].radius).toBe(4)
 
     const compact = new RecordingSurface()
     CollectionInput(compact, 0, 0, 146, 72, props([], {density: "compact"}))
@@ -231,7 +230,7 @@ describe("public CollectionInput", () => {
     expect(compactText.map(({text}) => text)).not.toContain("Vector attribute")
     expect(compactText.map(({text}) => text)).not.toContain("Disabled attribute")
     expectTextInsideRows(compact, 24)
-    expect(compact.roundedRects[0]?.[4].radius).toBe(uiShapeMetrics.lowRadius)
+    expect(compact.roundedRects[0]?.[4].radius).toBe(4)
   })
 
   test("keeps add independent while invalid, disabled and read-only state block mutation", () => {
