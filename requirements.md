@@ -116,8 +116,8 @@ contracts — [`@nodes/ui`](../ui/requirements.md).
 1. Runtime entities, snapshot и generic projection contracts не импортируют
    другие `@nodes/*`, `@ui/*`, Engine, DOM или product vocabulary.
 2. `@nodes/layout` получает только минимальный numeric structured-clone graph.
-3. `@nodes/ui` может адаптировать public runtime contracts `@nodes/core`, но
-   exact NodeEditor entrypoint не загружает solver без явного projection import.
+3. Application adapter может переводить public runtime contracts `@nodes/core`
+   в готовые standard-DOM graph props; `@nodes/ui` не импортирует Core или solver.
 4. Reference-aligned Field binding принадлежит UI adapter: root Parameter хранит value и
    renderer-neutral metadata, но не `FieldDefinition` callbacks.
 5. Legacy `NodeSystem*`, Port/Edge contracts и compatibility aliases не
