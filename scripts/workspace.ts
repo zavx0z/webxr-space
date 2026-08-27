@@ -41,7 +41,7 @@ export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze(
   {
     name: "@zavx0z/highlighter",
     path: "../highlighter",
-    revision: "565d9a5fe54e0abc83ecb328edb1ff460eaa28dd",
+    revision: "8d6dbd66fc04ca1109450d18ee3fcffcf6e29606",
   },
   {name: "@ui/components", path: "projects/ui/packages/components"},
   {name: "@nodes/layout", path: "projects/node/packages/layout"},
