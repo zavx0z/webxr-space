@@ -51,18 +51,12 @@
 
 ## Package-owned dev stories
 
-1. Dev-only stories, retained dock и preview adapters, которые объясняют
-   семантику `@nodes/editor`, принадлежат каталогу `./storybook` рядом с Editor.
-   Repository Storybook подключает их в один общий Workbench, routes и static
-   build. Adapter отдаёт package-owned preview/dock Surfaces, но не создаёт
-   второй entrypoint, runtime, Router или shell.
-2. Story показывает production `NodeTreeEditor` через dev-only retained dock:
-   Node, Parameter и Link можно добавить, выбрать и удалить, а числовое
-   значение Parameter — изменить тем же Store.
-3. После structural команды canvas сохраняет последнюю принятую проекцию и
-   явно показывает устаревший layout. Кнопка «Перестроить layout» получает и
-   применяет новую проекцию; автоматической перестановки Node нет.
-4. `./storybook` не входит в production exports и не добавляет Storybook,
-   Layout, UI или Engine в runtime dependencies `@nodes/editor`. Примеры
-   импортируют production owners и общую инфраструктуру только через exact
-   public subpaths.
+1. Dev-only Core/Editor routes используют общий standard-DOM NodeTreeEditor
+   story в repository Storybook; отдельного retained dock/preview adapter нет.
+   Repository Storybook подключает routes в один общий DOM Workbench and static
+   build без второго entrypoint, runtime, Router or shell.
+2. Story-owned ordinary input/click events изменяют только controlled DOM props;
+   они не становятся скрытой частью headless Editor runtime.
+3. Editor package не имеет локального Storybook export/dependency. Repository
+   examples получают semantic data через exact Core/Editor contracts и
+   materialize стандартный UI отдельно.
