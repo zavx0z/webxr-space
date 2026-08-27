@@ -34,7 +34,7 @@ describe("UI component graph Coffman–Graham adapter", () => {
   test("keeps all relations in one layout edge type with independent ports", () => {
     const layout = createUiComponentGraphLayout(typedGraph)
 
-    expect(layout.input.ports).toHaveLength(170)
+    expect(layout.input.ports).toHaveLength(188)
     expect(JSON.stringify(layout.input.edges)).not.toMatch(/tree|cross|shortcut|constraint/)
     for (const role of [":in:", ":out:"] as const) {
       const portsByNode = Map.groupBy(layout.input.ports.filter(({id}) => id.includes(role)), ({nodeId}) => nodeId)
@@ -49,10 +49,10 @@ describe("UI component graph Coffman–Graham adapter", () => {
 
     expect(layout.input.layoutOptions?.maxNodesPerLayer).toBe(4)
     expect(Math.max(...[...nodesByLayer.values()].map((nodes) => nodes.length))).toBeLessThanOrEqual(4)
-    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 6139, height: 6789.9074913})
-    expect(layout.result.crossings).toHaveLength(112)
+    expect(layout.result.bounds).toEqual({x: 0, y: 0, width: 5564.5, height: 6904.745035})
+    expect(layout.result.crossings).toHaveLength(172)
     expect(new Bun.CryptoHasher("sha256").update(JSON.stringify(layout.result)).digest("hex"))
-      .toBe("3a0ac69767fc563a88ff8e8fd853cf75f78dce86ea6e78df95252ae75681cce1")
+      .toBe("34c7f62e73785a37d026986e2e9f7cb57707750211b990c3ce2dcf28f2c6fe24")
   })
 
   test("preserves every intrinsic node and produces one cubic DOWN connection type", () => {

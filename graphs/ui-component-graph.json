@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "source": {
     "path": "projects/ui",
-    "revision": "74f5e7a8d3defb06787b6975dd672f5c1cba89fc",
+    "revision": "5e7df38ae55a5fadfc1df17347744954fd3c7009",
     "dirty": false,
-    "digestSha256": "655233340a25e0cb789b5249becbb8b3bda5bf39f7c4d4d2f75035084f96b81a"
+    "digestSha256": "60a20e495f2d5cafe56d132a5d652726d675a8452949dd71e11b7594e00877a1"
   },
   "scope": {
     "packages": [
@@ -35,7 +35,7 @@
       "exportName": "StatusChip",
       "declaration": {
         "path": "packages/components/badge.ts",
-        "line": 31,
+        "line": 36,
         "column": 1
       }
     },
@@ -48,7 +48,7 @@
       "exportName": "Button",
       "declaration": {
         "path": "packages/components/button.ts",
-        "line": 63,
+        "line": 70,
         "column": 1
       }
     },
@@ -61,7 +61,7 @@
       "exportName": "IconButton",
       "declaration": {
         "path": "packages/components/button.ts",
-        "line": 94,
+        "line": 102,
         "column": 1
       }
     },
@@ -74,7 +74,7 @@
       "exportName": "Checkbox",
       "declaration": {
         "path": "packages/components/checkbox.ts",
-        "line": 30,
+        "line": 37,
         "column": 1
       }
     },
@@ -87,7 +87,7 @@
       "exportName": "CodeEditor",
       "declaration": {
         "path": "packages/components/code-editor.ts",
-        "line": 99,
+        "line": 106,
         "column": 1
       }
     },
@@ -100,7 +100,7 @@
       "exportName": "CollectionInput",
       "declaration": {
         "path": "packages/components/collection-input.ts",
-        "line": 70,
+        "line": 74,
         "column": 1
       }
     },
@@ -113,7 +113,7 @@
       "exportName": "ColorInput",
       "declaration": {
         "path": "packages/components/color-input.ts",
-        "line": 59,
+        "line": 63,
         "column": 1
       }
     },
@@ -126,7 +126,7 @@
       "exportName": "ControlGroup",
       "declaration": {
         "path": "packages/components/control-group.ts",
-        "line": 52,
+        "line": 59,
         "column": 1
       }
     },
@@ -152,7 +152,7 @@
       "exportName": "EnumInput",
       "declaration": {
         "path": "packages/components/enum-input.ts",
-        "line": 66,
+        "line": 73,
         "column": 1
       }
     },
@@ -165,7 +165,20 @@
       "exportName": "Field",
       "declaration": {
         "path": "packages/components/field.ts",
-        "line": 242,
+        "line": 247,
+        "column": 1
+      }
+    },
+    {
+      "id": "@ui/components/inspector#Inspector",
+      "kind": "public-render-export",
+      "layer": "component",
+      "package": "@ui/components",
+      "subpath": "@ui/components/inspector",
+      "exportName": "Inspector",
+      "declaration": {
+        "path": "packages/components/inspector.ts",
+        "line": 236,
         "column": 1
       }
     },
@@ -191,7 +204,7 @@
       "exportName": "List",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 95,
+        "line": 102,
         "column": 1
       }
     },
@@ -204,7 +217,7 @@
       "exportName": "ListDivider",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 235,
+        "line": 265,
         "column": 1
       }
     },
@@ -217,7 +230,7 @@
       "exportName": "ListItem",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 151,
+        "line": 176,
         "column": 1
       }
     },
@@ -230,7 +243,7 @@
       "exportName": "ListItemButton",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 155,
+        "line": 180,
         "column": 1
       }
     },
@@ -243,7 +256,7 @@
       "exportName": "ListItemIcon",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 195,
+        "line": 225,
         "column": 1
       }
     },
@@ -256,7 +269,7 @@
       "exportName": "ListItemText",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 159,
+        "line": 184,
         "column": 1
       }
     },
@@ -269,7 +282,7 @@
       "exportName": "ListSubheader",
       "declaration": {
         "path": "packages/components/list.ts",
-        "line": 222,
+        "line": 252,
         "column": 1
       }
     },
@@ -282,7 +295,7 @@
       "exportName": "MatrixInput",
       "declaration": {
         "path": "packages/components/matrix-input.ts",
-        "line": 25,
+        "line": 27,
         "column": 1
       }
     },
@@ -308,7 +321,7 @@
       "exportName": "Pane",
       "declaration": {
         "path": "packages/components/pane.ts",
-        "line": 25,
+        "line": 26,
         "column": 1
       }
     },
@@ -321,7 +334,7 @@
       "exportName": "PaneTitle",
       "declaration": {
         "path": "packages/components/pane.ts",
-        "line": 85,
+        "line": 94,
         "column": 1
       }
     },
@@ -334,7 +347,7 @@
       "exportName": "Paper",
       "declaration": {
         "path": "packages/components/pane.ts",
-        "line": 81,
+        "line": 90,
         "column": 1
       }
     },
@@ -347,7 +360,7 @@
       "exportName": "PathInput",
       "declaration": {
         "path": "packages/components/path-input.ts",
-        "line": 23,
+        "line": 25,
         "column": 1
       }
     },
@@ -373,7 +386,7 @@
       "exportName": "ReferenceInput",
       "declaration": {
         "path": "packages/components/reference-input.ts",
-        "line": 29,
+        "line": 31,
         "column": 1
       }
     },
@@ -386,7 +399,7 @@
       "exportName": "SliderControl",
       "declaration": {
         "path": "packages/components/slider-control.ts",
-        "line": 43,
+        "line": 57,
         "column": 1
       }
     },
@@ -399,7 +412,7 @@
       "exportName": "Switcher",
       "declaration": {
         "path": "packages/components/switcher.ts",
-        "line": 25,
+        "line": 27,
         "column": 1
       }
     },
@@ -412,7 +425,7 @@
       "exportName": "Table",
       "declaration": {
         "path": "packages/components/table.ts",
-        "line": 137,
+        "line": 147,
         "column": 1
       }
     },
@@ -425,7 +438,7 @@
       "exportName": "TextField",
       "declaration": {
         "path": "packages/components/text-field.ts",
-        "line": 41,
+        "line": 42,
         "column": 1
       }
     },
@@ -451,7 +464,7 @@
       "exportName": "VectorInput",
       "declaration": {
         "path": "packages/components/vector-input.ts",
-        "line": 32,
+        "line": 34,
         "column": 1
       }
     },
@@ -464,7 +477,7 @@
       "exportName": "button",
       "declaration": {
         "path": "packages/elements/button.ts",
-        "line": 50,
+        "line": 51,
         "column": 1
       }
     },
@@ -516,7 +529,7 @@
       "exportName": "input",
       "declaration": {
         "path": "packages/elements/input.ts",
-        "line": 322,
+        "line": 323,
         "column": 1
       }
     },
@@ -529,7 +542,7 @@
       "exportName": "li",
       "declaration": {
         "path": "packages/elements/list.ts",
-        "line": 97,
+        "line": 98,
         "column": 1
       }
     },
@@ -542,7 +555,7 @@
       "exportName": "ol",
       "declaration": {
         "path": "packages/elements/list.ts",
-        "line": 93,
+        "line": 94,
         "column": 1
       }
     },
@@ -555,7 +568,7 @@
       "exportName": "ul",
       "declaration": {
         "path": "packages/elements/list.ts",
-        "line": 49,
+        "line": 50,
         "column": 1
       }
     },
@@ -581,7 +594,7 @@
       "exportName": "scrollbar",
       "declaration": {
         "path": "packages/elements/scrollbar.ts",
-        "line": 34,
+        "line": 36,
         "column": 1
       }
     },
@@ -594,7 +607,7 @@
       "exportName": "select",
       "declaration": {
         "path": "packages/elements/select.ts",
-        "line": 62,
+        "line": 67,
         "column": 1
       }
     },
@@ -608,6 +621,19 @@
       "declaration": {
         "path": "packages/elements/span.ts",
         "line": 6,
+        "column": 1
+      }
+    },
+    {
+      "id": "@ui/elements/status-bar#statusBar",
+      "kind": "public-render-export",
+      "layer": "element",
+      "package": "@ui/elements",
+      "subpath": "@ui/elements/status-bar",
+      "exportName": "statusBar",
+      "declaration": {
+        "path": "packages/elements/status-bar.ts",
+        "line": 34,
         "column": 1
       }
     },
@@ -729,7 +755,7 @@
               "callee": "@ui/elements/button#button",
               "location": {
                 "path": "packages/components/button.ts",
-                "line": 91,
+                "line": 99,
                 "column": 3
               }
             }
@@ -749,7 +775,7 @@
               "callee": "@ui/components/button#Button",
               "location": {
                 "path": "packages/components/button.ts",
-                "line": 95,
+                "line": 103,
                 "column": 3
               }
             }
@@ -769,7 +795,7 @@
               "callee": "@ui/elements/button#button",
               "location": {
                 "path": "packages/components/checkbox.ts",
-                "line": 56,
+                "line": 63,
                 "column": 3
               }
             }
@@ -789,7 +815,7 @@
               "callee": "@ui/components/pane#Pane",
               "location": {
                 "path": "packages/components/code-editor.ts",
-                "line": 129,
+                "line": 146,
                 "column": 3
               }
             }
@@ -809,7 +835,7 @@
               "callee": "packages/components/collection-input.ts#drawCollectionInputActions",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 116,
+                "line": 127,
                 "column": 9
               }
             },
@@ -818,7 +844,7 @@
               "callee": "@ui/components/button#Button",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 250,
+                "line": 261,
                 "column": 9
               }
             }
@@ -838,7 +864,7 @@
               "callee": "packages/components/collection-input.ts#drawCollectionInputActions",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 116,
+                "line": 127,
                 "column": 9
               }
             },
@@ -847,7 +873,7 @@
               "callee": "@ui/components/button#IconButton",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 232,
+                "line": 243,
                 "column": 9
               }
             }
@@ -867,7 +893,7 @@
               "callee": "@ui/components/control-group#ControlGroup",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 98,
+                "line": 105,
                 "column": 9
               }
             }
@@ -887,7 +913,7 @@
               "callee": "packages/components/collection-input.ts#drawCollectionInputList",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 100,
+                "line": 108,
                 "column": 32
               }
             },
@@ -896,8 +922,28 @@
               "callee": "@ui/components/list#List",
               "location": {
                 "path": "packages/components/collection-input.ts",
-                "line": 173,
+                "line": 184,
                 "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/collection-input#CollectionInput",
+      "to": "@ui/elements/div#div",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/collection-input.ts#CollectionInput",
+              "callee": "@ui/elements/div#div",
+              "location": {
+                "path": "packages/components/collection-input.ts",
+                "line": 124,
+                "column": 9
               }
             }
           ]
@@ -916,7 +962,7 @@
               "callee": "packages/components/color-input.ts#drawCompactColor",
               "location": {
                 "path": "packages/components/color-input.ts",
-                "line": 76,
+                "line": 83,
                 "column": 3
               }
             },
@@ -925,7 +971,7 @@
               "callee": "packages/components/color-input.ts#drawColorBarButton",
               "location": {
                 "path": "packages/components/color-input.ts",
-                "line": 105,
+                "line": 112,
                 "column": 7
               }
             },
@@ -934,7 +980,7 @@
               "callee": "@ui/elements/button#button",
               "location": {
                 "path": "packages/components/color-input.ts",
-                "line": 245,
+                "line": 267,
                 "column": 3
               }
             }
@@ -951,20 +997,11 @@
           "chain": [
             {
               "caller": "packages/components/color-input.ts#ColorInput",
-              "callee": "packages/components/color-input.ts#drawCompactColor",
+              "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/components/color-input.ts",
                 "line": 76,
                 "column": 3
-              }
-            },
-            {
-              "caller": "packages/components/color-input.ts#drawCompactColor",
-              "callee": "@ui/elements/div#div",
-              "location": {
-                "path": "packages/components/color-input.ts",
-                "line": 117,
-                "column": 7
               }
             }
           ]
@@ -983,7 +1020,7 @@
               "callee": "packages/components/color-input.ts#drawCompactColor",
               "location": {
                 "path": "packages/components/color-input.ts",
-                "line": 76,
+                "line": 83,
                 "column": 3
               }
             },
@@ -992,7 +1029,7 @@
               "callee": "@ui/elements/popover#popover",
               "location": {
                 "path": "packages/components/color-input.ts",
-                "line": 142,
+                "line": 162,
                 "column": 3
               }
             }
@@ -1012,7 +1049,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/components/control-group.ts",
-                "line": 70,
+                "line": 119,
                 "column": 3
               }
             }
@@ -1032,7 +1069,7 @@
               "callee": "@ui/elements/span#span",
               "location": {
                 "path": "packages/components/divider.ts",
-                "line": 64,
+                "line": 65,
                 "column": 3
               }
             }
@@ -1052,7 +1089,7 @@
               "callee": "packages/components/enum-input.ts#drawExpandedEnumInput",
               "location": {
                 "path": "packages/components/enum-input.ts",
-                "line": 82,
+                "line": 101,
                 "column": 5
               }
             },
@@ -1061,8 +1098,28 @@
               "callee": "@ui/components/button#Button",
               "location": {
                 "path": "packages/components/enum-input.ts",
-                "line": 152,
+                "line": 189,
                 "column": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/enum-input#EnumInput",
+      "to": "@ui/elements/div#div",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/enum-input.ts#EnumInput",
+              "callee": "@ui/elements/div#div",
+              "location": {
+                "path": "packages/components/enum-input.ts",
+                "line": 81,
+                "column": 3
               }
             }
           ]
@@ -1081,7 +1138,7 @@
               "callee": "@ui/elements/select#select",
               "location": {
                 "path": "packages/components/enum-input.ts",
-                "line": 119,
+                "line": 144,
                 "column": 3
               }
             }
@@ -1101,7 +1158,7 @@
               "callee": "packages/components/field.ts#drawBooleanField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 257,
+                "line": 265,
                 "column": 5
               }
             },
@@ -1110,7 +1167,7 @@
               "callee": "@ui/components/checkbox#Checkbox",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 603,
+                "line": 646,
                 "column": 11
               }
             }
@@ -1130,7 +1187,7 @@
               "callee": "packages/components/field.ts#drawGroupedField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 264,
+                "line": 272,
                 "column": 3
               }
             },
@@ -1139,7 +1196,7 @@
               "callee": "packages/components/field.ts#drawGroupedFieldControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 468,
+                "line": 495,
                 "column": 5
               }
             },
@@ -1148,7 +1205,7 @@
               "callee": "@ui/components/collection-input#CollectionInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 502,
+                "line": 537,
                 "column": 5
               }
             }
@@ -1168,7 +1225,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1177,7 +1234,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1186,7 +1243,7 @@
               "callee": "@ui/components/color-input#ColorInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 407,
+                "line": 428,
                 "column": 5
               }
             }
@@ -1206,7 +1263,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1215,7 +1272,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1224,7 +1281,7 @@
               "callee": "@ui/components/enum-input#EnumInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 403,
+                "line": 422,
                 "column": 5
               }
             }
@@ -1244,7 +1301,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1253,7 +1310,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1262,7 +1319,7 @@
               "callee": "@ui/components/integer-input#IntegerInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 399,
+                "line": 416,
                 "column": 5
               }
             }
@@ -1282,7 +1339,7 @@
               "callee": "packages/components/field.ts#drawGroupedField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 264,
+                "line": 272,
                 "column": 3
               }
             },
@@ -1291,7 +1348,7 @@
               "callee": "packages/components/field.ts#drawGroupedFieldControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 468,
+                "line": 495,
                 "column": 5
               }
             },
@@ -1300,7 +1357,7 @@
               "callee": "@ui/components/matrix-input#MatrixInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 500,
+                "line": 533,
                 "column": 5
               }
             }
@@ -1320,7 +1377,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1329,7 +1386,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1338,7 +1395,7 @@
               "callee": "@ui/components/number-input#NumberInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 395,
+                "line": 410,
                 "column": 5
               }
             }
@@ -1358,7 +1415,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1367,7 +1424,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1376,7 +1433,7 @@
               "callee": "@ui/components/path-input#PathInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 415,
+                "line": 440,
                 "column": 5
               }
             }
@@ -1396,7 +1453,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1405,7 +1462,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1414,7 +1471,7 @@
               "callee": "@ui/components/reference-input#ReferenceInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 411,
+                "line": 434,
                 "column": 5
               }
             }
@@ -1434,7 +1491,7 @@
               "callee": "packages/components/field.ts#drawNumberSlider",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 253,
+                "line": 261,
                 "column": 5
               }
             },
@@ -1443,7 +1500,7 @@
               "callee": "@ui/components/slider-control#SliderControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 577,
+                "line": 616,
                 "column": 3
               }
             }
@@ -1463,7 +1520,7 @@
               "callee": "packages/components/field.ts#drawBooleanField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 257,
+                "line": 265,
                 "column": 5
               }
             },
@@ -1472,7 +1529,7 @@
               "callee": "@ui/components/switcher#Switcher",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 607,
+                "line": 651,
                 "column": 11
               }
             }
@@ -1492,7 +1549,7 @@
               "callee": "packages/components/field.ts#drawScalarFieldRow",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 261,
+                "line": 269,
                 "column": 5
               }
             },
@@ -1501,7 +1558,7 @@
               "callee": "packages/components/field.ts#drawScalarControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 359,
+                "line": 368,
                 "column": 5
               }
             },
@@ -1510,7 +1567,7 @@
               "callee": "@ui/components/text-field#TextField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 426,
+                "line": 452,
                 "column": 3
               }
             }
@@ -1530,7 +1587,7 @@
               "callee": "packages/components/field.ts#drawBooleanField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 257,
+                "line": 265,
                 "column": 5
               }
             },
@@ -1539,7 +1596,7 @@
               "callee": "@ui/components/typography#Typography",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 594,
+                "line": 635,
                 "column": 69
               }
             }
@@ -1559,7 +1616,7 @@
               "callee": "packages/components/field.ts#drawGroupedField",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 264,
+                "line": 272,
                 "column": 3
               }
             },
@@ -1568,7 +1625,7 @@
               "callee": "packages/components/field.ts#drawGroupedFieldControl",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 468,
+                "line": 495,
                 "column": 5
               }
             },
@@ -1577,8 +1634,173 @@
               "callee": "@ui/components/vector-input#VectorInput",
               "location": {
                 "path": "packages/components/field.ts",
-                "line": 498,
+                "line": 529,
                 "column": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/field#Field",
+      "to": "@ui/elements/div#div",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/field.ts#Field",
+              "callee": "@ui/elements/div#div",
+              "location": {
+                "path": "packages/components/field.ts",
+                "line": 256,
+                "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/inspector#Inspector",
+      "to": "@ui/components/button#IconButton",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/inspector.ts#Inspector",
+              "callee": "packages/components/inspector.ts#drawInspectorRail",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 247,
+                "column": 7
+              }
+            },
+            {
+              "caller": "packages/components/inspector.ts#drawInspectorRail",
+              "callee": "@ui/components/button#IconButton",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 338,
+                "column": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/inspector#Inspector",
+      "to": "@ui/components/pane#Pane",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/inspector.ts#Inspector",
+              "callee": "@ui/components/pane#Pane",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 241,
+                "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/inspector#Inspector",
+      "to": "@ui/components/text-field#TextField",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/inspector.ts#Inspector",
+              "callee": "packages/components/inspector.ts#drawInspectorToolbar",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 246,
+                "column": 7
+              }
+            },
+            {
+              "caller": "packages/components/inspector.ts#drawInspectorToolbar",
+              "callee": "packages/components/inspector.ts#drawInspectorSearch",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 278,
+                "column": 84
+              }
+            },
+            {
+              "caller": "packages/components/inspector.ts#drawInspectorSearch",
+              "callee": "@ui/components/text-field#TextField",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 286,
+                "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/inspector#Inspector",
+      "to": "@ui/components/typography#Typography",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/inspector.ts#Inspector",
+              "callee": "packages/components/inspector.ts#drawInspectorContext",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 248,
+                "column": 65
+              }
+            },
+            {
+              "caller": "packages/components/inspector.ts#drawInspectorContext",
+              "callee": "@ui/components/typography#Typography",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 376,
+                "column": 31
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/inspector#Inspector",
+      "to": "@ui/elements/div#div",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/inspector.ts#Inspector",
+              "callee": "packages/components/inspector.ts#drawInspectorContext",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 248,
+                "column": 65
+              }
+            },
+            {
+              "caller": "packages/components/inspector.ts#drawInspectorContext",
+              "callee": "@ui/elements/div#div",
+              "location": {
+                "path": "packages/components/inspector.ts",
+                "line": 356,
+                "column": 3
               }
             }
           ]
@@ -1617,8 +1839,8 @@
               "callee": "@ui/components/list#ListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 141,
-                "column": 14
+                "line": 162,
+                "column": 24
               }
             }
           ]
@@ -1637,8 +1859,8 @@
               "callee": "@ui/components/list#ListItemButton",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 140,
-                "column": 60
+                "line": 161,
+                "column": 70
               }
             }
           ]
@@ -1657,8 +1879,8 @@
               "callee": "@ui/components/list#ListSubheader",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 119,
-                "column": 9
+                "line": 137,
+                "column": 51
               }
             }
           ]
@@ -1677,7 +1899,7 @@
               "callee": "@ui/elements/list#ul",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 148,
+                "line": 173,
                 "column": 3
               }
             }
@@ -1697,7 +1919,7 @@
               "callee": "@ui/components/divider#Divider",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 237,
+                "line": 267,
                 "column": 3
               }
             }
@@ -1717,7 +1939,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 152,
+                "line": 177,
                 "column": 3
               }
             },
@@ -1726,7 +1948,7 @@
               "callee": "@ui/components/list#ListDivider",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 251,
+                "line": 282,
                 "column": 35
               }
             }
@@ -1746,7 +1968,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 152,
+                "line": 177,
                 "column": 3
               }
             },
@@ -1755,7 +1977,7 @@
               "callee": "packages/components/list.ts#drawListItemContent",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 250,
+                "line": 281,
                 "column": 7
               }
             },
@@ -1764,8 +1986,8 @@
               "callee": "@ui/components/list#ListItemIcon",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 285,
-                "column": 5
+                "line": 325,
+                "column": 9
               }
             }
           ]
@@ -1784,7 +2006,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 152,
+                "line": 177,
                 "column": 3
               }
             },
@@ -1793,7 +2015,7 @@
               "callee": "packages/components/list.ts#drawListItemContent",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 250,
+                "line": 281,
                 "column": 7
               }
             },
@@ -1802,8 +2024,8 @@
               "callee": "@ui/components/list#ListItemText",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 300,
-                "column": 3
+                "line": 336,
+                "column": 9
               }
             }
           ]
@@ -1822,7 +2044,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 152,
+                "line": 177,
                 "column": 3
               }
             },
@@ -1831,7 +2053,7 @@
               "callee": "@ui/elements/list#li",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 261,
+                "line": 292,
                 "column": 3
               }
             }
@@ -1851,7 +2073,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 156,
+                "line": 181,
                 "column": 3
               }
             },
@@ -1860,7 +2082,7 @@
               "callee": "@ui/components/list#ListDivider",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 251,
+                "line": 282,
                 "column": 35
               }
             }
@@ -1880,7 +2102,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 156,
+                "line": 181,
                 "column": 3
               }
             },
@@ -1889,7 +2111,7 @@
               "callee": "packages/components/list.ts#drawListItemContent",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 250,
+                "line": 281,
                 "column": 7
               }
             },
@@ -1898,8 +2120,8 @@
               "callee": "@ui/components/list#ListItemIcon",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 285,
-                "column": 5
+                "line": 325,
+                "column": 9
               }
             }
           ]
@@ -1918,7 +2140,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 156,
+                "line": 181,
                 "column": 3
               }
             },
@@ -1927,7 +2149,7 @@
               "callee": "packages/components/list.ts#drawListItemContent",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 250,
+                "line": 281,
                 "column": 7
               }
             },
@@ -1936,8 +2158,8 @@
               "callee": "@ui/components/list#ListItemText",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 300,
-                "column": 3
+                "line": 336,
+                "column": 9
               }
             }
           ]
@@ -1956,7 +2178,7 @@
               "callee": "packages/components/list.ts#renderListItem",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 156,
+                "line": 181,
                 "column": 3
               }
             },
@@ -1965,7 +2187,7 @@
               "callee": "@ui/elements/list#li",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 261,
+                "line": 292,
                 "column": 3
               }
             }
@@ -1982,10 +2204,19 @@
           "chain": [
             {
               "caller": "packages/components/list.ts#ListItemText",
+              "callee": "packages/components/list.ts#drawListItemTextRows",
+              "location": {
+                "path": "packages/components/list.ts",
+                "line": 207,
+                "column": 69
+              }
+            },
+            {
+              "caller": "packages/components/list.ts#drawListItemTextRows",
               "callee": "@ui/elements/span#span",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 176,
+                "line": 375,
                 "column": 5
               }
             }
@@ -2005,7 +2236,7 @@
               "callee": "@ui/elements/span#span",
               "location": {
                 "path": "packages/components/list.ts",
-                "line": 224,
+                "line": 254,
                 "column": 3
               }
             }
@@ -2025,7 +2256,7 @@
               "callee": "@ui/components/control-group#ControlGroup",
               "location": {
                 "path": "packages/components/matrix-input.ts",
-                "line": 35,
+                "line": 37,
                 "column": 3
               }
             }
@@ -2045,7 +2276,7 @@
               "callee": "@ui/components/number-input#NumberInput",
               "location": {
                 "path": "packages/components/matrix-input.ts",
-                "line": 59,
+                "line": 62,
                 "column": 17
               }
             }
@@ -2105,7 +2336,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/components/pane.ts",
-                "line": 42,
+                "line": 47,
                 "column": 3
               }
             }
@@ -2125,7 +2356,7 @@
               "callee": "@ui/elements/text#h2",
               "location": {
                 "path": "packages/components/pane.ts",
-                "line": 86,
+                "line": 95,
                 "column": 3
               }
             }
@@ -2145,7 +2376,7 @@
               "callee": "@ui/components/pane#Pane",
               "location": {
                 "path": "packages/components/pane.ts",
-                "line": 82,
+                "line": 91,
                 "column": 3
               }
             }
@@ -2165,7 +2396,7 @@
               "callee": "@ui/components/button#IconButton",
               "location": {
                 "path": "packages/components/path-input.ts",
-                "line": 71,
+                "line": 74,
                 "column": 13
               }
             }
@@ -2185,7 +2416,7 @@
               "callee": "@ui/components/control-group#ControlGroup",
               "location": {
                 "path": "packages/components/path-input.ts",
-                "line": 42,
+                "line": 44,
                 "column": 3
               }
             }
@@ -2205,7 +2436,7 @@
               "callee": "@ui/components/text-field#TextField",
               "location": {
                 "path": "packages/components/path-input.ts",
-                "line": 55,
+                "line": 58,
                 "column": 13
               }
             }
@@ -2245,7 +2476,7 @@
               "callee": "@ui/components/button#Button",
               "location": {
                 "path": "packages/components/reference-input.ts",
-                "line": 68,
+                "line": 71,
                 "column": 13
               }
             }
@@ -2265,7 +2496,7 @@
               "callee": "@ui/components/button#IconButton",
               "location": {
                 "path": "packages/components/reference-input.ts",
-                "line": 77,
+                "line": 80,
                 "column": 13
               }
             }
@@ -2285,7 +2516,7 @@
               "callee": "@ui/components/control-group#ControlGroup",
               "location": {
                 "path": "packages/components/reference-input.ts",
-                "line": 54,
+                "line": 56,
                 "column": 3
               }
             }
@@ -2305,7 +2536,7 @@
               "callee": "packages/components/slider-control.ts#drawTrackLayout",
               "location": {
                 "path": "packages/components/slider-control.ts",
-                "line": 46,
+                "line": 63,
                 "column": 34
               }
             },
@@ -2314,7 +2545,7 @@
               "callee": "packages/components/slider-control.ts#drawSliderIconButton",
               "location": {
                 "path": "packages/components/slider-control.ts",
-                "line": 209,
+                "line": 258,
                 "column": 83
               }
             },
@@ -2323,7 +2554,7 @@
               "callee": "@ui/components/button#IconButton",
               "location": {
                 "path": "packages/components/slider-control.ts",
-                "line": 277,
+                "line": 340,
                 "column": 3
               }
             }
@@ -2343,7 +2574,7 @@
               "callee": "packages/components/slider-control.ts#drawInlineLayout",
               "location": {
                 "path": "packages/components/slider-control.ts",
-                "line": 45,
+                "line": 62,
                 "column": 35
               }
             },
@@ -2352,7 +2583,27 @@
               "callee": "@ui/elements/control#control",
               "location": {
                 "path": "packages/components/slider-control.ts",
-                "line": 60,
+                "line": 86,
+                "column": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "calls",
+      "from": "@ui/components/slider-control#SliderControl",
+      "to": "@ui/elements/div#div",
+      "evidence": [
+        {
+          "chain": [
+            {
+              "caller": "packages/components/slider-control.ts#SliderControl",
+              "callee": "@ui/elements/div#div",
+              "location": {
+                "path": "packages/components/slider-control.ts",
+                "line": 59,
                 "column": 3
               }
             }
@@ -2372,7 +2623,7 @@
               "callee": "@ui/elements/button#button",
               "location": {
                 "path": "packages/components/switcher.ts",
-                "line": 48,
+                "line": 51,
                 "column": 3
               }
             }
@@ -2392,7 +2643,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/components/table.ts",
-                "line": 144,
+                "line": 154,
                 "column": 3
               }
             }
@@ -2412,7 +2663,7 @@
               "callee": "@ui/elements/input#input",
               "location": {
                 "path": "packages/components/text-field.ts",
-                "line": 65,
+                "line": 68,
                 "column": 3
               }
             }
@@ -2452,7 +2703,7 @@
               "callee": "@ui/components/control-group#ControlGroup",
               "location": {
                 "path": "packages/components/vector-input.ts",
-                "line": 45,
+                "line": 47,
                 "column": 3
               }
             }
@@ -2472,7 +2723,7 @@
               "callee": "packages/components/vector-input.ts#drawVectorInputAxis",
               "location": {
                 "path": "packages/components/vector-input.ts",
-                "line": 59,
+                "line": 62,
                 "column": 13
               }
             },
@@ -2481,7 +2732,7 @@
               "callee": "@ui/components/number-input#NumberInput",
               "location": {
                 "path": "packages/components/vector-input.ts",
-                "line": 119,
+                "line": 122,
                 "column": 9
               }
             }
@@ -2501,7 +2752,7 @@
               "callee": "packages/components/vector-input.ts#drawVectorInputAxis",
               "location": {
                 "path": "packages/components/vector-input.ts",
-                "line": 59,
+                "line": 62,
                 "column": 13
               }
             },
@@ -2510,7 +2761,7 @@
               "callee": "@ui/components/typography#Typography",
               "location": {
                 "path": "packages/components/vector-input.ts",
-                "line": 112,
+                "line": 115,
                 "column": 92
               }
             }
@@ -2530,7 +2781,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/elements/button.ts",
-                "line": 107,
+                "line": 96,
                 "column": 5
               }
             }
@@ -2550,7 +2801,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/elements/control.ts",
-                "line": 32,
+                "line": 31,
                 "column": 3
               }
             }
@@ -2628,7 +2879,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/elements/input.ts",
-                "line": 381,
+                "line": 388,
                 "column": 5
               }
             }
@@ -2648,7 +2899,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/elements/list.ts",
-                "line": 169,
+                "line": 175,
                 "column": 3
               }
             }
@@ -2668,7 +2919,7 @@
               "callee": "@ui/elements/list#ul",
               "location": {
                 "path": "packages/elements/list.ts",
-                "line": 94,
+                "line": 95,
                 "column": 3
               }
             }
@@ -2688,7 +2939,7 @@
               "callee": "@ui/elements/div#div",
               "location": {
                 "path": "packages/elements/list.ts",
-                "line": 90,
+                "line": 91,
                 "column": 3
               }
             }
@@ -2708,7 +2959,7 @@
               "callee": "packages/elements/select.ts#drawSelectTrigger",
               "location": {
                 "path": "packages/elements/select.ts",
-                "line": 81,
+                "line": 87,
                 "column": 5
               }
             },
@@ -2717,7 +2968,7 @@
               "callee": "@ui/elements/button#button",
               "location": {
                 "path": "packages/elements/select.ts",
-                "line": 158,
+                "line": 179,
                 "column": 3
               }
             }
@@ -2737,7 +2988,7 @@
               "callee": "@ui/elements/popover#popover",
               "location": {
                 "path": "packages/elements/select.ts",
-                "line": 110,
+                "line": 122,
                 "column": 3
               }
             }
