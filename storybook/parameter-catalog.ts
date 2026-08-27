@@ -1,5 +1,3 @@
-import type {FieldDefinition} from "@ui/components/field"
-
 export const NODE_PARAMETER_FIELD_KINDS = Object.freeze([
   "text",
   "number",
@@ -14,7 +12,7 @@ export const NODE_PARAMETER_FIELD_KINDS = Object.freeze([
   "collection",
   "path",
   "readonly",
-] as const satisfies readonly FieldDefinition["kind"][])
+] as const)
 
 export type NodeParameterFieldKind = typeof NODE_PARAMETER_FIELD_KINDS[number]
 

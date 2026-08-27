@@ -2,35 +2,37 @@
 
 **Built for [MetaFor](https://github.com/zavx0z/metafor).**
 
-`@nodes/ui` provides retained WebGPU views for `NodeTree → Frame / Node → Parameter → Socket → Link`.
+`@nodes/ui` is the standard-DOM authoring package for Node graphs. Public
+factories return exact `@zavx0z/dom` elements plus stable typed controllers:
 
 ```ts
-import {NodeEditor} from "@nodes/ui/node-editor"
-import {
-  createNodeRenderers,
-  type FrameView,
-  type LinkView,
-  type NodeView,
-  type NodePlan,
-  type SocketView,
-} from "@nodes/ui/node"
+import {createDocument} from "@zavx0z/dom"
+import {createGraphCanvas} from "@nodes/ui/graph-canvas"
 
-const editor = new NodeEditor<NodeView, SocketView, LinkView, FrameView, NodePlan>({
-  renderers: createNodeRenderers(),
+const document = createDocument()
+const graph = createGraphCanvas(document, {
+  title: "Graph",
+  width: 640,
+  height: 360,
+  scene: {translateX: 0, translateY: 0, scale: 1},
+  frames: [],
+  links: [],
+  nodes: [],
 })
+document.appendChild(graph.element)
 ```
 
-`NodeEditor` accepts a ready projection or `PositionedNodeTree`, owns fit, pan, zoom, selection, and interaction, and delegates presentation to independent Frame, Node, Parameter, Socket, and Link renderers. The exact `node-editor` entrypoint is solver-free.
+Public subpaths:
 
-The explicit `projection` entrypoint adapts a live `@nodes/core` tree through `@nodes/layout`. Runtime and retained layout primitives come directly from `@layout/core`; shared controls and element semantics come from `@ui/components` and `@ui/elements`.
+- `@nodes/ui/graph-canvas` — keyed Frame → orthogonal Link → Node scene
+- `@nodes/ui/node-workbench` — composition of Graph, NodeTree and Parameter owners
+- `@nodes/ui/parameter-socket` — standard input/select/checkbox Parameter rows and Sockets
+- `@nodes/ui/node-tree-editor` — nested NodeTree and controlled authoring tree
 
-Public view presets use neutral names: `NodeView`, `SocketView`, `FrameView`, `LinkView`, `NodePlan`, `createNodeRenderers`, `socketPreset`, and `createNodeTreeProjector`. Source-product identity is confined to Storybook evidence provenance.
+The former retained Surface and projection APIs were removed in one breaking cutover. There
+are no compatibility aliases or re-exports. Runtime connection to CPU/WebGPU is
+owned by an application through `@zavx0z/renderer` and
+`@zavx0z/renderer-browser`; this package owns only the semantic document tree.
 
-The normative contracts remain in [`requirements.md`](./requirements.md).
-
-Dev-only examples belong to `@nodes/ui` and live in [`storybook/`](./storybook/).
-They own exact story metadata, fixtures, adapters and accepted evidence. The
-repository-owned [`@nodes/storybook`](../storybook/README.md) composes them into
-the Node UI sections of its one entrypoint, canvas, runtime and Workbench.
-Shared `@zavx0z/storybook/*` imports stay inside this development boundary: they
-are neither production exports nor production dependencies of `@nodes/ui`.
+Dev-only route data and stories remain under `storybook/` and are not public
+exports or production dependencies.

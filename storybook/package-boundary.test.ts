@@ -6,9 +6,7 @@ const storybookRoot = import.meta.dir
 const legacyRoot = resolve(storybookRoot, "../../storybook/pages/ui")
 const sharedImports = new Set([
   "@zavx0z/storybook/stories",
-  "@zavx0z/storybook/workbench",
   "@zavx0z/storybook/environment",
-  "@zavx0z/storybook/references",
 ])
 
 describe("@nodes/ui Storybook owner boundary", () => {
@@ -16,15 +14,27 @@ describe("@nodes/ui Storybook owner boundary", () => {
     expect(await filesBelow(legacyRoot)).toEqual([])
     expect(await filesBelow(join(storybookRoot, ".missing-owner-root"))).toEqual([])
     expect(await filesBelow(storybookRoot)).toEqual(expect.arrayContaining([
-      "node-ui-story.ts",
+      "parameter-catalog.ts",
       "socket-catalog.ts",
+      "dom/graph-story.ts",
+      "dom/node-tree-editor-story.ts",
+      "dom/parameter-socket-story.ts",
+      "dom/remaining-dom-story.ts",
+      "dom/remaining-dom-data.ts",
+      "dom/remaining-route-catalog.ts",
+    ]))
+    for (const removed of [
+      "node-ui-story.ts",
       "ui-story-catalog.ts",
+      "stories/node-components.ts",
+      "stories/parameter.ts",
+      "stories/socket.ts",
       "stories/socket-overview.ts",
       "fixtures/ui-fixtures.ts",
+      "fixtures/parameter-fixtures.ts",
       "state/controlled-field-state.ts",
       "surfaces/reference-surfaces.ts",
-      "evidence/reference-readiness.ts",
-    ]))
+    ]) expect(await Bun.file(join(storybookRoot, removed)).exists(), removed).toBeFalse()
   })
 
   test("imports only exact shared Storybook subpaths", async () => {
@@ -42,7 +52,6 @@ describe("@nodes/ui Storybook owner boundary", () => {
     }
     expect(usedSharedImports).toEqual(new Set([
       "@zavx0z/storybook/stories",
-      "@zavx0z/storybook/workbench",
       "@zavx0z/storybook/environment",
     ]))
   })

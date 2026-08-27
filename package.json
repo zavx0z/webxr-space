@@ -1,7 +1,7 @@
 {
   "name": "@nodes/ui",
   "version": "0.0.1",
-  "description": "Retained NodeTree, Frame, Node, Parameter, Socket and Link WebGPU views. Built for MetaFor.",
+  "description": "Standard-DOM Node graph, workbench, Parameter/Socket and NodeTree controllers. Built for MetaFor.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/node.git",
@@ -16,21 +16,15 @@
   "types": "index.ts",
   "exports": {
     ".": "./index.ts",
-    "./parameter": "./parameter.ts",
-    "./node-editor": "./node-editor.ts",
-    "./node": "./node.ts",
-    "./projection": "./projection.ts",
-    "./link-curve": "./link-curve.ts"
+    "./graph-canvas": "./dom/graph-canvas.ts",
+    "./node-workbench": "./dom/node-workbench.ts",
+    "./parameter-socket": "./dom/parameter-socket.ts",
+    "./node-tree-editor": "./dom/node-tree-editor.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
-    "@engine/core": "link:@engine/core",
-    "@layout/core": "link:@layout/core",
-    "@nodes/core": "workspace:*",
-    "@nodes/layout": "workspace:*",
-    "@ui/components": "link:@ui/components",
-    "@ui/elements": "link:@ui/elements"
+    "@zavx0z/dom": "link:@zavx0z/dom"
   }
 }
