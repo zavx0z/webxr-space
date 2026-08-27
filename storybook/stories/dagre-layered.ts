@@ -5,6 +5,7 @@ import {
   TOP_DOWN_REFERENCE_LABELS,
 } from "../top-down-fixture.ts"
 import {drawLayoutPreview} from "../render-layout-preview.ts"
+import {layoutStorySource} from "../story-source.ts"
 
 export function createDagreLayeredLayoutStory() {
   return defineStorybookStoryModule({
@@ -21,12 +22,13 @@ export function createDagreLayeredLayoutStory() {
       })
     },
     source() {
-      return [
+      const typescript = [
         'import {layoutTopDown} from "@nodes/layout/top-down"',
         "",
         `const graph = ${JSON.stringify(TOP_DOWN_REFERENCE_GRAPH, null, 2)}`,
         "const result = layoutTopDown(graph)",
       ].join("\n")
+      return layoutStorySource("dagre-layered", typescript)
     },
   })
 }

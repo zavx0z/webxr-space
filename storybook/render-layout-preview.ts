@@ -79,7 +79,7 @@ export function drawLayoutPreview(
     Pane(surface, x, y, width, height, {
       appearance: "panel",
       variant: "filled",
-      sx: {padding: 0},
+      style: {padding: 0},
     })
     const label = labelById[node.id] ?? node.id
     div(surface, x + 5, y + 3, Math.max(1, width - 10), Math.max(1, height - 6), {

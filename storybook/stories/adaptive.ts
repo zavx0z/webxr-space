@@ -2,6 +2,7 @@ import {layoutAdaptive} from "@nodes/layout/adaptive"
 import {defineStorybookStoryModule} from "@zavx0z/storybook/stories"
 import {getStorybookFixture} from "../layout-fixtures.ts"
 import {drawLayoutPreview} from "../render-layout-preview.ts"
+import {layoutStorySource} from "../story-source.ts"
 
 export function createAdaptiveLayoutStory(fixtureId: string) {
   const fixture = getStorybookFixture(fixtureId)
@@ -19,12 +20,13 @@ export function createAdaptiveLayoutStory(fixtureId: string) {
       })
     },
     source() {
-      return [
+      const typescript = [
         'import {layoutAdaptive} from "@nodes/layout/adaptive"',
         "",
         `const graph = ${JSON.stringify(fixture.graph, null, 2)}`,
         "const result = layoutAdaptive(graph)",
       ].join("\n")
+      return layoutStorySource("adaptive", typescript)
     },
   })
 }

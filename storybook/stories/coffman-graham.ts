@@ -5,6 +5,7 @@ import {
   TOP_DOWN_DENSE_LABELS,
 } from "../top-down-dense-fixture.ts"
 import {drawLayoutPreview} from "../render-layout-preview.ts"
+import {layoutStorySource} from "../story-source.ts"
 
 export function createCoffmanGrahamLayoutStory() {
   const graph = {
@@ -25,12 +26,13 @@ export function createCoffmanGrahamLayoutStory() {
       })
     },
     source() {
-      return [
+      const typescript = [
         'import {layoutCoffmanGraham} from "@nodes/layout/coffman-graham"',
         "",
         `const graph = ${JSON.stringify(graph, null, 2)}`,
         "const result = layoutCoffmanGraham(graph)",
       ].join("\n")
+      return layoutStorySource("coffman-graham", typescript)
     },
   })
 }

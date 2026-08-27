@@ -2,6 +2,7 @@ import {layoutFixed} from "@nodes/layout/fixed"
 import {defineStorybookStoryModule} from "@zavx0z/storybook/stories"
 import {getStorybookFixture} from "../layout-fixtures.ts"
 import {drawLayoutPreview} from "../render-layout-preview.ts"
+import {layoutStorySource} from "../story-source.ts"
 
 export function createFixedLayoutStory(fixtureId: string) {
   const fixture = getStorybookFixture(fixtureId)
@@ -19,12 +20,13 @@ export function createFixedLayoutStory(fixtureId: string) {
       })
     },
     source() {
-      return [
+      const typescript = [
         'import {layoutFixed} from "@nodes/layout/fixed"',
         "",
         `const graph = ${JSON.stringify(fixture.graph, null, 2)}`,
         "const result = layoutFixed(graph)",
       ].join("\n")
+      return layoutStorySource("fixed", typescript)
     },
   })
 }

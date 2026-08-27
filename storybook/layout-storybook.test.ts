@@ -10,15 +10,9 @@ import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {getFixtureFamily, STORYBOOK_FIXTURES} from "./layout-fixtures.ts"
 import {
-  LAYOUT_STORYBOOK_COFFMAN_GRAHAM_PATH,
-  LAYOUT_STORYBOOK_DAGRE_LAYERED_PATH,
-} from "./layout-navigation.ts"
-import {
   LAYOUT_STORIES,
-  layoutCatalogItems,
-  layoutSectionItems,
-  layoutStoryRoute,
-  layoutVariantItems,
+  layoutPolicyItems,
+  layoutScenarioItems,
 } from "./layout-stories.ts"
 import {renderLayoutSvg} from "./render-layout-svg.ts"
 import {TOP_DOWN_REFERENCE_GRAPH} from "./top-down-fixture.ts"
@@ -81,20 +75,14 @@ const ADAPTIVE_BASELINES = {
 } as const
 
 describe("standard package-owned Layout Storybook", () => {
-  test("uses the shared retained Workbench and exact UI owners", async () => {
-    const entry = await Bun.file(join(storybookRoot, "layout.stories.ts")).text()
-    const preview = await Bun.file(join(storybookRoot, "layout-preview-surface.ts")).text()
+  test("supplies exact lazy Layout stories to the one root Workbench", async () => {
+    const rootStories = await Bun.file(join(repositoryStorybookRoot, "app/stories.ts")).text()
     const renderer = await Bun.file(join(storybookRoot, "render-layout-preview.ts")).text()
     const registry = await Bun.file(join(repositoryStorybookRoot, "server/page-registry.ts")).text()
 
-    expect(entry).toContain('UiRuntime} from "@layout/core/runtime"')
-    expect(entry).toContain('from "@zavx0z/storybook/workbench"')
-    expect(entry).toContain("StorybookBackdropSurface")
-    expect(entry).toContain("StorybookNavigationSurface")
-    expect(entry).toContain("StorybookDockSurface")
-    expect(entry).toContain("StorybookStoryPanelSurface")
-    expect(entry).toContain("planStorybookShell")
-    expect(preview).toContain("drawStorybookPreviewChrome")
+    expect(rootStories).toContain('from "../../layout/storybook/layout-stories.ts"')
+    expect(rootStories).toContain('primary: {id: "layout", label: "Раскладка", route: "layout"}')
+    expect(rootStories).toContain("load: () => LAYOUT_STORIES.load(item.route)")
     expect(renderer).toContain('Pane} from "@ui/components/pane"')
     expect(renderer).toContain('Typography} from "@ui/components/typography"')
     expect(renderer).toContain('div} from "@ui/elements/div"')
@@ -103,10 +91,7 @@ describe("standard package-owned Layout Storybook", () => {
     expect(renderer).not.toContain("separateSemanticEdge")
     expect(renderer).toContain("sampleCurveChain")
     expect(renderer).toContain("splitPolylineAtGaps")
-    expect(registry).toContain('body: {kind: "canvas", canvasId: "nodes-storybook-canvas"}')
-    expect(registry).toContain('entrypoint: join(packagesRoot, "layout/storybook/layout.stories.ts")')
-    expect(await Bun.file(join(storybookRoot, "layout-storybook-body.html")).exists()).toBeFalse()
-    expect(await Bun.file(join(storybookRoot, "layout-detail.ts")).exists()).toBeFalse()
+    expect(registry).toContain('entrypoint: join(import.meta.dir, "../app/entry.ts")')
   })
 
   test("publishes the standard package-policy-scenario-variant hierarchy", () => {
@@ -121,16 +106,21 @@ describe("standard package-owned Layout Storybook", () => {
       "coffman-graham/default/default",
     ])
     expect(LAYOUT_STORIES.representative).toBe("fixed/baseline/right")
-    expect(layoutStoryRoute("")).toBe("fixed/baseline/right")
-    expect(layoutStoryRoute("dagre-layered")).toBe("dagre-layered/default/default")
-    expect(layoutStoryRoute("coffman-graham")).toBe("coffman-graham/default/default")
-    expect(LAYOUT_STORYBOOK_DAGRE_LAYERED_PATH).toBe("/layout/dagre-layered/default/default")
-    expect(LAYOUT_STORYBOOK_COFFMAN_GRAHAM_PATH).toBe("/layout/coffman-graham/default/default")
-    expect(layoutCatalogItems(new Set()).map(({route}) => route))
-      .toEqual(["fixed", "adaptive", "dagre-layered", "coffman-graham"])
-    expect(layoutSectionItems("adaptive/shared/right").map(({route}) => route))
-      .toEqual(["adaptive/shared", "adaptive/compound"])
-    expect(layoutVariantItems("fixed/baseline/right").map(({route}) => route))
+    expect(new Set(LAYOUT_STORIES.index.map(({groupId}) => groupId))).toEqual(new Set(["layout-policies"]))
+    expect(new Set(LAYOUT_STORIES.index.map(({groupLabel}) => groupLabel))).toEqual(new Set(["Раскладка"]))
+    expect(layoutPolicyItems().map(({route, label}) => ({route, label}))).toEqual([
+      {route: "fixed", label: "Фиксированная"},
+      {route: "adaptive", label: "Адаптивная"},
+      {route: "dagre-layered", label: "Dagre Layered"},
+      {route: "coffman-graham", label: "Coffman–Graham"},
+    ])
+    expect(layoutScenarioItems("adaptive/shared/right").map(({route, label}) => ({route, label}))).toEqual([
+      {route: "adaptive/shared/right", label: "Общий порт · RIGHT"},
+      {route: "adaptive/shared/down", label: "Общий порт · DOWN"},
+      {route: "adaptive/compound/right", label: "Контейнеры · RIGHT"},
+      {route: "adaptive/compound/down", label: "Контейнеры · DOWN"},
+    ])
+    expect(layoutScenarioItems("fixed/baseline/right").map(({route}) => route))
       .toEqual(["fixed/baseline/right", "fixed/baseline/down"])
     expect(JSON.stringify(LAYOUT_STORIES.index.map(({
       route,
@@ -170,7 +160,10 @@ describe("standard package-owned Layout Storybook", () => {
 
     for (const route of LAYOUT_STORIES.index.map(({route}) => route)) {
       const module = await LAYOUT_STORIES.load(route)
-      expect(module.source(module.defaultArgs)).toContain("const result = layout")
+      const source = module.source(module.defaultArgs)
+      expect(source.html).toContain("<node-layout")
+      expect(source.css).toContain(".node-layout")
+      expect(source.typescript).toContain("const result = layout")
       expect(module.controls.map(({key}) => key)).toEqual(["routes", "ports"])
     }
   })
@@ -243,7 +236,7 @@ describe("standard package-owned Layout Storybook", () => {
     }
     expect(Object.keys(packageJson.exports ?? {})).not.toContain("./storybook")
     const build = await Bun.build({
-      entrypoints: [join(storybookRoot, "layout.stories.ts")],
+      entrypoints: [join(storybookRoot, "layout-stories.ts")],
       target: "browser",
       format: "esm",
       minify: true,

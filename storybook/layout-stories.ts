@@ -38,8 +38,8 @@ const loadCoffmanGraham = async (): Promise<StorybookStoryModule> => {
 export const LAYOUT_STORIES = defineStorybookStories({
   groups: [
     {
-      id: "socket-policies",
-      label: "Сокеты нод",
+      id: "layout-policies",
+      label: "Раскладка",
       components: [
         {
           id: "fixed",
@@ -79,12 +79,6 @@ export const LAYOUT_STORIES = defineStorybookStories({
             },
           ],
         },
-      ],
-    },
-    {
-      id: "scene-policies",
-      label: "Сцена",
-      components: [
         {
           id: "dagre-layered",
           label: "Dagre Layered",
@@ -123,22 +117,13 @@ export const LAYOUT_STORIES = defineStorybookStories({
   representative: {component: "fixed", section: "baseline", variant: "right"},
 })
 
-export function layoutStoryRoute(path: string): LayoutStoryRoute {
-  const exact = LAYOUT_STORIES.find(path)
-  if (exact !== undefined) return exact.route as LayoutStoryRoute
-  if (path === "") return LAYOUT_STORIES.representative as LayoutStoryRoute
-  const descendant = LAYOUT_STORIES.index.find(({route}) => route.startsWith(`${path}/`))
-  if (descendant === undefined) throw new Error(`Unknown Layout Storybook route: ${path}`)
-  return descendant.route as LayoutStoryRoute
-}
-
 export function layoutStoryIndex(route: LayoutStoryRoute): StorybookStoryIndexItem {
   const index = LAYOUT_STORIES.find(route)
   if (index === undefined) throw new Error(`Unknown Layout story: ${route}`)
   return index
 }
 
-export function layoutCatalogItems(collapsedGroups: ReadonlySet<string>): readonly StorybookNavigationItem<string>[] {
+export function layoutPolicyItems(): readonly StorybookNavigationItem<string>[] {
   const seen = new Set<string>()
   return LAYOUT_STORIES.index.flatMap((item) => {
     if (seen.has(item.componentId)) return []
@@ -148,42 +133,21 @@ export function layoutCatalogItems(collapsedGroups: ReadonlySet<string>): readon
       label: item.componentLabel,
       route: item.componentId,
       searchText: item.searchText,
-      group: {
-        id: item.groupId,
-        label: item.groupLabel,
-        collapsed: collapsedGroups.has(item.groupId),
-      },
     }]
   })
 }
 
-export function layoutSectionItems(route: LayoutStoryRoute): readonly StorybookNavigationItem<string>[] {
+export function layoutScenarioItems(route: LayoutStoryRoute): readonly StorybookNavigationItem<string>[] {
   const selected = layoutStoryIndex(route)
-  const seen = new Set<string>()
-  return LAYOUT_STORIES.index.flatMap((item) => {
-    if (item.componentId !== selected.componentId || seen.has(item.sectionId)) return []
-    seen.add(item.sectionId)
-    return [{
-      id: item.sectionId,
-      label: item.sectionLabel,
-      route: `${item.componentId}/${item.sectionId}`,
-    }]
-  })
-}
-
-export function layoutVariantItems(route: LayoutStoryRoute): readonly StorybookNavigationItem<string>[] {
-  return LAYOUT_STORIES.variants(route).map((item) => ({
-    id: item.variantId,
-    label: item.variantLabel,
+  const stories = LAYOUT_STORIES.index.filter(({componentId}) => componentId === selected.componentId)
+  const multipleSections = new Set(stories.map(({sectionId}) => sectionId)).size > 1
+  return stories.map((item) => ({
+    id: `${item.sectionId}/${item.variantId}`,
+    label: multipleSections ? `${item.sectionLabel} · ${item.variantLabel}` : item.variantLabel,
     route: item.route,
   }))
 }
 
 export function layoutComponentPath(path: string): string {
   return path.split("/")[0] ?? ""
-}
-
-export function layoutSectionPath(path: string): string {
-  const [component, section] = path.split("/")
-  return component !== undefined && section !== undefined ? `${component}/${section}` : ""
 }

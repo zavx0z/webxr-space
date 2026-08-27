@@ -265,11 +265,13 @@ bun test packages/layout/storybook/layout-storybook.test.ts
 
 Dev-only stories принадлежат `@nodes/layout` и находятся в
 `packages/layout/storybook`. Репозиторный `@nodes/storybook` собирает их в
-стандартную retained WebGPU page `/layout/` и владеет общим процессом, route
-tree и static build. Shared Workbench использует точные UI Elements/Components,
-а package-owned preview показывает geometry. Каждый lazy story импортирует
+раздел `Раскладка` одного retained WebGPU Workbench и владеет общим процессом,
+route tree, canvas, runtime и static build. Второстепенная панель содержит
+Fixed, Adaptive, Dagre Layered и Coffman–Graham; dock содержит их сценарии.
+Shared Workbench использует точные UI Elements/Components, а package-owned
+story показывает geometry. Каждый lazy story импортирует
 ровно один public fixed, adaptive, top-down или coffman-graham entrypoint; NodeTree, editor и
-product renderer не входят в страницу. Storybook не экспортируется из
+product renderer не входят в его chunk. Storybook не экспортируется из
 `@nodes/layout` и не входит в его production dependencies. Frozen geometry и
 SVG baselines fixed/adaptive проверяются отдельно от WebGPU presentation.
 Алгоритмы опубликованы под собственными именами: `Dagre Layered` на
@@ -278,8 +280,8 @@ SVG baselines fixed/adaptive проверяются отдельно от WebGPU
 именами layout policy. Width-bounded route проверяется графом из 54 нод,
 85 semantic edges и 170 разнесённых independent endpoints.
 
-Полный consumer-путь `NodeTree → projection → NodeEditor` отдельно показывает
-центральная WebGPU page `/editor/live-node-tree` того же `bun run nodes:storybook`.
+Полный consumer-путь `NodeTree → projection → NodeEditor` показывает соседний
+раздел `/editor/node-tree/live` того же `@nodes/storybook` Workbench.
 
 ## Обязательный benchmark перед REVIEW
 
