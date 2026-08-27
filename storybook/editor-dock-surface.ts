@@ -132,7 +132,7 @@ export class NodeTreeEditorDockSurface extends UiSurface {
     Pane(this, 0, 0, this.rectW, this.rectH, {
       appearance: "panel",
       key: "node-tree-editor-dock",
-      sx: {padding: 0},
+      style: {padding: 0},
       children: () => {
         this.#drawHeader(plan.header)
         if (this.#mode === "nodes") this.#drawNodes(plan.body)

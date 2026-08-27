@@ -51,9 +51,11 @@
 
 ## Package-owned dev stories
 
-1. Dev-only stories, retained dock и browser entrypoints, которые объясняют
+1. Dev-only stories, retained dock и preview adapters, которые объясняют
    семантику `@nodes/editor`, принадлежат каталогу `./storybook` рядом с Editor.
-   Repository Storybook подключает их в общий процесс, routes и static build.
+   Repository Storybook подключает их в один общий Workbench, routes и static
+   build. Adapter отдаёт package-owned preview/dock Surfaces, но не создаёт
+   второй entrypoint, runtime, Router или shell.
 2. Story показывает production `NodeTreeEditor` через dev-only retained dock:
    Node, Parameter и Link можно добавить, выбрать и удалить, а числовое
    значение Parameter — изменить тем же Store.
