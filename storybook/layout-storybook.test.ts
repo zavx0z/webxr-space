@@ -1,6 +1,7 @@
 import {describe, expect, test} from "bun:test"
 import {join} from "node:path"
 import {fileURLToPath} from "node:url"
+import {createDocument} from "@zavx0z/dom"
 import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
 import {
   layoutCoffmanGraham,
@@ -10,10 +11,9 @@ import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {getFixtureFamily, STORYBOOK_FIXTURES} from "./layout-fixtures.ts"
 import {
-  LAYOUT_STORIES,
-  layoutPolicyItems,
-  layoutScenarioItems,
-} from "./layout-stories.ts"
+  LAYOUT_DOM_ROUTES,
+  createLayoutDomStory,
+} from "./dom/layout-dom-story.ts"
 import {renderLayoutSvg} from "./render-layout-svg.ts"
 import {TOP_DOWN_REFERENCE_GRAPH} from "./top-down-fixture.ts"
 import {
@@ -76,69 +76,64 @@ const ADAPTIVE_BASELINES = {
 
 describe("standard package-owned Layout Storybook", () => {
   test("supplies exact lazy Layout stories to the one root Workbench", async () => {
-    const rootStories = await Bun.file(join(repositoryStorybookRoot, "app/stories.ts")).text()
-    const renderer = await Bun.file(join(storybookRoot, "render-layout-preview.ts")).text()
+    const rootStories = await Bun.file(join(repositoryStorybookRoot, "app/dom-catalog.ts")).text()
+    const domStory = await Bun.file(join(storybookRoot, "dom/layout-dom-story.ts")).text()
+    const domController = await Bun.file(join(layoutRoot, "dom/layout-presentation.ts")).text()
     const registry = await Bun.file(join(repositoryStorybookRoot, "server/page-registry.ts")).text()
 
-    expect(rootStories).toContain('from "../../layout/storybook/layout-stories.ts"')
-    expect(rootStories).toContain('primary: {id: "layout", label: "Раскладка", route: "layout"}')
-    expect(rootStories).toContain("load: () => LAYOUT_STORIES.load(item.route)")
-    expect(renderer).toContain('Pane} from "@ui/components/pane"')
-    expect(renderer).toContain('Typography} from "@ui/components/typography"')
-    expect(renderer).toContain('div} from "@ui/elements/div"')
-    expect(renderer).not.toContain("drawnCurves")
-    expect(renderer).not.toContain("arrowTips")
-    expect(renderer).not.toContain("separateSemanticEdge")
-    expect(renderer).toContain("sampleCurveChain")
-    expect(renderer).toContain("splitPolylineAtGaps")
-    expect(registry).toContain('entrypoint: join(import.meta.dir, "../app/entry.ts")')
+    expect(rootStories).toContain('label: "Раскладка", route: "layout"')
+    expect(rootStories).not.toContain("loadNodesStory")
+    expect(rootStories).not.toContain("LAYOUT_STORIES.load")
+    expect(domStory).toContain('import("./providers/fixed.ts")')
+    expect(domStory).toContain('import("./providers/adaptive.ts")')
+    expect(domStory).toContain('import("./providers/dagre-layered.ts")')
+    expect(domStory).toContain('import("./providers/coffman-graham.ts")')
+    expect(domController).toContain('from "@zavx0z/dom"')
+    expect(domController).not.toMatch(/@layout\/core|@ui\/elements|@ui\/components/)
+    expect(registry).toContain('entrypoint: join(import.meta.dir, "../app/dom-entry.ts")')
   })
 
-  test("publishes the standard package-policy-scenario-variant hierarchy", () => {
-    expect(LAYOUT_STORIES.index.map(({route}) => route)).toEqual([
-      "fixed/baseline/right",
-      "fixed/baseline/down",
-      "adaptive/shared/right",
-      "adaptive/shared/down",
-      "adaptive/compound/right",
-      "adaptive/compound/down",
-      "dagre-layered/default/default",
-      "coffman-graham/default/default",
+  test("publishes every overview and exact package-policy-scenario route", () => {
+    expect(LAYOUT_DOM_ROUTES).toEqual([
+      "layout",
+      "layout/fixed",
+      "layout/fixed/baseline",
+      "layout/fixed/baseline/right",
+      "layout/fixed/baseline/down",
+      "layout/adaptive",
+      "layout/adaptive/shared",
+      "layout/adaptive/shared/right",
+      "layout/adaptive/shared/down",
+      "layout/adaptive/compound",
+      "layout/adaptive/compound/right",
+      "layout/adaptive/compound/down",
+      "layout/dagre-layered",
+      "layout/dagre-layered/default",
+      "layout/dagre-layered/default/default",
+      "layout/coffman-graham",
+      "layout/coffman-graham/default",
+      "layout/coffman-graham/default/default",
     ])
-    expect(LAYOUT_STORIES.representative).toBe("fixed/baseline/right")
-    expect(new Set(LAYOUT_STORIES.index.map(({groupId}) => groupId))).toEqual(new Set(["layout-policies"]))
-    expect(new Set(LAYOUT_STORIES.index.map(({groupLabel}) => groupLabel))).toEqual(new Set(["Раскладка"]))
-    expect(layoutPolicyItems().map(({route, label}) => ({route, label}))).toEqual([
-      {route: "fixed", label: "Фиксированная"},
-      {route: "adaptive", label: "Адаптивная"},
-      {route: "dagre-layered", label: "Dagre Layered"},
-      {route: "coffman-graham", label: "Coffman–Graham"},
+    const details = LAYOUT_DOM_ROUTES.filter((route) => route.split("/").length === 4)
+    expect(details).toEqual([
+      "layout/fixed/baseline/right",
+      "layout/fixed/baseline/down",
+      "layout/adaptive/shared/right",
+      "layout/adaptive/shared/down",
+      "layout/adaptive/compound/right",
+      "layout/adaptive/compound/down",
+      "layout/dagre-layered/default/default",
+      "layout/coffman-graham/default/default",
     ])
-    expect(layoutScenarioItems("adaptive/shared/right").map(({route, label}) => ({route, label}))).toEqual([
-      {route: "adaptive/shared/right", label: "Общий порт · RIGHT"},
-      {route: "adaptive/shared/down", label: "Общий порт · DOWN"},
-      {route: "adaptive/compound/right", label: "Контейнеры · RIGHT"},
-      {route: "adaptive/compound/down", label: "Контейнеры · DOWN"},
-    ])
-    expect(layoutScenarioItems("fixed/baseline/right").map(({route}) => route))
-      .toEqual(["fixed/baseline/right", "fixed/baseline/down"])
-    expect(JSON.stringify(LAYOUT_STORIES.index.map(({
-      route,
-      componentLabel,
-      sectionLabel,
-      variantLabel,
-      title,
-      searchText,
-    }) => ({route, componentLabel, sectionLabel, variantLabel, title, searchText}))))
-      .not.toMatch(/Blender Area|Dense DAG/)
+    expect(JSON.stringify(LAYOUT_DOM_ROUTES)).not.toMatch(/Blender Area|Dense DAG/)
   })
 
-  test("lazy story modules import only their exact production policy", async () => {
-    const eager = await Bun.file(join(storybookRoot, "layout-stories.ts")).text()
-    const fixed = await Bun.file(join(storybookRoot, "stories/fixed.ts")).text()
-    const adaptive = await Bun.file(join(storybookRoot, "stories/adaptive.ts")).text()
-    const dagreLayered = await Bun.file(join(storybookRoot, "stories/dagre-layered.ts")).text()
-    const coffmanGraham = await Bun.file(join(storybookRoot, "stories/coffman-graham.ts")).text()
+  test("lazy DOM providers import only their exact production policy", async () => {
+    const eager = await Bun.file(join(storybookRoot, "dom/layout-dom-story.ts")).text()
+    const fixed = await Bun.file(join(storybookRoot, "dom/providers/fixed.ts")).text()
+    const adaptive = await Bun.file(join(storybookRoot, "dom/providers/adaptive.ts")).text()
+    const dagreLayered = await Bun.file(join(storybookRoot, "dom/providers/dagre-layered.ts")).text()
+    const coffmanGraham = await Bun.file(join(storybookRoot, "dom/providers/coffman-graham.ts")).text()
 
     expect(eager).not.toMatch(/from "@nodes\/layout\/(?:fixed|adaptive|top-down|coffman-graham)"/)
     expect(fixed).toContain('from "@nodes/layout/fixed"')
@@ -158,13 +153,16 @@ describe("standard package-owned Layout Storybook", () => {
     expect(coffmanGraham).not.toContain("@nodes/layout/adaptive")
     expect(coffmanGraham).not.toContain("@nodes/layout/top-down")
 
-    for (const route of LAYOUT_STORIES.index.map(({route}) => route)) {
-      const module = await LAYOUT_STORIES.load(route)
-      const source = module.source(module.defaultArgs)
-      expect(source.html).toContain("<node-layout")
-      expect(source.css).toContain(".node-layout")
-      expect(source.typescript).toContain("const result = layout")
-      expect(module.controls.map(({key}) => key)).toEqual(["routes", "ports"])
+    for (const route of LAYOUT_DOM_ROUTES.filter((value) => value.split("/").length === 4)) {
+      const story = await createLayoutDomStory(createDocument(), route)
+      const source = story.source()
+      expect(source.html).toContain('class="layout-dom"')
+      expect(source.css).toContain(".layout-dom")
+      expect(source.typescript)
+        .toMatch(/ = layout(?:Fixed|AdaptiveWithDiagnostics|TopDown|CoffmanGraham)\(/u)
+      expect(story.props.showRoutes).toBeTrue()
+      expect(story.props.showPorts).toBeTrue()
+      story.dispose()
     }
   })
 
@@ -236,7 +234,7 @@ describe("standard package-owned Layout Storybook", () => {
     }
     expect(Object.keys(packageJson.exports ?? {})).not.toContain("./storybook")
     const build = await Bun.build({
-      entrypoints: [join(storybookRoot, "layout-stories.ts")],
+      entrypoints: [join(storybookRoot, "dom/layout-dom-story.ts")],
       target: "browser",
       format: "esm",
       minify: true,
