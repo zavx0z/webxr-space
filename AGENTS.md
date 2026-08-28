@@ -10,6 +10,9 @@
 - Libraries and development tools such as highlighters, Storybook
   infrastructure, parsers, generators, and analyzers remain separate
   repositories. Consumption by the UI stack is not a reason to add a submodule.
+- A DOM/renderer/package-boundary migration never authorizes visual redesign or
+  removal of production control behavior. Preserve UI- and Node-owned
+  Blender-compatible references, interactions and explicit owner acceptance.
 - Work in the supplied branch and checkout. Do not create branches, clones, or
   worktrees without a direct request from zavx0z.
 

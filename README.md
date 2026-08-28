@@ -14,6 +14,11 @@ graph projections. Production code remains owned by the child repositories.
 | `projects/ui/` | `zavx0z/ui` | DOM/CSS Components, HUD compositions and UI Storybook |
 | `projects/node/` | `zavx0z/node` | Node model, layout policies and DOM editor |
 
+The DOM pipeline is an authoring/runtime migration, not a product redesign.
+UI and Node retain their repository-owned Blender-compatible composition,
+density, material and interaction contracts while implementing them with
+standard DOM/CSS and the shared renderer.
+
 Only the three direct UI-stack repositories belong to this superproject.
 Libraries and development tools such as highlighters, Storybook infrastructure,
 parsers, generators, and analyzers remain independent repositories even when
