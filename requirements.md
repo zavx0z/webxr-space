@@ -41,12 +41,10 @@ joined `ControlGroup` владеет одним outer contour и не созда
 на middle cells. Exact visual owner хранит собственный radius: совпадающие
 числа не образуют глобальный radius token.
 
-Пока document renderer не исполняет CSS pseudo-selectors, controller отражает
-standard pointer/focus/change events в exact `data-ui-state` и ARIA attributes,
-а flat CSS адресует только эти поддержанные attribute selectors. Это runtime
-projection того же DOM event state, не параллельный interaction API. После
-появления native pseudo-state cascade атрибутный bridge удаляется отдельным
-проверяемым slice без изменения public component contract.
+Document renderer исполняет native pseudo-state cascade. Production Components
+используют `:hover`, `:active`, `:focus`, `:focus-within`, `:disabled`,
+`:checked` и `:indeterminate` напрямую и не поддерживают параллельный
+`data-ui-state` bridge.
 
 ## Public boundary
 
@@ -83,11 +81,10 @@ projection того же DOM event state, не параллельный interact
 - `@ui/components/theme`
 
 Root barrel, `./dom/*`, story exports и compatibility subpath aliases
-отсутствуют. Каждый public subpath указывает прямо на финального physical
-`*-component.tsx` owner.
+отсутствуют. Каждый public subpath указывает прямо на единственный natural
+physical `*.tsx` owner. Параллельных `.ts` controller implementations,
+`*-component.tsx` aliases и `createX` re-exports нет.
 
-Временные `createX` controllers остаются named static re-export из отдельных
-`.ts` modules и обязаны исчезать из consumer bundle, если не импортированы.
 Общий minified browser proof всех финальных owners должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
 120 kB / 30 kB gzip при external DOM, highlighter, React-shaped runtime и
@@ -95,12 +92,11 @@ Template ABI.
 
 ## DOM ownership
 
-Final Component — обычная TSX-функция, которую `@zavx0z/template` понижает в
+Component — обычная TSX-функция, которую `@zavx0z/template` понижает в
 static DOM mount и addressed bindings, а `@zavx0z/react` планирует без Fiber и
 virtual DOM. Stable standard element subtree сохраняет persistent identities;
-Text, properties, styles and keyed children изменяются адресно. Переходные
-`createX(document, props)` controllers остаются только до миграции их consumer
-chain и не являются вторым final authoring model.
+Text, properties, styles and keyed children изменяются адресно. Это
+единственная production authoring model пакета.
 
 Platform inheritance остаётся в `@zavx0z/dom`:
 `EventTarget → Node → Element → HTMLElement` и специализированные
@@ -125,12 +121,11 @@ listener/callback, но не создаёт второй value store и не ф�
 events. `title`, ARIA и boolean attributes принадлежат соответствующему
 `HTMLElement`.
 
-Каждый `createX(document, props)` создаёт один stable root и возвращает typed
-refs/controller с `update` и `dispose`. Update сохраняет persistent element,
-Text и keyed child identities. Native `input`/`change`/`click`/pointer/focus
-events остаются standard bubbling events; property update не фабрикует event.
+Повторный render того же compiled Component сохраняет persistent element, Text
+и keyed child identities. Native `input`/`change`/`click`/pointer/focus events
+остаются standard bubbling events; property update не фабрикует event.
 Controlled callback сообщает proposed value owner-у, а live editing state
-остаётся в standard DOM property до следующего explicit owner update.
+остаётся в standard DOM property до следующего explicit owner render.
 
 ## Exact owners
 
@@ -157,8 +152,8 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 - `icons` владеет immutable image URLs.
 - `syntax-theme` владеет source-backed scope color resolver.
 
-Detailed controller and Storybook laws remain executable beside their
-implementations under `dom/requirements.md` and focused tests.
+Detailed component and Storybook laws остаются executable в natural owner
+tests и private `@ui/storybook` tests.
 
 ## `UI-COMPILED-BUTTON-001` — first final component owner
 
@@ -175,9 +170,8 @@ thin border and low radius until equal-scale Blender 5.2 evidence authorizes a
 change. Owner CSS is class-free and native-pseudo based; caller `style` is the
 only public visual override.
 
-The existing `createButton()` controller remains a temporary consumer adapter
-while Field/HUD/Storybook are migrated in dependency order. It is not the
-target authoring API and does not make the Button cutover complete.
+`Button` и `IconButton` являются единственными production owners этого
+контракта; imperative controller alias отсутствует.
 
 ## `UI-COMPILED-TEXT-FIELD-001` — controlled native text owner
 
@@ -192,8 +186,7 @@ uses native pseudos, and caller `style` remains the only public override.
 The production Storybook TextField route composes `TextField` inside a small
 hook component using `useState`. Its HTML source does not fabricate a `value`
 content attribute for live state; executable TypeScript carries the current
-value instead. The old `createTextField()` remains only for consumers not yet
-ported.
+value instead.
 
 ## `UI-COMPILED-NUMBER-INPUT-001` — joined numeric interaction owner
 
@@ -264,8 +257,8 @@ independently keyed, so an addressed source update retains every line/token
 whose semantic key survives. Token colors are inline authored declarations;
 all structural geometry is class-free owner CSS. The source-backed highlighter
 and caller-supplied `Tokens` share one pure `buildCodeEditorViewModel` module,
-used by both the final component and the temporary controller—tokenization is
-not duplicated between authoring models.
+used by the natural component and its Storybook adapter—tokenization is not
+duplicated between runtime and documentation.
 
 The public contract remains `readOnly: true`. It exposes no clipboard,
 selection Store, editor mutation protocol, className or `sx`; those would be
@@ -298,9 +291,8 @@ for its transport. Window active state, Frame edge and Timeline selection are
 owner style tokens; interaction is reported through controlled callbacks.
 
 All three retain their historical 320×160, 300×140 and 640×140 minimum
-contours, 28px headers and low-radius materials. The temporary `createHud*`
-controllers remain only for unmigrated callers and Storybook routes; they do
-not define another final HUD model.
+contours, 28px headers and low-radius materials. `HudWindow`, `HudFrame` and
+`Timeline` являются их единственными production implementations.
 
 ## `UI-COMPILED-FOUNDATIONS-001` — neutral visual primitives
 
@@ -318,10 +310,7 @@ with full-width, 96% inset and 90% middle variants.
 `props.children` slot. A child is a retained component value, nullable child
 range or keyed component collection—not a virtual element tree. The explicit
 primitive `content` binding remains for text-only call sites; supplying both is
-an error. Transitional `createPane()` separately keeps its existing raw Node
-adapter until every legacy consumer is compiled.
-The four `create*()` controllers remain available only as legacy consumer
-adapters and do not define a second final styling API.
+an error. No imperative compatibility controller exists beside the TSX owner.
 
 ## `UI-COMPILED-RESOURCE-INPUTS-001` — joined resource controls
 
@@ -341,9 +330,8 @@ The exact regression geometry remains 320×28 regular / 220×24 compact for
 PathInput and 260×28 regular / 190×24 compact for ReferenceInput, with 26px
 regular and 22px compact inner cells.
 
-`createPathInput()` and `createReferenceInput()` remain transitional consumer
-adapters with their existing class-based props. Final `PathInputProps` and
-`ReferenceInputProps` expose `style`, never `className`.
+`PathInputProps` and `ReferenceInputProps` expose `style`, never `className`;
+imperative compatibility adapters are absent.
 
 ## Dependency boundary
 
@@ -357,7 +345,7 @@ subpaths: `@zavx0z/dom`, `@zavx0z/react`, `@zavx0z/template` and
 
 1. Manifest exports exactly the 29 subpaths above and every target exists.
 2. Production typecheck succeeds from `tsconfig.production.json`.
-3. Focused controller tests prove stable identity, controlled state, standard
+3. Focused component tests prove stable identity, controlled state, standard
    event propagation, validation-before-mutation and disposal.
 4. `@ui/storybook` renders the same production DOM/CSS owners through the
    document renderer with exact route readiness, console 0 and non-black

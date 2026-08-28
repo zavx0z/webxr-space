@@ -5,7 +5,7 @@ import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 const componentsRoot = import.meta.dir
 
 describe("final public component bundle", () => {
-  test("tree-shakes every legacy controller and class stylesheet", async () => {
+  test("contains only natural compiled owners and class-free stylesheets", async () => {
     const result = await Bun.build({
       entrypoints: [resolve(componentsRoot, "final-owner-bundle-fixture.ts")],
       target: "browser",

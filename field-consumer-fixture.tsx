@@ -1,4 +1,4 @@
-import {Field} from "./field-component.tsx"
+import {Field} from "./field.tsx"
 
 export function DuplicateIdFieldsFixture() {
   return <div>

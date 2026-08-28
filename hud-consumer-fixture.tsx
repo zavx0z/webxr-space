@@ -1,13 +1,13 @@
 import {useState} from "@zavx0z/react"
-import {Pane} from "./pane-component.tsx"
+import {Pane} from "./pane.tsx"
 import {
   HudFrame,
   HudWindow,
-  type HudFrameComponentProps,
-  type HudWindowComponentProps
-} from "./hud-component.tsx"
+  type HudFrameProps,
+  type HudWindowProps
+} from "./hud.tsx"
 
-export function HudWindowFixture(props: Omit<HudWindowComponentProps, "children">) {
+export function HudWindowFixture(props: Omit<HudWindowProps, "children">) {
   const [minimized, setMinimized] = useState(props.minimized)
   return <HudWindow
     title={props.title}
@@ -21,7 +21,7 @@ export function HudWindowFixture(props: Omit<HudWindowComponentProps, "children"
   ><Pane content="Window body" variant="transparent" /></HudWindow>
 }
 
-export function HudFrameFixture(props: Omit<HudFrameComponentProps, "children">) {
+export function HudFrameFixture(props: Omit<HudFrameProps, "children">) {
   return <HudFrame
     title={props.title}
     edge={props.edge}

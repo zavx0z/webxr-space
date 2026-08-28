@@ -1,325 +1,165 @@
 import {describe, expect, test} from "bun:test"
+import {Event, createDocument, type HTMLButtonElement} from "@zavx0z/dom"
+import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createRoot} from "@zavx0z/react"
+import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {
-  createDocument,
-  HTMLButtonElement,
-  HTMLElement,
-  MouseEvent,
-  PointerEvent,
-  Text,
-} from "@zavx0z/dom"
-import {
-  createHudFrame,
-  createHudWindow,
-  createTimeline,
+  HudFrame,
+  HudWindow,
+  Timeline,
   hudCss,
-  hudFrameDefaultProps,
-  hudWindowDefaultProps,
-  timelineDefaultProps,
-  type HudFrameProps,
-} from "./hud.ts"
+  timelineDefaultProps
+} from "./hud.tsx"
+import {HudFrameFixture, HudWindowFixture} from "./hud-consumer-fixture.tsx"
 
-describe("production DOM HUD controllers", () => {
-  test("creates one stable semantic HudWindow with a consumer-owned body", () => {
+describe("compiled production HUD compositions", () => {
+  test("HudWindow retains keyed actions and authored Pane body while minimizing", () => {
+    expect(isCompiledTemplate(HudWindow)).toBe(true)
     const document = createDocument()
-    const controller = createHudWindow(document)
-    const refs = controller.refs
-    const bodyContent = document.createElement("p")
-    const bodyText = document.createTextNode("Consumer content")
-    bodyContent.appendChild(bodyText)
-    refs.body.appendChild(bodyContent)
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const actions = [
+      {key: "pin", label: "Pin", disabled: false},
+      {key: "close", label: "Close", disabled: false}
+    ]
+    root.render(HudWindowFixture as any, {title: "Output", subtitle: "HUD", active: true, minimized: false, actions})
+    const owner = host.querySelector("section")!
+    const header = owner.querySelector("header")!
+    const headerChildren = [...header.childNodes].filter(node => node.nodeType === 1) as import("@zavx0z/dom").Element[]
+    const bodyPane = owner.querySelector("section section")!
+    const pin = [...owner.querySelectorAll("button")].find(button => button.textContent === "Pin")!
+    const minimize = [...owner.querySelectorAll("button")].find(button => button.getAttribute("title") === "Minimize") as HTMLButtonElement
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 800, height: 400}, styleSheets: [hudCss]})
+    const frame = renderer.flush()
+    const headerBox = frame.boxByNode.get(header)!
+    expect(headerChildren.every(child => {
+      const box = frame.boxByNode.get(child)!
+      return box.x >= headerBox.contentX && box.x + box.width <= headerBox.contentX + headerBox.contentWidth
+    })).toBe(true)
+    renderer.dispose()
+    minimize.click()
+    expect(minimize.textContent).toBe("+")
+    expect(minimize.title).toBe("Restore")
+    const body = [...owner.querySelectorAll("section")].find(section => section.id === minimize.getAttribute("aria-controls"))!
+    expect(body.hasAttribute("hidden")).toBe(true)
+    expect(owner.querySelector("section section")).toBe(bodyPane)
 
-    expect(controller.element).toBe(refs.root)
-    expect(refs.root.localName).toBe("section")
-    expect(refs.header.localName).toBe("header")
-    expect(refs.actionNav.localName).toBe("nav")
-    expect(refs.minimizeButton).toBeInstanceOf(HTMLButtonElement)
-    expect(refs.titleText).toBeInstanceOf(Text)
-    expect(refs.titleText.data).toBe("Output")
-    expect(refs.subtitleText.data).toBe("HUD window")
-    expect(refs.root.getAttribute("data-active")).toBe("true")
-    expect(refs.minimizeButton.getAttribute("aria-expanded")).toBe("true")
-    expect(refs.minimizeButton.getAttribute("aria-controls")).toBe(refs.body.id)
-    expect(refs.body.hasAttribute("hidden")).toBeFalse()
-    expect([...refs.actionButtons.keys()]).toEqual(["pin", "close"])
-    expect(controller.props).toEqual(hudWindowDefaultProps)
-
-    const root = refs.root
-    const header = refs.header
-    const body = refs.body
-    const titleText = refs.titleText
-    controller.update({
-      title: "Preview",
-      subtitle: "Viewport",
+    root.render(HudWindowFixture as any, {
+      title: "Output",
+      subtitle: "HUD",
       active: false,
-      minimized: true,
-      actions: [
-        {key: "close", label: "Dismiss", disabled: true},
-        {key: "pin", label: "Pin", disabled: false},
-      ],
+      minimized: false,
+      actions: [actions[1]!, actions[0]!]
     })
-    expect(controller.element).toBe(root)
-    expect(controller.refs.header).toBe(header)
-    expect(controller.refs.body).toBe(body)
-    expect(controller.refs.titleText).toBe(titleText)
-    expect(refs.titleText.data).toBe("Preview")
-    expect(refs.subtitleText.data).toBe("Viewport")
-    expect(refs.root.getAttribute("data-active")).toBe("false")
-    expect(refs.minimizeText.data).toBe("Restore")
-    expect(refs.minimizeButton.getAttribute("aria-expanded")).toBe("false")
-    expect(refs.body.hasAttribute("hidden")).toBeTrue()
-    expect(refs.body.childNodes).toEqual([bodyContent])
-    expect(bodyContent.firstChild).toBe(bodyText)
+    expect(host.querySelector("section")).toBe(owner)
+    expect([...owner.querySelectorAll("button")].find(button => button.textContent === "Pin")).toBe(pin)
+    expect(owner.className).toBe("")
+    root.unmount()
   })
 
-  test("preserves keyed HudWindow actions through reorder and rejects duplicates atomically", () => {
-    const controller = createHudWindow(createDocument())
-    const pin = controller.refs.actionButtons.get("pin")!
-    const close = controller.refs.actionButtons.get("close")!
-    const pinText = pin.firstChild
-    const closeText = close.firstChild
-    const props = controller.props
-
-    controller.update({
-      ...controller.props,
-      actions: [
-        {key: "close", label: "Dismiss", disabled: true},
-        {key: "pin", label: "Pinned", disabled: false},
-        {key: "inspect", label: "Inspect", disabled: false},
-      ],
-    })
-    expect(controller.refs.actionButtons.get("pin")).toBe(pin)
-    expect(controller.refs.actionButtons.get("close")).toBe(close)
-    expect(pin.firstChild).toBe(pinText)
-    expect(close.firstChild).toBe(closeText)
-    expect(controller.refs.actionNav.childNodes).toEqual([
-      close,
-      pin,
-      controller.refs.actionButtons.get("inspect")!,
-    ])
-    expect(pin.textContent).toBe("Pinned")
-    expect(close.disabled).toBeTrue()
-
-    const ordered = [...controller.refs.actionNav.childNodes]
-    const updated = controller.props
-    expect(() => controller.update({
-      ...controller.props,
-      actions: [
-        {key: "same", label: "A", disabled: false},
-        {key: "same", label: "B", disabled: false},
-      ],
-    })).toThrow("HudWindow action key must be unique: same")
-    expect(controller.refs.actionNav.childNodes).toEqual(ordered)
-    expect(controller.props).toBe(updated)
-    expect(controller.props).not.toBe(props)
-  })
-
-  test("creates stable HudFrame chrome, edge state and keyed handles", () => {
+  test("HudFrame composes its body and emits retained keyed handle intent", () => {
+    expect(isCompiledTemplate(HudFrame)).toBe(true)
     const document = createDocument()
-    const controller = createHudFrame(document)
-    const refs = controller.refs
-    const content = document.createTextNode("Consumer frame")
-    refs.body.appendChild(content)
-    const move = refs.handleButtons.get("move")!
-    const resize = refs.handleButtons.get("resize")!
-
-    expect(refs.root.localName).toBe("section")
-    expect(refs.header.localName).toBe("header")
-    expect(refs.handleNav.localName).toBe("nav")
-    expect(refs.root.getAttribute("data-edge")).toBe("right")
-    expect(controller.props).toEqual(hudFrameDefaultProps)
-    controller.update({
-      title: "Docked frame",
-      edge: "left",
-      handles: [
-        {key: "resize", label: "Resize frame", disabled: false},
-        {key: "move", label: "Move frame", disabled: true},
-      ],
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const events: string[] = []
+    root.render(HudFrameFixture as any, {
+      title: "Frame",
+      edge: "right",
+      handles: [{key: "move", label: "Move", disabled: false}],
+      onHandle: (key: string) => events.push(key)
     })
-    expect(refs.root.getAttribute("data-edge")).toBe("left")
-    expect(refs.root.getAttribute("aria-label")).toBe("Docked frame")
-    expect(refs.titleText.data).toBe("Docked frame")
-    expect(refs.handleButtons.get("move")).toBe(move)
-    expect(refs.handleButtons.get("resize")).toBe(resize)
-    expect(refs.handleNav.childNodes).toEqual([resize, move])
-    expect(move.disabled).toBeTrue()
-    expect(refs.body.childNodes).toEqual([content])
+    const move = [...host.querySelectorAll("button")].find(button => button.textContent === "Move") as HTMLButtonElement
+    const owner = host.querySelector("section")!
+    const edge = owner.querySelector('[aria-hidden="true"]')!
+    move.dispatchEvent(new Event("click", {bubbles: true}))
+    expect(events).toEqual(["move"])
+    expect(host.textContent).toContain("Frame body")
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 360, height: 200},
+      styleSheets: [hudCss]
+    })
+    expect(renderer.flush().boxByNode.get(edge)?.width).toBe(1)
+    renderer.dispose()
+    root.unmount()
   })
 
-  test("creates Timeline time/transport/list semantics from one controlled snapshot", () => {
-    const controller = createTimeline(createDocument())
-    const refs = controller.refs
-
-    expect(refs.root.localName).toBe("section")
-    expect(refs.currentTime.localName).toBe("time")
-    expect(refs.currentTime.getAttribute("datetime")).toBe("50")
-    expect(refs.currentTime.getAttribute("data-tick")).toBe("50")
-    expect(refs.currentText.data).toBe("Current 50")
-    expect(refs.transport.localName).toBe("nav")
-    expect(refs.previousButton).toBeInstanceOf(HTMLButtonElement)
-    expect(refs.playButton.getAttribute("aria-pressed")).toBe("false")
-    expect(refs.playText.data).toBe("Play")
-    expect(refs.nextButton).toBeInstanceOf(HTMLButtonElement)
-    expect(refs.tracksList.localName).toBe("ul")
-    expect([...refs.trackElements.keys()]).toEqual(["output", "events"])
-    expect(refs.trackElements.get("output")?.localName).toBe("li")
-    expect(refs.markerTimes.get("output/current")?.localName).toBe("time")
-    expect(refs.markerTimes.get("output/current")?.getAttribute("datetime")).toBe("50")
-    expect(refs.markerItems.get("output/current")?.getAttribute("aria-current")).toBe("true")
-    expect(controller.props).toEqual(timelineDefaultProps)
-  })
-
-  test("preserves Timeline track and composite marker identities across reorder", () => {
-    const controller = createTimeline(createDocument())
-    const refs = controller.refs
-    const output = refs.trackElements.get("output")!
-    const events = refs.trackElements.get("events")!
-    const outputText = refs.trackLabelTexts.get("output")!
-    const currentItem = refs.markerItems.get("output/current")!
-    const currentTime = refs.markerTimes.get("output/current")!
-    const currentText = refs.markerTexts.get("output/current")!
-
-    controller.update({
-      title: "Playback",
-      min: 0,
-      max: 120,
+  test("Timeline retains nested keyed track and marker identities", () => {
+    expect(isCompiledTemplate(Timeline)).toBe(true)
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const tracks = timelineDefaultProps.tracks
+    root.render(Timeline as any, {...timelineDefaultProps, tracks})
+    const output = host.querySelector('[data-track-key="output"]')!
+    const current = output.querySelector('[data-marker-key="current"]')!
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 720, height: 240},
+      styleSheets: [hudCss]
+    })
+    const currentButton = current.querySelector("button")!
+    const beforeX = renderer.flush().boxByNode.get(currentButton)!.x
+    root.render(Timeline as any, {
+      ...timelineDefaultProps,
       current: 75,
       playing: true,
-      tracks: [
-        {
-          key: "events",
-          label: "Scene events",
-          markers: [{key: "event", tick: 90, label: "Event 90", selected: true}],
-        },
-        {
-          key: "output",
-          label: "Rendered output",
-          markers: [
-            {key: "current", tick: 75, label: "Current 75", selected: true},
-            {key: "start", tick: 10, label: "Start", selected: false},
-          ],
-        },
-      ],
+      tracks: [tracks[1]!, {...tracks[0]!, markers: [
+        {...tracks[0]!.markers[1]!, tick: 90},
+        tracks[0]!.markers[0]!
+      ]}]
     })
-
-    expect(refs.trackElements.get("output")).toBe(output)
-    expect(refs.trackElements.get("events")).toBe(events)
-    expect(refs.trackLabelTexts.get("output")).toBe(outputText)
-    expect(refs.markerItems.get("output/current")).toBe(currentItem)
-    expect(refs.markerTimes.get("output/current")).toBe(currentTime)
-    expect(refs.markerTexts.get("output/current")).toBe(currentText)
-    expect(refs.tracksList.childNodes).toEqual([events, output])
-    expect(refs.titleText.data).toBe("Playback")
-    expect(refs.currentText.data).toBe("Current 75")
-    expect(refs.playText.data).toBe("Pause")
-    expect(refs.playButton.getAttribute("aria-pressed")).toBe("true")
-    expect(currentTime.getAttribute("datetime")).toBe("75")
-    expect(currentTime.getAttribute("data-tick")).toBe("75")
-    expect(currentText.data).toBe("Current 75")
+    expect(host.querySelector('[data-track-key="output"]')).toBe(output)
+    expect(output.querySelector('[data-marker-key="current"]')).toBe(current)
+    expect(renderer.flush().boxByNode.get(currentButton)!.x).toBeGreaterThan(beforeX)
+    expect(host.textContent).toContain("Pause")
+    expect(host.querySelector("section")!.className).toBe("")
+    renderer.dispose()
+    root.unmount()
   })
 
-  test("keeps standard click/pointer bubbling without changing controlled props", () => {
+  test("preserves exact HUD geometry and class-free owner sheets", () => {
     const document = createDocument()
-    const host = document.createElement("div")
-    const window = createHudWindow(document)
-    const frame = createHudFrame(document)
-    const timeline = createTimeline(document)
+    const host = document.createElement("main")
     document.appendChild(host)
-    host.append(window.element, frame.element, timeline.element)
-    const events: string[] = []
-    host.addEventListener("click", (event) => events.push(`${event.type}:${(event.target as HTMLElement).localName}`))
-    host.addEventListener("pointerdown", (event) => events.push(`${event.type}:${(event.target as HTMLElement).localName}`))
-    const windowProps = window.props
-    const frameProps = frame.props
-    const timelineProps = timeline.props
-
-    window.refs.actionButtons.get("pin")!.click()
-    frame.refs.handleButtons.get("move")!.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true}))
-    timeline.refs.playButton.click()
-    timeline.refs.markerTimes.get("output/current")!
-      .dispatchEvent(new MouseEvent("click", {bubbles: true}))
-
-    expect(events).toEqual(["click:button", "pointerdown:button", "click:button", "click:time"])
-    expect(window.props).toBe(windowProps)
-    expect(frame.props).toBe(frameProps)
-    expect(timeline.props).toBe(timelineProps)
-    expect(window.props.minimized).toBeFalse()
-    expect(timeline.props.playing).toBeFalse()
-    expect(timeline.refs.playButton.getAttribute("aria-pressed")).toBe("false")
+    const root = createRoot(host)
+    root.render(Timeline as any, timelineDefaultProps)
+    const owner = host.querySelector("section")!
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 720, height: 240},
+      styleSheets: [hudCss]
+    })
+    expect(renderer.flush().boxByNode.get(owner)?.width).toBe(640)
+    expect(hudCss).not.toContain(".ui-")
+    renderer.dispose()
+    root.unmount()
   })
 
-  test("validates controlled data atomically and disposes without removing roots", () => {
+  test("rejects malformed keyed Timeline data before replacing the committed owner", () => {
     const document = createDocument()
-    const host = document.createElement("div")
-    const window = createHudWindow(document)
-    const frame = createHudFrame(document)
-    const timeline = createTimeline(document)
+    const host = document.createElement("main")
     document.appendChild(host)
-    host.append(window.element, frame.element, timeline.element)
-    const windowChildren = [...window.refs.actionNav.childNodes]
-    const frameProps = frame.props
-    const timelineProps = timeline.props
-
-    expect(() => window.update({
-      ...window.props,
-      actions: [{key: "same", label: "A", disabled: false}, {key: "same", label: "B", disabled: false}],
-    })).toThrow("HudWindow action key must be unique: same")
-    expect(() => frame.update({...frame.props, edge: "center" as HudFrameProps["edge"]}))
-      .toThrow("Unknown HudFrame edge: center")
-    expect(() => timeline.update({...timeline.props, max: 0}))
-      .toThrow("Timeline max must be greater than min")
-    expect(() => timeline.update({
-      ...timeline.props,
-      tracks: [{key: "output", label: "Output", markers: [{key: "late", tick: 101, label: "Late", selected: false}]}],
-    })).toThrow("Timeline marker is outside the range: output/late")
-    expect(window.refs.actionNav.childNodes).toEqual(windowChildren)
-    expect(frame.props).toBe(frameProps)
-    expect(timeline.props).toBe(timelineProps)
-
-    window.dispose()
-    frame.dispose()
-    timeline.dispose()
-    expect(window.element.parentNode).toBe(host)
-    expect(frame.element.parentNode).toBe(host)
-    expect(timeline.element.parentNode).toBe(host)
-    expect(() => window.update(window.props)).toThrow("HudWindow controller is disposed")
-    expect(() => frame.update(frame.props)).toThrow("HudFrame controller is disposed")
-    expect(() => timeline.update(timeline.props)).toThrow("Timeline controller is disposed")
-  })
-
-  test("keeps one flat CSS owner and one exact DOM-only production boundary", async () => {
-    const source = await Bun.file(new URL("./hud.ts", import.meta.url)).text()
-    const requirements = await Bun.file(new URL("./dom/requirements.md", import.meta.url)).text()
-    const components = await Bun.file(new URL("./package.json", import.meta.url)).json() as {
-      exports: Record<string, string>
-    }
-
-    expect(hudCss).toContain(".ui-hud-window")
-    expect(hudCss).toContain(".ui-hud-frame")
-    expect(hudCss).toContain(".ui-timeline")
-    expect(hudCss).toContain('[aria-current="true"]')
-    expect(hudCss).not.toContain("&")
-    expect(hudCss).not.toContain("-story")
-    expect(source).toContain('from "@zavx0z/dom"')
-    for (const forbidden of [
-      "@ui/hud",
-      "@engine/core",
-      "@layout/core",
-      "@ui/elements",
-      "@ui/components",
-      "@zavx0z/renderer",
-      ["@zavx0z", "storybook"].join("/"),
-      "UiSurface",
-      "dispatchEvent",
-      "addEventListener",
-      "onClick",
-      "onChange",
-      "Story",
-      "source:",
-      "hud-stories",
-      "-story.ts",
-    ]) expect(source).not.toContain(forbidden)
-    expect(components.exports["./hud"]).toBe("./hud-component.tsx")
-    expect(components.exports["./dom/hud"]).toBeUndefined()
-    expect(requirements).toContain("UI-DOM-HUD-001")
+    const root = createRoot(host)
+    root.render(Timeline as any, timelineDefaultProps)
+    const owner = host.querySelector("section")
+    expect(() => root.render(Timeline as any, {
+      ...timelineDefaultProps,
+      tracks: [{key: "", label: "Broken", markers: [{key: "bad", tick: Number.NaN, label: "Bad", selected: false}]}]
+    })).toThrow("track key must not be empty")
+    expect(host.querySelector("section")).toBe(owner)
+    expect(() => root.render(Timeline as any, {
+      ...timelineDefaultProps,
+      tracks: [{key: "track", label: "Broken", markers: [{key: "bad", tick: Number.NaN, label: "Bad", selected: false}]}]
+    })).toThrow("tick must be finite")
+    expect(host.querySelector("section")).toBe(owner)
+    root.unmount()
   })
 })

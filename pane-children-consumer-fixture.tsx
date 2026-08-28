@@ -1,4 +1,4 @@
-import {Pane} from "./pane-component.tsx"
+import {Pane} from "./pane.tsx"
 
 function PaneChild(props: Readonly<{label: string}>) {
   return <span data-pane-child="true">{props.label}</span>

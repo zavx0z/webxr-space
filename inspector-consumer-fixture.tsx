@@ -1,5 +1,5 @@
 import {useState} from "@zavx0z/react"
-import {Field} from "./field-component.tsx"
+import {Field} from "./field.tsx"
 import {
   Inspector,
   InspectorSection,
@@ -7,7 +7,7 @@ import {
   InspectorTextSection,
   isInspectorSectionVisible,
   type InspectorCategory
-} from "./inspector-component.tsx"
+} from "./inspector.tsx"
 
 export type InspectorFixtureSection = Readonly<{
   id: string
