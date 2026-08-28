@@ -1,7 +1,9 @@
 import {
   equalNodeJsonValue,
   ownNodeJsonValue,
+  ownNodeValueType,
   type NodeJsonValue,
+  type NodeValueType,
   type ParameterReference,
   type ParameterSnapshot,
 } from "./parameter.ts"
@@ -10,11 +12,54 @@ import type {
   NodeTreeProjector,
   PriorNodeTreeProjection,
 } from "./projection-types.ts"
+import {
+  consumeNodeTreePolicy,
+  type InternalNodeTreePolicy,
+} from "./node-tree-policy.ts"
+
+const freeze = Object.freeze
+
+export {
+  requireNodeTreeDocumentShape,
+} from "./node-tree-document.ts"
+
+const MAX_GENERATION_CAPTURE_ATTEMPTS = 25
 
 export type Frame<TMetadata extends NodeJsonValue = NodeJsonValue> = Readonly<{
   id: string
   parentFrameId?: string
+  scopeId?: string
+  groupId?: string
   metadata?: TMetadata
+}>
+
+export type GraphScope<TMetadata extends NodeJsonValue = NodeJsonValue> = Readonly<{
+  id: string
+  kind: "graph" | "subgraph"
+  parentScopeId?: string
+  instance?: NodeInstanceReference
+  metadata?: TMetadata
+}>
+
+export type NodeGroup<TMetadata extends NodeJsonValue = NodeJsonValue> = Readonly<{
+  id: string
+  scopeId?: string
+  parentGroupId?: string
+  metadata?: TMetadata
+}>
+
+export type NodeTemplate<TMetadata extends NodeJsonValue = NodeJsonValue> = Readonly<{
+  id: string
+  version: number
+  kind: "node" | "graph"
+  metadata?: TMetadata
+}>
+
+export type NodeInstanceReference = Readonly<{
+  id: string
+  templateId: string
+  templateVersion: number
+  localId: string
 }>
 
 export type SocketDirection = "input" | "output" | "bidirectional"
@@ -25,6 +70,7 @@ export type Socket<TMetadata extends NodeJsonValue = NodeJsonValue> = Readonly<{
   direction: SocketDirection
   parameterId?: string
   side?: SocketSide
+  valueType?: NodeValueType
   metadata?: TMetadata
 }>
 
@@ -35,6 +81,9 @@ export type Node<
 > = Readonly<{
   id: string
   frameId?: string
+  scopeId?: string
+  groupId?: string
+  instance?: NodeInstanceReference
   parameters?: readonly TParameter[]
   sockets?: readonly Socket<TSocketMetadata>[]
   metadata?: TNodeMetadata
@@ -59,6 +108,9 @@ export type NodeTreeDefinition<
   TSocketMetadata extends NodeJsonValue = NodeJsonValue,
   TLinkMetadata extends NodeJsonValue = NodeJsonValue,
 > = Readonly<{
+  scopes?: readonly GraphScope[]
+  groups?: readonly NodeGroup[]
+  templates?: readonly NodeTemplate[]
   frames?: readonly Frame<TFrameMetadata>[]
   nodes: readonly Node<TParameter, TNodeMetadata, TSocketMetadata>[]
   links?: readonly Link<TLinkMetadata>[]
@@ -76,6 +128,9 @@ export type NodeTreeNodeSnapshot<
 > = Readonly<{
   id: string
   frameId?: string
+  scopeId?: string
+  groupId?: string
+  instance?: NodeInstanceReference
   parameters: readonly NodeTreeParameterSnapshot<TParameter>[]
   sockets: readonly Socket<TSocketMetadata>[]
   metadata?: TNodeMetadata
@@ -90,6 +145,9 @@ export type NodeTreeSnapshot<
 > = Readonly<{
   revision: number
   topologyRevision: number
+  scopes?: readonly GraphScope[]
+  groups?: readonly NodeGroup[]
+  templates?: readonly NodeTemplate[]
   frames: readonly Frame<TFrameMetadata>[]
   nodes: readonly NodeTreeNodeSnapshot<TParameter, TNodeMetadata, TSocketMetadata>[]
   links: readonly Link<TLinkMetadata>[]
@@ -104,6 +162,8 @@ export type NodeTreeFrameDocument<
   TMetadata extends NodeJsonValue = NodeJsonValue,
 > = Readonly<{
   parentFrameId?: string
+  scopeId?: string
+  groupId?: string
   metadata?: TMetadata
 }>
 
@@ -112,10 +172,12 @@ export type NodeTreeParameterDocument<TParameter extends ParameterReference> =
     ? Readonly<{
         value: TValue
         presentation: TPresentation
+        valueType?: NodeValueType
       }>
     : Readonly<{
         value: NodeJsonValue
         presentation: NodeJsonValue
+        valueType?: NodeValueType
       }>
 
 export type NodeTreeSocketDocument<
@@ -124,6 +186,7 @@ export type NodeTreeSocketDocument<
   direction: SocketDirection
   parameterId?: string
   side?: SocketSide
+  valueType?: NodeValueType
   metadata?: TMetadata
 }>
 
@@ -133,6 +196,9 @@ export type NodeTreeNodeDocument<
   TSocketMetadata extends NodeJsonValue = NodeJsonValue,
 > = Readonly<{
   frameId?: string
+  scopeId?: string
+  groupId?: string
+  instance?: NodeInstanceReference
   parameters: Ordered<NodeTreeParameterDocument<TParameter>>
   sockets: Ordered<NodeTreeSocketDocument<TSocketMetadata>>
   metadata?: TNodeMetadata
@@ -146,6 +212,36 @@ export type NodeTreeLinkDocument<
   metadata?: TMetadata
 }>
 
+export type LegacyNodeTreeFrameDocument<
+  TMetadata extends NodeJsonValue = NodeJsonValue,
+> = Readonly<{
+  parentFrameId?: string
+  scopeId?: never
+  groupId?: never
+  metadata?: TMetadata
+}>
+
+export type LegacyNodeTreeParameterDocument<TParameter extends ParameterReference> =
+  Readonly<Omit<NodeTreeParameterDocument<TParameter>, "valueType"> & {valueType?: never}>
+
+export type LegacyNodeTreeSocketDocument<
+  TMetadata extends NodeJsonValue = NodeJsonValue,
+> = Readonly<Omit<NodeTreeSocketDocument<TMetadata>, "valueType"> & {valueType?: never}>
+
+export type LegacyNodeTreeNodeDocument<
+  TParameter extends ParameterReference = ParameterReference,
+  TNodeMetadata extends NodeJsonValue = NodeJsonValue,
+  TSocketMetadata extends NodeJsonValue = NodeJsonValue,
+> = Readonly<{
+  frameId?: string
+  scopeId?: never
+  groupId?: never
+  instance?: never
+  parameters: Ordered<LegacyNodeTreeParameterDocument<TParameter>>
+  sockets: Ordered<LegacyNodeTreeSocketDocument<TSocketMetadata>>
+  metadata?: TNodeMetadata
+}>
+
 export type NodeTreeDocument<
   TParameter extends ParameterReference = ParameterReference,
   TFrameMetadata extends NodeJsonValue = NodeJsonValue,
@@ -154,10 +250,25 @@ export type NodeTreeDocument<
   TLinkMetadata extends NodeJsonValue = NodeJsonValue,
 > = Readonly<{
   formatVersion: 1
+  scopes?: never
+  groups?: never
+  templates?: never
+  frames: Ordered<LegacyNodeTreeFrameDocument<TFrameMetadata>>
+  nodes: Ordered<LegacyNodeTreeNodeDocument<TParameter, TNodeMetadata, TSocketMetadata>>
+  links: Ordered<NodeTreeLinkDocument<TLinkMetadata>>
+}> | Readonly<{
+  formatVersion: 2
+  scopes?: Ordered<GraphScopeDocument>
+  groups?: Ordered<NodeGroupDocument>
+  templates?: Ordered<NodeTemplateDocument>
   frames: Ordered<NodeTreeFrameDocument<TFrameMetadata>>
   nodes: Ordered<NodeTreeNodeDocument<TParameter, TNodeMetadata, TSocketMetadata>>
   links: Ordered<NodeTreeLinkDocument<TLinkMetadata>>
 }>
+
+export type GraphScopeDocument = Readonly<Omit<GraphScope, "id">>
+export type NodeGroupDocument = Readonly<Omit<NodeGroup, "id">>
+export type NodeTemplateDocument = Readonly<Omit<NodeTemplate, "id">>
 
 export type NodeTreeGenerationParameter<TParameter extends ParameterReference> =
   TParameter extends ParameterReference<infer TValue, infer TPresentation>
@@ -166,6 +277,7 @@ export type NodeTreeGenerationParameter<TParameter extends ParameterReference> =
         revision: number
         value: TValue
         presentation: TPresentation
+        valueType?: NodeValueType
         store: TParameter
       }>
     : Readonly<{
@@ -173,6 +285,7 @@ export type NodeTreeGenerationParameter<TParameter extends ParameterReference> =
         revision: number
         value: NodeJsonValue
         presentation: NodeJsonValue
+        valueType?: NodeValueType
         store: TParameter
       }>
 
@@ -183,6 +296,9 @@ export type NodeTreeGenerationNode<
 > = Readonly<{
   id: string
   frameId?: string
+  scopeId?: string
+  groupId?: string
+  instance?: NodeInstanceReference
   parameters: readonly NodeTreeGenerationParameter<TParameter>[]
   sockets: readonly Socket<TSocketMetadata>[]
   metadata?: TNodeMetadata
@@ -197,6 +313,9 @@ export type NodeTreeGenerationView<
 > = Readonly<{
   revision: number
   topologyRevision: number
+  scopes?: readonly GraphScope[]
+  groups?: readonly NodeGroup[]
+  templates?: readonly NodeTemplate[]
   frames: readonly Frame<TFrameMetadata>[]
   nodes: readonly NodeTreeGenerationNode<TParameter, TNodeMetadata, TSocketMetadata>[]
   links: readonly Link<TLinkMetadata>[]
@@ -217,6 +336,25 @@ export type NodeTreeTopologyChange = Readonly<{
   revision: number
   topologyRevision: number
 }>
+
+export type NodeTreeTopLevelEntityKind = "scope" | "group" | "template" | "frame" | "node" | "link"
+export type NodeTreeEntityKind = NodeTreeTopLevelEntityKind | "parameter" | "socket"
+
+export type NodeTreeEntityAddress =
+  | Readonly<{kind: NodeTreeTopLevelEntityKind; id: string}>
+  | Readonly<{kind: "parameter" | "socket"; nodeId: string; id: string}>
+
+export type NodeTreeTopologyDelta = Readonly<{
+  kind: "topology"
+  revision: number
+  topologyRevision: number
+  added: readonly NodeTreeEntityAddress[]
+  removed: readonly NodeTreeEntityAddress[]
+  updated: readonly NodeTreeEntityAddress[]
+}>
+
+export type NodeTreeParameterDelta = NodeTreeParameterChange
+export type NodeTreeDelta = NodeTreeTopologyDelta | NodeTreeParameterDelta
 
 export type NodeTreeChange = NodeTreeParameterChange | NodeTreeTopologyChange
 
@@ -282,6 +420,11 @@ type ParameterSubscription<TParameter extends ParameterReference> = Readonly<{
   unsubscribe: () => void
 }>
 
+type NodeTreePublication = Readonly<{
+  change: NodeTreeChange
+  delta: NodeTreeDelta
+}>
+
 /**
  * Live owner of immutable Node topology and observable Parameter values.
  * Concrete UI measurement and layout remain injected through `project()`.
@@ -293,6 +436,9 @@ export class NodeTree<
   TSocketMetadata extends NodeJsonValue = NodeJsonValue,
   TLinkMetadata extends NodeJsonValue = NodeJsonValue,
 > {
+  #scopes: readonly GraphScope[]
+  #groups: readonly NodeGroup[]
+  #templates: readonly NodeTemplate[]
   #frames: readonly Frame<TFrameMetadata>[]
   #nodes: readonly Node<TParameter, TNodeMetadata, TSocketMetadata>[]
   #links: readonly Link<TLinkMetadata>[]
@@ -300,12 +446,21 @@ export class NodeTree<
   #parameterSubscriptions: Map<string, ParameterSubscription<TParameter>>
   readonly #orphanedParameterSubscriptions = new Set<ParameterSubscription<TParameter>>()
   readonly #listeners = new Set<(change: NodeTreeChange) => void>()
-  readonly #changeQueue: NodeTreeChange[] = []
-  #deliveringChanges = false
+  readonly #deltaListeners = new Set<(delta: NodeTreeDelta) => void>()
+  readonly #publicationQueue: NodeTreePublication[] = []
+  #deliveringPublications = false
   #projectionCache = new WeakMap<object, Map<string, ProjectionCacheEntry>>()
   #revision = 0
   #topologyRevision = 0
+  #externalSnapshot: NodeTreeSnapshot<
+    TParameter,
+    TFrameMetadata,
+    TNodeMetadata,
+    TSocketMetadata,
+    TLinkMetadata
+  > | null = null
   #disposed = false
+  readonly #policy: InternalNodeTreePolicy | undefined
 
   constructor(
     definition: NodeTreeDefinition<
@@ -316,7 +471,11 @@ export class NodeTree<
       TLinkMetadata
     >,
   ) {
-    const owned = ownAndValidateDefinition(definition)
+    this.#policy = consumeNodeTreePolicy(definition)
+    const owned = ownAndValidateDefinition(definition, this.#policy)
+    this.#scopes = owned.scopes
+    this.#groups = owned.groups
+    this.#templates = owned.templates
     this.#frames = owned.frames
     this.#nodes = owned.nodes
     this.#links = owned.links
@@ -336,6 +495,18 @@ export class NodeTree<
     return this.#frames
   }
 
+  get scopes(): readonly GraphScope[] {
+    return this.#scopes
+  }
+
+  get groups(): readonly NodeGroup[] {
+    return this.#groups
+  }
+
+  get templates(): readonly NodeTemplate[] {
+    return this.#templates
+  }
+
   get nodes(): readonly Node<TParameter, TNodeMetadata, TSocketMetadata>[] {
     return this.#nodes
   }
@@ -352,7 +523,10 @@ export class NodeTree<
     TSocketMetadata,
     TLinkMetadata
   > {
-    return Object.freeze({
+    return freeze({
+      ...(this.#scopes.length === 0 ? {} : {scopes: this.#scopes}),
+      ...(this.#groups.length === 0 ? {} : {groups: this.#groups}),
+      ...(this.#templates.length === 0 ? {} : {templates: this.#templates}),
       frames: this.#frames,
       nodes: this.#nodes,
       links: this.#links,
@@ -367,7 +541,7 @@ export class NodeTree<
     TSocketMetadata,
     TLinkMetadata
   > {
-    return documentFromDefinition(this.definition())
+    return this.#readRevisionFenced(() => documentFromDefinition(this.definition()))
   }
 
   parameter(nodeId: string, parameterId: string): TParameter {
@@ -386,6 +560,17 @@ export class NodeTree<
     }
   }
 
+  /** Detailed incremental changes without introducing another graph store. */
+  subscribeDelta(listener: (delta: NodeTreeDelta) => void): () => void {
+    this.#deltaListeners.add(listener)
+    let subscribed = true
+    return () => {
+      if (!subscribed) return
+      subscribed = false
+      this.#deltaListeners.delete(listener)
+    }
+  }
+
   reconcile(
     request: NodeTreeReconcileRequest<
       TParameter,
@@ -395,20 +580,24 @@ export class NodeTree<
       TLinkMetadata
     >,
   ): NodeTreeReconcileResult {
-    if (this.#disposed) throw new Error("NodeTree is disposed")
-    requireRevision(request.expectedRevision)
-    this.#requireExpectedRevision(request.expectedRevision)
+    this.#requireReconcileRevision(request.expectedRevision)
 
-    const owned = ownAndValidateDefinition(request.definition)
+    const owned = ownAndValidateDefinition(request.definition, this.#policy)
     const nextParameters = indexParameters(owned.nodes)
     requirePreservedParameterIdentity(this.#parameters, nextParameters)
-    if (sameDefinition(this.definition(), owned)) {
-      return Object.freeze({
+    if (sameDefinition(this.definition(), owned, this.#policy)) {
+      return freeze({
         changed: false,
         revision: this.#revision,
         topologyRevision: this.#topologyRevision,
       })
     }
+    const delta = this.#policy?.delta(
+      this.definition(),
+      owned,
+      this.#revision + 1,
+      this.#topologyRevision + 1,
+    ) ?? emptyTopologyDelta(this.#revision + 1, this.#topologyRevision + 1)
 
     const preparedSubscriptions = new Map<string, ParameterSubscription<TParameter>>()
     try {
@@ -442,37 +631,71 @@ export class NodeTree<
       .filter(([key, subscription]) => preparedSubscriptions.get(key) !== subscription)
       .map(([, subscription]) => subscription)
 
+    this.#scopes = owned.scopes
+    this.#groups = owned.groups
+    this.#templates = owned.templates
     this.#frames = owned.frames
     this.#nodes = owned.nodes
     this.#links = owned.links
     this.#parameters = nextParameters
     this.#parameterSubscriptions = preparedSubscriptions
-    this.#revision += 1
-    this.#topologyRevision += 1
+    this.#policy?.reconciled?.(this.definition())
+    return this.#finishTopologyCommit(delta, removedSubscriptions)
+  }
 
-    const result = Object.freeze({
+  protected commitAppend(
+    expectedRevision: number,
+    node: Node<TParameter, TNodeMetadata, TSocketMetadata>,
+    delta: NodeTreeTopologyDelta,
+    committed: () => void,
+  ): NodeTreeReconcileResult {
+    this.#requireReconcileRevision(expectedRevision)
+    const subscriptions = new Map<string, ParameterSubscription<TParameter>>()
+    try {
+      for (const parameter of node.parameters ?? []) {
+        const key = parameterKey(node.id, parameter.id)
+        subscriptions.set(key, this.#subscribeParameter(key, parameter))
+      }
+      this.#requireExpectedRevision(expectedRevision)
+    } catch (error) {
+      throw this.#rollbackPreparedSubscriptions(subscriptions, this.#parameterSubscriptions, error)
+    }
+    this.#nodes = freeze(this.#nodes.concat(node))
+    for (const parameter of node.parameters ?? []) {
+      const key = parameterKey(node.id, parameter.id)
+      this.#parameters.set(key, parameter)
+      this.#parameterSubscriptions.set(key, subscriptions.get(key)!)
+    }
+    committed()
+    return this.#finishTopologyCommit(delta, [])
+  }
+
+  #finishTopologyCommit(
+    delta: NodeTreeTopologyDelta,
+    removedSubscriptions: readonly ParameterSubscription<TParameter>[],
+  ): NodeTreeReconcileResult {
+    this.#revision = delta.revision
+    this.#topologyRevision = delta.topologyRevision
+    this.#externalSnapshot = null
+    const result = freeze({
       changed: true,
       revision: this.#revision,
       topologyRevision: this.#topologyRevision,
     })
     const errors: unknown[] = []
     for (const subscription of removedSubscriptions) {
-      try {
-        subscription.unsubscribe()
-      } catch (error) {
+      try { subscription.unsubscribe() } catch (error) {
         this.#orphanedParameterSubscriptions.add(subscription)
         errors.push(error)
       }
     }
-    const change: NodeTreeTopologyChange = Object.freeze({
+    const change: NodeTreeTopologyChange = freeze({
       kind: "topology",
       revision: result.revision,
       topologyRevision: result.topologyRevision,
     })
-    errors.push(...this.#notify(change))
-    if (errors.length > 0) {
-      throw new AggregateError(errors, "NodeTree listeners failed after topology commit")
-    }
+    errors.push(...this.#publish(change, delta))
+    if (errors.length > 0) throw new AggregateError(errors, "NodeTree topology listener failure")
     return result
   }
 
@@ -484,6 +707,18 @@ export class NodeTree<
     TLinkMetadata
   > {
     return snapshotFromGeneration(this.#captureGeneration())
+  }
+
+  /** Stable by reference until the next committed tree revision. */
+  getSnapshot(): NodeTreeSnapshot<
+    TParameter,
+    TFrameMetadata,
+    TNodeMetadata,
+    TSocketMetadata,
+    TLinkMetadata
+  > {
+    this.#externalSnapshot ??= this.snapshot()
+    return this.#externalSnapshot
   }
 
   toJSON(): NodeTreeSnapshot<
@@ -533,18 +768,18 @@ export class NodeTree<
       return Promise.resolve(cache.completed.projection as TProjection)
     }
 
-    const sourceRevision = this.#revision
-    const sourceTopologyRevision = this.#topologyRevision
+    const generation = this.#captureGeneration()
+    const sourceRevision = generation.revision
+    const sourceTopologyRevision = generation.topologyRevision
     const generationKey = `${sourceTopologyRevision}:${sourceRevision}`
     const pending = cache.pending.get(generationKey)
     if (pending !== undefined) return pending as Promise<TProjection>
 
-    const previous = cache.completed === undefined ? undefined : Object.freeze({
+    const previous = cache.completed === undefined ? undefined : freeze({
       revision: cache.completed.revision,
       topologyRevision: cache.completed.topologyRevision,
       projection: cache.completed.projection as TProjection,
     }) satisfies PriorNodeTreeProjection<TProjection>
-    const generation = this.#captureGeneration()
     const snapshot = snapshotFromGeneration(generation)
     const promise = Promise.resolve().then(() => projector.project({
       tree: generation,
@@ -563,7 +798,7 @@ export class NodeTree<
         completed.revision,
         completed.topologyRevision,
       )) {
-        cache!.completed = Object.freeze({
+        cache!.completed = freeze({
           revision: sourceRevision,
           topologyRevision: sourceTopologyRevision,
           projection,
@@ -585,6 +820,7 @@ export class NodeTree<
   dispose(): void {
     this.#disposed = true
     this.#listeners.clear()
+    this.#deltaListeners.clear()
     this.clearProjectionCache()
     const errors: unknown[] = []
     for (const [key, subscription] of [...this.#parameterSubscriptions]) {
@@ -606,7 +842,7 @@ export class NodeTree<
       }
     }
     if (errors.length > 0) {
-      throw new AggregateError(errors, "NodeTree Parameter cleanup failed during disposal")
+      throw new AggregateError(errors, "NodeTree disposal cleanup failure")
     }
   }
 
@@ -617,28 +853,48 @@ export class NodeTree<
     TSocketMetadata,
     TLinkMetadata
   > {
+    return this.#readRevisionFenced((revision, topologyRevision) =>
+      this.#captureGenerationAttempt(revision, topologyRevision))
+  }
+
+  #captureGenerationAttempt(
+    revision: number,
+    topologyRevision: number,
+  ): NodeTreeGenerationView<
+    TParameter,
+    TFrameMetadata,
+    TNodeMetadata,
+    TSocketMetadata,
+    TLinkMetadata
+  > {
     const parameters = new Map<string, NodeTreeGenerationParameter<TParameter>>()
-    const nodes = Object.freeze(this.#nodes.map((node): NodeTreeGenerationNode<
+    const nodes = freeze(this.#nodes.map((node): NodeTreeGenerationNode<
       TParameter,
       TNodeMetadata,
       TSocketMetadata
     > => {
-      const generationParameters = Object.freeze((node.parameters ?? []).map((parameter) => {
+      const generationParameters = freeze((node.parameters ?? []).map((parameter) => {
         const captured = captureGenerationParameter(parameter, node.id)
         parameters.set(parameterKey(node.id, parameter.id), captured)
         return captured
       }))
-      return Object.freeze({
+      return freeze({
         id: node.id,
         ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
+        ...(node.scopeId === undefined ? {} : {scopeId: node.scopeId}),
+        ...(node.groupId === undefined ? {} : {groupId: node.groupId}),
+        ...(node.instance === undefined ? {} : {instance: node.instance}),
         parameters: generationParameters,
-        sockets: node.sockets ?? Object.freeze([]),
+        sockets: node.sockets ?? freeze([]),
         ...(node.metadata === undefined ? {} : {metadata: node.metadata}),
       })
     }))
-    return Object.freeze({
-      revision: this.#revision,
-      topologyRevision: this.#topologyRevision,
+    return freeze({
+      revision,
+      topologyRevision,
+      ...(this.#scopes.length === 0 ? {} : {scopes: this.#scopes}),
+      ...(this.#groups.length === 0 ? {} : {groups: this.#groups}),
+      ...(this.#templates.length === 0 ? {} : {templates: this.#templates}),
       frames: this.#frames,
       nodes,
       links: this.#links,
@@ -648,6 +904,18 @@ export class NodeTree<
         return parameter
       },
     })
+  }
+
+  #readRevisionFenced<Result>(
+    read: (revision: number, topologyRevision: number) => Result,
+  ): Result {
+    for (let attempt = 0; attempt < MAX_GENERATION_CAPTURE_ATTEMPTS; attempt += 1) {
+      const revision = this.#revision
+      const topologyRevision = this.#topologyRevision
+      const result = read(revision, topologyRevision)
+      if (revision === this.#revision && topologyRevision === this.#topologyRevision) return result
+    }
+    throw new Error("Unstable NodeTree read")
   }
 
   #prepareParameterSubscriptions(
@@ -674,7 +942,8 @@ export class NodeTree<
       if (this.#disposed || subscription === undefined ||
         this.#parameterSubscriptions.get(key) !== subscription) return
       this.#revision += 1
-      const change: NodeTreeParameterChange = Object.freeze({
+      this.#externalSnapshot = null
+      const change: NodeTreeParameterChange = freeze({
         kind: "parameter",
         revision: this.#revision,
         topologyRevision: this.#topologyRevision,
@@ -682,33 +951,41 @@ export class NodeTree<
         parameterId,
         parameterRevision: parameter.revision,
       })
-      const errors = this.#notify(change)
+      const errors = this.#publish(change, change)
       if (errors.length > 0) {
-        throw new AggregateError(errors, `NodeTree listeners failed after Parameter commit: ${nodeId}/${parameterId}`)
+        throw new AggregateError(errors, `NodeTree Parameter listener failure: ${nodeId}/${parameterId}`)
       }
     })
-    subscription = Object.freeze({key, parameter, unsubscribe})
+    subscription = freeze({key, parameter, unsubscribe})
     return subscription
   }
 
-  #notify(change: NodeTreeChange): unknown[] {
-    this.#changeQueue.push(change)
-    if (this.#deliveringChanges) return []
-    this.#deliveringChanges = true
+  #publish(change: NodeTreeChange, delta: NodeTreeDelta): unknown[] {
+    this.#publicationQueue.push({change, delta})
+    if (this.#deliveringPublications) return []
+    this.#deliveringPublications = true
     const errors: unknown[] = []
     try {
-      while (this.#changeQueue.length > 0) {
-        const queued = this.#changeQueue.shift()!
+      for (let index = 0; index < this.#publicationQueue.length; index += 1) {
+        const publication = this.#publicationQueue[index]!
+        for (const listener of [...this.#deltaListeners]) {
+          try {
+            listener(publication.delta)
+          } catch (error) {
+            errors.push(error)
+          }
+        }
         for (const listener of [...this.#listeners]) {
           try {
-            listener(queued)
+            listener(publication.change)
           } catch (error) {
             errors.push(error)
           }
         }
       }
     } finally {
-      this.#deliveringChanges = false
+      this.#publicationQueue.length = 0
+      this.#deliveringPublications = false
     }
     return errors
   }
@@ -730,13 +1007,74 @@ export class NodeTree<
     }
     return errors.length === 1
       ? cause
-      : new AggregateError(errors, "NodeTree subscription preparation rollback failed")
+      : new AggregateError(errors, "NodeTree subscription rollback failure")
   }
 
   #requireExpectedRevision(expectedRevision: number): void {
     if (this.#revision !== expectedRevision) {
       throw new NodeTreeRevisionConflictError(expectedRevision, this.#revision)
     }
+  }
+
+  #requireReconcileRevision(expectedRevision: number): void {
+    if (this.#disposed) throw new Error("NodeTree is disposed")
+    requireRevision(expectedRevision)
+    this.#requireExpectedRevision(expectedRevision)
+  }
+}
+
+/** @internal Canonical specialization with no state beyond the inherited NodeTree. */
+export class FoundationNodeTree<
+  TParameter extends ParameterReference = ParameterReference,
+  TFrameMetadata extends NodeJsonValue = NodeJsonValue,
+  TNodeMetadata extends NodeJsonValue = NodeJsonValue,
+  TSocketMetadata extends NodeJsonValue = NodeJsonValue,
+  TLinkMetadata extends NodeJsonValue = NodeJsonValue,
+> extends NodeTree<TParameter, TFrameMetadata, TNodeMetadata, TSocketMetadata, TLinkMetadata> {
+  readonly #foundationPolicy: InternalNodeTreePolicy
+
+  constructor(
+    definition: NodeTreeDefinition<
+      TParameter,
+      TFrameMetadata,
+      TNodeMetadata,
+      TSocketMetadata,
+      TLinkMetadata
+    >,
+    policy: InternalNodeTreePolicy,
+  ) {
+    super(definition)
+    this.#foundationPolicy = policy
+  }
+
+  override reconcile(
+    request: NodeTreeReconcileRequest<
+      TParameter,
+      TFrameMetadata,
+      TNodeMetadata,
+      TSocketMetadata,
+      TLinkMetadata
+    >,
+  ): NodeTreeReconcileResult {
+    const current = this.definition()
+    const source = singleAppendedNode(current, request.definition)
+    if (source === null || this.#foundationPolicy.append === undefined) return super.reconcile(request)
+    const candidate = ownAndValidateDefinition({
+      ...(current.scopes === undefined ? {} : {scopes: current.scopes}),
+      ...(current.groups === undefined ? {} : {groups: current.groups}),
+      ...(current.templates === undefined ? {} : {templates: current.templates}),
+      frames: current.frames ?? [],
+      nodes: [source],
+      links: [],
+    }, this.#foundationPolicy)
+    const node = candidate.nodes[0] as Node<TParameter, TNodeMetadata, TSocketMetadata>
+    const plan = this.#foundationPolicy.append(
+      current,
+      node,
+      this.revision + 1,
+      this.topologyRevision + 1,
+    )
+    return this.commitAppend(request.expectedRevision, node, plan.delta, plan.committed)
   }
 }
 
@@ -748,7 +1086,7 @@ function captureGenerationParameter<TParameter extends ParameterReference>(
   if (snapshot.id !== parameter.id) {
     throw new Error(`Parameter snapshot identity differs: ${nodeId}/${parameter.id}/${snapshot.id}`)
   }
-  return Object.freeze({
+  return freeze({
     id: parameter.id,
     revision: snapshot.revision,
     value: ownNodeJsonValue(snapshot.value, `Parameter generation value: ${nodeId}/${parameter.id}`),
@@ -756,6 +1094,7 @@ function captureGenerationParameter<TParameter extends ParameterReference>(
       snapshot.presentation,
       `Parameter generation presentation: ${nodeId}/${parameter.id}`,
     ),
+    ...(snapshot.valueType === undefined ? {} : {valueType: snapshot.valueType}),
     store: parameter,
   }) as NodeTreeGenerationParameter<TParameter>
 }
@@ -781,18 +1120,25 @@ function snapshotFromGeneration<
   TSocketMetadata,
   TLinkMetadata
 > {
-  return Object.freeze({
+  return freeze({
     revision: generation.revision,
     topologyRevision: generation.topologyRevision,
+    ...(generation.scopes === undefined ? {} : {scopes: generation.scopes}),
+    ...(generation.groups === undefined ? {} : {groups: generation.groups}),
+    ...(generation.templates === undefined ? {} : {templates: generation.templates}),
     frames: generation.frames,
-    nodes: Object.freeze(generation.nodes.map((node) => Object.freeze({
+    nodes: freeze(generation.nodes.map((node) => freeze({
       id: node.id,
       ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
-      parameters: Object.freeze(node.parameters.map((parameter) => Object.freeze({
+      ...(node.scopeId === undefined ? {} : {scopeId: node.scopeId}),
+      ...(node.groupId === undefined ? {} : {groupId: node.groupId}),
+      ...(node.instance === undefined ? {} : {instance: node.instance}),
+      parameters: freeze(node.parameters.map((parameter) => freeze({
         id: parameter.id,
         revision: parameter.revision,
         value: parameter.value,
         presentation: parameter.presentation,
+        ...(parameter.valueType === undefined ? {} : {valueType: parameter.valueType}),
       }))) as readonly NodeTreeParameterSnapshot<TParameter>[],
       sockets: node.sockets,
       ...(node.metadata === undefined ? {} : {metadata: node.metadata}),
@@ -822,33 +1168,65 @@ function documentFromDefinition<
   TSocketMetadata,
   TLinkMetadata
 > {
+  const scopes = definition.scopes === undefined ? undefined : ordered(definition.scopes.map((scope) => [
+    scope.id,
+    freeze({
+      kind: scope.kind,
+      ...(scope.parentScopeId === undefined ? {} : {parentScopeId: scope.parentScopeId}),
+      ...(scope.instance === undefined ? {} : {instance: scope.instance}),
+      ...(scope.metadata === undefined ? {} : {metadata: scope.metadata}),
+    }),
+  ] as const))
+  const groups = definition.groups === undefined ? undefined : ordered(definition.groups.map((group) => [
+    group.id,
+    freeze({
+      ...(group.scopeId === undefined ? {} : {scopeId: group.scopeId}),
+      ...(group.parentGroupId === undefined ? {} : {parentGroupId: group.parentGroupId}),
+      ...(group.metadata === undefined ? {} : {metadata: group.metadata}),
+    }),
+  ] as const))
+  const templates = definition.templates === undefined ? undefined : ordered(definition.templates.map((template) => [
+    template.id,
+    freeze({
+      version: template.version,
+      kind: template.kind,
+      ...(template.metadata === undefined ? {} : {metadata: template.metadata}),
+    }),
+  ] as const))
   const frames = ordered((definition.frames ?? []).map((frame) => [
     frame.id,
-    Object.freeze({
+    freeze({
       ...(frame.parentFrameId === undefined ? {} : {parentFrameId: frame.parentFrameId}),
+      ...(frame.scopeId === undefined ? {} : {scopeId: frame.scopeId}),
+      ...(frame.groupId === undefined ? {} : {groupId: frame.groupId}),
       ...(frame.metadata === undefined ? {} : {metadata: frame.metadata}),
     }),
   ] as const))
   const nodes = ordered(definition.nodes.map((node) => [
     node.id,
-    Object.freeze({
+    freeze({
       ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
+      ...(node.scopeId === undefined ? {} : {scopeId: node.scopeId}),
+      ...(node.groupId === undefined ? {} : {groupId: node.groupId}),
+      ...(node.instance === undefined ? {} : {instance: node.instance}),
       parameters: ordered((node.parameters ?? []).map((parameter) => {
         const snapshot = parameter.snapshot()
-        return [parameter.id, Object.freeze({
+        return [parameter.id, freeze({
           value: ownNodeJsonValue(snapshot.value, `Parameter document value: ${node.id}/${parameter.id}`),
           presentation: ownNodeJsonValue(
             snapshot.presentation,
             `Parameter document presentation: ${node.id}/${parameter.id}`,
           ),
+          ...(snapshot.valueType === undefined ? {} : {valueType: snapshot.valueType}),
         })] as const
       })) as Ordered<NodeTreeParameterDocument<TParameter>>,
       sockets: ordered((node.sockets ?? []).map((socket) => [
         socket.id,
-        Object.freeze({
+        freeze({
           direction: socket.direction,
           ...(socket.parameterId === undefined ? {} : {parameterId: socket.parameterId}),
           ...(socket.side === undefined ? {} : {side: socket.side}),
+          ...(socket.valueType === undefined ? {} : {valueType: socket.valueType}),
           ...(socket.metadata === undefined ? {} : {metadata: socket.metadata}),
         }),
       ] as const)),
@@ -857,19 +1235,46 @@ function documentFromDefinition<
   ] as const))
   const links = ordered((definition.links ?? []).map((link) => [
     link.id,
-    Object.freeze({
-      from: Object.freeze({...link.from}),
-      to: Object.freeze({...link.to}),
+    freeze({
+      from: freeze({...link.from}),
+      to: freeze({...link.to}),
       ...(link.metadata === undefined ? {} : {metadata: link.metadata}),
     }),
   ] as const))
-  return Object.freeze({formatVersion: 1, frames, nodes, links})
+  const formatVersion = hasFoundationDocumentFeatures(definition) ? 2 : 1
+  return freeze({
+    formatVersion,
+    ...(scopes === undefined ? {} : {scopes}),
+    ...(groups === undefined ? {} : {groups}),
+    ...(templates === undefined ? {} : {templates}),
+    frames,
+    nodes,
+    links,
+  }) as unknown as NodeTreeDocument<
+    TParameter,
+    TFrameMetadata,
+    TNodeMetadata,
+    TSocketMetadata,
+    TLinkMetadata
+  >
+}
+
+function hasFoundationDocumentFeatures(definition: NodeTreeDefinition): boolean {
+  if (definition.scopes !== undefined || definition.groups !== undefined || definition.templates !== undefined) return true
+  if ((definition.frames ?? []).some((frame) => frame.scopeId !== undefined || frame.groupId !== undefined)) return true
+  return definition.nodes.some((node) => node.scopeId !== undefined || node.groupId !== undefined ||
+    node.instance !== undefined || (node.parameters ?? []).some((parameter) => parameter.valueType !== undefined) ||
+    (node.sockets ?? []).some((socket) => socket.valueType !== undefined))
+}
+
+function hasFoundationDefinitionFeatures(definition: NodeTreeDefinition): boolean {
+  return hasFoundationDocumentFeatures(definition)
 }
 
 function ordered<T>(entries: readonly (readonly [string, T])[]): Ordered<T> {
-  return Object.freeze({
-    order: Object.freeze(entries.map(([id]) => id)),
-    byId: Object.freeze(Object.fromEntries(entries)) as Readonly<Record<string, T>>,
+  return freeze({
+    order: freeze(entries.map(([id]) => id)),
+    byId: freeze(Object.fromEntries(entries)) as Readonly<Record<string, T>>,
   })
 }
 
@@ -883,6 +1288,19 @@ function indexParameters<TParameter extends ParameterReference>(
     }
   }
   return parameters
+}
+
+function singleAppendedNode(
+  current: NodeTreeDefinition,
+  next: NodeTreeDefinition,
+): Node | null {
+  if (next.nodes.length !== current.nodes.length + 1 || next.frames !== current.frames ||
+    next.links !== current.links || next.scopes !== current.scopes || next.groups !== current.groups ||
+    next.templates !== current.templates) return null
+  for (let index = 0; index < current.nodes.length; index += 1) {
+    if (next.nodes[index] !== current.nodes[index]) return null
+  }
+  return next.nodes[next.nodes.length - 1] ?? null
 }
 
 function requirePreservedParameterIdentity<TParameter extends ParameterReference>(
@@ -907,7 +1325,9 @@ function sameDefinition<
 >(
   left: NodeTreeDefinition<TParameter, TFrameMetadata, TNodeMetadata, TSocketMetadata, TLinkMetadata>,
   right: NodeTreeDefinition<TParameter, TFrameMetadata, TNodeMetadata, TSocketMetadata, TLinkMetadata>,
+  validation: InternalNodeTreePolicy | undefined,
 ): boolean {
+  if (validation?.same(left, right) === false) return false
   const leftFrames = left.frames ?? []
   const rightFrames = right.frames ?? []
   if (leftFrames.length !== rightFrames.length) return false
@@ -954,6 +1374,17 @@ function sameDefinition<
   return true
 }
 
+function emptyTopologyDelta(revision: number, topologyRevision: number): NodeTreeTopologyDelta {
+  return freeze({
+    kind: "topology",
+    revision,
+    topologyRevision,
+    added: freeze([]),
+    removed: freeze([]),
+    updated: freeze([]),
+  })
+}
+
 function equalOptionalNodeJsonValue(
   left: NodeJsonValue | undefined,
   right: NodeJsonValue | undefined,
@@ -964,7 +1395,7 @@ function equalOptionalNodeJsonValue(
 
 function requireRevision(value: number): void {
   if (!Number.isSafeInteger(value) || value < 0) {
-    throw new TypeError("NodeTree expectedRevision must be a non-negative safe integer")
+    throw new TypeError("Invalid NodeTree expectedRevision")
   }
 }
 
@@ -976,19 +1407,32 @@ function ownAndValidateDefinition<
   TLinkMetadata extends NodeJsonValue,
 >(
   definition: NodeTreeDefinition<TParameter, TFrameMetadata, TNodeMetadata, TSocketMetadata, TLinkMetadata>,
+  policy: InternalNodeTreePolicy | undefined,
 ): Readonly<{
+  scopes: readonly GraphScope[]
+  groups: readonly NodeGroup[]
+  templates: readonly NodeTemplate[]
   frames: readonly Frame<TFrameMetadata>[]
   nodes: readonly Node<TParameter, TNodeMetadata, TSocketMetadata>[]
   links: readonly Link<TLinkMetadata>[]
 }> {
+  if (hasFoundationDefinitionFeatures(definition) && policy === undefined) {
+    throw new Error("Use createNodeTree()")
+  }
+  policy?.validate(definition as NodeTreeDefinition)
+  const templates = ownTemplateData(definition.templates ?? [])
+  const scopes = ownScopeData(definition.scopes ?? [])
+  const groups = ownGroupData(definition.groups ?? [])
   const frameIds = new Set<string>()
-  const frames = Object.freeze((definition.frames ?? []).map((frame): Frame<TFrameMetadata> => {
+  const frames = freeze((definition.frames ?? []).map((frame): Frame<TFrameMetadata> => {
     requireIdentifier(frame.id, "Frame")
     if (frameIds.has(frame.id)) throw new Error(`Duplicate Frame id: ${frame.id}`)
     frameIds.add(frame.id)
-    return Object.freeze({
+    return freeze({
       id: frame.id,
       ...(frame.parentFrameId === undefined ? {} : {parentFrameId: frame.parentFrameId}),
+      ...(frame.scopeId === undefined ? {} : {scopeId: frame.scopeId}),
+      ...(frame.groupId === undefined ? {} : {groupId: frame.groupId}),
       ...(frame.metadata === undefined ? {} : {
         metadata: ownNodeJsonValue(frame.metadata, `Frame metadata: ${frame.id}`),
       }),
@@ -998,16 +1442,18 @@ function ownAndValidateDefinition<
   for (const frame of frames) {
     if (frame.parentFrameId === undefined) continue
     requireIdentifier(frame.parentFrameId, `Parent Frame on ${frame.id}`)
-    if (!frameById.has(frame.parentFrameId)) {
+    const parent = frameById.get(frame.parentFrameId)
+    if (parent === undefined) {
       throw new Error(`Unknown parent Frame: ${frame.id}/${frame.parentFrameId}`)
     }
+    if (parent.scopeId !== frame.scopeId) throw new Error(`Frame parent must share scope: ${frame.id}`)
   }
-  for (const frame of frames) validateFrameAncestry(frame, frameById)
+  validateFrameAncestry(frameById)
 
   const nodeIds = new Set<string>()
   const socketsByNode = new Map<string, ReadonlyMap<string, Socket<TSocketMetadata>>>()
   const ownedParameters = new Set<ParameterReference>()
-  const nodes = Object.freeze(definition.nodes.map((node): Node<TParameter, TNodeMetadata, TSocketMetadata> => {
+  const nodes = freeze(definition.nodes.map((node): Node<TParameter, TNodeMetadata, TSocketMetadata> => {
     requireIdentifier(node.id, "Node")
     if (nodeIds.has(node.id)) throw new Error(`Duplicate Node id: ${node.id}`)
     if (frameIds.has(node.id)) throw new Error(`Frame and Node ids must be distinct: ${node.id}`)
@@ -1015,9 +1461,12 @@ function ownAndValidateDefinition<
     if (node.frameId !== undefined && !frameIds.has(node.frameId)) {
       throw new Error(`Unknown Node Frame: ${node.id}/${node.frameId}`)
     }
+    const instance = node.instance === undefined
+      ? undefined
+      : ownInstanceData(node.instance)
 
     const parameterIds = new Set<string>()
-    const parameters = Object.freeze((node.parameters ?? []).map((parameter) => {
+    const parameters = freeze((node.parameters ?? []).map((parameter) => {
       requireParameterReference(parameter, node.id)
       if (parameterIds.has(parameter.id)) throw new Error(`Duplicate Parameter id: ${node.id}/${parameter.id}`)
       if (ownedParameters.has(parameter)) throw new Error(`Parameter is shared by multiple Nodes: ${parameter.id}`)
@@ -1028,7 +1477,7 @@ function ownAndValidateDefinition<
 
     const socketIds = new Set<string>()
     const explicitParameterSides = new Set<string>()
-    const sockets = Object.freeze((node.sockets ?? []).map((socket): Socket<TSocketMetadata> => {
+    const sockets = freeze((node.sockets ?? []).map((socket): Socket<TSocketMetadata> => {
       requireIdentifier(socket.id, `Socket on ${node.id}`)
       if (socketIds.has(socket.id)) throw new Error(`Duplicate Socket id: ${node.id}/${socket.id}`)
       socketIds.add(socket.id)
@@ -1050,20 +1499,27 @@ function ownAndValidateDefinition<
           explicitParameterSides.add(sideKey)
         }
       }
-      return Object.freeze({
+      const valueType = socket.valueType === undefined
+        ? undefined
+        : ownNodeValueType(socket.valueType, `Socket type: ${node.id}/${socket.id}`)
+      return freeze({
         id: socket.id,
         direction: socket.direction,
         ...(socket.parameterId === undefined ? {} : {parameterId: socket.parameterId}),
         ...(socket.side === undefined ? {} : {side: socket.side}),
+        ...(valueType === undefined ? {} : {valueType}),
         ...(socket.metadata === undefined ? {} : {
           metadata: ownNodeJsonValue(socket.metadata, `Socket metadata: ${node.id}/${socket.id}`),
         }),
       })
     }))
     socketsByNode.set(node.id, new Map(sockets.map((socket) => [socket.id, socket])))
-    return Object.freeze({
+    return freeze({
       id: node.id,
       ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
+      ...(node.scopeId === undefined ? {} : {scopeId: node.scopeId}),
+      ...(node.groupId === undefined ? {} : {groupId: node.groupId}),
+      ...(instance === undefined ? {} : {instance}),
       parameters,
       sockets,
       ...(node.metadata === undefined ? {} : {
@@ -1073,7 +1529,7 @@ function ownAndValidateDefinition<
   }))
 
   const linkIds = new Set<string>()
-  const links = Object.freeze((definition.links ?? []).map((link): Link<TLinkMetadata> => {
+  const links = freeze((definition.links ?? []).map((link): Link<TLinkMetadata> => {
     requireIdentifier(link.id, "Link")
     if (linkIds.has(link.id)) throw new Error(`Duplicate Link id: ${link.id}`)
     linkIds.add(link.id)
@@ -1085,28 +1541,72 @@ function ownAndValidateDefinition<
     if (to.direction === "output") {
       throw new Error(`Output Socket cannot be a Link target: ${link.id}/${link.to.nodeId}/${link.to.socketId}`)
     }
-    return Object.freeze({
+    return freeze({
       id: link.id,
-      from: Object.freeze({...link.from}),
-      to: Object.freeze({...link.to}),
+      from: freeze({...link.from}),
+      to: freeze({...link.to}),
       ...(link.metadata === undefined ? {} : {
         metadata: ownNodeJsonValue(link.metadata, `Link metadata: ${link.id}`),
       }),
     })
   }))
-  return Object.freeze({frames, nodes, links})
+  return freeze({scopes, groups, templates, frames, nodes, links})
+}
+
+function ownTemplateData(source: readonly NodeTemplate[]): readonly NodeTemplate[] {
+  return freeze(source.map((template) => freeze({
+    id: template.id,
+    version: template.version,
+    kind: template.kind,
+    ...(template.metadata === undefined ? {} : {
+      metadata: ownNodeJsonValue(template.metadata, `Template metadata: ${template.id}`),
+    }),
+  })))
+}
+
+function ownScopeData(source: readonly GraphScope[]): readonly GraphScope[] {
+  return freeze(source.map((scope) => freeze({
+    id: scope.id,
+    kind: scope.kind,
+    ...(scope.parentScopeId === undefined ? {} : {parentScopeId: scope.parentScopeId}),
+    ...(scope.instance === undefined ? {} : {instance: ownInstanceData(scope.instance)}),
+    ...(scope.metadata === undefined ? {} : {
+      metadata: ownNodeJsonValue(scope.metadata, `Graph Scope metadata: ${scope.id}`),
+    }),
+  })))
+}
+
+function ownGroupData(source: readonly NodeGroup[]): readonly NodeGroup[] {
+  return freeze(source.map((group) => freeze({
+    id: group.id,
+    ...(group.scopeId === undefined ? {} : {scopeId: group.scopeId}),
+    ...(group.parentGroupId === undefined ? {} : {parentGroupId: group.parentGroupId}),
+    ...(group.metadata === undefined ? {} : {
+      metadata: ownNodeJsonValue(group.metadata, `Node Group metadata: ${group.id}`),
+    }),
+  })))
+}
+
+function ownInstanceData(source: NodeInstanceReference): NodeInstanceReference {
+  return freeze({...source})
 }
 
 function validateFrameAncestry<TMetadata extends NodeJsonValue>(
-  frame: Frame<TMetadata>,
   frameById: ReadonlyMap<string, Frame<TMetadata>>,
 ): void {
-  const seen = new Set<string>([frame.id])
-  let parentFrameId = frame.parentFrameId
-  while (parentFrameId !== undefined) {
-    if (seen.has(parentFrameId)) throw new Error(`Cyclic Frame ancestry: ${frame.id}`)
-    seen.add(parentFrameId)
-    parentFrameId = frameById.get(parentFrameId)?.parentFrameId
+  const done = new Set<string>()
+  for (const frame of frameById.values()) {
+    if (done.has(frame.id)) continue
+    const path: string[] = []
+    const inPath = new Set<string>()
+    let frameId: string | undefined = frame.id
+    while (frameId !== undefined && !done.has(frameId)) {
+      if (inPath.has(frameId)) throw new Error(`Cyclic Frame ancestry: ${frame.id}`)
+      inPath.add(frameId)
+      path.push(frameId)
+      frameId = frameById.get(frameId)?.parentFrameId
+    }
+    for (const entry of path) done.add(entry)
   }
 }
 

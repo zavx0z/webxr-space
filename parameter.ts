@@ -12,6 +12,13 @@ export type ParameterSnapshot<
   revision: number
   value: T
   presentation: TPresentation
+  valueType?: NodeValueType
+}>
+
+/** Serializable runtime type identity shared by Parameters and Sockets. */
+export type NodeValueType = Readonly<{
+  id: string
+  version: number
 }>
 
 /** Read-only Parameter surface used by NodeTree without knowing a concrete value kind. */
@@ -23,6 +30,7 @@ export type ParameterReference<
   revision: number
   value: T
   presentation: TPresentation
+  valueType: NodeValueType | undefined
   snapshot(): ParameterSnapshot<T, TPresentation>
   subscribe(listener: () => void): () => void
 }>
@@ -39,14 +47,21 @@ export class Parameter<
 > implements ParameterReference<T, TPresentation> {
   readonly #id: string
   readonly #presentation: TPresentation
+  readonly #valueType: NodeValueType | undefined
   readonly #listeners = new Set<() => void>()
   #value: T
   #revision = 0
 
-  constructor(id: string, initialValue: T, presentation: TPresentation = null as TPresentation) {
+  constructor(
+    id: string,
+    initialValue: T,
+    presentation: TPresentation = null as TPresentation,
+    valueType?: NodeValueType,
+  ) {
     this.#id = requireIdentifier(id, "Parameter")
     this.#value = ownNodeJsonValue(initialValue, `Parameter value: ${id}`)
     this.#presentation = ownNodeJsonValue(presentation, `Parameter presentation: ${id}`)
+    this.#valueType = valueType === undefined ? undefined : ownNodeValueType(valueType, `Parameter type: ${id}`)
   }
 
   get id(): string {
@@ -65,9 +80,14 @@ export class Parameter<
     return this.#presentation
   }
 
+  get valueType(): NodeValueType | undefined {
+    return this.#valueType
+  }
+
   set(value: T): boolean {
-    if (equalNodeJsonValue(this.#value, value)) return false
-    this.#value = ownNodeJsonValue(value, `Parameter value: ${this.#id}`)
+    const owned = ownNodeJsonValue(value, `Parameter value: ${this.#id}`)
+    if (equalNodeJsonValue(this.#value, owned)) return false
+    this.#value = owned
     this.#revision += 1
     const errors: unknown[] = []
     for (const listener of [...this.#listeners]) {
@@ -99,12 +119,23 @@ export class Parameter<
       revision: this.#revision,
       value: this.#value,
       presentation: this.#presentation,
+      ...(this.#valueType === undefined ? {} : {valueType: this.#valueType}),
     })
   }
 
   toJSON(): ParameterSnapshot<T, TPresentation> {
     return this.snapshot()
   }
+}
+
+/** Owns and validates one portable value-type identity. */
+export function ownNodeValueType(value: NodeValueType, label = "Node value type"): NodeValueType {
+  if (typeof value !== "object" || value === null) throw new TypeError(`${label} must be an object`)
+  const id = requireIdentifier(value.id, label)
+  if (!Number.isSafeInteger(value.version) || value.version < 1) {
+    throw new TypeError(`${label} version must be a positive safe integer`)
+  }
+  return Object.freeze({id, version: value.version})
 }
 
 /** Creates an owned, deeply frozen JSON value and rejects ambiguous runtime data. */

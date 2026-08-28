@@ -133,6 +133,54 @@ describe("live NodeTree runtime", () => {
     expect(changes).toHaveLength(1)
   })
 
+  test("revision-fences reentrant snapshot capture and bounds an unstable Store", () => {
+    class ReentrantParameter extends Parameter<number> {
+      armed = false
+      fired = false
+
+      override snapshot() {
+        const captured = super.snapshot()
+        if (this.armed && !this.fired) {
+          this.fired = true
+          this.set(captured.value + 1)
+        }
+        return captured
+      }
+    }
+    const value = new ReentrantParameter("value", 0)
+    const tree = new NodeTree({nodes: [{id: "node", parameters: [value]}]})
+    value.armed = true
+    const snapshot = tree.getSnapshot()
+    expect(snapshot.revision).toBe(1)
+    expect(snapshot.nodes[0]?.parameters[0]?.value).toBe(1)
+    expect(tree.getSnapshot()).toBe(snapshot)
+
+    value.fired = false
+    const document = tree.document()
+    expect(document.nodes.byId.node?.parameters.byId.value?.value).toBe(2)
+    expect(tree.revision).toBe(2)
+    const refreshed = tree.getSnapshot()
+    expect(refreshed).not.toBe(snapshot)
+    expect(refreshed.revision).toBe(2)
+    expect(refreshed.nodes[0]?.parameters[0]?.value).toBe(2)
+    expect(tree.getSnapshot()).toBe(refreshed)
+
+    class NeverStableParameter extends Parameter<number> {
+      armed = false
+
+      override snapshot() {
+        const captured = super.snapshot()
+        if (this.armed) this.set(this.value + 1)
+        return captured
+      }
+    }
+    const unstable = new NeverStableParameter("value", 0)
+    const unstableTree = new NodeTree({nodes: [{id: "node", parameters: [unstable]}]})
+    unstable.armed = true
+    expect(() => unstableTree.getSnapshot()).toThrow("Unstable NodeTree read")
+    expect(unstableTree.revision).toBe(25)
+  })
+
   test("stops observing Parameters after explicit disposal", () => {
     const {tree, sourceValue} = createTree()
     tree.dispose()
@@ -413,6 +461,62 @@ describe("live NodeTree topology", () => {
 
     prepared.set(2)
     expect(tree.revision).toBe(0)
+  })
+
+  test("rolls back every new subscription when preparation changes the expected revision", () => {
+    class TrackingParameter extends Parameter<number, FieldPresentation> {
+      subscriptions = 0
+      cleanups = 0
+
+      override subscribe(listener: () => void): () => void {
+        this.subscriptions += 1
+        const unsubscribe = super.subscribe(listener)
+        return () => {
+          this.cleanups += 1
+          unsubscribe()
+        }
+      }
+    }
+    class ReentrantSubscriptionParameter extends TrackingParameter {
+      constructor(
+        id: string,
+        presentation: FieldPresentation,
+        readonly reenter: () => void,
+      ) {
+        super(id, 1, presentation)
+      }
+
+      override subscribe(listener: () => void): () => void {
+        const unsubscribe = super.subscribe(listener)
+        this.reenter()
+        return unsubscribe
+      }
+    }
+    const {tree, sourceValue} = createTree()
+    const presentation = {fieldKind: "number", label: "Prepared"} as const
+    const prepared = new TrackingParameter("prepared", 1, presentation)
+    const reentrant = new ReentrantSubscriptionParameter("reentrant", presentation, () => sourceValue.set(2))
+    const current = tree.definition()
+
+    expect(() => tree.reconcile({
+      expectedRevision: 0,
+      definition: {
+        ...current,
+        nodes: current.nodes.map((node) => node.id === "source" ? {
+          ...node,
+          parameters: [...(node.parameters ?? []), prepared, reentrant],
+        } : node),
+      },
+    })).toThrow(NodeTreeRevisionConflictError)
+    expect(tree.revision).toBe(1)
+    expect(tree.topologyRevision).toBe(0)
+    expect(prepared).toMatchObject({subscriptions: 1, cleanups: 1})
+    expect(reentrant).toMatchObject({subscriptions: 1, cleanups: 1})
+    expect(() => tree.parameter("source", "prepared")).toThrow("Unknown Parameter")
+    expect(() => tree.parameter("source", "reentrant")).toThrow("Unknown Parameter")
+    prepared.set(2)
+    reentrant.set(2)
+    expect(tree.revision).toBe(1)
   })
 
   test("reports every listener failure only after the topology commit", () => {
