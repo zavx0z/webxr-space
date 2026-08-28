@@ -197,7 +197,7 @@ describe("single standard-DOM NodeCanvas production slice", () => {
     expect(manifest.exports["./dom/single-node-canvas"]).toBeUndefined()
     expect(Object.values(manifest.exports)).not.toContain("./dom/single-node-canvas.ts")
     expect(manifest.exports["./graph-canvas"]).toBe("./dom/graph-canvas.ts")
-    expect(manifest.exports["./node-editor"]).toBeUndefined()
+    expect(manifest.exports["./node-editor"]).toBe("./dom/node-editor.ts")
     expect(requirements).toContain("NODES-UI-DOM-SINGLE-NODE-001")
     expect(architecture).toContain("packages/ui/dom/single-node-canvas.ts")
   })

@@ -4,6 +4,22 @@ import type {
   HTMLElement,
   Text,
 } from "@zavx0z/dom"
+import {
+  createLink,
+  linkCss,
+  normalizeLinkDefinition,
+  type LinkController,
+  type LinkEndpoint,
+  type LinkSegmentRefs,
+} from "./link.ts"
+import {
+  createNode,
+  nodeCss,
+  normalizeNodeDefinition,
+  type NodeController,
+  type NodeDefinition,
+} from "./node.ts"
+import type {SocketKind} from "./socket.ts"
 
 export type GraphCanvasScene = Readonly<{
   translateX: number
@@ -33,13 +49,14 @@ export type GraphCanvasLink = Readonly<{
   id: string
   title: string
   selected: boolean
+  kind?: SocketKind
+  from?: LinkEndpoint
+  to?: LinkEndpoint
+  disabled?: boolean
   segments: readonly GraphCanvasLinkSegment[]
 }>
 
-export type GraphCanvasNode = Readonly<{
-  id: string
-  label: string
-  title: string
+export type GraphCanvasNode = NodeDefinition & Readonly<{
   x: number
   y: number
   width: number
@@ -63,19 +80,14 @@ export type GraphCanvasFrameRefs = Readonly<{
   labelText: Text
 }>
 
-export type GraphCanvasLinkSegmentRefs = Readonly<{
-  element: HTMLDivElement
-}>
+export type GraphCanvasLinkSegmentRefs = LinkSegmentRefs
 
 export type GraphCanvasLinkRefs = Readonly<{
   element: HTMLDivElement
   segmentRefs(index: number): GraphCanvasLinkSegmentRefs | null
 }>
 
-export type GraphCanvasNodeRefs = Readonly<{
-  element: HTMLElement
-  text: Text
-}>
+export type GraphCanvasNodeRefs = NodeController["refs"]
 
 export type GraphCanvasRefs = Readonly<{
   root: HTMLElement
@@ -96,10 +108,7 @@ export type GraphCanvasController = Readonly<{
   dispose(): void
 }>
 
-type LinkRecord = {
-  refs: GraphCanvasLinkRefs
-  segments: GraphCanvasLinkSegmentRefs[]
-}
+type LinkRecord = {controller: LinkController; refs: GraphCanvasLinkRefs}
 
 const defaultFrames = Object.freeze([
   Object.freeze({
@@ -180,7 +189,7 @@ export const graphCanvasDefaultProps: GraphCanvasProps = Object.freeze({
   nodes: defaultNodes,
 })
 
-export const graphCanvasCss = String.raw`
+export const graphCanvasCss = [nodeCss, linkCss, String.raw`
 .graph-canvas {
   box-sizing: border-box;
   display: flex;
@@ -256,36 +265,8 @@ export const graphCanvasCss = String.raw`
   width: 0;
   height: 0;
 }
-
-.graph-canvas__link-segment {
-  box-sizing: border-box;
-  position: absolute;
-  display: block;
-  background: #6f8090;
-}
-
-.graph-canvas__link[aria-selected="true"] .graph-canvas__link-segment {
-  background: #7edcec;
-}
-
-.graph-canvas__node {
-  box-sizing: border-box;
-  position: absolute;
-  display: block;
-  padding: 8px;
-  border: 1px solid #111111;
-  border-radius: 6px;
-  background: #303030;
-  color: #e0e0e0;
-  font-size: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.32);
-}
-
-.graph-canvas__node[aria-selected="true"] {
-  border-color: #2d6880;
-  box-shadow: 0 2px 10px rgba(45, 104, 128, 0.56);
-}
-`
+.graph-canvas__node { position: absolute; }
+`] .join("\n")
 
 export function createGraphCanvas(
   document: Document,
@@ -298,7 +279,7 @@ export function createGraphCanvas(
   const scene = document.createElement("div")
   const frameRecords = new Map<string, GraphCanvasFrameRefs>()
   const linkRecords = new Map<string, LinkRecord>()
-  const nodeRecords = new Map<string, GraphCanvasNodeRefs>()
+  const nodeRecords = new Map<string, NodeController>()
   let currentProps = normalizeProps(initialProps)
   let disposed = false
 
@@ -323,10 +304,13 @@ export function createGraphCanvas(
       syncAttribute(viewport, "aria-label", next.title)
       syncAttribute(scene, "style", sceneStyle(next.scene))
 
-      reconcileFrames(document, frameRecords, next.frames)
-      reconcileLinks(document, linkRecords, next.links)
-      reconcileNodes(document, nodeRecords, next.nodes)
-      reorderScene(scene, [
+      const framesChanged = next.frames !== currentProps.frames || frameRecords.size !== next.frames.length
+      const linksChanged = next.links !== currentProps.links || linkRecords.size !== next.links.length
+      const nodesChanged = next.nodes !== currentProps.nodes || nodeRecords.size !== next.nodes.length
+      if (framesChanged) reconcileFrames(document, frameRecords, next.frames)
+      if (linksChanged) reconcileLinks(document, linkRecords, next.links)
+      if (nodesChanged) reconcileNodes(document, nodeRecords, next.nodes)
+      if (framesChanged || linksChanged || nodesChanged) reorderScene(scene, [
         ...next.frames.map(({id}) => frameRecords.get(id)!.element),
         ...next.links.map(({id}) => linkRecords.get(id)!.refs.element),
         ...next.nodes.map(({id}) => nodeRecords.get(id)!.element),
@@ -342,13 +326,22 @@ export function createGraphCanvas(
     get props() { return currentProps },
     frameRefs(id) { return frameRecords.get(String(id)) ?? null },
     linkRefs(id) { return linkRecords.get(String(id))?.refs ?? null },
-    nodeRefs(id) { return nodeRecords.get(String(id)) ?? null },
+    nodeRefs(id) { return nodeRecords.get(String(id))?.refs ?? null },
     update(props) {
       if (disposed) throw new Error("GraphCanvas controller is disposed")
-      apply(normalizeProps(props))
+      const next = normalizeProps(props)
+      apply(Object.freeze({
+        ...next,
+        frames: props.frames === currentProps.frames ? currentProps.frames : next.frames,
+        links: props.links === currentProps.links ? currentProps.links : next.links,
+        nodes: props.nodes === currentProps.nodes ? currentProps.nodes : next.nodes,
+      }))
     },
     dispose() {
+      if (disposed) return
       disposed = true
+      for (const record of linkRecords.values()) record.controller.dispose()
+      for (const node of nodeRecords.values()) node.dispose()
     },
   })
   apply(currentProps)
@@ -387,79 +380,41 @@ function reconcileLinks(
   records: Map<string, LinkRecord>,
   links: readonly GraphCanvasLink[],
 ): void {
-  removeMissing(records, new Set(links.map(({id}) => id)), ({refs}) => refs.element.remove())
+  removeMissing(records, new Set(links.map(({id}) => id)), ({controller}) => {
+    controller.element.remove()
+    controller.dispose()
+  })
   for (const link of links) {
     let record = records.get(link.id)
     if (!record) {
-      record = createLinkRecord(document)
+      const controller = createLink(document, link)
+      const refs: GraphCanvasLinkRefs = Object.freeze({
+        element: controller.element,
+        segmentRefs(index) { return controller.refs.segment(index) },
+      })
+      record = {controller, refs}
       records.set(link.id, record)
-    }
-    syncSelectable(record.refs.element, "data-link-id", link.id, link.title, link.selected)
-    reconcileSegments(document, record, link)
-  }
-}
-
-function createLinkRecord(document: Document): LinkRecord {
-  const element = document.createElement("div")
-  const segments: GraphCanvasLinkSegmentRefs[] = []
-  element.className = "graph-canvas__link"
-  element.setAttribute("role", "option")
-  element.tabIndex = 0
-  const refs: GraphCanvasLinkRefs = Object.freeze({
-    element,
-    segmentRefs(index) {
-      return Number.isInteger(index) && index >= 0 ? segments[index] ?? null : null
-    },
-  })
-  return {refs, segments}
-}
-
-function reconcileSegments(
-  document: Document,
-  record: LinkRecord,
-  link: GraphCanvasLink,
-): void {
-  while (record.segments.length > link.segments.length) {
-    record.segments.pop()!.element.remove()
-  }
-  for (const [index, segment] of link.segments.entries()) {
-    let refs = record.segments[index]
-    if (!refs) {
-      const element = document.createElement("div")
-      element.setAttribute("aria-hidden", "true")
-      refs = Object.freeze({element})
-      record.segments.push(refs)
-      record.refs.element.appendChild(element)
-    }
-    const orientation = segment.y1 === segment.y2 ? "horizontal" : "vertical"
-    syncAttribute(refs.element, "class", `graph-canvas__link-segment graph-canvas__link-segment--${orientation}`)
-    syncAttribute(refs.element, "data-link-id", link.id)
-    syncAttribute(refs.element, "data-segment-index", String(index))
-    syncAttribute(refs.element, "style", segmentStyle(segment))
+    } else record.controller.update(link)
   }
 }
 
 function reconcileNodes(
   document: Document,
-  records: Map<string, GraphCanvasNodeRefs>,
+  records: Map<string, NodeController>,
   nodes: readonly GraphCanvasNode[],
 ): void {
-  removeMissing(records, new Set(nodes.map(({id}) => id)), ({element}) => element.remove())
+  removeMissing(records, new Set(nodes.map(({id}) => id)), (controller) => {
+    controller.element.remove()
+    controller.dispose()
+  })
   for (const node of nodes) {
-    let record = records.get(node.id)
-    if (!record) {
-      const element = document.createElement("article")
-      const text = document.createTextNode("")
-      element.className = "graph-canvas__node"
-      element.setAttribute("role", "option")
-      element.tabIndex = 0
-      element.appendChild(text)
-      record = Object.freeze({element, text})
-      records.set(node.id, record)
+    const current = records.get(node.id)
+    if (current) current.update(node)
+    else {
+      const controller = createNode(document, node)
+      controller.element.className = "node-article graph-canvas__node"
+      records.set(node.id, controller)
     }
-    syncText(record.text, node.label)
-    syncSelectable(record.element, "data-node-id", node.id, node.title, node.selected)
-    syncAttribute(record.element, "style", positionedStyle(node))
   }
 }
 
@@ -494,7 +449,8 @@ function normalizeProps(props: GraphCanvasProps): GraphCanvasProps {
   assertPositive(props.scene.scale, "GraphCanvas scene scale")
 
   const frames = normalizePositioned(props.frames, "Frame")
-  const nodes = normalizePositioned(props.nodes, "Node")
+  const nodes = Object.freeze(normalizePositioned(props.nodes, "Node")
+    .map((node) => normalizeNodeDefinition(node) as GraphCanvasNode))
   if (!Array.isArray(props.links)) throw new TypeError("GraphCanvas Links must be an array")
   const linkIds = new Set<string>()
   const links = props.links.map((link, linkIndex) => {
@@ -524,7 +480,7 @@ function normalizeProps(props: GraphCanvasProps): GraphCanvasProps {
       }
       return Object.freeze({...segment})
     })
-    return Object.freeze({...link, segments: Object.freeze(segments)})
+    return normalizeLinkDefinition({...link, segments: Object.freeze(segments)}) as GraphCanvasLink
   })
 
   return Object.freeze({
@@ -582,13 +538,6 @@ function sceneStyle(scene: GraphCanvasScene): string {
 
 function positionedStyle(entry: GraphCanvasFrame | GraphCanvasNode): string {
   return `left: ${entry.x}px; top: ${entry.y}px; width: ${entry.width}px; height: ${entry.height}px`
-}
-
-function segmentStyle(segment: GraphCanvasLinkSegment): string {
-  if (segment.y1 === segment.y2) {
-    return `left: ${Math.min(segment.x1, segment.x2)}px; top: ${segment.y1 - 1}px; width: ${Math.abs(segment.x2 - segment.x1)}px; height: 2px`
-  }
-  return `left: ${segment.x1 - 1}px; top: ${Math.min(segment.y1, segment.y2)}px; width: 2px; height: ${Math.abs(segment.y2 - segment.y1)}px`
 }
 
 function assertString(value: unknown, label: string): asserts value is string {

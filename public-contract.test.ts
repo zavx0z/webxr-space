@@ -21,27 +21,70 @@ import {
   nodeTreeEditorCss,
   nodeTreeEditorDefaultProps,
 } from "@nodes/ui/node-tree-editor"
+import {createNode, nodeCss} from "@nodes/ui/node"
+import {createParameter, parameterCss} from "@nodes/ui/parameter"
+import {createSocket, socketCss} from "@nodes/ui/socket"
+import {createLink, linkCss} from "@nodes/ui/link"
+import {createNodeEditor, nodeEditorCss} from "@nodes/ui/node-editor"
 
 describe("@nodes/ui public standard-DOM contract", () => {
   test("publishes only exact DOM owner subpaths at root", () => {
     expect(Object.keys(root).sort()).toEqual([
+      "NodeCard",
+      "NodeConnection",
+      "NodeSystem",
+      "ParameterRow",
+      "SOCKET_KINDS",
+      "SOCKET_PRESETS",
+      "SOCKET_SHAPES",
+      "SocketPort",
       "createGraphCanvas",
+      "createLink",
+      "createNode",
+      "createNodeEditor",
       "createNodeTreeEditor",
       "createNodeWorkbench",
+      "createParameter",
       "createParameterSocket",
+      "createSocket",
       "graphCanvasCss",
       "graphCanvasDefaultProps",
+      "linkCss",
+      "nodeCss",
+      "nodeEditorCss",
+      "nodeSystemCss",
+      "nodeSystemStyles",
       "nodeTreeEditorCss",
       "nodeTreeEditorDefaultProps",
       "nodeWorkbenchCss",
+      "parameterCss",
       "parameterSocketCss",
       "parameterSocketDefaultProps",
+      "socketCss",
+      "socketPreset",
     ])
   })
 
   test("returns exact @zavx0z/dom identities from every factory", () => {
     const document = createDocument()
     const graph = createGraphCanvas(document)
+    const field = {
+      id: "value",
+      kind: "number" as const,
+      label: "Value",
+      value: 1,
+    }
+    const parameter = createParameter(document, {id: "value", field})
+    const socket = createSocket(document, {
+      id: "value-output",
+      kind: "float",
+      direction: "output",
+      side: "right",
+      label: "Value",
+    })
+    const node = createNode(document, {id: "node", label: "Math", parameters: [{id: "value", field}]})
+    const link = createLink(document, {id: "link", title: "Value", segments: [{x1: 0, y1: 0, x2: 40, y2: 0}]})
+    const editor = createNodeEditor(document, graphCanvasDefaultProps)
     const parameters = createParameterSocket(document)
     const tree = createNodeTreeEditor(document)
     const workbench = createNodeWorkbench(document, {
@@ -56,7 +99,7 @@ describe("@nodes/ui public standard-DOM contract", () => {
       images: [],
       popup: {visible: false, label: "", items: []},
     })
-    for (const controller of [graph, parameters, tree, workbench]) {
+    for (const controller of [graph, parameter, socket, node, link, editor, parameters, tree, workbench]) {
       expect(controller.element).toBeInstanceOf(HTMLElement)
       expect(controller.element.ownerDocument).toBe(document)
     }
@@ -73,7 +116,7 @@ describe("@nodes/ui public standard-DOM contract", () => {
       document,
       root: graph.element,
       viewport: {width: 800, height: 520},
-      styleSheets: [graphCanvasCss, nodeWorkbenchCss, parameterSocketCss, nodeTreeEditorCss],
+      styleSheets: [graphCanvasCss, nodeCss, parameterCss, socketCss, linkCss, nodeEditorCss, nodeWorkbenchCss, parameterSocketCss, nodeTreeEditorCss],
     })
     const frame = renderer.flush()
     expect(frame.hits.get(graph.nodeRefs("process")!.element)).toBeDefined()

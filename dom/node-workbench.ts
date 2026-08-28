@@ -5,10 +5,14 @@ import type {
   Text,
 } from "@zavx0z/dom"
 import {
-  createGraphCanvas,
   type GraphCanvasController,
   type GraphCanvasProps,
 } from "./graph-canvas.ts"
+import {
+  createNodeEditor,
+  nodeEditorCss,
+  type NodeEditorController,
+} from "./node-editor.ts"
 import {
   createNodeTreeEditor,
   type NodeTreeEditorController,
@@ -73,6 +77,7 @@ export type NodeWorkbenchController = Readonly<{
     popupList: HTMLElement
   }>
   tree: NodeTreeEditorController
+  editor: NodeEditorController
   graph: GraphCanvasController
   parameters: ParameterSocketController
   imageRefs(id: string): NodeWorkbenchImageRefs | null
@@ -82,7 +87,7 @@ export type NodeWorkbenchController = Readonly<{
 
 type PopupRecord = {item: HTMLElement; text: Text}
 
-export const nodeWorkbenchCss = String.raw`
+export const nodeWorkbenchCss = [nodeEditorCss, String.raw`
 .node-workbench { box-sizing: border-box; display: flex; flex-direction: column; width: 860px; height: 560px; overflow: hidden; border: 1px solid #111; border-radius: 4px; background: #292929; color: #e0e0e0; }
 .node-workbench__header { box-sizing: border-box; height: 34px; padding: 8px 10px; background: #242424; color: #7edcec; font-size: 12px; }
 .node-workbench__content { box-sizing: border-box; display: flex; flex-direction: row; flex-grow: 1; gap: 10px; min-height: 0; overflow: auto; padding: 10px; }
@@ -97,7 +102,7 @@ export const nodeWorkbenchCss = String.raw`
 .node-workbench__popup-item { box-sizing: border-box; min-height: 26px; padding: 6px 8px; color: #d7d7d7; font-size: 10px; }
 .node-workbench__popup-item[aria-selected="true"] { background: #2d5060; color: #bff5ff; }
 [hidden] { display: none; }
-`
+`] .join("\n")
 
 export function createNodeWorkbench(
   document: Document,
@@ -117,7 +122,8 @@ export function createNodeWorkbench(
   const popupLabelText = document.createTextNode("")
   const popupList = document.createElement("div")
   const tree = createNodeTreeEditor(document, initial.tree)
-  const graph = createGraphCanvas(document, initial.graph)
+  const editor = createNodeEditor(document, initial.graph)
+  const graph = editor.graph
   const parameters = createParameterSocket(document, initial.parameters)
   const images = new Map<string, NodeWorkbenchImageRefs>()
   const popupItems = new Map<string, PopupRecord>()
@@ -131,7 +137,7 @@ export function createNodeWorkbench(
   for (const region of [treeRegion, graphRegion, parameterRegion]) region.className = "node-workbench__region"
   mediaRegion.className = "node-workbench__media"
   treeRegion.appendChild(tree.element)
-  graphRegion.appendChild(graph.element)
+  graphRegion.appendChild(editor.element)
   parameterRegion.appendChild(parameters.element)
   content.append(treeRegion, graphRegion, parameterRegion, mediaRegion)
   popup.className = "node-workbench__popup"
@@ -147,7 +153,7 @@ export function createNodeWorkbench(
     syncText(headerText, next.title)
     root.setAttribute("data-mode", next.mode)
     tree.update(next.tree)
-    graph.update(next.graph)
+    editor.update(next.graph)
     parameters.update(next.parameters)
     syncBooleanAttribute(treeRegion, "hidden", !next.showTree)
     syncBooleanAttribute(graphRegion, "hidden", !next.showGraph)
@@ -175,6 +181,7 @@ export function createNodeWorkbench(
     element: root,
     refs,
     tree,
+    editor,
     graph,
     parameters,
     get props() { return current },
@@ -187,7 +194,7 @@ export function createNodeWorkbench(
       if (disposed) return
       disposed = true
       tree.dispose()
-      graph.dispose()
+      editor.dispose()
       parameters.dispose()
     },
   })

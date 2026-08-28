@@ -11,6 +11,7 @@ const nodeEditor = {id: "node-editor", label: "Редактор нод", route: 
 
 export const NODE_EDITOR_DOM_LEAVES: readonly UiDomLeafMetadata[] = Object.freeze([
   nodeEditorLeaf("scene", "Развёрнутая нода", "default", "Обычная", "Редактор нод · Развёрнутая · Обычная"),
+  nodeEditorLeaf("scene", "Развёрнутая нода", "compiled-general", "Compiled general", "Редактор нод · Compiled general system"),
   nodeEditorLeaf("scene", "Развёрнутая нода", "selected", "Выбранная", "Редактор нод · Развёрнутая · Выбранная"),
   nodeEditorLeaf("scene", "Развёрнутая нода", "rotation-linked", "Rotation linked", "Редактор нод · Shifted Rotation Link"),
   nodeEditorLeaf("scene", "Развёрнутая нода", "translation-unlinked", "Translation unlinked", "Редактор нод · Translation без связи"),

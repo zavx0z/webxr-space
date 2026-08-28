@@ -1,7 +1,7 @@
 {
   "name": "@nodes/ui",
   "version": "0.0.1",
-  "description": "Standard-DOM Node graph, workbench, Parameter/Socket and NodeTree controllers. Built for MetaFor.",
+  "description": "Standard-DOM Node, Parameter, Socket, Link, Frame and NodeEditor controllers. Built for MetaFor.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zavx0z/node.git",
@@ -16,6 +16,12 @@
   "types": "index.ts",
   "exports": {
     ".": "./index.ts",
+    "./node": "./dom/node.ts",
+    "./parameter": "./dom/parameter.ts",
+    "./socket": "./dom/socket.ts",
+    "./link": "./dom/link.ts",
+    "./node-editor": "./dom/node-editor.ts",
+    "./node-system": "./node-system.tsx",
     "./graph-canvas": "./dom/graph-canvas.ts",
     "./node-workbench": "./dom/node-workbench.ts",
     "./parameter-socket": "./dom/parameter-socket.ts",
@@ -25,6 +31,9 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
-    "@zavx0z/dom": "link:@zavx0z/dom"
+    "@zavx0z/dom": "link:@zavx0z/dom",
+    "@zavx0z/react": "link:@zavx0z/react",
+    "@zavx0z/template": "link:@zavx0z/template",
+    "@ui/components": "link:@ui/components"
   }
 }

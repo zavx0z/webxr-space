@@ -10,6 +10,7 @@ import {
   type RenderFrame,
 } from "@zavx0z/renderer"
 import {graphCanvasCss} from "../../dom/graph-canvas.ts"
+import {socketPreset} from "../../dom/socket.ts"
 import {
   createGraphStory,
   graphStoryDefaultProps,
@@ -116,13 +117,17 @@ describe("package-owned GraphCanvas DOM story", () => {
     const selectedLinkSegment = story.linkRefs("process-output")!.segmentRefs(1)!.element
     const input = story.nodeRefs("input")!.element
 
-    expect(background(first, selectedLinkSegment).color).toBe("#7edcec")
+    expect(background(first, selectedLinkSegment).color).toBe(socketPreset("custom").color)
     expect(story.selection).toEqual({kind: "link", id: "process-output"})
     input.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     const selectedNode = renderer.flush()
     expect(story.selection).toEqual({kind: "node", id: "input"})
-    expect(background(selectedNode, selectedLinkSegment).color).toBe("#6f8090")
-    expect(background(selectedNode, input).border.colors.top).toBe("#2d6880")
+    expect(background(selectedNode, selectedLinkSegment).color).toBe(socketPreset("custom").color)
+    expect(background(selectedNode, input).border.colors.top).toBe("#171717")
+    const selectedShadow = selectedNode.displayList.find((candidate): candidate is Extract<DisplayItem, {kind: "rect"}> =>
+      candidate.kind === "rect" && candidate.node === input && candidate.key === "shadow"
+    )
+    expect(selectedShadow?.color).toBe("#5b466b")
 
     story.update({
       ...story.props,
@@ -134,7 +139,9 @@ describe("package-owned GraphCanvas DOM story", () => {
     const x = (inputBox.x + inputBox.width / 2) * transform.scaleX + transform.translateX
     const y = (inputBox.y + inputBox.height / 2) * transform.scaleY + transform.translateY
     expect(transform.scaleX).toBe(1.25)
-    expect(hitTest(transformed, x, y)?.node).toBe(input)
+    const hit = hitTest(transformed, x, y)
+    expect(hit).not.toBeNull()
+    expect(input.contains(hit!.node)).toBeTrue()
     expect(renderer.flush()).toBe(transformed)
     renderer.dispose()
   })

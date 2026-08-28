@@ -2,10 +2,26 @@
 
 **Built for [MetaFor](https://github.com/zavx0z/metafor).**
 
-`@nodes/ui` владеет standard-DOM authoring contract для
-`NodeTree → Frame / Node → Parameter → Socket → Link`. Application root
-соединяет это semantic tree с CPU/WebGPU renderer; UI package не получает
-renderer host или ручной paint surface.
+`@nodes/ui` владеет Blender-подобной компонентной библиотекой
+`NodeTree → Frame / Node → Parameter → Socket → Link`, авторинг которой
+выполняется standard DOM. DOM является substrate для прежнего визуального и
+interaction-контракта, а не разрешением заменить Node Editor набором общих
+прямоугольников, вынести Parameter из Node или изменить принятый Blender-like
+язык. Application root соединяет semantic tree с CPU/WebGPU renderer; UI
+package не получает renderer host или ручной paint surface.
+
+Нормативная поведенческая база миграции — public Node UI из parent revision
+`8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7`: compact coloured Node header,
+collapse, preview, embedded Parameter/Property Fields, typed Socket endpoints,
+Frame/Link/Node paint order, controlled selection, fit/pan/zoom, grid, culling,
+hit semantics и stable keyed identity. Реализация не обязана сохранять прежние
+`UiSurface` signatures, но обязана сохранять наблюдаемое поведение и данные.
+
+Accepted raster
+`../storybook/assets/references/blender-4.5.5-reference.png` является exact
+visual boundary. DOM migration считается завершённой только после
+сопоставимого live Node capture, а не по количеству DOM routes, отсутствию
+retained imports или размеру bundle.
 
 ## Public contract
 
@@ -17,10 +33,18 @@ Public exports ограничены следующими exact subpaths:
 - `@nodes/ui/node-workbench` → `createNodeWorkbench`, CSS и composition types;
 - `@nodes/ui/parameter-socket` → `createParameterSocket`, CSS и control types;
 - `@nodes/ui/node-tree-editor` → `createNodeTreeEditor`, CSS и tree types.
+- `@nodes/ui/node` → Blender-like Node article, typed presets and controller;
+- `@nodes/ui/parameter` → embedded Parameter/Property Field composition;
+- `@nodes/ui/socket` → typed Socket kinds, shapes, colors and controller;
+- `@nodes/ui/link` → typed Link geometry and keyed hit corridors;
+- `@nodes/ui/node-editor` → Graph composition and interaction controller.
+- `@nodes/ui/node-system` → compiled TSX `NodeSystem → NodeCard → ParameterRow
+  → SocketPort / NodeConnection` composition over a structural external-store
+  read contract.
 
-Root `@nodes/ui` экспортирует четыре DOM owner modules. Старые retained
-Node/NodeEditor/Parameter/Link APIs удалены одним breaking change без aliases,
-deprecated names или compatibility re-exports.
+Root `@nodes/ui` экспортирует standard-DOM owner modules. Новые exact leaves
+используют естественные Node names; они не являются aliases к старым Surface
+constructors и не восстанавливают параллельную runtime hierarchy.
 
 Каждая factory принимает exact `@zavx0z/dom` `Document`, возвращает один
 стандартный `HTMLElement`, typed refs, frozen controlled props, `update()` и
@@ -30,14 +54,66 @@ hierarchy.
 
 ### `NODES-UI-DOM-PUBLIC-002` — package boundary
 
-Production DOM owners импортируют только `@zavx0z/dom` и друг друга.
-Engine, generic retained Layout runtime, retained UI controls,
-Elements, Surface/Runtime owners и renderer отсутствуют в production source и
-manifest. Domain `@nodes/layout` не является скрытой UI dependency: real
-computed graph geometry передаётся в `GraphCanvasProps` владельцем domain/app.
+Production DOM owners импортируют `@zavx0z/dom`, exact
+`@ui/components/field` contract и друг друга. Compiled owners дополнительно
+используют только `@zavx0z/react` runtime и build-time
+`@zavx0z/template`; npm React/Fiber отсутствуют. Engine, generic retained Layout
+runtime, Elements, Surface/Runtime owners и renderer отсутствуют в production
+source и manifest. Domain `@nodes/layout` не является скрытой UI dependency:
+real computed graph geometry передаётся владельцем domain/app.
+
+Удаление `@ui/elements` или Surface runtime не разрешает удалить возможности,
+которыми они ранее владели. Поведение переносится на DOM/CSS/events до удаления
+старого implementation path.
 
 Storybook files являются dev-only consumers и не входят в exports или
 production dependency graph.
+
+### `NODES-UI-COMPILED-001` — canonical store projection
+
+`NodeSystem` принимает стабильные `subscribe()` / `getSnapshot()` из
+`createNodeTreeExternalStore()` и читает их через `useSyncExternalStore`.
+Компоненты не копируют NodeTree, Parameter values, topology или revision в
+локальный store. Запись Parameter является callback boundary; canonical
+adapter вызывает `NodeTreeEditor.setParameterValue()` с текущей revision.
+
+Node, Parameter, Socket и Link materialize-ятся keyed по canonical id. Value и
+topology commits сохраняют identity каждого surviving semantic element.
+Произвольное количество Parameters/Sockets компонуется без slot limit;
+boolean, number и string имеют native controlled inputs, а составное JSON
+value остаётся read-only canonical representation, не string Store.
+
+Каждый compiled public component имеет один `style` prop. Owner defaults
+создаются class-free `defineStyles`, caller override идёт последним; `class`,
+`className` и `sx` не являются public styling paths.
+
+### `NODES-UI-COMPILED-PERF-001` — 1k / 10k interaction budget
+
+Reproducible gate запускается `bun run bench:node-system` на сценах 1 000 и
+10 000 canonical Nodes. Каждый Node имеет четыре Parameters (vector source,
+number, boolean, vector result), два typed Sockets и участвует в ordered Link
+chain. Viewport `850 × 500` materialize-ит шесть Nodes; culling является pure
+projection над snapshot и не хранит второй tree/index.
+
+Budgets выводятся из 90 Hz (`11.111 ms`) и 60 Hz (`16.667 ms`):
+
+1. visible Parameter commit p95, offscreen commit/renderer/backend и topology
+   UI publication ≤ один 90 Hz frame; immutable external-store projection ≤
+   один 60 Hz frame и отдельно видна внутри total topology commit;
+2. visible renderer/backend p95 и topology renderer ≤ один 60 Hz frame;
+3. total Editor `addNode` ≤ один 60 Hz frame на 1k и два frame на 10k;
+4. cold component mount, initial CPU renderer и WebGPU backend preparation ≤
+   восемь 60 Hz frames каждый;
+5. 20 warmed visible samples определяют p50/p95; один случайный fast sample не
+   является evidence и не поднимает budget. Три value и один additive topology
+   warm-up выполняются до измерений и не входят в reported samples.
+
+Acceptance также требует: ≤3 renders visible value; 0 renders offscreen value;
+0 root renders culled topology; 0 DOM/state mutations offscreen/topology;
+surviving Node/Input identity; exact renderer frame reuse; WebGPU backend
+`rectPlanReused` с `rectPreparedItems=0`; default automatic safe Rect instancing
+без manual backend hints. Benchmark завершает process non-zero при любом
+budget/correctness failure.
 
 ## GraphCanvas
 
@@ -63,8 +139,53 @@ Frame, Link and Node IDs unique внутри entity family. Их Element/Text id
 `(link id, segment index)`. Removed key detach-ится; повторное добавление
 создаёт новую identity.
 
-Selection отражается только controlled `aria-selected`; production controller
-не устанавливает listeners и не создаёт события.
+GraphCanvas является keyed paint owner. Он materializes production Node и Link
+controllers, а не label-only substitutes. Selection отражается controlled
+`aria-selected`; interaction listeners принадлежат exact NodeEditor owner.
+
+## Node
+
+### `NODES-UI-DOM-NODE-001` — Blender-like article
+
+`createNode()` возвращает stable semantic `article` с compact 24px coloured
+header, controlled disclosure, optional preview toggle/panel, embedded
+Properties и Parameters, loose typed Sockets и symmetrical selection shadow.
+Properties используют exact `createField()`; Parameter сохраняет один Field и
+не дублирует value/control implementation. Collapse скрывает body, сохраняя
+Node, Field, Parameter и Socket identities.
+
+Public socket inventory сохраняет 19 kinds и 8 shapes parent contract. Kind
+задаёт color/shape preset, а `side` и capability `direction` остаются
+независимыми. Socket является standard button endpoint с exact Node/Socket ids.
+
+## Parameter
+
+### `NODES-UI-DOM-PARAMETER-002` — exact shared Field
+
+`createParameter()` принимает `FieldDefinition` из `@ui/components/field` и
+встраивает exact `createField()` controller между максимум одним левым и одним
+правым Socket. Color, vector, rotation, matrix, reference, collection и path не
+сериализуются в строковый substitute. Connected state скрывает только editor,
+сохраняя label, Field controller и endpoint identities.
+
+## Link
+
+### `NODES-UI-DOM-LINK-001` — route and hit identity
+
+`createLink()` принимает typed Socket kind, optional exact endpoints и ordered
+axis-aligned route segments. Segment visuals и 16px hit corridors имеют stable
+identity `(link id, segment index)`. Kind color совпадает с Socket preset;
+selected Link остаётся последним среди Links, но перед Nodes.
+
+## NodeEditor
+
+### `NODES-UI-DOM-EDITOR-001` — interaction without Surface signatures
+
+`createNodeEditor()` владеет одним GraphCanvas, intrinsic grid, controlled
+Frame/Link/Node selection, fit, wheel pan, anchor-preserving zoom, pointer pan,
+two-pointer pinch, transform-only scene mutation и viewport culling. Standard
+DOM events являются единственным input API. Transform меняет stable scene и
+не пересоздаёт Frame, Link, Node, Parameter, Field или Socket subtrees.
 
 ## ParameterSocket
 
@@ -74,13 +195,15 @@ Selection отражается только controlled `aria-selected`; producti
 сохраняет label/control relation, stable input and select identities, keyed
 options и максимум один Socket на каждой visual side.
 
-Exact standard projections:
+Legacy standalone catalog owner поддерживает standard projections:
 
 - `input[type=text|number|checkbox]`;
 - single `select` с keyed `option` values;
-- string authoring для composite color/vector/rotation/matrix/reference/path.
+- временную string projection только для прежних standalone route descriptors.
 
-Последнее является явной DOM projection, а не копией universal Field DSL.
+Она не является production Node Parameter contract и не может использоваться
+для embedded Node или visual parity. Production Parameter использует exact
+`@ui/components/field` definitions.
 Каждый Parameter отражает `fieldKind`, variant
 `field|input|output|both|connected`, value/checked/options/range metadata,
 visibility, disabled/readOnly and connected state. Connected input скрывает
@@ -147,8 +270,11 @@ public GraphCanvas controller and remains outside package exports.
 
 1. Exact self-imports каждого public subpath compile and build.
 2. Все factories возвращают elements того же `@zavx0z/dom` realm.
-3. CPU renderer smoke подтверждает geometry/hit identity без renderer imports в
-   production package.
-4. Source and manifest scans подтверждают отсутствие retained owners.
-5. Root Node check, package typecheck, Storybook static build and diff check
-   проходят без compatibility files.
+3. CPU renderer smoke подтверждает geometry, transform, culling и hit identity
+   без renderer imports в production package.
+4. Source and manifest scans подтверждают отсутствие retained owners при exact
+   dependency на `@ui/components/field`.
+5. Focused tests доказывают rich Node structure, Field identity, Socket presets,
+   Link corridors, selection, pan/zoom/pinch, grid и keyed reconciliation.
+6. Exact Blender-reference capture остаётся обязательным browser acceptance
+   gate; route count и non-black canvas его не заменяют.
