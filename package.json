@@ -4,20 +4,49 @@
   "description": "DOM and CSS components for the document renderer. Built for MetaFor and reusable in immersive interfaces.",
   "type": "module",
   "private": true,
+  "sideEffects": false,
   "exports": {
-    "./field": "./field.ts",
-    "./code-editor": "./code-editor.ts",
-    "./inspector": "./inspector.ts",
-    "./hud": "./hud.ts",
+    "./button": "./button-component.tsx",
+    "./field": "./field-component.tsx",
+    "./pane": "./pane-component.tsx",
+    "./checkbox": "./checkbox-component.tsx",
+    "./badge": "./badge-component.tsx",
+    "./typography": "./typography-component.tsx",
+    "./text-field": "./text-field-component.tsx",
+    "./control-group": "./control-group-component.tsx",
+    "./number-input": "./number-input-component.tsx",
+    "./integer-input": "./integer-input-component.tsx",
+    "./color-input": "./color-input-component.tsx",
+    "./vector-input": "./vector-input-component.tsx",
+    "./matrix-input": "./matrix-input-component.tsx",
+    "./reference-input": "./reference-input-component.tsx",
+    "./enum-input": "./enum-input-component.tsx",
+    "./collection-input": "./collection-input-component.tsx",
+    "./path-input": "./path-input-component.tsx",
+    "./switcher": "./switcher-component.tsx",
+    "./progress-checkbox": "./progress-checkbox-component.tsx",
+    "./slider-control": "./slider-control-component.tsx",
+    "./divider": "./divider-component.tsx",
+    "./list": "./list-component.tsx",
+    "./table": "./table-component.tsx",
+    "./code-editor": "./code-editor-component.tsx",
+    "./inspector": "./inspector-component.tsx",
+    "./hud": "./hud-component.tsx",
     "./icons": "./icons.ts",
-    "./syntax-theme": "./syntax-theme.ts"
+    "./syntax-theme": "./syntax-theme.ts",
+    "./theme": "./theme.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false --project tsconfig.production.json"
   },
   "dependencies": {
     "@zavx0z/dom": "link:@zavx0z/dom",
-    "@zavx0z/highlighter": "link:@zavx0z/highlighter"
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter",
+    "@zavx0z/react": "link:@zavx0z/react",
+    "@zavx0z/template": "link:@zavx0z/template"
+  },
+  "devDependencies": {
+    "@zavx0z/renderer": "link:@zavx0z/renderer"
   },
   "repository": {
     "type": "git",

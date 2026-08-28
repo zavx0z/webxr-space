@@ -1,5 +1,23 @@
 # Требования production DOM Components и private stories
 
+## `UI-DOM-PRODUCTION-RESTORATION-001` — production API имеет приоритет
+
+Переходный story-only контур ниже больше не определяет production surface.
+Фразы `не требует production factory`, `без production factory`,
+`Production factories запрещены` и эквивалентные ограничения явно
+superseded этим законом. Button, Pane, Badge, Typography, Divider, TextField,
+NumberInput, Checkbox, Switcher, ControlGroup, SliderControl,
+ProgressCheckbox, List, Table, VectorInput, MatrixInput, EnumInput,
+ColorInput, ReferenceInput, CollectionInput и PathInput имеют самостоятельные
+public `createX` DOM controllers и flat CSS owners согласно
+`../requirements.md`.
+
+Private stories могут временно сохранять direct-element proof, пока их
+Storybook adapters переводятся на production imports, но такой proof не
+заменяет production component, не определяет его visual law и не является
+evidence визуального соответствия. Production implementation не импортирует
+private story modules.
+
 ## `UI-DOM-ICONS-001` — document image assets
 
 Exact public leaf `@ui/components/icons` owns immutable SVG data URLs used by

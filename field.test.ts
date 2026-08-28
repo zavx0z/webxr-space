@@ -323,9 +323,10 @@ describe("final production DOM Field", () => {
     for (const forbidden of [
       "@engine/core", "@layout/core", "@ui/elements", "@ui/components",
       "@zavx0z/renderer", ["@zavx0z", "storybook"].join("/"), "UiSurface",
-      "dispatchEvent", "labelStyle", "controlStyle", "sx", "field-stories", "-story.ts",
+      "dispatchEvent", "labelStyle", "controlStyle", "field-stories", "-story.ts",
     ]) expect(source).not.toContain(forbidden)
-    expect(manifest.exports["./field"]).toBe("./field.ts")
+    expect(source).not.toMatch(/\bsx\s*[?:=]/)
+    expect(manifest.exports["./field"]).toBe("./field-component.tsx")
     expect(Object.keys(manifest.exports).some((key) => key.startsWith("./dom/"))).toBeFalse()
     expect(requirements).toContain("UI-DOM-FIELD-001")
     expect(requirements).toContain("text | number | integer")

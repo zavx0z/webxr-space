@@ -247,7 +247,7 @@ describe("DOM-only Inspector", () => {
       expect(source).not.toContain(forbidden)
     }
     expect(source).not.toMatch(/\b(?:x|y|width|height): number\b/)
-    expect(manifest.exports["./inspector"]).toBe("./inspector.ts")
+    expect(manifest.exports["./inspector"]).toBe("./inspector-component.tsx")
     expect(manifest.exports["./dom/inspector"]).toBeUndefined()
     expect(manifest.dependencies["@zavx0z/dom"]).toBe("link:@zavx0z/dom")
     expect(requirements).toContain("UI-DOM-INSPECTOR-001")

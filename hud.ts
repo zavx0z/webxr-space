@@ -5,6 +5,9 @@ import type {
   Node,
   Text,
 } from "@zavx0z/dom"
+import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
+import {projectVisualState, type VisualStateProjection} from "./internal/dom-state.ts"
+
 
 export type HudWindowAction = Readonly<{
   key: string
@@ -165,6 +168,9 @@ export const timelineDefaultProps: TimelineProps = Object.freeze({
   ]),
 })
 
+const hudButtonColors = resolveWidgetColors("toolbarItem")
+const hudSelectedColors = resolveWidgetColors("toolbarItem", {selected: true})
+
 export const hudCss = String.raw`
 .ui-hud-window,
 .ui-hud-frame,
@@ -172,18 +178,18 @@ export const hudCss = String.raw`
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  border: 1px solid #484848;
+  border: 1px solid ${rgba8ToColor(hudButtonColors.outline)};
   border-radius: 6px;
-  background: #181c22;
-  color: #e0e0e0;
+  background: ${rgba8ToColor(uiTheme.spaceNode.navigationBar)};
+  color: ${rgba8ToColor(hudButtonColors.text)};
   overflow: hidden;
 }
 
-.ui-hud-window { width: 360px; min-height: 220px; }
-.ui-hud-frame { width: 320px; min-height: 180px; }
-.ui-timeline { width: 720px; min-height: 180px; }
+.ui-hud-window { width: 320px; min-height: 160px; }
+.ui-hud-frame { width: 300px; min-height: 140px; }
+.ui-timeline { width: 640px; min-height: 140px; }
 
-.ui-hud-window[data-active="true"] { border-color: #7edcec; }
+.ui-hud-window[data-active="true"] { border-color: ${rgba8ToColor(uiTheme.material.editorOutlineActive)}; }
 
 .ui-hud-window__header,
 .ui-hud-frame__header,
@@ -192,10 +198,10 @@ export const hudCss = String.raw`
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 36px;
-  gap: 8px;
-  padding: 6px 10px;
-  background: #20242a;
+  height: 28px;
+  gap: 4px;
+  padding: 3px 6px;
+  background: ${rgba8ToColor(uiTheme.spaceNode.header)};
 }
 
 .ui-hud-window__title,
@@ -208,7 +214,7 @@ export const hudCss = String.raw`
 
 .ui-hud-window__subtitle {
   display: inline;
-  color: #a0a0a0;
+  color: rgb(153 153 153);
   font-size: 10px;
 }
 
@@ -227,32 +233,41 @@ export const hudCss = String.raw`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
-  padding: 3px 8px;
-  border: 1px solid #484848;
-  border-radius: 4px;
-  background: #30343c;
-  color: #e0e0e0;
-  font-size: 11px;
+  height: 22px;
+  padding: 2px 6px;
+  border: 1px solid ${rgba8ToColor(hudButtonColors.outline)};
+  border-radius: 3px;
+  background: ${rgba8ToColor(hudButtonColors.inner)};
+  color: ${rgba8ToColor(hudButtonColors.text)};
+  font-size: 10px;
 }
+.ui-hud-window button[data-ui-state="hover"],
+.ui-hud-frame button[data-ui-state="hover"],
+.ui-timeline button[data-ui-state="hover"] { background: rgb(101 101 101); }
+.ui-hud-window button[data-ui-state="active"],
+.ui-hud-frame button[data-ui-state="active"],
+.ui-timeline button[data-ui-state="active"],
+.ui-hud-window button[data-ui-state="focus"],
+.ui-hud-frame button[data-ui-state="focus"],
+.ui-timeline button[data-ui-state="focus"] { background: ${rgba8ToColor(hudSelectedColors.inner)}; color: ${rgba8ToColor(hudSelectedColors.text)}; }
 
 .ui-hud-window__body,
 .ui-hud-frame__body {
   box-sizing: border-box;
   display: block;
   flex-grow: 1;
-  padding: 12px;
+  padding: 6px;
 }
 
 .ui-hud-window [hidden] { display: none; }
-.ui-hud-frame[data-edge="left"] { border-left-color: #7edcec; }
-.ui-hud-frame[data-edge="right"] { border-right-color: #7edcec; }
-.ui-hud-frame[data-edge="top"] { border-top-color: #7edcec; }
-.ui-hud-frame[data-edge="bottom"] { border-bottom-color: #7edcec; }
+.ui-hud-frame[data-edge="left"] { border-left-color: ${rgba8ToColor(hudSelectedColors.inner)}; }
+.ui-hud-frame[data-edge="right"] { border-right-color: ${rgba8ToColor(hudSelectedColors.inner)}; }
+.ui-hud-frame[data-edge="top"] { border-top-color: ${rgba8ToColor(hudSelectedColors.inner)}; }
+.ui-hud-frame[data-edge="bottom"] { border-bottom-color: ${rgba8ToColor(hudSelectedColors.inner)}; }
 
 .ui-timeline__current {
   display: inline;
-  color: #7edcec;
+  color: ${rgba8ToColor(hudSelectedColors.text)};
   font-size: 11px;
 }
 
@@ -261,8 +276,8 @@ export const hudCss = String.raw`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  gap: 4px;
-  padding: 8px;
+  gap: 2px;
+  padding: 4px;
   overflow-y: auto;
 }
 
@@ -270,13 +285,13 @@ export const hudCss = String.raw`
   display: flex;
   flex-direction: row;
   align-items: center;
-  min-height: 28px;
-  gap: 8px;
+  min-height: 24px;
+  gap: 4px;
 }
 
 .ui-timeline__track-label {
   display: inline;
-  width: 90px;
+  width: 80px;
   font-size: 11px;
 }
 
@@ -284,17 +299,17 @@ export const hudCss = String.raw`
   display: flex;
   flex-direction: row;
   flex-grow: 1;
-  gap: 6px;
+  gap: 3px;
 }
 
 .ui-timeline__marker {
   display: block;
-  padding: 3px 6px;
-  border-radius: 3px;
-  background: #30343c;
+  padding: 2px 4px;
+  border-radius: 2px;
+  background: ${rgba8ToColor(hudButtonColors.inner)};
 }
 
-.ui-timeline__marker[aria-current="true"] { background: #2d6880; }
+.ui-timeline__marker[aria-current="true"] { background: ${rgba8ToColor(hudSelectedColors.inner)}; color: ${rgba8ToColor(hudSelectedColors.text)}; }
 `
 
 type KeyedButtonProps = Readonly<{
@@ -306,6 +321,7 @@ type KeyedButtonProps = Readonly<{
 type ButtonEntry = {
   button: HTMLButtonElement
   text: Text
+  state: VisualStateProjection
 }
 
 type TimelineMarkerEntry = {
@@ -359,6 +375,7 @@ export function createHudWindow(
   const actionButtons = new Map<string, HTMLButtonElement>()
   let currentProps = hudWindowDefaultProps
   let disposed = false
+  const minimizeState = projectVisualState(minimizeButton, () => minimizeButton.disabled)
 
   const update = (props: HudWindowProps): void => {
     if (disposed) throw new Error("HudWindow controller is disposed")
@@ -372,6 +389,7 @@ export function createHudWindow(
     if (minimizeText.data !== minimizeLabel) minimizeText.data = minimizeLabel
     if (minimizeButton.title !== minimizeLabel) minimizeButton.title = minimizeLabel
     minimizeButton.setAttribute("aria-expanded", String(!next.minimized))
+    minimizeState.sync()
     syncBooleanAttribute(body, "hidden", next.minimized)
     reconcileButtons(document, actionNav, entries, actionButtons, next.actions, "action")
     currentProps = next
@@ -393,7 +411,12 @@ export function createHudWindow(
     refs,
     get props() { return currentProps },
     update,
-    dispose() { disposed = true },
+    dispose() {
+      if (disposed) return
+      disposed = true
+      minimizeState.dispose()
+      disposeButtonEntries(entries)
+    },
   })
   update(initialProps)
   return controller
@@ -448,7 +471,11 @@ export function createHudFrame(
     refs,
     get props() { return currentProps },
     update,
-    dispose() { disposed = true },
+    dispose() {
+      if (disposed) return
+      disposed = true
+      disposeButtonEntries(entries)
+    },
   })
   update(initialProps)
   return controller
@@ -493,6 +520,7 @@ export function createTimeline(
   const markerTexts = new Map<string, Text>()
   let currentProps = timelineDefaultProps
   let disposed = false
+  const transportStates = [previousButton, playButton, nextButton].map((button) => projectVisualState(button, () => button.disabled))
 
   const update = (props: TimelineProps): void => {
     if (disposed) throw new Error("Timeline controller is disposed")
@@ -507,6 +535,7 @@ export function createTimeline(
     const playLabel = next.playing ? "Pause" : "Play"
     if (playText.data !== playLabel) playText.data = playLabel
     if (playButton.title !== playLabel) playButton.title = playLabel
+    for (const state of transportStates) state.sync()
     reconcileTracks(
       document,
       tracksList,
@@ -543,7 +572,11 @@ export function createTimeline(
     refs,
     get props() { return currentProps },
     update,
-    dispose() { disposed = true },
+    dispose() {
+      if (disposed) return
+      disposed = true
+      for (const state of transportStates) state.dispose()
+    },
   })
   update(initialProps)
   return controller
@@ -568,6 +601,7 @@ function reconcileButtons(
   const retained = new Set(props.map(({key}) => key))
   for (const key of entries.keys()) {
     if (retained.has(key)) continue
+    entries.get(key)?.state.dispose()
     entries.delete(key)
     refs.delete(key)
   }
@@ -578,16 +612,23 @@ function reconcileButtons(
       const button = createButton(document, item.label)
       const text = button.firstChild as Text
       button.setAttribute(`data-${owner}-key`, item.key)
-      entry = {button, text}
+      const state = projectVisualState(button, () => button.disabled)
+      entry = {button, text, state}
       entries.set(item.key, entry)
       refs.set(item.key, button)
     }
     if (entry.text.data !== item.label) entry.text.data = item.label
     if (entry.button.title !== item.label) entry.button.title = item.label
     if (entry.button.disabled !== item.disabled) entry.button.disabled = item.disabled
+    entry.state.sync()
     ordered.push(entry.button)
   }
   reconcileChildren(parent, ordered)
+}
+
+function disposeButtonEntries(entries: Map<string, ButtonEntry>): void {
+  for (const entry of entries.values()) entry.state.dispose()
+  entries.clear()
 }
 
 function reconcileTracks(

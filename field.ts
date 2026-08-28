@@ -13,6 +13,8 @@ import type {
   Node,
   Text,
 } from "@zavx0z/dom"
+import {projectVisualState, type VisualStateProjection} from "./internal/dom-state.ts"
+import {resolveWidgetColors, rgba8ToColor} from "./theme.ts"
 
 export const FIELD_KINDS = Object.freeze([
   "text",
@@ -51,7 +53,6 @@ export type FieldBase = Readonly<{
   description?: string
   disabled?: boolean
   readOnly?: boolean
-  className?: string
 }>
 
 export type TextFieldDefinition = FieldBase & Readonly<{
@@ -195,6 +196,10 @@ export type FieldController = Readonly<{
   dispose(): void
 }>
 
+const regularFieldColors = resolveWidgetColors("regular")
+const textFieldColors = resolveWidgetColors("text")
+const selectedFieldColors = resolveWidgetColors("regular", {selected: true})
+
 export const fieldCss = String.raw`
 .ui-field {
   box-sizing: border-box;
@@ -203,10 +208,10 @@ export const fieldCss = String.raw`
   align-items: flex-start;
   width: 100%;
   min-width: 0;
-  min-height: 32px;
-  gap: 8px;
-  padding: 2px 4px;
-  color: #e0e0e0;
+  min-height: 28px;
+  gap: 4px;
+  padding: 0;
+  color: ${rgba8ToColor(regularFieldColors.text)};
 }
 
 .ui-field__label {
@@ -216,7 +221,7 @@ export const fieldCss = String.raw`
   width: 40%;
   min-width: 0;
   height: 28px;
-  color: #e0e0e0;
+  color: ${rgba8ToColor(regularFieldColors.text)};
   font-size: 12px;
 }
 
@@ -226,11 +231,11 @@ export const fieldCss = String.raw`
   box-sizing: border-box;
   min-width: 0;
   min-height: 28px;
-  padding: 4px 8px;
-  border: 1px solid #161616;
+  padding: 3px 7px;
+  border: 1px solid ${rgba8ToColor(regularFieldColors.outline)};
   border-radius: 4px;
-  background: #242424;
-  color: #e0e0e0;
+  background: ${rgba8ToColor(regularFieldColors.inner)};
+  color: ${rgba8ToColor(regularFieldColors.text)};
   font-size: 12px;
 }
 
@@ -247,7 +252,7 @@ export const fieldCss = String.raw`
   flex-direction: column;
   min-width: 0;
   flex-grow: 1;
-  gap: 4px;
+  gap: 2px;
 }
 
 .ui-field__row,
@@ -260,14 +265,14 @@ export const fieldCss = String.raw`
   flex-direction: row;
   align-items: center;
   min-width: 0;
-  gap: 4px;
+  gap: 0;
 }
 
 .ui-field__cell { flex-grow: 1; }
 .ui-field__cell-label {
   display: inline;
   width: 18px;
-  color: #b0b0b0;
+  color: rgb(153 153 153);
   font-size: 11px;
   text-align: center;
 }
@@ -279,14 +284,14 @@ export const fieldCss = String.raw`
   flex-grow: 0;
   padding: 0;
   border-radius: 2px;
-  color: #7edcec;
+  color: ${rgba8ToColor(selectedFieldColors.inner)};
 }
 .ui-field__button {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 28px;
-  background: #3d3d3d;
+  background: ${rgba8ToColor(regularFieldColors.inner)};
 }
 .ui-field__button--primary { flex-grow: 1; justify-content: flex-start; }
 .ui-field__list {
@@ -302,7 +307,7 @@ export const fieldCss = String.raw`
   overflow-y: auto;
   border: 1px solid #161616;
   border-radius: 4px;
-  background: #242424;
+  background: ${rgba8ToColor(textFieldColors.inner)};
 }
 .ui-field__item { display: block; min-height: 24px; }
 .ui-field__item-button {
@@ -313,18 +318,25 @@ export const fieldCss = String.raw`
   border-color: transparent;
   background: transparent;
 }
-.ui-field__item-button[aria-selected="true"] { background: #2d6880; }
+.ui-field__item-button[aria-selected="true"] { background: ${rgba8ToColor(selectedFieldColors.inner)}; color: ${rgba8ToColor(selectedFieldColors.text)}; }
 .ui-field__empty {
   display: block;
   min-height: 24px;
   padding: 4px 8px;
-  color: #b0b0b0;
+  color: rgb(153 153 153);
   font-size: 11px;
 }
 .ui-field__control[readonly],
 .ui-field__input[readonly],
 .ui-field__control[aria-readonly="true"],
-.ui-field__group[aria-readonly="true"] { background: #303030; color: #b0b0b0; }
+.ui-field__group[aria-readonly="true"] { background: rgb(48 48 48); color: rgb(153 153 153); }
+.ui-field input[data-ui-state="hover"],
+.ui-field select[data-ui-state="hover"],
+.ui-field button[data-ui-state="hover"] { background: rgb(101 101 101); }
+.ui-field input[data-ui-state="focus"],
+.ui-field select[data-ui-state="focus"],
+.ui-field button[data-ui-state="focus"],
+.ui-field button[data-ui-state="active"] { border-color: rgb(113 168 255); background: rgb(34 34 34); }
 .ui-field__control[disabled],
 .ui-field__input[disabled],
 .ui-field__button[disabled],
@@ -373,7 +385,7 @@ const defaultAxes = Object.freeze(["X", "Y", "Z", "W"] as const)
 let nextGeneratedFieldId = 1
 
 export function createField(document: Document, initialDefinition: FieldDefinition): FieldController {
-  const initial = normalizeDefinition(initialDefinition)
+  const initial = normalizeFieldDefinition(initialDefinition)
   const root = document.createElement("div")
   const label = document.createElement("label")
   const labelText = document.createTextNode("")
@@ -395,10 +407,10 @@ export function createField(document: Document, initialDefinition: FieldDefiniti
 
   const update = (nextDefinition: FieldDefinition): void => {
     if (disposed) throw new Error("Field controller is disposed")
-    const next = normalizeDefinition(nextDefinition)
+    const next = normalizeFieldDefinition(nextDefinition)
     if (next.id !== fieldId) throw new Error(`Field id cannot change: ${fieldId} -> ${next.id}`)
     if (next.kind !== fieldKind) throw new Error(`Field kind cannot change: ${fieldKind} -> ${next.kind}`)
-    root.className = next.className === undefined ? "ui-field" : `ui-field ${next.className}`
+    root.className = "ui-field"
     root.setAttribute("data-field-id", next.id)
     root.setAttribute("data-field-kind", next.kind)
     root.setAttribute("aria-disabled", String(next.disabled === true))
@@ -1027,6 +1039,27 @@ function baseOwner(
     disposeExtra?(): void
   }> = {},
 ): KindOwner {
+  let blocked = false
+  const projections = new Map<HTMLElement, VisualStateProjection>()
+  const syncWithVisualState = (definition: FieldDefinition): FieldDefinition => {
+    const result = sync(definition)
+    blocked = definition.disabled === true || definition.readOnly === true
+    const elements = new Set<HTMLElement>([primary, ...inputs.values(), ...(extra.buttons?.values() ?? [])])
+    for (const [element, projection] of projections) {
+      if (elements.has(element)) continue
+      projection.dispose()
+      projections.delete(element)
+    }
+    for (const element of elements) {
+      let projection = projections.get(element)
+      if (projection === undefined) {
+        projection = projectVisualState(element, () => blocked || element.hasAttribute("disabled"))
+        projections.set(element, projection)
+      }
+      projection.sync()
+    }
+    return result
+  }
   return Object.freeze({
     control,
     primary,
@@ -1034,10 +1067,12 @@ function baseOwner(
     options: extra.options ?? new Map(),
     buttons: extra.buttons ?? new Map(),
     items: extra.items ?? new Map(),
-    sync,
+    sync: syncWithVisualState,
     dispose() {
       for (const listener of [...listeners]) removeOwnedListener(listener)
       listeners.length = 0
+      for (const projection of projections.values()) projection.dispose()
+      projections.clear()
       extra.disposeExtra?.()
     },
   })
@@ -1087,7 +1122,7 @@ function createButton(
   return {element, text}
 }
 
-function normalizeDefinition(definition: FieldDefinition): FieldDefinition {
+export function normalizeFieldDefinition(definition: FieldDefinition): FieldDefinition {
   if (typeof definition !== "object" || definition === null) {
     throw new TypeError("Field definition must be an object")
   }
@@ -1297,15 +1332,12 @@ function normalizeBase(definition: FieldBase): FieldBase {
   if (definition.description !== undefined) assertString(definition.description, "Field description")
   if (definition.disabled !== undefined) assertBoolean(definition.disabled, "Field disabled")
   if (definition.readOnly !== undefined) assertBoolean(definition.readOnly, "Field readOnly")
-  if (definition.className !== undefined) assertString(definition.className, "Field className")
-  const className = definition.className?.trim().replace(/\s+/g, " ")
   return Object.freeze({
     id: definition.id,
     label: definition.label,
     ...optional("description", definition.description),
     disabled: definition.disabled === true,
     readOnly: definition.readOnly === true,
-    ...(className === undefined || className === "" ? {} : {className}),
   })
 }
 

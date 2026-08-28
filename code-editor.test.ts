@@ -182,7 +182,7 @@ describe("production semantic DOM CodeEditor", () => {
       ["@zavx0z", "storybook"].join("/"), "UiSurface", "textarea",
       "clipboard", "selection", "caret", "dispatchEvent", "../code-editor",
     ]) expect(source).not.toContain(forbidden)
-    expect(manifest.exports["./code-editor"]).toBe("./code-editor.ts")
+    expect(manifest.exports["./code-editor"]).toBe("./code-editor-component.tsx")
     expect(Object.keys(manifest.exports).some((key) => key.startsWith("./dom/"))).toBeFalse()
     expect(requirements).toContain("UI-DOM-CODE-EDITOR-001")
     expect(requirements).toContain("caret, selection, clipboard")

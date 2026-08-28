@@ -77,11 +77,11 @@ describe("production CodeEditor Storybook adapter", () => {
     for (const forbidden of ["@engine/core", "@layout/core", "@ui/elements", "../code-editor", "UiSurface", "textarea"]) {
       expect(source).not.toContain(forbidden)
     }
-    expect(entry).toContain('from "@ui/components/code-editor"')
-    expect(entry).toContain("story: createCodeEditorStory(document), css: codeEditorCss")
+    expect(entry).toContain('from "./compiled-code-editor-production-story.tsx"')
+    expect(entry).toContain("return createCompiledCodeEditorProductionStory(document)")
     expect(manifest.exports["./dom/code-editor-story"]).toBeUndefined()
     expect(manifest.exports["./dom/code-editor"]).toBeUndefined()
-    expect(manifest.exports["./code-editor"]).toBe("./code-editor.ts")
+    expect(manifest.exports["./code-editor"]).toBe("./code-editor-component.tsx")
     expect(requirements).toContain("UI-DOM-CODE-EDITOR-STORY-001")
   })
 })

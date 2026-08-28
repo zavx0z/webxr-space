@@ -6,6 +6,7 @@ import type {
   Node,
 } from "@zavx0z/dom"
 
+
 export type InspectorDomContent = string | Node | readonly Node[]
 
 export type InspectorDomCategory = Readonly<{

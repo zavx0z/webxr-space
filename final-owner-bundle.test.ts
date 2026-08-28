@@ -1,0 +1,31 @@
+import {describe, expect, test} from "bun:test"
+import {resolve} from "node:path"
+import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
+
+const componentsRoot = import.meta.dir
+
+describe("final public component bundle", () => {
+  test("tree-shakes every legacy controller and class stylesheet", async () => {
+    const result = await Bun.build({
+      entrypoints: [resolve(componentsRoot, "final-owner-bundle-fixture.ts")],
+      target: "browser",
+      format: "esm",
+      minify: true,
+      external: [
+        "@zavx0z/dom",
+        "@zavx0z/highlighter",
+        "@zavx0z/react",
+        "@zavx0z/template/compiled"
+      ],
+      plugins: [createTemplateJsxBunPlugin({sourceRoots: [componentsRoot]})]
+    })
+    expect(result.success).toBe(true)
+    expect(result.logs).toEqual([])
+    const output = await result.outputs[0]!.text()
+    expect(output).not.toContain(".ui-")
+    expect(output).not.toContain("data-ui-state")
+    expect(output).not.toMatch(/\bcreate(?:Button|Field|Inspector|HudWindow|CodeEditor)\b/u)
+    expect(result.outputs[0]!.size).toBeLessThan(120_000)
+    expect(Bun.gzipSync(new TextEncoder().encode(output)).byteLength).toBeLessThan(30_000)
+  }, 30_000)
+})

@@ -318,7 +318,7 @@ describe("production DOM HUD controllers", () => {
       "hud-stories",
       "-story.ts",
     ]) expect(source).not.toContain(forbidden)
-    expect(components.exports["./hud"]).toBe("./hud.ts")
+    expect(components.exports["./hud"]).toBe("./hud-component.tsx")
     expect(components.exports["./dom/hud"]).toBeUndefined()
     expect(requirements).toContain("UI-DOM-HUD-001")
   })
