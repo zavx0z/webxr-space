@@ -2,8 +2,9 @@ import {Space} from "../scenes/space"
 import {ViewPoint} from "../core/view-point"
 import {Mesh} from "../core/mesh"
 import {InstancedMesh} from "../core/instanced-mesh"
+import {InstancedRoundedRect} from "../core/instanced-rounded-rect"
 import {SkinnedMesh} from "../core/skinned-mesh"
-import {BufferGeometry} from "../core/buffer-geometry"
+import {BufferAttribute, BufferGeometry} from "../core/buffer-geometry"
 import {WireframeInstancedMesh} from "../core/wireframe-instanced-mesh"
 import {ColorPickerMaterial, HolographicMaterial, ImageMaterial, LineBasicMaterial, LineGlowMaterial, MeshBasicMaterial, MeshLambertMaterial, RadialBackdropMaterial, RoundedRectMaterial, TextMaterial, ThinFilmMaterial} from "../materials"
 import {Matrix4, Vector3, Frustum} from "../math"
@@ -24,6 +25,7 @@ import {
   meshBasicShader as meshBasicWGSL,
   radialBackdropShader as radialBackdropShaderCode,
   roundedShader as roundedShaderCode,
+  roundedInstancedShader as roundedInstancedShaderCode,
   textShader as textShaderCode,
 } from "./shaders/ui-shaders"
 import {TEXT_COVER_FACE_STATE, TEXT_STENCIL_BACK_FACE_STATE, TEXT_STENCIL_FACE_STATE} from "./text-stencil"
@@ -60,6 +62,10 @@ import {
   type PresentationClipRange,
 } from "./presentation-clip-upload"
 import {renderItemSupportsPresentationClips} from "./presentation-clip-support"
+import {
+  applyBufferAttributeUploadPlan,
+  planBufferAttributeUpload,
+} from "./buffer-attribute-upload"
 
 if (import.meta.hot) {
   (import.meta.hot.accept as unknown as (dependencies: string[], callback: () => void) => void)([
@@ -74,6 +80,7 @@ if (import.meta.hot) {
     "./shaders/image.wgsl",
     "./shaders/image-external.wgsl",
     "./shaders/rounded.wgsl",
+    "./shaders/rounded-instanced.wgsl",
     "./shaders/color-picker.wgsl",
   ], () => {
     if (typeof location !== "undefined") location.reload()
@@ -100,6 +107,21 @@ interface GeometryBuffers {
   skinWeightBuffer?: GPUBuffer
   instanceMatrixBuffer?: GPUBuffer // для инстансированных мешей
   instanceBuffer?: GPUBuffer // для WireframeInstancedMesh (матрица + параметры материала)
+  roundedRectRecordBuffer?: GPUBuffer
+  roundedRectOrderBuffer?: GPUBuffer
+}
+
+type OptionalGeometryBufferKey = Exclude<keyof GeometryBuffers, "positionBuffer">
+
+interface GeometryAttributeBinding {
+  readonly attribute: BufferAttribute
+  readonly version: number
+}
+
+interface RoundedRectInstanceBindGroupEntry {
+  readonly recordBuffer: GPUBuffer
+  readonly orderBuffer: GPUBuffer
+  readonly bindGroup: GPUBindGroup
 }
 
 interface PreparedRenderLayer {
@@ -150,14 +172,17 @@ export class Renderer {
   private uiImagePipeline: GPURenderPipeline | null = null
   private uiExternalImagePipeline: GPURenderPipeline | null = null
   private uiRoundedPipeline: GPURenderPipeline | null = null
+  private uiInstancedRoundedRectPipeline: GPURenderPipeline | null = null
   private radialBackdropPipeline: GPURenderPipeline | null = null
   private uiRadialBackdropPipeline: GPURenderPipeline | null = null
   private colorPickerPipeline: GPURenderPipeline | null = null
   private uiColorPickerPipeline: GPURenderPipeline | null = null
   private imageBindGroupLayout: GPUBindGroupLayout | null = null
   private externalImageBindGroupLayout: GPUBindGroupLayout | null = null
+  private roundedRectInstanceBindGroupLayout: GPUBindGroupLayout | null = null
   private imageSampler: GPUSampler | null = null
   private imageBindGroupCache: WeakMap<GPUTexture, GPUBindGroup> = new WeakMap()
+  private roundedRectInstanceBindGroupCache = new Map<BufferGeometry, RoundedRectInstanceBindGroupEntry>()
 
   // --- Глобальные ресурсы ---
   private globalUniformBuffer: GPUBuffer | null = null
@@ -178,6 +203,7 @@ export class Renderer {
   private presentationClipRanges: ReadonlyMap<Object3D, PresentationClipRange> = new Map()
 
   private geometryCache: Map<BufferGeometry, GeometryBuffers> = new Map()
+  private geometryAttributeSources: WeakMap<BufferGeometry, Map<string, GeometryAttributeBinding>> = new WeakMap()
   private depthTexture: GPUTexture | null = null
   private depthTextureView: GPUTextureView | null = null
   private multisampleTexture: GPUTexture | null = null
@@ -302,6 +328,21 @@ export class Renderer {
     })
     this.perObjectBindGroupLayout = perObjectBindGroupLayout
 
+    this.roundedRectInstanceBindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {type: "read-only-storage"},
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {type: "read-only-storage"},
+        },
+      ],
+    })
+
     this.createPerObjectResources(INITIAL_RENDERABLE_CAPACITY)
 
     this.imageBindGroupLayout = this.device.createBindGroupLayout({
@@ -345,6 +386,14 @@ export class Renderer {
       bindGroupLayouts: [globalBindGroupLayout, perObjectBindGroupLayout],
     })
 
+    const roundedRectInstancePipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [
+        globalBindGroupLayout,
+        perObjectBindGroupLayout,
+        this.roundedRectInstanceBindGroupLayout,
+      ],
+    })
+
     const imagePipelineLayout = this.device.createPipelineLayout({
       bindGroupLayouts: [globalBindGroupLayout, perObjectBindGroupLayout, this.imageBindGroupLayout],
     })
@@ -383,6 +432,9 @@ export class Renderer {
     })
     const lineShaderModule = this.device.createShaderModule({
       code: lineShaderCode,
+    })
+    const roundedInstancedShaderModule = this.device.createShaderModule({
+      code: roundedInstancedShaderCode,
     })
     const textShaderModule = this.device.createShaderModule({
       code: textShaderCode,
@@ -753,6 +805,32 @@ export class Renderer {
               dstFactor: "one-minus-src-alpha",
               operation: "add",
             },
+          },
+        }],
+      },
+      primitive: {topology: "triangle-list", cullMode: "none"},
+      depthStencil: uiDepthStencil,
+      multisample: {count: this.sampleCount},
+    })
+
+    this.uiInstancedRoundedRectPipeline = await this.device.createRenderPipelineAsync({
+      label: "InstancedRoundedRect.ui",
+      layout: roundedRectInstancePipelineLayout,
+      vertex: {
+        module: roundedInstancedShaderModule,
+        entryPoint: "vs_main",
+        buffers: [
+          {arrayStride: 12, attributes: [{shaderLocation: 0, offset: 0, format: "float32x3"}]},
+        ],
+      },
+      fragment: {
+        module: roundedInstancedShaderModule,
+        entryPoint: "fs_main",
+        targets: [{
+          format: this.presentationFormat,
+          blend: {
+            color: {srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add"},
+            alpha: {srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add"},
           },
         }],
       },
@@ -1289,13 +1367,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       ((item.object as LineSegments).material as LineGlowMaterial).visibilityMode === "silhouette"
 
     const regularObjects = renderList.filter(item =>
-      !(item.object.material as any)?.isGlassMaterial &&
+      !((item.object as {material?: {isGlassMaterial?: boolean}}).material?.isGlassMaterial) &&
       !isUiLayerObject(item.object) &&
       !isOverlayLine(item)
     )
 
     return {
-      glassObjects: renderList.filter(item => (item.object.material as any)?.isGlassMaterial === true),
+      glassObjects: renderList.filter(item =>
+        (item.object as {material?: {isGlassMaterial?: boolean}}).material?.isGlassMaterial === true
+      ),
       // Non-depth-writing silhouettes go first so later relation lines retain
       // visual priority even where their projected paths cross the Torus.
       regularObjects: [
@@ -1334,6 +1414,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.uiExternalImagePipeline &&
       this.roundedPipeline &&
       this.uiRoundedPipeline &&
+      this.uiInstancedRoundedRectPipeline &&
       this.radialBackdropPipeline &&
       this.uiRadialBackdropPipeline &&
       this.colorPickerPipeline &&
@@ -1346,6 +1427,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.perObjectUniformBuffer &&
       this.boneMatricesBuffer &&
       this.perObjectBindGroupLayout &&
+      this.roundedRectInstanceBindGroupLayout &&
       this.perObjectBindGroup &&
       this.perObjectDataCPU &&
       this.boneMatricesDataCPU &&
@@ -1759,6 +1841,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         case "instanced-mesh":
           this.updateInstancedMeshData(item.object as InstancedMesh, item.worldMatrix, offsetFloats)
           break
+        case "instanced-rounded-rect":
+          this.updateInstancedRoundedRectData(item.worldMatrix, offsetFloats)
+          break
         case "instanced-line":
           this.updateInstancedLineData(item.object as WireframeInstancedMesh, item.worldMatrix, offsetFloats)
           break
@@ -1942,6 +2027,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
+  private updateInstancedRoundedRectData(worldMatrix: Matrix4, offsetFloats: number): void {
+    this.perObjectDataCPU!.set(worldMatrix.elements, offsetFloats)
+  }
+
   private updateInstancedLineData(lines: WireframeInstancedMesh, worldMatrix: Matrix4, offsetFloats: number): void {
     if (!lines.visible) return
 
@@ -2066,6 +2155,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         case "instanced-mesh":
           pipeline = this.instancedMeshPipeline
           break
+        case "instanced-rounded-rect":
+          pipeline = this.uiInstancedRoundedRectPipeline
+          break
         case "instanced-line":
           pipeline = this.instancedLinePipeline
           break
@@ -2108,6 +2200,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         case "instanced-mesh":
           this.renderInstancedMesh(passEncoder, item.object as InstancedMesh, renderIndex)
           break
+        case "instanced-rounded-rect":
+          this.renderInstancedRoundedRect(
+            passEncoder,
+            item.object as InstancedRoundedRect,
+            renderIndex,
+          )
+          break
         case "instanced-line":
           this.renderInstancedLines(passEncoder, item.object as WireframeInstancedMesh, renderIndex)
           break
@@ -2139,6 +2238,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   public invalidateGeometry(geometry: BufferGeometry): void {
     const buffers = this.geometryCache.get(geometry)
     if (buffers === undefined) return
+    this.destroyGeometryBuffers(buffers)
+    this.geometryCache.delete(geometry)
+    this.geometryAttributeSources.delete(geometry)
+    this.roundedRectInstanceBindGroupCache.delete(geometry)
+  }
+
+  private destroyGeometryBuffers(buffers: GeometryBuffers): void {
     buffers.positionBuffer.destroy()
     buffers.normalBuffer?.destroy()
     buffers.uvBuffer?.destroy()
@@ -2148,7 +2254,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     buffers.skinWeightBuffer?.destroy()
     buffers.instanceMatrixBuffer?.destroy()
     buffers.instanceBuffer?.destroy()
-    this.geometryCache.delete(geometry)
+    buffers.roundedRectRecordBuffer?.destroy()
+    buffers.roundedRectOrderBuffer?.destroy()
   }
 
   private createAndUploadBuffer(
@@ -2157,12 +2264,210 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   ): GPUBuffer {
     if (!this.device) throw new Error("Device not initialized")
 
+    const capacity = Math.max(4, Math.ceil(typedArray.byteLength / 4) * 4)
     const buffer = this.device.createBuffer({
-      size: (typedArray.byteLength + 3) & ~3,
+      size: capacity,
       usage: usage | GPUBufferUsage.COPY_DST,
     })
-    this.device.queue.writeBuffer(buffer, 0, typedArray as GPUAllowSharedBufferSource)
+    if (typedArray.byteLength > 0) {
+      const sourceBytes = new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength)
+      if (sourceBytes.byteLength === capacity) {
+        this.device.queue.writeBuffer(buffer, 0, sourceBytes)
+      } else {
+        const padded = new Uint8Array(capacity)
+        padded.set(sourceBytes)
+        this.device.queue.writeBuffer(buffer, 0, padded)
+      }
+    }
     return buffer
+  }
+
+  private createAndUploadAttribute(
+    attribute: BufferAttribute,
+    usage: GPUBufferUsageFlags,
+  ): GPUBuffer {
+    if (!this.device) throw new Error("Device not initialized")
+
+    const plan = planBufferAttributeUpload(attribute, 0)
+    const buffer = this.device.createBuffer({
+      size: plan.requiredCapacity,
+      usage: usage | GPUBufferUsage.COPY_DST,
+    })
+    try {
+      applyBufferAttributeUploadPlan(attribute, plan, (byteOffset, source) => {
+        this.device!.queue.writeBuffer(buffer, byteOffset, source)
+      })
+      return buffer
+    } catch (error) {
+      buffer.destroy()
+      throw error
+    }
+  }
+
+  private synchronizeAttributeBuffer(
+    attribute: BufferAttribute,
+    previousBinding: GeometryAttributeBinding | undefined,
+    buffer: GPUBuffer | undefined,
+    usage: GPUBufferUsageFlags,
+  ): GPUBuffer {
+    if (!this.device) throw new Error("Device not initialized")
+    if (!buffer) return this.createAndUploadAttribute(attribute, usage)
+    if (
+      previousBinding?.attribute === attribute
+      && previousBinding.version === attribute.version
+    ) {
+      return buffer
+    }
+
+    const synchronizedVersion = previousBinding?.attribute === attribute
+      ? previousBinding.version
+      : undefined
+    const plan = planBufferAttributeUpload(attribute, buffer.size, synchronizedVersion)
+    if (plan.reallocate) {
+      const replacement = this.device.createBuffer({
+        size: plan.requiredCapacity,
+        usage: usage | GPUBufferUsage.COPY_DST,
+      })
+      try {
+        applyBufferAttributeUploadPlan(attribute, plan, (byteOffset, source) => {
+          this.device!.queue.writeBuffer(replacement, byteOffset, source)
+        })
+      } catch (error) {
+        replacement.destroy()
+        throw error
+      }
+      buffer.destroy()
+      return replacement
+    }
+
+    if (plan.ranges.length > 0) {
+      applyBufferAttributeUploadPlan(attribute, plan, (byteOffset, source) => {
+        this.device!.queue.writeBuffer(buffer, byteOffset, source)
+      })
+    }
+    return buffer
+  }
+
+  private synchronizeOptionalGeometryAttribute(
+    buffers: GeometryBuffers,
+    sources: Map<string, GeometryAttributeBinding>,
+    sourceKey: string,
+    bufferKey: OptionalGeometryBufferKey,
+    attribute: BufferAttribute | undefined,
+    usage: GPUBufferUsageFlags,
+  ): void {
+    const previousBinding = sources.get(sourceKey)
+    const currentBuffer = buffers[bufferKey]
+
+    if (!attribute || attribute.array.length === 0) {
+      if (currentBuffer) {
+        currentBuffer.destroy()
+        delete buffers[bufferKey]
+      }
+      sources.delete(sourceKey)
+      return
+    }
+
+    const synchronizedBuffer = this.synchronizeAttributeBuffer(
+      attribute,
+      previousBinding,
+      currentBuffer,
+      usage,
+    )
+    buffers[bufferKey] = synchronizedBuffer
+    if (
+      previousBinding?.attribute !== attribute
+      || previousBinding.version !== attribute.version
+    ) {
+      sources.set(sourceKey, {attribute, version: attribute.version})
+    }
+  }
+
+  private synchronizeOptionalGeometryAttributes(
+    geometry: BufferGeometry,
+    buffers: GeometryBuffers,
+    sources: Map<string, GeometryAttributeBinding>,
+  ): void {
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "normal",
+      "normalBuffer",
+      geometry.attributes.normal,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "uv",
+      "uvBuffer",
+      geometry.attributes.uv,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "color",
+      "colorBuffer",
+      geometry.attributes.color,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "skinIndex",
+      "skinIndexBuffer",
+      geometry.attributes.skinIndex,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "skinWeight",
+      "skinWeightBuffer",
+      geometry.attributes.skinWeight,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "instanceMatrix",
+      "instanceMatrixBuffer",
+      geometry.attributes.instanceMatrix,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "instanceBuffer",
+      "instanceBuffer",
+      geometry.attributes.instanceBuffer,
+      GPUBufferUsage.VERTEX,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "roundedRectRecords",
+      "roundedRectRecordBuffer",
+      geometry.attributes.roundedRectRecords,
+      GPUBufferUsage.STORAGE,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "roundedRectOrder",
+      "roundedRectOrderBuffer",
+      geometry.attributes.roundedRectOrder,
+      GPUBufferUsage.STORAGE,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "$index",
+      "indexBuffer",
+      geometry.index ?? undefined,
+      GPUBufferUsage.INDEX,
+    )
   }
 
   private updateSceneUniforms(lights: LightItem[], viewMatrix: Matrix4): void {
@@ -2221,133 +2526,50 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   private getOrCreateGeometryBuffers(geometry: BufferGeometry): GeometryBuffers {
     if (this.geometryCache.has(geometry)) {
       const buffers = this.geometryCache.get(geometry)!
-
-      // Проверяем, нужно ли обновить буфер инстансов
+      const sources = this.geometryAttributeSources.get(geometry) ?? new Map<string, GeometryAttributeBinding>()
+      const position = geometry.attributes.position
+      if (!position || position.array.length === 0) {
+        throw new Error("BufferGeometry requires non-empty position data")
+      }
+      const previousPosition = sources.get("position")
+      buffers.positionBuffer = this.synchronizeAttributeBuffer(
+        position,
+        previousPosition,
+        buffers.positionBuffer,
+        GPUBufferUsage.VERTEX,
+      )
       if (
-        geometry.attributes.instanceBuffer &&
-        geometry.attributes.instanceBuffer.needsUpdate &&
-        buffers.instanceBuffer
+        previousPosition?.attribute !== position
+        || previousPosition.version !== position.version
       ) {
-        this.device!.queue.writeBuffer(
-          buffers.instanceBuffer,
-          0,
-          geometry.attributes.instanceBuffer.array as any,
-        )
-        geometry.attributes.instanceBuffer.needsUpdate = false
+        sources.set("position", {attribute: position, version: position.version})
       }
-
-      // Проверяем, нужно ли обновить буфер позиций
-      if (
-        geometry.attributes.position &&
-        geometry.attributes.position.needsUpdate &&
-        buffers.positionBuffer
-      ) {
-        this.device!.queue.writeBuffer(
-          buffers.positionBuffer,
-          0,
-          geometry.attributes.position.array as any,
-        )
-        geometry.attributes.position.needsUpdate = false
-      }
-
-      if (geometry.attributes.uv && geometry.attributes.uv.needsUpdate && buffers.uvBuffer) {
-        this.device!.queue.writeBuffer(
-          buffers.uvBuffer,
-          0,
-          geometry.attributes.uv.array as any,
-        )
-        geometry.attributes.uv.needsUpdate = false
-      }
+      this.synchronizeOptionalGeometryAttributes(geometry, buffers, sources)
+      this.geometryAttributeSources.set(geometry, sources)
 
       return buffers
     }
 
     if (!this.device) throw new Error("Device not initialized")
 
-    const positionBuffer = this.createAndUploadBuffer(
-      geometry.attributes.position!.array as ArrayBufferView,
-      GPUBufferUsage.VERTEX,
-    )
-
-    let normalBuffer: GPUBuffer | undefined
-    if (geometry.attributes.normal) {
-      normalBuffer = this.createAndUploadBuffer(
-        geometry.attributes.normal.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
+    const position = geometry.attributes.position
+    if (!position || position.array.length === 0) {
+      throw new Error("BufferGeometry requires non-empty position data")
     }
-
-    let uvBuffer: GPUBuffer | undefined
-    if (geometry.attributes.uv) {
-      uvBuffer = this.createAndUploadBuffer(
-        geometry.attributes.uv.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    let skinIndexBuffer: GPUBuffer | undefined
-    if (geometry.attributes.skinIndex && geometry.attributes.skinIndex.array.length > 0) {
-      skinIndexBuffer = this.createAndUploadBuffer(
-        geometry.attributes.skinIndex.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    let skinWeightBuffer: GPUBuffer | undefined
-    if (geometry.attributes.skinWeight && geometry.attributes.skinWeight.array.length > 0) {
-      skinWeightBuffer = this.createAndUploadBuffer(
-        geometry.attributes.skinWeight.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    // Для WireframeInstancedMesh создаем буфер для данных инстансов (матрица + параметры материала)
-    let instanceBuffer: GPUBuffer | undefined
-    if (geometry.attributes.instanceBuffer && geometry.attributes.instanceBuffer.array.length > 0) {
-      instanceBuffer = this.createAndUploadBuffer(
-        geometry.attributes.instanceBuffer.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    // Для обратной совместимости: если есть старый атрибут instanceMatrix, создаем из него instanceBuffer
-    let instanceMatrixBuffer: GPUBuffer | undefined
-    if (geometry.attributes.instanceMatrix && geometry.attributes.instanceMatrix.array.length > 0) {
-      instanceMatrixBuffer = this.createAndUploadBuffer(
-        geometry.attributes.instanceMatrix.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    let colorBuffer: GPUBuffer | undefined
-    if (geometry.attributes.color) {
-      colorBuffer = this.createAndUploadBuffer(
-        geometry.attributes.color.array as ArrayBufferView,
-        GPUBufferUsage.VERTEX,
-      )
-    }
-
-    let indexBuffer: GPUBuffer | undefined
-    if (geometry.index) {
-      indexBuffer = this.createAndUploadBuffer(
-        geometry.index.array as ArrayBufferView,
-        GPUBufferUsage.INDEX,
-      )
-    }
-
+    const sources = new Map<string, GeometryAttributeBinding>()
     const buffers: GeometryBuffers = {
-      positionBuffer,
+      positionBuffer: this.createAndUploadAttribute(position, GPUBufferUsage.VERTEX),
     }
-    if (colorBuffer) buffers.colorBuffer = colorBuffer
-    if (normalBuffer) buffers.normalBuffer = normalBuffer
-    if (uvBuffer) buffers.uvBuffer = uvBuffer
-    if (indexBuffer) buffers.indexBuffer = indexBuffer
-    if (skinIndexBuffer) buffers.skinIndexBuffer = skinIndexBuffer
-    if (skinWeightBuffer) buffers.skinWeightBuffer = skinWeightBuffer
-    if (instanceMatrixBuffer) buffers.instanceMatrixBuffer = instanceMatrixBuffer
-    if (instanceBuffer) buffers.instanceBuffer = instanceBuffer
+    sources.set("position", {attribute: position, version: position.version})
+    try {
+      this.synchronizeOptionalGeometryAttributes(geometry, buffers, sources)
+    } catch (error) {
+      this.destroyGeometryBuffers(buffers)
+      throw error
+    }
 
     this.geometryCache.set(geometry, buffers)
+    this.geometryAttributeSources.set(geometry, sources)
     return buffers
   }
 
@@ -2360,6 +2582,40 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     const colorBuffer = this.createAndUploadBuffer(defaultColors, GPUBufferUsage.VERTEX)
     buffers.colorBuffer = colorBuffer
     return colorBuffer
+  }
+
+  private getRoundedRectInstanceBindGroup(
+    geometry: BufferGeometry,
+    buffers: GeometryBuffers,
+  ): GPUBindGroup {
+    if (
+      !this.device
+      || !this.roundedRectInstanceBindGroupLayout
+      || !buffers.roundedRectRecordBuffer
+      || !buffers.roundedRectOrderBuffer
+    ) {
+      throw new Error("InstancedRoundedRect bind group is unavailable")
+    }
+
+    const cached = this.roundedRectInstanceBindGroupCache.get(geometry)
+    if (
+      cached?.recordBuffer === buffers.roundedRectRecordBuffer
+      && cached.orderBuffer === buffers.roundedRectOrderBuffer
+    ) return cached.bindGroup
+
+    const bindGroup = this.device.createBindGroup({
+      layout: this.roundedRectInstanceBindGroupLayout,
+      entries: [
+        {binding: 0, resource: {buffer: buffers.roundedRectRecordBuffer}},
+        {binding: 1, resource: {buffer: buffers.roundedRectOrderBuffer}},
+      ],
+    })
+    this.roundedRectInstanceBindGroupCache.set(geometry, {
+      recordBuffer: buffers.roundedRectRecordBuffer,
+      orderBuffer: buffers.roundedRectOrderBuffer,
+      bindGroup,
+    })
+    return bindGroup
   }
 
   private getImageBindGroup(material: ImageMaterial): GPUBindGroup {
@@ -2491,6 +2747,38 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         passEncoder.draw(mesh.geometry.attributes.position!.count, mesh.count)
       }
     }
+  }
+
+  private renderInstancedRoundedRect(
+    passEncoder: GPURenderPassEncoder | null,
+    batch: InstancedRoundedRect,
+    renderIndex: number,
+  ): void {
+    if (
+      !passEncoder
+      || !this.device
+      || !this.perObjectUniformBuffer
+      || !this.perObjectBindGroup
+      || batch.count === 0
+    ) return
+
+    const dynamicOffset = renderIndex * PER_OBJECT_UNIFORM_SIZE
+    const boneMatricesOffset = renderIndex * BONE_MATRICES_SIZE
+    passEncoder.setBindGroup(1, this.perObjectBindGroup, [dynamicOffset, boneMatricesOffset])
+
+    const buffers = this.getOrCreateGeometryBuffers(batch.geometry)
+    if (!buffers.indexBuffer || !buffers.roundedRectRecordBuffer || !buffers.roundedRectOrderBuffer) {
+      throw new Error("InstancedRoundedRect GPU buffers are incomplete")
+    }
+    passEncoder.setBindGroup(2, this.getRoundedRectInstanceBindGroup(batch.geometry, buffers))
+    passEncoder.setVertexBuffer(0, buffers.positionBuffer)
+    const index = batch.geometry.index
+    if (index === null) throw new Error("InstancedRoundedRect unit quad requires an index")
+    passEncoder.setIndexBuffer(
+      buffers.indexBuffer,
+      index.array instanceof Uint32Array ? "uint32" : "uint16",
+    )
+    passEncoder.drawIndexed(index.count, batch.count, 0, 0, batch.firstInstance)
   }
 
   private renderLines(

@@ -103,6 +103,56 @@ averages widths or silently presents a lossy rounded asymmetric border.
 
 `ColorPickerMaterial` draws wheel, value, alpha, and swatch modes with one texture-free quad on a plane. The wheel uses hue, saturation, and a controlled value. The value strip is the same achromatic `white → black` gradient regardless of hue or saturation. Alpha and swatch modes preserve the controlled HSV color and checker composition; correcting one mode does not change packing or presentation for another.
 
+## Partial attribute uploads and instance storage
+
+`BufferAttribute.addUpdateRange(offset, count)` records changed typed-array
+elements as sorted, coalesced half-open intervals. Invalid, empty, fractional,
+negative, or out-of-bounds intervals fail before dirty state changes. Setting
+`needsUpdate = true` remains the explicit full-buffer path and supersedes all
+partial intervals; `clearUpdateRanges()` acknowledges either form. More than
+64 disjoint intervals promote the attribute to one full upload, bounding
+producer-side interval maintenance and queue submission overhead.
+
+Renderer expands partial intervals only to the enclosing four-byte WebGPU
+words. While the cached GPU capacity is sufficient and the same attribute
+remains attached, it submits only those bounded writes. A new attribute or
+insufficient capacity performs one complete upload; replacement succeeds
+before the old GPU buffer is destroyed. Dirty state clears only after every
+planned queue write succeeds. Each cache binding retains the monotonic
+attribute revision it has consumed. If another binding already acknowledged
+ranges that an older cache missed, that older cache catches up with one complete
+upload rather than applying an incomplete newer interval set.
+
+`InstancedMesh` setters mark only the matrix elements they change. For dynamic
+batch owners, `InstanceLayer` provides fixed-stride opaque record bytes and a
+separate dense `Uint32` order indirection. Physical slots remain stable;
+released slots use a free list and a new generation before reuse, so stale
+handles fail closed. Handles are canonical layer-owned identities: copied or
+foreign `{slot, generation}` values are rejected. `maxCapacity` is a required
+caller bound; eager capacity may start at zero and doubles geometrically without
+crossing it. Allocation and record mutation are amortized O(1); order insertion,
+removal, and movement are O(n) in the shifted interval.
+
+`InstanceLayer` does not interpret record bytes, allocate per-item `Mesh`
+objects, choose a shader, or introduce DOM, UI, Node, and product semantics.
+A renderer adapter owns the concrete record layout, binding kind, draw
+submission, culling, picking, and GPU-visible interpretation.
+
+`RoundedRectInstanceLayer` is the first concrete Engine presentation ABI over
+that generic storage. One layer owns one indexed unit quad, 128-byte records
+and the dense order buffer. `InstancedRoundedRect` is only a retained draw-range
+view over that shared layer, so scalar barriers can split submission without
+duplicating slots or geometry. The packed record contains local rect geometry,
+axis-aligned scale/translation, fill/border RGBA, four radii, four border
+widths, opacity, analytical shadow blur/spread and local Z. Engine performs one
+indexed instanced draw for each view and never allocates a Mesh, geometry or
+material per admitted item.
+
+This pipeline intentionally has no presentation-clip binding. A renderer
+adapter may admit only items whose exact paint and clipping result it has
+proved equivalent; every other item remains on its existing scalar owner.
+`RenderFrame.hits` and consumer identity never enter the packed GPU record.
+
 ## Plain and skinned meshes
 
 Each visible object submits only its own model and material data. A plain object does not create, clear, or upload bone matrices.

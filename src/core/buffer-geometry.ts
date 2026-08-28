@@ -1,48 +1,8 @@
 import { Vector3, Sphere } from "../math"
+import {BufferAttribute} from "./buffer-attribute"
 
-/**
- * Типы TypedArray, которые можно использовать в BufferAttribute.
- */
-export type TypedArray = Float32Array | Uint32Array | Uint16Array | Uint8Array | Int32Array | Int16Array | Int8Array
-
-/**
- * Хранит сырые данные для одного атрибута геометрии.
- * Обеспечивает связь между JS-массивами и буферами GPU.
- */
-export class BufferAttribute {
-  /**
-   * Прямая ссылка на типизированный массив данных.
-   * Изменение значений здесь требует установки флага обновления (в будущих версиях).
-   */
-
-  public array: TypedArray
-
-  /**
-   * Количество компонентов на одну вершину (stride).
-   * Обычно: 3 (XYZ), 2 (UV), 4 (Tangent/Color).
-   */
-  public itemSize: number
-
-  /**
-   * Общее число вершин в атрибуте (read-only derived).
-   */
-  public count: number
-
-  /**
-   * Флаг необходимости обновления данных на GPU.
-   */
-  public needsUpdate: boolean = false
-
-  /**
-   * @param array - Данные. Передаются по ссылке (не клонируются).
-   * @param itemSize - Компонентность. Ограничение: `[1..4]`.
-   */
-  constructor(array: TypedArray, itemSize: number) {
-    this.array = array
-    this.itemSize = itemSize
-    this.count = array.length / itemSize
-  }
-}
+export {BufferAttribute, Float32BufferAttribute} from "./buffer-attribute"
+export type {BufferAttributeUpdateRange, TypedArray} from "./buffer-attribute"
 
 /**
  * Геометрическое описание 3D-объекта.

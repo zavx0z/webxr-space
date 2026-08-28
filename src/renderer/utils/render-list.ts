@@ -1,6 +1,7 @@
 import { Object3D } from "../../core/object-3d"
 import { Mesh } from "../../core/mesh"
 import { InstancedMesh } from "../../core/instanced-mesh"
+import {InstancedRoundedRect} from "../../core/instanced-rounded-rect"
 import { LineSegments } from "../../objects/line-segments"
 import { Text } from "../../objects/text"
 import { Light } from "../../lights/light"
@@ -11,8 +12,8 @@ import { Matrix4, Frustum, Sphere, Vector3 } from "../../math";
 const _sphere = new Sphere();
 
 export interface RenderItem {
-  type: "static-mesh" | "skinned-mesh" | "instanced-mesh" | "instanced-line" | "line" | "text-stencil" | "text-cover"
-  object: Mesh | InstancedMesh | SkinnedMesh | LineSegments | Text | WireframeInstancedMesh
+  type: "static-mesh" | "skinned-mesh" | "instanced-mesh" | "instanced-rounded-rect" | "instanced-line" | "line" | "text-stencil" | "text-cover"
+  object: Mesh | InstancedMesh | InstancedRoundedRect | SkinnedMesh | LineSegments | Text | WireframeInstancedMesh
   worldMatrix: Matrix4
   originalIndex?: number // для сохранения порядка при сортировке
 }
@@ -47,7 +48,9 @@ export function collectSpaceObjects(
     }
   }
 
-  if (object instanceof InstancedMesh) {
+  if (object instanceof InstancedRoundedRect) {
+    renderList.push({type: "instanced-rounded-rect", object, worldMatrix})
+  } else if (object instanceof InstancedMesh) {
     renderList.push({ type: "instanced-mesh", object, worldMatrix })
   } else if (object instanceof WireframeInstancedMesh) {
     renderList.push({ type: "instanced-line", object, worldMatrix })
