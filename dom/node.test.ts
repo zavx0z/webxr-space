@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument, MouseEvent} from "@zavx0z/dom"
+import {createDocument, MouseEvent, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createNode, nodeCss, type NodeDefinition} from "./node.ts"
 
@@ -50,9 +50,11 @@ describe("Blender-like standard-DOM Node", () => {
     expect(controller.refs.header.getAttribute("style")).toBe("background: #5b466b")
     expect(controller.refs.collapseText.data).toBe("▾")
     expect(controller.refs.preview.hasAttribute("hidden")).toBeFalse()
-    expect(controller.refs.property("operation")?.definition.kind).toBe("enum")
-    expect(controller.refs.parameter("vector")?.refs.field.definition.kind).toBe("vector")
-    expect([...controller.refs.parameter("vector")!.refs.field.refs.inputs.keys()]).toEqual(["0", "1", "2"])
+    expect(controller.refs.property("operation")?.getAttribute("data-field-kind")).toBe("enum")
+    expect(controller.refs.parameter("vector")?.refs.field.getAttribute("data-field-kind")).toBe("vector")
+    expect([...controller.refs.parameter("vector")!.refs.field.querySelectorAll("[data-control-key]")]
+      .map((element) => element.getAttribute("data-control-key")))
+      .toEqual(["X", "Y", "Z"])
     expect(controller.refs.socket("vector-in")?.definition.kind).toBe("vector")
     expect(controller.refs.socket("color-out")?.definition.kind).toBe("color")
     expect(controller.refs.socket("color-out")?.refs.button.getAttribute("style")).toContain("#ebc73d")
@@ -67,7 +69,7 @@ describe("Blender-like standard-DOM Node", () => {
     const root = controller.element
     const property = controller.refs.property("operation")!
     const vector = controller.refs.parameter("vector")!
-    const vectorInput = vector.refs.field.refs.inputs.get("0")!
+    const vectorInput = vector.refs.field.querySelector('[data-control-key="X"] input') as HTMLInputElement
     const socket = controller.refs.socket("vector-in")!
     const next = noiseNode([])
     controller.update({
@@ -82,7 +84,7 @@ describe("Blender-like standard-DOM Node", () => {
     expect(controller.element).toBe(root)
     expect(controller.refs.property("operation")).toBe(property)
     expect(controller.refs.parameter("vector")).toBe(vector)
-    expect(vector.refs.field.refs.inputs.get("0")).toBe(vectorInput)
+    expect(vector.refs.field.querySelector('[data-control-key="X"] input')).toBe(vectorInput)
     expect(controller.refs.socket("vector-in")).toBe(socket)
     expect(controller.refs.body.hasAttribute("hidden")).toBeTrue()
     expect(controller.refs.collapseText.data).toBe("▸")
@@ -102,7 +104,8 @@ describe("Blender-like standard-DOM Node", () => {
     const frame = renderer.flush()
     const texts = frame.displayList.filter((item) => item.kind === "text").map((item) => item.text)
     expect(texts).toEqual(expect.arrayContaining(["Noise Texture", "Dimensions", "Vector", "Scale", "Color"]))
-    expect(frame.hits.get(controller.refs.parameter("vector")!.refs.field.refs.inputs.get("0")!)).toBeDefined()
+    expect(frame.hits.get(controller.refs.parameter("vector")!.refs.field
+      .querySelector('[data-control-key="X"] input')!)).toBeDefined()
     expect(frame.hits.get(controller.refs.socket("color-out")!.element)).toBeDefined()
     expect(nodeCss).toContain("height: 24px")
     expect(nodeCss).toContain("box-shadow: 0 0 12px")

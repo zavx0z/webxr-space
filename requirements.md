@@ -150,9 +150,9 @@ controllers, а не label-only substitutes. Selection отражается cont
 `createNode()` возвращает stable semantic `article` с compact 24px coloured
 header, controlled disclosure, optional preview toggle/panel, embedded
 Properties и Parameters, loose typed Sockets и symmetrical selection shadow.
-Properties используют exact `createField()`; Parameter сохраняет один Field и
-не дублирует value/control implementation. Collapse скрывает body, сохраняя
-Node, Field, Parameter и Socket identities.
+Properties монтируют exact compiled `Field`; Parameter сохраняет один Field
+element и не дублирует value/control implementation. Collapse скрывает body,
+сохраняя Node, Field, Parameter и Socket identities.
 
 Public socket inventory сохраняет 19 kinds и 8 shapes parent contract. Kind
 задаёт color/shape preset, а `side` и capability `direction` остаются
@@ -163,10 +163,13 @@ Public socket inventory сохраняет 19 kinds и 8 shapes parent contract.
 ### `NODES-UI-DOM-PARAMETER-002` — exact shared Field
 
 `createParameter()` принимает `FieldDefinition` из `@ui/components/field` и
-встраивает exact `createField()` controller между максимум одним левым и одним
-правым Socket. Color, vector, rotation, matrix, reference, collection и path не
-сериализуются в строковый substitute. Connected state скрывает только editor,
-сохраняя label, Field controller и endpoint identities.
+монтирует exact compiled `Field` через один `@zavx0z/react` root между максимум
+одним левым и одним правым Socket. Mount не создаёт второй props Store или
+параллельное control tree: update передаёт текущий immutable definition тому же
+Field component, а public ref является его реальным standard DOM element.
+Color, vector, rotation, matrix, reference, collection и path не сериализуются
+в строковый substitute. Connected state скрывает только editor, сохраняя label,
+Field element и endpoint identities.
 
 ## Link
 

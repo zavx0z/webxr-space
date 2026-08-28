@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument, InputEvent} from "@zavx0z/dom"
+import {createDocument, InputEvent, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createParameter, parameterCss} from "./parameter.ts"
 
@@ -22,23 +22,26 @@ describe("embedded DOM Parameter", () => {
       ],
     })
     const field = controller.refs.field
-    const x = field.refs.inputs.get("0")!
+    const x = field.querySelector('[data-control-key="X"] input') as HTMLInputElement
     const left = controller.refs.socket("vector-in")!
     const right = controller.refs.socket("vector-out")!
-    expect(field.definition.kind).toBe("vector")
-    expect([...field.refs.inputs.keys()]).toEqual(["0", "1", "2"])
-    expect(controller.element.childNodes).toEqual([left.element, field.element, right.element])
+    expect(field.getAttribute("data-field-kind")).toBe("vector")
+    expect([...field.querySelectorAll("[data-control-key]")].map((element) => element.getAttribute("data-control-key")))
+      .toEqual(["X", "Y", "Z"])
+    expect(controller.element.childNodes).toEqual([left.element, field, right.element])
 
     x.value = "9"
     x.dispatchEvent(new InputEvent("input", {bubbles: true}))
     expect(values).toEqual([[9, 2, 3]])
+    expect(controller.definition.field.kind === "vector" && controller.definition.field.value)
+      .toEqual([1, 2, 3])
     controller.update({...controller.definition, connected: true})
     expect(controller.refs.field).toBe(field)
     expect(controller.refs.socket("vector-in")).toBe(left)
     expect(controller.refs.socket("vector-out")).toBe(right)
-    expect(field.refs.control.hasAttribute("hidden")).toBeTrue()
+    expect(field.querySelector('[role="group"]')!.hasAttribute("hidden")).toBeTrue()
     controller.update({...controller.definition, connected: false})
-    expect(field.refs.control.hasAttribute("hidden")).toBeFalse()
+    expect(field.querySelector('[role="group"]')!.hasAttribute("hidden")).toBeFalse()
   })
 
   test("renders exact composite Field controls and rejects duplicate sides", () => {
@@ -56,7 +59,9 @@ describe("embedded DOM Parameter", () => {
       styleSheets: [parameterCss],
     })
     const frame = renderer.flush()
-    expect([...controller.refs.field.refs.inputs.keys()]).toEqual(["r", "g", "b", "a"])
+    expect([...controller.refs.field.querySelectorAll("[data-color-channel]")]
+      .map((element) => element.getAttribute("data-color-channel")))
+      .toEqual(["r", "g", "b", "a"])
     expect(frame.displayList.filter((item) => item.kind === "text").map((item) => item.text))
       .toEqual(expect.arrayContaining(["Color", "R", "G", "B", "A"]))
     renderer.dispose()
@@ -67,5 +72,25 @@ describe("embedded DOM Parameter", () => {
         {id: "b", kind: "color", direction: "input", side: "left", label: "B"},
       ],
     })).toThrow("duplicate left Socket")
+  })
+
+  test("retains the compiled Field root while replacing only its discriminated control", () => {
+    const controller = createParameter(createDocument(), {
+      id: "value",
+      field: {id: "value", kind: "number", label: "Value", value: 1},
+    })
+    const field = controller.refs.field
+    const number = field.querySelector("input")
+
+    controller.update({
+      id: "value",
+      field: {id: "value", kind: "boolean", label: "Value", value: true},
+    })
+
+    expect(controller.refs.field).toBe(field)
+    expect(field.getAttribute("data-field-kind")).toBe("boolean")
+    expect(field.querySelector("input")).not.toBe(number)
+    expect(field.querySelector('input[type="checkbox"]')).not.toBeNull()
+    expect(field.className).toBe("")
   })
 })

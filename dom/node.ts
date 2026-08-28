@@ -1,8 +1,4 @@
-import {
-  createField,
-  type FieldController,
-  type FieldDefinition,
-} from "@ui/components/field"
+import type {FieldDefinition} from "@ui/components/field"
 import type {
   Document,
   Event,
@@ -23,6 +19,10 @@ import {
   type SocketController,
   type SocketDefinition,
 } from "./socket.ts"
+import {
+  mountField,
+  type FieldMount,
+} from "./field-mount.ts"
 
 export type NodePreviewImage = Readonly<{
   src: string
@@ -75,7 +75,7 @@ export type NodeController = Readonly<{
     properties: HTMLDivElement
     parameters: HTMLDivElement
     sockets: HTMLDivElement
-    property(id: string): FieldController | null
+    property(id: string): HTMLDivElement | null
     parameter(id: string): ParameterController | null
     socket(id: string): SocketController | null
   }>
@@ -187,11 +187,11 @@ export const nodeCss = [parameterCss, String.raw`
   min-width: 0;
   gap: 3px;
 }
-.node-article__property { min-height: 26px; padding: 1px 0; }
-.node-article__property .ui-field__label { height: 24px; min-height: 24px; font-size: 11px; }
-.node-article__property .ui-field__control,
-.node-article__property .ui-field__input,
-.node-article__property .ui-field__button { min-height: 24px; height: 24px; padding: 3px 6px; border-radius: 3px; font-size: 11px; }
+.node-article__properties > [data-field-id] { min-height: 26px; padding: 1px 0; }
+.node-article__properties > [data-field-id] > span { height: 24px; min-height: 24px; font-size: 11px; }
+.node-article__properties [data-field-id] input,
+.node-article__properties [data-field-id] select,
+.node-article__properties [data-field-id] button { min-height: 24px; height: 24px; padding: 3px 6px; border-radius: 3px; font-size: 11px; }
 .node-article__socket-row {
   box-sizing: border-box;
   display: flex;
@@ -221,7 +221,7 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
   const propertiesElement = document.createElement("div")
   const parametersElement = document.createElement("div")
   const socketsElement = document.createElement("div")
-  const properties = new Map<string, FieldController>()
+  const properties = new Map<string, FieldMount>()
   const parameters = new Map<string, ParameterController>()
   const looseSockets = new Map<string, LooseSocketRecord>()
   const id = definition.id
@@ -323,7 +323,7 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
     properties: propertiesElement,
     parameters: parametersElement,
     sockets: socketsElement,
-    property(fieldId: string) { return properties.get(String(fieldId)) ?? null },
+    property(fieldId: string) { return properties.get(String(fieldId))?.element ?? null },
     parameter(parameterId: string) { return parameters.get(String(parameterId)) ?? null },
     socket(socketId: string) {
       const loose = looseSockets.get(String(socketId))?.socket
@@ -360,7 +360,7 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
 function reconcileProperties(
   document: Document,
   parent: HTMLDivElement,
-  records: Map<string, FieldController>,
+  records: Map<string, FieldMount>,
   definitions: readonly FieldDefinition[],
 ): void {
   const retained = new Set(definitions.map(({id}) => id))
@@ -371,12 +371,8 @@ function reconcileProperties(
   }
   for (const definition of definitions) {
     const current = records.get(definition.id)
-    if (current && current.definition.kind === definition.kind) current.update(definition)
-    else {
-      current?.dispose()
-      const controller = createField(document, definition)
-      records.set(definition.id, controller)
-    }
+    if (current) current.update(definition)
+    else records.set(definition.id, mountField(document, definition))
   }
   reconcileChildren(parent, definitions.map(({id}) => records.get(id)!.element))
 }

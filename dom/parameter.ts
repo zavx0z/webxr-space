@@ -1,13 +1,11 @@
 import {
-  createField,
   fieldCss,
-  type FieldController,
   type FieldDefinition,
 } from "@ui/components/field"
-import type {
-  Document,
+import {
   HTMLDivElement,
-  HTMLElement,
+  type Document,
+  type HTMLElement,
 } from "@zavx0z/dom"
 import {
   createSocket,
@@ -15,6 +13,7 @@ import {
   type SocketController,
   type SocketDefinition,
 } from "./socket.ts"
+import {mountField} from "./field-mount.ts"
 
 export type ParameterDefinition = Readonly<{
   id: string
@@ -28,7 +27,7 @@ export type ParameterController = Readonly<{
   element: HTMLDivElement
   refs: Readonly<{
     root: HTMLDivElement
-    field: FieldController
+    field: HTMLDivElement
     socket(id: string): SocketController | null
   }>
   definition: ParameterDefinition
@@ -47,27 +46,27 @@ export const parameterCss = [fieldCss, socketCss, String.raw`
   min-height: 26px;
   gap: 3px;
 }
-.node-parameter > .ui-field {
+.node-parameter > [data-field-id] {
   min-height: 26px;
   flex-grow: 1;
   gap: 5px;
   padding: 1px 0;
 }
-.node-parameter > .ui-field > .ui-field__label {
+.node-parameter > [data-field-id] > span {
   height: 24px;
   min-height: 24px;
   font-size: 11px;
 }
-.node-parameter .ui-field__control,
-.node-parameter .ui-field__input,
-.node-parameter .ui-field__button {
+.node-parameter [data-field-id] input,
+.node-parameter [data-field-id] select,
+.node-parameter [data-field-id] button {
   min-height: 24px;
   height: 24px;
   padding: 3px 6px;
   border-radius: 3px;
   font-size: 11px;
 }
-.node-parameter[data-connected="true"] > .ui-field > .ui-field__label {
+.node-parameter[data-connected="true"] > [data-field-id] > span {
   width: 100%;
 }
 `] .join("\n")
@@ -77,7 +76,7 @@ export function createParameter(document: Document, initial: ParameterDefinition
   const root = document.createElement("div")
   const sockets = new Map<string, SocketController>()
   const id = definition.id
-  let field = createField(document, definition.field)
+  const field = mountField(document, definition.field)
   let current = definition
   let disposed = false
 
@@ -88,12 +87,7 @@ export function createParameter(document: Document, initial: ParameterDefinition
     if (disposed) throw new Error("Parameter controller is disposed")
     const next = normalizeParameter(nextDefinition)
     if (next.id !== id) throw new Error(`Parameter id cannot change: ${id} -> ${next.id}`)
-    if (field.definition.kind !== next.field.kind) {
-      const replacement = createField(document, next.field)
-      if (field.element.parentNode === root) root.replaceChild(replacement.element, field.element)
-      field.dispose()
-      field = replacement
-    } else field.update(next.field)
+    field.update(next.field)
 
     const socketDefinitions = next.sockets ?? []
     const retained = new Set(socketDefinitions.map(({id: socketId}) => socketId))
@@ -113,7 +107,9 @@ export function createParameter(document: Document, initial: ParameterDefinition
     root.setAttribute("data-field-kind", next.field.kind)
     root.setAttribute("data-connected", String(next.connected === true))
     syncBooleanAttribute(root, "hidden", next.hidden === true)
-    syncBooleanAttribute(field.refs.control, "hidden", next.connected === true)
+    const fieldControl = field.element.querySelector('[role="group"]')
+    if (!(fieldControl instanceof HTMLDivElement)) throw new Error(`Parameter ${id} Field mounted no control group`)
+    syncBooleanAttribute(fieldControl, "hidden", next.connected === true)
     reconcileChildren(root, [
       ...socketDefinitions.filter(({side}) => side === "left").map(({id: socketId}) => sockets.get(socketId)!.element),
       field.element,
@@ -124,7 +120,7 @@ export function createParameter(document: Document, initial: ParameterDefinition
 
   const refs = Object.freeze({
     root,
-    get field() { return field },
+    get field() { return field.element },
     socket(socketId: string) { return sockets.get(String(socketId)) ?? null },
   })
   const controller: ParameterController = Object.freeze({
