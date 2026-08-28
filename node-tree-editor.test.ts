@@ -218,6 +218,7 @@ describe("headless NodeTreeEditor", () => {
 
   test("adds a complete Node with canonical Parameter stores", () => {
     const {tree, editor} = createTree()
+    const before = tree.document()
     const added = editor.addNode({
       expectedRevision: 0,
       node: {
@@ -230,6 +231,31 @@ describe("headless NodeTreeEditor", () => {
     expect(tree.nodes.map(({id}) => id)).toEqual(["source/~", "target", "math"])
     expect(tree.parameter("math", "factor")).toBeInstanceOf(Parameter)
     expect(added.result.topologyRevision).toBe(1)
+    expect(applyJsonPatch(before, added.forward)).toEqual(tree.document())
+    expect(applyJsonPatch(tree.document(), added.inverse)).toEqual(before)
+  })
+
+  test("preserves fast addNode transaction evidence when a listener fails after commit", () => {
+    const {tree, editor} = createTree()
+    const before = tree.document()
+    tree.subscribe(change => {
+      if (change.kind === "topology") throw new Error("append observer failed")
+    })
+    try {
+      editor.addNode({
+        expectedRevision: 0,
+        node: {id: "committed-node", parameters: [{id: "value", value: 1}]},
+      })
+      throw new Error("Expected committed append listener failure")
+    } catch (error) {
+      expect(error).toBeInstanceOf(NodeTreeEditorCommittedError)
+      const committed = error as NodeTreeEditorCommittedError
+      expect(committed.transaction.result).toEqual({changed: true, revision: 1, topologyRevision: 1})
+      expect(applyJsonPatch(before, committed.transaction.forward)).toEqual(tree.document())
+      expect(applyJsonPatch(tree.document(), committed.transaction.inverse)).toEqual(before)
+      expect(committed.cause).toBeInstanceOf(AggregateError)
+    }
+    expect(tree.nodes.some(node => node.id === "committed-node")).toBeTrue()
   })
 
   test("sets one Parameter value without a duplicate Store or layout invalidation", () => {

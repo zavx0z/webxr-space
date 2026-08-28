@@ -9,9 +9,10 @@
 
 ## Authoring transaction
 
-1. `NodeTreeEditor` не хранит копию графа. Перед каждой командой он получает
-   свежий ID-keyed document из NodeTree и фиксирует exact `expectedRevision`.
-2. Команда создаёт serializable forward JSON Patch, применяет его к отдельной
+1. `NodeTreeEditor` не хранит копию графа. Обычная structural команда получает
+   свежий ID-keyed document из NodeTree; additive `addNode` читает только
+   canonical arrays/indexes Core. Обе фиксируют exact `expectedRevision`.
+2. Обычная команда создаёт serializable forward JSON Patch, применяет его к отдельной
    копии document, материализует конечную runtime-definition с повторным
    использованием существующих Parameter и вызывает один core reconcile.
 3. Успешная команда возвращает forward и inverse operations. Inverse
@@ -21,12 +22,30 @@
 4. Ошибка patch, конфликт revision или невалидная конечная topology не оставляет
    частичного изменения.
 5. `addParameter`, `removeParameter`, `addNode`, `removeNode`, `connect`,
-   `disconnect` и `setParameterValue` используют тот же transaction contract.
+   `disconnect` и `setParameterValue` возвращают тот же transaction evidence;
+   пункт 10 задаёт эквивалентный additive commit path `addNode`.
 6. Удаление Parameter, на который ссылается Socket, по умолчанию отклоняется.
    Удаление Node с принадлежащими Link допускается только явной составной
    командой, где все disconnect operations видимы в одном patch.
 7. Core проверяет direction endpoints: исходный Socket предоставляет
    `output | bidirectional`, целевой — `input | bidirectional`.
+8. `transact({forward, inverse})` принимает bounded serializable structural
+   batch только если inverse на отдельной копии восстанавливает exact source
+   document. Весь batch materialize-ится один раз и выполняет один Core
+   reconcile, revision и topology delta. Изменение value retained Parameter
+   через structural patch по-прежнему запрещено. Переход между canonical
+   formatVersion 1/2 добавляется в forward/inverse автоматически до commit, так
+   что возвращённый inverse применяется к фактически committed document.
+9. Editor сохраняет Scope, Group, Template, Frame, instance и value-type поля
+   format 2 при любой команде; он не создаёт для них соседний Store. Exact shape
+   каждой patched entity проверяется до materialization, unknown members и
+   primitive payload не нормализуются молча.
+10. Built-in `addNode` формирует те же exact forward/inverse JSON Patch
+    operations, но не клонирует весь уже валидный document. Он materialize-ит
+    только новый Node и вызывает exact single-append Core `reconcile`; Core остаётся владельцем
+    atomic validation, Parameter observation, revision и detailed delta.
+    Returned patches обязаны применять committed document вперёд и назад, а
+    listener failure после commit сохраняет точный `NodeTreeEditorCommittedError`.
 
 ## Layout gate
 

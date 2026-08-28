@@ -4,11 +4,14 @@ import {
   type NodeTreeDefinition,
   type NodeTreeDocument,
   type NodeTreeLinkDocument,
+  type Node,
+  type NodeInstanceReference,
   type NodeTreeNodeDocument,
   type NodeTreeParameterChange,
   type NodeTreeParameterDocument,
   type NodeTreeReconcileResult,
   type NodeTreeSocketDocument,
+  requireNodeTreeDocumentShape,
 } from "@nodes/core/node-tree"
 import {
   Parameter,
@@ -16,6 +19,7 @@ import {
   ownNodeJsonValue,
   type NodeJsonObject,
   type NodeJsonValue,
+  type NodeValueType,
 } from "@nodes/core/parameter"
 import {
   applyJsonPatch,
@@ -68,6 +72,7 @@ export type NodeTreeEditorErrorCode =
   | "duplicate-parameter"
   | "duplicate-socket"
   | "invalid-identifier"
+  | "invalid-inverse"
   | "invalid-patched-document"
   | "node-linked"
   | "parameter-content-change"
@@ -109,6 +114,7 @@ export type ParameterDraft<
 > = Readonly<{
   id: string
   value: TValue
+  valueType?: NodeValueType
 }> & ParameterPresentationDraft<TPresentation>
 
 export type SocketDraft<
@@ -118,6 +124,7 @@ export type SocketDraft<
   direction: "input" | "output" | "bidirectional"
   parameterId?: string
   side?: "left" | "right"
+  valueType?: NodeValueType
   metadata?: TMetadata
 }>
 
@@ -129,6 +136,9 @@ export type NodeDraft<
 > = Readonly<{
   id: string
   frameId?: string
+  scopeId?: string
+  groupId?: string
+  instance?: NodeInstanceReference
   parameters?: readonly ParameterDraft<TValue, TPresentation>[]
   sockets?: readonly SocketDraft<TSocketMetadata>[]
   metadata?: TNodeMetadata
@@ -188,6 +198,11 @@ export type SetParameterValueCommand<
   nodeId: string
   parameterId: string
   value: TValue
+}>
+
+export type NodeTreeEditorTransactionCommand = ExpectedRevision & Readonly<{
+  forward: readonly JsonPatchOperation[]
+  inverse: readonly JsonPatchOperation[]
 }>
 
 export type NodeTreeEditorProjectionRevision = Readonly<{
@@ -365,24 +380,26 @@ export class NodeTreeEditor<
   ): NodeTreeEditorResult {
     this.#assertRevision(command.expectedRevision)
     requireIdentifier(command.node.id)
-    const document = this.tree.document()
-    if (Object.hasOwn(document.nodes.byId, command.node.id)) {
+    if (this.tree.nodes.some(node => node.id === command.node.id)) {
       throw new NodeTreeEditorError("duplicate-node", `Duplicate Node: ${command.node.id}`)
     }
-    const index = document.nodes.order.length
+    const index = this.tree.nodes.length
     const nodePath = pointer("nodes")
-    return this.#reconcile(
-      command.expectedRevision,
-      document,
-      [
-        add(`${nodePath}/byId/${encodeJsonPointerToken(command.node.id)}`, asNodeJsonValue(nodeDocument(command.node))),
-        add(`${nodePath}/order/-`, command.node.id),
-      ],
-      [
-        remove(`${nodePath}/order/${index}`),
-        remove(`${nodePath}/byId/${encodeJsonPointerToken(command.node.id)}`),
-      ],
-    )
+    const document = nodeDocument(command.node)
+    const node = materializeNodeDraft(command.node, document)
+    const forward = [
+      add(`${nodePath}/byId/${encodeJsonPointerToken(command.node.id)}`, asNodeJsonValue(document)),
+      add(`${nodePath}/order/-`, command.node.id),
+    ]
+    const inverse = [
+      remove(`${nodePath}/order/${index}`),
+      remove(`${nodePath}/byId/${encodeJsonPointerToken(command.node.id)}`),
+    ]
+    const definition = {
+      ...this.tree.definition(),
+      nodes: this.tree.nodes.concat(node),
+    }
+    return this.#commitDefinition(command.expectedRevision, definition, forward, inverse)
   }
 
   removeNode(command: RemoveNodeCommand): NodeTreeEditorResult {
@@ -464,6 +481,16 @@ export class NodeTreeEditor<
     )
   }
 
+  /**
+   * Commits one caller-planned structural batch through one Core reconcile.
+   * The supplied inverse must restore the exact source document before commit.
+   */
+  transact(command: NodeTreeEditorTransactionCommand): NodeTreeEditorResult {
+    this.#assertRevision(command.expectedRevision)
+    const source = this.tree.document()
+    return this.#reconcile(command.expectedRevision, source, command.forward, command.inverse)
+  }
+
   setParameterValue(command: SetParameterValueCommand<TValue>): NodeTreeEditorResult {
     this.#assertRevision(command.expectedRevision)
     requireIdentifier(command.nodeId)
@@ -526,26 +553,41 @@ export class NodeTreeEditor<
     forward: readonly JsonPatchOperation[],
     inverse: readonly JsonPatchOperation[],
   ): NodeTreeEditorResult {
-    const ownedForward = ownOperations(forward)
-    const ownedInverse = ownOperations(inverse)
-    const topologyRevision = this.tree.topologyRevision
-    const patched = applyJsonPatch(asNodeJsonValue(source), ownedForward)
-    const document = narrowPatchedDocument<
+    const transaction = prepareEditorTransaction(source, forward, inverse)
+    const ownedForward = transaction.forward
+    const ownedInverse = transaction.inverse
+    const document = transaction.document as EditorDocument<
       TValue,
       TPresentation,
       TFrameMetadata,
       TNodeMetadata,
       TSocketMetadata,
       TLinkMetadata
-    >(patched)
+    >
     const definition = materializeDefinition(this.tree, document)
+    return this.#commitDefinition(expectedRevision, definition, ownedForward, ownedInverse)
+  }
+
+  #commitDefinition(
+    expectedRevision: number,
+    definition: NodeTreeDefinition<
+      Parameter<TValue, TPresentation>,
+      TFrameMetadata,
+      TNodeMetadata,
+      TSocketMetadata,
+      TLinkMetadata
+    >,
+    forward: readonly JsonPatchOperation[],
+    inverse: readonly JsonPatchOperation[],
+  ): NodeTreeEditorResult {
+    const topologyRevision = this.tree.topologyRevision
     try {
       const result = this.tree.reconcile({expectedRevision, definition})
-      return commandResult(ownedForward, ownedInverse, result)
+      return commandResult(forward, inverse, result)
     } catch (error) {
       if (this.tree.topologyRevision > topologyRevision) {
         throw new NodeTreeEditorCommittedError(
-          commandResult(ownedForward, ownedInverse, {
+          commandResult(forward, inverse, {
             changed: true,
             revision: expectedRevision + 1,
             topologyRevision: topologyRevision + 1,
@@ -581,13 +623,21 @@ function materializeDefinition<
     for (const parameter of node.parameters ?? []) parameters.set(parameter.id, parameter)
     existing.set(node.id, parameters)
   }
+  const scopes = document.scopes?.order.map((id) => ({
+    id,
+    ...requiredDocumentEntry(document.scopes!.byId, id, "Graph Scope"),
+  }))
+  const groups = document.groups?.order.map((id) => ({
+    id,
+    ...requiredDocumentEntry(document.groups!.byId, id, "Node Group"),
+  }))
+  const templates = document.templates?.order.map((id) => ({
+    id,
+    ...requiredDocumentEntry(document.templates!.byId, id, "Node Template"),
+  }))
   const frames = document.frames.order.map((id) => {
     const frame = requiredDocumentEntry(document.frames.byId, id, "Frame")
-    return {
-      id,
-      ...(frame.parentFrameId === undefined ? {} : {parentFrameId: frame.parentFrameId}),
-      ...(frame.metadata === undefined ? {} : {metadata: frame.metadata}),
-    }
+    return {id, ...frame}
   })
   const nodes = document.nodes.order.map((id) => {
     const node = requiredDocumentEntry(document.nodes.byId, id, "Node")
@@ -596,7 +646,8 @@ function materializeDefinition<
       const retained = existing.get(id)?.get(parameterId)
       if (retained !== undefined) {
         if (!equalNodeJsonValue(retained.value, parameter.value) ||
-          !equalNodeJsonValue(retained.presentation, parameter.presentation)) {
+          !equalNodeJsonValue(retained.presentation, parameter.presentation) ||
+          !sameValueType(retained.snapshot().valueType, parameter.valueType)) {
           throw new NodeTreeEditorError(
             "parameter-content-change",
             `Structural transaction changed retained Parameter content: ${id}/${parameterId}`,
@@ -608,32 +659,27 @@ function materializeDefinition<
     })
     const sockets = node.sockets.order.map((socketId) => {
       const socket = requiredDocumentEntry(node.sockets.byId, socketId, `Socket on ${id}`)
-      return {
-        id: socketId,
-        direction: socket.direction,
-        ...(socket.parameterId === undefined ? {} : {parameterId: socket.parameterId}),
-        ...(socket.side === undefined ? {} : {side: socket.side}),
-        ...(socket.metadata === undefined ? {} : {metadata: socket.metadata}),
-      }
+      return {id: socketId, ...socket}
     })
     return {
       id,
-      ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
+      ...node,
       parameters,
       sockets,
-      ...(node.metadata === undefined ? {} : {metadata: node.metadata}),
     }
   })
   const links = document.links.order.map((id) => {
     const link = requiredDocumentEntry(document.links.byId, id, "Link")
-    return {
-      id,
-      from: link.from,
-      to: link.to,
-      ...(link.metadata === undefined ? {} : {metadata: link.metadata}),
-    }
+    return {id, ...link}
   })
-  return {frames, nodes, links}
+  return {
+    ...(scopes === undefined ? {} : {scopes}),
+    ...(groups === undefined ? {} : {groups}),
+    ...(templates === undefined ? {} : {templates}),
+    frames,
+    nodes,
+    links,
+  }
 }
 
 function createCanonicalParameter<
@@ -643,7 +689,36 @@ function createCanonicalParameter<
   id: string,
   document: NodeTreeParameterDocument<Parameter<TValue, TPresentation>>,
 ): Parameter<TValue, TPresentation> {
-  return new Parameter<TValue, TPresentation>(id, document.value, document.presentation)
+  return new Parameter<TValue, TPresentation>(id, document.value, document.presentation, document.valueType)
+}
+
+function materializeNodeDraft<
+  TValue extends NodeJsonValue,
+  TPresentation extends NodeJsonValue,
+  TNodeMetadata extends NodeJsonValue,
+  TSocketMetadata extends NodeJsonValue,
+>(
+  draft: NodeDraft<TValue, TPresentation, TNodeMetadata, TSocketMetadata>,
+  document: NodeTreeNodeDocument<Parameter<TValue, TPresentation>, TNodeMetadata, TSocketMetadata>,
+): Node<Parameter<TValue, TPresentation>, TNodeMetadata, TSocketMetadata> {
+  const parameters = document.parameters.order.map(id => createCanonicalParameter(
+    id,
+    requiredDocumentEntry(document.parameters.byId, id, `Parameter on ${draft.id}`),
+  ))
+  const sockets = document.sockets.order.map(id => ({
+    id,
+    ...requiredDocumentEntry(document.sockets.byId, id, `Socket on ${draft.id}`),
+  }))
+  return {
+    id: draft.id,
+    ...(document.frameId === undefined ? {} : {frameId: document.frameId}),
+    ...(document.scopeId === undefined ? {} : {scopeId: document.scopeId}),
+    ...(document.groupId === undefined ? {} : {groupId: document.groupId}),
+    ...(document.instance === undefined ? {} : {instance: document.instance}),
+    parameters,
+    sockets,
+    ...(document.metadata === undefined ? {} : {metadata: document.metadata}),
+  }
 }
 
 function parameterDocument<
@@ -655,6 +730,7 @@ function parameterDocument<
   return {
     value: parameter.value,
     presentation: parameterPresentation(parameter),
+    ...(parameter.valueType === undefined ? {} : {valueType: parameter.valueType}),
   }
 }
 
@@ -698,11 +774,15 @@ function nodeDocument<
       direction: socket.direction,
       ...(socket.parameterId === undefined ? {} : {parameterId: socket.parameterId}),
       ...(socket.side === undefined ? {} : {side: socket.side}),
+      ...(socket.valueType === undefined ? {} : {valueType: socket.valueType}),
       ...(socket.metadata === undefined ? {} : {metadata: socket.metadata}),
     }
   }
   return {
     ...(node.frameId === undefined ? {} : {frameId: node.frameId}),
+    ...(node.scopeId === undefined ? {} : {scopeId: node.scopeId}),
+    ...(node.groupId === undefined ? {} : {groupId: node.groupId}),
+    ...(node.instance === undefined ? {} : {instance: node.instance}),
     parameters: {order: parameterOrder, byId: parameterById},
     sockets: {order: socketOrder, byId: socketById},
     ...(node.metadata === undefined ? {} : {metadata: node.metadata}),
@@ -796,47 +876,111 @@ function asNodeJsonValue(value: unknown): NodeJsonValue {
   return value as NodeJsonValue
 }
 
-function narrowPatchedDocument<
-  TValue extends NodeJsonValue,
-  TPresentation extends NodeJsonValue,
-  TFrameMetadata extends NodeJsonValue,
-  TNodeMetadata extends NodeJsonValue,
-  TSocketMetadata extends NodeJsonValue,
-  TLinkMetadata extends NodeJsonValue,
->(value: NodeJsonValue): EditorDocument<
-  TValue,
-  TPresentation,
-  TFrameMetadata,
-  TNodeMetadata,
-  TSocketMetadata,
-  TLinkMetadata
-> {
-  if (!isNodeJsonObject(value) || value["formatVersion"] !== 1 ||
-    !isOrderedDocument(value["frames"]) ||
-    !isOrderedDocument(value["nodes"]) ||
-    !isOrderedDocument(value["links"])) {
-    throw new NodeTreeEditorError(
-      "invalid-patched-document",
-      "Editor-owned JSON Patch did not produce a NodeTreeDocument",
-    )
-  }
-  return value as unknown as EditorDocument<
-    TValue,
-    TPresentation,
-    TFrameMetadata,
-    TNodeMetadata,
-    TSocketMetadata,
-    TLinkMetadata
-  >
+function invalidDocument(message: string): never {
+  throw new NodeTreeEditorError("invalid-patched-document", message)
 }
 
-function isOrderedDocument(value: NodeJsonValue | undefined): boolean {
-  if (!isNodeJsonObject(value)) return false
-  const order = value["order"]
-  return Array.isArray(order) && order.every((id) => typeof id === "string") &&
-    isNodeJsonObject(value["byId"])
+function prepareEditorTransaction(
+  source: NodeTreeDocument,
+  forward: readonly JsonPatchOperation[],
+  inverse: readonly JsonPatchOperation[],
+): Readonly<{
+  document: NodeTreeDocument
+  forward: readonly JsonPatchOperation[]
+  inverse: readonly JsonPatchOperation[]
+}> {
+  let ownedForward = ownOperations(forward)
+  let ownedInverse = ownOperations(inverse)
+  let changed = applyJsonPatch(asNodeJsonValue(source), ownedForward)
+  if (!isNodeJsonObject(changed)) {
+    throw new NodeTreeEditorError(
+      "invalid-patched-document",
+      "Patched document is not an object",
+    )
+  }
+  if (changed["formatVersion"] !== 1 && changed["formatVersion"] !== 2) {
+    invalidDocument("NodeTree document has invalid formatVersion")
+  }
+
+  const cleanupForward: JsonPatchOperation[] = []
+  const cleanupInverse: JsonPatchOperation[] = []
+  for (const key of ["scopes", "groups", "templates"] as const) {
+    const value = changed[key]
+    if (value === undefined || !isExactEmptyOrderedCollection(value)) continue
+    const path = pointer(key)
+    cleanupForward.push(remove(path))
+    cleanupInverse.unshift(add(path, value))
+  }
+  if (cleanupForward.length > 0) {
+    ownedForward = ownOperations([...ownedForward, ...cleanupForward])
+    ownedInverse = ownOperations([
+      ...cleanupInverse,
+      ...ownedInverse,
+    ])
+    changed = applyJsonPatch(asNodeJsonValue(source), ownedForward)
+    if (!isNodeJsonObject(changed)) invalidDocument("Patched document is not an object")
+  }
+
+  let requiredVersion: 1 | 2
+  try {
+    requiredVersion = requireNodeTreeDocumentShape(changed)
+  } catch (error) {
+    throw new NodeTreeEditorError(
+      "invalid-patched-document",
+      error instanceof Error ? error.message : "Patched NodeTree document is malformed",
+    )
+  }
+  if (changed["formatVersion"] !== requiredVersion) {
+    if (forwardMutatesDocumentVersion(forward)) {
+      invalidDocument("Explicit formatVersion does not match the patched NodeTree document")
+    }
+    ownedForward = ownOperations([
+      ...ownedForward,
+      replace(pointer("formatVersion"), requiredVersion),
+    ])
+    ownedInverse = ownOperations([
+      ...ownedInverse,
+      replace(pointer("formatVersion"), source.formatVersion),
+    ])
+    changed = applyJsonPatch(asNodeJsonValue(source), ownedForward)
+  }
+
+  const document = changed as unknown as NodeTreeDocument
+
+  let restored: NodeJsonValue
+  try {
+    restored = applyJsonPatch(changed, ownedInverse)
+  } catch {
+    throw new NodeTreeEditorError(
+      "invalid-inverse",
+      "Inverse patch failed",
+    )
+  }
+  if (!equalNodeJsonValue(asNodeJsonValue(source), restored)) {
+    throw new NodeTreeEditorError(
+      "invalid-inverse",
+      "Inverse does not restore source document",
+    )
+  }
+  return Object.freeze({document, forward: ownedForward, inverse: ownedInverse})
+}
+
+function isExactEmptyOrderedCollection(value: NodeJsonValue): boolean {
+  if (!isNodeJsonObject(value) || Object.keys(value).length !== 2 ||
+    !Array.isArray(value["order"]) || value["order"].length !== 0) return false
+  return isNodeJsonObject(value["byId"]) && Object.keys(value["byId"]).length === 0
+}
+
+function forwardMutatesDocumentVersion(operations: readonly JsonPatchOperation[]): boolean {
+  return operations.some((operation) => operation.op !== "test" &&
+    (operation.path === "" || operation.path === "/formatVersion"))
 }
 
 function isNodeJsonObject(value: NodeJsonValue | undefined): value is NodeJsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function sameValueType(left: NodeValueType | undefined, right: NodeValueType | undefined): boolean {
+  if (left === undefined || right === undefined) return left === right
+  return left.id === right.id && left.version === right.version
 }

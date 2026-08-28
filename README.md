@@ -11,6 +11,16 @@ Editor не содержит the adopted reference, WebGPU, canvas или layout
 сам выбирает Node, Parameter и Socket, а layout запускает через подключённый
 projector только по явной команде.
 
+`transact()` объединяет несколько structural JSON Patch операций в один
+проверяемый forward/inverse batch и один Core reconcile. Scope/group/template,
+instance и value-type данные остаются частью того же canonical NodeTree
+document; Editor их сохраняет, но не дублирует. Canonical v1/v2 transition
+входит в возвращаемые patches, а malformed или unknown entity members
+отклоняются до materialization.
+
+Built-in `addNode` сохраняет те же forward/inverse patches, но использует
+atomic single-append Core reconcile path и не клонирует весь уже валидный document.
+
 Действующие законы находятся в [требованиях editor](requirements.md).
 
 Dev-only интерактивный пример Editor находится в [`storybook/`](storybook/).
