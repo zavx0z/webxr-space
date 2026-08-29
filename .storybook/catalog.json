@@ -1,0 +1,118 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "worker",
+      "label": "Worker",
+      "route": "worker",
+      "subjects": [
+        {
+          "id": "fixed",
+          "kind": "transport",
+          "label": "Fixed",
+          "apiName": "runFixedWorkerRequest",
+          "route": "worker/fixed",
+          "tags": [
+            "Worker",
+            "Fixed",
+            "Request",
+            "/",
+            "result",
+            "runFixedWorkerRequest"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Request / result",
+              "route": "worker/fixed/default",
+              "module": {
+                "path": "../storybook/dom/worker-dom-story.ts",
+                "export": "createWorkerDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "adaptive",
+          "kind": "transport",
+          "label": "Adaptive",
+          "apiName": "runAdaptiveWorkerRequest",
+          "route": "worker/adaptive",
+          "tags": [
+            "Worker",
+            "Adaptive",
+            "Request",
+            "/",
+            "result",
+            "runAdaptiveWorkerRequest"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Request / result",
+              "route": "worker/adaptive/default",
+              "module": {
+                "path": "../storybook/dom/worker-dom-story.ts",
+                "export": "createWorkerDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dagre-layered",
+          "kind": "transport",
+          "label": "Dagre Layered",
+          "apiName": "runTopDownWorkerRequest",
+          "route": "worker/dagre-layered",
+          "tags": [
+            "Worker",
+            "Dagre",
+            "Layered",
+            "Request",
+            "/",
+            "result",
+            "runTopDownWorkerRequest"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Request / result",
+              "route": "worker/dagre-layered/default",
+              "module": {
+                "path": "../storybook/dom/worker-dom-story.ts",
+                "export": "createWorkerDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "coffman-graham",
+          "kind": "transport",
+          "label": "Coffman–Graham",
+          "apiName": "runCoffmanGrahamWorkerRequest",
+          "route": "worker/coffman-graham",
+          "tags": [
+            "Worker",
+            "Coffman–Graham",
+            "Request",
+            "/",
+            "result",
+            "runCoffmanGrahamWorkerRequest"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Request / result",
+              "route": "worker/coffman-graham/default",
+              "module": {
+                "path": "../storybook/dom/worker-dom-story.ts",
+                "export": "createWorkerDomStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

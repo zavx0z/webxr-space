@@ -7,7 +7,7 @@ import {
   type Node,
   type Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {
   createWorkerProtocol,
   workerProtocolCss,
@@ -33,7 +33,7 @@ export type WorkerDomStory = Readonly<{
   element: HTMLElement
   props: WorkerProtocolProps
   exchangeRefs(id: string): WorkerProtocolExchangeRefs | null
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   updateGeneration(generation: number): void
   dispose(): void
 }>
