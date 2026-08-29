@@ -9,7 +9,6 @@ import {
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {buttonCss} from "./button.tsx"
 import {NumberInput, numberInputCss} from "./number-input.tsx"
 import {IntegerInput} from "./integer-input.tsx"
 
@@ -71,7 +70,7 @@ describe("compiled production NumberInput", () => {
       document,
       root: host,
       viewport: {width: 180, height: 60},
-      styleSheets: [buttonCss, numberInputCss]
+      styleSheets: [numberInputCss]
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 120, height: 22})

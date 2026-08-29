@@ -1,7 +1,7 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, useId, type StyleValue} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {Button, buttonCss} from "./button.tsx"
+import {Button} from "./button.tsx"
 import {TextField, textFieldCss} from "./text-field.tsx"
 
 export type InspectorCategory = Readonly<{
@@ -127,7 +127,6 @@ export const inspectorStyles = defineStyles("@ui/components/inspector", {
 })
 
 export const inspectorCss = [
-  buttonCss,
   textFieldCss,
   inspectorStyles.cssText
 ].join("\n")

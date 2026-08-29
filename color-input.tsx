@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {Button, buttonCss} from "./button.tsx"
+import {Button} from "./button.tsx"
 import {SliderControl, sliderControlCss} from "./slider-control.tsx"
 import {TextField, textFieldCss} from "./text-field.tsx"
 
@@ -86,7 +86,6 @@ export const colorInputStyles = defineStyles("@ui/components/color-input", {
 })
 
 export const colorInputCss = [
-  buttonCss,
   textFieldCss,
   sliderControlCss,
   colorInputStyles.cssText

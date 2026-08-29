@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {buttonCss, IconButton} from "./button.tsx"
+import {IconButton} from "./button.tsx"
 import {uiIcons} from "./icons.ts"
 import {TextField, textFieldCss} from "./text-field.tsx"
 import {rgba8ToColor, uiTheme} from "./theme.ts"
@@ -83,7 +83,6 @@ export const pathInputStyles = defineStyles("@ui/components/path-input", {
 
 export const pathInputCss = [
   textFieldCss,
-  buttonCss,
   pathInputStyles.cssText
 ].join("\n")
 

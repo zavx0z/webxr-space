@@ -107,11 +107,19 @@ Platform inheritance остаётся в `@zavx0z/dom`:
 Один flat CSS document владеет flow, Flex, dimensions, spacing, overflow,
 states и advisory presentation. Component не вычисляет sibling coordinates,
 display lists, hit geometry или GPU resources. Public Components expose one
-`style`, never `sx` or `className`: owner defaults are deterministic
-`defineStyles` tokens and the caller declaration is applied last. Authored JSX
+`style`, never `sx` or `className`: owner defaults объявляются прямо в intrinsic
+`style`, а caller declaration применяется последней. Static declarations,
+supported native pseudos и conditional static fragments compile-time
+извлекаются Template в scoped stylesheet metadata; React/Document/Renderer
+регистрируют его один раз на exact Document без DOM scanning и consumer
+`styleSheets` wiring. Props/state-dependent ordinary declarations остаются
+addressed inline bindings. Inherited CSS values идут по реальной semantic
+ancestor chain; Component не сливает их вручную с потомками. Authored JSX
 contains no BEM/state classes. Native `:hover`, `:active`, `:focus`,
 `:focus-within`, `:disabled`, `:checked` and `:indeterminate` are resolved by
-the document renderer instead of a `data-ui-state` bridge.
+the document renderer instead of a `data-ui-state` bridge. Новые owners не
+публикуют author-facing `defineStyles`, `StyleToken`, `*Styles` или
+содержательный `*Css` transport export.
 
 ## Controls and events
 
@@ -172,6 +180,18 @@ only public visual override.
 
 `Button` и `IconButton` являются единственными production owners этого
 контракта; imperative controller alias отсутствует.
+
+Button является первым owner component-local extraction contract: root, icon
+и label rules находятся только в соответствующих intrinsic `style`
+expressions. Static pseudos и finite variant/size/tone/selected fragments
+дедуплицируются как compiled stylesheet chunks; тысяча экземпляров не создаёт
+тысячу copies правил. `buttonCss`, `buttonStyles` и ручной stylesheet transport
+не являются частью production Button API.
+
+Props/state-dependent pseudo values remain a platform gap. The eventual API is
+still the same public `style`: compiler emits one static pseudo using `var(--z-*)`
+and binds only the per-instance custom property inline. Components must not
+create instance-specific CSS rules or replace native pseudo states with JS.
 
 ## `UI-COMPILED-TEXT-FIELD-001` — controlled native text owner
 

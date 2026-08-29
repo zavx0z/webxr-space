@@ -1,7 +1,7 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, useId, type CSSProperties, type StyleValue} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {Button, buttonCss} from "./button.tsx"
+import {Button} from "./button.tsx"
 import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type HudWindowAction = Readonly<{
@@ -170,7 +170,7 @@ export const hudStyles = defineStyles("@ui/components/hud", {
   selectedMarker: {background: rgba8ToColor(selectedColors.inner), color: rgba8ToColor(selectedColors.text)}
 })
 
-export const hudCss = `${buttonCss}\n${hudStyles.cssText}`
+export const hudCss = hudStyles.cssText
 
 type HudWindowActionButtonProps = Readonly<{
   action: HudWindowAction

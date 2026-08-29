@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, type CSSProperties, type StyleValue} from "@zavx0z/react"
-import {Button, buttonCss} from "./button.tsx"
+import {Button} from "./button.tsx"
 import {List, listCss} from "./list.tsx"
 
 export type CollectionInputItem = Readonly<{
@@ -55,7 +55,6 @@ export const collectionInputStyles = defineStyles("@ui/components/collection-inp
 })
 
 export const collectionInputCss = [
-  buttonCss,
   listCss,
   collectionInputStyles.cssText
 ].join("\n")

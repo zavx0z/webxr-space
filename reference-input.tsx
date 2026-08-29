@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {Button, buttonCss, IconButton} from "./button.tsx"
+import {Button, IconButton} from "./button.tsx"
 import {uiIcons} from "./icons.ts"
 import {rgba8ToColor, uiTheme} from "./theme.ts"
 
@@ -68,7 +68,6 @@ export const referenceInputStyles = defineStyles("@ui/components/reference-input
 })
 
 export const referenceInputCss = [
-  buttonCss,
   referenceInputStyles.cssText
 ].join("\n")
 

@@ -2,6 +2,7 @@ import {describe, expect, test} from "bun:test"
 import {
   Event,
   createDocument,
+  readDocumentCompiledStyleSheets,
   type HTMLButtonElement,
   type HTMLInputElement,
   type Node
@@ -229,10 +230,6 @@ describe("compiled production resource inputs", () => {
   test("keeps class-free native pseudo sheets and caller style last", () => {
     expect(pathInputCss).not.toContain(".ui-")
     expect(referenceInputCss).not.toContain(".ui-")
-    for (const pseudo of [":hover", ":active", ":focus", ":disabled"]) {
-      expect(pathInputCss).toContain(pseudo)
-      expect(referenceInputCss).toContain(pseudo)
-    }
 
     const mounted = mount()
     mounted.root.render(PathInput as any, {
@@ -247,6 +244,13 @@ describe("compiled production resource inputs", () => {
     })
     const reference = mounted.host.querySelector("div")!
     expect(reference.getAttribute("style")).toBe("width: 280px; background: #234567")
+    const adoptedCss = readDocumentCompiledStyleSheets(mounted.document).styleSheets
+      .map(styleSheet => styleSheet.cssText)
+      .join("\n")
+    for (const pseudo of [":hover", ":active", ":focus", ":disabled"]) {
+      expect(`${pathInputCss}\n${adoptedCss}`).toContain(pseudo)
+      expect(`${referenceInputCss}\n${adoptedCss}`).toContain(pseudo)
+    }
     mounted.root.unmount()
   })
 })
