@@ -18,7 +18,7 @@ hit semantics и stable keyed identity. Реализация не обязана
 `UiSurface` signatures, но обязана сохранять наблюдаемое поведение и данные.
 
 Accepted raster
-`../storybook/assets/references/blender-4.5.5-reference.png` является exact
+`.storybook/references/blender-4.5.5-reference.png` является exact
 visual boundary. DOM migration считается завершённой только после
 сопоставимого live Node capture, а не по количеству DOM routes, отсутствию
 retained imports или размеру bundle.

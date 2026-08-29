@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "references": [
+    {
+      "id": "accepted-node-editor-4-5-5",
+      "storyRoute": "/ui/comparison/reference/default",
+      "asset": "blender-4.5.5-reference.png",
+      "sha256": "a493e1c03591800bb05644963369fca49669aa27f98e67a9971fd91735f2531d",
+      "source": {
+        "product": "Blender",
+        "version": "4.5.5",
+        "revision": "release-4.5.5",
+        "documentation": [
+          "https://docs.blender.org/manual/en/latest/interface/controls/nodes/parts.html",
+          "https://docs.blender.org/api/current/bpy.types.NodeSocketStandard.html"
+        ]
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1200,
+        "dpr": 2
+      },
+      "pixelSize": {
+        "width": 3840,
+        "height": 2400
+      },
+      "compatibility": "compatible",
+      "acceptance": "accepted",
+      "acceptedFrom": {
+        "repository": "https://github.com/zavx0z/metafor",
+        "revision": "23057c8447e718d441e68e4cd4c86134915b08b8"
+      }
+    }
+  ]
+}

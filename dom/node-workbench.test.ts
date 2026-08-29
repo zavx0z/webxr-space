@@ -40,8 +40,8 @@ describe("production DOM NodeWorkbench composition", () => {
     const controller = createNodeWorkbench(createDocument(), createRemainingDomProps("ui/comparison/reference/default"))
     const reference = controller.imageRefs("reference")!
     expect(reference.image.localName).toBe("img")
-    expect(reference.image.src).toContain("/references/")
-    expect(reference.image.src.endsWith("-reference.png")).toBeTrue()
+    expect(reference.image.src).toContain("/__storybook/resources/nodes/")
+    expect(reference.image.src).toContain("kind=reference")
     expect(controller.graph.nodeRefs("comparison-noise")?.text.data).toBe("Noise Texture")
     expect(controller.parameters.props.parameters.map(({label}) => label)).toEqual([
       "Vector", "Scale", "Detail", "Roughness", "Lacunarity", "Distortion",

@@ -4,10 +4,6 @@ import {join, resolve} from "node:path"
 
 const storybookRoot = import.meta.dir
 const legacyRoot = resolve(storybookRoot, "../../storybook/pages/ui")
-const sharedImports = new Set([
-  "@zavx0z/storybook/stories",
-  "@zavx0z/storybook/environment",
-])
 
 describe("@nodes/ui Storybook owner boundary", () => {
   test("keeps every UI story and fixture beside its semantic owner", async () => {
@@ -17,7 +13,8 @@ describe("@nodes/ui Storybook owner boundary", () => {
       "parameter-catalog.ts",
       "socket-catalog.ts",
       "dom/graph-story.ts",
-      "dom/node-tree-editor-story.ts",
+      "dom/production-node-story.ts",
+      "dom/compiled-node-system-story.tsx",
       "dom/parameter-socket-story.ts",
       "dom/remaining-dom-story.ts",
       "dom/remaining-dom-data.ts",
@@ -37,23 +34,15 @@ describe("@nodes/ui Storybook owner boundary", () => {
     ]) expect(await Bun.file(join(storybookRoot, removed)).exists(), removed).toBeFalse()
   })
 
-  test("imports only exact shared Storybook subpaths", async () => {
-    const usedSharedImports = new Set<string>()
+  test("imports no shared Storybook package", async () => {
     for (const path of await filesBelow(storybookRoot)) {
-      if (!path.endsWith(".ts")) continue
+      if (!path.endsWith(".ts") && !path.endsWith(".tsx")) continue
       const source = await Bun.file(join(storybookRoot, path)).text()
       for (const specifier of importedSpecifiers(source)) {
         expect(specifier, path).not.toMatch(/^@ui\/storybook(?:\/|$)/u)
-        expect(specifier, path).not.toBe("@zavx0z/storybook")
-        if (!specifier.startsWith("@zavx0z/storybook/")) continue
-        expect(sharedImports.has(specifier), `${path}: ${specifier}`).toBeTrue()
-        usedSharedImports.add(specifier)
+        expect(specifier, path).not.toMatch(/^@zavx0z\/storybook(?:\/|$)/u)
       }
     }
-    expect(usedSharedImports).toEqual(new Set([
-      "@zavx0z/storybook/stories",
-      "@zavx0z/storybook/environment",
-    ]))
   })
 
   test("does not expose or depend on Storybook in the production package", async () => {

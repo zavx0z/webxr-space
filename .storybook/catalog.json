@@ -1,0 +1,2099 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "node-editor",
+      "label": "Редактор нод",
+      "route": "ui/node-editor",
+      "subjects": [
+        {
+          "id": "scene",
+          "kind": "component",
+          "label": "Развёрнутая нода",
+          "apiName": "NodeEditor",
+          "route": "ui/node-editor/scene",
+          "tags": [
+            "Редактор",
+            "нод",
+            "Развёрнутая",
+            "нода",
+            "Обычная",
+            "NodeEditor",
+            "Compiled",
+            "general",
+            "Выбранная",
+            "Rotation",
+            "linked",
+            "Translation",
+            "unlinked",
+            "Output-only",
+            "Left",
+            "+",
+            "right",
+            "Color",
+            "Path",
+            "Collection"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Обычная",
+              "route": "ui/node-editor/scene/default",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "compiled-general",
+              "label": "Compiled general",
+              "route": "ui/node-editor/scene/compiled-general",
+              "module": {
+                "path": "../storybook/dom/compiled-node-system-story.tsx",
+                "export": "createCompiledNodeSystemStory"
+              }
+            },
+            {
+              "id": "selected",
+              "label": "Выбранная",
+              "route": "ui/node-editor/scene/selected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "rotation-linked",
+              "label": "Rotation linked",
+              "route": "ui/node-editor/scene/rotation-linked",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "translation-unlinked",
+              "label": "Translation unlinked",
+              "route": "ui/node-editor/scene/translation-unlinked",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output-only",
+              "label": "Output-only",
+              "route": "ui/node-editor/scene/output-only",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "mixed-sides",
+              "label": "Left + right",
+              "route": "ui/node-editor/scene/mixed-sides",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "color-unlinked",
+              "label": "Color unlinked",
+              "route": "ui/node-editor/scene/color-unlinked",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "inventory",
+              "label": "Path + Collection",
+              "route": "ui/node-editor/scene/inventory",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "preview",
+          "kind": "component",
+          "label": "Node Preview",
+          "apiName": "NodeEditor",
+          "route": "ui/node-editor/preview",
+          "tags": [
+            "Редактор",
+            "нод",
+            "Node",
+            "Preview",
+            "closed",
+            "NodeEditor",
+            "open",
+            "Global",
+            "Previews",
+            "off",
+            "Buffer",
+            "updated",
+            "Missing",
+            "buffer",
+            "Zero-size",
+            "Multiple",
+            "previews",
+            "Non-previewable"
+          ],
+          "variants": [
+            {
+              "id": "closed",
+              "label": "Preview closed",
+              "route": "ui/node-editor/preview/closed",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "open",
+              "label": "Preview open",
+              "route": "ui/node-editor/preview/open",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "global-hidden",
+              "label": "Global Previews off",
+              "route": "ui/node-editor/preview/global-hidden",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "alternate",
+              "label": "Buffer updated",
+              "route": "ui/node-editor/preview/alternate",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "missing",
+              "label": "Missing buffer",
+              "route": "ui/node-editor/preview/missing",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "zero",
+              "label": "Zero-size buffer",
+              "route": "ui/node-editor/preview/zero",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "multiple",
+              "label": "Multiple previews",
+              "route": "ui/node-editor/preview/multiple",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "non-previewable",
+              "label": "Non-previewable",
+              "route": "ui/node-editor/preview/non-previewable",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "collapsed",
+          "kind": "component",
+          "label": "Свернутая нода",
+          "apiName": "NodeEditor",
+          "route": "ui/node-editor/collapsed",
+          "tags": [
+            "Редактор",
+            "нод",
+            "Свернутая",
+            "нода",
+            "Обычная",
+            "NodeEditor",
+            "Выбранная"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Обычная",
+              "route": "ui/node-editor/collapsed/default",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "selected",
+              "label": "Выбранная",
+              "route": "ui/node-editor/collapsed/selected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "popup",
+          "kind": "component",
+          "label": "Раскрытые controls",
+          "apiName": "NodeEditor",
+          "route": "ui/node-editor/popup",
+          "tags": [
+            "Редактор",
+            "нод",
+            "Раскрытые",
+            "controls",
+            "Select",
+            "раскрыт",
+            "NodeEditor"
+          ],
+          "variants": [
+            {
+              "id": "select-open",
+              "label": "Select раскрыт",
+              "route": "ui/node-editor/popup/select-open",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "parameter",
+      "label": "Параметры",
+      "route": "ui/parameter",
+      "subjects": [
+        {
+          "id": "text",
+          "kind": "field",
+          "label": "Текст",
+          "apiName": "Parameter",
+          "route": "ui/parameter/text",
+          "tags": [
+            "Параметры",
+            "Текст",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/text/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/text/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/text/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/text/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/text/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "number",
+          "kind": "field",
+          "label": "Число",
+          "apiName": "Parameter",
+          "route": "ui/parameter/number",
+          "tags": [
+            "Параметры",
+            "Число",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/number/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/number/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/number/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/number/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/number/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "integer",
+          "kind": "field",
+          "label": "Целое число",
+          "apiName": "Parameter",
+          "route": "ui/parameter/integer",
+          "tags": [
+            "Параметры",
+            "Целое",
+            "число",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/integer/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/integer/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/integer/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/integer/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/integer/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "boolean",
+          "kind": "field",
+          "label": "Логическое значение",
+          "apiName": "Parameter",
+          "route": "ui/parameter/boolean",
+          "tags": [
+            "Параметры",
+            "Логическое",
+            "значение",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/boolean/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/boolean/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/boolean/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/boolean/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/boolean/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "enum",
+          "kind": "field",
+          "label": "Выбор",
+          "apiName": "Parameter",
+          "route": "ui/parameter/enum",
+          "tags": [
+            "Параметры",
+            "Выбор",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/enum/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/enum/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/enum/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/enum/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/enum/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "color",
+          "kind": "field",
+          "label": "Цвет",
+          "apiName": "Parameter",
+          "route": "ui/parameter/color",
+          "tags": [
+            "Параметры",
+            "Цвет",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/color/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/color/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/color/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/color/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/color/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "vector",
+          "kind": "field",
+          "label": "Вектор",
+          "apiName": "Parameter",
+          "route": "ui/parameter/vector",
+          "tags": [
+            "Параметры",
+            "Вектор",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/vector/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/vector/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/vector/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/vector/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/vector/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "rotation",
+          "kind": "field",
+          "label": "Вращение",
+          "apiName": "Parameter",
+          "route": "ui/parameter/rotation",
+          "tags": [
+            "Параметры",
+            "Вращение",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/rotation/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/rotation/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/rotation/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/rotation/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/rotation/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "matrix",
+          "kind": "field",
+          "label": "Матрица",
+          "apiName": "Parameter",
+          "route": "ui/parameter/matrix",
+          "tags": [
+            "Параметры",
+            "Матрица",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/matrix/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/matrix/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/matrix/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/matrix/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/matrix/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "reference",
+          "kind": "field",
+          "label": "Ссылка",
+          "apiName": "Parameter",
+          "route": "ui/parameter/reference",
+          "tags": [
+            "Параметры",
+            "Ссылка",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/reference/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/reference/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/reference/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/reference/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/reference/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "collection",
+          "kind": "field",
+          "label": "Коллекция",
+          "apiName": "Parameter",
+          "route": "ui/parameter/collection",
+          "tags": [
+            "Параметры",
+            "Коллекция",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/collection/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/collection/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/collection/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/collection/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/collection/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "path",
+          "kind": "field",
+          "label": "Путь",
+          "apiName": "Parameter",
+          "route": "ui/parameter/path",
+          "tags": [
+            "Параметры",
+            "Путь",
+            "Только",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/path/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/path/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/path/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/path/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/path/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "readonly",
+          "kind": "field",
+          "label": "Только чтение",
+          "apiName": "Parameter",
+          "route": "ui/parameter/readonly",
+          "tags": [
+            "Параметры",
+            "Только",
+            "чтение",
+            "Field",
+            "Parameter",
+            "Вход",
+            "Выход",
+            "и",
+            "выход",
+            "Подключён"
+          ],
+          "variants": [
+            {
+              "id": "field",
+              "label": "Только Field",
+              "route": "ui/parameter/readonly/field",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/parameter/readonly/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/parameter/readonly/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "both",
+              "label": "Вход и выход",
+              "route": "ui/parameter/readonly/both",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "connected",
+              "label": "Подключён",
+              "route": "ui/parameter/readonly/connected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frame",
+      "label": "Frame",
+      "route": "ui/frame",
+      "subjects": [
+        {
+          "id": "nested",
+          "kind": "component",
+          "label": "Вложенный Frame",
+          "apiName": "FrameView",
+          "route": "ui/frame/nested",
+          "tags": [
+            "Frame",
+            "Вложенный",
+            "Выбран",
+            "FrameView"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Выбран",
+              "route": "ui/frame/nested/default",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "link",
+      "label": "Link",
+      "route": "ui/link",
+      "subjects": [
+        {
+          "id": "orthogonal",
+          "kind": "component",
+          "label": "Ортогональный Link",
+          "apiName": "LinkView",
+          "route": "ui/link/orthogonal",
+          "tags": [
+            "Link",
+            "Ортогональный",
+            "Выбран",
+            "LinkView"
+          ],
+          "variants": [
+            {
+              "id": "selected",
+              "label": "Выбран",
+              "route": "ui/link/orthogonal/selected",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comparison",
+      "label": "Сравнение",
+      "route": "ui/comparison",
+      "subjects": [
+        {
+          "id": "reference",
+          "kind": "component",
+          "label": "Принятый эталон",
+          "apiName": "NodeEditor",
+          "route": "ui/comparison/reference",
+          "tags": [
+            "Сравнение",
+            "Принятый",
+            "эталон",
+            "Референс",
+            "NodeEditor"
+          ],
+          "variants": [
+            {
+              "id": "default",
+              "label": "Референс",
+              "route": "ui/comparison/reference/default",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              },
+              "resources": {
+                "references": [
+                  "./references/blender-4.5.5-reference.png",
+                  "./references/catalog.json"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "socket",
+      "label": "Сокеты",
+      "route": "ui/socket",
+      "subjects": [
+        {
+          "id": "boolean",
+          "kind": "component",
+          "label": "Boolean",
+          "apiName": "SocketView",
+          "route": "ui/socket/boolean",
+          "tags": [
+            "Сокеты",
+            "Boolean",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/boolean/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/boolean/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/boolean/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "float",
+          "kind": "component",
+          "label": "Float",
+          "apiName": "SocketView",
+          "route": "ui/socket/float",
+          "tags": [
+            "Сокеты",
+            "Float",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/float/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/float/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/float/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "integer",
+          "kind": "component",
+          "label": "Integer",
+          "apiName": "SocketView",
+          "route": "ui/socket/integer",
+          "tags": [
+            "Сокеты",
+            "Integer",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/integer/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/integer/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/integer/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "vector",
+          "kind": "component",
+          "label": "Vector",
+          "apiName": "SocketView",
+          "route": "ui/socket/vector",
+          "tags": [
+            "Сокеты",
+            "Vector",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/vector/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/vector/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/vector/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "rotation",
+          "kind": "component",
+          "label": "Rotation",
+          "apiName": "SocketView",
+          "route": "ui/socket/rotation",
+          "tags": [
+            "Сокеты",
+            "Rotation",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/rotation/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/rotation/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/rotation/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "color",
+          "kind": "component",
+          "label": "Color",
+          "apiName": "SocketView",
+          "route": "ui/socket/color",
+          "tags": [
+            "Сокеты",
+            "Color",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/color/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/color/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/color/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "string",
+          "kind": "component",
+          "label": "String",
+          "apiName": "SocketView",
+          "route": "ui/socket/string",
+          "tags": [
+            "Сокеты",
+            "String",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/string/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/string/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/string/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "menu",
+          "kind": "component",
+          "label": "Menu",
+          "apiName": "SocketView",
+          "route": "ui/socket/menu",
+          "tags": [
+            "Сокеты",
+            "Menu",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/menu/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/menu/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/menu/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "object",
+          "kind": "component",
+          "label": "Object",
+          "apiName": "SocketView",
+          "route": "ui/socket/object",
+          "tags": [
+            "Сокеты",
+            "Object",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/object/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/object/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/object/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "collection",
+          "kind": "component",
+          "label": "Collection",
+          "apiName": "SocketView",
+          "route": "ui/socket/collection",
+          "tags": [
+            "Сокеты",
+            "Collection",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/collection/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/collection/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/collection/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "image",
+          "kind": "component",
+          "label": "Image",
+          "apiName": "SocketView",
+          "route": "ui/socket/image",
+          "tags": [
+            "Сокеты",
+            "Image",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/image/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/image/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/image/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "material",
+          "kind": "component",
+          "label": "Material",
+          "apiName": "SocketView",
+          "route": "ui/socket/material",
+          "tags": [
+            "Сокеты",
+            "Material",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/material/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/material/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/material/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "texture",
+          "kind": "component",
+          "label": "Texture",
+          "apiName": "SocketView",
+          "route": "ui/socket/texture",
+          "tags": [
+            "Сокеты",
+            "Texture",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/texture/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/texture/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/texture/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "geometry",
+          "kind": "component",
+          "label": "Geometry",
+          "apiName": "SocketView",
+          "route": "ui/socket/geometry",
+          "tags": [
+            "Сокеты",
+            "Geometry",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/geometry/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/geometry/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/geometry/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "matrix",
+          "kind": "component",
+          "label": "Matrix",
+          "apiName": "SocketView",
+          "route": "ui/socket/matrix",
+          "tags": [
+            "Сокеты",
+            "Matrix",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/matrix/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/matrix/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/matrix/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "shader",
+          "kind": "component",
+          "label": "Shader",
+          "apiName": "SocketView",
+          "route": "ui/socket/shader",
+          "tags": [
+            "Сокеты",
+            "Shader",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/shader/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/shader/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/shader/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bundle",
+          "kind": "component",
+          "label": "Bundle",
+          "apiName": "SocketView",
+          "route": "ui/socket/bundle",
+          "tags": [
+            "Сокеты",
+            "Bundle",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/bundle/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/bundle/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/bundle/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "closure",
+          "kind": "component",
+          "label": "Closure",
+          "apiName": "SocketView",
+          "route": "ui/socket/closure",
+          "tags": [
+            "Сокеты",
+            "Closure",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/closure/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/closure/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/closure/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "custom",
+          "kind": "component",
+          "label": "Custom",
+          "apiName": "SocketView",
+          "route": "ui/socket/custom",
+          "tags": [
+            "Сокеты",
+            "Custom",
+            "Вход",
+            "SocketView",
+            "Выход",
+            "Двунаправленный"
+          ],
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "ui/socket/custom/input",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "ui/socket/custom/output",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "ui/socket/custom/bidirectional",
+              "module": {
+                "path": "../storybook/dom/production-node-story.ts",
+                "export": "createProductionNodeStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

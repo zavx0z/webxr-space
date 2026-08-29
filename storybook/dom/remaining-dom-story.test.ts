@@ -41,7 +41,8 @@ describe("final remaining Node DOM route composition", () => {
     expect(popup.popup.visible).toBeTrue()
     expect(popup.popup.items.find(({selected}) => selected)?.id).toBe("multiply")
     const comparison = createRemainingDomProps("ui/comparison/reference/default")
-    expect(comparison.images[0]?.src).toContain("/references/blender-4.5.5-reference.png")
+    expect(comparison.images[0]?.src)
+      .toContain(encodeURIComponent("variant:@nodes/ui/comparison/reference/default"))
     expect(comparison.graph.nodes.map(({id}) => id)).toEqual(["comparison-noise"])
     expect(comparison.parameters.parameters.map(({label}) => label)).toEqual([
       "Vector", "Scale", "Detail", "Roughness", "Lacunarity", "Distortion",

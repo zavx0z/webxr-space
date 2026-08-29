@@ -199,10 +199,11 @@ describe("package-owned single Node DOM story", () => {
     }
 
     expect(source).toContain('from "@zavx0z/dom"')
-    expect(source).toContain('from "@zavx0z/storybook/stories"')
+    expect(source).toContain('from "../../../../.storybook/runtime.ts"')
     expect(source).toContain('from "../../dom/single-node-canvas.ts"')
     for (const forbidden of [
       "@engine/core",
+      "@zavx0z/storybook",
       "@layout/core",
       "@ui/elements",
       "@ui/components",

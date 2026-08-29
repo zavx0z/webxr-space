@@ -8,7 +8,7 @@ import {
   type Node,
   type Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {
   createParameterSocket,
   parameterSocketCss,
@@ -23,7 +23,7 @@ export type ParameterSocketStory = Readonly<{
   props: ParameterSocketProps
   parameterRefs(id: string): ParameterControlRefs | null
   update(props: ParameterSocketProps): void
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   dispose(): void
 }>
 

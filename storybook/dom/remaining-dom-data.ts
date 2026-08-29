@@ -12,7 +12,6 @@ import type {
   NodeWorkbenchPopup,
 } from "../../dom/node-workbench.ts"
 import type {ParameterSocketProps} from "../../dom/parameter-socket.ts"
-import {storybookPublicPath} from "@zavx0z/storybook/environment"
 import {createParameterDomProps} from "./parameter-dom-data.ts"
 import type {RemainingDomRoute} from "./remaining-route-catalog.ts"
 
@@ -270,9 +269,8 @@ function imagesFor(route: RemainingDomRoute): readonly NodeWorkbenchImage[] {
 }
 
 function acceptedReferenceSrc(): string {
-  return typeof document === "undefined"
-    ? "/references/blender-4.5.5-reference.png"
-    : storybookPublicPath("node", "/references/blender-4.5.5-reference.png", document)
+  const nodeId = "variant:@nodes/ui/comparison/reference/default"
+  return `/__storybook/resources/nodes/${encodeURIComponent(nodeId)}/?kind=reference&index=0`
 }
 
 function popupFor(route: RemainingDomRoute): NodeWorkbenchPopup {

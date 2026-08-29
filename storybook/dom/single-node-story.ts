@@ -6,7 +6,7 @@ import type {
   Node,
   Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {
   createSingleNodeCanvas,
   singleNodeCanvasCss,
@@ -19,7 +19,7 @@ export type SingleNodeStory = Readonly<{
   refs: SingleNodeCanvasRefs
   props: SingleNodeCanvasProps
   update(props: SingleNodeCanvasProps): void
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   dispose(): void
 }>
 

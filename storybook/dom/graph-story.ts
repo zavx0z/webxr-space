@@ -6,7 +6,7 @@ import {
   type Node,
   type Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {
   createGraphCanvas,
   graphCanvasCss,
@@ -33,7 +33,7 @@ export type GraphStory = Readonly<{
   linkRefs(id: string): GraphCanvasLinkRefs | null
   nodeRefs(id: string): GraphCanvasNodeRefs | null
   update(props: GraphCanvasProps): void
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   dispose(): void
 }>
 

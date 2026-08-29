@@ -8,7 +8,7 @@ import {
   type Node,
   type Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {graphCanvasCss} from "../../dom/graph-canvas.ts"
 import {nodeTreeEditorCss} from "../../dom/node-tree-editor.ts"
 import {
@@ -25,7 +25,7 @@ export type RemainingDomStory = Readonly<{
   element: HTMLElement
   props: NodeWorkbenchProps
   controller: NodeWorkbenchController
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   ready(): Promise<void>
   update(props: NodeWorkbenchProps): void
   dispose(): void
