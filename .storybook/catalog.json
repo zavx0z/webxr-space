@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "editor",
+      "label": "NodeTreeEditor",
+      "route": "editor",
+      "subjects": [
+        {
+          "id": "node-tree",
+          "kind": "tool",
+          "label": "Authoring",
+          "apiName": "NodeTreeEditor",
+          "route": "editor/node-tree",
+          "tags": [
+            "NodeTreeEditor",
+            "Authoring",
+            "Живой"
+          ],
+          "variants": [
+            {
+              "id": "live",
+              "label": "Живой",
+              "route": "editor/node-tree/live",
+              "module": {
+                "path": "../storybook/node-tree-editor-story.ts",
+                "export": "createEditorNodeTreeStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

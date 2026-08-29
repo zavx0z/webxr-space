@@ -23,6 +23,7 @@ atomic single-append Core reconcile path и не клонирует весь у�
 
 Действующие законы находятся в [требованиях editor](requirements.md).
 
-Dev-only интерактивный пример Editor находится в [`storybook/`](storybook/).
-Репозиторий показывает его в общем Storybook, но этот каталог не экспортируется
+Dev-only интерактивный пример Editor находится в [`storybook/`](storybook/),
+а declaration — в `.storybook/`. Внешний tool показывает его в общем Workbench,
+но этот каталог не экспортируется
 как часть `@nodes/editor` и не меняет production dependencies пакета.

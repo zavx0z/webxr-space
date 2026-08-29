@@ -70,10 +70,10 @@
 
 ## Package-owned dev stories
 
-1. Dev-only Core/Editor routes используют общий standard-DOM NodeTreeEditor
-   story в repository Storybook; отдельного retained dock/preview adapter нет.
-   Repository Storybook подключает routes в один общий DOM Workbench and static
-   build без второго entrypoint, runtime, Router or shell.
+1. Dev-only Core/Editor routes используют owner-local standard-DOM
+   NodeTreeEditor stories; отдельного retained dock/preview adapter нет.
+   Package catalogs подключают exact routes к общему внешнему Workbench без
+   consumer Storybook dependency, server, Router or shell.
 2. Story-owned ordinary input/click events изменяют только controlled DOM props;
    они не становятся скрытой частью headless Editor runtime.
 3. Editor package не имеет локального Storybook export/dependency. Repository
