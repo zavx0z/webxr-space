@@ -152,8 +152,8 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 - `icons` владеет immutable image URLs.
 - `syntax-theme` владеет source-backed scope color resolver.
 
-Detailed component and Storybook laws остаются executable в natural owner
-tests и private `@ui/storybook` tests.
+Detailed component and catalog laws остаются executable в natural owner tests
+и `packages/components/.storybook` tests без Storybook dependency.
 
 ## `UI-COMPILED-BUTTON-001` — first final component owner
 
@@ -347,7 +347,7 @@ subpaths: `@zavx0z/dom`, `@zavx0z/react`, `@zavx0z/template` and
 2. Production typecheck succeeds from `tsconfig.production.json`.
 3. Focused component tests prove stable identity, controlled state, standard
    event propagation, validation-before-mutation and disposal.
-4. `@ui/storybook` renders the same production DOM/CSS owners through the
+4. External Storybook renders the same production DOM/CSS owners through the
    document renderer with exact route readiness, console 0 and non-black
    canvas evidence.
 5. Repository and bundle scans contain no retained Surface/Layout/Elements/HUD
