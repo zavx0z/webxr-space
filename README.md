@@ -19,6 +19,13 @@ UI and Node retain their repository-owned Blender-compatible composition,
 density, material and interaction contracts while implementing them with
 standard DOM/CSS and the shared renderer.
 
+The shared Renderer presentation-host contract also preserves the former
+topology law: one application Experience owns one semantic Document, native
+Canvas, Engine Renderer and Space; displays, world UI and HUD are movable
+projection roots of that same owner. The normative details live in
+[`renderer/ARCHITECTURE.md`](../renderer/ARCHITECTURE.md) and
+[`renderer/packages/browser/requirements.md`](../renderer/packages/browser/requirements.md).
+
 Only the three direct UI-stack repositories belong to this superproject.
 Libraries and development tools such as highlighters, Storybook infrastructure,
 parsers, generators, and analyzers remain independent repositories even when
