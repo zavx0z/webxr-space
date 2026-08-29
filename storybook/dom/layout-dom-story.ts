@@ -7,7 +7,7 @@ import {
   type Node,
   type Text,
 } from "@zavx0z/dom"
-import type {StorybookDomStorySource} from "@zavx0z/storybook/stories"
+import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
 import {
   createLayoutPresentation,
   layoutPresentationCss,
@@ -43,7 +43,7 @@ export type LayoutDomStory = Readonly<{
   element: HTMLElement
   props: LayoutPresentationProps
   caseRefs(id: string): LayoutPresentationCaseRefs | null
-  source(): StorybookDomStorySource
+  source(): NodesExternalStorySource
   update(props: LayoutPresentationProps): void
   dispose(): void
 }>

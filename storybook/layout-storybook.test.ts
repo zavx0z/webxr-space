@@ -22,7 +22,6 @@ import {
 
 const storybookRoot = fileURLToPath(new URL(".", import.meta.url))
 const layoutRoot = fileURLToPath(new URL("../", import.meta.url))
-const repositoryStorybookRoot = fileURLToPath(new URL("../../storybook/", import.meta.url))
 const COFFMAN_GRAHAM_STORY_GRAPH = {
   ...TOP_DOWN_DENSE_GRAPH,
   layoutOptions: {...TOP_DOWN_DENSE_GRAPH.layoutOptions, maxNodesPerLayer: 4},
@@ -76,21 +75,37 @@ const ADAPTIVE_BASELINES = {
 
 describe("standard package-owned Layout Storybook", () => {
   test("supplies exact lazy Layout stories to the one root Workbench", async () => {
-    const rootStories = await Bun.file(join(repositoryStorybookRoot, "app/dom-catalog.ts")).text()
+    const catalog = await Bun.file(join(layoutRoot, ".storybook/catalog.json")).json() as {
+      categories: readonly Readonly<{
+        route: string
+        subjects: readonly Readonly<{
+          route: string
+          variants: readonly Readonly<{module: Readonly<{path: string; export: string}>}>[]
+        }>[]
+      }>[]
+    }
     const domStory = await Bun.file(join(storybookRoot, "dom/layout-dom-story.ts")).text()
     const domController = await Bun.file(join(layoutRoot, "dom/layout-presentation.ts")).text()
-    const registry = await Bun.file(join(repositoryStorybookRoot, "server/page-registry.ts")).text()
+    const runtime = await Bun.file(join(layoutRoot, ".storybook/runtime.ts")).text()
 
-    expect(rootStories).toContain('label: "Раскладка", route: "layout"')
-    expect(rootStories).not.toContain("loadNodesStory")
-    expect(rootStories).not.toContain("LAYOUT_STORIES.load")
+    expect(catalog.categories[0]?.route).toBe("layout")
+    expect(catalog.categories[0]?.subjects.map(({route}) => route)).toEqual([
+      "layout/fixed",
+      "layout/adaptive",
+      "layout/dagre-layered",
+      "layout/coffman-graham",
+    ])
+    expect(new Set(catalog.categories[0]?.subjects.flatMap(({variants}) =>
+      variants.map(({module}) => `${module.path}#${module.export}`))))
+      .toEqual(new Set(["../storybook/dom/layout-dom-story.ts#createLayoutDomStory"]))
     expect(domStory).toContain('import("./providers/fixed.ts")')
     expect(domStory).toContain('import("./providers/adaptive.ts")')
     expect(domStory).toContain('import("./providers/dagre-layered.ts")')
     expect(domStory).toContain('import("./providers/coffman-graham.ts")')
     expect(domController).toContain('from "@zavx0z/dom"')
     expect(domController).not.toMatch(/@layout\/core|@ui\/elements|@ui\/components/)
-    expect(registry).toContain('entrypoint: join(import.meta.dir, "../app/dom-entry.ts")')
+    expect(runtime).toContain("createNodesExternalRuntime")
+    expect(runtime).not.toContain("@zavx0z/storybook")
   })
 
   test("publishes every overview and exact package-policy-scenario route", () => {

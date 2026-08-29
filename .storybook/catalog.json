@@ -1,0 +1,186 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "layout",
+      "label": "Раскладка",
+      "route": "layout",
+      "subjects": [
+        {
+          "id": "fixed",
+          "kind": "policy",
+          "label": "Фиксированная",
+          "apiName": "layoutFixed",
+          "route": "layout/fixed",
+          "tags": [
+            "Раскладка",
+            "Фиксированная",
+            "RIGHT",
+            "layoutFixed",
+            "DOWN"
+          ],
+          "variants": [
+            {
+              "id": "baseline-right",
+              "label": "RIGHT",
+              "group": {
+                "id": "baseline",
+                "label": "Базовая топология"
+              },
+              "route": "layout/fixed/baseline/right",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            },
+            {
+              "id": "baseline-down",
+              "label": "DOWN",
+              "group": {
+                "id": "baseline",
+                "label": "Базовая топология"
+              },
+              "route": "layout/fixed/baseline/down",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "adaptive",
+          "kind": "policy",
+          "label": "Адаптивная",
+          "apiName": "layoutAdaptive",
+          "route": "layout/adaptive",
+          "tags": [
+            "Раскладка",
+            "Адаптивная",
+            "Общий",
+            "порт",
+            "·",
+            "RIGHT",
+            "layoutAdaptive",
+            "DOWN",
+            "Контейнеры"
+          ],
+          "variants": [
+            {
+              "id": "shared-right",
+              "label": "Общий порт · RIGHT",
+              "group": {
+                "id": "shared",
+                "label": "Общий порт"
+              },
+              "route": "layout/adaptive/shared/right",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            },
+            {
+              "id": "shared-down",
+              "label": "Общий порт · DOWN",
+              "group": {
+                "id": "shared",
+                "label": "Общий порт"
+              },
+              "route": "layout/adaptive/shared/down",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            },
+            {
+              "id": "compound-right",
+              "label": "Контейнеры · RIGHT",
+              "group": {
+                "id": "compound",
+                "label": "Контейнеры"
+              },
+              "route": "layout/adaptive/compound/right",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            },
+            {
+              "id": "compound-down",
+              "label": "Контейнеры · DOWN",
+              "group": {
+                "id": "compound",
+                "label": "Контейнеры"
+              },
+              "route": "layout/adaptive/compound/down",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "dagre-layered",
+          "kind": "policy",
+          "label": "Dagre Layered",
+          "apiName": "layoutTopDown",
+          "route": "layout/dagre-layered",
+          "tags": [
+            "Раскладка",
+            "Dagre",
+            "Layered",
+            "Default",
+            "layoutTopDown"
+          ],
+          "variants": [
+            {
+              "id": "default-default",
+              "label": "Default",
+              "group": {
+                "id": "default",
+                "label": "Default"
+              },
+              "route": "layout/dagre-layered/default/default",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            }
+          ]
+        },
+        {
+          "id": "coffman-graham",
+          "kind": "policy",
+          "label": "Coffman–Graham",
+          "apiName": "layoutCoffmanGraham",
+          "route": "layout/coffman-graham",
+          "tags": [
+            "Раскладка",
+            "Coffman–Graham",
+            "W",
+            "=",
+            "4",
+            "layoutCoffmanGraham"
+          ],
+          "variants": [
+            {
+              "id": "default-default",
+              "label": "W = 4",
+              "group": {
+                "id": "default",
+                "label": "Default"
+              },
+              "route": "layout/coffman-graham/default/default",
+              "module": {
+                "path": "../storybook/dom/layout-dom-story.ts",
+                "export": "createLayoutDomStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

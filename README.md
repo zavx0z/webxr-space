@@ -264,15 +264,14 @@ bun test packages/layout/storybook/layout-storybook.test.ts
 ```
 
 Dev-only stories принадлежат `@nodes/layout` и находятся в
-`packages/layout/storybook`. Репозиторный `@nodes/storybook` собирает их в
-раздел `Раскладка` одного DOM → WebGPU Workbench и владеет общим процессом,
-route tree, canvas, runtime и static build. Второстепенная панель содержит
+`packages/layout/storybook`; `.storybook/catalog.json` связывает их с одним
+внешним DOM → WebGPU Workbench без Storybook dependency. Второстепенная панель содержит
 Fixed, Adaptive, Dagre Layered и Coffman–Graham; dock содержит их сценарии.
 Package-private standard DOM controller показывает exact computed rectangles,
 resolved ports, route samples и diagnostics без generic Layout runtime или UI
 Elements. Каждый exact lazy story импортирует
 ровно один public fixed, adaptive, top-down или coffman-graham entrypoint; NodeTree, editor и
-product renderer не входят в его chunk. Storybook не экспортируется из
+product renderer не входят в его chunk. Dev catalog не экспортируется из
 `@nodes/layout` и не входит в его production dependencies. Frozen geometry и
 SVG baselines fixed/adaptive проверяются отдельно от WebGPU presentation.
 Алгоритмы опубликованы под собственными именами: `Dagre Layered` на
@@ -282,7 +281,7 @@ SVG baselines fixed/adaptive проверяются отдельно от WebGPU
 85 semantic edges и 170 разнесённых independent endpoints.
 
 Полный consumer-путь `NodeTree → standard DOM → document renderer` показывает
-соседний раздел `/editor/node-tree/live` того же `@nodes/storybook` Workbench.
+package tab `@nodes/editor` с route `editor/node-tree/live` в том же внешнем origin.
 
 ## Обязательный benchmark перед REVIEW
 
