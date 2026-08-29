@@ -10,7 +10,23 @@ export interface ViewPointParameters {
    * HTML-элемент, в котором будет отображаться сцена.
    * Служит для расчёта соотношения сторон и привязки событий ввода.
    */
-  element: HTMLElement
+  element?: HTMLElement
+
+  /**
+   * Browser listeners owned directly by ViewPoint or listener-free host routing.
+   *
+   * `host` keeps camera math in Engine while the composition owner routes input
+   * and requests presentation. It never mutates or subscribes to `element`.
+   *
+   * @default "browser"
+   */
+  controls?: ViewPointControls
+
+  /**
+   * Client-coordinate viewport used for aspect and anchored zoom mapping.
+   * Required in host mode when no HTML element is supplied.
+   */
+  viewport?: ViewPointClientViewport
 
   /**
    * Угол обзора (field of view) в радианах.
@@ -44,6 +60,15 @@ export interface ViewPointParameters {
    */
   target?: { x: number; y: number; z: number }
 }
+
+export type ViewPointControls = "browser" | "host"
+
+export type ViewPointClientViewport = Readonly<{
+  left: number
+  top: number
+  width: number
+  height: number
+}>
 
 /**
  * # ViewPoint: Единая Точка Обзора
@@ -98,7 +123,12 @@ export class ViewPoint {
   public viewMatrix: Matrix4 = new Matrix4()
   public projectionMatrix: Matrix4 = new Matrix4()
 
-  private element: HTMLElement
+  private readonly controls: ViewPointControls
+  private readonly element: HTMLElement | null
+  private readonly eventDocument: Document | null
+  private viewport: ViewPointClientViewport | null
+  private previousTouchAction: string | null = null
+  private controlsDisposed = false
   private target: Vector3
   private up: Vector3 = new Vector3(0, 0, 1)
 
@@ -116,7 +146,23 @@ export class ViewPoint {
    * @throws Error Если `fov` или `near` <= 0, или если `far` <= `near`.
    */
   constructor(parameters: ViewPointParameters) {
-    this.element = parameters.element
+    this.controls = viewPointControls(parameters.controls)
+    this.element = parameters.element ?? null
+    this.viewport = parameters.viewport === undefined
+      ? null
+      : viewPointClientViewport(parameters.viewport)
+    if (this.controls === "browser" && this.element === null) {
+      throw new TypeError("ViewPoint browser controls require an element")
+    }
+    if (this.controls === "host" && this.element === null && this.viewport === null) {
+      throw new TypeError("ViewPoint host controls require a viewport when no element is supplied")
+    }
+    this.eventDocument = this.controls === "browser"
+      ? this.element?.ownerDocument ?? globalThis.document ?? null
+      : null
+    if (this.controls === "browser" && this.eventDocument === null) {
+      throw new Error("ViewPoint browser controls require an owner Document")
+    }
     this.fov = parameters.fov ?? 1 // примерно 57 градусов
     this.near = parameters.near ?? 0.1
     this.far = parameters.far ?? 1000
@@ -125,7 +171,8 @@ export class ViewPoint {
     if (this.near <= 0) throw new Error("Ближняя плоскость отсечения (near) должна быть больше нуля.")
     if (this.far <= this.near) throw new Error("Дальняя плоскость отсечения (far) должна быть больше ближней (near).")
 
-    this.aspect = this.element.clientWidth / this.element.clientHeight
+    const initialViewport = this.viewport ?? elementClientViewport(this.element!)
+    this.aspect = initialViewport.width / initialViewport.height
 
     this.target = parameters.target
       ? new Vector3(parameters.target.x, parameters.target.y, parameters.target.z)
@@ -135,7 +182,7 @@ export class ViewPoint {
       : new Vector3(10, -10, 10)
 
     this.updateProjectionMatrix()
-    this.attachEventListeners()
+    if (this.controls === "browser") this.attachEventListeners()
     this.update()
   }
 
@@ -174,6 +221,12 @@ export class ViewPoint {
     if (aspect <= 0) return
     this.aspect = aspect
     this.updateProjectionMatrix()
+  }
+
+  /** Updates host-routed client bounds and the matching projection aspect. */
+  public setViewport(viewport: ViewPointClientViewport): void {
+    this.viewport = viewPointClientViewport(viewport)
+    this.setAspectRatio(this.viewport.width / this.viewport.height)
   }
 
   public updateProjectionMatrix(): void {
@@ -225,32 +278,40 @@ export class ViewPoint {
    * Удаляет слушатели событий с DOM-элемента и документа.
    */
   public dispose() {
-    this.element.removeEventListener("mousedown", this.onMouseDown)
-    document.removeEventListener("mousemove", this.onMouseMove)
-    document.removeEventListener("mouseup", this.onMouseUp)
-    this.element.removeEventListener("wheel", this.onWheel)
-    this.element.removeEventListener("contextmenu", this.preventContextMenu)
-    this.element.removeEventListener("touchstart", this.onTouchStart)
-    this.element.removeEventListener("touchend", this.onTouchEnd)
-    this.element.removeEventListener("touchcancel", this.onTouchEnd)
-    this.element.removeEventListener("touchmove", this.onTouchMove)
-    this.element.removeEventListener("gesturestart", this.onGestureStart)
+    if (this.controlsDisposed || this.controls !== "browser") return
+    this.controlsDisposed = true
+    const element = this.element!
+    const eventDocument = this.eventDocument!
+    element.removeEventListener("mousedown", this.onMouseDown)
+    eventDocument.removeEventListener("mousemove", this.onMouseMove)
+    eventDocument.removeEventListener("mouseup", this.onMouseUp)
+    element.removeEventListener("wheel", this.onWheel)
+    element.removeEventListener("contextmenu", this.preventContextMenu)
+    element.removeEventListener("touchstart", this.onTouchStart)
+    element.removeEventListener("touchend", this.onTouchEnd)
+    element.removeEventListener("touchcancel", this.onTouchEnd)
+    element.removeEventListener("touchmove", this.onTouchMove)
+    element.removeEventListener("gesturestart", this.onGestureStart)
+    if (this.previousTouchAction !== null) element.style.touchAction = this.previousTouchAction
   }
 
   private attachEventListeners() {
-    this.element.style.touchAction = "none"
-    this.element.addEventListener("mousedown", this.onMouseDown)
-    document.addEventListener("mousemove", this.onMouseMove)
-    document.addEventListener("mouseup", this.onMouseUp)
-    this.element.addEventListener("wheel", this.onWheel, { passive: false })
-    this.element.addEventListener("contextmenu", this.preventContextMenu)
+    const element = this.element!
+    const eventDocument = this.eventDocument!
+    this.previousTouchAction = element.style.touchAction
+    element.style.touchAction = "none"
+    element.addEventListener("mousedown", this.onMouseDown)
+    eventDocument.addEventListener("mousemove", this.onMouseMove)
+    eventDocument.addEventListener("mouseup", this.onMouseUp)
+    element.addEventListener("wheel", this.onWheel, { passive: false })
+    element.addEventListener("contextmenu", this.preventContextMenu)
 
-    this.element.addEventListener("touchstart", this.onTouchStart, { passive: false })
-    this.element.addEventListener("touchend", this.onTouchEnd)
-    this.element.addEventListener("touchcancel", this.onTouchEnd)
-    this.element.addEventListener("touchmove", this.onTouchMove, { passive: false })
+    element.addEventListener("touchstart", this.onTouchStart, { passive: false })
+    element.addEventListener("touchend", this.onTouchEnd)
+    element.addEventListener("touchcancel", this.onTouchEnd)
+    element.addEventListener("touchmove", this.onTouchMove, { passive: false })
     // Предотвращаем стандартное поведение масштабирования страницы на iOS
-    this.element.addEventListener("gesturestart", this.onGestureStart, { passive: false })
+    element.addEventListener("gesturestart", this.onGestureStart, { passive: false })
   }
 
   private preventContextMenu = (e: Event) => e.preventDefault()
@@ -456,9 +517,9 @@ export class ViewPoint {
   }
 
   private targetPlanePointForClient(clientX: number, clientY: number): Vector3 | null {
-    const rect = this.element.getBoundingClientRect()
-    const width = rect.width || this.element.clientWidth
-    const height = rect.height || this.element.clientHeight
+    const rect = this.viewport ?? elementClientViewport(this.element!)
+    const width = rect.width
+    const height = rect.height
     if (width <= 0 || height <= 0) return null
 
     this.update()
@@ -508,6 +569,43 @@ function isFiniteVector(v: Vector3): boolean {
 
 function finiteControlDelta(value: number, label: string): number {
   if (!Number.isFinite(value)) throw new RangeError(`ViewPoint ${label} must be finite`)
+  return value
+}
+
+function viewPointControls(value: ViewPointControls | undefined): ViewPointControls {
+  const controls = value ?? "browser"
+  if (controls !== "browser" && controls !== "host") {
+    throw new TypeError("ViewPoint controls must be browser or host")
+  }
+  return controls
+}
+
+function viewPointClientViewport(value: ViewPointClientViewport): ViewPointClientViewport {
+  if (value === null || typeof value !== "object") {
+    throw new TypeError("ViewPoint viewport is required")
+  }
+  const left = finiteViewportValue(value.left, "left")
+  const top = finiteViewportValue(value.top, "top")
+  const width = positiveViewportValue(value.width, "width")
+  const height = positiveViewportValue(value.height, "height")
+  return Object.freeze({left, top, width, height})
+}
+
+function elementClientViewport(element: HTMLElement): ViewPointClientViewport {
+  const rect = element.getBoundingClientRect()
+  const width = rect.width > 0 ? rect.width : Math.max(1, element.clientWidth)
+  const height = rect.height > 0 ? rect.height : Math.max(1, element.clientHeight)
+  return {left: rect.left, top: rect.top, width, height}
+}
+
+function finiteViewportValue(value: number, label: string): number {
+  if (!Number.isFinite(value)) throw new RangeError(`ViewPoint viewport ${label} must be finite`)
+  return value
+}
+
+function positiveViewportValue(value: number, label: string): number {
+  finiteViewportValue(value, label)
+  if (value <= 0) throw new RangeError(`ViewPoint viewport ${label} must be positive`)
   return value
 }
 

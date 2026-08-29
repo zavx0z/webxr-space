@@ -42,4 +42,28 @@ describe("Renderer backing viewport", () => {
     expect(viewports).toEqual([[0, 0, 1, 1, 0, 1]])
     expect(scissors).toEqual([[0, 0, 1, 1]])
   })
+
+  test("uses an exact physical bounded viewport and scissor when supplied", () => {
+    const renderer = new Renderer()
+    ;(renderer as unknown as {canvas: {width: number; height: number}}).canvas = {
+      width: 2_560,
+      height: 1_440,
+    }
+    const viewports: number[][] = []
+    const scissors: number[][] = []
+    const pass = {
+      setViewport(...values: number[]) { viewports.push(values) },
+      setScissorRect(...values: number[]) { scissors.push(values) },
+    } as unknown as GPURenderPassEncoder
+
+    ;(renderer as unknown as {
+      configurePassViewport(
+        owner: GPURenderPassEncoder,
+        viewport: {x: number; y: number; width: number; height: number},
+      ): void
+    }).configurePassViewport(pass, {x: 200, y: 160, width: 800, height: 640})
+
+    expect(viewports).toEqual([[200, 160, 800, 640, 0, 1]])
+    expect(scissors).toEqual([[200, 160, 800, 640]])
+  })
 })

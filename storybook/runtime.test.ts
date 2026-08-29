@@ -1,33 +1,21 @@
 import {describe, expect, test} from "bun:test"
-import {
-  Object3D,
-  Space,
-  type Renderer,
-  type ViewPoint,
-} from "@engine/core"
+import {Space} from "@engine/core"
 import {
   EngineStorySceneState,
   createEngineStorybookRuntime,
-  renderEngineStoryScene,
-  type EngineStorybookPreviewBounds,
   type EngineStorybookRuntimeContext,
-  type EngineStorybookStage,
 } from "../.storybook/runtime.ts"
 import type {EngineStory, StoryScene} from "./story.ts"
 
 describe("@engine/core structural Storybook runtime", () => {
-  test("mounts one owner canvas at shared preview bounds without owning navigation", async () => {
-    const native = fakeNativeCanvas()
-    const ownerCanvas = {
-      getBoundingClientRect: () => ({left: 10, top: 20, width: 800, height: 600}),
-    } as HTMLCanvasElement
-    const stage = fakeStage()
+  test("mounts one owner Space in the shared bounded world host without owning a canvas", async () => {
     const mounted: unknown[] = []
+    const worlds: any[] = []
     const inspector: unknown[] = []
     const source: unknown[] = []
     const props: unknown[] = []
-    let boundsListener: ((bounds: EngineStorybookPreviewBounds | null) => void) | null = null
-    let unsubscribed = 0
+    let worldDisposes = 0
+    let worldRequests = 0
     const lifetime = new AbortController()
     const context = {
       document: {
@@ -38,8 +26,6 @@ describe("@engine/core structural Storybook runtime", () => {
           }
         },
       },
-      browserDocument: {} as globalThis.Document,
-      canvas: ownerCanvas,
       signal: lifetime.signal,
       mount: (node: unknown) => mounted.push(node),
       publishInspector: (value: unknown) => inspector.push(value),
@@ -47,19 +33,24 @@ describe("@engine/core structural Storybook runtime", () => {
       publishProps: (value: unknown) => props.push(value),
       reportDiagnostic() {},
       requestRender() {},
-      subscribePreviewBounds(listener: (bounds: EngineStorybookPreviewBounds | null) => void) {
-        boundsListener = listener
-        listener(null)
-        return () => { unsubscribed += 1 }
+      mountWorldPreview(registration: any) {
+        mounted.push(registration.node)
+        worlds.push(registration)
+        return {
+          frames: 1,
+          disposed: false,
+          requestRender() { worldRequests += 1 },
+          resetViewPoint() {},
+          dispose() { worldDisposes += 1 },
+        }
       },
     } satisfies EngineStorybookRuntimeContext
-    const adapter = createEngineStorybookRuntime({
-      createNativeCanvas: () => native.canvas,
-      createStage: async () => stage.stage,
-    })
+    const adapter = createEngineStorybookRuntime()
     const session = await adapter.create(context)
     const routeSignal = new AbortController()
-    const current = story("current", () => scene(1))
+    const sceneResize: unknown[] = []
+    const currentScene = scene(1, (viewport) => sceneResize.push(viewport))
+    const current = story("current", () => currentScene)
 
     await session.mount({
       route: "space/coordinate-system/z-up",
@@ -67,36 +58,34 @@ describe("@engine/core structural Storybook runtime", () => {
       signal: routeSignal.signal,
     })
     expect(mounted).toHaveLength(1)
-    expect(stage.shown).toEqual([current])
+    expect(worlds).toHaveLength(1)
+    expect(worlds[0]?.space).toBe(currentScene.space)
+    expect(worlds[0]?.camera).toBe(currentScene.camera)
+    expect(worlds[0]?.cameraGestures).toBeTrue()
+    expect(worldRequests).toBe(1)
     expect(inspector.at(-1)).toMatchObject({context: "current"})
     expect(source.at(-1)).toMatchObject({typescript: "const current = true"})
     expect(props.at(-1)).toMatchObject({id: "current", frames: 1})
+    expect((source.at(-1) as {html: string}).html).not.toContain("canvas")
 
-    boundsListener!({
+    worlds[0]?.resize({
       x: 100,
       y: 80,
       width: 400,
       height: 320,
-      viewportWidth: 1_000,
-      viewportHeight: 800,
+      backingX: 200,
+      backingY: 160,
+      backingWidth: 800,
+      backingHeight: 640,
+      pixelRatio: 2,
     })
-    expect(native.style).toMatchObject({
-      left: "90px",
-      top: "80px",
-      width: "320px",
-      height: "240px",
-      visibility: "visible",
-    })
-    expect(stage.sizes.at(-1)).toEqual([320, 240])
+    expect(sceneResize).toEqual([{width: 800, height: 640}])
 
     await session.unmount()
-    expect(stage.clears).toBe(1)
-    expect(native.canvas.hidden).toBeTrue()
+    expect(worldDisposes).toBe(1)
     await session.dispose()
     await session.dispose()
-    expect(stage.disposes).toBe(1)
-    expect(native.removes).toBe(1)
-    expect(unsubscribed).toBe(1)
+    expect(worldDisposes).toBe(1)
   })
 
   test("rejects stale async scenes and recreates only the current selection", async () => {
@@ -115,68 +104,15 @@ describe("@engine/core structural Storybook runtime", () => {
     await expect(state.reset()).resolves.toBeNull()
   })
 
-  test("refreshes the retained world transform immediately before render", () => {
-    const space = new Space()
-    const parent = new Object3D()
-    const child = new Object3D()
-    parent.position.set(12, -4, 3)
-    child.position.set(5, 2, 1)
-    parent.add(child)
-    space.add(parent)
-    const events: string[] = []
-    const renderer = {
-      render() {
-        events.push(`${child.matrixWorld.elements[12]},${child.matrixWorld.elements[13]},${child.matrixWorld.elements[14]}`)
-      },
-    } as Pick<Renderer, "render">
+  test("contains no native canvas, private Renderer or private animation-frame loop", async () => {
+    const source = await Bun.file(new URL("../.storybook/runtime.ts", import.meta.url)).text()
 
-    renderEngineStoryScene(renderer, {space}, {} as ViewPoint)
-    expect(events).toEqual(["17,-2,4"])
+    expect(source).toContain("mountWorldPreview")
+    expect(source).not.toContain("engine-story-canvas")
+    expect(source).not.toContain("new Renderer")
+    expect(source).not.toContain("requestAnimationFrame")
   })
 })
-
-function fakeStage() {
-  const shown: EngineStory[] = []
-  const sizes: Array<readonly [number, number]> = []
-  const state = {clears: 0, disposes: 0, requests: 0}
-  const stage: EngineStorybookStage = {
-    get frames() { return 1 },
-    async show(story) {
-      shown.push(story)
-      return true
-    },
-    async reset() { return true },
-    clear() { state.clears += 1 },
-    resize(width, height) { sizes.push([width, height]) },
-    requestRender() { state.requests += 1 },
-    dispose() { state.disposes += 1 },
-  }
-  return {
-    stage,
-    shown,
-    sizes,
-    get clears() { return state.clears },
-    get disposes() { return state.disposes },
-  }
-}
-
-function fakeNativeCanvas() {
-  const style: Record<string, string> = {}
-  let removes = 0
-  const listeners = new Map<string, EventListener>()
-  const canvas = {
-    hidden: true,
-    style,
-    addEventListener(type: string, listener: EventListener) { listeners.set(type, listener) },
-    removeEventListener(type: string) { listeners.delete(type) },
-    remove() { removes += 1 },
-  } as unknown as HTMLCanvasElement
-  return {
-    canvas,
-    style,
-    get removes() { return removes },
-  }
-}
 
 function story(id: string, createScene: () => StoryScene | Promise<StoryScene>): EngineStory {
   return {
@@ -193,12 +129,16 @@ function story(id: string, createScene: () => StoryScene | Promise<StoryScene>):
   }
 }
 
-function scene(x: number): StoryScene {
+function scene(
+  x: number,
+  resize?: (viewport: Readonly<{width: number; height: number}>) => void,
+): StoryScene {
   return {
     space: new Space(),
     camera: {
       position: {x, y: 0, z: 10},
       target: {x: 0, y: 0, z: 0},
     },
+    ...(resize === undefined ? {} : {resize}),
   }
 }

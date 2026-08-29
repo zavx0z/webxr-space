@@ -66,6 +66,22 @@ import {
   applyBufferAttributeUploadPlan,
   planBufferAttributeUpload,
 } from "./buffer-attribute-upload"
+import {
+  planRenderComposition,
+  renderCompositionBackgroundShader,
+  type PlannedRenderComposition,
+  type RenderBoundedView,
+  type RenderComposition,
+  type RendererPhysicalViewport,
+  type RenderOverlay,
+} from "./render-composition"
+
+export type {
+  RenderBoundedView,
+  RenderComposition,
+  RendererPhysicalViewport,
+  RenderOverlay,
+} from "./render-composition"
 
 if (import.meta.hot) {
   (import.meta.hot.accept as unknown as (dependencies: string[], callback: () => void) => void)([
@@ -132,12 +148,23 @@ interface PreparedRenderLayer {
   uiObjects: RenderItem[]
 }
 
-function hasDirectRenderItems(layer: PreparedRenderLayer): boolean {
-  return layer.regularObjects.length > 0 || layer.glassObjects.length > 0 || layer.uiObjects.length > 0
+interface RenderViewUniformResources {
+  globalUniformBuffer: GPUBuffer
+  sceneUniformBuffer: GPUBuffer
+  globalBindGroup: GPUBindGroup
+  backgroundUniformBuffer: GPUBuffer
+  backgroundBindGroup: GPUBindGroup
 }
 
-export type RenderOverlay = Object3D & {
-  updateForViewPoint?(viewPoint: ViewPoint): void
+interface PreparedCompositionLayer {
+  layer: PreparedRenderLayer
+  resources: RenderViewUniformResources
+  viewport: RendererPhysicalViewport
+  paintBackground: boolean
+}
+
+function hasDirectRenderItems(layer: PreparedRenderLayer): boolean {
+  return layer.regularObjects.length > 0 || layer.glassObjects.length > 0 || layer.uiObjects.length > 0
 }
 
 /**
@@ -185,9 +212,10 @@ export class Renderer {
   private roundedRectInstanceBindGroupCache = new Map<BufferGeometry, RoundedRectInstanceBindGroupEntry>()
 
   // --- Глобальные ресурсы ---
-  private globalUniformBuffer: GPUBuffer | null = null
-  private sceneUniformBuffer: GPUBuffer | null = null // Для освещения
-  private globalBindGroup: GPUBindGroup | null = null
+  private globalBindGroupLayout: GPUBindGroupLayout | null = null
+  private backgroundBindGroupLayout: GPUBindGroupLayout | null = null
+  private backgroundPipeline: GPURenderPipeline | null = null
+  private viewUniformResources: RenderViewUniformResources[] = []
 
   // --- Ресурсы для каждого объекта ---
   private perObjectUniformBuffer: GPUBuffer | null = null
@@ -212,19 +240,19 @@ export class Renderer {
   private hasPresentedFrame = false
   private sampleCount = 4 // MSAA
   public pixelRatio = 1
-  private frustum: Frustum = new Frustum()
   public canvas: HTMLCanvasElement | null = null
-  private readonly viewProjectionMatrix = new Matrix4()
+  private readonly viewProjectionMatrices: Matrix4[] = []
+  private readonly compositionFrustums: Frustum[] = []
   private readonly sceneUniformData = new ArrayBuffer(SCENE_UNIFORMS_SIZE)
   private readonly sceneUniformFloats = new Float32Array(this.sceneUniformData)
   private readonly sceneUniformUints = new Uint32Array(this.sceneUniformData)
+  private readonly backgroundUniformData = new Float32Array(4)
   private readonly sceneViewNormalMatrix = new Matrix4()
   private readonly sceneCameraPosition = new Vector3()
   private readonly sceneWorldLightPosition = new Vector3()
   private readonly meshNormalMatrix = new Matrix4()
   private readonly skinnedMeshWorldInverse = new Matrix4()
   private readonly skinnedBoneMatrix = new Matrix4()
-  private readonly backgroundClearColor: GPUColorDict = {r: 0, g: 0, b: 0, a: 0}
 
   /**
    * Инициализирует WebGPU устройство и контекст.
@@ -274,16 +302,6 @@ export class Renderer {
   private async setupPipelines(): Promise<void> {
     if (!this.device || !this.presentationFormat) return
 
-    this.globalUniformBuffer = this.device.createBuffer({
-      size: 64,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
-
-    this.sceneUniformBuffer = this.device.createBuffer({
-      size: SCENE_UNIFORMS_SIZE,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
-
     const globalBindGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
@@ -298,14 +316,37 @@ export class Renderer {
         },
       ],
     })
-
-    this.globalBindGroup = this.device.createBindGroup({
-      layout: globalBindGroupLayout,
-      entries: [
-        {binding: 0, resource: {buffer: this.globalUniformBuffer}},
-        {binding: 1, resource: {buffer: this.sceneUniformBuffer}},
-      ],
+    this.globalBindGroupLayout = globalBindGroupLayout
+    const backgroundBindGroupLayout = this.device.createBindGroupLayout({
+      entries: [{
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: {type: "uniform"},
+      }],
     })
+    this.backgroundBindGroupLayout = backgroundBindGroupLayout
+    const backgroundShaderModule = this.device.createShaderModule({
+      code: renderCompositionBackgroundShader,
+    })
+    this.backgroundPipeline = this.device.createRenderPipeline({
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: [backgroundBindGroupLayout],
+      }),
+      vertex: {module: backgroundShaderModule, entryPoint: "vs_main"},
+      fragment: {
+        module: backgroundShaderModule,
+        entryPoint: "fs_main",
+        targets: [{format: this.presentationFormat}],
+      },
+      primitive: {topology: "triangle-list", cullMode: "none"},
+      depthStencil: {
+        depthWriteEnabled: false,
+        depthCompare: "always",
+        format: "depth24plus-stencil8",
+      },
+      multisample: {count: this.sampleCount},
+    })
+    this.ensureViewUniformResourceCapacity(1)
 
     const perObjectBindGroupLayout = this.device.createBindGroupLayout({
       entries: [
@@ -1338,6 +1379,42 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
+  private ensureViewUniformResourceCapacity(required: number): void {
+    if (!this.device || !this.globalBindGroupLayout || !this.backgroundBindGroupLayout) return
+    while (this.viewUniformResources.length < required) {
+      const globalUniformBuffer = this.device.createBuffer({
+        size: 64,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      })
+      const sceneUniformBuffer = this.device.createBuffer({
+        size: SCENE_UNIFORMS_SIZE,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      })
+      const backgroundUniformBuffer = this.device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      })
+      this.viewUniformResources.push({
+        globalUniformBuffer,
+        sceneUniformBuffer,
+        globalBindGroup: this.device.createBindGroup({
+          layout: this.globalBindGroupLayout,
+          entries: [
+            {binding: 0, resource: {buffer: globalUniformBuffer}},
+            {binding: 1, resource: {buffer: sceneUniformBuffer}},
+          ],
+        }),
+        backgroundUniformBuffer,
+        backgroundBindGroup: this.device.createBindGroup({
+          layout: this.backgroundBindGroupLayout,
+          entries: [{binding: 0, resource: {buffer: backgroundUniformBuffer}}],
+        }),
+      })
+      this.viewProjectionMatrices.push(new Matrix4())
+      this.compositionFrustums.push(new Frustum())
+    }
+  }
+
   private collectSpaceObjectsByType(
     renderList: RenderItem[]
   ): {
@@ -1422,8 +1499,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.imageBindGroupLayout &&
       this.externalImageBindGroupLayout &&
       this.imageSampler &&
-      this.globalUniformBuffer &&
-      this.sceneUniformBuffer &&
+      this.globalBindGroupLayout &&
+      this.backgroundBindGroupLayout &&
+      this.backgroundPipeline &&
+      this.viewUniformResources[0] &&
       this.perObjectUniformBuffer &&
       this.boneMatricesBuffer &&
       this.perObjectBindGroupLayout &&
@@ -1437,7 +1516,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   public render(space: Space, viewPoint: ViewPoint): void {
-    this.renderFrame(space, viewPoint)
+    this.renderComposition({space, viewPoint})
   }
 
   /**
@@ -1499,49 +1578,94 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     overlayOrViewPoint: RenderOverlay | readonly RenderOverlay[] | ViewPoint | null | undefined,
     maybeViewPoint?: ViewPoint,
   ): void {
-    if (!this.isReadyToRender()) return
-
     const viewPoint = maybeViewPoint ?? (overlayOrViewPoint as ViewPoint)
     if (!viewPoint) return
     const overlays = maybeViewPoint === undefined
-      ? []
-      : Array.isArray(overlayOrViewPoint)
-        ? overlayOrViewPoint
-        : overlayOrViewPoint
-          ? [overlayOrViewPoint as RenderOverlay]
-          : []
+      ? undefined
+      : overlayOrViewPoint as RenderOverlay | readonly RenderOverlay[] | null | undefined
+    this.renderComposition({
+      space,
+      viewPoint,
+      ...(overlays === undefined ? {} : {overlays}),
+    })
+  }
+
+  /**
+   * Presents one base Space, ordered bounded descendant Spaces and optional
+   * foreground overlays through the same Renderer, canvas and current texture.
+   */
+  public renderComposition(composition: RenderComposition): void {
+    const canvas = this.canvas
+    if (canvas === null) return
+    const planned = planRenderComposition(composition, canvas)
+    if (!this.isReadyToRender()) return
+
+    this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length)
+    const baseResources = this.viewUniformResources[0]!
+    const baseFrustum = this.prepareCompositionView(0, planned.viewPoint)
+    const fullViewport: RendererPhysicalViewport = {
+      x: 0,
+      y: 0,
+      width: Math.max(1, Math.floor(canvas.width)),
+      height: Math.max(1, Math.floor(canvas.height)),
+    }
 
     this.updateTextures()
 
     const commandEncoder = this.device!.createCommandEncoder()
     const canvasTexture = this.context!.getCurrentTexture()
     const textureView = canvasTexture.createView()
-    this.viewProjectionMatrix.multiplyMatrices(viewPoint.projectionMatrix, viewPoint.viewMatrix)
-    this.device!.queue.writeBuffer(this.globalUniformBuffer!, 0, this.viewProjectionMatrix.elements)
-    this.frustum.setFromProjectionMatrix(this.viewProjectionMatrix)
-
-    const preparedLayers: PreparedRenderLayer[] = []
     const frameRenderItems: RenderItem[] = []
-    const frameLights: LightItem[] = []
-
-    this.backgroundClearColor.r = space.background.r
-    this.backgroundClearColor.g = space.background.g
-    this.backgroundClearColor.b = space.background.b
-    this.backgroundClearColor.a = space.background.a
-    preparedLayers.push(this.prepareRenderLayer(space, frameRenderItems, frameLights, this.backgroundClearColor))
-
-    for (const overlay of overlays) {
-      overlay.updateForViewPoint?.(viewPoint)
-      preparedLayers.push(this.prepareRenderLayer(overlay, frameRenderItems, frameLights))
+    const baseLights: LightItem[] = []
+    const baseLayer: PreparedCompositionLayer = {
+      layer: this.prepareRenderLayer(
+        planned.space,
+        frameRenderItems,
+        baseLights,
+        baseFrustum,
+        planned.excludedBaseRoots,
+        planned.space.background,
+      ),
+      resources: baseResources,
+      viewport: fullViewport,
+      paintBackground: false,
     }
+    const boundedLayers: PreparedCompositionLayer[] = planned.boundedViews.map((view, index) => {
+      const resources = this.viewUniformResources[index + 1]!
+      const frustum = this.prepareCompositionView(index + 1, view.viewPoint)
+      const lights: LightItem[] = []
+      const layer = this.prepareRenderLayer(
+        view.space,
+        frameRenderItems,
+        lights,
+        frustum,
+        undefined,
+        view.space.background,
+      )
+      this.updateSceneUniforms(resources.sceneUniformBuffer, lights, view.viewPoint.viewMatrix)
+      return {layer, resources, viewport: view.viewport, paintBackground: true}
+    })
+    const overlayLayers: PreparedCompositionLayer[] = planned.overlays.map((overlay) => {
+      overlay.updateForViewPoint?.(planned.viewPoint)
+      return {
+        layer: this.prepareRenderLayer(
+          overlay,
+          frameRenderItems,
+          baseLights,
+          baseFrustum,
+        ),
+        resources: baseResources,
+        viewport: fullViewport,
+        paintBackground: false,
+      }
+    })
+    this.updateSceneUniforms(baseResources.sceneUniformBuffer, baseLights, planned.viewPoint.viewMatrix)
+    const preparedLayers = [baseLayer, ...boundedLayers, ...overlayLayers]
     const renderIndexByItem = new Map<RenderItem, number>()
     frameRenderItems.forEach((item, index) => {
       if (!renderIndexByItem.has(item)) renderIndexByItem.set(item, index)
     })
 
-    // Uniform buffers are written once for the whole frame. Rewriting them between
-    // passes before submit would make earlier passes read the later data.
-    this.updateSceneUniforms(frameLights, viewPoint.viewMatrix)
     this.ensurePerObjectCapacity(frameRenderItems.length)
     const presentationClipUpload = encodePresentationClipChains(
       frameRenderItems.map((item) => item.object),
@@ -1574,10 +1698,33 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.device!.queue.writeBuffer(this.presentationClipBuffer, 0, presentationClipUpload.data)
     }
 
-    const directDrawLayers = preparedLayers.filter(hasDirectRenderItems)
-    if (directDrawLayers.length === 0) {
+    const directDrawLayers = preparedLayers.filter(({layer}) => hasDirectRenderItems(layer))
+    if (boundedLayers.length > 0) {
+      this.renderPreparedLayer(
+        commandEncoder,
+        textureView,
+        baseLayer,
+        renderIndexByItem,
+        true,
+        baseLayer.layer.background,
+      )
+      for (const bounded of boundedLayers) {
+        this.renderPreparedLayer(commandEncoder, textureView, bounded, renderIndexByItem, false)
+      }
+      for (const overlay of overlayLayers) {
+        if (!hasDirectRenderItems(overlay.layer)) continue
+        this.renderPreparedLayer(commandEncoder, textureView, overlay, renderIndexByItem, false)
+      }
+    } else if (directDrawLayers.length === 0) {
       // Preserve background clearing even for a completely empty scene.
-      this.renderPreparedLayer(commandEncoder, textureView, preparedLayers[0]!, renderIndexByItem, true)
+      this.renderPreparedLayer(
+        commandEncoder,
+        textureView,
+        baseLayer,
+        renderIndexByItem,
+        true,
+        baseLayer.layer.background,
+      )
     } else {
       directDrawLayers.forEach((layer, index) => {
         // An empty root layer used to consume a complete MSAA resolve pass only
@@ -1588,16 +1735,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
           layer,
           renderIndexByItem,
           index === 0,
-          preparedLayers[0]?.background,
+          baseLayer.layer.background,
         )
       })
     }
-    this.renderOverlayLines(
-      commandEncoder,
-      textureView,
-      preparedLayers.flatMap((layer) => layer.overlayLines),
-      renderIndexByItem,
-    )
+    for (const prepared of preparedLayers) {
+      this.renderOverlayLines(commandEncoder, textureView, prepared, renderIndexByItem)
+    }
     if (this.presentedFrameTexture) {
       commandEncoder.copyTextureToTexture(
         {texture: canvasTexture},
@@ -1614,15 +1758,29 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.hasPresentedFrame = this.presentedFrameTexture !== null
   }
 
+  private prepareCompositionView(index: number, viewPoint: ViewPoint): Frustum {
+    const resources = this.viewUniformResources[index]!
+    const viewProjectionMatrix = this.viewProjectionMatrices[index]!
+      .multiplyMatrices(viewPoint.projectionMatrix, viewPoint.viewMatrix)
+    this.device!.queue.writeBuffer(
+      resources.globalUniformBuffer,
+      0,
+      viewProjectionMatrix.elements,
+    )
+    return this.compositionFrustums[index]!.setFromProjectionMatrix(viewProjectionMatrix)
+  }
+
   private prepareRenderLayer(
     root: Object3D,
     frameRenderItems: RenderItem[],
     frameLights: LightItem[],
+    frustum: Frustum,
+    excludedRoots?: ReadonlySet<Object3D>,
     background?: GPUColor,
   ): PreparedRenderLayer {
     const allRenderItems: RenderItem[] = []
     const lights: LightItem[] = []
-    collectSpaceObjects(root, allRenderItems, lights, this.frustum)
+    collectSpaceObjects(root, allRenderItems, lights, frustum, excludedRoots)
     const {glassObjects, regularObjects, overlayLines, uiObjects} =
       this.collectSpaceObjectsByType(allRenderItems)
 
@@ -1641,11 +1799,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   private renderPreparedLayer(
     commandEncoder: GPUCommandEncoder,
     textureView: GPUTextureView,
-    layer: PreparedRenderLayer,
+    prepared: PreparedCompositionLayer,
     renderIndexByItem: ReadonlyMap<RenderItem, number>,
     clearColor: boolean,
     clearValue?: GPUColor,
   ): void {
+    const {layer, resources, viewport, paintBackground} = prepared
     const colorLoadOp: GPULoadOp = clearColor ? "clear" : "load"
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [
@@ -1668,8 +1827,26 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       },
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    this.configurePassViewport(passEncoder)
-    passEncoder.setBindGroup(0, this.globalBindGroup!)
+    this.configurePassViewport(passEncoder, viewport)
+    if (paintBackground) {
+      const color = layer.background ?? [0, 0, 0, 0]
+      const components = "r" in color
+        ? [color.r, color.g, color.b, color.a]
+        : Array.from(color)
+      this.backgroundUniformData[0] = components[0] ?? 0
+      this.backgroundUniformData[1] = components[1] ?? 0
+      this.backgroundUniformData[2] = components[2] ?? 0
+      this.backgroundUniformData[3] = components[3] ?? 0
+      this.device!.queue.writeBuffer(
+        resources.backgroundUniformBuffer,
+        0,
+        this.backgroundUniformData,
+      )
+      passEncoder.setPipeline(this.backgroundPipeline!)
+      passEncoder.setBindGroup(0, resources.backgroundBindGroup)
+      passEncoder.draw(3)
+    }
+    passEncoder.setBindGroup(0, resources.globalBindGroup)
 
     // Рендерим обычные объекты
     this.renderObjectList(passEncoder, layer.regularObjects, renderIndexByItem)
@@ -1684,9 +1861,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   private renderOverlayLines(
     commandEncoder: GPUCommandEncoder,
     textureView: GPUTextureView,
-    overlayLines: RenderItem[],
+    prepared: PreparedCompositionLayer,
     renderIndexByItem: ReadonlyMap<RenderItem, number>,
   ): void {
+    const {overlayLines} = prepared.layer
     if (overlayLines.length === 0) return
     const overlayPass = commandEncoder.beginRenderPass({
       colorAttachments: [{
@@ -1695,19 +1873,26 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         storeOp: "store",
       }],
     })
-    this.configurePassViewport(overlayPass)
-    overlayPass.setBindGroup(0, this.globalBindGroup!)
+    this.configurePassViewport(overlayPass, prepared.viewport)
+    overlayPass.setBindGroup(0, prepared.resources.globalBindGroup)
     this.renderObjectList(overlayPass, overlayLines, renderIndexByItem)
     overlayPass.end()
   }
 
   /** Keeps every pass in physical backing pixels after a CSS/DPR resize. */
-  private configurePassViewport(passEncoder: GPURenderPassEncoder): void {
+  private configurePassViewport(
+    passEncoder: GPURenderPassEncoder,
+    viewport?: RendererPhysicalViewport,
+  ): void {
     if (!this.canvas) return
-    const width = Math.max(1, Math.floor(this.canvas.width))
-    const height = Math.max(1, Math.floor(this.canvas.height))
-    passEncoder.setViewport(0, 0, width, height, 0, 1)
-    passEncoder.setScissorRect(0, 0, width, height)
+    const resolved = viewport ?? {
+      x: 0,
+      y: 0,
+      width: Math.max(1, Math.floor(this.canvas.width)),
+      height: Math.max(1, Math.floor(this.canvas.height)),
+    }
+    passEncoder.setViewport(resolved.x, resolved.y, resolved.width, resolved.height, 0, 1)
+    passEncoder.setScissorRect(resolved.x, resolved.y, resolved.width, resolved.height)
   }
 
 
@@ -2470,8 +2655,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     )
   }
 
-  private updateSceneUniforms(lights: LightItem[], viewMatrix: Matrix4): void {
-    if (!this.device || !this.sceneUniformBuffer) return
+  private updateSceneUniforms(
+    sceneUniformBuffer: GPUBuffer,
+    lights: LightItem[],
+    viewMatrix: Matrix4,
+  ): void {
+    if (!this.device) return
 
     const float32View = this.sceneUniformFloats
     const uint32View = this.sceneUniformUints
@@ -2520,7 +2709,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       float32View[currentLightOffset + 7] = light.intensity
     }
 
-    this.device.queue.writeBuffer(this.sceneUniformBuffer, 0, this.sceneUniformData)
+    this.device.queue.writeBuffer(sceneUniformBuffer, 0, this.sceneUniformData)
   }
 
   private getOrCreateGeometryBuffers(geometry: BufferGeometry): GeometryBuffers {

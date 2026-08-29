@@ -169,6 +169,42 @@ describe("ViewPoint zoom", () => {
     expect(Math.abs(viewPoint.viewMatrix.determinant())).toBeGreaterThan(0.99)
   })
 
+  test("maps host-routed anchored zoom through an explicit client viewport without DOM listeners", () => {
+    delete (globalThis as {document?: Document}).document
+    const viewPoint = new ViewPoint({
+      controls: "host",
+      viewport: {left: 400, top: 200, width: 400, height: 200},
+      near: 1,
+      position: {x: 0, y: -10, z: 0},
+      target: {x: 0, y: 0, z: 0},
+    })
+    const privateViewPoint = viewPoint as unknown as {
+      targetPlanePointForClient(clientX: number, clientY: number): Vector3 | null
+    }
+    const anchor = {clientX: 700, clientY: 300}
+    const before = privateViewPoint.targetPlanePointForClient(anchor.clientX, anchor.clientY)
+
+    viewPoint.zoom(30, anchor)
+
+    const after = privateViewPoint.targetPlanePointForClient(anchor.clientX, anchor.clientY)
+    expect(viewPoint.aspect).toBe(2)
+    expect(before).not.toBeNull()
+    expect(after).not.toBeNull()
+    expect(after!.distanceTo(before!)).toBeLessThan(0.001)
+
+    viewPoint.setViewport({left: 100, top: 50, width: 300, height: 600})
+    expect(viewPoint.aspect).toBe(0.5)
+    expect(() => viewPoint.dispose()).not.toThrow()
+  })
+
+  test("requires a bounded viewport for listener-free host control", () => {
+    expect(() => new ViewPoint({controls: "host"})).toThrow("viewport")
+    expect(() => new ViewPoint({
+      controls: "host",
+      viewport: {left: 0, top: 0, width: 0, height: 100},
+    })).toThrow(RangeError)
+  })
+
   test("отклоняет нечисловые routed camera deltas", () => {
     const viewPoint = new ViewPoint({
       element: createElementStub(),

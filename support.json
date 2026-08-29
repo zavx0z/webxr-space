@@ -84,20 +84,76 @@
     },
     {
       "blockedBy": [],
-      "blocks": [
-        "gap.engine.browser-document-ownership"
-      ],
-      "conformance": "none",
+      "blocks": [],
+      "conformance": "extension",
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Runtime implementation or observable conformance.",
-          "path": "packages/core/contract.md",
-          "proves": "The pinned project inventory contains engine.features.browser-document-boundary.",
+          "doesNotProve": "Unrelated post-processing and multi-canvas composition.",
+          "path": "packages/core/src/renderer/index.ts",
+          "proves": "One Renderer/current texture presents a base Space, ordered bounded descendant Spaces and foreground overlays with independent ViewPoints and pass bounds.",
           "repository": "engine",
           "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
-          "symbol": "browser document boundary",
-          "type": "requirement"
+          "symbol": "Renderer.renderComposition",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "GPU pixels on every adapter.",
+          "path": "packages/core/src/renderer/render-composition.test.ts",
+          "proves": "Root ownership, exclusion, ordering, exact physical viewport validation and legacy delegation.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "bounded-multi-view-frame",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every material pipeline or physical GPU adapter.",
+          "path": "packages/core/src/renderer/render-composition.webgpu.test.ts",
+          "proves": "One initialized Renderer/current texture paints the bounded Space background inside its scissor while preserving base pixels outside.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "Renderer bounded composition WebGPU pass",
+          "type": "integration-test"
+        }
+      ],
+      "id": "engine.features.bounded-multi-view-frame",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [
+        "gap.engine.browser-document-ownership"
+      ],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "A fully host-neutral Renderer/canvas boundary.",
+          "path": "packages/core/src/core/view-point.ts",
+          "proves": "Host mode owns camera math and viewport mapping without browser listeners or element mutation.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "ViewPoint host controls",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Default browser controls and Renderer canvas ownership.",
+          "path": "packages/core/src/core/view-point.test.ts",
+          "proves": "Listener-free viewport-aware controls and anchored zoom mapping.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "browser-document-boundary",
+          "type": "unit-test"
         }
       ],
       "id": "engine.features.browser-document-boundary",
@@ -106,14 +162,14 @@
         "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
       },
       "limitations": [
-        "ViewPoint binds global document and mutates HTMLElement touchAction; Renderer owns HTMLCanvasElement."
+        "Listener-free host ViewPoints are available, but default browser controls and Renderer.init still accept browser-owned HTMLElement/HTMLCanvasElement resources."
       ],
       "owner": {
         "package": "@engine/core",
         "repository": "engine",
         "stage": "gpu-scene-resource"
       },
-      "status": "unsupported"
+      "status": "partial"
     },
     {
       "blockedBy": [],
@@ -3751,12 +3807,76 @@
     {
       "blockedBy": [],
       "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "79",
+          "path": "packages/core/src/renderer/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "RenderBoundedView",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.renderboundedview",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "79",
+          "path": "packages/core/src/renderer/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "RenderComposition",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.rendercomposition",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
       "conformance": "extension",
       "consumers": [],
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "151",
+          "lines": "178",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -3779,6 +3899,38 @@
         "stage": "gpu-scene-resource"
       },
       "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "79",
+          "path": "packages/core/src/renderer/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "RendererPhysicalViewport",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.rendererphysicalviewport",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "unverified"
     },
     {
       "blockedBy": [],
@@ -3820,7 +3972,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "139",
+          "lines": "79",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -4819,7 +4971,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "91",
+          "lines": "116",
           "path": "packages/core/src/core/view-point.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -4842,6 +4994,70 @@
         "stage": "gpu-scene-resource"
       },
       "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "66",
+          "path": "packages/core/src/core/view-point.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "ViewPointClientViewport",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.viewpointclientviewport",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "64",
+          "path": "packages/core/src/core/view-point.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "engine",
+          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "symbol": "ViewPointControls",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.viewpointcontrols",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "unverified"
     },
     {
       "blockedBy": [],

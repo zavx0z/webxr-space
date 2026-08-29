@@ -27,8 +27,10 @@ export function collectSpaceObjects(
   object: Object3D,
   renderList: RenderItem[],
   lights: LightItem[],
-  frustum?: Frustum
+  frustum?: Frustum,
+  excludedRoots?: ReadonlySet<Object3D>,
 ): void {
+  if (excludedRoots?.has(object) === true) return
   if (!object.visible) return
 
   const worldMatrix = object.matrixWorld;
@@ -68,6 +70,6 @@ export function collectSpaceObjects(
   }
 
   for (const child of object.children) {
-    collectSpaceObjects(child, renderList, lights, frustum);
+    collectSpaceObjects(child, renderList, lights, frustum, excludedRoots);
   }
 }

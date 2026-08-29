@@ -71,9 +71,44 @@ the gesture. Engine does not decide which UI, plane or product mode receives an
 event.
 
 Renderer converts CSS size to the canvas backing store exactly once through
-`pixelRatio`. Every render pass then uses the complete physical backing width
-and height for its viewport and scissor. Camera aspect and document layout stay
-in CSS/logical units; consumers never multiply world density by DPR.
+`pixelRatio`. A legacy single-view frame uses the complete physical backing
+width and height for its viewport and scissor; bounded composition uses each
+explicit physical rectangle. Camera aspect and document layout stay in
+CSS/logical units; consumers never multiply world density by DPR.
+
+A host that owns browser routing constructs `ViewPoint` with
+`controls: "host"` and an explicit `ViewPointClientViewport`. Host mode attaches
+no listener, reads no global `document`, and mutates no HTML element. The
+viewport uses client/CSS coordinates and is the canonical mapping for anchored
+zoom; `setViewport()` updates both that mapping and projection aspect. Browser
+mode remains the default compatibility behavior for a supplied `element`.
+
+## Bounded Renderer composition
+
+`Renderer.renderComposition()` is the one-canvas multi-view frame boundary. It
+accepts one base `Space`/`ViewPoint`, optional foreground `RenderOverlay` roots,
+and ordered `RenderBoundedView` entries. Each bounded entry contains an exact
+child or descendant `Space`, an independent `ViewPoint`, and one
+`RendererPhysicalViewport` in integer physical backing pixels with a top-left
+origin. The rectangle must be positive and wholly inside the current backing
+store. Duplicate, detached and nested retained-root ownership fails before GPU
+submission; ordered viewports may overlap intentionally.
+
+Bounded roots are excluded from base traversal and then submitted once through
+their own view. Every view has independent projection/frustum culling,
+view/scene uniforms, background, depth and stencil state. Its GPU viewport and
+scissor are the exact declared rectangle, and its background is drawn only
+inside that rectangle, so preceding pixels outside remain unchanged. Ordered
+composition is `base → boundedViews → overlays`; final frame capture copies the
+complete result after all views.
+
+One composition uses the same initialized Renderer, canvas context, current
+texture, geometry/pipeline caches and final queue submission. It does not create
+a Canvas, Renderer, device, requestAnimationFrame loop or input listener.
+Browser input priority, pointer capture, scene replacement, resize observation
+and demand-driven `requestRender()` ownership remain in the composition host.
+Legacy `render()` and `renderFrame()` delegate to this contract with no bounded
+views.
 
 ## Soft SDF shadow
 
