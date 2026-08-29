@@ -8,7 +8,7 @@
 
 Core не знает о renderer, WebGPU, DOM, the adopted reference или конкретном layout solver.
 Действующие законы находятся в [требованиях core](requirements.md), а карта
-всего семейства пакетов и storybook — в [родительском обзоре](../../README.md).
+всего семейства пакетов и external declarations — в [родительском обзоре](../../README.md).
 
 Тот же `NodeTree` хранит semantic graph/subgraph scopes, groups, отдельные
 visual Frames, versioned templates и stable instance references. Typed
@@ -25,8 +25,8 @@ Advanced definitions создаются `createNodeTree(definition, policy)`, п
 reconcile. Для runtime schema enforcement один `createValidatedParameter()`
 удерживает pure value policy без соседнего Store.
 
-Dev-only примеры Core находятся в [`storybook/`](storybook/). Репозиторий
-показывает их в общем Storybook, но этот каталог не экспортируется как часть
+Dev-only примеры Core находятся в [`storybook/`](storybook/), а data-only
+catalog — в `.storybook/`. Внешний tool показывает их в общем Workbench, но каталог не экспортируется как часть
 `@nodes/core` и не добавляет UI-зависимости в production runtime.
 
 ```bash

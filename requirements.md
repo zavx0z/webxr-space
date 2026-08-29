@@ -212,10 +212,10 @@ contracts — [`@nodes/ui`](../ui/requirements.md).
 
 1. Dev-only stories, fixtures и lazy story modules, которые объясняют
    семантику `@nodes/core`, принадлежат каталогу `./storybook` рядом с Core.
-2. Repository Storybook подключает эти файлы в один общий Workbench, но Core не
-   владеет отдельным entrypoint, shell, runtime, server, process, port, static
-   build или Pages lifecycle.
-3. `./storybook` не входит в production exports и не добавляет Storybook, DOM,
+2. `.storybook/catalog.json` подключает эти файлы к общему внешнему Workbench,
+   но Core не владеет entrypoint, shell, server, process, port, static build или
+   Pages lifecycle. Plain structural runtime только монтирует owner story.
+3. `./storybook` и `./.storybook` не входят в production exports и не добавляют Storybook, DOM,
    UI или Engine в runtime dependencies `@nodes/core`. Примеры импортируют
    production Core и общую инфраструктуру только через их exact public
    subpaths.

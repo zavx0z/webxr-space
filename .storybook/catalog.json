@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "core",
+      "label": "NodeTree",
+      "route": "core",
+      "subjects": [
+        {
+          "id": "node-tree",
+          "kind": "runtime",
+          "label": "Runtime",
+          "apiName": "NodeTree",
+          "route": "core/node-tree",
+          "tags": [
+            "NodeTree",
+            "Runtime",
+            "Живой"
+          ],
+          "variants": [
+            {
+              "id": "live",
+              "label": "Живой",
+              "route": "core/node-tree/live",
+              "module": {
+                "path": "../storybook/node-tree-story.ts",
+                "export": "createCoreNodeTreeStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
