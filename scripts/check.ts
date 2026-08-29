@@ -1,9 +1,15 @@
 import {join} from "node:path"
-import {assertGitlinks, assertWorkspaceLinks, gitlinkPaths} from "./workspace.ts"
+import {
+  assertExternalStorybookWorkspace,
+  assertGitlinks,
+  assertWorkspaceLinks,
+  gitlinkPaths,
+} from "./workspace.ts"
 
 const root = join(import.meta.dir, "..")
 
 try {
+  await assertExternalStorybookWorkspace(root)
   await assertGitlinks(root, {verifyRemote: true})
   await assertWorkspaceLinks(root, {verifyToolRemotes: true})
 } catch (error) {
@@ -19,7 +25,7 @@ if (budget.policy?.artifactRetentionDays !== 1) fail("GitHub artifact retention 
 if (budget.policy?.allowLargerRunners !== false) fail("Larger GitHub-hosted runners must stay disabled")
 
 console.log(
-  `webxr-space: ${gitlinkPaths.length} clean remote-backed gitlinks, linked tools, and consumer identities`,
+  `webxr-space: ${gitlinkPaths.length} gitlinks, optional external Storybook declarations, linked owners, and consumer identities`,
 )
 
 function fail(message: string): never {

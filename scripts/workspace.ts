@@ -14,6 +14,27 @@ export const workspaceConsumerPaths = Object.freeze([
   ...gitlinkPaths,
 ] as const)
 
+export const externalStorybookSchemaUrl =
+  "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/manifest.schema.json" as const
+
+export const externalStorybookProjectDeclarations = Object.freeze([
+  Object.freeze({
+    id: "engine",
+    reference: "../projects/engine/.storybook/manifest.json",
+    path: "projects/engine/.storybook/manifest.json",
+  }),
+  Object.freeze({
+    id: "ui",
+    reference: "../projects/ui/.storybook/manifest.json",
+    path: "projects/ui/.storybook/manifest.json",
+  }),
+  Object.freeze({
+    id: "nodes",
+    reference: "../projects/node/.storybook/manifest.json",
+    path: "projects/node/.storybook/manifest.json",
+  }),
+] as const)
+
 export type WorkspaceLinkDefinition = Readonly<{
   name: string
   path: string
@@ -36,7 +57,7 @@ export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze(
   {name: "@zavx0z/renderer", path: "../renderer/packages/core"},
   {name: "@zavx0z/renderer-browser", path: "../renderer/packages/browser"},
   {name: "@zavx0z/renderer-webgpu", path: "../renderer/packages/webgpu"},
-  {name: "@zavx0z/dom-react", path: "../renderer/packages/react"},
+  {name: "@zavx0z/react", path: "../renderer/packages/react"},
   {name: "@zavx0z/dom-devtools", path: "../renderer/packages/devtools"},
   {
     name: "@zavx0z/highlighter",
@@ -45,11 +66,7 @@ export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze(
   },
   {name: "@ui/components", path: "projects/ui/packages/components"},
   {name: "@nodes/layout", path: "projects/node/packages/layout"},
-  {
-    name: "@zavx0z/storybook",
-    path: "../storybook",
-    revision: "088702876a4fa116f5aaef339d518a7fbcce36fc",
-  },
+  {name: "@zavx0z/template", path: "../template"},
 ])
 
 export type GitlinkPathViews = Readonly<{
@@ -82,6 +99,7 @@ const dependencyFields = Object.freeze([
 ] as const)
 
 export async function bootstrapWorkspace(superprojectRoot: string): Promise<void> {
+  await assertExternalStorybookWorkspace(superprojectRoot)
   const links = await resolveWorkspaceLinks(superprojectRoot)
   assertToolRepositoryPins(links)
   for (const link of links) {
@@ -100,6 +118,7 @@ export async function assertWorkspaceLinks(
   superprojectRoot: string,
   options: Readonly<{verifyToolRemotes?: boolean}> = {},
 ): Promise<void> {
+  await assertExternalStorybookWorkspace(superprojectRoot)
   const links = await resolveWorkspaceLinks(superprojectRoot)
   assertToolRepositoryPins(links, options.verifyToolRemotes === true)
   const bunInstallRoot = process.env.BUN_INSTALL ?? join(homedir(), ".bun")
@@ -128,6 +147,91 @@ export async function assertWorkspaceLinks(
           expected,
           record.path,
         )
+      }
+    }
+  }
+}
+
+/**
+ * Verifies the optional data-only Storybook composition without importing or
+ * pinning the external tool. Renderer remains an independently linked sibling,
+ * never a workspace declaration child.
+ */
+export async function assertExternalStorybookWorkspace(
+  superprojectRoot: string,
+): Promise<void> {
+  const storybookRoot = join(superprojectRoot, ".storybook")
+  const entries = (await readdir(storybookRoot, {withFileTypes: true}))
+    .filter((entry) => entry.isFile())
+    .map(({name}) => name)
+    .sort()
+  if (JSON.stringify(entries) !== JSON.stringify(["manifest.json"])) {
+    throw new Error(`Superproject .storybook must contain only manifest.json: ${entries.join(", ")}`)
+  }
+  const manifestPath = join(storybookRoot, "manifest.json")
+  const manifest = await Bun.file(manifestPath).json() as Record<string, unknown>
+  assertExactObjectKeys("external Storybook workspace manifest", manifest, [
+    "$schema",
+    "schemaVersion",
+    "kind",
+    "id",
+    "label",
+    "projects",
+    "readme",
+  ])
+  if (manifest.$schema !== externalStorybookSchemaUrl || manifest.schemaVersion !== 1 ||
+    manifest.kind !== "workspace" || manifest.id !== "webxr-space" ||
+    manifest.label !== "WebXR Space" || manifest.readme !== "../README.md") {
+    throw new Error("Invalid external Storybook workspace declaration")
+  }
+  if (!Array.isArray(manifest.projects)) {
+    throw new Error("External Storybook workspace projects must be an array")
+  }
+  const references = manifest.projects.map((value, index) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(`Invalid external Storybook project reference ${index}`)
+    }
+    const record = value as Record<string, unknown>
+    assertExactObjectKeys(`external Storybook project reference ${index}`, record, ["declaration"])
+    if (typeof record.declaration !== "string") {
+      throw new Error(`Invalid external Storybook project declaration ${index}`)
+    }
+    return record.declaration
+  })
+  const expectedReferences = externalStorybookProjectDeclarations.map(({reference}) => reference)
+  if (JSON.stringify(references) !== JSON.stringify(expectedReferences)) {
+    throw new Error(`External Storybook workspace project order mismatch: ${references.join(", ")}`)
+  }
+  if (references.some((reference) => /renderer/iu.test(reference))) {
+    throw new Error("Renderer must remain an independently attached Storybook root")
+  }
+
+  for (const declaration of externalStorybookProjectDeclarations) {
+    const path = join(superprojectRoot, declaration.path)
+    const child = await Bun.file(path).json() as Record<string, unknown>
+    if (child.$schema !== externalStorybookSchemaUrl || child.schemaVersion !== 1 ||
+      child.kind !== "project" || child.id !== declaration.id) {
+      throw new Error(`Invalid external Storybook child declaration: ${declaration.path}`)
+    }
+  }
+
+  for (const consumerPath of workspaceConsumerPaths) {
+    for (const record of await discoverConsumerManifests(superprojectRoot, consumerPath)) {
+      const name = record.manifest.name
+      if (typeof name === "string" && /^@[^/]+\/storybook$/u.test(name)) {
+        throw new Error(`Consumer private Storybook package remains: ${record.path}`)
+      }
+      for (const field of dependencyFields) {
+        const dependencies = record.manifest[field]
+        if (dependencies !== undefined && typeof dependencies === "object" && dependencies !== null &&
+          !Array.isArray(dependencies) && "@zavx0z/storybook" in dependencies) {
+          throw new Error(`Consumer Storybook dependency remains: ${record.path}`)
+        }
+      }
+      const scripts = record.manifest.scripts
+      if (scripts !== undefined && typeof scripts === "object" && scripts !== null &&
+        !Array.isArray(scripts) && "storybook" in scripts) {
+        throw new Error(`Consumer Storybook lifecycle remains: ${record.path}`)
       }
     }
   }
@@ -504,6 +608,18 @@ function assertExactPaths(label: string, actual: readonly string[], expected: re
   }
 }
 
+function assertExactObjectKeys(
+  label: string,
+  value: Readonly<Record<string, unknown>>,
+  expected: readonly string[],
+): void {
+  const keys = Object.keys(value).sort()
+  const accepted = [...expected].sort()
+  if (JSON.stringify(keys) !== JSON.stringify(accepted)) {
+    throw new Error(`${label} fields mismatch: ${keys.join(", ")}`)
+  }
+}
+
 function git(args: readonly string[], cwd: string, trimStart = true): string {
   const result = spawnGit(args, cwd)
   if (result.exitCode !== 0) throw new Error(output(result.stderr).trim())
@@ -533,10 +649,10 @@ if (import.meta.main) {
   const command = process.argv[2]
   if (command === "bootstrap") {
     await bootstrapWorkspace(superprojectRoot)
-    console.log(`workspace: ${workspaceLinks.length} deterministic links ready`)
+    console.log(`workspace: declarations verified; ${workspaceLinks.length} deterministic links ready`)
   } else if (command === "links-check") {
     await assertWorkspaceLinks(superprojectRoot)
-    console.log("workspace: linked package identities verified across every consumer workspace")
+    console.log("workspace: external declarations and linked package identities verified")
   } else if (command === "gitlinks-check") {
     await assertGitlinks(superprojectRoot, {verifyRemote: true})
     await assertWorkspaceLinks(superprojectRoot, {verifyToolRemotes: true})

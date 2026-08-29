@@ -18,12 +18,15 @@
 
 ## Storybook lifecycle
 
-- This superproject owns no aggregate Storybook. Use the globally installed
-  `$storybook` with the exact repository package identity such as
-  `@engine/storybook`, `@ui/storybook` or `@nodes/storybook`.
-- Do not rebuild an umbrella component catalog from child implementation
-  sources. Each repository owns its stories and `@zavx0z/storybook` owns only
-  shared lifecycle and semantic DOM Workbench mechanics.
+- `.storybook/manifest.json` is an optional data-only composition of the Engine,
+  UI and Node project declarations. The superproject owns no stories, catalog,
+  runtime, package session, server, port or frontend shell.
+- Use the globally installed external `$storybook` for one server/origin and
+  exact package tabs. Child repositories remain the only story/resource owners.
+- Renderer remains an independently attached sibling declaration and linked
+  package owner; never add it as a Git submodule or workspace child.
+- Do not rebuild an umbrella catalog from child implementation sources or add a
+  dependency/private `@scope/storybook` package to this superproject.
 
 ## Submodules
 

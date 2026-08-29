@@ -4,7 +4,10 @@ import {tmpdir} from "node:os"
 import {join} from "node:path"
 import {
   assertNearestDependencyOwner,
+  assertExternalStorybookWorkspace,
   collectOwnedLinkDependencies,
+  externalStorybookProjectDeclarations,
+  externalStorybookSchemaUrl,
   discoverConsumerManifests,
   gitlinkPaths,
   validateGitlinkPathViews,
@@ -27,12 +30,12 @@ describe("superproject workspace contract", () => {
       "@zavx0z/renderer",
       "@zavx0z/renderer-browser",
       "@zavx0z/renderer-webgpu",
-      "@zavx0z/dom-react",
+      "@zavx0z/react",
       "@zavx0z/dom-devtools",
       "@zavx0z/highlighter",
       "@ui/components",
       "@nodes/layout",
-      "@zavx0z/storybook",
+      "@zavx0z/template",
     ])
     expect(new Set(workspaceLinks.map(({name}) => name)).size).toBe(workspaceLinks.length)
     expect(workspaceLinks.every(({path}) => !path.startsWith("/"))).toBeTrue()
@@ -50,12 +53,60 @@ describe("superproject workspace contract", () => {
         path: "../highlighter",
         revision: "8d6dbd66fc04ca1109450d18ee3fcffcf6e29606",
       },
+    ])
+  })
+
+  test("owns only an optional data-only external Storybook composition", async () => {
+    await expect(assertExternalStorybookWorkspace(root)).resolves.toBeUndefined()
+    expect(externalStorybookSchemaUrl).toBe(
+      "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/manifest.schema.json",
+    )
+    expect(externalStorybookProjectDeclarations).toEqual([
       {
-        name: "@zavx0z/storybook",
-        path: "../storybook",
-        revision: "088702876a4fa116f5aaef339d518a7fbcce36fc",
+        id: "engine",
+        reference: "../projects/engine/.storybook/manifest.json",
+        path: "projects/engine/.storybook/manifest.json",
+      },
+      {
+        id: "ui",
+        reference: "../projects/ui/.storybook/manifest.json",
+        path: "projects/ui/.storybook/manifest.json",
+      },
+      {
+        id: "nodes",
+        reference: "../projects/node/.storybook/manifest.json",
+        path: "projects/node/.storybook/manifest.json",
       },
     ])
+    const declaration = await Bun.file(join(root, ".storybook/manifest.json")).text()
+    expect(declaration).not.toContain("renderer")
+    expect(declaration).not.toContain("catalog")
+    expect(declaration).not.toContain("runtime")
+  })
+
+  test("leaves every child route baseline owner-local and read-only", async () => {
+    for (const [project, leaves, overviews] of [
+      ["engine", 5, 11],
+      ["ui", 176, 215],
+      ["node", 159, 66],
+    ] as const) {
+      const baseline = await Bun.file(join(
+        root,
+        "projects",
+        project,
+        ".storybook",
+        "route-baseline.json",
+      )).json() as {
+        schemaVersion: number
+        readOnlyBaseline: boolean
+        leafRoutes: readonly string[]
+        overviewRoutes: readonly string[]
+      }
+      expect(baseline.schemaVersion, project).toBe(1)
+      expect(baseline.readOnlyBaseline, project).toBeTrue()
+      expect(baseline.leafRoutes, project).toHaveLength(leaves)
+      expect(baseline.overviewRoutes, project).toHaveLength(overviews)
+    }
   })
 
   test("installs every consumer root in dependency order", () => {
@@ -121,25 +172,20 @@ describe("superproject workspace contract", () => {
         "@nodes/layout",
         "@ui/components",
         "@zavx0z/highlighter",
-        "@zavx0z/storybook",
       ]],
-      ["projects/engine", [
-        "@zavx0z/dom",
-        "@zavx0z/renderer",
-        "@zavx0z/renderer-browser",
-        "@zavx0z/renderer-webgpu",
-        "@zavx0z/storybook",
-      ]],
+      ["projects/engine", []],
       ["projects/ui", [
-        "@zavx0z/storybook",
+        "@zavx0z/react",
+        "@zavx0z/template",
       ]],
       ["projects/node", [
         "@engine/core",
         "@zavx0z/dom",
+        "@zavx0z/react",
         "@zavx0z/renderer",
         "@zavx0z/renderer-browser",
         "@zavx0z/renderer-webgpu",
-        "@zavx0z/storybook",
+        "@zavx0z/template",
       ]],
     ])
     for (const consumerPath of workspaceConsumerPaths) {
@@ -156,15 +202,12 @@ describe("superproject workspace contract", () => {
       ".",
       "projects/engine",
       "projects/engine/packages/core",
-      "projects/engine/packages/storybook",
       "projects/ui",
       "projects/ui/packages/components",
-      "projects/ui/packages/storybook",
       "projects/node",
       "projects/node/packages/core",
       "projects/node/packages/editor",
       "projects/node/packages/layout",
-      "projects/node/packages/storybook",
       "projects/node/packages/ui",
       "projects/node/packages/worker",
     ])

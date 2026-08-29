@@ -10,8 +10,9 @@
     "links:check": "bun scripts/workspace.ts links-check",
     "gitlinks:check": "bun scripts/workspace.ts gitlinks-check",
     "status": "bun scripts/status.ts",
+    "typecheck": "tsc --project tsconfig.json --pretty false",
     "test": "bun test scripts/workspace.test.ts",
-    "check": "bun scripts/check.ts && bun run test"
+    "check": "bun run typecheck && bun scripts/check.ts && bun run test"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,6 @@
     "@ui/components": "link:@ui/components",
     "@webgpu/types": "^0.1.68",
     "@zavx0z/highlighter": "link:@zavx0z/highlighter",
-    "@zavx0z/storybook": "link:@zavx0z/storybook",
     "typescript": "^7.0.2",
     "typescript-classic": "npm:typescript@6.0.3"
   }

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "workspace",
+  "id": "webxr-space",
+  "label": "WebXR Space",
+  "readme": "../README.md",
+  "projects": [
+    {"declaration": "../projects/engine/.storybook/manifest.json"},
+    {"declaration": "../projects/ui/.storybook/manifest.json"},
+    {"declaration": "../projects/node/.storybook/manifest.json"}
+  ]
+}

@@ -3,7 +3,7 @@
 Development-only superproject for the DOM-driven WebGPU/XR interface stack.
 
 This repository pins the exact revisions used together for development,
-cross-repository checks, dependency analysis, Storybook catalogs, and live
+cross-repository checks, dependency analysis, optional Storybook declaration composition, and live
 graph projections. Production code remains owned by the child repositories.
 
 ## Repositories
@@ -26,8 +26,8 @@ the UI stack consumes them.
 
 ## Checkout
 
-Keep the independent `highlighter` and `storybook` checkouts beside
-`webxr-space`; they are linked development tools, not submodules.
+Keep the independent `highlighter`, `storybook`, `renderer` and `template`
+checkouts beside `webxr-space`; they are development owners, not submodules.
 
 ```bash
 git clone --recurse-submodules git@github.com:zavx0z/webxr-space.git
@@ -36,8 +36,8 @@ bun run bootstrap
 bun run check
 ```
 
-`bun run bootstrap` registers every package from a path relative to this
-checkout, including the sibling `highlighter` and `storybook` repositories,
+`bun run bootstrap` registers every linked package from a path relative to this
+checkout, including the sibling Renderer, Highlighter and Template repositories,
 then performs frozen installs sequentially in the superproject, Engine, UI,
 and Node. It verifies every consumer's own `node_modules` links,
 including links resolved by each package declared through `packages/*`, not
@@ -46,17 +46,20 @@ the exact package owner. Run bootstrap again after moving the checkout; stale
 global Bun registrations are replaced with the paths from the current
 superproject.
 
-The sibling Renderer, Highlighter and Storybook revisions are pinned beside
-the link owners in `scripts/workspace.ts`. Bootstrap and link checks require
-those exact clean `HEAD`s; the delivery check additionally requires remote
-`main` to contain every pinned revision.
+Pinned linked-owner revisions remain declared in `scripts/workspace.ts`.
+External Storybook is deliberately not a Bun dependency or pinned link: its one
+server discovers this workspace through JSON declarations.
 
-## Storybooks
+## External Storybook composition
 
-The superproject does not own an aggregate Storybook or a second component
-catalog. Engine, UI and Node each own their exact repository Storybook, while
-`@zavx0z/storybook` remains the independent shared lifecycle and semantic DOM
-Workbench owner.
+The optional [workspace manifest](./.storybook/manifest.json) composes only the
+Engine, UI and Node project declarations. It contains no stories, catalog,
+runtime, server or layout metadata. Each child owns its package declarations,
+stories, README and resources; the standalone external Storybook owns one
+server/origin, Workbench and isolated package sessions.
+
+Renderer is not a submodule or workspace child. When needed, attach its sibling
+project declaration independently to the same server.
 
 For an existing checkout:
 
@@ -82,11 +85,11 @@ git commit -m "chore: update UI revision"
 Before committing a gitlink, `bun run gitlinks:check` requires the exact three
 declared submodules, clean worktrees, indexed revisions, and proof that every
 pinned commit is contained by its advertised remote `main`. The same command
-checks the pinned Highlighter and Storybook revisions and all consumer-local
+checks pinned linked-tool revisions and all consumer-local
 link identities. It never fetches or advances a child repository implicitly.
 
 The superproject is never imported by production packages. It owns only
-development integration, revision pins, analyzers, catalogs, budgets, and
+development integration, revision pins, optional declaration composition, analyzers, budgets, and
 cross-repository evidence.
 
 The former WebXR 3D Gallery remains available in Git history at commit
