@@ -18,8 +18,10 @@ This means:
 
 `packages/core/storybook/**` owns the live examples of this public contract,
 but remains development-only. It is absent from `@engine/core` exports and the
-production TypeScript project. The repository Storybook loads each example by
-its exact registered route; an unknown suffix cannot select another scene.
+production TypeScript project. `packages/core/.storybook/catalog.json` binds
+those owner modules as data; its structural runtime adapter imports no
+Storybook package. The external server lazy-loads only an exact registered
+route, and an unknown suffix cannot select another scene.
 
 ## Default font asset
 

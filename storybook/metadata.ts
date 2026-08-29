@@ -124,11 +124,3 @@ const leftClip: PresentationClipShape = {
 overflow.presentationClips = [leftClip]
 cleanLabel.presentationClips = [rightClip]`,
 })
-
-export const ENGINE_STORYBOOK_METADATA_BY_ROUTE = Object.freeze({
-  "space/coordinate-system/z-up": coordinateSpaceStoryMetadata,
-  "instanced-mesh/geometry/boxes": instancedBoxesStoryMetadata,
-  "holographic-material/geometry/torus": holographicTorusStoryMetadata,
-  "thin-film-material/geometry/sphere": thinFilmSphereStoryMetadata,
-  "text/presentation-clip/stencil": textStencilClippingStoryMetadata,
-})

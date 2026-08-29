@@ -1,0 +1,161 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "space",
+      "label": "Пространство",
+      "route": "space",
+      "group": {
+        "id": "foundations",
+        "label": "Основы"
+      },
+      "subjects": [
+        {
+          "id": "coordinate-system",
+          "kind": "class",
+          "label": "Система координат",
+          "route": "space/coordinate-system",
+          "apiName": "Space",
+          "tags": ["Z-up", "миллиметры", "retained-сцена"],
+          "aliases": ["координаты", "пространство"],
+          "variants": [
+            {
+              "id": "z-up",
+              "label": "Ось Z вверх",
+              "route": "space/coordinate-system/z-up",
+              "module": {
+                "path": "../storybook/foundations/coordinate-space.stories.ts",
+                "export": "coordinateSpaceStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "instanced-mesh",
+      "label": "Инстансированный mesh",
+      "route": "instanced-mesh",
+      "group": {
+        "id": "geometry",
+        "label": "Геометрия"
+      },
+      "subjects": [
+        {
+          "id": "geometry",
+          "kind": "class",
+          "label": "Геометрия",
+          "route": "instanced-mesh/geometry",
+          "apiName": "InstancedMesh",
+          "tags": ["инстансинг", "общая геометрия", "GPU-буферы"],
+          "aliases": ["instances", "боксы"],
+          "variants": [
+            {
+              "id": "boxes",
+              "label": "Боксы",
+              "route": "instanced-mesh/geometry/boxes",
+              "module": {
+                "path": "../storybook/geometry/instanced-boxes.stories.ts",
+                "export": "instancedBoxesStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "holographic-material",
+      "label": "Голографический материал",
+      "route": "holographic-material",
+      "group": {
+        "id": "materials",
+        "label": "Материалы"
+      },
+      "subjects": [
+        {
+          "id": "geometry",
+          "kind": "class",
+          "label": "Геометрия",
+          "route": "holographic-material/geometry",
+          "apiName": "HolographicMaterial",
+          "tags": ["аналитический материал", "прозрачный проход", "без текстур"],
+          "aliases": ["голограмма", "тор"],
+          "variants": [
+            {
+              "id": "torus",
+              "label": "Тор",
+              "route": "holographic-material/geometry/torus",
+              "module": {
+                "path": "../storybook/materials/holographic-torus.stories.ts",
+                "export": "holographicTorusStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "thin-film-material",
+      "label": "Тонкоплёночный материал",
+      "route": "thin-film-material",
+      "group": {
+        "id": "materials",
+        "label": "Материалы"
+      },
+      "subjects": [
+        {
+          "id": "geometry",
+          "kind": "class",
+          "label": "Геометрия",
+          "route": "thin-film-material/geometry",
+          "apiName": "ThinFilmMaterial",
+          "tags": ["тонкая плёнка", "Френель", "один проход"],
+          "aliases": ["iridescence", "сфера"],
+          "variants": [
+            {
+              "id": "sphere",
+              "label": "Сфера",
+              "route": "thin-film-material/geometry/sphere",
+              "module": {
+                "path": "../storybook/materials/thin-film-sphere.stories.ts",
+                "export": "thinFilmSphereStory"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text",
+      "label": "Текст",
+      "route": "text",
+      "group": {
+        "id": "text",
+        "label": "Текст"
+      },
+      "subjects": [
+        {
+          "id": "presentation-clip",
+          "kind": "capability",
+          "label": "Обрезка представления",
+          "route": "text/presentation-clip",
+          "apiName": "Text",
+          "tags": ["обрезка представления", "цепочка скруглённых границ", "трафарет текста"],
+          "aliases": ["clip", "stencil"],
+          "variants": [
+            {
+              "id": "stencil",
+              "label": "Трафарет",
+              "route": "text/presentation-clip/stencil",
+              "module": {
+                "path": "../storybook/text/stencil-clipping.stories.ts",
+                "export": "textStencilClippingStory"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
