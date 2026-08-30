@@ -8,9 +8,9 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createLayoutPresentation,
-  layoutPresentationCss,
   type LayoutPresentationCase,
   type LayoutPresentationCaseRefs,
   type LayoutPresentationProps,
@@ -41,6 +41,7 @@ export type LayoutDomRoute = typeof LAYOUT_DOM_ROUTES[number]
 
 export type LayoutDomStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   props: LayoutPresentationProps
   caseRefs(id: string): LayoutPresentationCaseRefs | null
   source(): NodesExternalStorySource
@@ -66,6 +67,7 @@ export async function createLayoutDomStory(
     showPorts: true,
     cases,
   })
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
   const update = (props: LayoutPresentationProps): void => {
     if (disposed) throw new Error("LayoutDomStory controller is disposed")
@@ -82,6 +84,7 @@ export async function createLayoutDomStory(
   controller.element.addEventListener("click", onClick)
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     get props() { return controller.props },
     caseRefs(id) { return controller.caseRefs(id) },
     update,
@@ -92,7 +95,6 @@ export async function createLayoutDomStory(
       })
       return Object.freeze({
         html: serialize(controller.element),
-        css: layoutPresentationCss,
         typescript: [
           ...snippets,
           "",
@@ -105,6 +107,7 @@ export async function createLayoutDomStory(
       if (disposed) return
       disposed = true
       controller.element.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

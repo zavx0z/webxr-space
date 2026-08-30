@@ -6,6 +6,9 @@
   "label": "Nodes Layout",
   "packageJson": "../package.json",
   "readme": "../README.md",
+  "authorStyleSheets": [
+    {"specifier": "@nodes/layout/layout-presentation.css"}
+  ],
   "runtime": {"module": "./runtime.ts", "export": "runtime"},
   "catalog": "./catalog.json"
 }

@@ -36,7 +36,8 @@
     "./types": {
       "types": "./types/index.ts",
       "default": "./types/index.ts"
-    }
+    },
+    "./layout-presentation.css": "./layout-presentation.css"
   },
   "description": "Isolated high-performance compound, Dagre and Coffman–Graham graph layout policies. Built for MetaFor.",
   "homepage": "https://zavx0z.github.io/node/layout/",

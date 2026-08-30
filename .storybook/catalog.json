@@ -47,7 +47,16 @@
                 "export": "createLayoutDomStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "adaptive",
@@ -119,7 +128,16 @@
                 "export": "createLayoutDomStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "dagre-layered",
@@ -148,7 +166,16 @@
                 "export": "createLayoutDomStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "coffman-graham",
@@ -178,7 +205,16 @@
                 "export": "createLayoutDomStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     }
