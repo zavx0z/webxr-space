@@ -23,5 +23,8 @@
   },
   "dependencies": {
     "@nodes/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@nodes/ui": "workspace:*"
   }
 }
