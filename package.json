@@ -25,7 +25,8 @@
     "./top-down/client": "./top-down/client.ts",
     "./top-down/executor": "./top-down/executor.ts",
     "./coffman-graham/client": "./coffman-graham/client.ts",
-    "./coffman-graham/executor": "./coffman-graham/executor.ts"
+    "./coffman-graham/executor": "./coffman-graham/executor.ts",
+    "./worker-protocol.css": "./worker-protocol.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"

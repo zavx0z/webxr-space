@@ -8,9 +8,9 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createWorkerProtocol,
-  workerProtocolCss,
   type WorkerProtocolExchangeRefs,
   type WorkerProtocolProps,
 } from "../../dom/worker-protocol.ts"
@@ -31,6 +31,7 @@ export type WorkerDomRoute = typeof WORKER_DOM_ROUTES[number]
 
 export type WorkerDomStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   props: WorkerProtocolProps
   exchangeRefs(id: string): WorkerProtocolExchangeRefs | null
   source(): NodesExternalStorySource
@@ -52,6 +53,7 @@ export async function createWorkerDomStory(
     })
   }
   const controller = createWorkerProtocol(document, propsFor(1))
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
   const updateGeneration = (generation: number): void => {
     if (disposed) throw new Error("WorkerDomStory controller is disposed")
@@ -65,12 +67,12 @@ export async function createWorkerDomStory(
   controller.element.addEventListener("change", onInput)
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     get props() { return controller.props },
     exchangeRefs(id) { return controller.exchangeRefs(id) },
     source() {
       return Object.freeze({
         html: serialize(controller.element),
-        css: workerProtocolCss,
         typescript: providers.map((provider) => provider.source(controller.props.generation)).join("\n\n"),
       })
     },
@@ -79,6 +81,7 @@ export async function createWorkerDomStory(
       if (disposed) return
       disposed = true
       controller.element.removeEventListener("change", onInput)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

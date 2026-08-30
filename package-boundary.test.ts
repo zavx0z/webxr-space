@@ -30,6 +30,7 @@ describe("layout Worker policy bundle boundaries", () => {
       "./top-down/executor",
       "./transport",
       "./types",
+      "./worker-protocol.css",
     ])
     for (const target of Object.values(manifest.exports ?? {})) {
       expect(await Bun.file(join(packageRoot, target)).exists(), target).toBeTrue()

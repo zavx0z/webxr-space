@@ -6,6 +6,9 @@
   "label": "Nodes Worker",
   "packageJson": "../package.json",
   "readme": "../README.md",
+  "authorStyleSheets": [
+    {"specifier": "@nodes/worker/worker-protocol.css"}
+  ],
   "runtime": {"module": "./runtime.ts", "export": "runtime"},
   "catalog": "./catalog.json"
 }
