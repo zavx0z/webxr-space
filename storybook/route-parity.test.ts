@@ -8,6 +8,11 @@ type Catalog = Readonly<{
     subjects: readonly Readonly<{
       id: string
       route: string
+      presentation: Readonly<{
+        protocol: "story-presentation/1"
+        projection: "world"
+        widgets: readonly ["props", "source", "diagnostics"]
+      }>
       variants: readonly Readonly<{
         route: string
         module: Readonly<{path: string; export: string}>
@@ -29,6 +34,16 @@ describe("@engine/core external route parity", () => {
     }
     const leaves = catalog.categories.flatMap(({subjects}) =>
       subjects.flatMap(({variants}) => variants.map(({route}) => route)))
+    for (const subject of catalog.categories.flatMap(({subjects}) => subjects)) {
+      expect(subject.presentation).toEqual({
+        protocol: "story-presentation/1",
+        projection: "world",
+        widgets: ["props", "source", "diagnostics"],
+      })
+      for (const variant of subject.variants) {
+        expect(Object.hasOwn(variant, "presentation"), variant.route).toBeFalse()
+      }
+    }
     const overviews = [
       "",
       ...catalog.categories.flatMap((category) => [

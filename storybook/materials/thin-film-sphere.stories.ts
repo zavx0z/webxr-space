@@ -3,7 +3,7 @@ import {
   GridHelper,
   Mesh,
   MeshBasicMaterial,
-  Space,
+  Object3D,
   SphereGeometry,
   ThinFilmMaterial,
 } from "@engine/core"
@@ -13,16 +13,15 @@ import type {EngineStory} from "../story"
 export const thinFilmSphereStory: EngineStory = Object.freeze({
   ...thinFilmSphereStoryMetadata,
   createScene() {
-    const space = new Space()
-    space.background = new Color(0x05070e)
-    space.add(new GridHelper(420, 21, 0x5d648e, 0x20243c))
+    const root = new Object3D()
+    root.add(new GridHelper(420, 21, 0x5d648e, 0x20243c))
 
     const core = new Mesh(
       new SphereGeometry({radius: 55, widthSegments: 36, heightSegments: 24}),
       new MeshBasicMaterial({color: 0x11172a}),
     )
     core.position.z = 78
-    space.add(core)
+    root.add(core)
 
     const shell = new Mesh(
       new SphereGeometry({radius: 72, widthSegments: 48, heightSegments: 32}),
@@ -37,10 +36,11 @@ export const thinFilmSphereStory: EngineStory = Object.freeze({
       }),
     )
     shell.position.z = 78
-    space.add(shell)
+    root.add(shell)
 
     return {
-      space,
+      root,
+      background: new Color(0x05070e),
       camera: {
         position: {x: 220, y: -280, z: 205},
         target: {x: 0, y: 0, z: 78},

@@ -4,10 +4,12 @@
 contract. The external Storybook reads `catalog.json`, builds only this package
 session and lazy-loads the selected owner module from `../storybook/**`.
 
-The package runtime creates one Engine-owned native preview canvas in the same
-browser tab. It follows bounds published by the shared Workbench, while
-navigation, search, overviews, diagnostics and package lifecycle remain owned
-by the external Storybook server.
+The package runtime publishes one compiled semantic preview anchor into the
+shared Workbench and contributes one detached Object3D root to the exact
+runtime/3 `context.space`. It creates no native canvas, Renderer, Space or
+ViewPoint. Route cleanup detaches that root and restores the previous shared
+Space background; navigation, search, overviews, diagnostics and package
+lifecycle remain owned by the external Storybook server.
 
 Overview routes are real states, exact leaf routes do not end in `/`, and an
 unknown route never selects another scene. The default font remains the public

@@ -17,8 +17,15 @@
           "label": "Система координат",
           "route": "space/coordinate-system",
           "apiName": "Space",
-          "tags": ["Z-up", "миллиметры", "retained-сцена"],
-          "aliases": ["координаты", "пространство"],
+          "tags": [
+            "Z-up",
+            "миллиметры",
+            "retained-сцена"
+          ],
+          "aliases": [
+            "координаты",
+            "пространство"
+          ],
           "variants": [
             {
               "id": "z-up",
@@ -29,7 +36,16 @@
                 "export": "coordinateSpaceStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "world",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -48,8 +64,15 @@
           "label": "Геометрия",
           "route": "instanced-mesh/geometry",
           "apiName": "InstancedMesh",
-          "tags": ["инстансинг", "общая геометрия", "GPU-буферы"],
-          "aliases": ["instances", "боксы"],
+          "tags": [
+            "инстансинг",
+            "общая геометрия",
+            "GPU-буферы"
+          ],
+          "aliases": [
+            "instances",
+            "боксы"
+          ],
           "variants": [
             {
               "id": "boxes",
@@ -60,7 +83,16 @@
                 "export": "instancedBoxesStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "world",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -79,8 +111,15 @@
           "label": "Геометрия",
           "route": "holographic-material/geometry",
           "apiName": "HolographicMaterial",
-          "tags": ["аналитический материал", "прозрачный проход", "без текстур"],
-          "aliases": ["голограмма", "тор"],
+          "tags": [
+            "аналитический материал",
+            "прозрачный проход",
+            "без текстур"
+          ],
+          "aliases": [
+            "голограмма",
+            "тор"
+          ],
           "variants": [
             {
               "id": "torus",
@@ -91,7 +130,16 @@
                 "export": "holographicTorusStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "world",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -110,8 +158,15 @@
           "label": "Геометрия",
           "route": "thin-film-material/geometry",
           "apiName": "ThinFilmMaterial",
-          "tags": ["тонкая плёнка", "Френель", "один проход"],
-          "aliases": ["iridescence", "сфера"],
+          "tags": [
+            "тонкая плёнка",
+            "Френель",
+            "один проход"
+          ],
+          "aliases": [
+            "iridescence",
+            "сфера"
+          ],
           "variants": [
             {
               "id": "sphere",
@@ -122,7 +177,16 @@
                 "export": "thinFilmSphereStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "world",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -141,8 +205,15 @@
           "label": "Обрезка представления",
           "route": "text/presentation-clip",
           "apiName": "Text",
-          "tags": ["обрезка представления", "цепочка скруглённых границ", "трафарет текста"],
-          "aliases": ["clip", "stencil"],
+          "tags": [
+            "обрезка представления",
+            "цепочка скруглённых границ",
+            "трафарет текста"
+          ],
+          "aliases": [
+            "clip",
+            "stencil"
+          ],
           "variants": [
             {
               "id": "stencil",
@@ -153,7 +224,16 @@
                 "export": "textStencilClippingStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "world",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     }

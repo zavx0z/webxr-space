@@ -6,7 +6,6 @@ import {
   PlaneGeometry,
   type PresentationClipShape,
   RoundedRectMaterial,
-  Space,
   Text,
   TextMaterial,
 } from "@engine/core"
@@ -52,11 +51,10 @@ export const textStencilClippingStory: EngineStory = Object.freeze({
   ...textStencilClippingStoryMetadata,
   async createScene() {
     const font = await loadDocumentDefaultFont()
-    const space = new Space()
-    space.background = new Color(0x090c12)
+    const root = new Object3D()
     const board = new Object3D()
     board.rotation.x = Math.PI / 2
-    space.add(board)
+    root.add(board)
 
     const left = panel(-142, 0x162a45)
     const right = panel(142, 0x173a2e)
@@ -112,7 +110,8 @@ export const textStencilClippingStory: EngineStory = Object.freeze({
     board.add(cleanLabel)
 
     return {
-      space,
+      root,
+      background: new Color(0x090c12),
       camera: {
         position: {x: 0, y: -480, z: 0},
         target: {x: 0, y: 0, z: 0},

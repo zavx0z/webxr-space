@@ -10,6 +10,7 @@ describe("@engine/core external Storybook boundary", () => {
     const manifest = await Bun.file(join(coreRoot, "package.json")).json() as {
       exports: Record<string, unknown>
       dependencies?: Record<string, string>
+      devDependencies?: Record<string, string>
     }
     const tsconfig = await Bun.file(join(coreRoot, "tsconfig.json")).json() as {
       include: readonly string[]
@@ -21,6 +22,11 @@ describe("@engine/core external Storybook boundary", () => {
       "./fonts/jetbrains-mono-bold.ttf",
     ])
     expect(manifest.dependencies).toBeUndefined()
+    expect(manifest.devDependencies).toEqual({
+      "@zavx0z/dom": "link:@zavx0z/dom",
+      "@zavx0z/react": "link:@zavx0z/react",
+      "@zavx0z/template": "link:@zavx0z/template",
+    })
     expect(tsconfig.include).toEqual(["src/**/*.ts", "test/**/*.ts"])
     expect(Object.keys(manifest.exports).some((path) => path.includes("storybook"))).toBeFalse()
   })
@@ -62,6 +68,14 @@ describe("@engine/core external Storybook boundary", () => {
 
     const runtime = await Bun.file(join(coreRoot, ".storybook/runtime.ts")).text()
     const imports = [...runtime.matchAll(/from ["']([^"']+)["']/gu)].map((match) => match[1])
-    expect(imports).toEqual(["@engine/core", "../storybook/story.ts"])
+    expect(imports).toEqual([
+      "@engine/core",
+      "@zavx0z/dom",
+      "../storybook/story.ts",
+      "./preview.tsx",
+    ])
+    const preview = await Bun.file(join(coreRoot, ".storybook/preview.tsx")).text()
+    expect(preview).toContain('from "@zavx0z/react"')
+    expect(preview).toContain("style={css`")
   })
 })

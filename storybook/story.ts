@@ -1,4 +1,4 @@
-import type {Space} from "@engine/core"
+import type {Color, Object3D} from "@engine/core"
 
 export type StoryIcon = "architecture" | "geometry" | "hologram" | "text" | "thin-film"
 
@@ -10,7 +10,8 @@ export type CameraPreset = Readonly<{
 }>
 
 export type StoryScene = Readonly<{
-  space: Space
+  root: Object3D
+  background: Color
   camera: CameraPreset
   resize?(viewport: Readonly<{width: number; height: number}>): void
 }>

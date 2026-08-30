@@ -5,8 +5,8 @@ import {
   InstancedMesh,
   Matrix4,
   MeshBasicMaterial,
+  Object3D,
   Quaternion,
-  Space,
   Vector3,
 } from "@engine/core"
 import {instancedBoxesStoryMetadata} from "../metadata"
@@ -15,9 +15,8 @@ import type {EngineStory} from "../story"
 export const instancedBoxesStory: EngineStory = Object.freeze({
   ...instancedBoxesStoryMetadata,
   createScene() {
-    const space = new Space()
-    space.background = new Color(0x060a0f)
-    space.add(new GridHelper(420, 21, 0x4d8b7a, 0x173a33))
+    const root = new Object3D()
+    root.add(new GridHelper(420, 21, 0x4d8b7a, 0x173a33))
 
     const side = 5
     const boxes = new InstancedMesh(
@@ -37,10 +36,11 @@ export const instancedBoxesStory: EngineStory = Object.freeze({
         boxes.setMatrixAt(index, matrix)
       }
     }
-    space.add(boxes)
+    root.add(boxes)
 
     return {
-      space,
+      root,
+      background: new Color(0x060a0f),
       camera: {
         position: {x: 270, y: -330, z: 260},
         target: {x: 0, y: 0, z: 35},

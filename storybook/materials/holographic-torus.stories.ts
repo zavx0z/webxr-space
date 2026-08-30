@@ -3,7 +3,7 @@ import {
   GridHelper,
   HolographicMaterial,
   Mesh,
-  Space,
+  Object3D,
   TorusGeometry,
 } from "@engine/core"
 import {holographicTorusStoryMetadata} from "../metadata"
@@ -12,9 +12,8 @@ import type {EngineStory} from "../story"
 export const holographicTorusStory: EngineStory = Object.freeze({
   ...holographicTorusStoryMetadata,
   createScene() {
-    const space = new Space()
-    space.background = new Color(0x030811)
-    space.add(new GridHelper(420, 21, 0x426886, 0x13273b))
+    const root = new Object3D()
+    root.add(new GridHelper(420, 21, 0x426886, 0x13273b))
 
     const torus = new Mesh(
       new TorusGeometry({radius: 68, tube: 20, radialSegments: 48, tubularSegments: 72}),
@@ -29,10 +28,11 @@ export const holographicTorusStory: EngineStory = Object.freeze({
     )
     torus.position.z = 92
     torus.rotation.set(0.72, 0.18, 0.28)
-    space.add(torus)
+    root.add(torus)
 
     return {
-      space,
+      root,
+      background: new Color(0x030811),
       camera: {
         position: {x: 235, y: -285, z: 210},
         target: {x: 0, y: 0, z: 82},

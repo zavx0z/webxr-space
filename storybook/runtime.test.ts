@@ -1,5 +1,6 @@
 import {describe, expect, test} from "bun:test"
-import {Space} from "@engine/core"
+import {Color, Object3D, Space} from "@engine/core"
+import {createDocument} from "@zavx0z/dom"
 import {
   EngineStorySceneState,
   createEngineStorybookRuntime,
@@ -8,33 +9,28 @@ import {
 import type {EngineStory, StoryScene} from "./story.ts"
 
 describe("@engine/core structural Storybook runtime", () => {
-  test("mounts one owner Space in the shared bounded world host without owning a canvas", async () => {
-    const mounted: unknown[] = []
+  test("contributes one scene root to the exact shared Space without another world owner", async () => {
+    const document = createDocument()
+    const sharedSpace = new Space()
+    const restoredBackground = sharedSpace.background
     const worlds: any[] = []
-    const inspector: unknown[] = []
-    const source: unknown[] = []
-    const props: unknown[] = []
+    const presentations: any[] = []
     let worldDisposes = 0
     let worldRequests = 0
+    let previewDisposes = 0
     const lifetime = new AbortController()
     const context = {
-      document: {
-        createElement() {
-          return {
-            className: "",
-            setAttribute() {},
-          }
-        },
-      },
+      projection: "world",
+      document,
       signal: lifetime.signal,
-      mount: (node: unknown) => mounted.push(node),
-      publishInspector: (value: unknown) => inspector.push(value),
-      publishSource: (value: unknown) => source.push(value),
-      publishProps: (value: unknown) => props.push(value),
+      space: sharedSpace,
+      present(value: unknown) {
+        presentations.push(value)
+        const node = (value as {node: import("@zavx0z/dom").Node}).node
+        document.appendChild(node)
+      },
       reportDiagnostic() {},
-      requestRender() {},
       mountWorldPreview(registration: any) {
-        mounted.push(registration.node)
         worlds.push(registration)
         return {
           frames: 1,
@@ -45,7 +41,17 @@ describe("@engine/core structural Storybook runtime", () => {
         }
       },
     } satisfies EngineStorybookRuntimeContext
-    const adapter = createEngineStorybookRuntime()
+    const adapter = createEngineStorybookRuntime({
+      createPreview() {
+        return {
+          element: document.createElement("section"),
+          componentRoot: {
+            readStyleSheets: () => ({revision: 1, styleSheets: []}),
+          },
+          dispose() { previewDisposes += 1 },
+        }
+      },
+    })
     const session = await adapter.create(context)
     const routeSignal = new AbortController()
     const sceneResize: unknown[] = []
@@ -57,16 +63,23 @@ describe("@engine/core structural Storybook runtime", () => {
       story: current,
       signal: routeSignal.signal,
     })
-    expect(mounted).toHaveLength(1)
+    expect(adapter.protocol).toBe("storybook-runtime/3")
+    expect("styleSheets" in session).toBeFalse()
+    expect(presentations).toHaveLength(1)
     expect(worlds).toHaveLength(1)
-    expect(worlds[0]?.space).toBe(currentScene.space)
+    expect(Object.hasOwn(worlds[0]!, "space")).toBeFalse()
     expect(worlds[0]?.camera).toBe(currentScene.camera)
     expect(worlds[0]?.cameraGestures).toBeTrue()
     expect(worldRequests).toBe(1)
-    expect(inspector.at(-1)).toMatchObject({context: "current"})
-    expect(source.at(-1)).toMatchObject({typescript: "const current = true"})
-    expect(props.at(-1)).toMatchObject({id: "current", frames: 1})
-    expect((source.at(-1) as {html: string}).html).not.toContain("canvas")
+    expect(currentScene.root.parent).toBe(sharedSpace)
+    expect(sharedSpace.background).toBe(currentScene.background)
+    expect(presentations.at(-1)).toMatchObject({
+      protocol: "story-presentation/1",
+      source: {typescript: "const current = true"},
+      values: {props: {id: "current", frames: 1}},
+    })
+    expect(presentations.at(-1).source.html).not.toContain("canvas")
+    expect(typeof presentations.at(-1).componentRoot.readStyleSheets).toBe("function")
 
     worlds[0]?.resize({
       x: 100,
@@ -83,9 +96,12 @@ describe("@engine/core structural Storybook runtime", () => {
 
     await session.unmount()
     expect(worldDisposes).toBe(1)
+    expect(currentScene.root.parent).toBeNull()
+    expect(sharedSpace.background).toBe(restoredBackground)
     await session.dispose()
     await session.dispose()
     expect(worldDisposes).toBe(1)
+    expect(previewDisposes).toBe(1)
   })
 
   test("rejects stale async scenes and recreates only the current selection", async () => {
@@ -108,6 +124,10 @@ describe("@engine/core structural Storybook runtime", () => {
     const source = await Bun.file(new URL("../.storybook/runtime.ts", import.meta.url)).text()
 
     expect(source).toContain("mountWorldPreview")
+    expect(source).toContain("context.space.add")
+    expect(source).not.toContain("new Space")
+    expect(source).not.toContain("styleSheets")
+    expect(source).not.toMatch(/publish(?:Inspector|Source|Props)/u)
     expect(source).not.toContain("engine-story-canvas")
     expect(source).not.toContain("new Renderer")
     expect(source).not.toContain("requestAnimationFrame")
@@ -134,7 +154,8 @@ function scene(
   resize?: (viewport: Readonly<{width: number; height: number}>) => void,
 ): StoryScene {
   return {
-    space: new Space(),
+    root: new Object3D(),
+    background: new Color(0x123456),
     camera: {
       position: {x, y: 0, z: 10},
       target: {x: 0, y: 0, z: 0},

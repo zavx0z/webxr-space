@@ -15,4 +15,7 @@ external Storybook генерирует отдельный lazy import для т
 
 Каждый overview остаётся отдельным состоянием shared Workbench и не загружает
 скрытый первый detail. Неизвестный путь не выбирает fallback story. Native
-WebGPU canvas и camera принадлежат structural adapter в соседней `.storybook/`.
+WebGPU canvas, Space и ViewPoint принадлежат external Experience. Story-owned
+adapter добавляет и удаляет только один `Object3D` root в выданном
+`context.space`, а compiled semantic anchor публикуется атомарным runtime/3
+`present` вместе с source provenance.
