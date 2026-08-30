@@ -23,5 +23,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"
+  },
+  "devDependencies": {
+    "@nodes/ui": "workspace:*"
   }
 }

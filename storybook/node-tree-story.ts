@@ -9,10 +9,10 @@ import {
 } from "@zavx0z/dom"
 import {
   createNodeTreeEditor,
-  nodeTreeEditorCss,
   nodeTreeEditorDefaultProps,
   type NodeTreeEditorProps,
 } from "@nodes/ui/node-tree-editor"
+import {createRoot} from "@zavx0z/react"
 import type {NodesExternalStorySource} from "../../../.storybook/runtime.ts"
 
 export function createCoreNodeTreeStory(document: Document, route: string) {
@@ -22,6 +22,7 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
     title: "NodeTree",
     editable: false,
   })
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
   const update = (props: NodeTreeEditorProps): void => {
     if (disposed) throw new Error("Core NodeTree story is disposed")
@@ -49,11 +50,11 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
   controller.element.addEventListener("click", onClick)
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     get props() { return controller.props },
     source(): NodesExternalStorySource {
       return Object.freeze({
         html: serialize(controller.element),
-        css: nodeTreeEditorCss,
         typescript: [
           'import {createNodeTreeEditor} from "@nodes/ui/node-tree-editor"',
           'import {createDocument} from "@zavx0z/dom"',
@@ -70,6 +71,7 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
       disposed = true
       controller.element.removeEventListener("input", onInput)
       controller.element.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })
