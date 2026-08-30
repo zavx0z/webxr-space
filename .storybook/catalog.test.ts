@@ -20,6 +20,19 @@ describe("@ui/components external catalog", () => {
 
     expect(variants.map(({route}) => route)).toEqual(expected)
     expect(variants).toHaveLength(85)
+    for (const subject of catalog.categories.flatMap(({subjects}) => subjects)) {
+      const projection = subject.variants.every(({route}) => route.startsWith("hud/"))
+        ? "hud"
+        : "display"
+      expect(subject.presentation).toEqual({
+        protocol: "story-presentation/1",
+        projection,
+        widgets: ["props", "source", "diagnostics"],
+      })
+      for (const variant of subject.variants) {
+        expect(Object.hasOwn(variant, "presentation"), variant.route).toBeFalse()
+      }
+    }
     for (const variant of variants) {
       const path = resolve(import.meta.dir, variant.module.path)
       expect(existsSync(path), variant.route).toBeTrue()
@@ -58,14 +71,14 @@ describe("@ui/components external catalog", () => {
 
   test("mounts one owner story through the structural runtime and disposes it", async () => {
     const document = createDocument()
-    let source: unknown = null
+    let presentation: Readonly<Record<string, unknown>> | null = null
     const session = runtime.create({
       document,
       signal: new AbortController().signal,
-      mount: (node) => document.appendChild(node),
-      publishInspector() {},
-      publishProps() {},
-      publishSource: (value) => { source = value },
+      present(value) {
+        presentation = value
+        document.appendChild(value.node)
+      },
       reportDiagnostic() {},
     })
     await session.mount({
@@ -74,11 +87,34 @@ describe("@ui/components external catalog", () => {
       signal: new AbortController().signal,
     })
     expect(document.childNodes).toHaveLength(1)
-    expect(source).not.toBeNull()
+    expect(presentation).toEqual(expect.objectContaining({
+      protocol: "story-presentation/1",
+      node: document.firstChild,
+      source: expect.objectContaining({html: expect.any(String), typescript: expect.any(String)}),
+      values: {props: expect.any(Object)},
+    }))
+    expect(Object.keys((presentation as {source: object}).source).sort()).toEqual(["html", "typescript"])
+    expect(typeof (presentation as {componentRoot: {readStyleSheets?: unknown}})
+      .componentRoot.readStyleSheets).toBe("function")
     session.unmount()
     expect(document.childNodes).toHaveLength(0)
     session.dispose()
     session.dispose()
+  })
+
+  test("declares runtime/3 and the exact linked production theme without custom widgets", () => {
+    const manifest = json(join(import.meta.dir, "manifest.json")) as Readonly<{
+      authorStyleSheets: readonly Readonly<{specifier: string}>[]
+    }>
+    expect(runtime.protocol).toBe("storybook-runtime/3")
+    expect(manifest.authorStyleSheets).toEqual([
+      {specifier: "@ui/components/theme.css"}
+    ])
+    expect(Object.hasOwn(manifest, "widgetContributions")).toBeFalse()
+    const runtimeSource = readFileSync(join(import.meta.dir, "runtime.ts"), "utf8")
+    for (const forbidden of ["context.mount", "publishSource", "publishProps", "publishInspector"]) {
+      expect(runtimeSource).not.toContain(forbidden)
+    }
   })
 
   test("contains no private Storybook package, dependency, import or lifecycle", async () => {
@@ -102,6 +138,11 @@ describe("@ui/components external catalog", () => {
 type Catalog = Readonly<{
   categories: readonly Readonly<{
     subjects: readonly Readonly<{
+      presentation: Readonly<{
+        protocol: "story-presentation/1"
+        projection: "display" | "hud"
+        widgets: readonly ["props", "source", "diagnostics"]
+      }>
       variants: readonly Readonly<{
         route: string
         module: Readonly<{path: string; export: string}>

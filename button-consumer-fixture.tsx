@@ -1,7 +1,7 @@
 import {createDocument} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/react"
 import {Button} from "./button.tsx"
-import {uiIcons} from "./icons.ts"
+import {runIcon} from "./icons.ts"
 
 export const document = createDocument()
 export const host = document.createElement("main")
@@ -10,7 +10,7 @@ export const root = createRoot(host)
 
 root.render(<Button
   label="Output"
-  iconSrc={uiIcons.run}
+  iconSrc={runIcon}
   iconPosition="start"
   title="Output"
 />)

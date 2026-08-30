@@ -1,5 +1,5 @@
 /** Package-owned external Storybook story support. */
-import {Field, fieldCss, type FieldColor, type FieldDefinition} from "@ui/components/field"
+import {Field, type FieldColor, type FieldDefinition} from "@ui/components/field"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState, type StateDispatch} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -25,10 +25,10 @@ export function createCompiledFieldProductionStory(
   owner.setAttribute("data-story-component", "field")
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(owner),
-        css: fieldCss,
         typescript: source(definition)
       })
     },
@@ -36,7 +36,7 @@ export function createCompiledFieldProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: fieldCss})
+  return Object.freeze({story})
 }
 
 function controlledDefinition(
@@ -125,7 +125,7 @@ function controlledDefinition(
 
 function source(definition: FieldDefinition): string {
   return [
-    'import {Field, fieldCss, type FieldDefinition} from "@ui/components/field"',
+    'import {Field, type FieldDefinition} from "@ui/components/field"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -135,8 +135,7 @@ function source(definition: FieldDefinition): string {
     "    onChange(value) { setDefinition(current => ({...current, value})) },",
     "  }} />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void fieldCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

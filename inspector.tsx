@@ -1,8 +1,8 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, useId, type StyleValue} from "@zavx0z/react"
+import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button} from "./button.tsx"
-import {TextField, textFieldCss} from "./text-field.tsx"
+import {TextField} from "./text-field.tsx"
 
 export type InspectorCategory = Readonly<{
   id: string
@@ -28,14 +28,14 @@ export type InspectorProps = Readonly<{
   searchPlaceholder?: string | undefined
   context?: InspectorContext | undefined
   children: JsxSourceElement
-  style?: StyleValue
+  style?: CssStyle | undefined
   onCategoryChange?: ((id: string, event: Event) => void) | undefined
   onQueryChange?: ((query: string, event: Event) => void) | undefined
 }>
 
 export type InspectorSectionsProps = Readonly<{
   children: readonly JsxSourceElement[]
-  style?: StyleValue
+  style?: CssStyle | undefined
 }>
 
 export type InspectorSectionProps = Readonly<{
@@ -46,7 +46,7 @@ export type InspectorSectionProps = Readonly<{
   disabled?: boolean | undefined
   hidden?: boolean | undefined
   children: JsxSourceElement
-  style?: StyleValue
+  style?: CssStyle | undefined
   onToggle?: ((id: string, expanded: boolean, event: Event) => void) | undefined
 }>
 
@@ -54,82 +54,18 @@ export type InspectorTextSectionProps = Omit<InspectorSectionProps, "children"> 
   content: string
 }>
 
-export const inspectorStyles = defineStyles("@ui/components/inspector", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    height: "100%",
-    overflow: "clip",
-    border: "1px solid rgb(22 22 22)",
-    borderRadius: 6,
-    background: "rgb(48 48 48)",
-    color: "rgb(224 224 224)",
-    fontSize: 12
-  },
-  toolbar: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: 30,
-    padding: 4,
-    background: "rgb(48 48 48)"
-  },
-  search: {width: 115, height: 22, padding: "2px 8px"},
-  body: {display: "flex", flexDirection: "row", width: "100%", flexGrow: 1},
-  rail: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: 30,
-    height: "100%",
-    gap: 0,
-    padding: "8px 0",
-    background: "rgb(29 29 29)"
-  },
-  category: {
-    width: 26,
-    minWidth: 26,
-    height: 28,
-    marginLeft: 4,
-    padding: 0,
-    border: 0,
-    borderRadius: 0,
-    background: "transparent",
-    boxShadow: "none"
-  },
-  categoryGroupStart: {marginTop: 8},
-  selectedCategory: {borderRadius: "4px 0 0 4px", background: "rgb(48 48 48)", color: "rgb(240 240 240)"},
-  content: {display: "flex", flexDirection: "column", minWidth: 0, flexGrow: 1, background: "rgb(48 48 48)"},
-  context: {boxSizing: "border-box", display: "block", width: "100%", height: 28, padding: 6, background: "rgb(48 48 48)"},
-  sections: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    minHeight: 0,
-    flexGrow: 1,
-    gap: 2,
-    padding: 7,
-    overflowY: "auto",
-    scrollbarWidth: "thin",
-    background: "rgb(48 48 48)"
-  },
-  section: {display: "flex", flexDirection: "column", width: "100%", overflow: "clip", borderRadius: 4, background: "rgb(61 61 61)"},
-  sectionHeader: {width: "100%", height: 26, padding: "0 5px", border: 0, borderRadius: 4, background: "rgb(61 61 61)", boxShadow: "none", justifyContent: "flex-start"},
-  expandedHeader: {borderRadius: "4px 4px 0 0"},
-  sectionContent: {boxSizing: "border-box", display: "block", width: "100%", padding: 6, background: "rgb(61 61 61)"},
-  hidden: {display: "none"}
-})
-
-export const inspectorCss = [
-  textFieldCss,
-  inspectorStyles.cssText
-].join("\n")
+const searchStyle: CssStyle = css`& { width: 115px; height: 22px; padding: 2px 8px; }`
+const categoryStyle: CssStyle = css`
+  & { width: 26px; min-width: 26px; height: 28px; margin-left: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+`
+const categoryGroupStartStyle: CssStyle = css`& { margin-top: 8px; }`
+const selectedCategoryStyle: CssStyle = css`
+  & { border-radius: 4px 0 0 4px; background: var(--widget-number-background-readonly); color: rgb(var(--surface-50)); }
+`
+const sectionHeaderStyle: CssStyle = css`
+  & { width: 100%; height: 26px; padding: 0 5px; border: 0; border-radius: 4px; background: var(--widget-regular-outline); box-shadow: none; justify-content: flex-start; }
+`
+const expandedHeaderStyle: CssStyle = css`& { border-radius: 4px 4px 0 0; }`
 
 type CategoryButtonProps = Readonly<{
   category: InspectorCategory
@@ -145,11 +81,7 @@ function CategoryButton(props: CategoryButtonProps) {
     aria-label={props.category.title ?? props.category.label}
     disabled={props.category.disabled === true}
     selected={props.selected}
-    style={[
-      inspectorStyles.category,
-      props.category.groupStart === true && inspectorStyles.categoryGroupStart,
-      props.selected && inspectorStyles.selectedCategory
-    ]}
+    style={css`${categoryStyle}${props.category.groupStart === true && categoryGroupStartStyle}${props.selected && selectedCategoryStyle}`}
     onClick={onClick}
   />
 }
@@ -159,20 +91,39 @@ export function Inspector(props: InspectorProps) {
   const onInput = (query: string, event: Event) => props.onQueryChange?.(query, event)
   return <aside
     aria-label={props.ariaLabel ?? "Inspector"}
-    style={[inspectorStyles.root, props.style]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+          overflow: clip;
+          border: var(--border-width-control) solid var(--material-editor-border);
+          border-radius: 6px;
+          background: var(--widget-number-background-readonly);
+          color: rgb(var(--surface-150));
+          font-size: var(--font-size-sm);
+        }
+        ${props.style}
+      `}
   >
-    <header style={inspectorStyles.toolbar}>
+    <header style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; height: 30px; padding: 4px; background: var(--widget-number-background-readonly); }
+    `}>
       <TextField
         type="search"
         value={props.query}
         placeholder={props.searchPlaceholder}
         aria-label={props.searchLabel ?? props.searchPlaceholder ?? "Search"}
-        style={inspectorStyles.search}
+        style={searchStyle}
         onInput={onInput}
       />
     </header>
-    <div style={inspectorStyles.body}>
-      <nav aria-label={props.categoriesLabel ?? "Categories"} style={inspectorStyles.rail}>
+    <div style={css`& { display: flex; flex-direction: row; width: 100%; flex-grow: 1; }`}>
+      <nav aria-label={props.categoriesLabel ?? "Categories"} style={css`
+        & { box-sizing: border-box; display: flex; flex-direction: column; width: 30px; height: 100%; gap: 0; padding: 8px 0; background: var(--widget-text-background); }
+      `}>
         {props.categories.map(category => <CategoryButton
           key={category.id}
           category={category}
@@ -180,11 +131,16 @@ export function Inspector(props: InspectorProps) {
           onChange={props.onCategoryChange}
         />)}
       </nav>
-      <div role="region" aria-label="Inspector content" style={inspectorStyles.content}>
+      <div role="region" aria-label="Inspector content" style={css`
+        & { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; background: var(--widget-number-background-readonly); }
+      `}>
         <div
           hidden={props.context === undefined}
           title={props.context?.title ?? props.context?.label}
-          style={[inspectorStyles.context, props.context === undefined && inspectorStyles.hidden]}
+          style={css`
+              & { box-sizing: border-box; display: block; width: 100%; height: 28px; padding: 6px; background: var(--widget-number-background-readonly); }
+              &[hidden] { display: none; }
+            `}
         >{props.context?.label ?? ""}</div>
         {props.children}
       </div>
@@ -193,7 +149,10 @@ export function Inspector(props: InspectorProps) {
 }
 
 export function InspectorSections(props: InspectorSectionsProps) {
-  return <div style={[inspectorStyles.sections, props.style]}>{props.children}</div>
+  return <div style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-height: 0; flex-grow: 1; gap: 2px; padding: 7px; overflow-y: auto; scrollbar-width: thin; background: var(--widget-number-background-readonly); }
+      ${props.style}
+    `}>{props.children}</div>
 }
 
 export function InspectorSection(props: InspectorSectionProps) {
@@ -202,7 +161,11 @@ export function InspectorSection(props: InspectorSectionProps) {
   return <section
     data-section-id={props.id}
     hidden={props.hidden === true}
-    style={[inspectorStyles.section, props.hidden === true && inspectorStyles.hidden, props.style]}
+    style={css`
+        & { display: flex; flex-direction: column; width: 100%; overflow: clip; border-radius: 4px; background: var(--widget-regular-outline); }
+        &[hidden] { display: none; }
+        ${props.style}
+      `}
   >
     <Button
       label={props.label}
@@ -210,10 +173,13 @@ export function InspectorSection(props: InspectorSectionProps) {
       aria-expanded={String(props.expanded)}
       aria-controls={contentId}
       disabled={props.disabled === true}
-      style={[inspectorStyles.sectionHeader, props.expanded && inspectorStyles.expandedHeader]}
+      style={css`${sectionHeaderStyle}${props.expanded && expandedHeaderStyle}`}
       onClick={onClick}
     />
-    <div id={contentId} hidden={!props.expanded} style={[inspectorStyles.sectionContent, !props.expanded && inspectorStyles.hidden]}>{props.children}</div>
+    <div id={contentId} hidden={!props.expanded} style={css`
+        & { box-sizing: border-box; display: block; width: 100%; padding: 6px; background: var(--widget-regular-outline); }
+        &[hidden] { display: none; }
+      `}>{props.children}</div>
   </section>
 }
 

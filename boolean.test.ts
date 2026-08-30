@@ -1,10 +1,11 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument, type HTMLInputElement} from "@zavx0z/dom"
+import {type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {Checkbox, checkboxCss} from "./checkbox.tsx"
-import {Switcher, switcherCss} from "./switcher.tsx"
+import {Checkbox} from "./checkbox.tsx"
+import {Switcher} from "./switcher.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled boolean controls", () => {
   test("keeps Checkbox live checked/indeterminate state and controlled proposals", () => {
@@ -35,8 +36,7 @@ describe("compiled boolean controls", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 80, height: 50},
-      styleSheets: [checkboxCss]
+      viewport: {width: 80, height: 50}
     })
     expect(renderer.flush().boxByNode.get(input)).toMatchObject({width: 18, height: 18})
     renderer.dispose()
@@ -70,8 +70,7 @@ describe("compiled boolean controls", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 80, height: 50},
-      styleSheets: [switcherCss]
+      viewport: {width: 80, height: 50}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(button)).toMatchObject({width: 32, height: 18})
@@ -81,6 +80,8 @@ describe("compiled boolean controls", () => {
   })
 
   test("uses class-free native pseudo owner sheets", () => {
+    const checkboxCss = (Checkbox as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
+    const switcherCss = (Switcher as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
     expect(checkboxCss).toContain(":checked")
     expect(checkboxCss).toContain(":indeterminate")
     expect(checkboxCss).not.toContain(".ui-")

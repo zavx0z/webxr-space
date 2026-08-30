@@ -1,6 +1,4 @@
 import type {Event, HTMLSelectElement} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type EnumInputOption = Readonly<{
   key: string
@@ -15,32 +13,9 @@ export type EnumInputProps = Readonly<{
   options: readonly EnumInputOption[]
   disabled?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onChange?: ((value: string, event: Event) => void) | undefined
 }>
-
-export const enumInputStyles = defineStyles("@ui/components/enum-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "block",
-    minWidth: 0,
-    width: 180,
-    height: 28,
-    padding: "3px 8px",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(84 84 84)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    color: "rgb(230 230 230)",
-    fontSize: 12,
-    ":hover": {background: "rgb(101 101 101)"},
-    ":active": {borderColor: "rgb(113 168 255)", background: "rgb(34 34 34)"},
-    ":focus": {borderColor: "rgb(113 168 255)", background: "rgb(34 34 34)"},
-    ":disabled": {opacity: 0.5, boxShadow: "none"}
-  }
-})
-
-export const enumInputCss = enumInputStyles.cssText
 
 function EnumOption(props: Readonly<{option: EnumInputOption; selected: boolean}>) {
   return <option
@@ -61,7 +36,33 @@ export function EnumInput(props: EnumInputProps) {
     disabled={props.disabled === true}
     title={props.title}
     onChange={onChange}
-    style={[enumInputStyles.root, props.style]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: block;
+          min-width: 0;
+          width: 180px;
+          height: var(--control-height-large);
+          padding: 3px 8px;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          color: var(--widget-regular-content);
+          font-size: var(--font-size-sm);
+        }
+        &:hover { background: var(--widget-hover-background); }
+        &:active {
+          border-color: var(--widget-focus-outline);
+          background: var(--widget-text-background-focus);
+        }
+        &:focus {
+          border-color: var(--widget-focus-outline);
+          background: var(--widget-text-background-focus);
+        }
+        &:disabled { opacity: 0.5; box-shadow: none; }
+        ${props.style}
+      `}
   >
     {props.options.map(option => <EnumOption
       key={option.key}

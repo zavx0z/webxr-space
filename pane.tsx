@@ -1,6 +1,4 @@
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type PaneVariant = "filled" | "outlined" | "transparent"
 export type PaneTextContent = string | number | bigint | boolean | null | undefined
@@ -11,29 +9,8 @@ export type PaneProps = Readonly<{
   variant?: PaneVariant | undefined
   title?: string | undefined
   active?: boolean | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
 }>
-
-const box = resolveWidgetColors("box")
-
-export const paneStyles = defineStyles("@ui/components/pane", {
-  root: {
-    boxSizing: "border-box",
-    display: "block",
-    minWidth: 0,
-    padding: 8,
-    overflow: "hidden",
-    border: `1px solid ${rgba8ToColor(box.outline)}`,
-    borderRadius: 4,
-    background: rgba8ToColor(box.inner),
-    color: rgba8ToColor(box.text)
-  },
-  outlined: {background: "transparent"},
-  transparent: {borderColor: "transparent", background: "transparent"},
-  active: {borderColor: rgba8ToColor(uiTheme.material.editorOutlineActive)}
-})
-
-export const paneCss = paneStyles.cssText
 
 export function Pane(props: PaneProps) {
   if (props.children != null && props.content != null) {
@@ -42,12 +19,24 @@ export function Pane(props: PaneProps) {
   const variant = props.variant ?? "filled"
   return <section
     title={props.title}
-    style={[
-      paneStyles.root,
-      variant === "outlined" && paneStyles.outlined,
-      variant === "transparent" && paneStyles.transparent,
-      props.active === true && paneStyles.active,
-      props.style
-    ]}
+    data-variant={variant}
+    data-active={props.active === true ? "true" : undefined}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: block;
+          min-width: 0;
+          padding: 8px;
+          overflow: hidden;
+          border: 1px solid var(--widget-box-outline);
+          border-radius: 4px;
+          background: var(--widget-box-background);
+          color: var(--widget-box-content);
+        }
+        &[data-variant="outlined"] { background: transparent; }
+        &[data-variant="transparent"] { border-color: transparent; background: transparent; }
+        &[data-active="true"] { border-color: var(--material-editor-outline-active); }
+        ${props.style}
+      `}
   >{props.children}{props.content}</section>
 }

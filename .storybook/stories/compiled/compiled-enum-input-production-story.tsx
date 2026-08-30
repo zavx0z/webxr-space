@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   EnumInput,
-  enumInputCss,
   type EnumInputProps
 } from "@ui/components/enum-input"
 import {createRoot, useState} from "@zavx0z/react"
@@ -19,7 +18,6 @@ function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps}>) {
     options={props.initial.options}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onChange={onChange}
   />
 }
@@ -41,10 +39,10 @@ export function createCompiledEnumInputProductionStory(
 
   const story = Object.freeze({
     element: select,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(select),
-        css: enumInputCss,
         typescript: source(props, select.value)
       })
     },
@@ -52,12 +50,12 @@ export function createCompiledEnumInputProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: enumInputCss})
+  return Object.freeze({story})
 }
 
 function source(props: EnumInputProps, value: string): string {
   return [
-    'import {EnumInput, enumInputCss} from "@ui/components/enum-input"',
+    'import {EnumInput} from "@ui/components/enum-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     `const options = ${JSON.stringify(props.options, null, 2)} as const`,
@@ -71,8 +69,7 @@ function source(props: EnumInputProps, value: string): string {
     "    onChange={setValue}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void enumInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

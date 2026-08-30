@@ -2,14 +2,21 @@
 
 External Storybook владеет одним server/origin, Workbench, routing и package
 sessions. `@ui/components` владеет только JSON catalog, static owner story
-exports, structural `storybook-runtime/1` adapter и неизменяемыми resources в
+exports, structural `storybook-runtime/3` adapter, linked production
+`@ui/components/theme.css` и неизменяемыми resources в
 `packages/components/.storybook`. UI не устанавливает и не импортирует
 `@zavx0z/storybook` даже type-only.
 
 ## `UI-STORYBOOK-DOM-001` — one document pipeline
 
-1. `.storybook/runtime.ts` получает exact package-tab `Document` и validated
-   mount/publication capabilities от external shell. Retained fallback,
+1. `.storybook/runtime.ts` получает exact package-tab `Document` и одну
+   atomic `present` capability от external shell. Каждый subject объявляет
+   `story-presentation/1`, projection `display` и ordered widgets
+   `props → source → diagnostics`; variant не переопределяет presentation.
+   Runtime одной операцией публикует `node`, `componentRoot`, обязательный
+   `{html, typescript}` source и только выбранный `values.props`. Старые
+   `mount`, `publishSource`, `publishProps` и `publishInspector` отсутствуют.
+   Retained fallback,
    `UiRuntime`, `UiSurface`, `@layout/core` и `@ui/elements` отсутствуют.
 2. External shell является единственным browser host. Owner runtime не создаёт
    canvas, Workbench, router, listener, server, port либо global registry.
@@ -77,8 +84,11 @@ chrome, rounded card contour либо интерактивное поведен�
 Source inspector показывает три live documents:
 
 - HTML сериализуется из фактического semantic tree;
-- CSS является complete immutable stylesheet, переданным единственному
-  renderer runtime, а detail source сохраняет exact production owner CSS;
+- CSS является structured projection exact linked author sheets и authored
+  compiled sheets active component root. Owner runtime атомарно публикует
+  обязательный `{html, typescript}` вместе с `componentRoot.readStyleSheets()`;
+  `css: string`,
+  `session.styleSheets` и ручной stylesheet transport запрещены;
 - TypeScript для platform stories использует direct
   `createDocument`/`createElement`, properties и standard listeners;
 - TypeScript для component stories импортирует exact production owner и
@@ -110,10 +120,11 @@ production owner stylesheet.
 
 ## `UI-STORYBOOK-PRODUCTION-001` — stories use exact production owners
 
-1. Component detail route импортирует exact natural `@ui/components/*` leaf,
-   создаёт preview его public factory и передаёт renderer exact exported CSS
-   этого owner. Storybook-only direct `document.createElement` replica
-   production control запрещена.
+1. Component detail route импортирует exact natural `@ui/components/*` leaf и
+   создаёт preview его public TSX owner. Compiled CSS регистрируется самим
+   component root; global `theme.css` объявлен как exact `authorStyleSheets`
+   package resource. Storybook-only direct `document.createElement` replica и
+   imported `*Css` production control запрещены.
 2. Standard DOM interface/element routes остаются прямыми platform proofs:
    они документируют `@zavx0z/dom` и не фабрикуют отсутствующий Component.
 3. Field, Inspector, CodeEditor и HUD продолжают использовать действующие

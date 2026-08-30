@@ -1,6 +1,4 @@
 import type {Event, HTMLInputElement} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type SliderControlProps = Readonly<{
   value: number
@@ -9,31 +7,10 @@ export type SliderControlProps = Readonly<{
   step?: number | undefined
   disabled?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: number, event: Event) => void) | undefined
   onChange?: ((value: number, event: Event) => void) | undefined
 }>
-
-export const sliderControlStyles = defineStyles("@ui/components/slider-control", {
-  root: {
-    boxSizing: "border-box",
-    display: "block",
-    width: 180,
-    height: 28,
-    padding: "3px 6px",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(84 84 84)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    color: "rgb(71 114 179)",
-    ":hover": {background: "rgb(101 101 101)"},
-    ":active": {background: "rgb(71 114 179)"},
-    ":focus": {borderColor: "rgb(113 168 255)"},
-    ":disabled": {opacity: 0.5, boxShadow: "none"}
-  }
-})
-
-export const sliderControlCss = sliderControlStyles.cssText
 
 export function SliderControl(props: SliderControlProps) {
   const step = validateSlider(props)
@@ -55,7 +32,25 @@ export function SliderControl(props: SliderControlProps) {
     title={props.title}
     onInput={onInput}
     onChange={onChange}
-    style={[sliderControlStyles.root, props.style]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: block;
+          width: 180px;
+          height: var(--control-height-large);
+          padding: 3px 6px;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          color: var(--widget-regular-background-selected);
+        }
+        &:hover { background: var(--widget-hover-background); }
+        &:active { background: var(--widget-active-background); }
+        &:focus { border-color: var(--widget-focus-outline); }
+        &:disabled { opacity: 0.5; box-shadow: none; }
+        ${props.style}
+      `}
   />
 }
 

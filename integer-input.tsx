@@ -1,7 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {
   NumberInput,
-  numberInputCss,
   type NumberInputProps
 } from "./number-input.tsx"
 
@@ -14,8 +13,6 @@ export type IntegerInputProps = Omit<
   onInput?: ((value: number, event: Event) => void) | undefined
   onChange?: ((value: number, event: Event) => void) | undefined
 }>
-
-export const integerInputCss = numberInputCss
 
 export function IntegerInput(props: IntegerInputProps) {
   const onInput = (value: number, event: Event) => props.onInput?.(Math.round(value), event)

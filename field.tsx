@@ -1,17 +1,17 @@
-import {defineStyles, useId, type StyleValue} from "@zavx0z/react"
-import {Checkbox, checkboxCss} from "./checkbox.tsx"
-import {CollectionInput, collectionInputCss} from "./collection-input.tsx"
-import {ColorInput, colorInputCss} from "./color-input.tsx"
-import {EnumInput, enumInputCss} from "./enum-input.tsx"
-import {IntegerInput, integerInputCss} from "./integer-input.tsx"
-import {MatrixInput, matrixInputCss} from "./matrix-input.tsx"
-import {NumberInput, numberInputCss} from "./number-input.tsx"
-import {PathInput, pathInputCss} from "./path-input.tsx"
-import {ReferenceInput, referenceInputCss} from "./reference-input.tsx"
-import {SliderControl, sliderControlCss} from "./slider-control.tsx"
-import {Switcher, switcherCss} from "./switcher.tsx"
-import {TextField, textFieldCss} from "./text-field.tsx"
-import {VectorInput, vectorInputCss} from "./vector-input.tsx"
+import {useId} from "@zavx0z/react"
+import {Checkbox} from "./checkbox.tsx"
+import {CollectionInput} from "./collection-input.tsx"
+import {ColorInput} from "./color-input.tsx"
+import {EnumInput} from "./enum-input.tsx"
+import {IntegerInput} from "./integer-input.tsx"
+import {MatrixInput} from "./matrix-input.tsx"
+import {NumberInput} from "./number-input.tsx"
+import {PathInput} from "./path-input.tsx"
+import {ReferenceInput} from "./reference-input.tsx"
+import {SliderControl} from "./slider-control.tsx"
+import {Switcher} from "./switcher.tsx"
+import {TextField} from "./text-field.tsx"
+import {VectorInput} from "./vector-input.tsx"
 
 export const FIELD_KINDS = Object.freeze([
   "text",
@@ -171,276 +171,173 @@ export type FieldDefinition =
 
 export type FieldProps = Readonly<{
   definition: FieldDefinition
-  style?: StyleValue
+  style?: CssStyle | undefined
 }>
 
-export const fieldStyles = defineStyles("@ui/components/field", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    width: "100%",
-    minWidth: 0,
-    minHeight: 28,
-    gap: 4,
-    padding: 0,
-    color: "rgb(204 204 204)"
-  },
-  disabled: {opacity: 0.5},
-  label: {
-    boxSizing: "border-box",
-    display: "flex",
-    alignItems: "center",
-    width: "40%",
-    minWidth: 0,
-    height: 28,
-    color: "rgb(204 204 204)",
-    fontSize: 12
-  },
-  controlSlot: {
-    boxSizing: "border-box",
-    display: "flex",
-    alignItems: "flex-start",
-    minWidth: 0,
-    minHeight: 28,
-    flexGrow: 1
-  },
-  fullWidth: {width: "100%"},
-  boolean: {marginTop: 5},
-  readonly: {
-    boxSizing: "border-box",
-    display: "flex",
-    alignItems: "center",
-    width: "100%",
-    minHeight: 28,
-    padding: "3px 7px",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(48 48 48)",
-    color: "rgb(153 153 153)",
-    fontSize: 12
-  }
-})
-
-export const fieldCss = [
-  checkboxCss,
-  collectionInputCss,
-  colorInputCss,
-  enumInputCss,
-  integerInputCss,
-  matrixInputCss,
-  numberInputCss,
-  pathInputCss,
-  referenceInputCss,
-  sliderControlCss,
-  switcherCss,
-  textFieldCss,
-  vectorInputCss,
-  fieldStyles.cssText
-].join("\n")
-
-function TextFieldControl(props: Readonly<{definition: TextFieldDefinition}>) {
-  const onInput = (value: string) => props.definition.onChange?.(value)
-  return <TextField
-    value={props.definition.value}
-    placeholder={props.definition.placeholder}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function NumberFieldControl(props: Readonly<{definition: NumberFieldDefinition}>) {
-  const onInput = (value: number) => props.definition.onChange?.(value)
-  return <NumberInput
-    value={props.definition.value}
-    min={props.definition.min}
-    max={props.definition.max}
-    step={props.definition.step}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function SliderFieldControl(props: Readonly<{definition: NumberFieldDefinition}>) {
-  const onInput = (value: number) => props.definition.onChange?.(value)
-  return <SliderControl
-    value={props.definition.value}
-    min={props.definition.min ?? 0}
-    max={props.definition.max ?? 100}
-    step={props.definition.step ?? 0.1}
-    disabled={props.definition.disabled === true || props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function IntegerFieldControl(props: Readonly<{definition: IntegerFieldDefinition}>) {
-  const onInput = (value: number) => props.definition.onChange?.(value)
-  return <IntegerInput
-    value={props.definition.value}
-    min={props.definition.min}
-    max={props.definition.max}
-    step={props.definition.step}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function CheckboxFieldControl(props: Readonly<{definition: BooleanFieldDefinition}>) {
-  return <Checkbox
-    checked={props.definition.value}
-    disabled={props.definition.disabled === true || props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.boolean}
-    onChange={props.definition.onChange}
-  />
-}
-
-function SwitchFieldControl(props: Readonly<{definition: BooleanFieldDefinition}>) {
-  return <Switcher
-    checked={props.definition.value}
-    disabled={props.definition.disabled === true || props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.boolean}
-    onChange={props.definition.onChange}
-  />
-}
-
-function EnumFieldControl(props: Readonly<{definition: EnumFieldDefinition}>) {
-  return <EnumInput
-    value={props.definition.value}
-    options={props.definition.options.map(option => ({...option, key: option.value}))}
-    disabled={props.definition.disabled === true || props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onChange={props.definition.onChange}
-  />
-}
-
-function ColorFieldControl(props: Readonly<{definition: ColorFieldDefinition}>) {
-  const onInput = (value: ColorFieldDefinition["value"]) => props.definition.onChange?.(value)
-  return <ColorInput
-    value={props.definition.value}
-    label={props.definition.label}
-    presentation="expanded"
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function VectorFieldControl(props: Readonly<{definition: VectorFieldDefinition | RotationFieldDefinition}>) {
-  const onInput = (value: readonly number[]) => props.definition.onChange?.(
-    props.definition.numberKind === "integer" ? Object.freeze(value.map(Math.round)) : value
-  )
-  return <VectorInput
-    value={props.definition.value}
-    axes={props.definition.axes}
-    min={props.definition.min}
-    max={props.definition.max}
-    step={props.definition.numberKind === "integer" ? props.definition.step ?? 1 : props.definition.step}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function MatrixFieldControl(props: Readonly<{definition: MatrixFieldDefinition}>) {
-  const onInput = (value: readonly (readonly number[])[]) => props.definition.onChange?.(value)
-  return <MatrixInput
-    value={props.definition.value}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-  />
-}
-
-function ReferenceFieldControl(props: Readonly<{definition: ReferenceFieldDefinition}>) {
-  return <ReferenceInput
-    value={props.definition.value}
-    placeholder={props.definition.placeholder}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onActivate={props.definition.onActivate}
-    onPick={props.definition.onPick}
-    onClear={props.definition.onClear}
-  />
-}
-
-function CollectionFieldControl(props: Readonly<{definition: CollectionFieldDefinition}>) {
-  return <CollectionInput
-    items={props.definition.items}
-    selectedId={props.definition.selectedId}
-    visibleRows={props.definition.visibleRows}
-    emptyLabel={props.definition.emptyLabel}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onSelect={props.definition.onSelect}
-    onAdd={props.definition.onAdd}
-    onRemove={props.definition.onRemove}
-    onMove={props.definition.onMove}
-  />
-}
-
-function PathFieldControl(props: Readonly<{definition: PathFieldDefinition}>) {
-  const onInput = (value: string) => props.definition.onChange?.(value)
-  return <PathInput
-    value={props.definition.value}
-    placeholder={props.definition.placeholder}
-    disabled={props.definition.disabled === true}
-    readOnly={props.definition.readOnly === true}
-    title={props.definition.description}
-    style={fieldStyles.fullWidth}
-    onInput={onInput}
-    onBrowse={props.definition.onBrowse}
-  />
-}
+const fullWidthStyle: CssStyle = css`& { width: 100%; }`
+const booleanStyle: CssStyle = css`& { margin-top: 5px; }`
 
 function ReadonlyFieldControl(props: Readonly<{definition: ReadonlyFieldDefinition}>) {
-  return <div title={props.definition.description} style={fieldStyles.readonly}>{String(props.definition.value)}</div>
+  return <div title={props.definition.description} style={css`
+    & {
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 28px;
+      padding: 3px 7px;
+      border: var(--border-width-control) solid var(--widget-regular-outline);
+      border-radius: 4px;
+      background: var(--widget-number-background-readonly);
+      color: var(--widget-text-content-readonly);
+      font-size: var(--font-size-sm);
+    }
+  `}>{String(props.definition.value)}</div>
 }
 
 function FieldControlView(props: Readonly<{definition: FieldDefinition; labelId: string}>) {
   const definition = props.definition
+  const vectorInput = (value: readonly number[]): void => {
+    if (definition.kind !== "vector" && definition.kind !== "rotation") return
+    definition.onChange?.(
+      definition.numberKind === "integer" ? Object.freeze(value.map(Math.round)) : value
+    )
+  }
   return <div
     role="group"
     aria-labelledby={props.labelId}
-    style={fieldStyles.controlSlot}
+    style={css`
+      & { box-sizing: border-box; display: flex; align-items: flex-start; min-width: 0; min-height: 28px; flex-grow: 1; }
+    `}
   >
-    {definition.kind === "text" ? <TextFieldControl definition={definition} /> : null}
-    {definition.kind === "number" && (definition.presentation ?? "input") !== "slider" ? <NumberFieldControl definition={definition} /> : null}
-    {definition.kind === "number" && definition.presentation === "slider" ? <SliderFieldControl definition={definition} /> : null}
-    {definition.kind === "integer" ? <IntegerFieldControl definition={definition} /> : null}
-    {definition.kind === "boolean" && (definition.presentation ?? "checkbox") !== "switch" ? <CheckboxFieldControl definition={definition} /> : null}
-    {definition.kind === "boolean" && definition.presentation === "switch" ? <SwitchFieldControl definition={definition} /> : null}
-    {definition.kind === "enum" ? <EnumFieldControl definition={definition} /> : null}
-    {definition.kind === "color" ? <ColorFieldControl definition={definition} /> : null}
-    {definition.kind === "vector" || definition.kind === "rotation" ? <VectorFieldControl definition={definition} /> : null}
-    {definition.kind === "matrix" ? <MatrixFieldControl definition={definition} /> : null}
-    {definition.kind === "reference" ? <ReferenceFieldControl definition={definition} /> : null}
-    {definition.kind === "collection" ? <CollectionFieldControl definition={definition} /> : null}
-    {definition.kind === "path" ? <PathFieldControl definition={definition} /> : null}
+    {definition.kind === "text" ? <TextField
+      value={definition.value}
+      placeholder={definition.placeholder}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "number" && (definition.presentation ?? "input") !== "slider" ? <NumberInput
+      value={definition.value}
+      min={definition.min}
+      max={definition.max}
+      step={definition.step}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "number" && definition.presentation === "slider" ? <SliderControl
+      value={definition.value}
+      min={definition.min ?? 0}
+      max={definition.max ?? 100}
+      step={definition.step ?? 0.1}
+      disabled={definition.disabled === true || definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "integer" ? <IntegerInput
+      value={definition.value}
+      min={definition.min}
+      max={definition.max}
+      step={definition.step}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "boolean" && (definition.presentation ?? "checkbox") !== "switch" ? <Checkbox
+      checked={definition.value}
+      disabled={definition.disabled === true || definition.readOnly === true}
+      title={definition.description}
+      style={booleanStyle}
+      onChange={definition.onChange}
+    /> : null}
+    {definition.kind === "boolean" && definition.presentation === "switch" ? <Switcher
+      checked={definition.value}
+      disabled={definition.disabled === true || definition.readOnly === true}
+      title={definition.description}
+      style={booleanStyle}
+      onChange={definition.onChange}
+    /> : null}
+    {definition.kind === "enum" ? <EnumInput
+      value={definition.value}
+      options={definition.options.map(option => ({...option, key: option.value}))}
+      disabled={definition.disabled === true || definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onChange={definition.onChange}
+    /> : null}
+    {definition.kind === "color" ? <ColorInput
+      value={definition.value}
+      label={definition.label}
+      presentation="expanded"
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "vector" || definition.kind === "rotation" ? <VectorInput
+      value={definition.value}
+      axes={definition.axes}
+      min={definition.min}
+      max={definition.max}
+      step={definition.numberKind === "integer" ? definition.step ?? 1 : definition.step}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={vectorInput}
+    /> : null}
+    {definition.kind === "matrix" ? <MatrixInput
+      value={definition.value}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+    /> : null}
+    {definition.kind === "reference" ? <ReferenceInput
+      value={definition.value}
+      placeholder={definition.placeholder}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onActivate={definition.onActivate}
+      onPick={definition.onPick}
+      onClear={definition.onClear}
+    /> : null}
+    {definition.kind === "collection" ? <CollectionInput
+      items={definition.items}
+      selectedId={definition.selectedId}
+      visibleRows={definition.visibleRows}
+      emptyLabel={definition.emptyLabel}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onSelect={definition.onSelect}
+      onAdd={definition.onAdd}
+      onRemove={definition.onRemove}
+      onMove={definition.onMove}
+    /> : null}
+    {definition.kind === "path" ? <PathInput
+      value={definition.value}
+      placeholder={definition.placeholder}
+      disabled={definition.disabled === true}
+      readOnly={definition.readOnly === true}
+      title={definition.description}
+      style={fullWidthStyle}
+      onInput={definition.onChange}
+      onBrowse={definition.onBrowse}
+    /> : null}
     {definition.kind === "readonly" ? <ReadonlyFieldControl definition={definition} /> : null}
   </div>
 }
@@ -453,13 +350,26 @@ export function Field(props: FieldProps) {
     data-field-kind={props.definition.kind}
     aria-disabled={String(props.definition.disabled === true)}
     title={props.definition.description}
-    style={[
-      fieldStyles.root,
-      props.definition.disabled === true && fieldStyles.disabled,
-      props.style
-    ]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          align-items: flex-start;
+          width: 100%;
+          min-width: 0;
+          min-height: 28px;
+          gap: 4px;
+          padding: 0;
+          color: var(--widget-list-content);
+        }
+        &[aria-disabled="true"] { opacity: 0.5; }
+        ${props.style}
+      `}
   >
-    <span id={labelId} style={fieldStyles.label}>{props.definition.label}</span>
+    <span id={labelId} style={css`
+      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
+    `}>{props.definition.label}</span>
     <FieldControlView definition={props.definition} labelId={labelId} />
   </div>
 }

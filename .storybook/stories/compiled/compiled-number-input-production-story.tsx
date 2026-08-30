@@ -1,15 +1,11 @@
 /** Package-owned external Storybook story support. */
 import {
   NumberInput,
-  numberInputCss,
   type NumberInputProps
 } from "@ui/components/number-input"
-import {buttonCss} from "@ui/components/button"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
-
-const css = `${buttonCss}\n${numberInputCss}`
 
 function NumberInputStoryComponent(props: Readonly<{initial: NumberInputProps}>) {
   const [value, setValue] = useState(props.initial.value)
@@ -29,7 +25,6 @@ function NumberInputStoryComponent(props: Readonly<{initial: NumberInputProps}>)
     title={props.initial.title}
     decrementTitle={props.initial.decrementTitle}
     incrementTitle={props.initial.incrementTitle}
-    style={props.initial.style}
     onInput={onInput}
     onChange={props.initial.onChange}
   />
@@ -52,11 +47,11 @@ export function createCompiledNumberInputProductionStory(
 
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
       const value = (owner.querySelector("input") as HTMLInputElement).valueAsNumber
       return Object.freeze({
         html: serialize(owner),
-        css,
         typescript: source(props, value)
       })
     },
@@ -64,13 +59,12 @@ export function createCompiledNumberInputProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function source(props: NumberInputProps, value: number): string {
   return [
-    'import {NumberInput, numberInputCss} from "@ui/components/number-input"',
-    'import {buttonCss} from "@ui/components/button"',
+    'import {NumberInput} from "@ui/components/number-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -83,9 +77,7 @@ function source(props: NumberInputProps, value: number): string {
     "    onInput={setValue}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void buttonCss",
-    "void numberInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

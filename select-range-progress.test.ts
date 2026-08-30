@@ -1,11 +1,12 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLInputElement, type HTMLSelectElement} from "@zavx0z/dom"
+import {Event, type HTMLInputElement, type HTMLSelectElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {EnumInput, enumInputCss} from "./enum-input.tsx"
-import {ProgressCheckbox, progressCheckboxCss} from "./progress-checkbox.tsx"
-import {SliderControl, sliderControlCss} from "./slider-control.tsx"
+import {EnumInput} from "./enum-input.tsx"
+import {ProgressCheckbox} from "./progress-checkbox.tsx"
+import {SliderControl} from "./slider-control.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled select, range and progress controls", () => {
   test("retains keyed options and proposes the standard select value", () => {
@@ -60,11 +61,11 @@ describe("compiled select, range and progress controls", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 240, height: 80},
-      styleSheets: [sliderControlCss]
+      viewport: {width: 240, height: 80}
     })
     expect(renderer.flush().boxByNode.get(input)).toMatchObject({width: 180, height: 28})
     expect(input.className).toBe("")
+    const sliderControlCss = (SliderControl as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
     expect(sliderControlCss).toContain(":active")
     renderer.dispose()
     root.unmount()
@@ -82,11 +83,12 @@ describe("compiled select, range and progress controls", () => {
     expect(input.getAttribute("aria-checked")).toBe("mixed")
     expect(input.className).toBe("")
     expect(root.stats().mounts).toBe(2)
-    expect(progressCheckboxCss).not.toContain(".ui-")
     root.unmount()
   })
 
   test("publishes class-free sheets", () => {
+    const enumInputCss = (EnumInput as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
+    const sliderControlCss = (SliderControl as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
     expect(enumInputCss).not.toContain(".ui-")
     expect(sliderControlCss).not.toContain(".ui-")
   })

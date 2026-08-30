@@ -1,14 +1,28 @@
 /**
  * Consistent 24px icons embedded as data URLs for the Vision Pro UI.
  */
+import {
+  chevronRightIcon,
+  clearIcon,
+  folderIcon,
+  iconSvg,
+  minusIcon,
+  pickerIcon,
+  plusIcon,
+  runIcon,
+  svgIcon,
+} from "./icon-assets.ts"
 
-const svgIcon = (source: string): string => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`
+export {
+  chevronRightIcon,
+  clearIcon,
+  folderIcon,
+  minusIcon,
+  pickerIcon,
+  plusIcon,
+  runIcon,
+} from "./icon-assets.ts"
 
-function iconSvg(body: string, color = "#fff"): string {
-  return svgIcon(`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)
-}
-
-const runSvg = iconSvg("<path d=\"M8 5v14l11-7-11-7Z\"/>")
 const restartSvg = iconSvg("<path d=\"M20 7v5h-5\"/><path d=\"M20 12a8 8 0 1 0-2.34 5.66\"/>")
 const pauseSvg = iconSvg("<path d=\"M8 5v14\"/><path d=\"M16 5v14\"/>")
 const stopSvg = iconSvg("<path d=\"M7 7h10v10H7z\"/>")
@@ -30,7 +44,6 @@ const codexSvg = iconSvg("<path d=\"M17 6.5A7.5 7.5 0 1 0 17 17.5\"/><path d=\"M
 const qwenSvg = svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"8.2\" fill=\"#111b26\" stroke=\"#5cf0ff\" stroke-width=\"1.8\"/><path d=\"M15.6 15.6 19 19\" stroke=\"#5cf0ff\" stroke-width=\"1.8\" stroke-linecap=\"round\"/><path d=\"M8.2 12.2c0-2.35 1.54-4 3.82-4 2.24 0 3.78 1.65 3.78 4 0 2.32-1.54 3.98-3.78 3.98-2.28 0-3.82-1.66-3.82-3.98Z\" stroke=\"#bffbff\" stroke-width=\"1.45\"/></svg>")
 const deepseekSvg = svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 3c4.7 0 8.5 3.25 8.5 7.25 0 4.75-4.55 8.1-9.75 10.25-.65-2.2-2.05-3.05-4.35-3.35C4.6 15.85 3.5 13.65 3.5 10.9 3.5 6.55 7.3 3 12 3Z\" fill=\"#071b27\" stroke=\"#5cf0ff\" stroke-width=\"1.7\" stroke-linejoin=\"round\"/><path d=\"M8.2 10.3h.02M15.8 10.3h.02\" stroke=\"#bffbff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/><path d=\"M8.8 14c1.8 1.25 4.6 1.25 6.4 0\" stroke=\"#5cf0ff\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg>")
 const phoneSvg = iconSvg("<rect x=\"7\" y=\"2.5\" width=\"10\" height=\"19\" rx=\"2\"/><path d=\"M10.5 18.5h3\"/>")
-const clearSvg = iconSvg("<path d=\"M4 7h16\"/><path d=\"M10 11v6\"/><path d=\"M14 11v6\"/><path d=\"M6 7l1 14h10l1-14\"/><path d=\"M9 7V4h6v3\"/>")
 const autoscrollSvg = iconSvg("<path d=\"M12 4v11\"/><path d=\"M7 10l5 5 5-5\"/><path d=\"M5 20h14\"/>")
 const manualSvg = iconSvg("<path d=\"M5 5h14v14H5z\"/><path d=\"M9 5v14\"/><path d=\"M12 9h5\"/><path d=\"M12 13h5\"/>")
 const settingsSvg = iconSvg("<path d=\"M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8.97 3.6 1.7 1.7 0 0 0 10 2.04V2a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 8a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z\"/>")
@@ -45,11 +58,8 @@ const breakpointActiveSvg = svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0
 const breakpointDisabledSvg = svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"6.3\" stroke=\"#d8a6a6\" stroke-opacity=\"0.74\" stroke-width=\"2.2\"/></svg>")
 const expandSvg = iconSvg("<path d=\"M8 3H3v5\"/><path d=\"M16 3h5v5\"/><path d=\"M21 16v5h-5\"/><path d=\"M3 16v5h5\"/><path d=\"M3 3l6 6\"/><path d=\"M21 3l-6 6\"/><path d=\"M21 21l-6-6\"/><path d=\"M3 21l6-6\"/>")
 const collapseSvg = iconSvg("<path d=\"M9 3v6H3\"/><path d=\"M15 3v6h6\"/><path d=\"M21 15h-6v6\"/><path d=\"M3 15h6v6\"/>")
-const plusSvg = iconSvg("<path d=\"M12 5v14\"/><path d=\"M5 12h14\"/>")
-const minusSvg = iconSvg("<path d=\"M5 12h14\"/>")
 const chevronDownSvg = iconSvg("<path d=\"m7 9 5 5 5-5\"/>")
 const chevronLeftSvg = iconSvg("<path d=\"m14 7-5 5 5 5\"/>")
-const chevronRightSvg = iconSvg("<path d=\"m10 7 5 5-5 5\"/>")
 const micSvg = iconSvg("<path d=\"M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z\"/><path d=\"M5 10a7 7 0 0 0 14 0\"/><path d=\"M12 17v4\"/><path d=\"M8 21h8\"/>")
 const keyboardSvg = iconSvg("<rect x=\"3\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M7 10h.01\"/><path d=\"M11 10h.01\"/><path d=\"M15 10h.01\"/><path d=\"M19 10h.01\"/><path d=\"M7 14h10\"/>", "#5cf0ff")
 const sendSvg = iconSvg("<path d=\"M22 2 11 13\"/><path d=\"m22 2-7 20-4-9-9-4 20-7Z\"/>", "#5cf0ff")
@@ -59,15 +69,13 @@ const expertSvg = iconSvg("<path d=\"M12 3h4.2L21 10l-9 11-9-11 4.8-7H12Z\"/><pa
 const recognitionSvg = imageSvg
 const zoomInSvg = iconSvg("<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4.5-4.5\"/><path d=\"M11 8v6\"/><path d=\"M8 11h6\"/>", "#5cf0ff")
 const zoomOutSvg = iconSvg("<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4.5-4.5\"/><path d=\"M8 11h6\"/>", "#5cf0ff")
-const folderSvg = iconSvg("<path d=\"M3 7h7l2 2h9v10H3z\"/><path d=\"M3 7V5h7l2 2\"/>")
 const resourceSvg = iconSvg("<path d=\"M7 4H4v3\"/><path d=\"M17 4h3v3\"/><path d=\"M20 17v3h-3\"/><path d=\"M7 20H4v-3\"/><rect x=\"7\" y=\"7\" width=\"10\" height=\"10\" rx=\"1\"/>")
-const pickerSvg = iconSvg("<path d=\"m19 3 2 2-10.5 10.5-3.5 1 1-3.5Z\"/><path d=\"m15.5 6.5 2 2\"/><path d=\"M5 19h5\"/>")
 const visibilityOnSvg = iconSvg("<path d=\"M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z\"/><circle cx=\"12\" cy=\"12\" r=\"2.5\"/>")
 const visibilityOffSvg = iconSvg("<path d=\"M3 3l18 18\"/><path d=\"M9.2 7.45A10.7 10.7 0 0 1 12 7c6 0 9.5 5 9.5 5a15.8 15.8 0 0 1-3.05 3.2\"/><path d=\"M14.6 16.65A10.5 10.5 0 0 1 12 17c-6 0-9.5-5-9.5-5a15.8 15.8 0 0 1 3-3.15\"/>")
 
 export const uiIcons = {
-  run: runSvg,
-  resume: runSvg,
+  run: runIcon,
+  resume: runIcon,
   restart: restartSvg,
   pause: pauseSvg,
   stop: stopSvg,
@@ -89,7 +97,7 @@ export const uiIcons = {
   qwen: qwenSvg,
   deepseek: deepseekSvg,
   phone: phoneSvg,
-  clear: clearSvg,
+  clear: clearIcon,
   autoscroll: autoscrollSvg,
   manual: manualSvg,
   settings: settingsSvg,
@@ -104,11 +112,11 @@ export const uiIcons = {
   breakpointDisabled: breakpointDisabledSvg,
   expand: expandSvg,
   collapse: collapseSvg,
-  plus: plusSvg,
-  minus: minusSvg,
+  plus: plusIcon,
+  minus: minusIcon,
   chevronDown: chevronDownSvg,
   chevronLeft: chevronLeftSvg,
-  chevronRight: chevronRightSvg,
+  chevronRight: chevronRightIcon,
   mic: micSvg,
   keyboard: keyboardSvg,
   send: sendSvg,
@@ -116,12 +124,12 @@ export const uiIcons = {
   fast: fastSvg,
   expert: expertSvg,
   recognition: recognitionSvg,
-  eval: runSvg,
+  eval: runIcon,
   zoomIn: zoomInSvg,
   zoomOut: zoomOutSvg,
-  folder: folderSvg,
+  folder: folderIcon,
   resource: resourceSvg,
-  picker: pickerSvg,
+  picker: pickerIcon,
   visibilityOn: visibilityOnSvg,
   visibilityOff: visibilityOffSvg,
 } as const

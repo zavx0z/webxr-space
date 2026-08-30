@@ -3,14 +3,14 @@ import {
   Event,
   KeyboardEvent,
   PointerEvent,
-  createDocument,
   type HTMLInputElement
 } from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {NumberInput, numberInputCss} from "./number-input.tsx"
+import {NumberInput} from "./number-input.tsx"
 import {IntegerInput} from "./integer-input.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production NumberInput", () => {
   test("composes Button, keeps keyed identities and proposes controlled edits", () => {
@@ -69,8 +69,7 @@ describe("compiled production NumberInput", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 180, height: 60},
-      styleSheets: [numberInputCss]
+      viewport: {width: 180, height: 60}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 120, height: 22})

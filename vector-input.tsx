@@ -1,8 +1,6 @@
 import type {Event} from "@zavx0z/dom"
-import {type StyleValue} from "@zavx0z/react"
 import {
   ControlGroup,
-  controlGroupCss,
   type ControlGroupItem
 } from "./control-group.tsx"
 
@@ -15,14 +13,12 @@ export type VectorInputProps = Readonly<{
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: readonly number[], event: Event) => void) | undefined
   onChange?: ((value: readonly number[], event: Event) => void) | undefined
 }>
 
 const accents = Object.freeze(["x", "y", "z", "w"] as const)
-
-export const vectorInputCss = controlGroupCss
 
 export function VectorInput(props: VectorInputProps) {
   const normalized = normalizeVector(props)

@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   Button,
-  buttonCss,
   type ButtonProps
 } from "@ui/components/button"
 import {createRoot} from "@zavx0z/react"
@@ -28,7 +27,6 @@ export function createCompiledButtonProductionStory(
     iconPosition={props.iconPosition}
     iconOnly={props.iconOnly}
     iconSize={props.iconSize}
-    style={props.style}
     onClick={props.onClick}
   />)
   const button = staging.querySelector("button") as HTMLElement | null
@@ -41,10 +39,10 @@ export function createCompiledButtonProductionStory(
 
   const story = Object.freeze({
     element: button,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(button),
-        css: buttonCss,
         typescript: source(props)
       })
     },
@@ -52,14 +50,14 @@ export function createCompiledButtonProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: buttonCss})
+  return Object.freeze({story})
 }
 
 function source(props: ButtonProps): string {
   const serializable = JSON.stringify(props, (_key, value) =>
     typeof value === "function" ? undefined : value, 2)
   return [
-    'import {Button, buttonCss} from "@ui/components/button"',
+    'import {Button} from "@ui/components/button"',
     'import {createRoot} from "@zavx0z/react"',
     "",
     `const props = ${serializable}`,
@@ -72,8 +70,7 @@ function source(props: ButtonProps): string {
     "  disabled={props.disabled}",
     "  selected={props.selected}",
     "  title={props.title}",
-    "/>)",
-    "void buttonCss"
+    "/>)"
   ].join("\n")
 }
 

@@ -1,7 +1,5 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {TextField, textFieldCss} from "./text-field.tsx"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
+import {TextField} from "./text-field.tsx"
 
 export type ControlGroupItem = Readonly<{
   key: string
@@ -21,71 +19,14 @@ export type ControlGroupProps = Readonly<{
   items: readonly ControlGroupItem[]
   disabled?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((key: string, value: string, event: Event) => void) | undefined
   onChange?: ((key: string, value: string, event: Event) => void) | undefined
 }>
 
-export const controlGroupStyles = defineStyles("@ui/components/control-group", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    minWidth: 0,
-    height: 28,
-    gap: 0,
-    padding: 0,
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    overflow: "clip",
-    background: "rgb(84 84 84)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    ":focus-within": {borderColor: "rgb(113 168 255)"}
-  },
-  disabled: {opacity: 0.5, boxShadow: "none"},
-  cell: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 0,
-    height: 26,
-    flexGrow: 1,
-    borderRight: "1px solid rgb(61 61 61)",
-    background: "rgb(84 84 84)",
-    ":hover": {background: "rgb(101 101 101)"},
-    ":focus-within": {background: "rgb(34 34 34)"}
-  },
-  lastCell: {borderRight: 0},
-  label: {
-    display: "inline",
-    width: 18,
-    color: "rgb(204 204 204)",
-    fontSize: 10,
-    textAlign: "center"
-  },
-  x: {color: "rgb(255 51 82)"},
-  y: {color: "rgb(83 179 67)"},
-  z: {color: "rgb(62 127 255)"},
-  w: {color: "rgb(204 204 204)"},
-  input: {
-    width: 0,
-    minWidth: 0,
-    height: 26,
-    flexGrow: 1,
-    padding: "3px 5px",
-    border: "none",
-    borderRadius: 0,
-    background: "transparent",
-    boxShadow: "none",
-    fontSize: 11,
-    textAlign: "right",
-    ":hover": {background: "transparent", borderColor: "transparent"},
-    ":focus": {background: "transparent", borderColor: "transparent"}
-  }
-})
-
-export const controlGroupCss = `${textFieldCss}\n${controlGroupStyles.cssText}`
+const inputStyle: CssStyle = css`
+  & { width: 0; min-width: 0; height: 26px; flex-grow: 1; padding: 3px 5px; border: none; border-radius: 0; background: transparent; box-shadow: none; font-size: 11px; text-align: right; --text-field-hover-outline: transparent; --text-field-focus-outline: transparent; --text-field-focus-background: transparent; }
+`
 
 type ControlGroupCellProps = Readonly<{
   item: ControlGroupItem
@@ -100,16 +41,31 @@ function ControlGroupCell(props: ControlGroupCellProps) {
   const onChange = (value: string, event: Event) => props.onChange?.(props.item.key, value, event)
   return <label
     data-control-key={props.item.key}
+    data-last={props.last ? "true" : undefined}
     title={props.item.title ?? props.item.label}
-    style={[controlGroupStyles.cell, props.last && controlGroupStyles.lastCell]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          min-width: 0;
+          height: 26px;
+          flex-grow: 1;
+          border-right: var(--border-width-control) solid var(--widget-regular-outline);
+          background: var(--widget-regular-background);
+        }
+        &:hover { background: var(--widget-hover-background); }
+        &:focus-within { background: var(--widget-number-background-focus); }
+        &[data-last="true"] { border-right: 0; }
+      `}
   >
-    <span style={[
-      controlGroupStyles.label,
-      props.item.accent === "x" && controlGroupStyles.x,
-      props.item.accent === "y" && controlGroupStyles.y,
-      props.item.accent === "z" && controlGroupStyles.z,
-      props.item.accent === "w" && controlGroupStyles.w
-    ]}>{props.item.label}</span>
+    <span data-accent={props.item.accent} style={css`
+        & { display: inline; width: 18px; color: var(--widget-list-content); font-size: var(--font-size-2xs); text-align: center; }
+        &[data-accent="x"] { color: rgb(var(--axis-x-500)); }
+        &[data-accent="y"] { color: rgb(var(--axis-y-500)); }
+        &[data-accent="z"] { color: rgb(var(--axis-z-500)); }
+      `}>{props.item.label}</span>
     <TextField
       type={props.item.type ?? "text"}
       value={props.item.value}
@@ -119,7 +75,7 @@ function ControlGroupCell(props: ControlGroupCellProps) {
       disabled={props.disabled || props.item.disabled === true}
       readOnly={props.item.readOnly === true}
       title={props.item.title ?? props.item.label}
-      style={controlGroupStyles.input}
+      style={inputStyle}
       onInput={onInput}
       onChange={onChange}
     />
@@ -131,11 +87,25 @@ export function ControlGroup(props: ControlGroupProps) {
   return <div
     title={props.title}
     aria-disabled={String(props.disabled === true)}
-    style={[
-      controlGroupStyles.root,
-      props.disabled === true && controlGroupStyles.disabled,
-      props.style
-    ]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          min-width: 0;
+          height: var(--control-height-large);
+          gap: 0;
+          padding: 0;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          overflow: clip;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+        }
+        &:focus-within { border-color: var(--widget-focus-outline); }
+        &[aria-disabled="true"] { opacity: 0.5; box-shadow: none; }
+        ${props.style}
+      `}
   >
     {props.items.map((item, index) => <ControlGroupCell
       key={item.key}

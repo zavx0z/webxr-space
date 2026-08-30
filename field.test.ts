@@ -1,10 +1,11 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {Field, fieldCss, type FieldDefinition} from "./field.tsx"
+import {Field, type FieldDefinition} from "./field.tsx"
 import {DuplicateIdFieldsFixture} from "./field-consumer-fixture.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled discriminated Field composition", () => {
   test("retains the owner and exact native control while proposing controlled text", () => {
@@ -80,11 +81,9 @@ describe("compiled discriminated Field composition", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 480, height: 120},
-      styleSheets: [fieldCss]
+      viewport: {width: 480, height: 120}
     })
     expect(renderer.flush().boxByNode.get(owner)?.height).toBe(28)
-    expect(fieldCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

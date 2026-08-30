@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   CodeEditor,
-  codeEditorCss,
   type CodeEditorProps
 } from "@ui/components/code-editor"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
@@ -35,7 +34,6 @@ export function createCompiledCodeEditorProductionStory(
     tokens={props.tokens}
     showLineNumbers={props.showLineNumbers}
     title={props.title}
-    style={props.style}
   />)
   const owner = staging.querySelector("section") as HTMLElement | null
   if (!owner) {
@@ -46,11 +44,11 @@ export function createCompiledCodeEditorProductionStory(
   owner.setAttribute("data-story-component", "code-editor")
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     props: Object.freeze({...props}) as Readonly<Record<string, unknown>>,
     get source() {
       return Object.freeze({
         html: serialize(owner),
-        css: codeEditorCss,
         typescript: source(props)
       })
     },
@@ -58,20 +56,19 @@ export function createCompiledCodeEditorProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: codeEditorCss})
+  return Object.freeze({story})
 }
 
 function source(props: CodeEditorProps): string {
   return [
-    'import {CodeEditor, codeEditorCss} from "@ui/components/code-editor"',
+    'import {CodeEditor} from "@ui/components/code-editor"',
     'import {createRoot} from "@zavx0z/react"',
     "",
     "createRoot(container).render(<CodeEditor",
     `  value={${JSON.stringify(props.value)}}`,
     "  readOnly={true}",
     `  languageId={${JSON.stringify(props.languageId ?? "plaintext")}}`,
-    "/>)",
-    "void codeEditorCss"
+    "/>)"
   ].join("\n")
 }
 

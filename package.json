@@ -34,7 +34,7 @@
     "./hud": "./hud.tsx",
     "./icons": "./icons.ts",
     "./syntax-theme": "./syntax-theme.ts",
-    "./theme": "./theme.ts"
+    "./theme.css": "./theme.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false --project tsconfig.production.json"

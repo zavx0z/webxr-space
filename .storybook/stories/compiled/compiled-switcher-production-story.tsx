@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   Switcher,
-  switcherCss,
   type SwitcherProps
 } from "@ui/components/switcher"
 import {createRoot, useState} from "@zavx0z/react"
@@ -18,7 +17,6 @@ function SwitcherStoryComponent(props: Readonly<{initial: SwitcherProps}>) {
     checked={checked}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onChange={onChange}
   />
 }
@@ -40,10 +38,10 @@ export function createCompiledSwitcherProductionStory(
 
   const story = Object.freeze({
     element: button,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(button),
-        css: switcherCss,
         typescript: source(props, button.getAttribute("aria-checked") === "true")
       })
     },
@@ -51,12 +49,12 @@ export function createCompiledSwitcherProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: switcherCss})
+  return Object.freeze({story})
 }
 
 function source(props: SwitcherProps, checked: boolean): string {
   return [
-    'import {Switcher, switcherCss} from "@ui/components/switcher"',
+    'import {Switcher} from "@ui/components/switcher"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -67,8 +65,7 @@ function source(props: SwitcherProps, checked: boolean): string {
     "    onChange={setChecked}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void switcherCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

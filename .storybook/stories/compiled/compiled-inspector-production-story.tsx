@@ -3,10 +3,9 @@ import {
   Inspector,
   InspectorSection,
   InspectorSections,
-  inspectorCss,
   type InspectorCategory
 } from "@ui/components/inspector"
-import {fieldCss, type FieldDefinition} from "@ui/components/field"
+import {type FieldDefinition} from "@ui/components/field"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -78,21 +77,22 @@ export function createCompiledInspectorProductionStory(document: Document): Rout
   owner.setAttribute("data-story-component", "inspector")
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     props: inspectorStoryProps,
     get source() {
-      return Object.freeze({html: serialize(owner), css: [inspectorCss, fieldCss].join("\n"), typescript: source()})
+      return Object.freeze({html: serialize(owner), typescript: source()})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css: [inspectorCss, fieldCss].join("\n")})
+  return Object.freeze({story})
 }
 
 function source(): string {
   return [
-    'import {Inspector, InspectorSection, InspectorSections, inspectorCss} from "@ui/components/inspector"',
-    'import {Field, fieldCss} from "@ui/components/field"',
+    'import {Inspector, InspectorSection, InspectorSections} from "@ui/components/inspector"',
+    'import {Field} from "@ui/components/field"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     `const categories = ${JSON.stringify(categories, null, 2)} as const`,
@@ -108,9 +108,7 @@ function source(): string {
     "    </InspectorSection></InspectorSections>",
     "  </Inspector>",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void inspectorCss",
-    "void fieldCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

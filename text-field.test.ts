@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLInputElement} from "@zavx0z/dom"
 import {
   createDocumentInteractionState,
   createDocumentRenderer,
@@ -7,10 +7,8 @@ import {
 } from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {
-  TextField,
-  textFieldCss
-} from "./text-field.tsx"
+import {createDocument} from "./test-document.ts"
+import {TextField} from "./text-field.tsx"
 
 describe("compiled production TextField", () => {
   test("keeps controlled live state, exact input identity and standard events", () => {
@@ -37,7 +35,7 @@ describe("compiled production TextField", () => {
     root.render(TextField as any, {
       value: "Render",
       readOnly: true,
-      style: {width: 196}
+      style: "width: 196px"
     })
     expect(host.querySelector("input")).toBe(input)
     expect(input.value).toBe("Render")
@@ -58,8 +56,7 @@ describe("compiled production TextField", () => {
       document,
       root: host,
       viewport: {width: 240, height: 80},
-      interactionState,
-      styleSheets: [textFieldCss]
+      interactionState
     })
     const initial = renderer.flush()
     expect(initial.boxByNode.get(input)).toMatchObject({width: 160, height: 22})

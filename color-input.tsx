@@ -1,8 +1,7 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 import {Button} from "./button.tsx"
-import {SliderControl, sliderControlCss} from "./slider-control.tsx"
-import {TextField, textFieldCss} from "./text-field.tsx"
+import {SliderControl} from "./slider-control.tsx"
+import {TextField} from "./text-field.tsx"
 
 export type ColorChannel = "r" | "g" | "b" | "a"
 export type ColorInputValue = Readonly<Record<ColorChannel, number>>
@@ -15,7 +14,7 @@ export type ColorInputProps = Readonly<{
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: ColorInputValue, event: Event) => void) | undefined
   onChange?: ((value: ColorInputValue, event: Event) => void) | undefined
   onOpenChange?: ((open: boolean, event: Event) => void) | undefined
@@ -23,73 +22,10 @@ export type ColorInputProps = Readonly<{
 
 const channels = Object.freeze(["r", "g", "b", "a"] as const)
 
-export const colorInputStyles = defineStyles("@ui/components/color-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: 280,
-    gap: 4,
-    padding: 0,
-    border: 0,
-    color: "rgb(230 230 230)"
-  },
-  legend: {display: "block", minHeight: 16, color: "rgb(204 204 204)", fontSize: 11},
-  trigger: {
-    width: "100%",
-    height: 28,
-    justifyContent: "flex-start",
-    padding: "3px 7px"
-  },
-  openTrigger: {background: "rgb(71 114 179)"},
-  picker: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    gap: 3,
-    padding: 6,
-    border: "1px solid rgb(36 36 36)",
-    borderRadius: 4,
-    background: "rgb(24 24 24)"
-  },
-  openPicker: {borderColor: "rgb(61 61 61)"},
-  expandedPicker: {borderColor: "rgb(71 114 179)"},
-  hidden: {display: "none"},
-  swatch: {
-    boxSizing: "border-box",
-    display: "block",
-    width: "100%",
-    height: 34,
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 3
-  },
-  channel: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    height: 24,
-    gap: 3
-  },
-  channelLabel: {display: "inline", width: 14, color: "rgb(153 153 153)", fontSize: 10, textAlign: "center"},
-  number: {
-    width: 52,
-    minWidth: 52,
-    height: 24,
-    padding: "2px 4px",
-    fontSize: 10,
-    textAlign: "right"
-  },
-  range: {width: 0, minWidth: 0, height: 24, flexGrow: 1, padding: "2px 4px"}
-})
-
-export const colorInputCss = [
-  textFieldCss,
-  sliderControlCss,
-  colorInputStyles.cssText
-].join("\n")
+const triggerStyle: CssStyle = css`& { width: 100%; height: 28px; justify-content: flex-start; padding: 3px 7px; }`
+const openTriggerStyle: CssStyle = css`& { background: var(--widget-active-background); }`
+const numberStyle: CssStyle = css`& { width: 52px; min-width: 52px; height: 24px; padding: 2px 4px; font-size: 10px; text-align: right; }`
+const rangeStyle: CssStyle = css`& { width: 0; min-width: 0; height: 24px; flex-grow: 1; padding: 2px 4px; }`
 
 type ColorChannelControlProps = Readonly<{
   channel: ColorChannel
@@ -111,8 +47,12 @@ function ColorChannelControl(props: ColorChannelControlProps) {
   const onNumberChange = (value: string, event: Event) => emit("change", Number(value), event)
   const onRangeInput = (value: number, event: Event) => emit("input", value, event)
   const onRangeChange = (value: number, event: Event) => emit("change", value, event)
-  return <label data-color-channel={props.channel} style={colorInputStyles.channel}>
-    <span style={colorInputStyles.channelLabel}>{props.channel.toUpperCase()}</span>
+  return <label data-color-channel={props.channel} style={css`
+    & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 24px; gap: 3px; }
+  `}>
+    <span style={css`
+      & { display: inline; width: 14px; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); text-align: center; }
+    `}>{props.channel.toUpperCase()}</span>
     <TextField
       type="number"
       value={String(props.value[props.channel])}
@@ -121,7 +61,7 @@ function ColorChannelControl(props: ColorChannelControlProps) {
       step={0.01}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      style={colorInputStyles.number}
+      style={numberStyle}
       onInput={onNumberInput}
       onChange={onNumberChange}
     />
@@ -131,7 +71,7 @@ function ColorChannelControl(props: ColorChannelControlProps) {
       max={1}
       step={0.01}
       disabled={props.disabled || props.readOnly}
-      style={colorInputStyles.range}
+      style={rangeStyle}
       onInput={onRangeInput}
       onChange={onRangeChange}
     />
@@ -148,24 +88,42 @@ export function ColorInput(props: ColorInputProps) {
   return <fieldset
     disabled={props.disabled === true}
     title={props.title}
-    style={[colorInputStyles.root, props.style]}
+    style={css`
+        & { box-sizing: border-box; display: flex; flex-direction: column; width: 280px; gap: 4px; padding: 0; border: 0; color: var(--widget-regular-content); }
+        ${props.style}
+      `}
   >
-    <legend style={colorInputStyles.legend}>{props.label ?? "Color"}</legend>
+    <legend style={css`
+      & { display: block; min-height: 16px; color: var(--widget-list-content); font-size: var(--font-size-xs); }
+    `}>{props.label ?? "Color"}</legend>
     <Button
       label={rgbaLabel(normalized.value)}
       disabled={locked}
       selected={open}
       aria-expanded={String(open)}
-      style={[colorInputStyles.trigger, open && colorInputStyles.openTrigger]}
+      style={css`${triggerStyle}${open && openTriggerStyle}`}
       onClick={onToggle}
     />
-    <div style={[
-      colorInputStyles.picker,
-      normalized.presentation === "closed" && colorInputStyles.hidden,
-      normalized.presentation === "open" && colorInputStyles.openPicker,
-      normalized.presentation === "expanded" && colorInputStyles.expandedPicker
-    ]}>
-      <div style={[colorInputStyles.swatch, {background: rgbaCss(normalized.value)}]}></div>
+    <div data-presentation={normalized.presentation} style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          gap: 3px;
+          padding: 6px;
+          border: var(--border-width-control) solid var(--widget-popup-outline);
+          border-radius: 4px;
+          background: var(--widget-popup-background);
+        }
+        &[data-presentation="closed"] { display: none; }
+        &[data-presentation="open"] { border-color: var(--widget-regular-outline); }
+        &[data-presentation="expanded"] { border-color: var(--widget-focus-outline); }
+      `}>
+      <div style={css`
+          & { box-sizing: border-box; display: block; width: 100%; height: 34px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 3px; }
+          & { background: ${rgbaCss(normalized.value)}; }
+        `}></div>
       {channels.map(channel => <ColorChannelControl
         key={channel}
         channel={channel}

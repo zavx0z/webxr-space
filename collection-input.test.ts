@@ -1,9 +1,10 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLButtonElement} from "@zavx0z/dom"
+import {Event, type HTMLButtonElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {CollectionInput, collectionInputCss} from "./collection-input.tsx"
+import {CollectionInput} from "./collection-input.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production CollectionInput", () => {
   test("composes List and Buttons with retained keyed items and standard actions", () => {
@@ -56,14 +57,12 @@ describe("compiled production CollectionInput", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 400, height: 240},
-      styleSheets: [collectionInputCss]
+      viewport: {width: 400, height: 240}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(owner)?.width).toBe(320)
     expect(frame.boxByNode.get(list)?.height).toBe(110)
     expect(list.textContent).toContain("Empty")
-    expect(collectionInputCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

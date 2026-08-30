@@ -1,8 +1,6 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 import {Button, IconButton} from "./button.tsx"
-import {uiIcons} from "./icons.ts"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
+import {clearIcon, pickerIcon} from "./icon-assets.ts"
 
 export type ReferenceInputValue = Readonly<{
   id: string
@@ -18,58 +16,20 @@ export type ReferenceInputProps = Readonly<{
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   density?: ReferenceInputDensity | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onActivate?: ((event: Event) => void) | undefined
   onPick?: ((event: Event) => void) | undefined
   onClear?: ((event: Event) => void) | undefined
 }>
 
-export const referenceInputStyles = defineStyles("@ui/components/reference-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    minWidth: 0,
-    width: 260,
-    height: 28,
-    gap: 0,
-    padding: 0,
-    overflow: "clip",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(84 84 84)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`
-  },
-  compactRoot: {width: 190, height: 24},
-  button: {
-    height: 26,
-    padding: "3px 7px",
-    border: "none",
-    borderRight: "1px solid rgb(61 61 61)",
-    borderRadius: 0,
-    background: "transparent",
-    boxShadow: "none",
-    color: "rgb(230 230 230)",
-    fontSize: 11,
-    ":hover": {borderColor: "transparent", background: "rgb(101 101 101)"},
-    ":active": {borderColor: "transparent", background: "rgb(71 114 179)"},
-    ":focus": {borderColor: "transparent", background: "rgb(71 114 179)"}
-  },
-  value: {
-    width: 0,
-    minWidth: 0,
-    flexGrow: 1,
-    justifyContent: "flex-start"
-  },
-  action: {width: 28, minWidth: 28, justifyContent: "center"},
-  lastAction: {borderRight: 0},
-  compactButton: {height: 22},
-  hidden: {display: "none"}
-})
-
-export const referenceInputCss = [
-  referenceInputStyles.cssText
-].join("\n")
+const buttonStyle: CssStyle = css`
+  & { height: 26px; padding: 3px 7px; border: none; border-right: 1px solid var(--widget-regular-outline); border-radius: 0; box-shadow: none; color: var(--widget-regular-content); font-size: 11px; }
+`
+const valueStyle: CssStyle = css`& { width: 0; min-width: 0; flex-grow: 1; justify-content: flex-start; }`
+const actionStyle: CssStyle = css`& { width: 28px; min-width: 28px; justify-content: center; }`
+const lastActionStyle: CssStyle = css`& { border-right: 0; }`
+const compactButtonStyle: CssStyle = css`& { height: 22px; }`
+const hiddenStyle: CssStyle = css`& { display: none; }`
 
 export function ReferenceInput(props: ReferenceInputProps) {
   assertReferenceInputProps(props)
@@ -82,49 +42,49 @@ export function ReferenceInput(props: ReferenceInputProps) {
   return <div
     title={props.title ?? props.value?.kind}
     aria-disabled={String(locked)}
-    style={[
-      referenceInputStyles.root,
-      density === "compact" && referenceInputStyles.compactRoot,
-      props.style
-    ]}
+    data-density={density}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          min-width: 0;
+          width: 260px;
+          height: var(--control-height-large);
+          gap: 0;
+          padding: 0;
+          overflow: clip;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+        }
+        &[data-density="compact"] { width: 190px; height: 24px; }
+        ${props.style}
+      `}
   >
     <Button
       label={label}
       variant="text"
       title={props.value?.kind ?? props.title}
       disabled={locked || props.onActivate === undefined}
-      style={[
-        referenceInputStyles.button,
-        referenceInputStyles.value,
-        density === "compact" && referenceInputStyles.compactButton
-      ]}
+      style={css`${buttonStyle}${valueStyle}${density === "compact" && compactButtonStyle}`}
       onClick={props.onActivate}
     />
     <IconButton
       label="Choose reference"
-      iconSrc={uiIcons.picker}
+      iconSrc={pickerIcon}
       title="Choose reference"
       disabled={locked || pickUnavailable}
-      style={[
-        referenceInputStyles.button,
-        referenceInputStyles.action,
-        density === "compact" && referenceInputStyles.compactButton,
-        pickUnavailable && referenceInputStyles.hidden
-      ]}
+      style={css`${buttonStyle}${actionStyle}${density === "compact" && compactButtonStyle}${pickUnavailable && hiddenStyle}`}
       onClick={props.onPick}
     />
     <IconButton
       label="Clear reference"
-      iconSrc={uiIcons.clear}
+      iconSrc={clearIcon}
       title="Clear reference"
       disabled={locked || clearUnavailable}
-      style={[
-        referenceInputStyles.button,
-        referenceInputStyles.action,
-        referenceInputStyles.lastAction,
-        density === "compact" && referenceInputStyles.compactButton,
-        clearUnavailable && referenceInputStyles.hidden
-      ]}
+      style={css`${buttonStyle}${actionStyle}${lastActionStyle}${density === "compact" && compactButtonStyle}${clearUnavailable && hiddenStyle}`}
       onClick={props.onClear}
     />
   </div>

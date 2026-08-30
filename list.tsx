@@ -1,5 +1,4 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 
 export type ListItem = Readonly<{
   key: string
@@ -16,54 +15,48 @@ export type ListProps = Readonly<{
   variant?: "standalone" | "embedded" | undefined
   emptyLabel?: string | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onSelect?: ((key: string, event: Event) => void) | undefined
 }>
 
-export const listStyles = defineStyles("@ui/components/list", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 0,
-    width: 300,
-    maxHeight: 180,
-    gap: 0,
-    padding: 2,
-    overflowY: "auto",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(29 29 29)"
-  },
-  item: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    minHeight: 28,
-    padding: "3px 7px",
-    borderRadius: 3,
-    color: "rgb(204 204 204)",
-    fontSize: 11,
-    ":hover": {background: "rgb(84 84 84)"}
-  },
-  denseItem: {minHeight: 24, padding: "2px 6px"},
-  embeddedItem: {minHeight: 26},
-  selected: {background: "rgb(71 114 179)", color: "rgb(255 255 255)"},
-  disabled: {opacity: 0.5},
-  label: {display: "inline", minWidth: 0, flexGrow: 1},
-  detail: {display: "inline", color: "rgb(153 153 153)", fontSize: 10},
-  empty: {
-    display: "block",
-    minHeight: 24,
-    padding: "4px 8px",
-    color: "rgb(153 153 153)",
-    fontSize: 11
+const rootCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 300px;
+    max-height: 180px;
+    gap: 0;
+    padding: 2px;
+    overflow-y: auto;
+    border: var(--border-width-control) solid var(--widget-regular-outline);
+    border-radius: 4px;
+    background: var(--widget-text-background);
   }
-})
+`
 
-export const listCss = listStyles.cssText
+const itemCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    min-height: 28px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    color: var(--widget-list-content);
+    font-size: var(--font-size-xs);
+  }
+  &:hover { background: var(--widget-regular-background); }
+`
+
+const labelCss = css`& { display: inline; min-width: 0; flex-grow: 1; }`
+const detailCss = css`& { display: inline; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }`
+const emptyCss = css`
+  & { display: block; min-height: 24px; padding: 4px 8px; color: var(--widget-text-content-readonly); font-size: var(--font-size-xs); }
+`
 
 type ListRowProps = Readonly<{
   item: ListItem
@@ -83,23 +76,25 @@ function ListRow(props: ListRowProps) {
     data-item-key={props.item.key}
     aria-selected={String(props.selected)}
     aria-disabled={String(props.disabled)}
+    data-dense={props.dense ? "true" : undefined}
+    data-embedded={props.embedded ? "true" : undefined}
     title={props.item.detail ?? props.item.label}
     onClick={onClick}
-    style={[
-      listStyles.item,
-      props.embedded && listStyles.embeddedItem,
-      props.dense && listStyles.denseItem,
-      props.selected && listStyles.selected,
-      props.disabled && listStyles.disabled
-    ]}
+    style={css`
+      ${itemCss}
+      &[data-embedded="true"] { min-height: 26px; }
+      &[data-dense="true"] { min-height: 24px; padding: 2px 6px; }
+      &[aria-selected="true"] { background: var(--widget-list-background-selected); color: var(--widget-list-content-selected); }
+      &[aria-disabled="true"] { opacity: 0.5; }
+    `}
   >
-    <span style={listStyles.label}>{props.item.label}</span>
-    <span style={listStyles.detail}>{props.item.detail ?? ""}</span>
+    <span style={labelCss}>{props.item.label}</span>
+    <span style={detailCss}>{props.item.detail ?? ""}</span>
   </li>
 }
 
 function EmptyListRow(props: Readonly<{label: string}>) {
-  return <li aria-disabled="true" style={listStyles.empty}>{props.label}</li>
+  return <li aria-disabled="true" style={emptyCss}>{props.label}</li>
 }
 
 export function List(props: ListProps) {
@@ -108,7 +103,7 @@ export function List(props: ListProps) {
     role="listbox"
     title={props.title}
     aria-disabled={String(props.disabled === true)}
-    style={[listStyles.root, props.style]}
+    style={css`${rootCss}${props.style}`}
   >
     {props.items.length === 0 ? <EmptyListRow label={props.emptyLabel ?? ""} /> : null}
     {props.items.map(item => <ListRow

@@ -1,5 +1,3 @@
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type BadgeTone = "neutral" | "info" | "success" | "warning" | "error"
 
@@ -7,40 +5,31 @@ export type BadgeProps = Readonly<{
   label: string
   tone?: BadgeTone | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
 }>
-
-export const badgeStyles = defineStyles("@ui/components/badge", {
-  root: {
-    boxSizing: "border-box",
-    display: "inline",
-    minHeight: 20,
-    padding: "2px 6px",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 3,
-    background: "rgb(48 48 48)",
-    color: "rgb(230 230 230)",
-    fontSize: 11
-  },
-  info: {background: rgba8ToColor(uiTheme.state.info)},
-  success: {background: rgba8ToColor(uiTheme.state.success)},
-  warning: {background: rgba8ToColor(uiTheme.state.warning)},
-  error: {background: rgba8ToColor(uiTheme.state.error)}
-})
-
-export const badgeCss = badgeStyles.cssText
 
 export function Badge(props: BadgeProps) {
   const tone = props.tone ?? "neutral"
   return <span
     title={props.title}
-    style={[
-      badgeStyles.root,
-      tone === "info" && badgeStyles.info,
-      tone === "success" && badgeStyles.success,
-      tone === "warning" && badgeStyles.warning,
-      tone === "error" && badgeStyles.error,
-      props.style
-    ]}
+    data-tone={tone}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: inline;
+          min-height: 20px;
+          padding: 2px 6px;
+          border: 1px solid var(--widget-regular-outline);
+          border-radius: 3px;
+          background: var(--widget-number-background-readonly);
+          color: var(--widget-regular-content);
+          font-size: var(--font-size-xs);
+        }
+        &[data-tone="info"] { background: var(--state-info); }
+        &[data-tone="success"] { background: var(--state-success); }
+        &[data-tone="warning"] { background: var(--state-warning); }
+        &[data-tone="error"] { background: var(--state-error); }
+        ${props.style}
+      `}
   >{props.label}</span>
 }

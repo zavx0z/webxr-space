@@ -1,14 +1,11 @@
 /** Package-owned external Storybook story support. */
 import {
   IntegerInput,
-  integerInputCss,
   type IntegerInputProps
 } from "@ui/components/integer-input"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
-
-const css = integerInputCss
 
 function IntegerInputStoryComponent(props: Readonly<{initial: IntegerInputProps}>) {
   const [value, setValue] = useState(props.initial.value)
@@ -24,7 +21,6 @@ function IntegerInputStoryComponent(props: Readonly<{initial: IntegerInputProps}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={props.initial.onChange}
   />
@@ -46,20 +42,21 @@ export function createCompiledIntegerInputProductionStory(
   owner.setAttribute("data-story-component", "integer-input")
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
       const value = (owner.querySelector("input") as HTMLInputElement).valueAsNumber
-      return Object.freeze({html: serialize(owner), css, typescript: source(props, value)})
+      return Object.freeze({html: serialize(owner), typescript: source(props, value)})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function source(props: IntegerInputProps, value: number): string {
   return [
-    'import {IntegerInput, integerInputCss} from "@ui/components/integer-input"',
+    'import {IntegerInput} from "@ui/components/integer-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -74,8 +71,7 @@ function source(props: IntegerInputProps, value: number): string {
     "    onInput={setValue}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void integerInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

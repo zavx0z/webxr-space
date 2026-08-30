@@ -1,13 +1,14 @@
 import type {HTMLElement} from "@zavx0z/dom"
+import type {ComponentRoot} from "@zavx0z/react"
 
 export type OwnerStorySource = Readonly<{
   html: string
-  css: string
   typescript: string
 }>
 
 export type OwnerStoryPresentation = Readonly<{
   element: HTMLElement
+  componentRoot: Pick<ComponentRoot, "readStyleSheets">
   source: OwnerStorySource
   props?: Readonly<Record<string, unknown>>
   dispose(): void
@@ -15,7 +16,6 @@ export type OwnerStoryPresentation = Readonly<{
 
 export type RoutedProductionComponentStory = Readonly<{
   story: OwnerStoryPresentation
-  css: string
 }>
 
 export type OwnerStoryDescriptor = Readonly<{
@@ -36,9 +36,9 @@ export function withStoryProps(
   props: Readonly<Record<string, unknown>>,
 ): RoutedProductionComponentStory {
   return Object.freeze({
-    css: routed.css,
     story: Object.freeze({
       element: routed.story.element,
+      componentRoot: routed.story.componentRoot,
       get source() { return routed.story.source },
       props: Object.freeze({...props}),
       dispose: () => routed.story.dispose(),

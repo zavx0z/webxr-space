@@ -1,8 +1,6 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 import {
   ControlGroup,
-  controlGroupCss,
   type ControlGroupItem
 } from "./control-group.tsx"
 
@@ -12,23 +10,12 @@ export type MatrixInputProps = Readonly<{
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: readonly (readonly number[])[], event: Event) => void) | undefined
   onChange?: ((value: readonly (readonly number[])[], event: Event) => void) | undefined
 }>
 
-export const matrixInputStyles = defineStyles("@ui/components/matrix-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 0,
-    gap: 2
-  },
-  row: {width: "100%"}
-})
-
-export const matrixInputCss = `${controlGroupCss}\n${matrixInputStyles.cssText}`
+const rowStyle: CssStyle = css`& { width: 100%; }`
 
 type MatrixRowProps = Readonly<{
   row: readonly number[]
@@ -65,7 +52,7 @@ function MatrixRow(props: MatrixRowProps) {
   return <ControlGroup
     items={items}
     disabled={props.disabled}
-    style={matrixInputStyles.row}
+    style={rowStyle}
     onInput={onInput}
     onChange={onChange}
   />
@@ -73,7 +60,10 @@ function MatrixRow(props: MatrixRowProps) {
 
 export function MatrixInput(props: MatrixInputProps) {
   const normalized = normalizeMatrix(props)
-  return <div title={props.title} style={[matrixInputStyles.root, props.style]}>
+  return <div title={props.title} style={css`
+    & { box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+    ${props.style}
+  `}>
     {normalized.value.map((row, rowIndex) => <MatrixRow
       key={String(rowIndex)}
       row={row}

@@ -1,8 +1,7 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, useId, type CSSProperties, type StyleValue} from "@zavx0z/react"
+import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button} from "./button.tsx"
-import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type HudWindowAction = Readonly<{
   key: string
@@ -17,7 +16,7 @@ export type HudWindowProps = Readonly<{
   minimized: boolean
   actions: readonly HudWindowAction[]
   children: JsxSourceElement | null
-  style?: StyleValue
+  style?: CssStyle | undefined
   onMinimizedChange?: ((minimized: boolean, event: Event) => void) | undefined
   onAction?: ((key: string, event: Event) => void) | undefined
 }>
@@ -40,7 +39,7 @@ export type HudFrameProps = Readonly<{
   edge: HudFrameEdge
   handles: readonly HudFrameHandle[]
   children: JsxSourceElement | null
-  style?: StyleValue
+  style?: CssStyle | undefined
   onHandle?: ((key: string, event: Event) => void) | undefined
 }>
 
@@ -66,7 +65,7 @@ export type TimelineProps = Readonly<{
   current: number
   playing: boolean
   tracks: readonly TimelineTrack[]
-  style?: StyleValue
+  style?: CssStyle | undefined
   onPrevious?: ((event: Event) => void) | undefined
   onPlayingChange?: ((playing: boolean, event: Event) => void) | undefined
   onNext?: ((event: Event) => void) | undefined
@@ -119,58 +118,39 @@ export const timelineDefaultProps: TimelineProps = Object.freeze({
   ])
 })
 
-const buttonColors = resolveWidgetColors("toolbarItem")
-const selectedColors = resolveWidgetColors("toolbarItem", {selected: true})
-
-export const hudStyles = defineStyles("@ui/components/hud", {
-  owner: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    border: `1px solid ${rgba8ToColor(buttonColors.outline)}`,
-    borderRadius: 6,
-    background: rgba8ToColor(uiTheme.spaceNode.navigationBar),
-    color: rgba8ToColor(buttonColors.text),
-    overflow: "clip"
-  },
-  window: {width: 320, minHeight: 160},
-  activeWindow: {borderColor: rgba8ToColor(uiTheme.material.editorOutlineActive)},
-  frame: {width: 300, minHeight: 140},
-  timeline: {width: 640, minHeight: 140},
-  edgeIndicator: {position: "absolute", display: "block", background: rgba8ToColor(selectedColors.inner)},
-  leftEdge: {left: 0, top: 0, width: 1, height: "100%"},
-  rightEdge: {right: 0, top: 0, width: 1, height: "100%"},
-  topEdge: {left: 0, top: 0, width: "100%", height: 1},
-  bottomEdge: {left: 0, bottom: 0, width: "100%", height: 1},
-  header: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    height: 28,
-    gap: 4,
-    padding: "3px 6px",
-    background: rgba8ToColor(uiTheme.spaceNode.header)
-  },
-  title: {display: "inline", minWidth: 0, flexGrow: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", fontSize: 12},
-  subtitle: {display: "inline", color: "rgb(153 153 153)", fontSize: 10},
-  nav: {display: "flex", flexDirection: "row", gap: 4},
-  button: {width: 52, minWidth: 22, height: 22, padding: "2px 6px", fontSize: 10},
-  minimizeButton: {width: 22},
-  body: {boxSizing: "border-box", display: "block", flexGrow: 1, padding: 6},
-  hidden: {display: "none"},
-  current: {display: "inline", color: rgba8ToColor(selectedColors.text), fontSize: 11},
-  tracks: {boxSizing: "border-box", display: "flex", flexDirection: "column", flexGrow: 1, gap: 2, padding: 4, overflowY: "auto"},
-  track: {display: "flex", flexDirection: "row", alignItems: "center", minHeight: 24, gap: 4},
-  trackLabel: {display: "inline", width: 80, fontSize: 11},
-  markers: {position: "relative", display: "block", height: 22, flexGrow: 1},
-  markerPosition: {position: "absolute", top: 0, display: "block", transform: "translateX(-50%)"},
-  marker: {width: "auto", minWidth: 20, height: 20, padding: "2px 4px", borderRadius: 2, background: rgba8ToColor(buttonColors.inner)},
-  selectedMarker: {background: rgba8ToColor(selectedColors.inner), color: rgba8ToColor(selectedColors.text)}
-})
-
-export const hudCss = hudStyles.cssText
+const ownerCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: var(--border-width-control) solid var(--widget-toolbar-outline);
+    border-radius: 6px;
+    background: var(--space-node-navigation-background);
+    color: var(--widget-toolbar-content);
+    overflow: clip;
+  }
+`
+const headerCss = css`
+  & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; height: 28px; gap: 4px; padding: 3px 6px; background: var(--space-node-header-background); }
+`
+const titleCss = css`
+  & { display: inline; min-width: 0; flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-size-sm); }
+`
+const subtitleCss = css`
+  & { display: inline; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }
+`
+const navCss = css`& { display: flex; flex-direction: row; gap: 4px; }`
+const bodyCss = css`& { box-sizing: border-box; display: block; flex-grow: 1; padding: 6px; }`
+const hiddenCss = css`& { display: none; }`
+const buttonStyle: CssStyle = css`& { width: 52px; min-width: 22px; height: 22px; padding: 2px 6px; font-size: 10px; }`
+const minimizeButtonStyle: CssStyle = css`& { width: 22px; }`
+const markerStyle: CssStyle = css`
+  & { width: auto; min-width: 20px; height: 20px; padding: 2px 4px; border-radius: 2px; background: var(--widget-toolbar-background); }
+`
+const selectedMarkerStyle: CssStyle = css`
+  & { background: var(--widget-toolbar-background-selected); color: var(--widget-toolbar-content-selected); }
+`
 
 type HudWindowActionButtonProps = Readonly<{
   action: HudWindowAction
@@ -183,7 +163,7 @@ function HudWindowActionButton(props: HudWindowActionButtonProps) {
     label={props.action.label}
     title={props.action.label}
     disabled={props.action.disabled}
-    style={hudStyles.button}
+    style={buttonStyle}
     onClick={onClick}
   />
 }
@@ -199,7 +179,7 @@ function HudFrameHandleButton(props: HudFrameHandleButtonProps) {
     label={props.handle.label}
     title={props.handle.label}
     disabled={props.handle.disabled}
-    style={hudStyles.button}
+    style={buttonStyle}
     onClick={onClick}
   />
 }
@@ -211,30 +191,31 @@ export function HudWindow(props: HudWindowProps) {
   const onMinimize = (event: Event) => props.onMinimizedChange?.(!props.minimized, event)
   return <section
     aria-label={props.title}
-    style={[
-      hudStyles.owner,
-      hudStyles.window,
-      props.active && hudStyles.activeWindow,
-      props.style
-    ]}
+    data-active={props.active ? "true" : undefined}
+    style={css`
+      ${ownerCss}
+      & { width: 320px; min-height: 160px; }
+      &[data-active="true"] { border-color: var(--material-editor-outline-active); }
+      ${props.style}
+    `}
   >
-    <header style={hudStyles.header}>
+    <header style={headerCss}>
       <Button
         label={props.minimized ? "+" : "−"}
         title={props.minimized ? "Restore" : "Minimize"}
         aria-label={props.minimized ? "Restore" : "Minimize"}
         aria-expanded={String(!props.minimized)}
         aria-controls={bodyId}
-        style={[hudStyles.button, hudStyles.minimizeButton]}
+        style={css`${buttonStyle}${minimizeButtonStyle}`}
         onClick={onMinimize}
       />
-      <span style={hudStyles.title}>{props.title}</span>
-      <span style={hudStyles.subtitle}>{props.subtitle}</span>
-      <nav aria-label="Window actions" style={hudStyles.nav}>
+      <span style={titleCss}>{props.title}</span>
+      <span style={subtitleCss}>{props.subtitle}</span>
+      <nav aria-label="Window actions" style={navCss}>
         {props.actions.map(action => <HudWindowActionButton key={action.key} action={action} onAction={props.onAction} />)}
       </nav>
     </header>
-    <section id={bodyId} hidden={props.minimized} style={[hudStyles.body, props.minimized && hudStyles.hidden]}>{props.children}</section>
+    <section id={bodyId} hidden={props.minimized} style={css`${bodyCss}${props.minimized && hiddenCss}`}>{props.children}</section>
   </section>
 }
 
@@ -244,27 +225,23 @@ export function HudFrame(props: HudFrameProps) {
   assertButtons(props.handles, "HudFrame handle")
   return <section
     aria-label={props.title}
-    style={[
-      hudStyles.owner,
-      hudStyles.frame,
-      props.style
-    ]}
+    style={css`${ownerCss}${css`& { width: 300px; min-height: 140px; }`}${props.style}`}
   >
-    <span aria-hidden="true" style={[
-      hudStyles.edgeIndicator,
-      props.edge === "floating" && hudStyles.hidden,
-      props.edge === "left" && hudStyles.leftEdge,
-      props.edge === "right" && hudStyles.rightEdge,
-      props.edge === "top" && hudStyles.topEdge,
-      props.edge === "bottom" && hudStyles.bottomEdge
-    ]}></span>
-    <header style={hudStyles.header}>
-      <span style={hudStyles.title}>{props.title}</span>
-      <nav aria-label="Frame handles" style={hudStyles.nav}>
+    <span aria-hidden="true" data-edge={props.edge} style={css`
+      & { position: absolute; display: block; background: var(--widget-toolbar-background-selected); }
+      &[data-edge="floating"] { display: none; }
+      &[data-edge="left"] { left: 0; top: 0; width: 1px; height: 100%; }
+      &[data-edge="right"] { right: 0; top: 0; width: 1px; height: 100%; }
+      &[data-edge="top"] { left: 0; top: 0; width: 100%; height: 1px; }
+      &[data-edge="bottom"] { left: 0; bottom: 0; width: 100%; height: 1px; }
+    `}></span>
+    <header style={headerCss}>
+      <span style={titleCss}>{props.title}</span>
+      <nav aria-label="Frame handles" style={navCss}>
         {props.handles.map(handle => <HudFrameHandleButton key={handle.key} handle={handle} onHandle={props.onHandle} />)}
       </nav>
     </header>
-    <section style={hudStyles.body}>{props.children}</section>
+    <section style={bodyCss}>{props.children}</section>
   </section>
 }
 
@@ -282,14 +259,16 @@ function TimelineMarkerView(props: TimelineMarkerViewProps) {
     data-marker-key={props.marker.key}
     data-tick={String(props.marker.tick)}
     aria-current={String(props.marker.selected)}
-    style={[hudStyles.markerPosition, markerPosition(props.marker.tick, props.min, props.max)]}
+    style={css`
+      & { position: absolute; top: 0; left: ${(props.marker.tick - props.min) / (props.max - props.min) * 100}%; display: block; transform: translateX(-50%); }
+    `}
   >
     <Button
       label={props.marker.label}
       title={`${props.marker.label} · ${props.marker.tick}`}
       aria-label={`${props.marker.label} at ${props.marker.tick}`}
       selected={props.marker.selected}
-      style={[hudStyles.marker, props.marker.selected && hudStyles.selectedMarker]}
+      style={css`${markerStyle}${props.marker.selected && selectedMarkerStyle}`}
       onClick={onClick}
     />
   </li>
@@ -304,9 +283,13 @@ type TimelineTrackViewProps = Readonly<{
 
 function TimelineTrackView(props: TimelineTrackViewProps) {
   assertMarkers(props.track.markers, props.track.key)
-  return <li data-track-key={props.track.key} style={hudStyles.track}>
-    <span style={hudStyles.trackLabel}>{props.track.label}</span>
-    <ul aria-label={`Markers for ${props.track.label}`} style={hudStyles.markers}>
+  return <li data-track-key={props.track.key} style={css`
+    & { display: flex; flex-direction: row; align-items: center; min-height: 24px; gap: 4px; }
+  `}>
+    <span style={css`& { display: inline; width: 80px; font-size: var(--font-size-xs); }`}>{props.track.label}</span>
+    <ul aria-label={`Markers for ${props.track.label}`} style={css`
+      & { position: relative; display: block; height: 22px; flex-grow: 1; }
+    `}>
       {props.track.markers.map(marker => <TimelineMarkerView
         key={marker.key}
         trackKey={props.track.key}
@@ -327,24 +310,28 @@ export function Timeline(props: TimelineProps) {
     data-min={String(props.min)}
     data-max={String(props.max)}
     data-current={String(props.current)}
-    style={[hudStyles.owner, hudStyles.timeline, props.style]}
+    style={css`${ownerCss}${css`& { width: 640px; min-height: 140px; }`}${props.style}`}
   >
-    <header style={hudStyles.header}>
-      <span style={hudStyles.title}>{props.title}</span>
-      <time datetime={String(props.current)} aria-label={`Current ${props.current}`} style={hudStyles.current}>{String(props.current)}</time>
-      <nav aria-label="Timeline transport" style={hudStyles.nav}>
-        <Button label="Previous" title="Previous" style={hudStyles.button} onClick={props.onPrevious} />
+    <header style={headerCss}>
+      <span style={titleCss}>{props.title}</span>
+      <time datetime={String(props.current)} aria-label={`Current ${props.current}`} style={css`
+        & { display: inline; color: var(--widget-toolbar-content-selected); font-size: var(--font-size-xs); }
+      `}>{String(props.current)}</time>
+      <nav aria-label="Timeline transport" style={navCss}>
+        <Button label="Previous" title="Previous" style={buttonStyle} onClick={props.onPrevious} />
         <Button
           label={props.playing ? "Pause" : "Play"}
           title={props.playing ? "Pause" : "Play"}
           selected={props.playing}
-          style={hudStyles.button}
+          style={buttonStyle}
           onClick={togglePlaying}
         />
-        <Button label="Next" title="Next" style={hudStyles.button} onClick={props.onNext} />
+        <Button label="Next" title="Next" style={buttonStyle} onClick={props.onNext} />
       </nav>
     </header>
-    <ul aria-label="Timeline tracks" style={hudStyles.tracks}>
+    <ul aria-label="Timeline tracks" style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: column; flex-grow: 1; gap: 2px; padding: 4px; overflow-y: auto; }
+    `}>
       {props.tracks.map(track => <TimelineTrackView
         key={track.key}
         track={track}
@@ -418,8 +405,4 @@ function assertWindow(props: HudWindowProps): void {
   if (typeof props.subtitle !== "string") throw new TypeError("HudWindow subtitle must be a string")
   if (typeof props.active !== "boolean") throw new TypeError("HudWindow active must be a boolean")
   if (typeof props.minimized !== "boolean") throw new TypeError("HudWindow minimized must be a boolean")
-}
-
-function markerPosition(tick: number, min: number, max: number): CSSProperties {
-  return Object.freeze({left: `${(tick - min) / (max - min) * 100}%`})
 }

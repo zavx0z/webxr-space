@@ -1,10 +1,11 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {Inspector, inspectorCss} from "./inspector.tsx"
+import {Inspector} from "./inspector.tsx"
 import {InspectorFieldFixture, InspectorFixture} from "./inspector-consumer-fixture.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production Inspector", () => {
   test("retains keyed category and section components through controlled interaction", () => {
@@ -82,15 +83,13 @@ describe("compiled production Inspector", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 320, height: 360},
-      styleSheets: [inspectorCss]
+      viewport: {width: 320, height: 360}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(rail)?.width).toBe(30)
     expect(frame.boxByNode.get(search)).toMatchObject({width: 115, height: 22})
     expect(frame.boxByNode.get(sections)?.y).toBe(frame.boxByNode.get(context)!.y + 28)
     expect(frame.boxByNode.get(section)?.y).toBe(frame.boxByNode.get(sections)!.contentY)
-    expect(inspectorCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

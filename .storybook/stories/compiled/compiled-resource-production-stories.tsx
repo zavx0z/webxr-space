@@ -1,12 +1,10 @@
 /** Package-owned external Storybook story support. */
 import {
   PathInput,
-  pathInputCss,
   type PathInputProps
 } from "@ui/components/path-input"
 import {
   ReferenceInput,
-  referenceInputCss,
   type ReferenceInputProps,
   type ReferenceInputValue
 } from "@ui/components/reference-input"
@@ -36,7 +34,6 @@ function PathInputStoryComponent(props: Readonly<{initial: PathInputProps}>) {
     density={props.initial.density}
     title={props.initial.title}
     browseTitle={props.initial.browseTitle}
-    style={props.initial.style}
     onInput={onInput}
     onChange={onChange}
     onBrowse={onBrowse}
@@ -63,7 +60,6 @@ function ReferenceInputStoryComponent(props: Readonly<{initial: ReferenceInputPr
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     density={props.initial.density}
-    style={props.initial.style}
     onActivate={onActivate}
     onPick={onPick}
     onClear={onClear}
@@ -79,7 +75,6 @@ export function createCompiledPathInputProductionStory(
     PathInputStoryComponent,
     {initial: props},
     "path-input",
-    pathInputCss,
     owner => pathSource(props, (owner.querySelector("input") as HTMLInputElement).value)
   )
   return mounted
@@ -94,7 +89,6 @@ export function createCompiledReferenceInputProductionStory(
     ReferenceInputStoryComponent,
     {initial: props},
     "reference-input",
-    referenceInputCss,
     () => referenceSource(props)
   )
 }
@@ -104,7 +98,6 @@ function mountCompiledStory(
   component: unknown,
   props: unknown,
   name: string,
-  css: string,
   typescript: (owner: HTMLElement) => string
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -119,19 +112,20 @@ function mountCompiledStory(
   owner.setAttribute("data-story-component", name)
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
-      return Object.freeze({html: serialize(owner), css, typescript: typescript(owner)})
+      return Object.freeze({html: serialize(owner), typescript: typescript(owner)})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function pathSource(props: PathInputProps, value: string): string {
   return [
-    'import {PathInput, pathInputCss} from "@ui/components/path-input"',
+    'import {PathInput} from "@ui/components/path-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -145,14 +139,13 @@ function pathSource(props: PathInputProps, value: string): string {
     "    onBrowse={onBrowse}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void pathInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function referenceSource(props: ReferenceInputProps): string {
   return [
-    'import {ReferenceInput, referenceInputCss, type ReferenceInputValue} from "@ui/components/reference-input"',
+    'import {ReferenceInput, type ReferenceInputValue} from "@ui/components/reference-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -165,8 +158,7 @@ function referenceSource(props: ReferenceInputProps): string {
     "    onClear={() => setValue(null)}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void referenceInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

@@ -1,6 +1,4 @@
 import type {Event} from "@zavx0z/dom"
-import type {StyleValue} from "@zavx0z/react"
-import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type ButtonVariant = "text" | "outlined" | "contained" | "glass"
 export type ButtonTone = "neutral" | "primary" | "success" | "warning" | "error"
@@ -24,7 +22,7 @@ export type ButtonProps = Readonly<{
   iconPosition?: ButtonIconPosition | undefined
   iconOnly?: boolean | undefined
   iconSize?: number | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onClick?: ((event: Event) => void) | undefined
 }>
 
@@ -38,12 +36,9 @@ export type IconButtonProps = Readonly<{
   selected?: boolean | undefined
   title?: string | undefined
   iconSize?: number | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onClick?: ((event: Event) => void) | undefined
 }>
-
-const regular = resolveWidgetColors("regular")
-const selected = resolveWidgetColors("regular", {selected: true})
 
 export function Button(props: ButtonProps) {
   const variant = props.variant ?? "contained"
@@ -66,101 +61,99 @@ export function Button(props: ButtonProps) {
     aria-expanded={props["aria-expanded"]}
     aria-label={props["aria-label"]}
     aria-controls={props["aria-controls"]}
+    data-variant={variant}
+    data-tone={tone}
+    data-size={size}
     onClick={props.onClick}
-    style={[
-      {
-        boxSizing: "border-box",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 92,
-        minWidth: 22,
-        height: 22,
-        gap: 3,
-        padding: "2px 6px",
-        border: `1px solid ${rgba8ToColor(regular.outline)}`,
-        borderRadius: 3,
-        background: rgba8ToColor(regular.inner),
-        boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-        color: rgba8ToColor(regular.text),
-        fontSize: 11,
-        lineHeight: 1,
-        overflow: "clip",
-        ":hover": {background: "rgb(101 101 101)"},
-        ":active": {
-          background: rgba8ToColor(selected.inner),
-          color: rgba8ToColor(selected.text)
-        },
-        ":focus": {borderColor: "rgb(113 168 255)"},
-        ":disabled": {opacity: 0.5, boxShadow: "none"}
-      },
-      variant === "text" && {
-        borderColor: "transparent",
-        background: "transparent",
-        boxShadow: "none"
-      },
-      variant === "outlined" && {background: "transparent", boxShadow: "none"},
-      variant === "glass" && {background: "rgba(84, 84, 84, 0.72)"},
-      size === "small" && {
-        width: 76,
-        height: 18,
-        minWidth: 18,
-        padding: "1px 5px",
-        fontSize: 11
-      },
-      size === "large" && {
-        width: 112,
-        height: 28,
-        minWidth: 28,
-        padding: "3px 8px",
-        fontSize: 12
-      },
-      variant === "contained" && tone === "primary" && {background: "rgb(71 114 179)"},
-      variant === "contained" && tone === "success" && {
-        background: rgba8ToColor(uiTheme.state.success)
-      },
-      variant === "contained" && tone === "warning" && {
-        background: rgba8ToColor(uiTheme.state.warning)
-      },
-      variant === "contained" && tone === "error" && {
-        background: rgba8ToColor(uiTheme.state.error)
-      },
-      props.selected === true && {
-        background: rgba8ToColor(selected.inner),
-        color: rgba8ToColor(selected.text)
-      },
-      props.style
-    ]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 92px;
+          min-width: 22px;
+          height: var(--control-height-medium);
+          gap: var(--control-content-gap);
+          padding: 2px 6px;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 3px;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          color: var(--widget-regular-content);
+          font-size: var(--font-size-xs);
+          line-height: var(--line-height-control);
+          overflow: clip;
+        }
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+        &:active {
+          background: var(--widget-regular-background-selected);
+          color: var(--widget-regular-content-selected);
+        }
+        &:focus {
+          border-color: var(--widget-focus-outline);
+        }
+        &:disabled {
+          opacity: 0.5;
+          box-shadow: none;
+        }
+        &[data-variant="text"] { border-color: transparent; background: transparent; box-shadow: none; }
+        &[data-variant="outlined"] { background: transparent; box-shadow: none; }
+        &[data-variant="glass"] { background: var(--widget-regular-background-glass); }
+        &[data-size="small"] { width: 76px; height: var(--control-height-small); min-width: 18px; padding: 1px 5px; font-size: var(--font-size-xs); }
+        &[data-size="large"] { width: 112px; height: var(--control-height-large); min-width: 28px; padding: 3px 8px; font-size: var(--font-size-sm); }
+        &[data-variant="contained"][data-tone="primary"] { background: var(--widget-regular-background-selected); }
+        &[data-variant="contained"][data-tone="success"] { background: var(--state-success); }
+        &[data-variant="contained"][data-tone="warning"] { background: var(--state-warning); }
+        &[data-variant="contained"][data-tone="error"] { background: var(--state-error); }
+        &[aria-pressed="true"] { background: var(--widget-regular-background-selected); color: var(--widget-regular-content-selected); }
+        &[aria-pressed="true"]:hover { background: var(--widget-regular-background-selected); }
+        ${props.style}
+      `}
   >
     <img
       src={startIcon}
       alt=""
       width={iconSize}
       height={iconSize}
-      style={[
-        {width: 14, height: 14, objectFit: "contain", flexShrink: 0},
-        startIcon === "" && {display: "none"}
-      ]}
+      hidden={startIcon === ""}
+      style={css`
+          & {
+            width: var(--control-icon-size);
+            height: var(--control-icon-size);
+            object-fit: contain;
+            flex-shrink: 0;
+          }
+          &[hidden] { display: none; }
+        `}
     />
-    <span style={[
-      {
-        display: "inline",
-        minWidth: 0,
-        overflow: "clip",
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis"
-      },
-      !showLabel && {display: "none"}
-    ]}>{props.label}</span>
+    <span hidden={!showLabel} style={css`
+        & {
+          display: inline;
+          min-width: 0;
+          overflow: clip;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+        &[hidden] { display: none; }
+      `}>{props.label}</span>
     <img
       src={endIcon}
       alt=""
       width={iconSize}
       height={iconSize}
-      style={[
-        {width: 14, height: 14, objectFit: "contain", flexShrink: 0},
-        endIcon === "" && {display: "none"}
-      ]}
+      hidden={endIcon === ""}
+      style={css`
+          & {
+            width: var(--control-icon-size);
+            height: var(--control-icon-size);
+            object-fit: contain;
+            flex-shrink: 0;
+          }
+          &[hidden] { display: none; }
+        `}
     />
   </button>
 }

@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   ProgressCheckbox,
-  progressCheckboxCss,
   type ProgressCheckboxProps
 } from "@ui/components/progress-checkbox"
 import {createRoot, useState} from "@zavx0z/react"
@@ -27,7 +26,6 @@ function ProgressCheckboxStoryComponent(props: Readonly<{initial: ProgressCheckb
     indeterminate={state.indeterminate}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onChange={onChange}
   />
 }
@@ -49,10 +47,10 @@ export function createCompiledProgressCheckboxProductionStory(
 
   const story = Object.freeze({
     element: input,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(input),
-        css: progressCheckboxCss,
         typescript: source(props, input.checked, input.indeterminate)
       })
     },
@@ -60,7 +58,7 @@ export function createCompiledProgressCheckboxProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: progressCheckboxCss})
+  return Object.freeze({story})
 }
 
 function source(
@@ -69,7 +67,7 @@ function source(
   indeterminate: boolean
 ): string {
   return [
-    'import {ProgressCheckbox, progressCheckboxCss} from "@ui/components/progress-checkbox"',
+    'import {ProgressCheckbox} from "@ui/components/progress-checkbox"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -82,8 +80,7 @@ function source(
     "    onChange={onChange}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void progressCheckboxCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

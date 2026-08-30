@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "include": [
-    "theme.ts",
     "button.tsx",
     "field.tsx",
     "pane.tsx",
@@ -28,6 +27,7 @@
     "code-editor-model.ts",
     "code-editor.tsx",
     "hud.tsx",
+    "icon-assets.ts",
     "icons.ts",
     "syntax-theme.ts",
     "inspector.tsx"

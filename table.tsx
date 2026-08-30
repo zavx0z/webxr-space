@@ -1,5 +1,4 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type CSSProperties, type StyleValue} from "@zavx0z/react"
 
 export type TableColumn = Readonly<{
   key: string
@@ -19,67 +18,62 @@ export type TableProps = Readonly<{
   selectedKey?: string | null | undefined
   disabled?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onRowActivate?: ((key: string, event: Event) => void) | undefined
 }>
 
-export const tableStyles = defineStyles("@ui/components/table", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 0,
-    width: "100%",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    overflow: "clip",
-    background: "rgb(29 29 29)"
-  },
-  section: {display: "flex", flexDirection: "column", width: "100%"},
-  row: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    width: "100%",
-    minHeight: 28,
-    borderBottom: "1px solid rgb(61 61 61)",
-    background: "rgb(48 48 48)",
-    ":hover": {background: "rgb(84 84 84)"}
-  },
-  lastRow: {borderBottom: 0},
-  selected: {background: "rgb(71 114 179)", color: "rgb(255 255 255)"},
-  disabled: {opacity: 0.5},
-  headerRow: {background: "rgb(61 61 61)"},
-  cell: {
-    boxSizing: "border-box",
-    display: "flex",
-    alignItems: "center",
-    minWidth: 0,
-    minHeight: 28,
-    flexGrow: 1,
-    padding: "3px 7px",
-    borderRight: "1px solid rgb(61 61 61)",
-    background: "transparent",
-    color: "rgb(204 204 204)",
-    fontSize: 11
-  },
-  header: {color: "rgb(230 230 230)"},
-  lastCell: {borderRight: 0}
-})
-
-export const tableCss = tableStyles.cssText
+const rootCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+    border: var(--border-width-control) solid var(--widget-regular-outline);
+    border-radius: 4px;
+    overflow: clip;
+    background: var(--widget-text-background);
+  }
+`
+const sectionCss = css`& { display: flex; flex-direction: column; width: 100%; }`
+const rowCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 28px;
+    border-bottom: var(--border-width-control) solid var(--widget-regular-outline);
+    background: var(--widget-number-background-readonly);
+  }
+  &:hover { background: var(--widget-regular-background); }
+`
+const cellCss = css`
+  & {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    min-height: 28px;
+    flex-grow: 1;
+    padding: 3px 7px;
+    border-right: var(--border-width-control) solid var(--widget-regular-outline);
+    background: transparent;
+    color: var(--widget-list-content);
+    font-size: var(--font-size-xs);
+  }
+  &[data-last="true"] { border-right: 0; }
+`
 
 type HeaderCellProps = Readonly<{column: TableColumn; last: boolean}>
 
 function HeaderCell(props: HeaderCellProps) {
+  const width = props.column.width === undefined ? "auto" : `${props.column.width}px`
+  const grow = props.column.width === undefined ? 1 : 0
   return <th
     data-column-key={props.column.key}
-    style={[
-      tableStyles.cell,
-      tableStyles.header,
-      props.last && tableStyles.lastCell,
-      columnWidth(props.column.width)
-    ]}
+    data-last={props.last ? "true" : undefined}
+    style={css`${cellCss}${css`& { color: var(--widget-regular-content); width: ${width}; flex-grow: ${grow}; flex-shrink: ${grow}; }`}`}
   >{props.column.label}</th>
 }
 
@@ -90,13 +84,12 @@ type DataCellProps = Readonly<{
 }>
 
 function DataCell(props: DataCellProps) {
+  const width = props.column.width === undefined ? "auto" : `${props.column.width}px`
+  const grow = props.column.width === undefined ? 1 : 0
   return <td
     data-column-key={props.column.key}
-    style={[
-      tableStyles.cell,
-      props.last && tableStyles.lastCell,
-      columnWidth(props.column.width)
-    ]}
+    data-last={props.last ? "true" : undefined}
+    style={css`${cellCss}${css`& { width: ${width}; flex-grow: ${grow}; flex-shrink: ${grow}; }`}`}
   >{props.value}</td>
 }
 
@@ -117,13 +110,14 @@ function TableRowView(props: TableRowViewProps) {
     data-row-key={props.row.key}
     aria-selected={String(props.selected)}
     aria-disabled={String(props.disabled)}
+    data-last={props.last ? "true" : undefined}
     onClick={onClick}
-    style={[
-      tableStyles.row,
-      props.last && tableStyles.lastRow,
-      props.selected && tableStyles.selected,
-      props.disabled && tableStyles.disabled
-    ]}
+    style={css`
+      ${rowCss}
+      &[data-last="true"] { border-bottom: 0; }
+      &[aria-selected="true"] { background: var(--widget-list-background-selected); color: var(--widget-list-content-selected); }
+      &[aria-disabled="true"] { opacity: 0.5; }
+    `}
   >
     {props.columns.map((column, index) => <DataCell
       key={column.key}
@@ -136,9 +130,9 @@ function TableRowView(props: TableRowViewProps) {
 
 export function Table(props: TableProps) {
   const selectedKey = assertTableProps(props)
-  return <table title={props.title} style={[tableStyles.root, props.style]}>
-    <thead style={tableStyles.section}>
-      <tr style={[tableStyles.row, tableStyles.headerRow]}>
+  return <table title={props.title} style={css`${rootCss}${props.style}`}>
+    <thead style={sectionCss}>
+      <tr style={css`${rowCss}${css`& { background: var(--widget-regular-outline); }`}`}>
         {props.columns.map((column, index) => <HeaderCell
           key={column.key}
           column={column}
@@ -146,7 +140,7 @@ export function Table(props: TableProps) {
         />)}
       </tr>
     </thead>
-    <tbody style={tableStyles.section}>
+    <tbody style={sectionCss}>
       {props.rows.map((row, index) => <TableRowView
         key={row.key}
         row={row}
@@ -160,11 +154,6 @@ export function Table(props: TableProps) {
   </table>
 }
 
-
-function columnWidth(width: number | undefined): CSSProperties | undefined {
-  if (width === undefined) return undefined
-  return Object.freeze({width, flexGrow: 0, flexShrink: 0})
-}
 
 function assertTableProps(props: TableProps): string | null {
   if (!Array.isArray(props.columns) || props.columns.length === 0) {

@@ -1,17 +1,14 @@
 /** Package-owned external Storybook story support. */
 import {
   ControlGroup,
-  controlGroupCss,
   type ControlGroupProps
 } from "@ui/components/control-group"
 import {
   MatrixInput,
-  matrixInputCss,
   type MatrixInputProps
 } from "@ui/components/matrix-input"
 import {
   VectorInput,
-  vectorInputCss,
   type VectorInputProps
 } from "@ui/components/vector-input"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
@@ -31,7 +28,6 @@ function ControlGroupStoryComponent(props: Readonly<{initial: ControlGroupProps}
     items={items}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={onChange}
   />
@@ -56,7 +52,6 @@ function VectorInputStoryComponent(props: Readonly<{initial: VectorInputProps}>)
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={onChange}
   />
@@ -78,7 +73,6 @@ function MatrixInputStoryComponent(props: Readonly<{initial: MatrixInputProps}>)
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={onChange}
   />
@@ -93,7 +87,6 @@ export function createCompiledControlGroupProductionStory(
     ControlGroupStoryComponent,
     {initial: props},
     "control-group",
-    controlGroupCss,
     controlGroupSource(props)
   )
 }
@@ -107,7 +100,6 @@ export function createCompiledVectorInputProductionStory(
     VectorInputStoryComponent,
     {initial: props},
     "vector-input",
-    vectorInputCss,
     vectorSource(props)
   )
 }
@@ -121,7 +113,6 @@ export function createCompiledMatrixInputProductionStory(
     MatrixInputStoryComponent,
     {initial: props},
     "matrix-input",
-    matrixInputCss,
     matrixSource(props)
   )
 }
@@ -131,7 +122,6 @@ function mountCompiledStory(
   component: unknown,
   props: unknown,
   name: string,
-  css: string,
   typescript: string
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -146,19 +136,20 @@ function mountCompiledStory(
   owner.setAttribute("data-story-component", name)
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
-      return Object.freeze({html: serialize(owner), css, typescript})
+      return Object.freeze({html: serialize(owner), typescript})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function controlGroupSource(props: ControlGroupProps): string {
   return [
-    'import {ControlGroup, controlGroupCss, type ControlGroupItem} from "@ui/components/control-group"',
+    'import {ControlGroup, type ControlGroupItem} from "@ui/components/control-group"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -167,36 +158,33 @@ function controlGroupSource(props: ControlGroupProps): string {
     "    setItems(items => items.map(item => item.key === key ? {...item, value} : item))",
     "  } />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void controlGroupCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function vectorSource(props: VectorInputProps): string {
   return [
-    'import {VectorInput, vectorInputCss} from "@ui/components/vector-input"',
+    'import {VectorInput} from "@ui/components/vector-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [value, setValue] = useState<readonly number[]>(${literal(props.value)})`,
     "  return <VectorInput value={value} onInput={setValue} />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void vectorInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function matrixSource(props: MatrixInputProps): string {
   return [
-    'import {MatrixInput, matrixInputCss} from "@ui/components/matrix-input"',
+    'import {MatrixInput} from "@ui/components/matrix-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [value, setValue] = useState<readonly (readonly number[])[]>(${literal(props.value)})`,
     "  return <MatrixInput value={value} onInput={setValue} />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void matrixInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

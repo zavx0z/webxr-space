@@ -3,7 +3,6 @@ import {
   type Token,
   type Tokens
 } from "@zavx0z/highlighter"
-import type {StyleValue} from "@zavx0z/react"
 import {
   activeSyntaxTheme,
   resolveSyntaxScopeColorHex
@@ -17,7 +16,7 @@ export type CodeEditorProps = Readonly<{
   tokens?: Tokens | undefined
   showLineNumbers?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
 }>
 
 type NormalizedToken = Readonly<{

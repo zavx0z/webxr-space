@@ -230,7 +230,16 @@
                 "export": "story_color_neutral"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "pane",
@@ -288,7 +297,16 @@
                 "export": "story_variants_filled"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "badge",
@@ -318,7 +336,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "typography",
@@ -348,7 +375,16 @@
                 "export": "story_variants_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "divider",
@@ -406,7 +442,16 @@
                 "export": "story_variants_middle"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -454,7 +499,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "field",
@@ -656,7 +710,16 @@
                 "export": "story_readonly_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "text-field",
@@ -685,7 +748,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "number-input",
@@ -714,7 +786,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "integer-input",
@@ -783,7 +864,16 @@
                 "export": "story_state_readonly"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "color-input",
@@ -841,7 +931,16 @@
                 "export": "story_presentation_expanded"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "vector-input",
@@ -877,7 +976,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "matrix-input",
@@ -912,7 +1020,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "reference-input",
@@ -947,7 +1064,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "enum-input",
@@ -1112,7 +1238,16 @@
                 "export": "story_state_readonly"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "collection-input",
@@ -1203,7 +1338,16 @@
                 "export": "story_density_compact"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "path-input",
@@ -1291,7 +1435,16 @@
                 "export": "story_density_compact"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "checkbox",
@@ -1334,7 +1487,16 @@
                 "export": "story_state_checked"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "switcher",
@@ -1377,7 +1539,16 @@
                 "export": "story_state_on"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "progress-checkbox",
@@ -1408,7 +1579,16 @@
                 "export": "story_progress_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "slider-control",
@@ -1437,7 +1617,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1483,7 +1672,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "code-editor",
@@ -1519,7 +1717,16 @@
                 "export": "story_state_read_only"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "list",
@@ -1548,7 +1755,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "table",
@@ -1578,7 +1794,16 @@
                 "export": "story_basic_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "scrollbar",
@@ -1609,7 +1834,16 @@
                 "export": "story_vertical_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "noti",
@@ -1643,7 +1877,16 @@
                 "export": "story_status_unavailable"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1683,7 +1926,16 @@
                 "export": "story_inventory_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "hud",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "frame",
@@ -1715,7 +1967,16 @@
                 "export": "story_inventory_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "hud",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "timeline",
@@ -1749,7 +2010,16 @@
                 "export": "story_inventory_default"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "hud",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     }

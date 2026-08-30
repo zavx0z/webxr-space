@@ -1,7 +1,6 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type CSSProperties, type StyleValue} from "@zavx0z/react"
 import {Button} from "./button.tsx"
-import {List, listCss} from "./list.tsx"
+import {List} from "./list.tsx"
 
 export type CollectionInputItem = Readonly<{
   id: string
@@ -22,7 +21,7 @@ export type CollectionInputProps = Readonly<{
   readOnly?: boolean | undefined
   density?: CollectionInputDensity | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onSelect?: ((id: string, event: Event) => void) | undefined
   onAdd?: ((event: Event) => void) | undefined
   onRemove?: ((id: string, event: Event) => void) | undefined
@@ -33,34 +32,15 @@ export const COLLECTION_INPUT_MIN_VISIBLE_ROWS = 1
 export const COLLECTION_INPUT_MAX_VISIBLE_ROWS = 8
 export const COLLECTION_INPUT_DEFAULT_VISIBLE_ROWS = 3
 
-export const collectionInputStyles = defineStyles("@ui/components/collection-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    width: 320,
-    minHeight: 28,
-    gap: 4
-  },
-  list: {width: 0, flexGrow: 1, padding: 2},
-  actions: {display: "flex", flexDirection: "column", width: 28, gap: 2},
-  action: {
-    width: 28,
-    minWidth: 28,
-    height: 28,
-    padding: 0,
-    borderRadius: 4
-  },
-  hidden: {display: "none"}
-})
-
-export const collectionInputCss = [
-  listCss,
-  collectionInputStyles.cssText
-].join("\n")
+const listStyle: CssStyle = css`& { width: 0; flex-grow: 1; padding: 2px; }`
+const actionStyle: CssStyle = css`
+  & { width: 28px; min-width: 28px; height: 28px; padding: 0; border-radius: 4px; }
+`
+const hiddenStyle: CssStyle = css`& { display: none; }`
 
 export function CollectionInput(props: CollectionInputProps) {
   const normalized = normalizeCollectionProps(props)
+  const visibleHeight = visibleRowsHeight(normalized.visibleRows)
   const locked = props.disabled === true || props.readOnly === true
   const selectedIndex = normalized.selectedId === null
     ? -1
@@ -81,7 +61,17 @@ export function CollectionInput(props: CollectionInputProps) {
   const moveDown = (event: Event) => {
     if (!locked && normalized.selectedId !== null) props.onMove?.(normalized.selectedId, "down", event)
   }
-  return <div title={props.title} style={[collectionInputStyles.root, props.style]}>
+  return <div title={props.title} style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        width: 320px;
+        min-height: 28px;
+        gap: 4px;
+      }
+      ${props.style}
+    `}>
     <List
       items={normalized.items.map(item => ({
         key: item.id,
@@ -94,36 +84,36 @@ export function CollectionInput(props: CollectionInputProps) {
       dense={normalized.density === "compact"}
       variant="embedded"
       emptyLabel={props.emptyLabel ?? "No items"}
-      style={[collectionInputStyles.list, listHeight(normalized.visibleRows)]}
+      style={css`${listStyle}${css`& { height: ${visibleHeight}px; max-height: ${visibleHeight}px; }`}`}
       onSelect={onSelect}
     />
-    <div style={collectionInputStyles.actions}>
+    <div style={css`& { display: flex; flex-direction: column; width: 28px; gap: 2px; }`}>
       <Button
         label="+"
         title="Add item"
         disabled={locked || props.onAdd === undefined}
-        style={collectionInputStyles.action}
+        style={actionStyle}
         onClick={onAdd}
       />
       <Button
         label="−"
         title="Remove selected item"
         disabled={locked || selected === undefined || selected.disabled === true || props.onRemove === undefined}
-        style={collectionInputStyles.action}
+        style={actionStyle}
         onClick={onRemove}
       />
       <Button
         label="↑"
         title="Move selected item up"
         disabled={locked || selectedIndex <= 0 || selected?.disabled === true || props.onMove === undefined}
-        style={[collectionInputStyles.action, props.onMove === undefined && collectionInputStyles.hidden]}
+        style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}
         onClick={moveUp}
       />
       <Button
         label="↓"
         title="Move selected item down"
         disabled={locked || selectedIndex < 0 || selectedIndex >= normalized.items.length - 1 || selected?.disabled === true || props.onMove === undefined}
-        style={[collectionInputStyles.action, props.onMove === undefined && collectionInputStyles.hidden]}
+        style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}
         onClick={moveDown}
       />
     </div>
@@ -143,9 +133,9 @@ export function findCollectionInputSelection(
   return selectedId === null ? undefined : items.find(item => item.id === selectedId)
 }
 
-function listHeight(rows: number): CSSProperties {
+function visibleRowsHeight(rows: number): number {
   const heights = [30, 56, 84, 110, 136, 162, 188, 214] as const
-  return Object.freeze({height: heights[rows - 1]!, maxHeight: heights[rows - 1]!})
+  return heights[rows - 1]!
 }
 
 function normalizeCollectionProps(props: CollectionInputProps): Readonly<{

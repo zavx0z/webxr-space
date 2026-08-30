@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   Checkbox,
-  checkboxCss,
   type CheckboxProps
 } from "@ui/components/checkbox"
 import {createRoot, useState} from "@zavx0z/react"
@@ -19,7 +18,6 @@ function CheckboxStoryComponent(props: Readonly<{initial: CheckboxProps}>) {
     indeterminate={props.initial.indeterminate}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onChange={onChange}
   />
 }
@@ -41,10 +39,10 @@ export function createCompiledCheckboxProductionStory(
 
   const story = Object.freeze({
     element: input,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(input),
-        css: checkboxCss,
         typescript: source(props, input.checked)
       })
     },
@@ -52,12 +50,12 @@ export function createCompiledCheckboxProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: checkboxCss})
+  return Object.freeze({story})
 }
 
 function source(props: CheckboxProps, checked: boolean): string {
   return [
-    'import {Checkbox, checkboxCss} from "@ui/components/checkbox"',
+    'import {Checkbox} from "@ui/components/checkbox"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -69,8 +67,7 @@ function source(props: CheckboxProps, checked: boolean): string {
     "    onChange={setChecked}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void checkboxCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

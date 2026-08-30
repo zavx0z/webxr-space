@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   SliderControl,
-  sliderControlCss,
   type SliderControlProps
 } from "@ui/components/slider-control"
 import {createRoot, useState} from "@zavx0z/react"
@@ -21,7 +20,6 @@ function SliderControlStoryComponent(props: Readonly<{initial: SliderControlProp
     step={props.initial.step}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={props.initial.onChange}
   />
@@ -44,10 +42,10 @@ export function createCompiledSliderControlProductionStory(
 
   const story = Object.freeze({
     element: input,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(input),
-        css: sliderControlCss,
         typescript: source(props, input.valueAsNumber)
       })
     },
@@ -55,12 +53,12 @@ export function createCompiledSliderControlProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: sliderControlCss})
+  return Object.freeze({story})
 }
 
 function source(props: SliderControlProps, value: number): string {
   return [
-    'import {SliderControl, sliderControlCss} from "@ui/components/slider-control"',
+    'import {SliderControl} from "@ui/components/slider-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -74,8 +72,7 @@ function source(props: SliderControlProps, value: number): string {
     "    onInput={setValue}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void sliderControlCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

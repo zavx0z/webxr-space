@@ -1,5 +1,13 @@
 import {describe, expect, test} from "bun:test"
-import {uiIcons} from "./icons.ts"
+import {
+  clearIcon,
+  folderIcon,
+  minusIcon,
+  pickerIcon,
+  plusIcon,
+  runIcon,
+  uiIcons,
+} from "./icons.ts"
 
 describe("@ui/components icons", () => {
   test("owns stable SVG data URLs for document img elements", () => {
@@ -8,6 +16,25 @@ describe("@ui/components icons", () => {
     expect(decodeURIComponent(uiIcons.breakpointActive)).toContain("<circle")
     expect(uiIcons.resume).toBe(uiIcons.run)
     expect(uiIcons.recognition).toBe(uiIcons.image)
+    expect([runIcon, clearIcon, plusIcon, minusIcon, folderIcon, pickerIcon]).toEqual([
+      uiIcons.run,
+      uiIcons.clear,
+      uiIcons.plus,
+      uiIcons.minus,
+      uiIcons.folder,
+      uiIcons.picker,
+    ])
+  })
+
+  test("keeps production control imports tree-shakeable without the aggregate catalog", async () => {
+    const sources = await Promise.all([
+      Bun.file(new URL("number-input.tsx", import.meta.url)).text(),
+      Bun.file(new URL("path-input.tsx", import.meta.url)).text(),
+      Bun.file(new URL("reference-input.tsx", import.meta.url)).text(),
+    ])
+    expect(sources.every((source) => source.includes('from "./icon-assets.ts"'))).toBeTrue()
+    expect(sources.every((source) => !source.includes('from "./icons.ts"'))).toBeTrue()
+    expect(await Bun.file(new URL("icon-assets.ts", import.meta.url)).text()).not.toContain("uiIcons")
   })
 
   test("has no Engine, Layout or Elements implementation dependency", async () => {

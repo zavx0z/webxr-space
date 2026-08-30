@@ -4,10 +4,9 @@ import type {
   KeyboardEvent,
   PointerEvent
 } from "@zavx0z/dom"
-import {defineStyles, useRef, type StyleValue} from "@zavx0z/react"
+import {useRef} from "@zavx0z/react"
 import {IconButton} from "./button.tsx"
-import {uiIcons} from "./icons.ts"
-import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
+import {minusIcon, plusIcon} from "./icon-assets.ts"
 
 export type NumberInputProps = Readonly<{
   value: number
@@ -21,66 +20,16 @@ export type NumberInputProps = Readonly<{
   title?: string | undefined
   decrementTitle?: string | undefined
   incrementTitle?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: number, event: Event) => void) | undefined
   onChange?: ((value: number, event: Event) => void) | undefined
 }>
 
 type ScrubState = Readonly<{startX: number; startValue: number}>
 
-const colors = resolveWidgetColors("number")
-
-export const numberInputStyles = defineStyles("@ui/components/number-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: 120,
-    height: 22,
-    gap: 0,
-    padding: 0,
-    border: `1px solid ${rgba8ToColor(colors.outline)}`,
-    borderRadius: 3,
-    background: rgba8ToColor(colors.inner),
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    overflow: "clip",
-    ":focus-within": {borderColor: "rgb(113 168 255)"}
-  },
-  input: {
-    boxSizing: "border-box",
-    display: "block",
-    width: 82,
-    height: 20,
-    minWidth: 0,
-    padding: "2px 4px",
-    border: "none",
-    borderRadius: 0,
-    background: "transparent",
-    color: rgba8ToColor(colors.text),
-    fontSize: 11,
-    lineHeight: 1,
-    textAlign: "right",
-    overflow: "clip",
-    ":hover": {background: "rgb(101 101 101)"},
-    ":focus": {background: "rgb(34 34 34)"}
-  },
-  disabled: {opacity: 0.5, boxShadow: "none"},
-  readOnly: {background: "rgb(48 48 48)", color: "rgb(153 153 153)"}
-})
-
-export const numberInputCss = numberInputStyles.cssText
-
-const stepButtonStyle: StyleValue = Object.freeze({
-  width: 18,
-  minWidth: 18,
-  height: 20,
-  padding: 2,
-  border: "none",
-  borderRadius: 0,
-  background: "transparent",
-  boxShadow: "none"
-})
+const stepButtonStyle: CssStyle = css`
+  & { width: 18px; min-width: 18px; height: 20px; padding: 2px; border: none; border-radius: 0; background: transparent; box-shadow: none; }
+`
 
 export function NumberInput(props: NumberInputProps) {
   const scrub = useRef<ScrubState | null>(null)
@@ -127,15 +76,31 @@ export function NumberInput(props: NumberInputProps) {
 
   return <div
     title={props.title}
-    style={[
-      numberInputStyles.root,
-      props.disabled === true && numberInputStyles.disabled,
-      props.style
-    ]}
+    aria-disabled={String(props.disabled === true)}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          width: 120px;
+          height: var(--control-height-medium);
+          gap: 0;
+          padding: 0;
+          border: var(--border-width-control) solid var(--widget-number-outline);
+          border-radius: 3px;
+          background: var(--widget-number-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          overflow: clip;
+        }
+        &:focus-within { border-color: var(--widget-focus-outline); }
+        &[aria-disabled="true"] { opacity: 0.5; box-shadow: none; }
+        ${props.style}
+      `}
   >
     <IconButton
       label="Decrease"
-      iconSrc={uiIcons.minus}
+      iconSrc={minusIcon}
       title={props.decrementTitle ?? "Decrease"}
       disabled={locked}
       style={stepButtonStyle}
@@ -157,14 +122,34 @@ export function NumberInput(props: NumberInputProps) {
       onPointerMove={onPointerMove}
       onPointerUp={endScrub}
       onPointerCancel={endScrub}
-      style={[
-        numberInputStyles.input,
-        props.readOnly === true && numberInputStyles.readOnly
-      ]}
+      style={css`
+          & {
+            box-sizing: border-box;
+            display: block;
+            width: 82px;
+            height: 20px;
+            min-width: 0;
+            padding: 2px 4px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: var(--widget-number-content);
+            font-size: var(--font-size-xs);
+            line-height: var(--line-height-control);
+            text-align: right;
+            overflow: clip;
+          }
+          &:hover { background: var(--widget-hover-background); }
+          &:focus { background: var(--widget-number-background-focus); }
+        &[readonly] {
+            background: var(--widget-number-background-readonly);
+            color: var(--widget-number-content-readonly);
+        }
+      `}
     />
     <IconButton
       label="Increase"
-      iconSrc={uiIcons.plus}
+      iconSrc={plusIcon}
       title={props.incrementTitle ?? "Increase"}
       disabled={locked}
       style={stepButtonStyle}

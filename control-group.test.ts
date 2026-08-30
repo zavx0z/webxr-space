@@ -1,9 +1,10 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {ControlGroup, controlGroupCss} from "./control-group.tsx"
+import {ControlGroup} from "./control-group.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production ControlGroup", () => {
   test("composes TextField cells and retains keyed identities through reorder", () => {
@@ -54,15 +55,15 @@ describe("compiled production ControlGroup", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 400, height: 100},
-      styleSheets: [controlGroupCss]
+      viewport: {width: 400, height: 100}
     })
     const frame = renderer.flush()
     expect(owner.className).toBe("")
     expect([...owner.querySelectorAll("input")].every(input => input.className === "")).toBe(true)
     expect(frame.boxByNode.get(owner)?.height).toBe(28)
-    expect(controlGroupCss).toContain(":focus-within")
-    expect(controlGroupCss).not.toContain(".ui-")
+    const adoptedCss = (ControlGroup as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
+    expect(adoptedCss).toContain(":focus-within")
+    expect(adoptedCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

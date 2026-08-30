@@ -1,9 +1,7 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
 import {IconButton} from "./button.tsx"
-import {uiIcons} from "./icons.ts"
-import {TextField, textFieldCss} from "./text-field.tsx"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
+import {folderIcon} from "./icon-assets.ts"
+import {TextField} from "./text-field.tsx"
 
 export type PathInputDensity = "regular" | "compact"
 
@@ -15,76 +13,21 @@ export type PathInputProps = Readonly<{
   density?: PathInputDensity | undefined
   title?: string | undefined
   browseTitle?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: string, event: Event) => void) | undefined
   onChange?: ((value: string, event: Event) => void) | undefined
   onBrowse?: ((event: Event) => void) | undefined
 }>
 
-export const pathInputStyles = defineStyles("@ui/components/path-input", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    minWidth: 0,
-    width: 320,
-    height: 28,
-    gap: 0,
-    padding: 0,
-    overflow: "clip",
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(29 29 29)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`
-  },
-  compactRoot: {width: 220, height: 24},
-  input: {
-    width: 0,
-    minWidth: 0,
-    height: 26,
-    flexGrow: 1,
-    padding: "3px 7px",
-    border: "none",
-    borderRight: "1px solid rgb(61 61 61)",
-    borderRadius: 0,
-    background: "transparent",
-    boxShadow: "none",
-    color: "rgb(230 230 230)",
-    fontSize: 11,
-    ":hover": {
-      border: "none",
-      borderRight: "1px solid rgb(61 61 61)"
-    },
-    ":focus": {
-      border: "none",
-      borderRight: "1px solid rgb(61 61 61)",
-      background: "rgb(34 34 34)"
-    }
-  },
-  compactInput: {height: 22},
-  readOnlyInput: {opacity: 0.5},
-  browse: {
-    width: 30,
-    minWidth: 30,
-    height: 26,
-    padding: 0,
-    border: "none",
-    borderRadius: 0,
-    background: "rgb(84 84 84)",
-    boxShadow: "none",
-    fontSize: 12,
-    ":hover": {borderColor: "transparent", background: "rgb(101 101 101)"},
-    ":active": {borderColor: "transparent", background: "rgb(71 114 179)"},
-    ":focus": {borderColor: "transparent", background: "rgb(71 114 179)"}
-  },
-  compactBrowse: {height: 22},
-  hidden: {display: "none"}
-})
-
-export const pathInputCss = [
-  textFieldCss,
-  pathInputStyles.cssText
-].join("\n")
+const inputStyle: CssStyle = css`
+  & { width: 0; min-width: 0; height: 26px; flex-grow: 1; padding: 3px 7px; border: none; border-right: 1px solid var(--widget-regular-outline); border-radius: 0; box-shadow: none; color: var(--widget-regular-content); font-size: 11px; --text-field-background: transparent; --text-field-hover-outline: transparent; --text-field-focus-outline: transparent; --text-field-focus-background: var(--widget-text-background-focus); }
+`
+const browseStyle: CssStyle = css`
+  & { width: 30px; min-width: 30px; height: 26px; padding: 0; border: none; border-radius: 0; box-shadow: none; font-size: 12px; color: var(--widget-regular-content); }
+`
+const compactInputStyle: CssStyle = css`& { height: 22px; }`
+const readOnlyInputStyle: CssStyle = css`& { opacity: 0.5; }`
+const hiddenStyle: CssStyle = css`& { display: none; }`
 
 export function PathInput(props: PathInputProps) {
   assertPathInputProps(props)
@@ -95,11 +38,26 @@ export function PathInput(props: PathInputProps) {
   return <div
     title={props.title}
     aria-disabled={String(locked)}
-    style={[
-      pathInputStyles.root,
-      density === "compact" && pathInputStyles.compactRoot,
-      props.style
-    ]}
+    data-density={density}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: row;
+          min-width: 0;
+          width: 320px;
+          height: var(--control-height-large);
+          gap: 0;
+          padding: 0;
+          overflow: clip;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          background: var(--widget-text-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+        }
+        &[data-density="compact"] { width: 220px; height: 24px; }
+        ${props.style}
+      `}
   >
     <TextField
       value={props.value}
@@ -107,24 +65,17 @@ export function PathInput(props: PathInputProps) {
       disabled={props.disabled === true}
       readOnly={props.readOnly === true}
       title={props.title}
-      style={[
-        pathInputStyles.input,
-        density === "compact" && pathInputStyles.compactInput,
-        props.readOnly === true && pathInputStyles.readOnlyInput
-      ]}
+      style={css`${inputStyle}${density === "compact" && compactInputStyle}${props.readOnly === true && readOnlyInputStyle}`}
       onInput={props.onInput}
       onChange={props.onChange}
     />
     <IconButton
       label="Browse"
-      iconSrc={uiIcons.folder}
+      iconSrc={folderIcon}
+      variant="contained"
       title={props.browseTitle ?? "Browse"}
       disabled={locked || browseUnavailable}
-      style={[
-        pathInputStyles.browse,
-        density === "compact" && pathInputStyles.compactBrowse,
-        browseUnavailable && pathInputStyles.hidden
-      ]}
+      style={css`${browseStyle}${density === "compact" && compactInputStyle}${browseUnavailable && hiddenStyle}`}
       onClick={props.onBrowse}
     />
   </div>

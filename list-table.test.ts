@@ -1,10 +1,11 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument} from "@zavx0z/dom"
+import {Event} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {List, listCss} from "./list.tsx"
-import {Table, tableCss} from "./table.tsx"
+import {List} from "./list.tsx"
+import {Table} from "./table.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled keyed collections", () => {
   test("List retains keyed rows and standard selection proposals", () => {
@@ -79,14 +80,11 @@ describe("compiled keyed collections", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 360, height: 220},
-      styleSheets: [listCss, tableCss]
+      viewport: {width: 360, height: 220}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(list)?.width).toBe(300)
     expect(frame.boxByNode.get(row)?.height).toBe(24)
-    expect(listCss).not.toContain(".ui-")
-    expect(tableCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

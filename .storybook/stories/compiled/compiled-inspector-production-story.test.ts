@@ -1,8 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {describe, expect, test} from "bun:test"
 import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
-import {fieldCss} from "@ui/components/field"
-import {inspectorCss} from "@ui/components/inspector"
 import {createCompiledInspectorProductionStory} from "./compiled-inspector-production-story.tsx"
 
 describe("compiled Inspector production story", () => {
@@ -18,12 +16,11 @@ describe("compiled Inspector production story", () => {
     expect(owner.textContent).not.toContain("variant")
     const category = [...owner.querySelectorAll("nav button")].find(button => button.textContent === "P") as HTMLButtonElement
     expect(category.getAttribute("aria-pressed")).toBe("true")
-    expect(mounted.story.source.css).toContain(inspectorCss)
-    expect(mounted.story.source.css).toContain(fieldCss)
     expect(mounted.story.source.typescript).toContain("<Inspector")
     expect(mounted.story.source.typescript).toContain("<Field")
     expect(mounted.story.source.typescript).toContain("useState")
-    expect(mounted.story.source.typescript).toContain("inspectorCss")
+    expect(mounted.story.source.typescript).not.toContain("Css")
+    expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
     expect(mounted.story.props).toMatchObject({selectedCategoryId: "props"})
     expect(owner.textContent).not.toContain("HTML")
     expect(owner.textContent).not.toContain("CSS")

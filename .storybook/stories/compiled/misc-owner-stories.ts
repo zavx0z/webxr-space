@@ -1,26 +1,14 @@
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
-const miscCss = String.raw`
-.ui-owner-misc-story {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  width: 360px;
-  min-height: 160px;
-  gap: 8px;
-  padding: 16px;
-  overflow: auto;
-  border: 1px solid rgb(22, 22, 22);
-  background: rgb(48, 48, 48);
-  color: rgb(224, 224, 224);
-}
-`
+const emptyComponentRoot = Object.freeze({
+  readStyleSheets: () => Object.freeze({revision: 0, styleSheets: Object.freeze([])})
+})
 
 export function createScrollbarOwnerStory(document: Document): RoutedProductionComponentStory {
   const root = document.createElement("section")
   const content = document.createElement("div")
-  root.className = "ui-owner-misc-story"
+  root.setAttribute("style", "box-sizing:border-box;display:flex;flex-direction:column;width:360px;min-height:160px;gap:8px;padding:16px;overflow:auto;border:1px solid rgb(22 22 22);background:rgb(48 48 48);color:rgb(224 224 224)")
   root.setAttribute("data-story-component", "scrollbar")
   content.append("Scrollable owner content ".repeat(24))
   root.append(content)
@@ -29,7 +17,7 @@ export function createScrollbarOwnerStory(document: Document): RoutedProductionC
 
 export function createUnavailableOwnerStory(document: Document): RoutedProductionComponentStory {
   const root = document.createElement("section")
-  root.className = "ui-owner-misc-story"
+  root.setAttribute("style", "box-sizing:border-box;display:flex;flex-direction:column;width:360px;min-height:160px;gap:8px;padding:16px;overflow:auto;border:1px solid rgb(22 22 22);background:rgb(48 48 48);color:rgb(224 224 224)")
   root.setAttribute("data-story-component", "noti")
   root.append("Noti has no production export")
   return result(root, "Noti · unavailable", "// Documentation-only unavailable production owner")
@@ -42,10 +30,11 @@ function result(
 ): RoutedProductionComponentStory {
   const story = Object.freeze({
     element,
-    source: Object.freeze({html: serialize(element), css: miscCss, typescript: `${title}\n${typescript}`}),
+    componentRoot: emptyComponentRoot,
+    source: Object.freeze({html: serialize(element), typescript: `${title}\n${typescript}`}),
     dispose() {},
   })
-  return Object.freeze({story, css: miscCss})
+  return Object.freeze({story})
 }
 
 function serialize(element: Element, depth = 0): string {

@@ -1,7 +1,6 @@
 import {describe, expect, test} from "bun:test"
 import {
   Event,
-  createDocument,
   readDocumentCompiledStyleSheets,
   type HTMLButtonElement,
   type HTMLInputElement,
@@ -14,8 +13,9 @@ import {
 } from "@zavx0z/renderer"
 import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {PathInput, pathInputCss} from "./path-input.tsx"
-import {ReferenceInput, referenceInputCss} from "./reference-input.tsx"
+import {PathInput} from "./path-input.tsx"
+import {ReferenceInput} from "./reference-input.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production resource inputs", () => {
   test("composes PathInput from TextField and IconButton with stable events", () => {
@@ -71,8 +71,7 @@ describe("compiled production resource inputs", () => {
     const hiddenRenderer = createDocumentRenderer({
       document: mounted.document,
       root: mounted.host,
-      viewport: {width: 380, height: 80},
-      styleSheets: [pathInputCss]
+      viewport: {width: 380, height: 80}
     })
     expect(hiddenRenderer.flush().boxByNode.has(browse)).toBe(false)
     hiddenRenderer.dispose()
@@ -90,8 +89,7 @@ describe("compiled production resource inputs", () => {
       document: mounted.document,
       root: mounted.host,
       viewport: {width: 380, height: 80},
-      interactionState,
-      styleSheets: [pathInputCss]
+      interactionState
     })
     let frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 320, height: 28})
@@ -176,8 +174,7 @@ describe("compiled production resource inputs", () => {
     const hiddenRenderer = createDocumentRenderer({
       document: mounted.document,
       root: mounted.host,
-      viewport: {width: 320, height: 80},
-      styleSheets: [referenceInputCss]
+      viewport: {width: 320, height: 80}
     })
     const hiddenFrame = hiddenRenderer.flush()
     expect(hiddenFrame.boxByNode.has(updated[1]!)).toBe(true)
@@ -201,8 +198,7 @@ describe("compiled production resource inputs", () => {
     const renderer = createDocumentRenderer({
       document: mounted.document,
       root: mounted.host,
-      viewport: {width: 320, height: 80},
-      styleSheets: [referenceInputCss]
+      viewport: {width: 320, height: 80}
     })
     let frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 260, height: 28})
@@ -228,19 +224,16 @@ describe("compiled production resource inputs", () => {
   })
 
   test("keeps class-free native pseudo sheets and caller style last", () => {
-    expect(pathInputCss).not.toContain(".ui-")
-    expect(referenceInputCss).not.toContain(".ui-")
-
     const mounted = mount()
     mounted.root.render(PathInput as any, {
       value: "/out",
-      style: {width: 340, background: "#123456"}
+      style: "width: 340px; background: #123456"
     })
     const path = mounted.host.querySelector("div")!
     expect(path.getAttribute("style")).toBe("width: 340px; background: #123456")
     mounted.root.render(ReferenceInput as any, {
       value: null,
-      style: {width: 280, background: "#234567"}
+      style: "width: 280px; background: #234567"
     })
     const reference = mounted.host.querySelector("div")!
     expect(reference.getAttribute("style")).toBe("width: 280px; background: #234567")
@@ -248,8 +241,7 @@ describe("compiled production resource inputs", () => {
       .map(styleSheet => styleSheet.cssText)
       .join("\n")
     for (const pseudo of [":hover", ":active", ":focus", ":disabled"]) {
-      expect(`${pathInputCss}\n${adoptedCss}`).toContain(pseudo)
-      expect(`${referenceInputCss}\n${adoptedCss}`).toContain(pseudo)
+      expect(adoptedCss).toContain(pseudo)
     }
     mounted.root.unmount()
   })

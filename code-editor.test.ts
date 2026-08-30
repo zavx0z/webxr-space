@@ -1,9 +1,9 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {CodeEditor, codeEditorCss} from "./code-editor.tsx"
+import {CodeEditor} from "./code-editor.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production CodeEditor", () => {
   test("retains keyed line and token identities across source updates", () => {
@@ -38,8 +38,7 @@ describe("compiled production CodeEditor", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 640, height: 320},
-      styleSheets: [codeEditorCss]
+      viewport: {width: 640, height: 320}
     })
     const frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 520, height: 220})
@@ -51,7 +50,6 @@ describe("compiled production CodeEditor", () => {
     expect(owner.getAttribute("role")).toBe("region")
     expect(owner.getAttribute("aria-label")).toBe("Code editor")
     expect(owner.hasAttribute("aria-readonly")).toBe(false)
-    expect(codeEditorCss).not.toContain(".ui-")
     expect([...owner.querySelectorAll("*")].every(element => element.className === "")).toBe(true)
     renderer.dispose()
     root.unmount()
@@ -72,10 +70,10 @@ describe("compiled production CodeEditor", () => {
     const segments = [...line.querySelectorAll("span")]
     expect(segments.map(segment => segment.textContent)).toEqual(["  ", "token", "  "])
     expect(segments.map(segment => segment.getAttribute("data-token-category"))).toEqual(["plain", "k", "plain"])
-    expect(segments[0]!.getAttribute("style")).not.toContain("background")
+    expect(segments[0]!.getAttribute("style")).toContain("background: transparent")
     expect(segments[1]!.getAttribute("style")).toContain("background: #112233")
-    expect(segments[2]!.getAttribute("style")).not.toContain("background")
-    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 640, height: 320}, styleSheets: [codeEditorCss]})
+    expect(segments[2]!.getAttribute("style")).toContain("background: transparent")
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 640, height: 320}})
     const textItems = renderer.flush().displayList.filter(item => item.kind === "text")
     expect(textItems.some(item => item.kind === "text" && item.text.trim().length === 0)).toBe(false)
     expect(textItems.some(item => item.kind === "text" && item.text === "token")).toBe(true)

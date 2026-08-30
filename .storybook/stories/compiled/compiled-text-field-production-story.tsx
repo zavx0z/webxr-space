@@ -1,7 +1,6 @@
 /** Package-owned external Storybook story support. */
 import {
   TextField,
-  textFieldCss,
   type TextFieldProps
 } from "@ui/components/text-field"
 import {createRoot, useState} from "@zavx0z/react"
@@ -21,7 +20,6 @@ function TextFieldStoryComponent(props: Readonly<{initial: TextFieldProps}>) {
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={props.initial.onChange}
   />
@@ -44,10 +42,10 @@ export function createCompiledTextFieldProductionStory(
 
   const story = Object.freeze({
     element: input,
+    componentRoot: root,
     get source() {
       return Object.freeze({
         html: serialize(input),
-        css: textFieldCss,
         typescript: source(props, input.value)
       })
     },
@@ -55,12 +53,12 @@ export function createCompiledTextFieldProductionStory(
       root.unmount()
     }
   })
-  return Object.freeze({story, css: textFieldCss})
+  return Object.freeze({story})
 }
 
 function source(props: TextFieldProps, value: string): string {
   return [
-    'import {TextField, textFieldCss} from "@ui/components/text-field"',
+    'import {TextField} from "@ui/components/text-field"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -74,8 +72,7 @@ function source(props: TextFieldProps, value: string): string {
     "    onInput={setValue}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void textFieldCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

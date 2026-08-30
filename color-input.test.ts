@@ -1,9 +1,10 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {ColorInput, colorInputCss, type ColorInputValue} from "./color-input.tsx"
+import {ColorInput, type ColorInputValue} from "./color-input.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production ColorInput", () => {
   test("composes Button, TextField and SliderControl with retained channel identities", () => {
@@ -57,11 +58,9 @@ describe("compiled production ColorInput", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 340, height: 280},
-      styleSheets: [colorInputCss]
+      viewport: {width: 340, height: 280}
     })
     expect(renderer.flush().boxByNode.get(fieldset)?.width).toBe(280)
-    expect(colorInputCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

@@ -3,8 +3,10 @@ import {mkdtemp, rm} from "node:fs/promises"
 import {join, resolve} from "node:path"
 import {pathToFileURL} from "node:url"
 import {
+  acquireDocumentAuthorStyleSheetOwner,
   createDocument,
   readDocumentCompiledStyleSheets,
+  type DocumentAuthorStyleSheetOwner,
   type Event,
   type HTMLButtonElement
 } from "@zavx0z/dom"
@@ -25,10 +27,12 @@ import {
 const packageRoot = resolve(import.meta.dir)
 let outputDirectory = ""
 let compiled: CompiledButtonModule
+let productionThemeCss = ""
 const buttonTemplate = runtimeButton as unknown as CompiledTemplate<ButtonProps>
 const dedupTemplate = ButtonDedupFixture as unknown as CompiledTemplate<ButtonDedupFixtureProps>
 
 beforeAll(async () => {
+  productionThemeCss = await Bun.file(join(packageRoot, "theme.css")).text()
   outputDirectory = await mkdtemp(join(packageRoot, ".button-test-"))
   const result = await Bun.build({
     entrypoints: [join(packageRoot, "button.tsx")],
@@ -65,8 +69,15 @@ describe("compiled production Button", () => {
     const source = await Bun.file(join(packageRoot, "button.tsx")).text()
     expect(source).not.toContain("defineStyles")
     expect(source).not.toContain("buttonStyles")
-    expect(source).toContain("style={[")
-    expect(source).toContain('\":hover\"')
+    expect(source).toContain("style={css`")
+    expect(source).toContain("css`")
+    expect(source).toContain("&:hover")
+    expect(source).toContain("--widget-regular-background")
+    expect(source).not.toContain("--button-")
+    expect(source).not.toContain('import {css}')
+    expect(source).not.toContain("style={[")
+    expect(source).not.toContain("resolveWidgetColors")
+    expect(source).not.toContain("rgba8ToColor")
     expect(source).toContain("props.style")
   })
 
@@ -106,7 +117,7 @@ describe("compiled production Button", () => {
       label: "Render",
       endIcon: "data:image/svg+xml,end",
       selected: true,
-      style: {width: 96, background: "#123456", color: "#abcdef", fontSize: 17}
+      style: "width: 96px; background: #123456; color: #abcdef; font-size: 17px"
     })
     expect(mounted.host.querySelector("button")).toBe(button)
     expect(button.querySelector("span")).toBe(label)
@@ -229,6 +240,7 @@ describe("compiled production Button", () => {
 
   test("invalidates an existing renderer when Button adopts its compiled stylesheet", () => {
     const document = createDocument()
+    applyProductionTheme(document)
     const host = document.createElement("main")
     document.appendChild(host)
     const renderer = createDocumentRenderer({
@@ -249,6 +261,41 @@ describe("compiled production Button", () => {
 
     root.unmount()
     renderer.dispose()
+  })
+
+  test("updates shared non-color foundations through the linked author tier", () => {
+    const document = createDocument()
+    const theme = applyProductionTheme(document)
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(compiled.Button, {label: "Output"})
+    const button = host.querySelector("button") as HTMLButtonElement
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 180, height: 80}
+    })
+
+    const initial = renderer.flush()
+    expect(initial.boxByNode.get(button)?.height).toBe(22)
+    expect(initial.displayList.find(item => item.kind === "text" && item.text === "Output"))
+      .toMatchObject({fontSize: 11})
+
+    theme.replace([
+      {id: "@ui/components/theme.css", cssText: productionThemeCss},
+      {
+        id: "test-density-override",
+        cssText: ":root{--control-height-medium:26px;--font-size-xs:13px}"
+      }
+    ])
+    const changed = renderer.flush()
+    expect(changed.boxByNode.get(button)?.height).toBe(26)
+    expect(changed.displayList.find(item => item.kind === "text" && item.text === "Output"))
+      .toMatchObject({fontSize: 13})
+
+    renderer.dispose()
+    root.unmount()
   })
 
   test("deduplicates one compiled Button stylesheet across 1000 instances", () => {
@@ -278,9 +325,18 @@ function mount(): Readonly<{
   root: ComponentRoot
 }> {
   const document = createDocument()
+  applyProductionTheme(document)
   const host = document.createElement("main")
   document.appendChild(host)
   return {document, host, root: createRoot(host)}
+}
+
+function applyProductionTheme(
+  document: ReturnType<typeof createDocument>
+): DocumentAuthorStyleSheetOwner {
+  const owner = acquireDocumentAuthorStyleSheetOwner(document)
+  owner.replace([{id: "@ui/components/theme.css", cssText: productionThemeCss}])
+  return owner
 }
 
 function background(

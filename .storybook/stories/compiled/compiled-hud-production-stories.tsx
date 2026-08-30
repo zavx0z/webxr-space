@@ -3,7 +3,6 @@ import {
   HudFrame,
   HudWindow,
   Timeline,
-  hudCss,
   type HudFrameDefaultProps,
   type HudWindowDefaultProps,
   type TimelineProps
@@ -45,6 +44,7 @@ function TimelineStoryComponent(props: Readonly<{initial: TimelineProps}>) {
     current={current}
     playing={playing}
     tracks={props.initial.tracks}
+    style={css`& { width: 100%; max-width: 640px; }`}
     onPrevious={previous}
     onPlayingChange={setPlaying}
     onNext={next}
@@ -91,19 +91,20 @@ function mount(
   owner.setAttribute("data-story-component", name)
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
-      return Object.freeze({html: serialize(owner), css: hudCss, typescript})
+      return Object.freeze({html: serialize(owner), typescript})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css: hudCss})
+  return Object.freeze({story})
 }
 
 function hudFrameSource(props: HudFrameDefaultProps): string {
   return [
-    'import {HudFrame, hudCss} from "@ui/components/hud"',
+    'import {HudFrame} from "@ui/components/hud"',
     'import {Pane} from "@ui/components/pane"',
     'import {createRoot} from "@zavx0z/react"',
     "",
@@ -114,14 +115,13 @@ function hudFrameSource(props: HudFrameDefaultProps): string {
     "  handles={props.handles}",
     ">",
     '  <Pane content="Body" />',
-    "</HudFrame>)",
-    "void hudCss"
+    "</HudFrame>)"
   ].join("\n")
 }
 
 function hudWindowSource(props: HudWindowDefaultProps): string {
   return [
-    'import {HudWindow, hudCss} from "@ui/components/hud"',
+    'import {HudWindow} from "@ui/components/hud"',
     'import {Pane} from "@ui/components/pane"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
@@ -140,14 +140,13 @@ function hudWindowSource(props: HudWindowDefaultProps): string {
     '    <Pane content="Body" />',
     "  </HudWindow>",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void hudCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function timelineSource(props: TimelineProps): string {
   return [
-    'import {Timeline, hudCss} from "@ui/components/hud"',
+    'import {Timeline} from "@ui/components/hud"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     `const props = ${literal(props)} as const`,
@@ -162,13 +161,13 @@ function timelineSource(props: TimelineProps): string {
     "    current={current}",
     "    playing={playing}",
     "    tracks={props.tracks}",
+    "    style={css`& { width: 100%; max-width: 640px; }`}",
     "    onPrevious={() => setCurrent(value => Math.max(props.min, value - 1))}",
     "    onPlayingChange={setPlaying}",
     "    onNext={() => setCurrent(value => Math.min(props.max, value + 1))}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void hudCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

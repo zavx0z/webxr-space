@@ -1,10 +1,9 @@
 /** Package-owned external Storybook story support. */
-import {Badge, badgeCss, type BadgeProps} from "@ui/components/badge"
-import {Divider, dividerCss, type DividerProps} from "@ui/components/divider"
-import {Pane, paneCss, type PaneProps} from "@ui/components/pane"
+import {Badge, type BadgeProps} from "@ui/components/badge"
+import {Divider, type DividerProps} from "@ui/components/divider"
+import {Pane, type PaneProps} from "@ui/components/pane"
 import {
   Typography,
-  typographyCss,
   type TypographyProps
 } from "@ui/components/typography"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
@@ -15,14 +14,14 @@ export function createCompiledPaneProductionStory(
   document: Document,
   props: PaneProps
 ): RoutedProductionComponentStory {
-  return mountCompiledStory(document, Pane, props, "pane", paneCss, paneSource(props))
+  return mountCompiledStory(document, Pane, props, "pane", paneSource(props))
 }
 
 export function createCompiledBadgeProductionStory(
   document: Document,
   props: BadgeProps
 ): RoutedProductionComponentStory {
-  return mountCompiledStory(document, Badge, props, "badge", badgeCss, badgeSource(props))
+  return mountCompiledStory(document, Badge, props, "badge", badgeSource(props))
 }
 
 export function createCompiledTypographyProductionStory(
@@ -34,7 +33,6 @@ export function createCompiledTypographyProductionStory(
     Typography,
     props,
     "typography",
-    typographyCss,
     typographySource(props)
   )
 }
@@ -48,7 +46,6 @@ export function createCompiledDividerProductionStory(
     Divider,
     props,
     "divider",
-    dividerCss,
     dividerSource(props)
   )
 }
@@ -58,7 +55,6 @@ function mountCompiledStory(
   component: unknown,
   props: unknown,
   name: string,
-  css: string,
   typescript: string
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -73,20 +69,20 @@ function mountCompiledStory(
   owner.setAttribute("data-story-component", name)
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
-      return Object.freeze({html: serialize(owner), css, typescript})
+      return Object.freeze({html: serialize(owner), typescript})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function paneSource(props: PaneProps): string {
   return componentSource(
     "Pane",
-    "paneCss",
     "pane",
     props,
     [
@@ -101,7 +97,6 @@ function paneSource(props: PaneProps): string {
 function badgeSource(props: BadgeProps): string {
   return componentSource(
     "Badge",
-    "badgeCss",
     "badge",
     props,
     ["  label={props.label}", "  tone={props.tone}", "  title={props.title}"]
@@ -111,7 +106,6 @@ function badgeSource(props: BadgeProps): string {
 function typographySource(props: TypographyProps): string {
   return componentSource(
     "Typography",
-    "typographyCss",
     "typography",
     props,
     ["  text={props.text}", "  variant={props.variant}", "  title={props.title}"]
@@ -121,7 +115,6 @@ function typographySource(props: TypographyProps): string {
 function dividerSource(props: DividerProps): string {
   return componentSource(
     "Divider",
-    "dividerCss",
     "divider",
     props,
     ["  variant={props.variant}", "  title={props.title}"]
@@ -130,20 +123,18 @@ function dividerSource(props: DividerProps): string {
 
 function componentSource(
   component: string,
-  cssName: string,
   subpath: string,
   props: unknown,
   jsxProps: readonly string[]
 ): string {
   return [
-    `import {${component}, ${cssName}} from "@ui/components/${subpath}"`,
+    `import {${component}} from "@ui/components/${subpath}"`,
     'import {createRoot} from "@zavx0z/react"',
     "",
     `const props = ${literal(props)} as const`,
     `createRoot(container).render(<${component}`,
     ...jsxProps,
-    "/>)",
-    `void ${cssName}`
+    "/>)"
   ].join("\n")
 }
 

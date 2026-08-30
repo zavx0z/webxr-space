@@ -1,5 +1,5 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLButtonElement} from "@zavx0z/dom"
+import {Event, type HTMLButtonElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
@@ -7,10 +7,10 @@ import {
   HudFrame,
   HudWindow,
   Timeline,
-  hudCss,
   timelineDefaultProps
 } from "./hud.tsx"
 import {HudFrameFixture, HudWindowFixture} from "./hud-consumer-fixture.tsx"
+import {createDocument} from "./test-document.ts"
 
 describe("compiled production HUD compositions", () => {
   test("HudWindow retains keyed actions and authored Pane body while minimizing", () => {
@@ -30,7 +30,7 @@ describe("compiled production HUD compositions", () => {
     const bodyPane = owner.querySelector("section section")!
     const pin = [...owner.querySelectorAll("button")].find(button => button.textContent === "Pin")!
     const minimize = [...owner.querySelectorAll("button")].find(button => button.getAttribute("title") === "Minimize") as HTMLButtonElement
-    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 800, height: 400}, styleSheets: [hudCss]})
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 800, height: 400}})
     const frame = renderer.flush()
     const headerBox = frame.boxByNode.get(header)!
     expect(headerChildren.every(child => {
@@ -80,8 +80,7 @@ describe("compiled production HUD compositions", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 360, height: 200},
-      styleSheets: [hudCss]
+      viewport: {width: 360, height: 200}
     })
     expect(renderer.flush().boxByNode.get(edge)?.width).toBe(1)
     renderer.dispose()
@@ -101,8 +100,7 @@ describe("compiled production HUD compositions", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 720, height: 240},
-      styleSheets: [hudCss]
+      viewport: {width: 720, height: 240}
     })
     const currentButton = current.querySelector("button")!
     const beforeX = renderer.flush().boxByNode.get(currentButton)!.x
@@ -134,11 +132,9 @@ describe("compiled production HUD compositions", () => {
     const renderer = createDocumentRenderer({
       document,
       root: host,
-      viewport: {width: 720, height: 240},
-      styleSheets: [hudCss]
+      viewport: {width: 720, height: 240}
     })
     expect(renderer.flush().boxByNode.get(owner)?.width).toBe(640)
-    expect(hudCss).not.toContain(".ui-")
     renderer.dispose()
     root.unmount()
   })

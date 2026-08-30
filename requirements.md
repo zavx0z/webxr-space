@@ -25,21 +25,42 @@ typecheck, unit tests и non-black canvas не являются visual acceptanc
 Reference является provenance, а не public vocabulary: package names,
 TypeScript identifiers, CSS classes и user-facing labels остаются нейтральными.
 
-## `UI-DOM-THEME-001` — source-backed theme и material states
+## `UI-DOM-THEME-001` — linked CSS theme и material states
 
-`@ui/components/theme` владеет immutable `UiTheme`, `WidgetClass`,
-`WidgetState`, `Rgba8`, `rgba8ToColor` и pure `resolveWidgetColors`. Theme
-разделяет raw roles для regular/text/number/number-slider/option/toggle/tool/
-toolbar-item/tab/menu/menu-back/menu-item/box/list-item/scroll и material roles
-для widget emboss, menu shadow, editor border/outline, checker и status bar.
-Widget class нельзя схлопывать в один generic background/hover law.
+`@ui/components/theme.css` — обычный production CSS resource. Он загружается
+application shell стандартным `<link rel="stylesheet">` один раз на Experience,
+а browser host переносит этот exact native sheet в тот же semantic `Document`.
+Компоненты не читают `getComputedStyle`, не сканируют native document и не
+регистрируют тему при каждом mount.
 
-Resolver детерминированно применяет class-specific hover, pressed, selected,
-active-default и disabled transitions. Production CSS получает цвета из этого
-owner и сохраняет один logical-pixel widget emboss у standalone filled control;
-joined `ControlGroup` владеет одним outer contour и не создаёт emboss islands
-на middle cells. Exact visual owner хранит собственный radius: совпадающие
-числа не образуют глобальный radius token.
+Первый foundation slice является bounded Tailwind-like vocabulary, а не полной
+копией Tailwind: raw channel scales `primary`, `surface`, `info`, `success`,
+`warning` и `error`; spacing/radius/typography/border/control-height scales;
+затем concrete semantic widget/material/space/status roles. Неиспользуемые
+color stops не интерполируются и не выдумываются. Имена не имеют redundant
+`ui` prefix.
+
+Cascade chain точный и наблюдаемый:
+
+```text
+foundation scales → concrete theme semantic roles
+                  → component CSS properties
+```
+
+Static production properties ссылаются на semantic roles напрямую и поэтому
+переиспользуют один inherited custom-property environment. Component-local
+custom property допустим только как реальный per-instance/dynamic bridge, а не
+как alias каждого global token. Замена linked theme меняет все экземпляры через
+обычные inheritance/cascade и не создаёт instance-specific rules.
+
+Production Components не импортируют runtime `uiTheme`,
+`resolveWidgetColors`, `rgba8ToColor` или `widgetCssVariables`. TypeScript
+`@ui/components/theme` отсутствует. Переход не схлопывает разные widget roles
+в один generic hover law и не меняет exact owner pixels/states. Standalone
+filled control сохраняет один logical-pixel widget emboss; joined
+`ControlGroup` владеет одним outer contour и не создаёт emboss islands на
+middle cells. Exact visual owner хранит собственный radius, если роль ещё не
+принята как общая foundation metric.
 
 Document renderer исполняет native pseudo-state cascade. Production Components
 используют `:hover`, `:active`, `:focus`, `:focus-within`, `:disabled`,
@@ -78,12 +99,13 @@ Document renderer исполняет native pseudo-state cascade. Production Com
 - `@ui/components/hud`
 - `@ui/components/icons`
 - `@ui/components/syntax-theme`
-- `@ui/components/theme`
+- `@ui/components/theme.css`
 
 Root barrel, `./dom/*`, story exports и compatibility subpath aliases
-отсутствуют. Каждый public subpath указывает прямо на единственный natural
-physical `*.tsx` owner. Параллельных `.ts` controller implementations,
-`*-component.tsx` aliases и `createX` re-exports нет.
+отсутствуют. Component subpaths указывают прямо на единственный natural
+physical `*.tsx` owner; `icons` и `syntax-theme` являются exact data owners, а
+`theme.css` — единственным global theme resource. Параллельных `.ts` controller
+implementations, `*-component.tsx` aliases и `createX` re-exports нет.
 
 Общий minified browser proof всех финальных owners должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
@@ -107,19 +129,32 @@ Platform inheritance остаётся в `@zavx0z/dom`:
 Один flat CSS document владеет flow, Flex, dimensions, spacing, overflow,
 states и advisory presentation. Component не вычисляет sibling coordinates,
 display lists, hit geometry или GPU resources. Public Components expose one
-`style`, never `sx` or `className`: owner defaults объявляются прямо в intrinsic
-`style`, а caller declaration применяется последней. Static declarations,
-supported native pseudos и conditional static fragments compile-time
-извлекаются Template в scoped stylesheet metadata; React/Document/Renderer
-регистрируют его один раз на exact Document без DOM scanning и consumer
-`styleSheets` wiring. Props/state-dependent ordinary declarations остаются
-addressed inline bindings. Inherited CSS values идут по реальной semantic
-ancestor chain; Component не сливает их вручную с потомками. Authored JSX
-contains no BEM/state classes. Native `:hover`, `:active`, `:focus`,
+`style`, never `sx` or `className`. Author-facing style является только
+настоящим `css\`\`` с kebab-case CSS; camelCase object, `CSSProperties`,
+`StyleValue` object и style-array API запрещены. Compile-time `css` tag
+предоставляется configured `jsxImportSource`; каждый owner не повторяет import
+и никакого `globalThis.css` runtime не существует.
+
+Owner объявляет один top-level `style={css\`...\`}`. Component variants и
+semantic state сначала отражаются real DOM attributes (`data-variant`,
+`data-tone`, `data-size`, ARIA, `disabled`, `checked`, `hidden`, `readonly`), а
+CSS использует scoped `&[attribute="value"]` selectors. JS conditional style
+fragment не дублирует состояние, уже представленное в DOM. Caller
+`${props.style}` идёт последним в том же template, а genuinely dynamic
+declaration values используют обычные CSS template interpolation. Static
+declarations, attribute selectors и supported native pseudos compile-time
+извлекаются Template в scoped stylesheet
+metadata; base-only caller CSS понижается через component boundary без runtime
+CSS parser. React/Document/Renderer регистрируют sheet один раз на exact
+Document без DOM scanning и consumer `styleSheets` wiring. Inherited CSS values
+идут по реальной semantic ancestor chain; Component не сливает их вручную с
+потомками. Authored JSX contains no BEM/state classes. Native `:hover`, `:active`, `:focus`,
 `:focus-within`, `:disabled`, `:checked` and `:indeterminate` are resolved by
 the document renderer instead of a `data-ui-state` bridge. Новые owners не
 публикуют author-facing `defineStyles`, `StyleToken`, `*Styles` или
-содержательный `*Css` transport export.
+содержательный `*Css` transport export. Production owners не используют
+`defineStyles`: exact CSS объявляется `css\`\`` непосредственно у intrinsic
+owner и переносится Template compiler в compiled metadata.
 
 ## Controls and events
 
@@ -157,7 +192,9 @@ Controlled callback сообщает proposed value owner-у, а live editing st
   highlighter projection.
 - `hud` владеет Window, Frame и Timeline compositions; отдельного
   `@ui/hud` package нет.
-- `icons` владеет immutable image URLs.
+- `icons` владеет immutable image URLs. Public `uiIcons` остаётся полным
+  aggregate catalog, но production Components импортируют нужные named assets
+  из package-private tree-shakeable owner; один control не удерживает все SVG.
 - `syntax-theme` владеет source-backed scope color resolver.
 
 Detailed component and catalog laws остаются executable в natural owner tests
@@ -188,10 +225,13 @@ expressions. Static pseudos и finite variant/size/tone/selected fragments
 тысячу copies правил. `buttonCss`, `buttonStyles` и ручной stylesheet transport
 не являются частью production Button API.
 
-Props/state-dependent pseudo values remain a platform gap. The eventual API is
-still the same public `style`: compiler emits one static pseudo using `var(--z-*)`
-and binds only the per-instance custom property inline. Components must not
-create instance-specific CSS rules or replace native pseudo states with JS.
+Props/state-dependent pseudo values используют тот же public `style`: author
+explicitly names a custom property в base declaration, compiler emits one
+static pseudo using `var(--name)`, а per-instance value остаётся inline.
+Compiler-generated hidden custom-property names запрещены. Static selected и
+variant rules остаются conditional compiled chunks и не создают custom-property
+environment без необходимости. Components не создают instance-specific CSS
+rules и не заменяют native pseudo states JavaScript-ом.
 
 ## `UI-COMPILED-TEXT-FIELD-001` — controlled native text owner
 
@@ -372,6 +412,6 @@ subpaths: `@zavx0z/dom`, `@zavx0z/react`, `@zavx0z/template` and
    canvas evidence.
 5. Repository and bundle scans contain no retained Surface/Layout/Elements/HUD
    implementation or compatibility path.
-6. Theme resolver, compact geometry and every public control state have focused
-   tests; current Blender 5.2 visual evidence remains candidate until explicit
-   owner acceptance.
+6. Linked `theme.css`, its foundation → semantic → local-role chain, compact
+   geometry and every public control state have focused tests; current Blender
+   5.2 visual evidence remains candidate until explicit owner acceptance.

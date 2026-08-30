@@ -24,13 +24,13 @@ describe("compiled foundation production stories", () => {
       "span",
       "hr",
     ])
-    for (const {story, css} of stories) {
+    for (const {story} of stories) {
       expect(story.element.className).toBe("")
       expect(story.source.html).not.toContain('class="')
       expect(story.source.typescript).toContain("createRoot")
-      expect(story.source.typescript).toContain("Css")
+      expect(story.source.typescript).not.toContain("Css")
       expect(story.source.typescript).not.toContain("useState")
-      expect(story.source.css).toBe(css)
+      expect(story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
       story.dispose()
     }
   })

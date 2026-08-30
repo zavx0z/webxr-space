@@ -1,6 +1,4 @@
 import type {Event, HTMLInputElement} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {resolveWidgetColors, rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type TextFieldType = "text" | "number" | "search" | "password" | "email" | "url"
 
@@ -15,37 +13,10 @@ export type TextFieldProps = Readonly<{
   readOnly?: boolean | undefined
   title?: string | undefined
   "aria-label"?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onInput?: ((value: string, event: Event) => void) | undefined
   onChange?: ((value: string, event: Event) => void) | undefined
 }>
-
-const colors = resolveWidgetColors("text")
-
-export const textFieldStyles = defineStyles("@ui/components/text-field", {
-  root: {
-    boxSizing: "border-box",
-    display: "block",
-    minWidth: 0,
-    width: 160,
-    height: 22,
-    padding: "2px 6px",
-    border: `1px solid ${rgba8ToColor(colors.outline)}`,
-    borderRadius: 3,
-    background: rgba8ToColor(colors.inner),
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    color: rgba8ToColor(colors.text),
-    fontSize: 11,
-    lineHeight: 1,
-    overflow: "clip",
-    ":hover": {borderColor: "rgb(89 89 89)"},
-    ":focus": {borderColor: "rgb(113 168 255)"},
-    ":disabled": {opacity: 0.5, boxShadow: "none"}
-  },
-  readOnly: {background: "rgb(40 40 40)", color: "rgb(153 153 153)"}
-})
-
-export const textFieldCss = textFieldStyles.cssText
 
 export function TextField(props: TextFieldProps) {
   const onInput = (event: Event) => props.onInput?.(
@@ -69,10 +40,34 @@ export function TextField(props: TextFieldProps) {
     aria-label={props["aria-label"]}
     onInput={onInput}
     onChange={onChange}
-    style={[
-      textFieldStyles.root,
-      props.readOnly === true && textFieldStyles.readOnly,
-      props.style
-    ]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: block;
+          min-width: 0;
+          width: 160px;
+          height: var(--control-height-medium);
+          padding: 2px 6px;
+          border: var(--border-width-control) solid var(--text-field-outline, var(--widget-text-outline));
+          border-radius: 3px;
+          background: var(--text-field-background, var(--widget-text-background));
+          box-shadow: var(--text-field-shadow, 0 1px 0 var(--material-widget-emboss));
+          color: var(--text-field-content, var(--widget-text-content));
+          font-size: var(--font-size-xs);
+          line-height: var(--line-height-control);
+          overflow: clip;
+        }
+        &:hover { border-color: var(--text-field-hover-outline, var(--widget-text-outline-hover)); }
+        &:focus {
+          border-color: var(--text-field-focus-outline, var(--widget-focus-outline));
+          background: var(--text-field-focus-background, var(--text-field-background, var(--widget-text-background)));
+        }
+        &:disabled { opacity: 0.5; box-shadow: none; }
+        &[readonly] {
+          background: var(--widget-text-background-readonly);
+          color: var(--widget-text-content-readonly);
+        }
+        ${props.style}
+      `}
   />
 }

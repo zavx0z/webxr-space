@@ -1,12 +1,12 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {Badge, badgeCss} from "./badge.tsx"
-import {Divider, dividerCss} from "./divider.tsx"
-import {Pane, paneCss} from "./pane.tsx"
-import {Typography, typographyCss} from "./typography.tsx"
+import {Badge} from "./badge.tsx"
+import {Divider} from "./divider.tsx"
+import {Pane} from "./pane.tsx"
+import {createDocument} from "./test-document.ts"
+import {Typography} from "./typography.tsx"
 import {PaneComposition} from "./pane-children-consumer-fixture.tsx"
 
 describe("compiled production visual primitives", () => {
@@ -18,7 +18,7 @@ describe("compiled production visual primitives", () => {
       variant: "filled",
       active: true,
       title: "Panel",
-      style: {padding: 10, background: "#123456"}
+      style: "padding: 10px; background: #123456"
     })
     const pane = mounted.host.querySelector("section") as import("@zavx0z/dom").HTMLElement
     const text = pane.firstChild
@@ -56,7 +56,7 @@ describe("compiled production visual primitives", () => {
       label: "Ready",
       tone: "success",
       title: "Status",
-      style: {padding: "1px 5px", background: "#234567"}
+      style: "padding: 1px 5px; background: #234567"
     })
     const badge = mounted.host.querySelector("span") as import("@zavx0z/dom").HTMLSpanElement
     const text = badge.firstChild
@@ -79,7 +79,7 @@ describe("compiled production visual primitives", () => {
     mounted.root.render(Typography as any, {
       text: "Heading",
       variant: "title",
-      style: {fontSize: 17, color: "#abcdef"}
+      style: "font-size: 17px; color: #abcdef"
     })
     const typography = mounted.host.querySelector("span") as import("@zavx0z/dom").HTMLSpanElement
     const text = typography.firstChild
@@ -104,8 +104,7 @@ describe("compiled production visual primitives", () => {
     const renderer = createDocumentRenderer({
       document: mounted.document,
       root: mounted.host,
-      viewport: {width: 200, height: 60},
-      styleSheets: [dividerCss]
+      viewport: {width: 200, height: 60}
     })
     expect(renderer.flush().boxByNode.get(divider)).toMatchObject({
       height: 1,
@@ -115,7 +114,7 @@ describe("compiled production visual primitives", () => {
 
     mounted.root.render(Divider as any, {
       variant: "middle",
-      style: {width: "50%", marginLeft: 8}
+      style: "width: 50%; margin-left: 8px"
     })
     expect(mounted.host.querySelector("hr")).toBe(divider)
     expect(divider.getAttribute("style")).toBe("width: 50%; margin-left: 8px")
@@ -123,19 +122,20 @@ describe("compiled production visual primitives", () => {
   })
 
   test("publishes only class-free owner geometry", () => {
-    for (const css of [
-      paneCss,
-      badgeCss,
-      typographyCss,
-      dividerCss
-    ]) expect(css).not.toContain(".ui-")
+    const paneCss = compiledCss(Pane)
+    const badgeCss = compiledCss(Badge)
+    const typographyCss = compiledCss(Typography)
+    const dividerCss = compiledCss(Divider)
+    for (const ownerCss of [paneCss, badgeCss, typographyCss, dividerCss]) {
+      expect(ownerCss).not.toContain(".ui-")
+    }
 
     expect(paneCss).toContain("padding:8px")
     expect(paneCss).toContain("border-radius:4px")
     expect(badgeCss).toContain("min-height:20px")
     expect(badgeCss).toContain("padding:2px 6px")
-    expect(typographyCss).toContain("font-size:15px")
-    expect(typographyCss).toContain("font-size:11px")
+    expect(typographyCss).toContain("font-size:var(--font-size-lg)")
+    expect(typographyCss).toContain("font-size:var(--font-size-xs)")
     expect(dividerCss).toContain("height:1px")
     expect(dividerCss).toContain("width:96%")
     expect(dividerCss).toContain("width:90%")
@@ -151,4 +151,8 @@ function mount(): Readonly<{
   const host = document.createElement("main")
   document.appendChild(host)
   return {document, host, root: createRoot(host)}
+}
+
+function compiledCss(component: unknown): string {
+  return (component as any).styleSheets.map((sheet: any) => sheet.cssText).join("\n")
 }

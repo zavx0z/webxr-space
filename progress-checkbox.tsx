@@ -1,12 +1,9 @@
 import {
   Checkbox,
-  checkboxCss,
   type CheckboxProps
 } from "./checkbox.tsx"
 
 export type ProgressCheckboxProps = CheckboxProps
-
-export const progressCheckboxCss = checkboxCss
 
 export function ProgressCheckbox(props: ProgressCheckboxProps) {
   return <Checkbox

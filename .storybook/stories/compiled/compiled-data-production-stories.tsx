@@ -1,20 +1,18 @@
 /** Package-owned external Storybook story support. */
 import {
   CollectionInput,
-  collectionInputCss,
   type CollectionInputItem,
   type CollectionInputMoveDirection,
   type CollectionInputProps
 } from "@ui/components/collection-input"
 import {
   ColorInput,
-  colorInputCss,
   type ColorInputPresentation,
   type ColorInputProps,
   type ColorInputValue
 } from "@ui/components/color-input"
-import {List, listCss, type ListProps} from "@ui/components/list"
-import {Table, tableCss, type TableProps} from "@ui/components/table"
+import {List, type ListProps} from "@ui/components/list"
+import {Table, type TableProps} from "@ui/components/table"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -48,7 +46,6 @@ function ColorInputStoryComponent(props: Readonly<{initial: ColorInputProps}>) {
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    style={props.initial.style}
     onInput={onInput}
     onChange={onChange}
     onOpenChange={onOpenChange}
@@ -96,7 +93,6 @@ function CollectionInputStoryComponent(props: Readonly<{initial: CollectionInput
     readOnly={props.initial.readOnly}
     density={props.initial.density}
     title={props.initial.title}
-    style={props.initial.style}
     onSelect={onSelect}
     onAdd={onAdd}
     onRemove={onRemove}
@@ -118,7 +114,6 @@ function ListStoryComponent(props: Readonly<{initial: ListProps}>) {
     variant={props.initial.variant}
     emptyLabel={props.initial.emptyLabel}
     title={props.initial.title}
-    style={props.initial.style}
     onSelect={onSelect}
   />
 }
@@ -135,7 +130,6 @@ function TableStoryComponent(props: Readonly<{initial: TableProps}>) {
     selectedKey={selectedKey}
     disabled={props.initial.disabled}
     title={props.initial.title}
-    style={props.initial.style}
     onRowActivate={onRowActivate}
   />
 }
@@ -149,7 +143,6 @@ export function createCompiledColorInputProductionStory(
     ColorInputStoryComponent,
     {initial: props},
     "color-input",
-    colorInputCss,
     colorSource(props)
   )
 }
@@ -163,7 +156,6 @@ export function createCompiledCollectionInputProductionStory(
     CollectionInputStoryComponent,
     {initial: props},
     "collection-input",
-    collectionInputCss,
     collectionSource(props)
   )
 }
@@ -177,7 +169,6 @@ export function createCompiledListProductionStory(
     ListStoryComponent,
     {initial: props},
     "list",
-    listCss,
     listSource(props)
   )
 }
@@ -191,7 +182,6 @@ export function createCompiledTableProductionStory(
     TableStoryComponent,
     {initial: props},
     "table",
-    tableCss,
     tableSource(props)
   )
 }
@@ -215,7 +205,6 @@ function mountCompiledStory(
   component: unknown,
   props: unknown,
   name: string,
-  css: string,
   typescript: string
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -230,19 +219,20 @@ function mountCompiledStory(
   owner.setAttribute("data-story-component", name)
   const story = Object.freeze({
     element: owner,
+    componentRoot: root,
     get source() {
-      return Object.freeze({html: serialize(owner), css, typescript})
+      return Object.freeze({html: serialize(owner), typescript})
     },
     dispose() {
       root.unmount()
     }
   })
-  return Object.freeze({story, css})
+  return Object.freeze({story})
 }
 
 function colorSource(props: ColorInputProps): string {
   return [
-    'import {ColorInput, colorInputCss, type ColorInputPresentation, type ColorInputValue} from "@ui/components/color-input"',
+    'import {ColorInput, type ColorInputPresentation, type ColorInputValue} from "@ui/components/color-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -254,14 +244,13 @@ function colorSource(props: ColorInputProps): string {
     "    onOpenChange={open => setState(current => ({...current, presentation: open ? \"open\" : \"closed\"}))}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void colorInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function collectionSource(props: CollectionInputProps): string {
   return [
-    'import {CollectionInput, collectionInputCss, type CollectionInputItem} from "@ui/components/collection-input"',
+    'import {CollectionInput, type CollectionInputItem} from "@ui/components/collection-input"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -272,28 +261,26 @@ function collectionSource(props: CollectionInputProps): string {
     "    onSelect={selectedId => setState(current => ({...current, selectedId}))}",
     "  />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void collectionInputCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function listSource(props: ListProps): string {
   return [
-    'import {List, listCss} from "@ui/components/list"',
+    'import {List} from "@ui/components/list"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [selectedKey, setSelectedKey] = useState<string | null>(${literal(props.selectedKey ?? null)})`,
     `  return <List items={${literal(props.items)}} selectedKey={selectedKey} onSelect={setSelectedKey} />`,
     "}",
-    "createRoot(container).render(<Story />)",
-    "void listCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
 function tableSource(props: TableProps): string {
   return [
-    'import {Table, tableCss} from "@ui/components/table"',
+    'import {Table} from "@ui/components/table"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -302,8 +289,7 @@ function tableSource(props: TableProps): string {
     `  const rows = ${literal(props.rows)}`,
     "  return <Table columns={columns} rows={rows} selectedKey={selectedKey} onRowActivate={setSelectedKey} />",
     "}",
-    "createRoot(container).render(<Story />)",
-    "void tableCss"
+    "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 

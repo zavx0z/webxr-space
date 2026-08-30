@@ -1,44 +1,12 @@
 import type {Event} from "@zavx0z/dom"
-import {defineStyles, type StyleValue} from "@zavx0z/react"
-import {rgba8ToColor, uiTheme} from "./theme.ts"
 
 export type SwitcherProps = Readonly<{
   checked: boolean
   disabled?: boolean | undefined
   title?: string | undefined
-  style?: StyleValue
+  style?: CssStyle | undefined
   onChange?: ((checked: boolean, event: Event) => void) | undefined
 }>
-
-export const switcherStyles = defineStyles("@ui/components/switcher", {
-  root: {
-    boxSizing: "border-box",
-    display: "flex",
-    alignItems: "center",
-    width: 32,
-    height: 18,
-    padding: 2,
-    border: "1px solid rgb(61 61 61)",
-    borderRadius: 4,
-    background: "rgb(84 84 84)",
-    boxShadow: `0 1px 0 ${rgba8ToColor(uiTheme.material.widgetEmboss)}`,
-    overflow: "clip",
-    ":hover": {borderColor: "rgb(101 101 101)"},
-    ":focus": {borderColor: "rgb(113 168 255)"},
-    ":disabled": {opacity: 0.5, boxShadow: "none"}
-  },
-  checked: {background: "rgb(71 114 179)"},
-  thumb: {
-    display: "block",
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    background: "rgb(230 230 230)"
-  },
-  thumbChecked: {transform: "translateX(14px)"}
-})
-
-export const switcherCss = switcherStyles.cssText
 
 export function Switcher(props: SwitcherProps) {
   const onClick = (event: Event) => props.onChange?.(!props.checked, event)
@@ -49,15 +17,36 @@ export function Switcher(props: SwitcherProps) {
     disabled={props.disabled === true}
     title={props.title}
     onClick={onClick}
-    style={[
-      switcherStyles.root,
-      props.checked && switcherStyles.checked,
-      props.style
-    ]}
+    style={css`
+        & {
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          width: 32px;
+          height: 18px;
+          padding: 2px;
+          border: var(--border-width-control) solid var(--widget-regular-outline);
+          border-radius: 4px;
+          background: var(--widget-regular-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          overflow: clip;
+        }
+        &:hover { border-color: var(--widget-hover-outline); }
+        &:focus { border-color: var(--widget-focus-outline); }
+        &:disabled { opacity: 0.5; box-shadow: none; }
+        &[aria-checked="true"] { background: var(--widget-regular-background-selected); }
+        ${props.style}
+      `}
   >
-    <span style={[
-      switcherStyles.thumb,
-      props.checked && switcherStyles.thumbChecked
-    ]}></span>
+    <span data-checked={props.checked ? "true" : undefined} style={css`
+        & {
+          display: block;
+          width: 12px;
+          height: 12px;
+          border-radius: 6px;
+          background: var(--widget-regular-content);
+        }
+        &[data-checked="true"] { transform: translateX(14px); }
+      `}></span>
   </button>
 }

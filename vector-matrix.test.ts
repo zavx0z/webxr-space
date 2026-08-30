@@ -1,9 +1,10 @@
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLInputElement} from "@zavx0z/dom"
+import {Event, type HTMLInputElement} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {MatrixInput, matrixInputCss} from "./matrix-input.tsx"
-import {VectorInput, vectorInputCss} from "./vector-input.tsx"
+import {MatrixInput} from "./matrix-input.tsx"
+import {createDocument} from "./test-document.ts"
+import {VectorInput} from "./vector-input.tsx"
 
 describe("compiled vector and matrix compositions", () => {
   test("VectorInput is a ControlGroup composition with stable axis cells", () => {
@@ -28,7 +29,6 @@ describe("compiled vector and matrix compositions", () => {
     expect(x.querySelector("input")).toBe(input)
     expect(input.value).toBe("4")
     expect(host.querySelectorAll("label")).toHaveLength(3)
-    expect(vectorInputCss).not.toContain(".ui-")
     root.unmount()
   })
 
@@ -57,7 +57,6 @@ describe("compiled vector and matrix compositions", () => {
     expect(nextRows[0]).toBe(row0)
     expect(nextRows[0]!.querySelector('[data-control-key="0"]')).toBe(cell00)
     expect(input00.value).toBe("8")
-    expect(matrixInputCss).not.toContain(".ui-")
     root.unmount()
   })
 })
