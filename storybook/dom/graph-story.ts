@@ -7,9 +7,9 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createGraphCanvas,
-  graphCanvasCss,
   graphCanvasDefaultProps,
   type GraphCanvasController,
   type GraphCanvasFrameRefs,
@@ -26,6 +26,7 @@ export type GraphStorySelection = Readonly<{
 
 export type GraphStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   refs: GraphCanvasRefs
   props: GraphCanvasProps
   selection: GraphStorySelection
@@ -67,6 +68,7 @@ export function createGraphStory(
   initialProps: GraphCanvasProps = graphStoryDefaultProps,
 ): GraphStory {
   const controller = createGraphCanvas(document, initialProps)
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
 
   const update = (props: GraphCanvasProps): void => {
@@ -99,6 +101,7 @@ export function createGraphStory(
 
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     refs: controller.refs,
     get props() { return controller.props },
     get selection() { return selectionFromProps(controller.props) },
@@ -109,7 +112,6 @@ export function createGraphStory(
     source() {
       return Object.freeze({
         html: serializeElement(controller.element),
-        css: graphCanvasCss,
         typescript: renderTypeScript(controller.props),
       })
     },
@@ -117,6 +119,7 @@ export function createGraphStory(
       if (disposed) return
       disposed = true
       controller.refs.scene.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

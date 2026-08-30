@@ -6,7 +6,10 @@ import {
   type Node as DomNode,
   type Text,
 } from "@zavx0z/dom"
-import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import type {
+  NodesExternalComponentRoot,
+  NodesExternalStorySource,
+} from "../../../../.storybook/runtime.ts"
 import {
   createLink,
   type LinkController,
@@ -36,10 +39,12 @@ import {
   type SocketDirection,
   type SocketKind,
 } from "@nodes/ui/socket"
-import {nodesDomStoryCss} from "./production-node-css.ts"
+import {createRoot} from "@zavx0z/react"
+import {mountedFieldStyleSheetRoot} from "../../dom/field-mount.ts"
 
 export type ProductionNodeStory = Readonly<{
   element: HTMLElement
+  componentRoot: NodesExternalComponentRoot
   props: unknown
   source(): NodesExternalStorySource
   ready(): Promise<void>
@@ -532,14 +537,31 @@ function result(options: Readonly<{
   ready?: () => Promise<void>
   dispose(): void
 }>): ProductionNodeStory {
+  const ownerDocument = options.element.ownerDocument
+  if (ownerDocument === null) throw new Error("Production Node story element has no owner Document")
+  const lifecycleRoot = createRoot(ownerDocument.createDocumentFragment())
+  const fieldRoot = mountedFieldStyleSheetRoot(options.element)
+  const componentRoot = Object.freeze({
+    readStyleSheets() {
+      const lifecycle = lifecycleRoot.readStyleSheets()
+      const fields = fieldRoot.readStyleSheets() as Readonly<{
+        revision: number
+        styleSheets: readonly unknown[]
+      }>
+      return Object.freeze({
+        revision: Math.max(lifecycle.revision, fields.revision),
+        styleSheets: Object.freeze([...lifecycle.styleSheets, ...fields.styleSheets]),
+      })
+    },
+  })
   let disposed = false
   return Object.freeze({
     element: options.element,
+    componentRoot,
     get props() { return options.readProps() },
     source() {
       return Object.freeze({
         html: serialize(options.element),
-        css: nodesDomStoryCss,
         typescript: options.typescript(),
       })
     },
@@ -547,6 +569,7 @@ function result(options: Readonly<{
     dispose() {
       if (disposed) return
       disposed = true
+      lifecycleRoot.unmount()
       options.dispose()
     },
   })

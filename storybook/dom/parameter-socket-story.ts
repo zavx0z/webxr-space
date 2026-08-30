@@ -9,9 +9,9 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createParameterSocket,
-  parameterSocketCss,
   type ParameterControlRefs,
   type ParameterSocketProps,
   type ParameterSocketRefs,
@@ -19,6 +19,7 @@ import {
 
 export type ParameterSocketStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   refs: ParameterSocketRefs
   props: ParameterSocketProps
   parameterRefs(id: string): ParameterControlRefs | null
@@ -80,6 +81,7 @@ export function createParameterSocketStory(
   initialProps: ParameterSocketProps = parameterSocketStoryDefaultProps,
 ): ParameterSocketStory {
   const controller = createParameterSocket(document, initialProps)
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
 
   const update = (props: ParameterSocketProps): void => {
@@ -144,6 +146,7 @@ export function createParameterSocketStory(
 
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     refs: controller.refs,
     get props() { return controller.props },
     parameterRefs(id) { return controller.parameterRefs(id) },
@@ -151,7 +154,6 @@ export function createParameterSocketStory(
     source() {
       return Object.freeze({
         html: serializeElement(controller.element),
-        css: parameterSocketCss,
         typescript: renderTypeScript(controller.props),
       })
     },
@@ -161,6 +163,7 @@ export function createParameterSocketStory(
       controller.refs.list.removeEventListener("input", onInput)
       controller.refs.list.removeEventListener("change", onChange)
       controller.refs.list.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

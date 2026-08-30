@@ -1,6 +1,7 @@
 import {describe, expect, test} from "bun:test"
 import {createDocument, Event, MouseEvent} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
+import {parameterSocketCss} from "../../dom/parameter-socket.ts"
 import {
   NODE_PARAMETER_FIELD_KINDS,
   NODE_PARAMETER_VARIANTS,
@@ -99,7 +100,7 @@ describe("complete Parameter/Socket DOM route family", () => {
         document,
         root: story.element,
         viewport: {width: 720, height: 560},
-        styleSheets: [story.source().css],
+        styleSheets: [parameterSocketCss],
       })
       const frame = renderer.flush()
       const refs = story.parameterRefs(story.props.parameters[0]!.id)!

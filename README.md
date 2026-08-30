@@ -44,8 +44,9 @@ and events. Runtime connection to CPU/WebGPU is owned by an application through
 
 `@nodes/ui/node-system` uses `@zavx0z/react` plus the build-time
 `@zavx0z/template` compiler. It has no npm React/Fiber path, no class names and
-no second NodeTree; owner `defineStyles` tokens and the caller's one `style`
-prop feed the same document renderer stylesheet boundary.
+no second NodeTree. Owner and caller styles use the global compile-time
+`css\`\`` intrinsic, semantic attributes and compiled root provenance; no
+style object, array, import or manual stylesheet transport exists.
 
 Performance acceptance is reproducible with `bun run bench:node-system`. It
 runs the same realistic four-Parameter/two-Socket/link-chain fixture at 1k and

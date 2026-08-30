@@ -32,9 +32,13 @@ describe("production Node Storybook adapters", () => {
     expect(story.element.querySelectorAll(".node-socket").length).toBeGreaterThan(3)
     expect(story.element.querySelectorAll(".node-link")).toHaveLength(1)
     expect(story.source().typescript).toContain('from "@nodes/ui/node-editor"')
-    expect(story.source().css).toContain(".node-article__header")
-    expect(story.source().css).toContain("[data-field-id]")
-    expect(story.source().css).not.toContain(".ui-field")
+    expect(Object.keys(story.source()).sort()).toEqual(["html", "typescript"])
+    const styleSheets = (story.componentRoot.readStyleSheets() as {
+      styleSheets: readonly Readonly<{source?: Readonly<{kind?: string; moduleId?: string}>}>[]
+    }).styleSheets
+    expect(styleSheets.length).toBeGreaterThan(0)
+    expect(styleSheets.every(sheet => sheet.source?.kind === "authored-css")).toBeTrue()
+    expect(styleSheets.some(sheet => sheet.source?.moduleId === "@ui/components/field.tsx")).toBeTrue()
     story.dispose()
   })
 

@@ -99,7 +99,7 @@ export const SOCKET_PRESETS: Readonly<Record<SocketKind, SocketPreset>> = Object
   custom: preset("custom", "Custom", "#d659d1", "circle-dot"),
 })
 
-export const socketCss = String.raw`
+export const socketCss = /* @__PURE__ */ String.raw`
 .node-socket {
   box-sizing: border-box;
   display: flex;

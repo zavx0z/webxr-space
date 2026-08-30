@@ -1,7 +1,6 @@
 import {linkCss} from "@nodes/ui/link"
 import {nodeCss} from "@nodes/ui/node"
 import {nodeEditorCss} from "@nodes/ui/node-editor"
-import {nodeSystemCss} from "@nodes/ui/node-system"
 import {parameterCss} from "@nodes/ui/parameter"
 import {socketCss} from "@nodes/ui/socket"
 
@@ -76,7 +75,6 @@ export const nodesProductionPreviewCss = String.raw`
 
 export const nodesDomStoryCss = [
   nodeEditorCss,
-  nodeSystemCss,
   nodeCss,
   parameterCss,
   socketCss,

@@ -3,7 +3,6 @@ import {
   createDocument,
   MouseEvent,
 } from "@zavx0z/dom"
-import {multiNodeCanvasCss} from "../../dom/multi-node-canvas.ts"
 import {
   createMultiNodeStory,
   multiNodeStoryDefaultProps,
@@ -25,7 +24,8 @@ describe("package-owned multi-node DOM story", () => {
     expect(initial.html).toContain('data-node-id="scalar"')
     expect(initial.html).toContain('aria-selected="true"')
     expect(initial.html).toContain("translate(18px, 12px) scale(1.05)")
-    expect(initial.css).toBe(multiNodeCanvasCss)
+    expect(Object.keys(initial).sort()).toEqual(["html", "typescript"])
+    expect(story.componentRoot.readStyleSheets()).toEqual({revision: 0, styleSheets: []})
     expect(initial.typescript).toContain('from "../../dom/multi-node-canvas.ts"')
     expect(initial.typescript).toContain('"translateX": 18')
     expect(initial.typescript).toContain('"scale": 1.05')

@@ -189,7 +189,7 @@ export const graphCanvasDefaultProps: GraphCanvasProps = Object.freeze({
   nodes: defaultNodes,
 })
 
-export const graphCanvasCss = [nodeCss, linkCss, String.raw`
+export const graphCanvasCss = /* @__PURE__ */ [nodeCss, linkCss, /* @__PURE__ */ String.raw`
 .graph-canvas {
   box-sizing: border-box;
   display: flex;

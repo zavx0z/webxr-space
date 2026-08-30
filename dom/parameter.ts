@@ -1,7 +1,4 @@
-import {
-  fieldCss,
-  type FieldDefinition,
-} from "@ui/components/field"
+import type {FieldDefinition} from "@ui/components/field"
 import {
   HTMLDivElement,
   type Document,
@@ -35,7 +32,7 @@ export type ParameterController = Readonly<{
   dispose(): void
 }>
 
-export const parameterCss = [fieldCss, socketCss, String.raw`
+export const parameterCss = /* @__PURE__ */ [socketCss, /* @__PURE__ */ String.raw`
 .node-parameter {
   box-sizing: border-box;
   display: flex;

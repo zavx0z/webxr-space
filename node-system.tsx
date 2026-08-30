@@ -1,12 +1,10 @@
 import type {Event, HTMLInputElement} from "@zavx0z/dom"
 import {
-  defineStyles,
   memo,
   useId,
   useMemo,
   useSyncExternalStore,
   type FunctionComponent,
-  type StyleValue,
 } from "@zavx0z/react"
 
 export type NodeSystemJsonValue =
@@ -88,7 +86,7 @@ export type NodeSystemProps = Readonly<{
   store: NodeSystemExternalStore
   label?: string
   viewport?: NodeSystemViewport
-  style?: StyleValue
+  style?: CssStyle
   onParameterInput?: ((change: NodeSystemParameterInput) => void) | undefined
 }>
 
@@ -106,7 +104,7 @@ export type NodeCardProps = Readonly<{
   index: number
   offsetX?: number
   offsetY?: number
-  style?: StyleValue
+  style?: CssStyle
   parameterStore?: ((nodeId: string, parameterId: string) => NodeSystemParameterExternalStore) | undefined
   onParameterInput?: ((change: NodeSystemParameterInput) => void) | undefined
 }>
@@ -117,7 +115,7 @@ export type ParameterRowProps = Readonly<{
   sockets: readonly NodeSystemSocketSnapshot[]
   links: readonly NodeSystemLinkSnapshot[]
   store?: NodeSystemParameterExternalStore | undefined
-  style?: StyleValue
+  style?: CssStyle
   onParameterInput?: ((change: NodeSystemParameterInput) => void) | undefined
 }>
 
@@ -125,7 +123,7 @@ export type SocketPortProps = Readonly<{
   nodeId: string
   socket: NodeSystemSocketSnapshot
   connected?: boolean
-  style?: StyleValue
+  style?: CssStyle
 }>
 
 export type NodeConnectionProps = Readonly<{
@@ -133,243 +131,8 @@ export type NodeConnectionProps = Readonly<{
   nodes: readonly NodeSystemNodeSnapshot[]
   offsetX?: number
   offsetY?: number
-  style?: StyleValue
+  style?: CssStyle
 }>
-
-export const nodeSystemStyles = defineStyles("@nodes/ui/node-system", {
-  root: {
-    boxSizing: "border-box",
-    position: "relative",
-    display: "block",
-    width: "100%",
-    minWidth: 720,
-    minHeight: 480,
-    overflow: "hidden",
-    border: "1px solid rgb(26 26 26)",
-    borderRadius: 7,
-    background: "rgb(29 29 29)",
-    color: "rgb(224 224 224)",
-    fontSize: 11,
-  },
-  status: {
-    boxSizing: "border-box",
-    position: "absolute",
-    top: 8,
-    right: 10,
-    zIndex: 3,
-    display: "flex",
-    alignItems: "center",
-    height: 20,
-    gap: 6,
-    padding: "2px 7px",
-    border: "1px solid rgb(57 57 57)",
-    borderRadius: 10,
-    background: "rgba(24, 24, 24, .86)",
-    color: "rgb(166 166 166)",
-    fontSize: 10,
-    whiteSpace: "nowrap",
-  },
-  scene: {
-    boxSizing: "border-box",
-    position: "absolute",
-    display: "block",
-    left: 0,
-    top: 0,
-    width: "100%",
-    height: "100%",
-  },
-  node: {
-    boxSizing: "border-box",
-    position: "absolute",
-    zIndex: 2,
-    display: "flex",
-    flexDirection: "column",
-    minWidth: 210,
-    overflow: "visible",
-    border: "1px solid rgb(15 15 15)",
-    borderRadius: 6,
-    background: "rgb(48 48 48)",
-    color: "rgb(224 224 224)",
-    boxShadow: "0 8px 22px rgba(0, 0, 0, .48)",
-  },
-  header: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    height: 26,
-    minHeight: 26,
-    gap: 6,
-    padding: "0 8px",
-    overflow: "hidden",
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    color: "rgb(245 245 245)",
-  },
-  title: {
-    display: "block",
-    minWidth: 0,
-    flexGrow: 1,
-    overflow: "hidden",
-    fontSize: 11,
-    fontWeight: 600,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-  },
-  category: {
-    display: "block",
-    flexShrink: 0,
-    color: "rgba(255, 255, 255, .68)",
-    fontSize: 9,
-    whiteSpace: "nowrap",
-  },
-  body: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    minWidth: 0,
-    gap: 3,
-    padding: "6px 8px 8px",
-  },
-  parameter: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    minWidth: 0,
-    minHeight: 27,
-    gap: 5,
-  },
-  socketStack: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 13,
-    gap: 2,
-  },
-  socket: {
-    boxSizing: "border-box",
-    display: "block",
-    width: 13,
-    minWidth: 13,
-    height: 13,
-    minHeight: 13,
-    padding: 0,
-    border: "2px solid rgb(158 158 158)",
-    borderRadius: "50%",
-    background: "rgb(31 31 31)",
-    color: "transparent",
-    fontSize: 1,
-    boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
-    ":hover": {boxShadow: "0 0 7px currentcolor"},
-    ":focus": {boxShadow: "0 0 8px currentcolor"},
-  },
-  socketConnected: {
-    background: "currentcolor",
-    boxShadow: "0 0 5px currentcolor",
-  },
-  label: {
-    display: "block",
-    width: 82,
-    minWidth: 64,
-    overflow: "hidden",
-    color: "rgb(211 211 211)",
-    fontSize: 10,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-  },
-  control: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 0,
-    flexGrow: 1,
-    height: 22,
-    overflow: "hidden",
-    border: "1px solid rgb(80 80 80)",
-    borderRadius: 3,
-    background: "rgb(68 68 68)",
-    color: "rgb(238 238 238)",
-  },
-  input: {
-    boxSizing: "border-box",
-    display: "block",
-    width: "100%",
-    minWidth: 0,
-    height: 20,
-    padding: "2px 5px",
-    border: "none",
-    borderRadius: 2,
-    background: "transparent",
-    color: "rgb(238 238 238)",
-    fontSize: 10,
-    ":focus": {background: "rgb(38 38 38)"},
-  },
-  checkbox: {
-    boxSizing: "border-box",
-    display: "block",
-    width: 14,
-    minWidth: 14,
-    height: 14,
-    margin: "3px 5px",
-  },
-  complex: {
-    display: "block",
-    width: "100%",
-    minWidth: 0,
-    padding: "2px 5px",
-    overflow: "hidden",
-    color: "rgb(183 204 226)",
-    fontSize: 9,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-  },
-  looseSockets: {
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    gap: 6,
-    paddingTop: 3,
-  },
-  looseLabel: {
-    display: "block",
-    minWidth: 0,
-    flexGrow: 1,
-    overflow: "hidden",
-    color: "rgb(176 176 176)",
-    fontSize: 9,
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
-  },
-  connection: {
-    boxSizing: "border-box",
-    position: "absolute",
-    zIndex: 1,
-    display: "block",
-    left: 0,
-    top: 0,
-    width: "100%",
-    height: "100%",
-  },
-  segment: {
-    boxSizing: "border-box",
-    position: "absolute",
-    display: "block",
-    minWidth: 2,
-    minHeight: 2,
-    borderRadius: 2,
-    background: "rgb(158 158 158)",
-    boxShadow: "0 0 4px rgba(0, 0, 0, .7)",
-  },
-})
-
-export const nodeSystemCss = nodeSystemStyles.cssText
 
 export function NodeSystem(props: NodeSystemProps) {
   const viewStore = useMemo(
@@ -384,16 +147,58 @@ export function NodeSystem(props: NodeSystemProps) {
   return <section
     aria-label={label}
     data-node-system=""
-    style={[
-      nodeSystemStyles.root,
-      viewport === undefined ? undefined : {width: viewport.width, height: viewport.height},
-      props.style,
-    ]}
+    style={css`
+      & {
+        box-sizing: border-box;
+        position: relative;
+        display: block;
+        width: ${viewport?.width === undefined ? "100%" : `${viewport.width}px`};
+        height: ${viewport?.height === undefined ? "auto" : `${viewport.height}px`};
+        min-width: 720px;
+        min-height: 480px;
+        overflow: hidden;
+        border: 1px solid rgb(26 26 26);
+        border-radius: 7px;
+        background: rgb(29 29 29);
+        color: rgb(224 224 224);
+        font-size: 11px;
+      }
+      ${props.style}
+    `}
   >
-    <span style={nodeSystemStyles.status}>
+    <span style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        height: 20px;
+        gap: 6px;
+        padding: 2px 7px;
+        border: 1px solid rgb(57 57 57);
+        border-radius: 10px;
+        background: rgba(24, 24, 24, .86);
+        color: rgb(166 166 166);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+    `}>
       {view.entries.length} visible nodes
     </span>
-    <div style={nodeSystemStyles.scene}>
+    <div style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        display: block;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+    `}>
       {view.links.map(link => <MemoNodeConnection
         key={link.id}
         link={link}
@@ -426,21 +231,78 @@ export function NodeCard(props: NodeCardProps) {
   return <article
     aria-label={label}
     data-node-id={props.node.id}
-    style={[
-      nodeSystemStyles.node,
-      {
-        left: placement.x - (props.offsetX ?? 0),
-        top: placement.y - (props.offsetY ?? 0),
-        width: placement.width,
-      },
-      props.style,
-    ]}
+    style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        left: ${placement.x - (props.offsetX ?? 0)}px;
+        top: ${placement.y - (props.offsetY ?? 0)}px;
+        width: ${placement.width}px;
+        min-width: 210px;
+        overflow: visible;
+        border: 1px solid rgb(15 15 15);
+        border-radius: 6px;
+        background: rgb(48 48 48);
+        color: rgb(224 224 224);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .48);
+      }
+      ${props.style}
+    `}
   >
-    <header style={[nodeSystemStyles.header, {background: headerColor}]}>
-      <strong style={nodeSystemStyles.title}>{label}</strong>
-      <small style={nodeSystemStyles.category}>{category}</small>
+    <header style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        height: 26px;
+        min-height: 26px;
+        gap: 6px;
+        padding: 0 8px;
+        overflow: hidden;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        background: ${headerColor};
+        color: rgb(245 245 245);
+      }
+    `}>
+      <strong style={css`
+        & {
+          display: block;
+          min-width: 0;
+          flex-grow: 1;
+          overflow: hidden;
+          font-size: 11px;
+          font-weight: 600;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+      `}>{label}</strong>
+      <small style={css`
+        & {
+          display: block;
+          flex-shrink: 0;
+          color: rgba(255, 255, 255, .68);
+          font-size: 9px;
+          white-space: nowrap;
+        }
+      `}>{category}</small>
     </header>
-    <section aria-label={`${label} parameters`} style={nodeSystemStyles.body}>
+    <section aria-label={`${label} parameters`} style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        gap: 3px;
+        padding: 6px 8px 8px;
+      }
+    `}>
       {props.node.parameters.map(parameter => <MemoParameterRow
         key={parameter.id}
         nodeId={props.node.id}
@@ -469,14 +331,35 @@ type LooseSocketRowProps = Readonly<{
 function LooseSocketRow(props: LooseSocketRowProps) {
   return <div
     data-loose-socket={props.socket.id}
-    style={nodeSystemStyles.looseSockets}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        gap: 6px;
+        padding-top: 3px;
+      }
+    `}
   >
     <MemoSocketPort
       nodeId={props.nodeId}
       socket={props.socket}
       connected={isSocketConnected(props.links, props.nodeId, props.socket.id)}
     />
-    <span style={nodeSystemStyles.looseLabel}>
+    <span style={css`
+      & {
+        display: block;
+        min-width: 0;
+        flex-grow: 1;
+        overflow: hidden;
+        color: rgb(176 176 176);
+        font-size: 9px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    `}>
       {metadataString(props.socket.metadata, "label", props.socket.id)}
     </span>
   </div>
@@ -505,9 +388,29 @@ export function ParameterRow(props: ParameterRowProps) {
     role="group"
     aria-labelledby={labelId}
     data-parameter-id={parameter.id}
-    style={[nodeSystemStyles.parameter, props.style]}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        min-width: 0;
+        min-height: 27px;
+        gap: 5px;
+      }
+      ${props.style}
+    `}
   >
-    <span style={nodeSystemStyles.socketStack}>
+    <span style={css`
+      & {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        min-width: 13px;
+        gap: 2px;
+      }
+    `}>
       {left.map(socket => <MemoSocketPort
         key={socket.id}
         nodeId={props.nodeId}
@@ -515,7 +418,18 @@ export function ParameterRow(props: ParameterRowProps) {
         connected={isSocketConnected(props.links, props.nodeId, socket.id)}
       />)}
     </span>
-    <label id={labelId} htmlFor={activeControlId(controlId, parameter.value)} style={nodeSystemStyles.label}>
+    <label id={labelId} htmlFor={activeControlId(controlId, parameter.value)} style={css`
+      & {
+        display: block;
+        width: 82px;
+        min-width: 64px;
+        overflow: hidden;
+        color: rgb(211 211 211);
+        font-size: 10px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    `}>
       {label}
     </label>
     <ParameterControl
@@ -525,7 +439,15 @@ export function ParameterRow(props: ParameterRowProps) {
       readOnly={readOnly}
       onInput={onInput}
     />
-    <span style={nodeSystemStyles.socketStack}>
+    <span style={css`
+      & {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        min-width: 13px;
+        gap: 2px;
+      }
+    `}>
       {right.map(socket => <MemoSocketPort
         key={socket.id}
         nodeId={props.nodeId}
@@ -549,7 +471,22 @@ function ParameterControl(props: ParameterControlProps) {
   const numberValue = typeof props.parameter.value === "number"
   const stringValue = typeof props.parameter.value === "string"
   const complexValue = !booleanValue && !numberValue && !stringValue
-  return <span style={nodeSystemStyles.control}>
+  return <span style={css`
+    & {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      min-width: 0;
+      flex-grow: 1;
+      height: 22px;
+      overflow: hidden;
+      border: 1px solid rgb(80 80 80);
+      border-radius: 3px;
+      background: rgb(68 68 68);
+      color: rgb(238 238 238);
+    }
+  `}>
     {booleanValue ? <BooleanParameterControl
       id={props.id}
       parameter={props.parameter}
@@ -590,7 +527,16 @@ function BooleanParameterControl(props: ParameterControlProps) {
     checked={props.parameter.value === true}
     disabled={props.disabled}
     onChange={onChange}
-    style={nodeSystemStyles.checkbox}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: block;
+        width: 14px;
+        min-width: 14px;
+        height: 14px;
+        margin: 3px 5px;
+      }
+    `}
   />
 }
 
@@ -610,7 +556,22 @@ function NumberParameterControl(props: ParameterControlProps) {
     disabled={props.disabled}
     readOnly={props.readOnly}
     onInput={onInput}
-    style={nodeSystemStyles.input}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        height: 20px;
+        padding: 2px 5px;
+        border: none;
+        border-radius: 2px;
+        background: transparent;
+        color: rgb(238 238 238);
+        font-size: 10px;
+      }
+      &:focus { background: rgb(38 38 38); }
+    `}
   />
 }
 
@@ -624,7 +585,22 @@ function StringParameterControl(props: ParameterControlProps) {
     disabled={props.disabled}
     readOnly={props.readOnly}
     onInput={onInput}
-    style={nodeSystemStyles.input}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        height: 20px;
+        padding: 2px 5px;
+        border: none;
+        border-radius: 2px;
+        background: transparent;
+        color: rgb(238 238 238);
+        font-size: 10px;
+      }
+      &:focus { background: rgb(38 38 38); }
+    `}
   />
 }
 
@@ -633,7 +609,19 @@ function ComplexParameterControl(props: ParameterControlProps) {
   return <output
     id={`${props.id}-complex`}
     aria-label={metadataString(props.parameter.presentation, "label", props.parameter.id)}
-    style={nodeSystemStyles.complex}
+    style={css`
+      & {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 2px 5px;
+        overflow: hidden;
+        color: rgb(183 204 226);
+        font-size: 9px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    `}
   >
     {text}
   </output>
@@ -653,12 +641,30 @@ export function SocketPort(props: SocketPortProps) {
     data-socket-direction={props.socket.direction}
     data-socket-side={socketSide(props.socket)}
     title={`${label} · ${kind}`}
-    style={[
-      nodeSystemStyles.socket,
-      props.connected === true && nodeSystemStyles.socketConnected,
-      {borderColor: color, color},
-      props.style,
-    ]}
+    style={css`
+      & {
+        box-sizing: border-box;
+        display: block;
+        width: 13px;
+        min-width: 13px;
+        height: 13px;
+        min-height: 13px;
+        padding: 0;
+        border: 2px solid ${color};
+        border-radius: 50%;
+        background: rgb(31 31 31);
+        color: ${color};
+        font-size: 1px;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+      &[aria-pressed="true"] {
+        background: currentcolor;
+        box-shadow: 0 0 5px currentcolor;
+      }
+      &:hover { box-shadow: 0 0 7px currentcolor; }
+      &:focus { box-shadow: 0 0 8px currentcolor; }
+      ${props.style}
+    `}
   >
     {label}
   </button>
@@ -681,11 +687,68 @@ export function NodeConnection(props: NodeConnectionProps) {
     role="img"
     aria-label={label}
     data-link-id={props.link.id}
-    style={[nodeSystemStyles.connection, props.style]}
+    style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        z-index: 1;
+        display: block;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+      ${props.style}
+    `}
   >
-    <span aria-hidden="true" style={[nodeSystemStyles.segment, horizontalOne, {background: color}]}></span>
-    <span aria-hidden="true" style={[nodeSystemStyles.segment, vertical, {background: color}]}></span>
-    <span aria-hidden="true" style={[nodeSystemStyles.segment, horizontalTwo, {background: color}]}></span>
+    <span aria-hidden="true" style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        display: block;
+        left: ${horizontalOne.x}px;
+        top: ${horizontalOne.y}px;
+        width: ${horizontalOne.width}px;
+        height: ${horizontalOne.height}px;
+        min-width: 2px;
+        min-height: 2px;
+        border-radius: 2px;
+        background: ${color};
+        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
+      }
+    `}></span>
+    <span aria-hidden="true" style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        display: block;
+        left: ${vertical.x}px;
+        top: ${vertical.y}px;
+        width: ${vertical.width}px;
+        height: ${vertical.height}px;
+        min-width: 2px;
+        min-height: 2px;
+        border-radius: 2px;
+        background: ${color};
+        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
+      }
+    `}></span>
+    <span aria-hidden="true" style={css`
+      & {
+        box-sizing: border-box;
+        position: absolute;
+        display: block;
+        left: ${horizontalTwo.x}px;
+        top: ${horizontalTwo.y}px;
+        width: ${horizontalTwo.width}px;
+        height: ${horizontalTwo.height}px;
+        min-width: 2px;
+        min-height: 2px;
+        border-radius: 2px;
+        background: ${color};
+        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
+      }
+    `}></span>
   </span>
 }
 
@@ -703,6 +766,7 @@ const MemoLooseSocketRow = memo(LooseSocketRow, sameLooseSocketRowProps)
 
 type Placement = Readonly<{x: number; y: number; width: number}>
 type EndpointPosition = Readonly<{x: number; y: number; kind: string}>
+type SegmentPlacement = Readonly<{x: number; y: number; width: number; height: number}>
 type VisibleNodeEntry = Readonly<{node: NodeSystemNodeSnapshot; index: number}>
 type NodeSystemViewSnapshot = Readonly<{
   entries: readonly VisibleNodeEntry[]
@@ -923,19 +987,19 @@ function endpointPosition(
   })
 }
 
-function horizontalSegment(fromX: number, y: number, toX: number): StyleValue {
+function horizontalSegment(fromX: number, y: number, toX: number): SegmentPlacement {
   return Object.freeze({
-    left: Math.min(fromX, toX),
-    top: y,
+    x: Math.min(fromX, toX),
+    y,
     width: Math.max(2, Math.abs(toX - fromX)),
     height: 2,
   })
 }
 
-function verticalSegment(x: number, fromY: number, toY: number): StyleValue {
+function verticalSegment(x: number, fromY: number, toY: number): SegmentPlacement {
   return Object.freeze({
-    left: x,
-    top: Math.min(fromY, toY),
+    x,
+    y: Math.min(fromY, toY),
     width: 2,
     height: Math.max(2, Math.abs(toY - fromY)),
   })

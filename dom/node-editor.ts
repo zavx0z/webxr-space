@@ -58,7 +58,7 @@ export type NodeEditorController = Readonly<{
 
 type Point = Readonly<{x: number; y: number}>
 
-export const nodeEditorCss = [graphCanvasCss, String.raw`
+export const nodeEditorCss = /* @__PURE__ */ [graphCanvasCss, /* @__PURE__ */ String.raw`
 .node-editor { position: relative; }
 .node-editor__grid {
   box-sizing: border-box;

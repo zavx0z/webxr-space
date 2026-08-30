@@ -12,7 +12,6 @@ import {RendererWebGpuBackend} from "@zavx0z/renderer-webgpu"
 import {createRoot} from "@zavx0z/react"
 import {
   NodeSystem,
-  nodeSystemCss,
   type NodeSystemParameterInput,
 } from "./node-system.tsx"
 
@@ -92,16 +91,31 @@ describe("compiled general Node system", () => {
     tree.dispose()
   })
 
-  test("owns class-free compiled styles and no npm React path", async () => {
+  test("owns source-traceable css templates and no runtime style transport", async () => {
     const source = await Bun.file(new URL("./node-system.tsx", import.meta.url)).text()
-    expect(source).toContain('defineStyles("@nodes/ui/node-system"')
+    expect(source).toContain("style={css`")
     expect(source).toContain("useSyncExternalStore(")
     expect(source).toContain("key={entry.node.id}")
     expect(source).toContain("key={parameter.id}")
+    expect(source).toContain('&[aria-pressed="true"]')
+    expect(source).not.toContain("defineStyles")
+    expect(source).not.toContain("nodeSystemCss")
+    expect(source).not.toMatch(/style=\{\[/u)
     expect(source).not.toContain("className")
     expect(source).not.toContain('from "react"')
     expect(source).not.toContain('from "react-dom')
-    expect(nodeSystemCss).toContain("[data-z-")
+
+    const document = createDocument()
+    const host = document.createElement("main")
+    const root = createRoot(host)
+    const tree = createNodeTree({nodes: [], links: []})
+    root.render(<NodeSystem store={createNodeTreeExternalStore(tree)} />)
+    const snapshot = root.readStyleSheets()
+    expect(snapshot.styleSheets.length).toBeGreaterThan(0)
+    expect(snapshot.styleSheets.every(sheet => sheet.source?.kind === "authored-css")).toBeTrue()
+    expect(snapshot.styleSheets.map(sheet => sheet.source?.moduleId)).toEqual(["@nodes/ui/node-system.tsx"])
+    root.unmount()
+    tree.dispose()
   })
 
   test("culls a 1k canonical tree and scopes offscreen value/topology work to zero DOM mutations", () => {
@@ -145,7 +159,6 @@ describe("compiled general Node system", () => {
       document,
       root: host,
       viewport: {width: 850, height: 500},
-      styleSheets: [nodeSystemCss],
     })
     const frame = renderer.flush()
     const backend = new RendererWebGpuBackend({invalidateGeometry() {}})

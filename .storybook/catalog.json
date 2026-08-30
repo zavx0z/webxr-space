@@ -117,7 +117,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "preview",
@@ -218,7 +227,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "collapsed",
@@ -254,7 +272,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "popup",
@@ -281,7 +308,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -354,7 +390,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "number",
@@ -420,7 +465,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "integer",
@@ -487,7 +541,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "boolean",
@@ -554,7 +617,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "enum",
@@ -620,7 +692,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "color",
@@ -686,7 +767,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "vector",
@@ -752,7 +842,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "rotation",
@@ -818,7 +917,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "matrix",
@@ -884,7 +992,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "reference",
@@ -950,7 +1067,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "collection",
@@ -1016,7 +1142,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "path",
@@ -1082,7 +1217,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "readonly",
@@ -1148,7 +1292,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1179,7 +1332,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1210,7 +1372,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1248,7 +1419,16 @@
                 ]
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -1299,7 +1479,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "float",
@@ -1343,7 +1532,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "integer",
@@ -1387,7 +1585,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "vector",
@@ -1431,7 +1638,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "rotation",
@@ -1475,7 +1691,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "color",
@@ -1519,7 +1744,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "string",
@@ -1563,7 +1797,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "menu",
@@ -1607,7 +1850,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "object",
@@ -1651,7 +1903,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "collection",
@@ -1695,7 +1956,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "image",
@@ -1739,7 +2009,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "material",
@@ -1783,7 +2062,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "texture",
@@ -1827,7 +2115,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "geometry",
@@ -1871,7 +2168,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "matrix",
@@ -1915,7 +2221,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "shader",
@@ -1959,7 +2274,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "bundle",
@@ -2003,7 +2327,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "closure",
@@ -2047,7 +2380,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "custom",
@@ -2091,7 +2433,16 @@
                 "export": "createProductionNodeStory"
               }
             }
-          ]
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     }

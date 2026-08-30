@@ -3,7 +3,6 @@ import {describe, expect, test} from "bun:test"
 // Owner-local acceptance for the compiled NodeSystem story.
 import {Event, HTMLInputElement, createDocument} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
-import {nodeSystemCss} from "@nodes/ui/node-system"
 import {createCompiledNodeSystemStory} from "./compiled-node-system-story.tsx"
 
 describe("compiled general Node system Storybook route", () => {
@@ -39,7 +38,8 @@ describe("compiled general Node system Storybook route", () => {
     expect(source.typescript).toContain('from "@nodes/editor"')
     expect(source.typescript).toContain('from "@nodes/ui/node-system"')
     expect(source.typescript).toContain('from "@zavx0z/react"')
-    expect(source.css).toContain("[data-z-")
+    const styleSheets = (story.componentRoot.readStyleSheets() as {styleSheets: readonly unknown[]}).styleSheets
+    expect(styleSheets.length).toBeGreaterThan(0)
     expect(source.html).toContain("data-node-system")
     expect(source.html).toContain("top: 243.5px")
     expect(source.html).toContain("top: 207.5px")
@@ -48,7 +48,6 @@ describe("compiled general Node system Storybook route", () => {
       document,
       root: story.element,
       viewport: {width: 1000, height: 520},
-      styleSheets: [nodeSystemCss],
     })
     const frame = renderer.flush()
     const fieldSocket = story.element.querySelector('[data-socket-id="field-output"]')!

@@ -30,7 +30,8 @@ describe("package-owned Parameter/Socket DOM story", () => {
     expect(source.html).toContain('data-socket-id="text-output"')
     expect(source.html).not.toContain(' value="Output"')
     expect(source.html).not.toContain("</input>")
-    expect(source.css).toBe(parameterSocketCss)
+    expect(Object.keys(source).sort()).toEqual(["html", "typescript"])
+    expect(story.componentRoot.readStyleSheets()).toEqual({revision: 0, styleSheets: []})
     expect(source.typescript).toContain('from "../../dom/parameter-socket.ts"')
     expect(source.typescript).toContain('"value": "Output"')
     expect(source.typescript).toContain('addEventListener("input"')
@@ -123,7 +124,7 @@ describe("package-owned Parameter/Socket DOM story", () => {
       document,
       root: story.element,
       viewport: {width: 560, height: 260},
-      styleSheets: [story.source().css],
+      styleSheets: [parameterSocketCss],
     })
     const frame = renderer.flush()
     const parameter = story.parameterRefs("text")!

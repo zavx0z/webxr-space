@@ -46,6 +46,11 @@ Root `@nodes/ui` экспортирует standard-DOM owner modules. Новые
 используют естественные Node names; они не являются aliases к старым Surface
 constructors и не восстанавливают параллельную runtime hierarchy.
 
+Public `*Css` exports сохраняют exact bytes при явном импорте, но их pure
+initializers не удерживаются consumer bundle, который импортирует только
+factory/default props. Linked `dom.css` не дублирует JS CSS transport без
+явного запроса consumer-а.
+
 Каждая factory принимает exact `@zavx0z/dom` `Document`, возвращает один
 стандартный `HTMLElement`, typed refs, frozen controlled props, `update()` и
 `dispose()`. Observable hierarchy остаётся стандартной
@@ -83,9 +88,15 @@ topology commits сохраняют identity каждого surviving semantic e
 boolean, number и string имеют native controlled inputs, а составное JSON
 value остаётся read-only canonical representation, не string Store.
 
-Каждый compiled public component имеет один `style` prop. Owner defaults
-создаются class-free `defineStyles`, caller override идёт последним; `class`,
-`className` и `sx` не являются public styling paths.
+Каждый compiled public component имеет один `style` prop. Author-facing style
+является только настоящим `css\`\``: один top-level template содержит owner
+defaults, attribute/native-state selectors, dynamic declaration interpolation
+и последний `${props.style}` caller fragment. Variant/state сначала отражается
+real DOM/ARIA/data attribute и не дублируется JS conditional style. CamelCase object,
+`CSSProperties`, `StyleValue` object, style arrays, `defineStyles`, `*Styles` и
+`*Css` transport запрещены; `class`, `className` и `sx` также не являются
+public styling paths. Compile-time `css` tag предоставляет configured
+`jsxImportSource` без повторяющихся imports и без `globalThis` runtime.
 
 ### `NODES-UI-COMPILED-PERF-001` — 1k / 10k interaction budget
 

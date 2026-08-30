@@ -25,7 +25,8 @@
     "./graph-canvas": "./dom/graph-canvas.ts",
     "./node-workbench": "./dom/node-workbench.ts",
     "./parameter-socket": "./dom/parameter-socket.ts",
-    "./node-tree-editor": "./dom/node-tree-editor.ts"
+    "./node-tree-editor": "./dom/node-tree-editor.ts",
+    "./dom.css": "./dom.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --pretty false"

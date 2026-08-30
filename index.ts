@@ -43,8 +43,6 @@ export {
   NodeSystem,
   ParameterRow,
   SocketPort,
-  nodeSystemCss,
-  nodeSystemStyles,
 } from "./node-system.tsx"
 export type {
   NodeCardComponent,

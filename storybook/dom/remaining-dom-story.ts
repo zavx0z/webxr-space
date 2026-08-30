@@ -9,20 +9,18 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
-import {graphCanvasCss} from "../../dom/graph-canvas.ts"
-import {nodeTreeEditorCss} from "../../dom/node-tree-editor.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createNodeWorkbench,
-  nodeWorkbenchCss,
   type NodeWorkbenchController,
   type NodeWorkbenchProps,
 } from "../../dom/node-workbench.ts"
-import {parameterSocketCss} from "../../dom/parameter-socket.ts"
 import {createRemainingDomProps} from "./remaining-dom-data.ts"
 import type {RemainingDomRoute} from "./remaining-route-catalog.ts"
 
 export type RemainingDomStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   props: NodeWorkbenchProps
   controller: NodeWorkbenchController
   source(): NodesExternalStorySource
@@ -31,13 +29,12 @@ export type RemainingDomStory = Readonly<{
   dispose(): void
 }>
 
-const css = [nodeWorkbenchCss, graphCanvasCss, nodeTreeEditorCss, parameterSocketCss].join("\n")
-
 export function createRemainingDomStory(
   document: Document,
   route: RemainingDomRoute,
 ): RemainingDomStory {
   const controller = createNodeWorkbench(document, createRemainingDomProps(route))
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
   const update = (props: NodeWorkbenchProps): void => {
     if (disposed) throw new Error("RemainingDomStory controller is disposed")
@@ -125,13 +122,13 @@ export function createRemainingDomStory(
   controller.element.addEventListener("click", onClick)
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     controller,
     get props() { return controller.props },
     update,
     source() {
       return Object.freeze({
         html: serialize(controller.element),
-        css,
         typescript: renderTypeScript(route, controller.props),
       })
     },
@@ -149,6 +146,7 @@ export function createRemainingDomStory(
       controller.element.removeEventListener("input", onInput)
       controller.element.removeEventListener("change", onChange)
       controller.element.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

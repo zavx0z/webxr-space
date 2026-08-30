@@ -7,15 +7,16 @@ import type {
   Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createSingleNodeCanvas,
-  singleNodeCanvasCss,
   type SingleNodeCanvasProps,
   type SingleNodeCanvasRefs,
 } from "../../dom/single-node-canvas.ts"
 
 export type SingleNodeStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   refs: SingleNodeCanvasRefs
   props: SingleNodeCanvasProps
   update(props: SingleNodeCanvasProps): void
@@ -44,6 +45,7 @@ export function createSingleNodeStory(
   initialProps: SingleNodeCanvasProps = singleNodeStoryDefaultProps,
 ): SingleNodeStory {
   const controller = createSingleNodeCanvas(document, initialProps)
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
 
   const update = (props: SingleNodeCanvasProps): void => {
@@ -66,13 +68,13 @@ export function createSingleNodeStory(
 
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     refs: controller.refs,
     get props() { return controller.props },
     update,
     source() {
       return Object.freeze({
         html: serializeElement(controller.element),
-        css: singleNodeCanvasCss,
         typescript: renderTypeScript(controller.props),
       })
     },
@@ -80,6 +82,7 @@ export function createSingleNodeStory(
       if (disposed) return
       disposed = true
       controller.refs.node.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

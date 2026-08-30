@@ -25,7 +25,8 @@ describe("package-owned single Node DOM story", () => {
     expect(initialSource.html).toContain('aria-selected="false"')
     expect(initialSource.html).toContain("Граф узла")
     expect(initialSource.html).toContain("Вывод")
-    expect(initialSource.css).toBe(singleNodeCanvasCss)
+    expect(Object.keys(initialSource).sort()).toEqual(["html", "typescript"])
+    expect(story.componentRoot.readStyleSheets()).toEqual({revision: 0, styleSheets: []})
     expect(initialSource.typescript).toContain('from "../../dom/single-node-canvas.ts"')
     expect(initialSource.typescript).toContain('"selected": false')
     expect(Object.isFrozen(initialSource)).toBeTrue()
@@ -114,7 +115,7 @@ describe("package-owned single Node DOM story", () => {
       document,
       root: story.element,
       viewport: {width: 520, height: 360},
-      styleSheets: [story.source().css],
+      styleSheets: [singleNodeCanvasCss],
     })
     const first = renderer.flush()
     const firstNodeBox = first.boxByNode.get(story.refs.node)

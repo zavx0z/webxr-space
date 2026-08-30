@@ -91,7 +91,7 @@ type LooseSocketRecord = {
   socket: SocketController
 }
 
-export const nodeCss = [parameterCss, String.raw`
+export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw`
 .node-article {
   box-sizing: border-box;
   position: absolute;

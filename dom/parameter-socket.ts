@@ -178,7 +178,7 @@ export const parameterSocketDefaultProps: ParameterSocketProps = Object.freeze({
   ]),
 })
 
-export const parameterSocketCss = String.raw`
+export const parameterSocketCss = /* @__PURE__ */ String.raw`
 .parameter-socket {
   box-sizing: border-box;
   display: flex;

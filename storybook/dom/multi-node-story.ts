@@ -7,9 +7,9 @@ import {
   type Text,
 } from "@zavx0z/dom"
 import type {NodesExternalStorySource} from "../../../../.storybook/runtime.ts"
+import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {
   createMultiNodeCanvas,
-  multiNodeCanvasCss,
   type MultiNodeCanvasProps,
   type MultiNodeCanvasRefs,
   type MultiNodeCanvasNodeRefs,
@@ -17,6 +17,7 @@ import {
 
 export type MultiNodeStory = Readonly<{
   element: HTMLElement
+  componentRoot: ComponentRoot
   refs: MultiNodeCanvasRefs
   props: MultiNodeCanvasProps
   nodeRefs(id: string): MultiNodeCanvasNodeRefs | null
@@ -69,6 +70,7 @@ export function createMultiNodeStory(
   initialProps: MultiNodeCanvasProps = multiNodeStoryDefaultProps,
 ): MultiNodeStory {
   const controller = createMultiNodeCanvas(document, initialProps)
+  const componentRoot = createRoot(document.createDocumentFragment())
   let disposed = false
 
   const update = (props: MultiNodeCanvasProps): void => {
@@ -92,6 +94,7 @@ export function createMultiNodeStory(
 
   return Object.freeze({
     element: controller.element,
+    componentRoot,
     refs: controller.refs,
     get props() { return controller.props },
     nodeRefs(id) { return controller.nodeRefs(id) },
@@ -99,7 +102,6 @@ export function createMultiNodeStory(
     source() {
       return Object.freeze({
         html: serializeElement(controller.element),
-        css: multiNodeCanvasCss,
         typescript: renderTypeScript(controller.props),
       })
     },
@@ -107,6 +109,7 @@ export function createMultiNodeStory(
       if (disposed) return
       disposed = true
       controller.refs.scene.removeEventListener("click", onClick)
+      componentRoot.unmount()
       controller.dispose()
     },
   })

@@ -52,8 +52,6 @@ describe("@nodes/ui public standard-DOM contract", () => {
       "linkCss",
       "nodeCss",
       "nodeEditorCss",
-      "nodeSystemCss",
-      "nodeSystemStyles",
       "nodeTreeEditorCss",
       "nodeTreeEditorDefaultProps",
       "nodeWorkbenchCss",

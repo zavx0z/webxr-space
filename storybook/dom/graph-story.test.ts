@@ -32,7 +32,8 @@ describe("package-owned GraphCanvas DOM story", () => {
     expect(source.html).toContain('<section class="graph-canvas"')
     expect(source.html).toContain('data-link-id="process-output"')
     expect(source.html).toContain('data-segment-index="1"')
-    expect(source.css).toBe(graphCanvasCss)
+    expect(Object.keys(source).sort()).toEqual(["html", "typescript"])
+    expect(story.componentRoot.readStyleSheets()).toEqual({revision: 0, styleSheets: []})
     expect(source.typescript).toContain('from "../../dom/graph-canvas.ts"')
     expect(source.typescript).toContain('"translateX": 14')
     expect(source.typescript).toContain("links: current.links.map")
@@ -111,7 +112,7 @@ describe("package-owned GraphCanvas DOM story", () => {
       document,
       root: story.element,
       viewport: {width: 900, height: 560},
-      styleSheets: [story.source().css],
+      styleSheets: [graphCanvasCss],
     })
     const first = renderer.flush()
     const selectedLinkSegment = story.linkRefs("process-output")!.segmentRefs(1)!.element

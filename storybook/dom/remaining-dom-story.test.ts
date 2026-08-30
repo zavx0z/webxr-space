@@ -1,6 +1,7 @@
 import {describe, expect, test} from "bun:test"
 import {createDocument, MouseEvent} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
+import {nodesDomStoryCss} from "./production-node-css.ts"
 import {REMAINING_DOM_ROUTES} from "./remaining-route-catalog.ts"
 import {createRemainingDomProps} from "./remaining-dom-data.ts"
 import {createRemainingDomStory} from "./remaining-dom-story.ts"
@@ -72,7 +73,7 @@ describe("final remaining Node DOM route composition", () => {
       document,
       root: story.element,
       viewport: {width: 1024, height: 700},
-      styleSheets: [story.source().css],
+      styleSheets: [nodesDomStoryCss],
     })
     const frame = renderer.flush()
     expect(frame.displayList.filter((item) => item.kind === "text").map((item) => item.text))

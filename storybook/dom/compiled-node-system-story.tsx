@@ -7,7 +7,6 @@ import {
 import {NodeTreeEditor} from "@nodes/editor"
 import {
   NodeSystem,
-  nodeSystemCss,
   type NodeSystemParameterInput,
 } from "@nodes/ui/node-system"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
@@ -37,18 +36,18 @@ export function createCompiledNodeSystemStory(document: Document): ProductionNod
   root.render(<NodeSystem
     store={store}
     label="General compiled node system"
-    style={{height: 520, minHeight: 520}}
+    style={css`& { height: 520px; min-height: 520px; }`}
     onParameterInput={onParameterInput}
   />)
 
   let disposed = false
   return Object.freeze({
     element: host,
+    componentRoot: root,
     get props() { return tree.getSnapshot() },
     source(): NodesExternalStorySource {
       return Object.freeze({
         html: serialize(host),
-        css: nodeSystemCss,
         typescript: storySource(),
       })
     },
@@ -181,7 +180,7 @@ function storySource(): string {
   return [
     'import {createNodeTree, createNodeTreeExternalStore} from "@nodes/core"',
     'import {NodeTreeEditor} from "@nodes/editor"',
-    'import {NodeSystem, nodeSystemCss} from "@nodes/ui/node-system"',
+    'import {NodeSystem} from "@nodes/ui/node-system"',
     'import {createRoot} from "@zavx0z/react"',
     "",
     "const tree = createNodeTree(definition)",
@@ -193,7 +192,6 @@ function storySource(): string {
     "    expectedRevision: tree.revision, nodeId, parameterId, value",
     "  })}",
     "/>)",
-    "void nodeSystemCss",
   ].join("\n")
 }
 

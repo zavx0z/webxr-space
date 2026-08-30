@@ -87,7 +87,7 @@ export type NodeWorkbenchController = Readonly<{
 
 type PopupRecord = {item: HTMLElement; text: Text}
 
-export const nodeWorkbenchCss = [nodeEditorCss, String.raw`
+export const nodeWorkbenchCss = /* @__PURE__ */ [nodeEditorCss, /* @__PURE__ */ String.raw`
 .node-workbench { box-sizing: border-box; display: flex; flex-direction: column; width: 860px; height: 560px; overflow: hidden; border: 1px solid #111; border-radius: 4px; background: #292929; color: #e0e0e0; }
 .node-workbench__header { box-sizing: border-box; height: 34px; padding: 8px 10px; background: #242424; color: #7edcec; font-size: 12px; }
 .node-workbench__content { box-sizing: border-box; display: flex; flex-direction: row; flex-grow: 1; gap: 10px; min-height: 0; overflow: auto; padding: 10px; }
