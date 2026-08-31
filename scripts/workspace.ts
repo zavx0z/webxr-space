@@ -52,7 +52,7 @@ export const workspaceLinks: readonly WorkspaceLinkDefinition[] = Object.freeze(
   {
     name: "@zavx0z/dom",
     path: "../renderer/packages/dom",
-    revision: "35dc366d0de502320aec0343c802b3f1a8cea023",
+    revision: "9ec3b8cb72d0e5517eee895b0dcbfd14b1204c05",
   },
   {name: "@zavx0z/renderer", path: "../renderer/packages/core"},
   {name: "@zavx0z/renderer-browser", path: "../renderer/packages/browser"},
