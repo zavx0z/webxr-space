@@ -94,6 +94,7 @@ export function CodeEditor(props: CodeEditorProps) {
   return <section
     role="region"
     aria-label={props.title ?? "Code editor"}
+    aria-readonly="true"
     data-language-id={view.resolvedLanguageId}
     data-path={props.path}
     title={props.title}

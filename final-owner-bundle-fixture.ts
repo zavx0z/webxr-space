@@ -14,6 +14,7 @@ import {IntegerInput} from "@ui/components/integer-input"
 import {List} from "@ui/components/list"
 import {MatrixInput} from "@ui/components/matrix-input"
 import {NumberInput} from "@ui/components/number-input"
+import {Notification} from "@ui/components/notification"
 import {Pane} from "@ui/components/pane"
 import {PathInput} from "@ui/components/path-input"
 import {ProgressCheckbox} from "@ui/components/progress-checkbox"
@@ -22,6 +23,7 @@ import {SliderControl} from "@ui/components/slider-control"
 import {Switcher} from "@ui/components/switcher"
 import {Table} from "@ui/components/table"
 import {TextField} from "@ui/components/text-field"
+import {StatusBar} from "@ui/components/status-bar"
 import {Typography} from "@ui/components/typography"
 import {VectorInput} from "@ui/components/vector-input"
 
@@ -43,6 +45,7 @@ globalThis.__uiFinalOwners = Object.freeze([
   List,
   MatrixInput,
   NumberInput,
+  Notification,
   Pane,
   PathInput,
   ProgressCheckbox,
@@ -51,6 +54,7 @@ globalThis.__uiFinalOwners = Object.freeze([
   Switcher,
   Table,
   TextField,
+  StatusBar,
   Timeline,
   Typography,
   VectorInput

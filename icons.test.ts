@@ -28,12 +28,12 @@ describe("@ui/components icons", () => {
 
   test("keeps production control imports tree-shakeable without the aggregate catalog", async () => {
     const sources = await Promise.all([
-      Bun.file(new URL("number-input.tsx", import.meta.url)).text(),
       Bun.file(new URL("path-input.tsx", import.meta.url)).text(),
       Bun.file(new URL("reference-input.tsx", import.meta.url)).text(),
     ])
     expect(sources.every((source) => source.includes('from "./icon-assets.ts"'))).toBeTrue()
     expect(sources.every((source) => !source.includes('from "./icons.ts"'))).toBeTrue()
+    expect(await Bun.file(new URL("number-input.tsx", import.meta.url)).text()).not.toContain("icon-assets")
     expect(await Bun.file(new URL("icon-assets.ts", import.meta.url)).text()).not.toContain("uiIcons")
   })
 

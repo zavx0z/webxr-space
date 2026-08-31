@@ -1,10 +1,14 @@
 import {describe, expect, test} from "bun:test"
-import {Event} from "@zavx0z/dom"
+import {Event, MouseEvent} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {List} from "./list.tsx"
-import {Table} from "./table.tsx"
+import {
+  Table,
+  normalizeTableSelection,
+  tableSelectionAfterClick
+} from "./table.tsx"
 import {createDocument} from "./test-document.ts"
 
 describe("compiled keyed collections", () => {
@@ -66,6 +70,55 @@ describe("compiled keyed collections", () => {
     expect(rowA.querySelectorAll("td")[1]).toBe(cellAName)
     expect(rowB.getAttribute("aria-selected")).toBe("true")
     expect(host.querySelector("table")!.className).toBe("")
+    root.unmount()
+  })
+
+  test("Table restores single, additive and Shift-range selection proposals", () => {
+    const keys = ["a", "b", "c", "d"]
+    expect(normalizeTableSelection(keys, ["missing", "b", "b", "d"])).toEqual(["b", "d"])
+    expect(tableSelectionAfterClick(keys, ["a"], "c", "a").selectedKeys).toEqual(["c"])
+    expect(tableSelectionAfterClick(keys, ["a"], "c", "a", {metaKey: true}).selectedKeys).toEqual(["a", "c"])
+    expect(tableSelectionAfterClick(keys, ["a", "c"], "a", "a", {ctrlKey: true}).selectedKeys).toEqual(["c"])
+    expect(tableSelectionAfterClick(keys, ["a"], "d", "a", {shiftKey: true}).selectedKeys).toEqual(keys)
+  })
+
+  test("lets an interactive cell own activation before its row", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const actions: string[] = []
+    const selections: string[][] = []
+    root.render(Table as any, {
+      columns: [{key: "name", label: "Name"}, {key: "value", label: "Value"}],
+      rows: [{key: "a", cells: {name: "Alpha", value: 1}}],
+      selectedKeys: [],
+      isCellInteractive: (context: {columnIndex: number}) => context.columnIndex === 0,
+      onCellActivate: (context: {column: {key: string}}) => actions.push(`cell:${context.column.key}`),
+      onRowActivate: () => actions.push("row"),
+      onSelectionChange: (update: {selectedKeys: readonly string[]}) => selections.push([...update.selectedKeys])
+    })
+    const cells = host.querySelectorAll("td")
+    cells[0]!.dispatchEvent(new MouseEvent("click", {bubbles: true}))
+    expect(actions).toEqual(["cell:name"])
+    expect(selections).toEqual([])
+    cells[1]!.dispatchEvent(new MouseEvent("click", {bubbles: true, shiftKey: true}))
+    expect(actions).toEqual(["cell:name", "row"])
+    expect(selections).toEqual([["a"]])
+    expect(cells[0]!.getAttribute("data-interactive")).toBe("true")
+
+    root.render(Table as any, {
+      columns: [{key: "name", label: "Name"}, {key: "value", label: "Value"}],
+      rows: [{key: "a", cells: {name: "Alpha", value: 1}}],
+      disabled: true,
+      isCellInteractive: () => true,
+      onCellActivate: () => actions.push("disabled-cell"),
+      onRowActivate: () => actions.push("disabled-row")
+    })
+    host.querySelector("td")!.dispatchEvent(new MouseEvent("click", {bubbles: true}))
+    expect(actions).toEqual(["cell:name", "row"])
+    expect(host.querySelector("td")!.getAttribute("data-interactive")).toBeNull()
+    expect(host.querySelector("td")!.getAttribute("aria-disabled")).toBe("true")
     root.unmount()
   })
 

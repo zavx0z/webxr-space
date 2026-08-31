@@ -69,7 +69,7 @@ Document renderer исполняет native pseudo-state cascade. Production Com
 
 ## Public boundary
 
-Пакет публикует ровно 29 exact production subpaths:
+Пакет публикует ровно 31 exact production subpaths:
 
 - `@ui/components/button`
 - `@ui/components/field`
@@ -94,6 +94,8 @@ Document renderer исполняет native pseudo-state cascade. Production Com
 - `@ui/components/divider`
 - `@ui/components/list`
 - `@ui/components/table`
+- `@ui/components/status-bar`
+- `@ui/components/notification`
 - `@ui/components/inspector`
 - `@ui/components/code-editor`
 - `@ui/components/hud`
@@ -184,6 +186,9 @@ Controlled callback сообщает proposed value owner-у, а live editing st
   композирует их semantic contracts и не становится их единственным API.
 - `list` и `table` владеют semantic keyed collections и сохраняют descendant
   identities при reorder.
+- `status-bar` владеет passive 24px lower-chrome status line, а
+  `notification` — compact semantic `status`/`alert`; очередь, доставка и
+  product commands остаются caller-owned.
 - `field` владеет discriminated Field composition и keyed complex values.
 - `inspector` владеет toolbar, category rail, sections и native search;
   основной contract id — `UI-DOM-INSPECTOR-001`, а search ref имеет exact
@@ -196,6 +201,13 @@ Controlled callback сообщает proposed value owner-у, а live editing st
   aggregate catalog, но production Components импортируют нужные named assets
   из package-private tree-shakeable owner; один control не удерживает все SVG.
 - `syntax-theme` владеет source-backed scope color resolver.
+
+`syntax-theme-runtime.ts` — tree-shakeable source-exact projection только тех
+theme fields, которые читает `CodeEditor`; это не второй theme owner. Focused
+test сопоставляет каждый projected scope и editor color с public
+`syntax-theme`/source JSON. Public `activeSyntaxTheme` сохраняет полный source
+artifact, тогда как all-owner production proof не удерживает неиспользуемые
+Workbench/VS Code color roles.
 
 Detailed component and catalog laws остаются executable в natural owner tests
 и `packages/components/.storybook` tests без Storybook dependency.
@@ -248,19 +260,30 @@ hook component using `useState`. Its HTML source does not fabricate a `value`
 content attribute for live state; executable TypeScript carries the current
 value instead.
 
-## `UI-COMPILED-NUMBER-INPUT-001` — joined numeric interaction owner
+## `UI-COMPILED-NUMBER-INPUT-001` — continuous scalar interaction owner
 
 `@ui/components/number-input` exports controlled TSX `NumberInput(props)` as
-one 120×22 joined contour. It composes the already-owned `IconButton` twice
-around one standard Number input; middle cells create no independent emboss
-islands. Exact Button/input identities survive controlled updates.
+one 120×22 standard Number input and continuous scalar contour. The control has
+no visible decrement/increment buttons. Source-compatible left/right edge
+zones remain invisible step affordances; the center remains the same exact
+input identity for text focus and horizontal scrubbing.
 
-Side buttons propose one `step`. Horizontal pointer scrubbing uses the current
+When both hard `min` and `max` are finite and ordered, one ordinary semantic
+DOM span behind the input shows `(value - min) / (max - min)` as the
+proportional fill. It is clamped visually to `0–100%`, preserves the single
+contour and never changes value normalization. Soft bounds affect pointer
+gesture range only and never the fill. Missing/degenerate hard range hides the
+fill; no Canvas, display-list callback or private paint path is allowed.
+
+Edge release proposes one `step`. Horizontal pointer scrubbing uses the current
 controlled value as its immutable gesture baseline, Shift applies 0.1
-precision, Ctrl snaps to `step`, hard/soft bounds clamp proposals, and Escape
-proposes the focus baseline. Native `input`/`change` remain standard bubbling
-events. The component stores only transient gesture/edit refs and never owns a
-second value Store. The Storybook route wraps this exact owner with `useState`.
+precision, Ctrl applies the frozen-range snap law, hard value bounds stay
+separate from pointer-only soft bounds, and Escape proposes the focus baseline.
+The exact input acquires standard pointer capture for the gesture and releases
+it on up/cancel/Escape; movement outside the original hit remains routed by the
+DOM/Renderer owner. Native `input`/`change` remain standard bubbling events.
+The component stores only transient gesture/edit refs and never owns a second
+value Store. The Storybook route wraps this exact owner with `useState`.
 
 `IntegerInput` is not a second numeric implementation: its TSX component
 returns `NumberInput`, supplies integer step/value semantics and rounds every
@@ -283,6 +306,22 @@ Keyed reorder preserves both the parent component instance and every retained
 nested component/element. Joined owners suppress nested contour shadows and
 radii through owner tokens while keeping exactly one caller-facing `style`.
 
+## `UI-COMPILED-COLOR-INPUT-001` — controlled color semantics, partial presentation
+
+`ColorInput` keeps immutable RGBA as its public controlled value, projects
+editable HSVA rows, parses and formats exact six/eight-digit hex, and renders
+alpha over a semantic DOM checker. `closed`, `open` and `expanded` remain
+distinct controlled presentations; the current `open` panel is an in-flow
+disclosure, not an accepted anchored picker substitute.
+
+This owner is explicitly partial. Reference-compatible hue/saturation wheel,
+value plane/marker dragging and compact anchored top-layer placement remain
+blocked on generic platform capabilities, including
+`gap.html.anchored-popover`. Components must not add a private picker-plane
+renderer, manual viewport placement, pointer dispatcher, Canvas/WebGPU path or
+hardcoded story-only wheel. Hex/HSVA/checker tests prove the completed semantic
+slice only; they do not satisfy ColorInput visual/interaction acceptance.
+
 ## `UI-COMPILED-COLLECTIONS-001` — keyed List and Table
 
 `List` compiles each item as a keyed `ListRow`. `Table` independently keys
@@ -292,6 +331,13 @@ path. Selection and disabled state are semantic ARIA plus owner tokens; hover
 is a native pseudo. `CollectionInput` consumes the same `List` owner rather
 than maintaining a second list implementation and preserves the historical
 1–8 visible-row height table.
+
+`Table` supports controlled single, Ctrl/Meta additive and Shift-range
+selection proposals with an explicit anchor. An interactive cell owns its
+activation before the row through standard event propagation; disabled Table
+or row state disables both cell and row activation. Cells accept primitive or
+structured values through the owner formatter instead of narrowing the data
+contract to strings.
 
 ## `UI-COMPILED-FIELD-001` — one discriminated component graph
 
@@ -303,6 +349,11 @@ markup or a second value store. Controlled proposals flow directly to the
 callback on the current definition. Changing a value preserves the active
 owner; changing the discriminant replaces only that conditional control range
 while preserving the Field row and label relation.
+
+`number` with `presentation: "input"` composes the continuous `NumberInput`.
+`presentation: "slider"` composes the exact proportional `SliderControl` with
+the declared min/max/step; it does not overlay step buttons or a private
+numeric replica.
 
 The definition is semantic data and therefore exposes no class or style
 escape hatch. `style` belongs only to the `Field` component itself. The
@@ -345,14 +396,24 @@ section headers compose `Button`. Geometry remains the compact 30px rail,
 
 `HudWindow` and `HudFrame` accept direct authored component children for their
 bodies. They compile keyed action/handle Buttons and retain the body subtree
-while minimized, reordered or reconfigured. `Timeline` independently keys
-tracks and the markers within each track and composes the common Button owner
-for its transport. Window active state, Frame edge and Timeline selection are
-owner style tokens; interaction is reported through controlled callbacks.
+while minimized, reordered or reconfigured. `Timeline` is the neutral Timeline
+mode projection: playback range, optional preview range, visible range, current
+frame/playhead, one shared summary keyframe row and one separate named scene
+marker row. It independently keys summary points and scene markers.
+
+Playback transport, play/pause state, preroll/loop policy and product commands
+belong to a separately composed playback controller, not `Timeline`. Multiple
+independently labelled rows belong to a separate multi-channel contract; they
+are not represented as Timeline markers. `showSeconds` changes formatting only
+and never changes stored frame coordinates. Legacy `min/max/current/tracks`
+input remains migration-only and is projected into the one summary row without
+restoring transport or labelled-track presentation.
 
 All three retain their historical 320×160, 300×140 and 640×140 minimum
-contours, 28px headers and low-radius materials. `HudWindow`, `HudFrame` and
-`Timeline` являются их единственными production implementations.
+contours, 28px headers and low-radius materials. Window active state, Frame
+edge and Timeline point selection are owner style tokens; interaction is
+reported through controlled callbacks. `HudWindow`, `HudFrame` and `Timeline`
+являются их единственными production implementations.
 
 ## `UI-COMPILED-FOUNDATIONS-001` — neutral visual primitives
 

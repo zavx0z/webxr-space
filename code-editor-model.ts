@@ -4,9 +4,9 @@ import {
   type Tokens
 } from "@zavx0z/highlighter"
 import {
-  activeSyntaxTheme,
-  resolveSyntaxScopeColorHex
-} from "./syntax-theme.ts"
+  codeEditorSyntaxTheme,
+  resolveCodeEditorSyntaxScopeColorHex
+} from "./syntax-theme-runtime.ts"
 
 export type CodeEditorProps = Readonly<{
   value: string
@@ -101,7 +101,7 @@ function tokenize(
     ...(path === undefined ? {} : {path}),
     fallbackLanguageId: "plaintext"
   })
-  const tokens = highlighter.tokenize(lines, {resolveForeground: resolveSyntaxScopeColorHex})
+  const tokens = highlighter.tokenize(lines, {resolveForeground: resolveCodeEditorSyntaxScopeColorHex})
   return Object.freeze({tokens: normalizeTokens(tokens, lines, true), languageId: highlighter.id})
 }
 
@@ -197,11 +197,11 @@ function categoryColor(category: string): string {
     p: "punctuation",
     d: "variable.other"
   } as Readonly<Record<string, string>>)[category] ?? category
-  return resolveSyntaxScopeColorHex([scope], editorForeground) ?? editorForeground
+  return resolveCodeEditorSyntaxScopeColorHex([scope], editorForeground) ?? editorForeground
 }
 
 function themeColor(key: string, fallback: string): string {
-  const value = activeSyntaxTheme.colors?.[key]
+  const value = codeEditorSyntaxTheme.colors[key]
   return value === undefined || !isHexColor(value) ? fallback : normalizeHexColor(value)
 }
 

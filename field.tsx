@@ -65,6 +65,8 @@ export type NumberFieldDefinition = FieldBase & Readonly<{
   presentation?: "input" | "slider"
   min?: number
   max?: number
+  softMin?: number
+  softMax?: number
   step?: number
   onChange?(value: number): void
 }>
@@ -74,6 +76,8 @@ export type IntegerFieldDefinition = FieldBase & Readonly<{
   value: number
   min?: number
   max?: number
+  softMin?: number
+  softMax?: number
   step?: number
   onChange?(value: number): void
 }>
@@ -223,6 +227,8 @@ function FieldControlView(props: Readonly<{definition: FieldDefinition; labelId:
       value={definition.value}
       min={definition.min}
       max={definition.max}
+      softMin={definition.softMin}
+      softMax={definition.softMax}
       step={definition.step}
       disabled={definition.disabled === true}
       readOnly={definition.readOnly === true}
@@ -244,6 +250,8 @@ function FieldControlView(props: Readonly<{definition: FieldDefinition; labelId:
       value={definition.value}
       min={definition.min}
       max={definition.max}
+      softMin={definition.softMin}
+      softMax={definition.softMax}
       step={definition.step}
       disabled={definition.disabled === true}
       readOnly={definition.readOnly === true}

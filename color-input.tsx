@@ -5,6 +5,7 @@ import {TextField} from "./text-field.tsx"
 
 export type ColorChannel = "r" | "g" | "b" | "a"
 export type ColorInputValue = Readonly<Record<ColorChannel, number>>
+export type ColorInputHsva = Readonly<{h: number; s: number; v: number; a: number}>
 export type ColorInputPresentation = "closed" | "open" | "expanded"
 
 export type ColorInputProps = Readonly<{
@@ -20,16 +21,55 @@ export type ColorInputProps = Readonly<{
   onOpenChange?: ((open: boolean, event: Event) => void) | undefined
 }>
 
-const channels = Object.freeze(["r", "g", "b", "a"] as const)
+type HsvaChannel = "h" | "s" | "v" | "a"
+
+const channels = Object.freeze(["h", "s", "v", "a"] as const)
+const checkerCells = Object.freeze(Array.from({length: 32}, (_, index) => Object.freeze({
+  key: String(index),
+  dark: (Math.floor(index / 8) + index) % 2 === 0
+})))
 
 const triggerStyle: CssStyle = css`& { width: 100%; height: 28px; justify-content: flex-start; padding: 3px 7px; }`
 const openTriggerStyle: CssStyle = css`& { background: var(--widget-active-background); }`
-const numberStyle: CssStyle = css`& { width: 52px; min-width: 52px; height: 24px; padding: 2px 4px; font-size: 10px; text-align: right; }`
+const hexStyle: CssStyle = css`& { width: 92px; min-width: 92px; height: 24px; text-transform: uppercase; }`
+const numberStyle: CssStyle = css`& { width: 56px; min-width: 56px; height: 24px; padding: 2px 4px; font-size: 10px; text-align: right; }`
 const rangeStyle: CssStyle = css`& { width: 0; min-width: 0; height: 24px; flex-grow: 1; padding: 2px 4px; }`
 
+function CheckerCell(props: Readonly<{dark: boolean}>) {
+  return <span
+    data-dark={props.dark ? "true" : undefined}
+    style={css`
+      & { display: block; width: 12.5%; height: 25%; background: var(--surface-550); }
+      &[data-dark="true"] { background: var(--surface-750); }
+    `}
+  ></span>
+}
+
+function CheckerCells() {
+  return <div aria-hidden="true" style={css`
+    & { position: absolute; inset: 0; display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; height: 100%; overflow: clip; }
+  `}>{checkerCells.map(cell => <CheckerCell
+    key={cell.key}
+    dark={cell.dark}
+  />)}</div>
+}
+
+function ColorSwatch(props: Readonly<{value: ColorInputValue; expanded: boolean}>) {
+  return <div data-color-swatch="" data-expanded={props.expanded ? "true" : undefined} style={css`
+    & { box-sizing: border-box; position: relative; display: block; width: 100%; height: 34px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 3px; overflow: clip; }
+    &[data-expanded="true"] { height: 48px; }
+  `}>
+    <CheckerCells />
+    <span aria-hidden="true" style={css`
+      & { position: absolute; inset: 0; display: block; background: ${rgbaCss(props.value)}; }
+    `}></span>
+  </div>
+}
+
 type ColorChannelControlProps = Readonly<{
-  channel: ColorChannel
+  channel: HsvaChannel
   value: ColorInputValue
+  hsva: ColorInputHsva
   disabled: boolean
   readOnly: boolean
   onInput?: ColorInputProps["onInput"]
@@ -37,9 +77,16 @@ type ColorChannelControlProps = Readonly<{
 }>
 
 function ColorChannelControl(props: ColorChannelControlProps) {
+  const displayValue = colorChannelDisplayValue(props.channel, props.hsva)
+  const maximum = props.channel === "h" ? 360 : 1
+  const step = props.channel === "h" ? 1 : 0.01
   const emit = (kind: "input" | "change", nextValue: number, event: Event) => {
     if (!Number.isFinite(nextValue)) return
-    const next = Object.freeze({...props.value, [props.channel]: clamp(nextValue)})
+    const nextHsva = Object.freeze({
+      ...props.hsva,
+      [props.channel]: props.channel === "h" ? wrapUnit(nextValue / 360) : clampUnit(nextValue)
+    })
+    const next = colorInputHsvaToValue(nextHsva)
     if (kind === "input") props.onInput?.(next, event)
     else props.onChange?.(next, event)
   }
@@ -55,22 +102,24 @@ function ColorChannelControl(props: ColorChannelControlProps) {
     `}>{props.channel.toUpperCase()}</span>
     <TextField
       type="number"
-      value={String(props.value[props.channel])}
+      value={String(displayValue)}
       min={0}
-      max={1}
-      step={0.01}
+      max={maximum}
+      step={step}
       disabled={props.disabled}
       readOnly={props.readOnly}
+      aria-label={`${props.channel.toUpperCase()} channel`}
       style={numberStyle}
       onInput={onNumberInput}
       onChange={onNumberChange}
     />
     <SliderControl
-      value={props.value[props.channel]}
+      value={displayValue}
       min={0}
-      max={1}
-      step={0.01}
+      max={maximum}
+      step={step}
       disabled={props.disabled || props.readOnly}
+      title={`${props.channel.toUpperCase()} channel`}
       style={rangeStyle}
       onInput={onRangeInput}
       onChange={onRangeChange}
@@ -82,52 +131,74 @@ export function ColorInput(props: ColorInputProps) {
   const normalized = normalizeColorProps(props)
   const open = normalized.presentation !== "closed"
   const locked = props.disabled === true || props.readOnly === true
+  const hsva = colorInputValueToHsva(normalized.value)
   const onToggle = (event: Event) => {
     if (!locked) props.onOpenChange?.(!open, event)
   }
+  const emitHex = (kind: "input" | "change", text: string, event: Event) => {
+    const next = parseColorInputValue(text)
+    if (next === null || locked) return
+    if (kind === "input") props.onInput?.(next, event)
+    else props.onChange?.(next, event)
+  }
+  const onHexInput = (value: string, event: Event) => emitHex("input", value, event)
+  const onHexChange = (value: string, event: Event) => emitHex("change", value, event)
   return <fieldset
     disabled={props.disabled === true}
     title={props.title}
+    data-color-input=""
+    data-presentation={normalized.presentation}
     style={css`
-        & { box-sizing: border-box; display: flex; flex-direction: column; width: 280px; gap: 4px; padding: 0; border: 0; color: var(--widget-regular-content); }
-        ${props.style}
-      `}
+      & { box-sizing: border-box; display: flex; flex-direction: column; width: 280px; gap: 4px; padding: 0; border: 0; color: var(--widget-regular-content); }
+      ${props.style}
+    `}
   >
     <legend style={css`
       & { display: block; min-height: 16px; color: var(--widget-list-content); font-size: var(--font-size-xs); }
     `}>{props.label ?? "Color"}</legend>
     <Button
-      label={rgbaLabel(normalized.value)}
+      label={formatColorInputValue(normalized.value)}
       disabled={locked}
       selected={open}
       aria-expanded={String(open)}
       style={css`${triggerStyle}${open && openTriggerStyle}`}
       onClick={onToggle}
     />
-    <div data-presentation={normalized.presentation} style={css`
-        & {
-          box-sizing: border-box;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          gap: 3px;
-          padding: 6px;
-          border: var(--border-width-control) solid var(--widget-popup-outline);
-          border-radius: 4px;
-          background: var(--widget-popup-background);
-        }
-        &[data-presentation="closed"] { display: none; }
-        &[data-presentation="open"] { border-color: var(--widget-regular-outline); }
-        &[data-presentation="expanded"] { border-color: var(--widget-focus-outline); }
-      `}>
+    <div style={css`
+      & {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 3px;
+        padding: 6px;
+        border: var(--border-width-control) solid var(--widget-popup-outline);
+        border-radius: 4px;
+        background: var(--widget-popup-background);
+      }
+      &[hidden] { display: none; }
+      &[data-presentation="open"] { border-color: var(--widget-regular-outline); }
+      &[data-presentation="expanded"] { gap: 5px; border-color: var(--widget-focus-outline); }
+    `} hidden={!open} data-presentation={normalized.presentation} role="group" aria-label="Color editor">
       <div style={css`
-          & { box-sizing: border-box; display: block; width: 100%; height: 34px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 3px; }
-          & { background: ${rgbaCss(normalized.value)}; }
-        `}></div>
+        & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; gap: 4px; }
+      `} data-expanded={normalized.presentation === "expanded" ? "true" : undefined}>
+        <ColorSwatch value={normalized.value} expanded={normalized.presentation === "expanded"} />
+        <TextField
+          value={formatColorInputValue(normalized.value)}
+          disabled={props.disabled === true}
+          readOnly={props.readOnly === true}
+          aria-label="Hex color"
+          style={hexStyle}
+          onInput={onHexInput}
+          onChange={onHexChange}
+        />
+      </div>
       {channels.map(channel => <ColorChannelControl
         key={channel}
         channel={channel}
         value={normalized.value}
+        hsva={hsva}
         disabled={props.disabled === true}
         readOnly={props.readOnly === true}
         onInput={props.onInput}
@@ -137,18 +208,86 @@ export function ColorInput(props: ColorInputProps) {
   </fieldset>
 }
 
+/** Normalizes partial RGBA input into an immutable unit-range value. */
+export function normalizeColorInputValue(value: Partial<ColorInputValue>): ColorInputValue {
+  return Object.freeze({
+    r: clampUnit(value.r ?? 0),
+    g: clampUnit(value.g ?? 0),
+    b: clampUnit(value.b ?? 0),
+    a: clampUnit(value.a ?? 1)
+  })
+}
+
+/** Formats normalized RGB or RGBA as exact two-digit hexadecimal channels. */
+export function formatColorInputValue(value: Partial<ColorInputValue>, includeAlpha = true): string {
+  const color = normalizeColorInputValue(value)
+  const channel = (entry: number): string => Math.round(entry * 255).toString(16).padStart(2, "0").toUpperCase()
+  return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}${includeAlpha ? channel(color.a) : ""}`
+}
+
+/** Parses exact six- or eight-digit RGB(A) hexadecimal text. */
+export function parseColorInputValue(value: string): ColorInputValue | null {
+  const hex = value.trim().replace(/^#/, "")
+  if (!/^[0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?$/.test(hex)) return null
+  const channel = (offset: number): number => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255
+  return normalizeColorInputValue({
+    r: channel(0),
+    g: channel(2),
+    b: channel(4),
+    a: hex.length === 8 ? channel(6) : 1
+  })
+}
+
+/** Converts normalized RGBA to immutable hue/saturation/value/alpha. */
+export function colorInputValueToHsva(value: Partial<ColorInputValue>): ColorInputHsva {
+  const color = normalizeColorInputValue(value)
+  const maximum = Math.max(color.r, color.g, color.b)
+  const minimum = Math.min(color.r, color.g, color.b)
+  const delta = maximum - minimum
+  let hue = 0
+  if (delta > 0) {
+    if (maximum === color.r) hue = ((color.g - color.b) / delta) % 6
+    else if (maximum === color.g) hue = (color.b - color.r) / delta + 2
+    else hue = (color.r - color.g) / delta + 4
+    hue /= 6
+  }
+  return Object.freeze({
+    h: wrapUnit(hue),
+    s: maximum <= 0 ? 0 : delta / maximum,
+    v: maximum,
+    a: color.a
+  })
+}
+
+/** Converts normalized HSVA to a new immutable RGBA value. */
+export function colorInputHsvaToValue(value: Partial<ColorInputHsva>): ColorInputValue {
+  const hue = wrapUnit(value.h ?? 0) * 6
+  const saturation = clampUnit(value.s ?? 0)
+  const brightness = clampUnit(value.v ?? 0)
+  const chroma = brightness * saturation
+  const secondary = chroma * (1 - Math.abs((hue % 2) - 1))
+  const match = brightness - chroma
+  const sector = Math.floor(hue) % 6
+  const rgb = sector === 0 ? [chroma, secondary, 0]
+    : sector === 1 ? [secondary, chroma, 0]
+      : sector === 2 ? [0, chroma, secondary]
+        : sector === 3 ? [0, secondary, chroma]
+          : sector === 4 ? [secondary, 0, chroma]
+            : [chroma, 0, secondary]
+  return normalizeColorInputValue({
+    r: rgb[0]! + match,
+    g: rgb[1]! + match,
+    b: rgb[2]! + match,
+    a: value.a ?? 1
+  })
+}
 
 function normalizeColorProps(props: ColorInputProps): Readonly<{
   value: ColorInputValue
   presentation: ColorInputPresentation
 }> {
   if (!props.value || typeof props.value !== "object") throw new TypeError("ColorInput value must be an object")
-  const value = Object.freeze({
-    r: unit(props.value.r, "r"),
-    g: unit(props.value.g, "g"),
-    b: unit(props.value.b, "b"),
-    a: unit(props.value.a, "a")
-  })
+  const value = normalizeColorInputValue(props.value)
   const presentation = props.presentation ?? "closed"
   if (presentation !== "closed" && presentation !== "open" && presentation !== "expanded") {
     throw new Error(`Unknown ColorInput presentation: ${presentation}`)
@@ -156,23 +295,25 @@ function normalizeColorProps(props: ColorInputProps): Readonly<{
   return Object.freeze({value, presentation})
 }
 
-function unit(value: number, channel: string): number {
-  if (!Number.isFinite(value) || value < 0 || value > 1) {
-    throw new RangeError(`ColorInput ${channel} must be between 0 and 1`)
-  }
-  return value
+function colorChannelDisplayValue(channel: HsvaChannel, value: ColorInputHsva): number {
+  return channel === "h" ? Math.round(value.h * 360) : rounded(value[channel])
 }
 
-function clamp(value: number): number {
-  return Math.max(0, Math.min(1, value))
+function clampUnit(value: number): number {
+  return Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0))
+}
+
+function wrapUnit(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return ((value % 1) + 1) % 1
+}
+
+function rounded(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000
 }
 
 function byte(value: number): number {
   return Math.round(value * 255)
-}
-
-function rgbaLabel(value: ColorInputValue): string {
-  return `RGBA ${byte(value.r)}, ${byte(value.g)}, ${byte(value.b)}, ${Math.round(value.a * 100)}%`
 }
 
 function rgbaCss(value: ColorInputValue): string {

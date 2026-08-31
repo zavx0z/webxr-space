@@ -29,6 +29,8 @@
     "./divider": "./divider.tsx",
     "./list": "./list.tsx",
     "./table": "./table.tsx",
+    "./status-bar": "./status-bar.tsx",
+    "./notification": "./notification.tsx",
     "./code-editor": "./code-editor.tsx",
     "./inspector": "./inspector.tsx",
     "./hud": "./hud.tsx",

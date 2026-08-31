@@ -108,6 +108,7 @@
 
   --widget-number-outline: rgb(var(--surface-700));
   --widget-number-background: rgb(var(--surface-600));
+  --widget-number-fill: rgb(var(--primary-500));
   --widget-number-background-focus: rgb(var(--surface-850));
   --widget-number-background-readonly: rgb(var(--surface-750));
   --widget-number-content: rgb(var(--surface-100));
@@ -173,4 +174,5 @@
   --status-bar-content: rgb(var(--surface-450));
   --status-bar-content-highlight: rgb(var(--surface-0));
   --status-bar-content-shadow: rgb(var(--surface-black) / 0.749);
+  --notification-shadow: rgb(var(--surface-black) / 0.35);
 }

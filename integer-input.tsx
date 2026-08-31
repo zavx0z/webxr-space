@@ -6,7 +6,7 @@ import {
 
 export type IntegerInputProps = Omit<
   NumberInputProps,
-  "value" | "step" | "onInput" | "onChange"
+  "value" | "numberKind" | "step" | "onInput" | "onChange"
 > & Readonly<{
   value: number
   step?: number | undefined
@@ -19,6 +19,7 @@ export function IntegerInput(props: IntegerInputProps) {
   const onChange = (value: number, event: Event) => props.onChange?.(Math.round(value), event)
   return <NumberInput
     value={Math.round(props.value)}
+    numberKind="integer"
     min={props.min}
     max={props.max}
     softMin={props.softMin}
@@ -27,8 +28,6 @@ export function IntegerInput(props: IntegerInputProps) {
     disabled={props.disabled}
     readOnly={props.readOnly}
     title={props.title}
-    decrementTitle={props.decrementTitle}
-    incrementTitle={props.incrementTitle}
     style={props.style}
     onInput={onInput}
     onChange={onChange}

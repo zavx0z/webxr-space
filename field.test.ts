@@ -71,6 +71,36 @@ describe("compiled discriminated Field composition", () => {
     root.unmount()
   })
 
+  test("uses the proportional range owner for slider presentation", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const values: number[] = []
+    root.render(Field as any, {definition: {
+      id: "ratio",
+      label: "Ratio",
+      kind: "number",
+      value: 0.25,
+      presentation: "slider",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      onChange: (value: number) => values.push(value)
+    }})
+    const range = host.querySelector('input[type="range"]') as HTMLInputElement
+    expect(range).not.toBeNull()
+    expect(host.querySelector('input[type="number"]')).toBeNull()
+    expect(range.min).toBe("0")
+    expect(range.max).toBe("1")
+    expect(range.step).toBe("0.05")
+    range.valueAsNumber = 0.6
+    range.dispatchEvent(new Event("input", {bubbles: true}))
+    expect(values).toHaveLength(1)
+    expect(values[0]).toBeCloseTo(0.6, 12)
+    root.unmount()
+  })
+
   test("keeps the 28px field row law and a class-free aggregate sheet", () => {
     const document = createDocument()
     const host = document.createElement("main")

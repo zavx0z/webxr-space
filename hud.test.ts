@@ -87,16 +87,16 @@ describe("compiled production HUD compositions", () => {
     root.unmount()
   })
 
-  test("Timeline retains nested keyed track and marker identities", () => {
+  test("Timeline retains keyed summary points and keeps scene markers in a separate row", () => {
     expect(isCompiledTemplate(Timeline)).toBe(true)
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
-    const tracks = timelineDefaultProps.tracks
-    root.render(Timeline as any, {...timelineDefaultProps, tracks})
-    const output = host.querySelector('[data-track-key="output"]')!
-    const current = output.querySelector('[data-marker-key="current"]')!
+    const keyframes = timelineDefaultProps.keyframes!
+    root.render(Timeline as any, {...timelineDefaultProps, keyframes})
+    const current = host.querySelector('[data-keyframe-key="current"]')!
+    const sceneMarker = host.querySelector('[data-marker-key="review"]')!
     const renderer = createDocumentRenderer({
       document,
       root: host,
@@ -106,17 +106,19 @@ describe("compiled production HUD compositions", () => {
     const beforeX = renderer.flush().boxByNode.get(currentButton)!.x
     root.render(Timeline as any, {
       ...timelineDefaultProps,
-      current: 75,
-      playing: true,
-      tracks: [tracks[1]!, {...tracks[0]!, markers: [
-        {...tracks[0]!.markers[1]!, tick: 90},
-        tracks[0]!.markers[0]!
-      ]}]
+      frameCurrent: 75,
+      keyframes: [
+        {...keyframes[1]!, frame: 90},
+        keyframes[0]!,
+        keyframes[2]!
+      ]
     })
-    expect(host.querySelector('[data-track-key="output"]')).toBe(output)
-    expect(output.querySelector('[data-marker-key="current"]')).toBe(current)
+    expect(host.querySelector('[data-keyframe-key="current"]')).toBe(current)
+    expect(host.querySelector('[data-marker-key="review"]')).toBe(sceneMarker)
     expect(renderer.flush().boxByNode.get(currentButton)!.x).toBeGreaterThan(beforeX)
-    expect(host.textContent).toContain("Pause")
+    expect(host.querySelector('[aria-label="Summary keyframes"]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="Timeline markers"]')).not.toBeNull()
+    expect(host.querySelector('[aria-label="Timeline transport"]')).toBeNull()
     expect(host.querySelector("section")!.className).toBe("")
     renderer.dispose()
     root.unmount()
@@ -148,13 +150,13 @@ describe("compiled production HUD compositions", () => {
     const owner = host.querySelector("section")
     expect(() => root.render(Timeline as any, {
       ...timelineDefaultProps,
-      tracks: [{key: "", label: "Broken", markers: [{key: "bad", tick: Number.NaN, label: "Bad", selected: false}]}]
-    })).toThrow("track key must not be empty")
+      keyframes: [{key: "", frame: 1, label: "Broken"}]
+    })).toThrow("keyframe key must not be empty")
     expect(host.querySelector("section")).toBe(owner)
     expect(() => root.render(Timeline as any, {
       ...timelineDefaultProps,
-      tracks: [{key: "track", label: "Broken", markers: [{key: "bad", tick: Number.NaN, label: "Bad", selected: false}]}]
-    })).toThrow("tick must be finite")
+      keyframes: [{key: "bad", frame: Number.NaN, label: "Broken"}]
+    })).toThrow("frame must be finite")
     expect(host.querySelector("section")).toBe(owner)
     root.unmount()
   })

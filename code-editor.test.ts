@@ -49,9 +49,22 @@ describe("compiled production CodeEditor", () => {
     expect(owner.getAttribute("data-language-id")).toBe("typescript")
     expect(owner.getAttribute("role")).toBe("region")
     expect(owner.getAttribute("aria-label")).toBe("Code editor")
-    expect(owner.hasAttribute("aria-readonly")).toBe(false)
+    expect(owner.getAttribute("aria-readonly")).toBe("true")
     expect([...owner.querySelectorAll("*")].every(element => element.className === "")).toBe(true)
     renderer.dispose()
+    root.unmount()
+  })
+
+  test("leaves document selection and clipboard behavior to the public platform owner", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(CodeEditor as any, {value: "const answer = 42", readOnly: true})
+    const owner = host.querySelector("section")!
+    expect(owner.querySelector("pre code")).not.toBeNull()
+    expect(owner.querySelector("textarea")).toBeNull()
+    expect((document as unknown as {getSelection?: unknown}).getSelection).toBeUndefined()
     root.unmount()
   })
 
