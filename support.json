@@ -13,7 +13,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "analytical-ui-materials",
           "type": "implementation"
         },
@@ -22,7 +22,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "analytical-ui-materials",
           "type": "unit-test"
         }
@@ -30,7 +30,7 @@
       "id": "engine.features.analytical-ui-materials",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -53,7 +53,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "animation",
           "type": "implementation"
         },
@@ -62,7 +62,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "animation",
           "type": "unit-test"
         }
@@ -70,7 +70,7 @@
       "id": "engine.features.animation",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "A bounded implementation exists without focused behavioral tests for many admitted branches."
@@ -93,7 +93,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "One Renderer/current texture presents a base Space, ordered bounded descendant Spaces and foreground overlays with independent ViewPoints and pass bounds.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Renderer.renderComposition",
           "type": "implementation"
         },
@@ -102,7 +102,7 @@
           "path": "packages/core/src/renderer/render-composition.test.ts",
           "proves": "Root ownership, exclusion, ordering, exact physical viewport validation and legacy delegation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "bounded-multi-view-frame",
           "type": "unit-test"
         },
@@ -111,7 +111,7 @@
           "path": "packages/core/src/renderer/render-composition.webgpu.test.ts",
           "proves": "One initialized Renderer/current texture paints the bounded Space background inside its scissor while preserving base pixels outside.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Renderer bounded composition WebGPU pass",
           "type": "integration-test"
         }
@@ -119,7 +119,7 @@
       "id": "engine.features.bounded-multi-view-frame",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -142,7 +142,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "Host mode owns camera math and viewport mapping without browser listeners or element mutation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ViewPoint host controls",
           "type": "implementation"
         },
@@ -151,7 +151,7 @@
           "path": "packages/core/src/core/view-point.test.ts",
           "proves": "Listener-free viewport-aware controls and anchored zoom mapping.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "browser-document-boundary",
           "type": "unit-test"
         }
@@ -159,7 +159,7 @@
       "id": "engine.features.browser-document-boundary",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Listener-free host ViewPoints are available, but default browser controls and Renderer.init still accept browser-owned HTMLElement/HTMLCanvasElement resources."
@@ -182,7 +182,7 @@
           "path": "packages/core/src/core/buffer-attribute.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "buffer-attributes",
           "type": "implementation"
         },
@@ -191,7 +191,7 @@
           "path": "packages/core/src/core/buffer-attribute.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "buffer-attributes",
           "type": "unit-test"
         }
@@ -199,7 +199,7 @@
       "id": "engine.features.buffer-attributes",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -220,7 +220,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "capture-readback",
           "type": "implementation"
         },
@@ -229,7 +229,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "capture-readback",
           "type": "unit-test"
         }
@@ -237,7 +237,7 @@
       "id": "engine.features.capture-readback",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -260,7 +260,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "clip-surface-unification",
           "type": "implementation"
         },
@@ -269,7 +269,7 @@
           "path": "packages/core/src/renderer/shaders/presentation-clip.webgpu.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "clip-surface-unification",
           "type": "unit-test"
         }
@@ -277,7 +277,7 @@
       "id": "engine.features.clip-surface-unification",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -300,7 +300,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "clipping",
           "type": "implementation"
         },
@@ -309,7 +309,7 @@
           "path": "packages/core/src/renderer/shaders/presentation-clip.webgpu.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "clipping",
           "type": "unit-test"
         }
@@ -317,7 +317,7 @@
       "id": "engine.features.clipping",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -338,7 +338,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "culling",
           "type": "implementation"
         },
@@ -347,7 +347,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "culling",
           "type": "unit-test"
         }
@@ -355,7 +355,7 @@
       "id": "engine.features.culling",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -378,7 +378,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "device-loss",
           "type": "implementation"
         },
@@ -387,7 +387,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "device-loss",
           "type": "unit-test"
         }
@@ -395,7 +395,7 @@
       "id": "engine.features.device-loss",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "No whole-renderer/texture-cache teardown or device-loss recovery contract exists."
@@ -418,7 +418,7 @@
           "path": "packages/core/src/core/buffer-attribute.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "dirty-intervals",
           "type": "implementation"
         },
@@ -427,7 +427,7 @@
           "path": "packages/core/src/core/buffer-attribute.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "dirty-intervals",
           "type": "unit-test"
         }
@@ -435,7 +435,7 @@
       "id": "engine.features.dirty-intervals",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -458,7 +458,7 @@
           "path": "packages/core/contract.md",
           "proves": "The pinned project inventory contains engine.features.dom-css-ownership-boundary.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "dom css ownership boundary",
           "type": "requirement"
         }
@@ -466,7 +466,7 @@
       "id": "engine.features.dom-css-ownership-boundary",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "@engine/core publicly owns CSS-like LayoutProps/ComputedLayout on Object3D, violating the accepted platform boundary."
@@ -489,7 +489,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "draw-range-views",
           "type": "implementation"
         },
@@ -498,7 +498,7 @@
           "path": "packages/core/src/core/instance-layer.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "draw-range-views",
           "type": "unit-test"
         }
@@ -506,7 +506,7 @@
       "id": "engine.features.draw-range-views",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -527,7 +527,7 @@
           "path": "packages/core/src/objects/text.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "font-loading",
           "type": "implementation"
         },
@@ -536,7 +536,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "font-loading",
           "type": "unit-test"
         }
@@ -544,7 +544,7 @@
       "id": "engine.features.font-loading",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "No shaping, kerning, ligatures, bidi, multiline layout, or direct Text geometry behavioral suite; cache identity also has a font-key correctness gap."
@@ -567,7 +567,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "geometry",
           "type": "implementation"
         },
@@ -576,7 +576,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "geometry",
           "type": "unit-test"
         }
@@ -584,7 +584,7 @@
       "id": "engine.features.geometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -607,7 +607,7 @@
           "path": "packages/core/src/loaders/gltf-loader.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "gltf",
           "type": "implementation"
         },
@@ -616,7 +616,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "gltf",
           "type": "unit-test"
         }
@@ -624,7 +624,7 @@
       "id": "engine.features.gltf",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "A bounded implementation exists without focused behavioral tests for many admitted branches."
@@ -649,7 +649,7 @@
           "path": "packages/core/contract.md",
           "proves": "The pinned project inventory contains engine.features.glyph-cache-identity.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "glyph cache identity",
           "type": "requirement"
         }
@@ -657,7 +657,7 @@
       "id": "engine.features.glyph-cache-identity",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Glyph geometry cache keys only by gid, so different fonts with the same glyph ID reuse incorrect geometry."
@@ -680,7 +680,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "gpu-device-evidence",
           "type": "implementation"
         },
@@ -689,7 +689,7 @@
           "path": "packages/core/src/renderer/shaders/presentation-clip.webgpu.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "gpu-device-evidence",
           "type": "unit-test"
         }
@@ -697,7 +697,7 @@
       "id": "engine.features.gpu-device-evidence",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -720,7 +720,7 @@
           "path": "packages/core/contract.md",
           "proves": "The owner contract or public export claims this bounded capability.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "index buffer format",
           "type": "requirement"
         }
@@ -728,7 +728,7 @@
       "id": "engine.features.index-buffer-format",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "setIndex accepts arbitrary typed arrays while Renderer binds every non-Uint32 index as uint16; invalid inputs are not rejected."
@@ -751,7 +751,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "instance-layer",
           "type": "implementation"
         },
@@ -760,7 +760,7 @@
           "path": "packages/core/src/core/instance-layer.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "instance-layer",
           "type": "unit-test"
         }
@@ -768,7 +768,7 @@
       "id": "engine.features.instance-layer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -789,7 +789,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "Bounded Engine ABI implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "instanced-rounded-rectangles",
           "type": "implementation"
         },
@@ -798,7 +798,7 @@
           "path": "packages/core/src/core/instance-layer.test.ts",
           "proves": "Behavioral and, where applicable, real GPU pipeline/pixel evidence.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "instanced-rounded-rectangles",
           "type": "unit-test"
         }
@@ -806,7 +806,7 @@
       "id": "engine.features.instanced-rounded-rectangles",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -827,7 +827,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "legacy-ui-display-flag",
           "type": "implementation"
         },
@@ -836,7 +836,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "legacy-ui-display-flag",
           "type": "unit-test"
         }
@@ -844,7 +844,7 @@
       "id": "engine.features.legacy-ui-display-flag",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -867,7 +867,7 @@
           "path": "packages/core/src/loaders/gltf-loader.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "loaders",
           "type": "implementation"
         },
@@ -876,7 +876,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "loaders",
           "type": "unit-test"
         }
@@ -884,7 +884,7 @@
       "id": "engine.features.loaders",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -909,7 +909,7 @@
           "path": "packages/core/contract.md",
           "proves": "The pinned project inventory contains engine.features.material-groups.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "material groups",
           "type": "requirement"
         }
@@ -917,7 +917,7 @@
       "id": "engine.features.material-groups",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Public Mesh documentation promises material arrays mapped to geometry.groups, but BufferGeometry has no groups and Renderer uses material[0]."
@@ -940,7 +940,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "materials",
           "type": "implementation"
         },
@@ -949,7 +949,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "materials",
           "type": "unit-test"
         }
@@ -957,7 +957,7 @@
       "id": "engine.features.materials",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -980,7 +980,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "public-math",
           "type": "implementation"
         },
@@ -989,7 +989,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "public-math",
           "type": "unit-test"
         }
@@ -997,7 +997,7 @@
       "id": "engine.features.public-math",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1020,7 +1020,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ray-casting",
           "type": "implementation"
         },
@@ -1029,7 +1029,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ray-casting",
           "type": "unit-test"
         }
@@ -1037,7 +1037,7 @@
       "id": "engine.features.ray-casting",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Mesh uses bounding-sphere hits; Text, lines, rounded rectangles, and instances lack exact per-primitive ray tests."
@@ -1062,7 +1062,7 @@
           "path": "packages/core/contract.md",
           "proves": "The pinned project inventory contains engine.features.renderer-disposal.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "renderer disposal",
           "type": "requirement"
         }
@@ -1070,7 +1070,7 @@
       "id": "engine.features.renderer-disposal",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Renderer and TextureLoader have no whole-owner teardown for GPU resources, caches, callbacks, pipelines, or attachments."
@@ -1093,7 +1093,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "resource-lifetime",
           "type": "implementation"
         },
@@ -1102,7 +1102,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "resource-lifetime",
           "type": "unit-test"
         }
@@ -1110,7 +1110,7 @@
       "id": "engine.features.resource-lifetime",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "No whole-renderer/texture-cache teardown or device-loss recovery contract exists."
@@ -1133,7 +1133,7 @@
           "path": "packages/core/src/core/object-3d.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "scene-graph",
           "type": "implementation"
         },
@@ -1142,7 +1142,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "scene-graph",
           "type": "unit-test"
         }
@@ -1150,7 +1150,7 @@
       "id": "engine.features.scene-graph",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1173,7 +1173,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "space",
           "type": "implementation"
         },
@@ -1182,7 +1182,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "space",
           "type": "unit-test"
         }
@@ -1190,7 +1190,7 @@
       "id": "engine.features.space",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1213,7 +1213,7 @@
           "path": "packages/core/src/objects/text.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "text",
           "type": "implementation"
         },
@@ -1222,7 +1222,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "text",
           "type": "unit-test"
         }
@@ -1230,7 +1230,7 @@
       "id": "engine.features.text",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "No shaping, kerning, ligatures, bidi, multiline layout, or direct Text geometry behavioral suite; cache identity also has a font-key correctness gap."
@@ -1255,7 +1255,7 @@
           "path": "packages/core/contract.md",
           "proves": "The pinned project inventory contains engine.features.texture-device-identity.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "texture device identity",
           "type": "requirement"
         }
@@ -1263,7 +1263,7 @@
       "id": "engine.features.texture-device-identity",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Texture and fallback caches are process-global by src rather than scoped by GPUDevice."
@@ -1286,7 +1286,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "texture-image-loading",
           "type": "implementation"
         },
@@ -1295,7 +1295,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "texture-image-loading",
           "type": "unit-test"
         }
@@ -1303,7 +1303,7 @@
       "id": "engine.features.texture-image-loading",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1326,7 +1326,7 @@
           "path": "packages/core/src/core/object-3d.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "transforms",
           "type": "implementation"
         },
@@ -1335,7 +1335,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "transforms",
           "type": "unit-test"
         }
@@ -1343,7 +1343,7 @@
       "id": "engine.features.transforms",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1366,7 +1366,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "view-point",
           "type": "implementation"
         },
@@ -1375,7 +1375,7 @@
           "path": "packages/core/src/core/view-point.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "view-point",
           "type": "unit-test"
         }
@@ -1383,7 +1383,7 @@
       "id": "engine.features.view-point",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1406,7 +1406,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "webgpu-pipelines",
           "type": "implementation"
         },
@@ -1415,7 +1415,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "webgpu-pipelines",
           "type": "unit-test"
         }
@@ -1423,7 +1423,7 @@
       "id": "engine.features.webgpu-pipelines",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1446,7 +1446,7 @@
           "path": "packages/core/src/core/object-3d.ts",
           "proves": "Current bounded Engine implementation.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "world-transform-update",
           "type": "implementation"
         },
@@ -1455,7 +1455,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "Existing focused behavior where available.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "world-transform-update",
           "type": "unit-test"
         }
@@ -1463,7 +1463,7 @@
       "id": "engine.features.world-transform-update",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Implementation exists, but the public lifecycle/value space or focused behavioral evidence is incomplete."
@@ -1486,7 +1486,7 @@
           "path": "packages/core/package.json",
           "proves": "The package export path exists.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "./default-font",
           "type": "implementation"
         }
@@ -1494,7 +1494,7 @@
       "id": "platform.at-engine-core.export-paths.default-font",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -1518,7 +1518,7 @@
           "path": "packages/core/src/text/default-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "DEFAULT_FONT_META_NAME",
           "type": "implementation"
         }
@@ -1526,7 +1526,7 @@
       "id": "platform.at-engine-core.export-paths.default-font.symbols.default_font_meta_name",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1550,7 +1550,7 @@
           "path": "packages/core/src/text/default-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "DefaultFontDocument",
           "type": "implementation"
         }
@@ -1558,7 +1558,7 @@
       "id": "platform.at-engine-core.export-paths.default-font.symbols.defaultfontdocument",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1582,7 +1582,7 @@
           "path": "packages/core/src/text/default-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "documentDefaultFontUrl",
           "type": "implementation"
         }
@@ -1590,7 +1590,7 @@
       "id": "platform.at-engine-core.export-paths.default-font.symbols.documentdefaultfonturl",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1614,7 +1614,7 @@
           "path": "packages/core/src/text/default-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "loadDocumentDefaultFont",
           "type": "implementation"
         }
@@ -1622,7 +1622,7 @@
       "id": "platform.at-engine-core.export-paths.default-font.symbols.loaddocumentdefaultfont",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1646,7 +1646,7 @@
           "path": "packages/core/src/text/default-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "loadSharedFont",
           "type": "implementation"
         }
@@ -1654,7 +1654,7 @@
       "id": "platform.at-engine-core.export-paths.default-font.symbols.loadsharedfont",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1673,11 +1673,49 @@
       "consumers": [],
       "evidence": [
         {
+          "doesNotProve": "Browser route wiring and rendered pixels.",
+          "path": "packages/core/package.json",
+          "proves": "The package exports the exact Engine-owned Blender Inter asset.",
+          "repository": "engine",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
+          "symbol": "./fonts/inter-regular.ttf",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Live external Storybook activation and rendered glyph pixels.",
+          "path": "packages/core/src/text/default-font-asset.test.ts",
+          "proves": "Pinned Blender source/output hashes, OFL provenance, cmap coverage, outlines and tabular digits.",
+          "repository": "engine",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
+          "symbol": "Engine-owned default font asset",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.fonts-inter-regular.ttf",
+      "lastVerified": {
+        "date": "2026-08-31",
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
           "doesNotProve": "Every symbol and observable behavior behind the path.",
           "path": "packages/core/package.json",
           "proves": "The package export path exists.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "./fonts/jetbrains-mono-bold.ttf",
           "type": "implementation"
         }
@@ -1685,7 +1723,7 @@
       "id": "platform.at-engine-core.export-paths.fonts-jetbrains-mono-bold.ttf",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -1708,7 +1746,7 @@
           "path": "packages/core/package.json",
           "proves": "The package export path exists.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": ".",
           "type": "implementation"
         }
@@ -1716,7 +1754,7 @@
       "id": "platform.at-engine-core.export-paths.root",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -1740,7 +1778,7 @@
           "path": "packages/core/src/animation/animation-action.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "AnimationAction",
           "type": "implementation"
         }
@@ -1748,7 +1786,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.animationaction",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1772,7 +1810,7 @@
           "path": "packages/core/src/animation/animation-clip.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "AnimationClip",
           "type": "implementation"
         }
@@ -1780,7 +1818,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.animationclip",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1804,7 +1842,7 @@
           "path": "packages/core/src/animation/animation-mixer.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "AnimationMixer",
           "type": "implementation"
         }
@@ -1812,7 +1850,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.animationmixer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1836,7 +1874,7 @@
           "path": "packages/core/src/helpers/axes-helper.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "AxesHelper",
           "type": "implementation"
         }
@@ -1844,7 +1882,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.axeshelper",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1868,7 +1906,7 @@
           "path": "packages/core/src/geometries/box-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BoxGeometry",
           "type": "implementation"
         }
@@ -1876,7 +1914,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.boxgeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1900,7 +1938,7 @@
           "path": "packages/core/src/geometries/box-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BoxGeometryParameters",
           "type": "implementation"
         }
@@ -1908,7 +1946,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.boxgeometryparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1932,7 +1970,7 @@
           "path": "packages/core/src/core/buffer-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BufferAttribute",
           "type": "implementation"
         },
@@ -1941,7 +1979,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BufferAttribute",
           "type": "unit-test"
         }
@@ -1949,7 +1987,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.bufferattribute",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -1971,7 +2009,7 @@
           "path": "packages/core/src/core/buffer-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BufferAttributeUpdateRange",
           "type": "implementation"
         }
@@ -1979,7 +2017,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.bufferattributeupdaterange",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2003,7 +2041,7 @@
           "path": "packages/core/src/core/buffer-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "BufferGeometry",
           "type": "implementation"
         }
@@ -2011,7 +2049,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.buffergeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2035,7 +2073,7 @@
           "path": "packages/core/src/objects/text.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "CachedText",
           "type": "implementation"
         }
@@ -2043,7 +2081,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.cachedtext",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -2067,7 +2105,7 @@
           "path": "packages/core/src/math/color.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Color",
           "type": "implementation"
         }
@@ -2075,7 +2113,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.color",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2099,7 +2137,7 @@
           "path": "packages/core/src/materials/color-picker-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ColorPickerMaterial",
           "type": "implementation"
         }
@@ -2107,7 +2145,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.colorpickermaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2131,7 +2169,7 @@
           "path": "packages/core/src/materials/color-picker-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ColorPickerMaterialMode",
           "type": "implementation"
         }
@@ -2139,7 +2177,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.colorpickermaterialmode",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2163,7 +2201,7 @@
           "path": "packages/core/src/materials/color-picker-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ColorPickerMaterialParameters",
           "type": "implementation"
         }
@@ -2171,7 +2209,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.colorpickermaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2195,7 +2233,7 @@
           "path": "packages/core/src/layout/layout-types.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ComputedLayout",
           "type": "implementation"
         }
@@ -2203,7 +2241,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.computedlayout",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2227,7 +2265,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ExternalTexturePool",
           "type": "implementation"
         }
@@ -2235,7 +2273,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.externaltexturepool",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2259,7 +2297,7 @@
           "path": "packages/core/src/core/buffer-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Float32BufferAttribute",
           "type": "implementation"
         },
@@ -2268,7 +2306,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Float32BufferAttribute",
           "type": "unit-test"
         }
@@ -2276,7 +2314,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.float32bufferattribute",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -2298,7 +2336,7 @@
           "path": "packages/core/src/loaders/gltf-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "GLTFLoader",
           "type": "implementation"
         }
@@ -2306,7 +2344,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.gltfloader",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -2330,7 +2368,7 @@
           "path": "packages/core/src/loaders/gltf-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "GLTFLoaderOptions",
           "type": "implementation"
         }
@@ -2338,7 +2376,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.gltfloaderoptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2362,7 +2400,7 @@
           "path": "packages/core/src/helpers/grid-helper.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "GridHelper",
           "type": "implementation"
         }
@@ -2370,7 +2408,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.gridhelper",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2394,7 +2432,7 @@
           "path": "packages/core/src/materials/holographic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "HolographicMaterial",
           "type": "implementation"
         }
@@ -2402,7 +2440,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.holographicmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2426,7 +2464,7 @@
           "path": "packages/core/src/materials/holographic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "HolographicMaterialParameters",
           "type": "implementation"
         }
@@ -2434,7 +2472,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.holographicmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2458,7 +2496,7 @@
           "path": "packages/core/src/materials/image-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ImageFit",
           "type": "implementation"
         }
@@ -2466,7 +2504,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.imagefit",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2490,7 +2528,7 @@
           "path": "packages/core/src/materials/image-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ImageMaterial",
           "type": "implementation"
         }
@@ -2498,7 +2536,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.imagematerial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2522,7 +2560,7 @@
           "path": "packages/core/src/materials/image-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ImageMaterialParameters",
           "type": "implementation"
         }
@@ -2530,7 +2568,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.imagematerialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2554,7 +2592,7 @@
           "path": "packages/core/src/materials/image-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ImageViewBox",
           "type": "implementation"
         }
@@ -2562,7 +2600,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.imageviewbox",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2586,7 +2624,7 @@
           "path": "packages/core/src/core/instanced-mesh.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstancedMesh",
           "type": "implementation"
         }
@@ -2594,7 +2632,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.instancedmesh",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2618,7 +2656,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstancedRoundedRect",
           "type": "implementation"
         },
@@ -2627,7 +2665,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstancedRoundedRect",
           "type": "unit-test"
         }
@@ -2635,7 +2673,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.instancedroundedrect",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -2657,7 +2695,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstanceHandle",
           "type": "implementation"
         }
@@ -2665,7 +2703,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.instancehandle",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2689,7 +2727,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstanceLayer",
           "type": "implementation"
         },
@@ -2698,7 +2736,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstanceLayer",
           "type": "unit-test"
         }
@@ -2706,7 +2744,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.instancelayer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -2728,7 +2766,7 @@
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "InstanceLayerOptions",
           "type": "implementation"
         }
@@ -2736,7 +2774,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.instancelayeroptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2760,7 +2798,7 @@
           "path": "packages/core/src/core/raycaster.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Intersection",
           "type": "implementation"
         }
@@ -2768,7 +2806,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.intersection",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2792,7 +2830,7 @@
           "path": "packages/core/src/animation/keyframe-track.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "KeyframeTrack",
           "type": "implementation"
         }
@@ -2800,7 +2838,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.keyframetrack",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2824,7 +2862,7 @@
           "path": "packages/core/src/layout/layout-types.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LayoutProps",
           "type": "implementation"
         }
@@ -2832,7 +2870,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.layoutprops",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2856,7 +2894,7 @@
           "path": "packages/core/src/lights/light.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Light",
           "type": "implementation"
         }
@@ -2864,7 +2902,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.light",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2888,7 +2926,7 @@
           "path": "packages/core/src/objects/line.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Line",
           "type": "implementation"
         }
@@ -2896,7 +2934,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.line",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2920,7 +2958,7 @@
           "path": "packages/core/src/materials/line-basic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineBasicMaterial",
           "type": "implementation"
         }
@@ -2928,7 +2966,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.linebasicmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2952,7 +2990,7 @@
           "path": "packages/core/src/materials/line-basic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineBasicMaterialParameters",
           "type": "implementation"
         }
@@ -2960,7 +2998,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.linebasicmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -2984,7 +3022,7 @@
           "path": "packages/core/src/materials/line-glow-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineGlowMaterial",
           "type": "implementation"
         }
@@ -2992,7 +3030,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.lineglowmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3016,7 +3054,7 @@
           "path": "packages/core/src/materials/line-glow-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineGlowMaterialParameters",
           "type": "implementation"
         }
@@ -3024,7 +3062,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.lineglowmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3048,7 +3086,7 @@
           "path": "packages/core/src/objects/line-segments.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineSegments",
           "type": "implementation"
         }
@@ -3056,7 +3094,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.linesegments",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3080,7 +3118,7 @@
           "path": "packages/core/src/materials/line-glow-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "LineVisibilityMode",
           "type": "implementation"
         }
@@ -3088,7 +3126,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.linevisibilitymode",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3112,7 +3150,7 @@
           "path": "packages/core/src/materials/material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Material",
           "type": "implementation"
         }
@@ -3120,7 +3158,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.material",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3144,7 +3182,7 @@
           "path": "packages/core/src/materials/material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "MaterialParameters",
           "type": "implementation"
         }
@@ -3152,7 +3190,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.materialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3176,7 +3214,7 @@
           "path": "packages/core/src/math/matrix-4.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Matrix4",
           "type": "implementation"
         }
@@ -3184,7 +3222,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.matrix4",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3208,7 +3246,7 @@
           "path": "packages/core/src/core/mesh.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Mesh",
           "type": "implementation"
         }
@@ -3216,7 +3254,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.mesh",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3240,7 +3278,7 @@
           "path": "packages/core/src/materials/mesh-basic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "MeshBasicMaterial",
           "type": "implementation"
         }
@@ -3248,7 +3286,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.meshbasicmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3272,7 +3310,7 @@
           "path": "packages/core/src/materials/mesh-basic-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "MeshBasicMaterialParameters",
           "type": "implementation"
         }
@@ -3280,7 +3318,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.meshbasicmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3304,7 +3342,7 @@
           "path": "packages/core/src/materials/mesh-lambert-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "MeshLambertMaterial",
           "type": "implementation"
         }
@@ -3312,7 +3350,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.meshlambertmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3336,7 +3374,7 @@
           "path": "packages/core/src/materials/mesh-lambert-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "MeshLambertMaterialParameters",
           "type": "implementation"
         }
@@ -3344,7 +3382,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.meshlambertmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3368,7 +3406,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "normaliseSvgRootDimensions",
           "type": "implementation"
         }
@@ -3376,7 +3414,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.normalisesvgrootdimensions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3400,7 +3438,7 @@
           "path": "packages/core/src/core/object-3d.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Object3D",
           "type": "implementation"
         }
@@ -3408,7 +3446,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.object3d",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3432,7 +3470,7 @@
           "path": "packages/core/src/text/true-type-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Outline",
           "type": "implementation"
         }
@@ -3440,7 +3478,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.outline",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3464,7 +3502,7 @@
           "path": "packages/core/src/loaders/gltf-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ParsedGLTF",
           "type": "implementation"
         }
@@ -3472,7 +3510,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.parsedgltf",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3496,7 +3534,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "PendingExternalSource",
           "type": "implementation"
         }
@@ -3504,7 +3542,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.pendingexternalsource",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3528,7 +3566,7 @@
           "path": "packages/core/src/geometries/plane-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "PlaneGeometry",
           "type": "implementation"
         }
@@ -3536,7 +3574,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.planegeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3560,7 +3598,7 @@
           "path": "packages/core/src/geometries/plane-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "PlaneGeometryParameters",
           "type": "implementation"
         }
@@ -3568,7 +3606,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.planegeometryparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3592,7 +3630,7 @@
           "path": "packages/core/src/core/presentation-clip.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "PresentationClipShape",
           "type": "implementation"
         }
@@ -3600,7 +3638,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.presentationclipshape",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3624,7 +3662,7 @@
           "path": "packages/core/src/math/quaternion.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Quaternion",
           "type": "implementation"
         }
@@ -3632,7 +3670,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.quaternion",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3656,7 +3694,7 @@
           "path": "packages/core/src/materials/radial-backdrop-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RadialBackdropGlow",
           "type": "implementation"
         }
@@ -3664,7 +3702,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.radialbackdropglow",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3688,7 +3726,7 @@
           "path": "packages/core/src/materials/radial-backdrop-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RadialBackdropMaterial",
           "type": "implementation"
         }
@@ -3696,7 +3734,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.radialbackdropmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3720,7 +3758,7 @@
           "path": "packages/core/src/materials/radial-backdrop-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RadialBackdropMaterialParameters",
           "type": "implementation"
         }
@@ -3728,7 +3766,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.radialbackdropmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3752,7 +3790,7 @@
           "path": "packages/core/src/math/ray.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Ray",
           "type": "implementation"
         }
@@ -3760,7 +3798,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.ray",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3784,7 +3822,7 @@
           "path": "packages/core/src/core/raycaster.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Raycaster",
           "type": "implementation"
         }
@@ -3792,7 +3830,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.raycaster",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -3816,7 +3854,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RenderBoundedView",
           "type": "implementation"
         }
@@ -3824,7 +3862,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.renderboundedview",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3848,7 +3886,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RenderComposition",
           "type": "implementation"
         }
@@ -3856,7 +3894,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.rendercomposition",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3880,7 +3918,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Renderer",
           "type": "implementation"
         }
@@ -3888,7 +3926,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.renderer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -3912,7 +3950,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RendererPhysicalViewport",
           "type": "implementation"
         }
@@ -3920,7 +3958,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.rendererphysicalviewport",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3944,7 +3982,7 @@
           "path": "packages/core/src/core/object-3d.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RenderLayer",
           "type": "implementation"
         }
@@ -3952,7 +3990,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.renderlayer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -3976,7 +4014,7 @@
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RenderOverlay",
           "type": "implementation"
         }
@@ -3984,7 +4022,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.renderoverlay",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4008,7 +4046,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ReplaceExternalSourceOptions",
           "type": "implementation"
         }
@@ -4016,7 +4054,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.replaceexternalsourceoptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4040,7 +4078,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ROUNDED_RECT_INSTANCE_OFFSETS",
           "type": "implementation"
         }
@@ -4048,7 +4086,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.rounded_rect_instance_offsets",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4072,7 +4110,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ROUNDED_RECT_INSTANCE_RECORD_BYTE_LENGTH",
           "type": "implementation"
         }
@@ -4080,7 +4118,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.rounded_rect_instance_record_byte_length",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4104,7 +4142,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ROUNDED_RECT_INSTANCE_RECORD_FLOATS",
           "type": "implementation"
         }
@@ -4112,7 +4150,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.rounded_rect_instance_record_floats",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4136,7 +4174,7 @@
           "path": "packages/core/src/materials/rounded-rect-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectBorderWidths",
           "type": "implementation"
         }
@@ -4144,7 +4182,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.roundedrectborderwidths",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4168,7 +4206,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectInstanceLayer",
           "type": "implementation"
         },
@@ -4177,7 +4215,7 @@
           "path": "packages/core/src/renderer/dpr-viewport.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectInstanceLayer",
           "type": "unit-test"
         }
@@ -4185,7 +4223,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.roundedrectinstancelayer",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [],
       "owner": {
@@ -4207,7 +4245,7 @@
           "path": "packages/core/src/core/instanced-rounded-rect.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectInstanceLayerOptions",
           "type": "implementation"
         }
@@ -4215,7 +4253,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.roundedrectinstancelayeroptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4239,7 +4277,7 @@
           "path": "packages/core/src/materials/rounded-rect-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectMaterial",
           "type": "implementation"
         }
@@ -4247,7 +4285,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.roundedrectmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4271,7 +4309,7 @@
           "path": "packages/core/src/materials/rounded-rect-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "RoundedRectMaterialParameters",
           "type": "implementation"
         }
@@ -4279,7 +4317,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.roundedrectmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4303,7 +4341,7 @@
           "path": "packages/core/src/animation/skeleton.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Skeleton",
           "type": "implementation"
         }
@@ -4311,7 +4349,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.skeleton",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4335,7 +4373,7 @@
           "path": "packages/core/src/core/skinned-mesh.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "SkinnedMesh",
           "type": "implementation"
         }
@@ -4343,7 +4381,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.skinnedmesh",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4367,7 +4405,7 @@
           "path": "packages/core/src/scenes/space.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Space",
           "type": "implementation"
         }
@@ -4375,7 +4413,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.space",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4399,7 +4437,7 @@
           "path": "packages/core/src/geometries/sphere-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "SphereGeometry",
           "type": "implementation"
         }
@@ -4407,7 +4445,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.spheregeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4431,7 +4469,7 @@
           "path": "packages/core/src/geometries/sphere-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "SphereGeometryParameters",
           "type": "implementation"
         }
@@ -4439,7 +4477,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.spheregeometryparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4463,7 +4501,7 @@
           "path": "packages/core/src/text/true-type-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TableInfo",
           "type": "implementation"
         }
@@ -4471,7 +4509,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.tableinfo",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4495,7 +4533,7 @@
           "path": "packages/core/src/objects/text.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Text",
           "type": "implementation"
         }
@@ -4503,7 +4541,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.text",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -4527,7 +4565,7 @@
           "path": "packages/core/src/materials/text-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TextMaterial",
           "type": "implementation"
         }
@@ -4535,7 +4573,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.textmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4559,7 +4597,7 @@
           "path": "packages/core/src/materials/text-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TextMaterialParameters",
           "type": "implementation"
         }
@@ -4567,7 +4605,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.textmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4591,7 +4629,7 @@
           "path": "packages/core/src/geometries/textured-plane-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TexturedPlaneGeometry",
           "type": "implementation"
         }
@@ -4599,7 +4637,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.texturedplanegeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4623,7 +4661,7 @@
           "path": "packages/core/src/geometries/textured-plane-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TexturedPlaneGeometryParameters",
           "type": "implementation"
         }
@@ -4631,7 +4669,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.texturedplanegeometryparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4655,7 +4693,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TextureEntry",
           "type": "implementation"
         }
@@ -4663,7 +4701,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.textureentry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4687,7 +4725,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TextureLoader",
           "type": "implementation"
         }
@@ -4695,7 +4733,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.textureloader",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -4719,7 +4757,7 @@
           "path": "packages/core/src/loaders/texture-loader.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TextureStatus",
           "type": "implementation"
         }
@@ -4727,7 +4765,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.texturestatus",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4751,7 +4789,7 @@
           "path": "packages/core/src/materials/thin-film-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ThinFilmMaterial",
           "type": "implementation"
         }
@@ -4759,7 +4797,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.thinfilmmaterial",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4783,7 +4821,7 @@
           "path": "packages/core/src/materials/thin-film-material.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ThinFilmMaterialParameters",
           "type": "implementation"
         }
@@ -4791,7 +4829,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.thinfilmmaterialparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4815,7 +4853,7 @@
           "path": "packages/core/src/geometries/torus-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TorusGeometry",
           "type": "implementation"
         }
@@ -4823,7 +4861,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.torusgeometry",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4847,7 +4885,7 @@
           "path": "packages/core/src/geometries/torus-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TorusGeometryParameters",
           "type": "implementation"
         }
@@ -4855,7 +4893,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.torusgeometryparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4879,7 +4917,7 @@
           "path": "packages/core/src/text/true-type-font.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TrueTypeFont",
           "type": "implementation"
         }
@@ -4887,7 +4925,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.truetypefont",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4911,7 +4949,7 @@
           "path": "packages/core/src/core/buffer-geometry.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "TypedArray",
           "type": "implementation"
         }
@@ -4919,7 +4957,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.typedarray",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4943,7 +4981,7 @@
           "path": "packages/core/src/math/vector-3.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "Vector3",
           "type": "implementation"
         }
@@ -4951,7 +4989,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.vector3",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -4975,7 +5013,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ViewPoint",
           "type": "implementation"
         }
@@ -4983,7 +5021,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.viewpoint",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -5007,7 +5045,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ViewPointClientViewport",
           "type": "implementation"
         }
@@ -5015,7 +5053,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.viewpointclientviewport",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -5039,7 +5077,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ViewPointControls",
           "type": "implementation"
         }
@@ -5047,7 +5085,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.viewpointcontrols",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -5071,7 +5109,7 @@
           "path": "packages/core/src/core/view-point.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "ViewPointParameters",
           "type": "implementation"
         }
@@ -5079,7 +5117,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.viewpointparameters",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -5103,7 +5141,7 @@
           "path": "packages/core/src/core/wireframe-instanced-mesh.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
-          "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
           "symbol": "WireframeInstancedMesh",
           "type": "implementation"
         }
@@ -5111,7 +5149,7 @@
       "id": "platform.at-engine-core.export-paths.root.symbols.wireframeinstancedmesh",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e"
+        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -5125,7 +5163,7 @@
     }
   ],
   "repository": "engine",
-  "revision": "18c55d6c3dc68d1f2ab257378a505e5bac2eea3e",
+  "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
   "schemaVersion": 1,
-  "verificationDate": "2026-08-29"
+  "verificationDate": "2026-08-31"
 }
