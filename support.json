@@ -523,31 +523,40 @@
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Complete correctness/lifecycle/conformance contract.",
+          "doesNotProve": "Kerning, shaping, ligatures, bidi, fallback or multiline layout.",
           "path": "packages/core/src/objects/text.ts",
-          "proves": "Current bounded Engine implementation.",
+          "proves": "Text uses exact font/glyph cache identity, inserts letter spacing only between code points and covers the complete horizontal advance cell including side bearings.",
           "repository": "engine",
-          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
-          "symbol": "font-loading",
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "font-owned Text geometry and advance-cell cover",
           "type": "implementation"
         },
         {
-          "doesNotProve": "Uncovered branches and browser integration.",
-          "path": "packages/core/src/renderer/dpr-viewport.test.ts",
-          "proves": "Existing focused behavior where available.",
+          "doesNotProve": "Every real glyph, transform, GPU adapter or shaping mode.",
+          "path": "packages/core/src/objects/text.test.ts",
+          "proves": "The final cover reaches advanceWidth rather than ink xMax and equal gids from different fonts preserve distinct outlines.",
           "repository": "engine",
-          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
-          "symbol": "font-loading",
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "Text font-owned geometry",
           "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every font, glyph, size, transform, device, shaping or fallback path.",
+          "path": "storybook://captures/capture_kIyZqHyIxkZgmDu4DCMIa7Er",
+          "proves": "The default Inter SVG label presents its complete final G through the production Engine text cover on one canvas with zero console errors.",
+          "repository": "external",
+          "revision": "ead10e484f57705410ce58e9",
+          "symbol": "@ui/components/components/foundation/button/icon/svg",
+          "type": "visual-evidence"
         }
       ],
       "id": "engine.features.font-loading",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
+        "date": "2026-09-01",
+        "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2"
       },
       "limitations": [
-        "No shaping, kerning, ligatures, bidi, multiline layout, or direct Text geometry behavioral suite; cache identity also has a font-key correctness gap."
+        "Exact font/glyph cache identity, advance-cell cover geometry and between-codepoint spacing are behaviorally proven; shaping, kerning, ligatures, bidi, fallback and multiline text layout remain unsupported."
       ],
       "owner": {
         "package": "@engine/core",
@@ -638,36 +647,41 @@
     },
     {
       "blockedBy": [],
-      "blocks": [
-        "gap.engine.glyph-cache-font-identity"
-      ],
-      "conformance": "none",
+      "blocks": [],
+      "conformance": "extension",
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Runtime implementation or observable conformance.",
-          "path": "packages/core/contract.md",
-          "proves": "The pinned project inventory contains engine.features.glyph-cache-identity.",
+          "doesNotProve": "Shaping, fallback selection or cross-process cache behavior.",
+          "path": "packages/core/src/objects/text.ts",
+          "proves": "A WeakMap owns one glyph-id geometry map per exact TrueTypeFont identity, so equal gids from different fonts cannot share outlines or cover bounds.",
           "repository": "engine",
-          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
-          "symbol": "glyph cache identity",
-          "type": "requirement"
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "font-keyed glyph geometry cache",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every real font file or shaping engine.",
+          "path": "packages/core/src/objects/text.test.ts",
+          "proves": "Two fake fonts with the same glyph id and different outlines retain different stencil geometry.",
+          "repository": "engine",
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "exact font identity and glyph id",
+          "type": "unit-test"
         }
       ],
       "id": "engine.features.glyph-cache-identity",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
+        "date": "2026-09-01",
+        "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2"
       },
-      "limitations": [
-        "Glyph geometry cache keys only by gid, so different fonts with the same glyph ID reuse incorrect geometry."
-      ],
+      "limitations": [],
       "owner": {
         "package": "@engine/core",
         "repository": "engine",
         "stage": "gpu-scene-resource"
       },
-      "status": "unsupported"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -1209,31 +1223,40 @@
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Complete correctness/lifecycle/conformance contract.",
+          "doesNotProve": "Kerning, shaping, ligatures, bidi, fallback or multiline layout.",
           "path": "packages/core/src/objects/text.ts",
-          "proves": "Current bounded Engine implementation.",
+          "proves": "Text uses exact font/glyph cache identity, inserts letter spacing only between code points and covers the complete horizontal advance cell including side bearings.",
           "repository": "engine",
-          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
-          "symbol": "text",
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "font-owned Text geometry and advance-cell cover",
           "type": "implementation"
         },
         {
-          "doesNotProve": "Uncovered branches and browser integration.",
-          "path": "packages/core/src/renderer/dpr-viewport.test.ts",
-          "proves": "Existing focused behavior where available.",
+          "doesNotProve": "Every real glyph, transform, GPU adapter or shaping mode.",
+          "path": "packages/core/src/objects/text.test.ts",
+          "proves": "The final cover reaches advanceWidth rather than ink xMax and equal gids from different fonts preserve distinct outlines.",
           "repository": "engine",
-          "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
-          "symbol": "text",
+          "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
+          "symbol": "Text font-owned geometry",
           "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every font, glyph, size, transform, device, shaping or fallback path.",
+          "path": "storybook://captures/capture_kIyZqHyIxkZgmDu4DCMIa7Er",
+          "proves": "The default Inter SVG label presents its complete final G through the production Engine text cover on one canvas with zero console errors.",
+          "repository": "external",
+          "revision": "ead10e484f57705410ce58e9",
+          "symbol": "@ui/components/components/foundation/button/icon/svg",
+          "type": "visual-evidence"
         }
       ],
       "id": "engine.features.text",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5"
+        "date": "2026-09-01",
+        "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2"
       },
       "limitations": [
-        "No shaping, kerning, ligatures, bidi, multiline layout, or direct Text geometry behavioral suite; cache identity also has a font-key correctness gap."
+        "Exact font/glyph cache identity, advance-cell cover geometry and between-codepoint spacing are behaviorally proven; shaping, kerning, ligatures, bidi, fallback and multiline text layout remain unsupported."
       ],
       "owner": {
         "package": "@engine/core",
@@ -2069,7 +2092,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "404",
+          "lines": "418",
           "path": "packages/core/src/objects/text.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -5163,7 +5186,7 @@
     }
   ],
   "repository": "engine",
-  "revision": "31164f46bb3d5dd9a7df018203f0e13a8a383dc5",
+  "revision": "0d63eeaf4e2057316212a1a8f5ff31684f22e2b2",
   "schemaVersion": 1,
-  "verificationDate": "2026-08-31"
+  "verificationDate": "2026-09-01"
 }
