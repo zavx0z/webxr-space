@@ -76,6 +76,14 @@ const previewImage = Object.freeze({
   alt: "Предпросмотр Noise",
 })
 
+export const NODE_COMPARISON_REFERENCE = Object.freeze({
+  id: "accepted-node-editor-4-5-5",
+  scope: "noise-texture-node",
+  sourceViewport: Object.freeze({width: 1920, height: 1200, dpr: 2}),
+  sourceRect: Object.freeze({x: 498, y: 558, width: 228, height: 385}),
+  liveViewport: Object.freeze({width: 228, height: 385, scale: 1}),
+})
+
 export function createProductionNodeStory(document: Document, route: string): ProductionNodeStory {
   if (route === "ui" || route === "ui/node-editor" || route.startsWith("ui/node-editor/")) {
     return createNodeEditorStory(document, route)
@@ -218,27 +226,47 @@ function createComparisonStory(document: Document, route: string): ProductionNod
   const frame = storyFrame(document, "comparison")
   const reference = document.createElement("figure")
   const referenceLabel = document.createElement("figcaption")
+  const referenceStage = document.createElement("div")
   const referenceImage = document.createElement("img")
   const live = document.createElement("section")
   const liveLabel = document.createElement("h3")
-  const node = createNode(document, richNoiseNode("comparison-noise", false, false, () => {}, () => {}))
+  const liveStage = document.createElement("div")
+  const node = createNode(document, comparisonNoiseNode())
+  const sourceRect = NODE_COMPARISON_REFERENCE.sourceRect
+  frame.setAttribute("data-comparison-scope", NODE_COMPARISON_REFERENCE.scope)
+  frame.setAttribute("data-comparison-scale", String(NODE_COMPARISON_REFERENCE.liveViewport.scale))
   reference.className = "nodes-production-story__comparison-panel"
   referenceLabel.className = "nodes-production-story__comparison-label"
-  referenceLabel.appendChild(document.createTextNode("Принятый эталон"))
+  referenceLabel.appendChild(document.createTextNode("Эталон · Noise Texture · 1:1"))
+  referenceStage.className = "nodes-production-story__comparison-stage nodes-production-story__reference-stage"
+  referenceStage.setAttribute("data-source-rect", `${sourceRect.x} ${sourceRect.y} ${sourceRect.width} ${sourceRect.height}`)
+  referenceStage.setAttribute("data-source-dpr", String(NODE_COMPARISON_REFERENCE.sourceViewport.dpr))
   referenceImage.className = "nodes-production-story__reference"
   referenceImage.src = acceptedReferenceSrc()
-  referenceImage.alt = "Принятый эталон Node Editor"
-  referenceImage.width = 640
-  referenceImage.height = 480
-  reference.append(referenceLabel, referenceImage)
-  live.className = "nodes-production-story__comparison-panel nodes-production-story__live"
+  referenceImage.alt = "Exact accepted crop of the Blender Noise Texture node"
+  referenceImage.width = NODE_COMPARISON_REFERENCE.sourceViewport.width
+  referenceImage.height = NODE_COMPARISON_REFERENCE.sourceViewport.height
+  referenceStage.appendChild(referenceImage)
+  referenceStage.scrollLeft = sourceRect.x
+  referenceStage.scrollTop = sourceRect.y
+  reference.append(referenceLabel, referenceStage)
+  live.className = "nodes-production-story__comparison-panel"
   liveLabel.className = "nodes-production-story__comparison-label"
-  liveLabel.appendChild(document.createTextNode("Production DOM → WebGPU"))
-  live.append(liveLabel, node.element)
+  liveLabel.appendChild(document.createTextNode("Live · @nodes/ui/node · 1:1"))
+  liveStage.className = "nodes-production-story__comparison-stage nodes-production-story__live-stage"
+  liveStage.setAttribute("data-live-owner", "@nodes/ui/node")
+  liveStage.setAttribute("data-live-scale", String(NODE_COMPARISON_REFERENCE.liveViewport.scale))
+  liveStage.appendChild(node.element)
+  live.append(liveLabel, liveStage)
   frame.append(reference, live)
   return result({
     element: frame,
-    readProps: () => Object.freeze({route, reference: referenceImage.src, node: node.definition}),
+    readProps: () => Object.freeze({
+      route,
+      comparison: NODE_COMPARISON_REFERENCE,
+      reference: Object.freeze({src: referenceImage.src, rect: sourceRect}),
+      live: Object.freeze({owner: "@nodes/ui/node", scale: 1, node: node.definition}),
+    }),
     typescript: () => [
       'import {createNode} from "@nodes/ui/node"',
       'import {createDocument} from "@zavx0z/dom"',
@@ -246,9 +274,22 @@ function createComparisonStory(document: Document, route: string): ProductionNod
       "const document = createDocument()",
       'const comparison = document.createElement("section")',
       `const node = createNode(document, ${literal(node.definition)})`,
+      'const referenceStage = document.createElement("div")',
+      'const liveStage = document.createElement("div")',
       'const reference = document.createElement("img")',
       `reference.src = ${JSON.stringify(referenceImage.src)}`,
-      "comparison.append(reference, node.element)",
+      `reference.width = ${NODE_COMPARISON_REFERENCE.sourceViewport.width}`,
+      `reference.height = ${NODE_COMPARISON_REFERENCE.sourceViewport.height}`,
+      `const sourceRect = ${literal(sourceRect)}`,
+      'comparison.setAttribute("data-comparison-scale", "1")',
+      'referenceStage.className = "nodes-production-story__comparison-stage nodes-production-story__reference-stage"',
+      'referenceStage.setAttribute("data-source-rect", `${sourceRect.x} ${sourceRect.y} ${sourceRect.width} ${sourceRect.height}`)',
+      'liveStage.className = "nodes-production-story__comparison-stage nodes-production-story__live-stage"',
+      "referenceStage.append(reference)",
+      "referenceStage.scrollLeft = sourceRect.x",
+      "referenceStage.scrollTop = sourceRect.y",
+      "liveStage.append(node.element)",
+      "comparison.append(referenceStage, liveStage)",
       "document.appendChild(comparison)",
     ].join("\n"),
     ready: async () => {
@@ -257,6 +298,84 @@ function createComparisonStory(document: Document, route: string): ProductionNod
       await response.arrayBuffer()
     },
     dispose: () => node.dispose(),
+  })
+}
+
+function comparisonNoiseNode(): NodeDefinition {
+  const number = (id: string, label: string, value: number, min: number, max: number, step: number): ParameterDefinition => Object.freeze({
+    id,
+    field: Object.freeze({id, label, description: `${label} · accepted comparison`, kind: "number", value, min, max, step}),
+    sockets: Object.freeze([socket(`${id}-input`, "float", "input", "left", label)]),
+  })
+  return Object.freeze({
+    id: "comparison-noise",
+    label: "Noise Texture",
+    title: "Noise Texture · accepted comparison scope",
+    category: "texture",
+    headerColor: "#79461d",
+    x: 6,
+    y: 0,
+    width: 216,
+    selected: false,
+    collapsed: false,
+    properties: Object.freeze([
+      Object.freeze({
+        id: "noise-dimensions",
+        label: "Dimensions",
+        description: "Noise dimensions",
+        kind: "enum",
+        value: "3d",
+        options: Object.freeze([
+          Object.freeze({value: "1d", label: "1D"}),
+          Object.freeze({value: "2d", label: "2D"}),
+          Object.freeze({value: "3d", label: "3D"}),
+          Object.freeze({value: "4d", label: "4D"}),
+        ]),
+      }),
+      Object.freeze({
+        id: "noise-basis",
+        label: "Noise",
+        description: "Noise basis",
+        kind: "enum",
+        value: "fbm",
+        options: Object.freeze([
+          Object.freeze({value: "fbm", label: "fBM"}),
+          Object.freeze({value: "multifractal", label: "Multifractal"}),
+          Object.freeze({value: "hybrid", label: "Hybrid Multifractal"}),
+        ]),
+      }),
+      Object.freeze({
+        id: "noise-normalize",
+        label: "Normalize",
+        description: "Normalize Noise output",
+        kind: "boolean",
+        value: true,
+      }),
+    ]),
+    parameters: Object.freeze([
+      Object.freeze({
+        id: "noise-vector",
+        field: Object.freeze({
+          id: "noise-vector",
+          label: "Vector",
+          description: "Connected vector input",
+          kind: "vector",
+          value: Object.freeze([0, 0, 0]),
+          axes: Object.freeze(["X", "Y", "Z"]),
+        }),
+        sockets: Object.freeze([socket("noise-vector-input", "vector", "input", "left", "Vector")]),
+        connected: true,
+      }),
+      number("noise-scale", "Scale", 5, 0, 10, .1),
+      number("noise-detail", "Detail", 2, 0, 15, .1),
+      number("noise-roughness", "Roughness", .5, 0, 1, .01),
+      number("noise-lacunarity", "Lacunarity", 2, 0, 4, .1),
+      number("noise-distortion", "Distortion", 0, 0, 10, .1),
+    ]),
+    sockets: Object.freeze([
+      socket("noise-factor-output", "float", "output", "right", "Fac"),
+      socket("noise-color-output", "color", "output", "right", "Color"),
+    ]),
   })
 }
 

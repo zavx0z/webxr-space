@@ -91,6 +91,37 @@ describe("Blender-like standard-DOM Node", () => {
     expect(vectorInput.valueAsNumber).toBe(2)
   })
 
+  test("places right loose Sockets before Fields and left loose Sockets after Parameters", () => {
+    const definition = noiseNode([])
+    const controller = createNode(createDocument(), {
+      ...definition,
+      sockets: [
+        {id: "fac-out", kind: "float", direction: "output", side: "right", label: "Fac"},
+        {id: "color-out", kind: "color", direction: "output", side: "right", label: "Color"},
+        {id: "coordinate-in", kind: "vector", direction: "input", side: "left", label: "Coordinate"},
+      ],
+    })
+    const right = controller.refs.rightSockets
+    const left = controller.refs.leftSockets
+
+    expect(controller.refs.sockets).toBe(right)
+    expect(controller.refs.body.childNodes).toEqual([
+      right,
+      controller.refs.properties,
+      controller.refs.parameters,
+      left,
+    ])
+    expect([...right.querySelectorAll(".node-socket")].map((socket) => socket.getAttribute("data-socket-id")))
+      .toEqual(["fac-out", "color-out"])
+    expect([...left.querySelectorAll(".node-socket")].map((socket) => socket.getAttribute("data-socket-id")))
+      .toEqual(["coordinate-in"])
+
+    const fac = controller.refs.socket("fac-out")!.element
+    controller.update({...controller.definition, sockets: controller.definition.sockets!.filter(({id}) => id !== "coordinate-in")})
+    expect(controller.refs.socket("fac-out")!.element).toBe(fac)
+    expect(left.hasAttribute("hidden")).toBeTrue()
+  })
+
   test("renders the rich Node subtree with exact shared CSS", () => {
     const document = createDocument()
     const controller = createNode(document, noiseNode([]))
@@ -103,7 +134,8 @@ describe("Blender-like standard-DOM Node", () => {
     })
     const frame = renderer.flush()
     const texts = frame.displayList.filter((item) => item.kind === "text").map((item) => item.text)
-    expect(texts).toEqual(expect.arrayContaining(["Noise Texture", "Dimensions", "Vector", "Scale", "Color"]))
+    expect(texts).toEqual(expect.arrayContaining(["Noise Texture", "3D", "Vector", "Scale", "Color"]))
+    expect(texts).not.toContain("Dimensions")
     expect(frame.hits.get(controller.refs.parameter("vector")!.refs.field
       .querySelector('[data-control-key="X"] input')!)).toBeDefined()
     expect(frame.hits.get(controller.refs.socket("color-out")!.element)).toBeDefined()

@@ -35,9 +35,11 @@ export const nodesProductionPreviewCss = String.raw`
 }
 .nodes-production-story--comparison {
   flex-direction: row;
-  min-height: 500px;
-  gap: 4px;
-  padding: 4px;
+  align-items: center;
+  justify-content: center;
+  min-height: 437px;
+  gap: 12px;
+  padding: 12px;
   background: #161616;
 }
 .nodes-production-story__comparison-panel {
@@ -45,8 +47,11 @@ export const nodesProductionPreviewCss = String.raw`
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  flex: 1 1 0;
+  width: 230px;
+  min-width: 230px;
+  height: 413px;
+  min-height: 413px;
+  flex: 0 0 230px;
   overflow: hidden;
   border: 1px solid #111111;
   border-radius: 4px;
@@ -55,22 +60,41 @@ export const nodesProductionPreviewCss = String.raw`
 .nodes-production-story__comparison-label {
   box-sizing: border-box;
   display: block;
-  height: 24px;
+  height: 26px;
+  min-height: 26px;
   margin: 0;
-  padding: 4px 7px;
+  padding: 5px 7px;
   border-bottom: 1px solid #111111;
   background: #303030;
   color: #d8d8d8;
   font-size: 11px;
 }
-.nodes-production-story__reference {
+.nodes-production-story__comparison-stage {
+  box-sizing: border-box;
+  position: relative;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 228px;
+  min-width: 228px;
+  height: 385px;
+  min-height: 385px;
+  flex: 0 0 385px;
+  overflow: hidden;
+  background: #1d1d1d;
+}
+.nodes-production-story__reference {
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  width: 1920px;
+  min-width: 1920px;
+  max-width: 1920px;
+  height: 1200px;
+  min-height: 1200px;
+  max-height: 1200px;
   background: #181818;
 }
-.nodes-production-story__live { min-height: 0; }
 `
 
 export const nodesDomStoryCss = [

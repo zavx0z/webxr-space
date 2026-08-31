@@ -99,42 +99,42 @@ export const SOCKET_PRESETS: Readonly<Record<SocketKind, SocketPreset>> = Object
   custom: preset("custom", "Custom", "#d659d1", "circle-dot"),
 })
 
-export const socketCss = /* @__PURE__ */ String.raw`
+export const socketCss = `
 .node-socket {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  min-width: 14px;
-  height: 14px;
-  min-height: 14px;
+  width: 10px;
+  min-width: 10px;
+  height: 10px;
+  min-height: 10px;
   padding: 0;
-  border: 2px solid #9e9e9e;
+  border: 1px solid #202020;
   border-radius: 50%;
-  background: #202020;
-  color: transparent;
+  background: currentcolor;
+  color: #9e9e9e;
   font-size: 1px;
 }
 .node-socket[data-side="left"] { margin-left: -8px; }
 .node-socket[data-side="right"] { margin-right: -8px; }
 .node-socket[data-shape="square"],
-.node-socket[data-shape="square-dot"] { border-radius: 2px; }
+.node-socket[data-shape="square-dot"] { border-radius: 1px; }
 .node-socket[data-shape="diamond"],
 .node-socket[data-shape="diamond-dot"] { border-color: transparent; background: transparent; }
-.node-socket[data-shape="line"] { width: 14px; height: 6px; min-height: 6px; border-radius: 1px; }
-.node-socket[data-shape="volume-grid"] { border-radius: 2px; background: #292929; }
-.node-socket__glyph { display: block; width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+.node-socket[data-shape="line"] { width: 10px; height: 4px; min-height: 4px; border-radius: 1px; }
+.node-socket[data-shape="volume-grid"] { border-radius: 1px; }
+.node-socket__glyph { display: block; width: 3px; height: 3px; border-radius: 50%; background: transparent; }
 .node-socket[data-shape="diamond"] .node-socket__glyph,
 .node-socket[data-shape="diamond-dot"] .node-socket__glyph,
 .node-socket[data-shape="line"] .node-socket__glyph,
 .node-socket[data-shape="volume-grid"] .node-socket__glyph {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   border-radius: 0;
   color: currentcolor;
-  font-size: 13px;
-  line-height: 14px;
+  font-size: 10px;
+  line-height: 10px;
   text-align: center;
 }
 .node-socket[data-shape="circle-dot"] .node-socket__glyph,
@@ -184,7 +184,7 @@ export function createSocket(document: Document, initial: SocketDefinition): Soc
     button.setAttribute("aria-pressed", String(next.selected === true))
     button.title = next.title ?? `${next.label} · ${visual.label}`
     button.disabled = next.disabled === true
-    button.setAttribute("style", `border-color: ${visual.color}; color: ${visual.color}`)
+    button.setAttribute("style", `color: ${visual.color}`)
     const symbol = shape === "diamond" ? "◆"
       : shape === "diamond-dot" ? "◈"
         : shape === "line" ? "━"

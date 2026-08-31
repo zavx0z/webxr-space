@@ -104,7 +104,12 @@ describe("complete Parameter/Socket DOM route family", () => {
       })
       const frame = renderer.flush()
       const refs = story.parameterRefs(story.props.parameters[0]!.id)!
-      expect(frame.hits.get(refs.activeControl()), route).toBeDefined()
+      if (route.startsWith("ui/socket/")) {
+        const socket = story.props.parameters[0]!.sockets[0]!
+        expect(refs.activeControl().hasAttribute("hidden"), route).toBeTrue()
+        expect(frame.hits.get(refs.activeControl()), route).toBeUndefined()
+        expect(frame.hits.get(refs.socketRefs(socket.id)!.button), route).toBeDefined()
+      } else expect(frame.hits.get(refs.activeControl()), route).toBeDefined()
       expect(frame.displayList.filter((item) => item.kind === "text").map((item) => item.text), route)
         .toContain(story.props.parameters[0]!.label)
       renderer.dispose()

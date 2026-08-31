@@ -44,6 +44,34 @@ describe("embedded DOM Parameter", () => {
     expect(field.querySelector('[role="group"]')!.hasAttribute("hidden")).toBeFalse()
   })
 
+  test("keeps a connected Parameter label and Socket while hidden controls neither paint nor hit", () => {
+    const document = createDocument()
+    const controller = createParameter(document, {
+      id: "vector",
+      field: {id: "vector", kind: "vector", label: "Vector", value: [0, 0, 0]},
+      sockets: [{id: "vector-in", kind: "vector", direction: "input", side: "left", label: "Vector"}],
+      connected: true,
+    })
+    document.appendChild(controller.element)
+    const control = controller.refs.field.querySelector('[role="group"]')!
+    const inputs = [...control.querySelectorAll("input")]
+    const renderer = createDocumentRenderer({
+      document,
+      root: controller.element,
+      viewport: {width: 220, height: 40},
+      styleSheets: [parameterCss],
+    })
+    const frame = renderer.flush()
+    const texts = frame.displayList.filter((item) => item.kind === "text").map((item) => item.text)
+
+    expect(control.hasAttribute("hidden")).toBeTrue()
+    expect(frame.boxByNode.has(control)).toBeFalse()
+    expect(inputs.every((input) => !frame.boxByNode.has(input) && !frame.hits.has(input))).toBeTrue()
+    expect(texts).toEqual(["Vector"])
+    expect(frame.hits.get(controller.refs.socket("vector-in")!.element)).toBeDefined()
+    renderer.dispose()
+  })
+
   test("renders exact composite Field controls and rejects duplicate sides", () => {
     const document = createDocument()
     const controller = createParameter(document, {
@@ -61,9 +89,9 @@ describe("embedded DOM Parameter", () => {
     const frame = renderer.flush()
     expect([...controller.refs.field.querySelectorAll("[data-color-channel]")]
       .map((element) => element.getAttribute("data-color-channel")))
-      .toEqual(["r", "g", "b", "a"])
+      .toEqual(["h", "s", "v", "a"])
     expect(frame.displayList.filter((item) => item.kind === "text").map((item) => item.text))
-      .toEqual(expect.arrayContaining(["Color", "R", "G", "B", "A"]))
+      .toEqual(expect.arrayContaining(["Color", "H", "S", "V", "A"]))
     renderer.dispose()
     expect(() => controller.update({
       ...controller.definition,

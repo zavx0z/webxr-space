@@ -85,7 +85,12 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(process.text.data).toBe("Process")
     expect(process.element.childNodes).toEqual([process.preview, process.header, process.body])
     expect(process.header.childNodes).toEqual([process.collapse, process.title, process.previewToggle])
-    expect(process.body.childNodes).toEqual([process.properties, process.parameters, process.sockets])
+    expect(process.body.childNodes).toEqual([
+      process.rightSockets,
+      process.properties,
+      process.parameters,
+      process.leftSockets,
+    ])
     expect(process.element.getAttribute("style")).toContain("box-shadow: 0 0 12px #5b466b")
     expect(controller.props).toEqual(graphCanvasDefaultProps)
     expect(Object.isFrozen(controller.props)).toBeTrue()

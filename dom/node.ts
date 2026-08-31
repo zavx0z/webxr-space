@@ -75,6 +75,8 @@ export type NodeController = Readonly<{
     properties: HTMLDivElement
     parameters: HTMLDivElement
     sockets: HTMLDivElement
+    rightSockets: HTMLDivElement
+    leftSockets: HTMLDivElement
     property(id: string): HTMLDivElement | null
     parameter(id: string): ParameterController | null
     socket(id: string): SocketController | null
@@ -99,11 +101,11 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   flex-direction: column;
   min-width: 100px;
   overflow: visible;
-  border: 1px solid #131313;
+  border: 1px solid #111111;
   border-radius: 6px;
   background: #303030;
-  color: #e0e0e0;
-  font-size: 11px;
+  color: #d8d8d8;
+  font-size: 10px;
   box-shadow: 0 0 12px rgba(0, 0, 0, .5);
 }
 .node-article[aria-selected="true"] { border-color: #171717; }
@@ -134,11 +136,11 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   width: 100%;
   height: 24px;
   min-height: 24px;
-  gap: 4px;
-  padding: 0 6px 0 7px;
+  gap: 2px;
+  padding: 0 5px;
   overflow: hidden;
   border-radius: 5px 5px 0 0;
-  color: #f0f0f0;
+  color: #dedede;
 }
 .node-article[data-collapsed="true"] .node-article__header { border-radius: 5px; }
 .node-article__collapse,
@@ -147,23 +149,23 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  min-width: 16px;
+  width: 12px;
+  min-width: 12px;
   height: 20px;
   min-height: 20px;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #e8e8e8;
-  font-size: 11px;
+  color: #dedede;
+  font-size: 10px;
 }
 .node-article__title {
   display: block;
   min-width: 0;
   flex-grow: 1;
   overflow: hidden;
-  color: #f2f2f2;
-  font-size: 11px;
+  color: #dedede;
+  font-size: 10px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -174,7 +176,7 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   width: 100%;
   min-width: 0;
   gap: 3px;
-  padding: 6px 8px 8px;
+  padding: 0 8px 1px;
 }
 .node-article__body[hidden] { display: none; }
 .node-article__properties,
@@ -187,21 +189,27 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   min-width: 0;
   gap: 3px;
 }
-.node-article__properties > [data-field-id] { min-height: 26px; padding: 1px 0; }
-.node-article__properties > [data-field-id] > span { height: 24px; min-height: 24px; font-size: 11px; }
+.node-article__sockets[hidden] { display: none; }
+.node-article__properties > [data-field-id] { min-height: 20px; padding: 0; }
+.node-article__properties > [data-field-id] > span { height: 20px; min-height: 20px; font-size: 10px; }
+.node-article__properties > [data-field-id] > [role="group"] { min-height: 20px; }
+.node-article__properties > [data-field-kind="enum"] > span { display: none; }
 .node-article__properties [data-field-id] input,
 .node-article__properties [data-field-id] select,
-.node-article__properties [data-field-id] button { min-height: 24px; height: 24px; padding: 3px 6px; border-radius: 3px; font-size: 11px; }
+.node-article__properties [data-field-id] button { min-height: 20px; height: 20px; padding: 2px 5px; border-radius: 3px; font-size: 10px; }
+.node-article__properties [data-field-kind="boolean"] input[type="checkbox"] { margin-top: 0; }
+.node-article .node-socket[data-side="left"] { margin-left: -13px; }
+.node-article .node-socket[data-side="right"] { margin-right: -13px; }
 .node-article__socket-row {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   align-items: center;
   width: 100%;
-  min-height: 22px;
-  gap: 5px;
+  min-height: 20px;
+  gap: 4px;
 }
-.node-article__socket-label { display: block; min-width: 0; flex-grow: 1; font-size: 11px; }
+.node-article__socket-label { display: block; min-width: 0; flex-grow: 1; color: #d8d8d8; font-size: 10px; }
 .node-article__socket-row[data-side="right"] .node-article__socket-label { text-align: right; }
 `] .join("\n")
 
@@ -220,7 +228,8 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
   const body = document.createElement("div")
   const propertiesElement = document.createElement("div")
   const parametersElement = document.createElement("div")
-  const socketsElement = document.createElement("div")
+  const rightSocketsElement = document.createElement("div")
+  const leftSocketsElement = document.createElement("div")
   const properties = new Map<string, FieldMount>()
   const parameters = new Map<string, ParameterController>()
   const looseSockets = new Map<string, LooseSocketRecord>()
@@ -249,8 +258,9 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
   body.className = "node-article__body"
   propertiesElement.className = "node-article__properties"
   parametersElement.className = "node-article__parameters"
-  socketsElement.className = "node-article__sockets"
-  body.append(propertiesElement, parametersElement, socketsElement)
+  rightSocketsElement.className = "node-article__sockets node-article__sockets--right"
+  leftSocketsElement.className = "node-article__sockets node-article__sockets--left"
+  body.append(rightSocketsElement, propertiesElement, parametersElement, leftSocketsElement)
   root.append(preview, header, body)
 
   const onCollapse = (event: Event): void => {
@@ -302,7 +312,7 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
 
     reconcileProperties(document, propertiesElement, properties, next.properties ?? [])
     reconcileParameters(document, parametersElement, parameters, next.parameters ?? [])
-    reconcileLooseSockets(document, socketsElement, looseSockets, next.sockets ?? [])
+    reconcileLooseSockets(document, rightSocketsElement, leftSocketsElement, looseSockets, next.sockets ?? [])
     current = next
   }
 
@@ -322,7 +332,9 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
     body,
     properties: propertiesElement,
     parameters: parametersElement,
-    sockets: socketsElement,
+    sockets: rightSocketsElement,
+    rightSockets: rightSocketsElement,
+    leftSockets: leftSocketsElement,
     property(fieldId: string) { return properties.get(String(fieldId))?.element ?? null },
     parameter(parameterId: string) { return parameters.get(String(parameterId)) ?? null },
     socket(socketId: string) {
@@ -399,7 +411,8 @@ function reconcileParameters(
 
 function reconcileLooseSockets(
   document: Document,
-  parent: HTMLDivElement,
+  rightParent: HTMLDivElement,
+  leftParent: HTMLDivElement,
   records: Map<string, LooseSocketRecord>,
   definitions: readonly SocketDefinition[],
 ): void {
@@ -429,11 +442,12 @@ function reconcileLooseSockets(
       ? [record.socket.element, record.label]
       : [record.label, record.socket.element])
   }
-  const ordered = [
-    ...definitions.filter(({side}) => side === "right"),
-    ...definitions.filter(({side}) => side === "left"),
-  ]
-  reconcileChildren(parent, ordered.map(({id}) => records.get(id)!.row))
+  const right = definitions.filter(({side}) => side === "right")
+  const left = definitions.filter(({side}) => side === "left")
+  reconcileChildren(rightParent, right.map(({id}) => records.get(id)!.row))
+  reconcileChildren(leftParent, left.map(({id}) => records.get(id)!.row))
+  syncBooleanAttribute(rightParent, "hidden", right.length === 0)
+  syncBooleanAttribute(leftParent, "hidden", left.length === 0)
 }
 
 function positionedStyle(definition: NodeDefinition, headerColor: string, selected: boolean): string {

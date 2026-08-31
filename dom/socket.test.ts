@@ -62,7 +62,16 @@ describe("Blender-like DOM Socket", () => {
       styleSheets: [socketCss],
     })
     expect(events).toEqual(["click"])
-    expect(renderer.flush().hits.get(controller.element)).toBeDefined()
+    const frame = renderer.flush()
+    const visual = frame.displayList.find((item) => item.kind === "rect" && item.node === controller.element)
+    expect(frame.boxByNode.get(controller.element)).toMatchObject({width: 10, height: 10})
+    expect(frame.hits.get(controller.element)).toBeDefined()
+    expect(visual).toMatchObject({
+      color: "#9e9e9e",
+      border: {widths: {top: 1, right: 1, bottom: 1, left: 1}},
+    })
+    expect(socketCss).toContain("border: 1px solid #202020")
+    expect(socketCss).toContain("background: currentcolor")
     renderer.dispose()
   })
 })

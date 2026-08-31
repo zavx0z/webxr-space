@@ -74,6 +74,33 @@ real computed graph geometry передаётся владельцем domain/ap
 Storybook files являются dev-only consumers и не входят в exports или
 production dependency graph.
 
+### `NODES-UI-DOM-BUNDLE-001` — full all-controller browser budget
+
+Package boundary собирает один minified browser artifact из public
+`GraphCanvas`, `NodeWorkbench`, `ParameterSocket` и `NodeTreeEditor`.
+`NodeWorkbench` транзитивно включает `NodeEditor → GraphCanvas → Node →
+Parameter → exact compiled Field`; поэтому это полный all-controller + one-DOM-
+realm budget, а не размер отдельного UI package или одного lazy subpath.
+
+После восстановления native pointer capture, select picker, text/input state,
+полных Color/Number/Enum contracts и DOM Node behavior измерение текущего
+linked owner graph после bounded tree-shaking составляет `222462` raw / `56981`
+gzip bytes. Metafile раскладывает raw contribution на Renderer DOM `73004`,
+React runtime `33913`, UI controls `57881`, Nodes UI controllers `52176`,
+Template `5155` и fixture `232` bytes; оставшиеся bytes являются bundler
+framing. Side-effect-free literal initializers удаляют из consumer четыре
+неиспользуемых public CSS documents (`Socket`, `Link`, `NodeTreeEditor`,
+`ParameterSocket`) без изменения их exact импортируемых bytes и экономят `6266`
+raw / `1440` gzip bytes. Повторные controller imports также дедуплицированы.
+
+Даже после этой оптимизации предыдущий gate `215000 / 55000`, снятый до этих
+platform/control contracts, не описывает тот же observable scope: current
+artifact превышает его на `7462` raw / `1981` gzip bytes. Новый tight ceiling — `230000`
+raw / `60000` gzip bytes. Увеличение этого ceiling требует нового metafile
+evidence; уменьшение bundle не разрешает удалять owner behavior, validators,
+standard DOM state или exact shared Field kinds. Отдельный UI bundle budget не
+подменяет этот full-realm gate.
+
 ### `NODES-UI-COMPILED-001` — canonical store projection
 
 `NodeSystem` принимает стабильные `subscribe()` / `getSnapshot()` из
@@ -168,6 +195,17 @@ element и не дублирует value/control implementation. Collapse скр
 Public socket inventory сохраняет 19 kinds и 8 shapes parent contract. Kind
 задаёт color/shape preset, а `side` и capability `direction` остаются
 независимыми. Socket является standard button endpoint с exact Node/Socket ids.
+Loose right-side Sockets materialize-ятся сразу под header в definition order;
+Properties и Parameters следуют за ними, а loose left-side Sockets завершают
+body. Перенос между сторонами сохраняет Socket identity и не создаёт второй
+presentation owner.
+
+Accepted compact density использует `24px` header, `8px` horizontal body inset,
+`20px` Field/Parameter rows, `10px` text и `10px` filled Socket с `1px` dark
+outline. Node CSS уменьшает public Field chrome только через обычный cascade:
+full-row enum Property скрывает дублирующий внешний painted label и сохраняет
+тот же Field/`aria-labelledby`; numeric control, value transport и continuous
+fill остаются собственностью `@ui/components`.
 
 ## Parameter
 
@@ -180,7 +218,9 @@ Public socket inventory сохраняет 19 kinds и 8 shapes parent contract.
 Field component, а public ref является его реальным standard DOM element.
 Color, vector, rotation, matrix, reference, collection и path не сериализуются
 в строковый substitute. Connected state скрывает только editor, сохраняя label,
-Field element и endpoint identities.
+Field element и endpoint identities. Standard `hidden` исключает control group
+и его descendants из layout, paint и hit projection; Node не подменяет это
+ручным удалением inputs или локальным control implementation.
 
 ## Link
 
@@ -291,4 +331,12 @@ public GraphCanvas controller and remains outside package exports.
 5. Focused tests доказывают rich Node structure, Field identity, Socket presets,
    Link corridors, selection, pan/zoom/pinch, grid и keyed reconciliation.
 6. Exact Blender-reference capture остаётся обязательным browser acceptance
-   gate; route count и non-black canvas его не заменяют.
+   gate; route count и non-black canvas его не заменяют. Comparison route
+   использует immutable accepted raster без производного baseline и показывает
+   exact `Noise Texture` scope `x=498, y=558, width=228, height=385` в CSS px
+   source viewport `1920 × 1200` при DPR `2`. Рядом materialize-ится production
+   `@nodes/ui/node` в том же `228 × 385` viewport и при scale `1`; full-window
+   `object-fit` thumbnail, independently fitted live Node и несопоставимые
+   scene/scale запрещены. Presentation crop использует standard scroll offset
+   clipped `overflow` container; derived raster, private Canvas и manual image
+   painting не создаются.

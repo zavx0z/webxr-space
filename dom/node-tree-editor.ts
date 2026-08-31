@@ -73,7 +73,7 @@ export const nodeTreeEditorDefaultProps: NodeTreeEditorProps = Object.freeze({
   ]),
 })
 
-export const nodeTreeEditorCss = /* @__PURE__ */ String.raw`
+export const nodeTreeEditorCss = `
 .node-tree-dom { box-sizing: border-box; display: flex; flex-direction: column; width: 460px; min-height: 260px; overflow: hidden; border: 1px solid #111; border-radius: 4px; background: #292929; color: #e0e0e0; }
 .node-tree-dom__header { box-sizing: border-box; height: 30px; padding: 7px 10px; background: #242424; color: #7edcec; font-size: 12px; }
 .node-tree-dom__toolbar { box-sizing: border-box; display: flex; flex-direction: row; gap: 6px; padding: 6px; border-bottom: 1px solid #181818; }

@@ -46,7 +46,7 @@ export type LinkController = Readonly<{
   dispose(): void
 }>
 
-export const linkCss = /* @__PURE__ */ String.raw`
+export const linkCss = `
 .node-link {
   box-sizing: border-box;
   display: block;

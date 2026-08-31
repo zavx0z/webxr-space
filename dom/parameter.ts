@@ -40,29 +40,31 @@ export const parameterCss = /* @__PURE__ */ [socketCss, /* @__PURE__ */ String.r
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: 26px;
+  min-height: 20px;
   gap: 3px;
 }
 .node-parameter > [data-field-id] {
-  min-height: 26px;
+  min-height: 20px;
   flex-grow: 1;
-  gap: 5px;
-  padding: 1px 0;
+  gap: 4px;
+  padding: 0;
 }
 .node-parameter > [data-field-id] > span {
-  height: 24px;
-  min-height: 24px;
-  font-size: 11px;
+  height: 20px;
+  min-height: 20px;
+  font-size: 10px;
 }
+.node-parameter > [data-field-id] > [role="group"] { min-height: 20px; }
 .node-parameter [data-field-id] input,
 .node-parameter [data-field-id] select,
 .node-parameter [data-field-id] button {
-  min-height: 24px;
-  height: 24px;
-  padding: 3px 6px;
+  min-height: 20px;
+  height: 20px;
+  padding: 2px 5px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: 10px;
 }
+.node-parameter [data-field-kind="boolean"] input[type="checkbox"] { margin-top: 0; }
 .node-parameter[data-connected="true"] > [data-field-id] > span {
   width: 100%;
 }
