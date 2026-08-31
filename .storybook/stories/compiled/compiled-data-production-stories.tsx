@@ -14,7 +14,7 @@ import {
 import {List, type ListProps} from "@ui/components/list"
 import {Table, type TableProps} from "@ui/components/table"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
-import {createRoot, useState} from "@zavx0z/react"
+import {createRoot, useState, type ComponentRoot} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
 type ColorInputStoryState = Readonly<{
@@ -22,7 +22,12 @@ type ColorInputStoryState = Readonly<{
   presentation: ColorInputPresentation
 }>
 
-function ColorInputStoryComponent(props: Readonly<{initial: ColorInputProps}>) {
+type ColorInputStoryProps = Readonly<{
+  initial: ColorInputProps
+  presented: boolean
+}>
+
+function ColorInputStoryComponent(props: ColorInputStoryProps) {
   const [state, setState] = useState<ColorInputStoryState>({
     value: props.initial.value,
     presentation: props.initial.presentation ?? "closed"
@@ -42,7 +47,7 @@ function ColorInputStoryComponent(props: Readonly<{initial: ColorInputProps}>) {
   return <ColorInput
     value={state.value}
     label={props.initial.label}
-    presentation={state.presentation}
+    presentation={!props.presented && state.presentation === "open" ? "closed" : state.presentation}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
@@ -141,9 +146,10 @@ export function createCompiledColorInputProductionStory(
   return mountCompiledStory(
     document,
     ColorInputStoryComponent,
-    {initial: props},
+    {initial: props, presented: false},
     "color-input",
-    colorSource(props)
+    colorSource(props),
+    root => root.render(ColorInputStoryComponent as any, {initial: props, presented: true})
   )
 }
 
@@ -205,7 +211,8 @@ function mountCompiledStory(
   component: unknown,
   props: unknown,
   name: string,
-  typescript: string
+  typescript: string,
+  afterPresent?: (root: ComponentRoot) => void
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
   const root = createRoot(staging)
@@ -217,11 +224,17 @@ function mountCompiledStory(
   }
   staging.removeChild(owner)
   owner.setAttribute("data-story-component", name)
+  let presented = false
   const story = Object.freeze({
     element: owner,
     componentRoot: root,
     get source() {
       return Object.freeze({html: serialize(owner), typescript})
+    },
+    afterPresent: afterPresent === undefined ? undefined : () => {
+      if (presented) return
+      presented = true
+      afterPresent(root)
     },
     dispose() {
       root.unmount()

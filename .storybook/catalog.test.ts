@@ -2,9 +2,10 @@ import {describe, expect, test} from "bun:test"
 import {createHash} from "node:crypto"
 import {existsSync, readFileSync} from "node:fs"
 import {dirname, join, resolve} from "node:path"
-import {createDocument} from "@zavx0z/dom"
+import {createDocument, getPopoverVisibilityState, type HTMLElement} from "@zavx0z/dom"
 import {runtime} from "./runtime.ts"
 import {story_status_unavailable} from "./stories/subjects/components-data-noti.ts"
+import {story_state_open as story_color_input_open} from "./stories/subjects/components-inputs-color-input.ts"
 
 const packageRoot = resolve(import.meta.dir, "..")
 const projectRoot = resolve(packageRoot, "../..")
@@ -186,6 +187,28 @@ describe("@ui/components external catalog", () => {
     session.unmount()
     expect(document.childNodes).toHaveLength(0)
     session.dispose()
+    session.dispose()
+  })
+
+  test("runs owner post-present lifecycle after the exact node is connected", async () => {
+    const document = createDocument()
+    const session = runtime.create({
+      document,
+      signal: new AbortController().signal,
+      present(value) {
+        document.appendChild(value.node)
+      },
+      reportDiagnostic() {},
+    })
+    await session.mount({
+      route: story_color_input_open.route,
+      story: story_color_input_open,
+      signal: new AbortController().signal,
+    })
+    const owner = document.firstChild as HTMLElement
+    const editor = owner.querySelector('[aria-label="Color editor"]') as HTMLElement
+    expect(owner.querySelector("button")?.getAttribute("aria-expanded")).toBe("true")
+    expect(editor[getPopoverVisibilityState]()).toBe("showing")
     session.dispose()
   })
 

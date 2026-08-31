@@ -1,4 +1,5 @@
-import type {Event} from "@zavx0z/dom"
+import type {Event, HTMLElement, ToggleEvent} from "@zavx0z/dom"
+import {useCallback} from "@zavx0z/react"
 import {Button} from "./button.tsx"
 import {SliderControl} from "./slider-control.tsx"
 import {TextField} from "./text-field.tsx"
@@ -23,11 +24,8 @@ export type ColorInputProps = Readonly<{
 
 type HsvaChannel = "h" | "s" | "v" | "a"
 
-const channels = Object.freeze(["h", "s", "v", "a"] as const)
-const checkerCells = Object.freeze(Array.from({length: 32}, (_, index) => Object.freeze({
-  key: String(index),
-  dark: (Math.floor(index / 8) + index) % 2 === 0
-})))
+const channels = ["h", "s", "v", "a"] as const
+const checkerCells = "10101010010101011010101001010101"
 
 const triggerStyle: CssStyle = css`& { width: 100%; height: 28px; justify-content: flex-start; padding: 3px 7px; }`
 const openTriggerStyle: CssStyle = css`& { background: var(--widget-active-background); }`
@@ -48,9 +46,9 @@ function CheckerCell(props: Readonly<{dark: boolean}>) {
 function CheckerCells() {
   return <div aria-hidden="true" style={css`
     & { position: absolute; inset: 0; display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; height: 100%; overflow: clip; }
-  `}>{checkerCells.map(cell => <CheckerCell
-    key={cell.key}
-    dark={cell.dark}
+  `}>{checkerCells.split("").map((dark, index) => <CheckerCell
+    key={index}
+    dark={dark > "0"}
   />)}</div>
 }
 
@@ -68,7 +66,6 @@ function ColorSwatch(props: Readonly<{value: ColorInputValue; expanded: boolean}
 
 type ColorChannelControlProps = Readonly<{
   channel: HsvaChannel
-  value: ColorInputValue
   hsva: ColorInputHsva
   disabled: boolean
   readOnly: boolean
@@ -130,10 +127,23 @@ function ColorChannelControl(props: ColorChannelControlProps) {
 export function ColorInput(props: ColorInputProps) {
   const normalized = normalizeColorProps(props)
   const open = normalized.presentation !== "closed"
+  const popoverOpen = normalized.presentation === "open"
+  const expanded = normalized.presentation === "expanded"
   const locked = props.disabled === true || props.readOnly === true
   const hsva = colorInputValueToHsva(normalized.value)
+  const bindEditor = useCallback((element: HTMLElement | null) => {
+    if (!element?.isConnected) return
+    const trigger = element.parentElement?.querySelector("button") as HTMLElement | null
+    if (!trigger?.isConnected) return
+    if (popoverOpen) element.showPopover({source: trigger})
+    else if (element.popover !== null) element.hidePopover()
+  }, [normalized.presentation])
   const onToggle = (event: Event) => {
     if (!locked) props.onOpenChange?.(!open, event)
+  }
+  const onEditorToggle = (event: Event) => {
+    const showing = (event as ToggleEvent).newState === "open"
+    if (showing !== popoverOpen) props.onOpenChange?.(showing, event)
   }
   const emitHex = (kind: "input" | "change", text: string, event: Event) => {
     const next = parseColorInputValue(text)
@@ -143,6 +153,7 @@ export function ColorInput(props: ColorInputProps) {
   }
   const onHexInput = (value: string, event: Event) => emitHex("input", value, event)
   const onHexChange = (value: string, event: Event) => emitHex("change", value, event)
+
   return <fieldset
     disabled={props.disabled === true}
     title={props.title}
@@ -164,26 +175,26 @@ export function ColorInput(props: ColorInputProps) {
       style={css`${triggerStyle}${open && openTriggerStyle}`}
       onClick={onToggle}
     />
-    <div style={css`
+    <div ref={bindEditor} style={css`
       & {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        width: 100%;
+        width: 280px;
         gap: 3px;
         padding: 6px;
         border: var(--border-width-control) solid var(--widget-popup-outline);
         border-radius: 4px;
         background: var(--widget-popup-background);
       }
-      &[hidden] { display: none; }
       &[data-presentation="open"] { border-color: var(--widget-regular-outline); }
       &[data-presentation="expanded"] { gap: 5px; border-color: var(--widget-focus-outline); }
-    `} hidden={!open} data-presentation={normalized.presentation} role="group" aria-label="Color editor">
+    `} popover={expanded ? undefined : "auto"} data-presentation={normalized.presentation}
+      role="group" aria-label="Color editor" onToggle={onEditorToggle}>
       <div style={css`
         & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; gap: 4px; }
-      `} data-expanded={normalized.presentation === "expanded" ? "true" : undefined}>
-        <ColorSwatch value={normalized.value} expanded={normalized.presentation === "expanded"} />
+      `} data-expanded={expanded ? "true" : undefined}>
+        <ColorSwatch value={normalized.value} expanded={expanded} />
         <TextField
           value={formatColorInputValue(normalized.value)}
           disabled={props.disabled === true}
@@ -197,7 +208,6 @@ export function ColorInput(props: ColorInputProps) {
       {channels.map(channel => <ColorChannelControl
         key={channel}
         channel={channel}
-        value={normalized.value}
         hsva={hsva}
         disabled={props.disabled === true}
         readOnly={props.readOnly === true}
@@ -292,11 +302,13 @@ function normalizeColorProps(props: ColorInputProps): Readonly<{
   if (presentation !== "closed" && presentation !== "open" && presentation !== "expanded") {
     throw new Error(`Unknown ColorInput presentation: ${presentation}`)
   }
-  return Object.freeze({value, presentation})
+  return {value, presentation}
 }
 
 function colorChannelDisplayValue(channel: HsvaChannel, value: ColorInputHsva): number {
-  return channel === "h" ? Math.round(value.h * 360) : rounded(value[channel])
+  return channel === "h"
+    ? Math.round(value.h * 360)
+    : Math.round(value[channel] * 1_000_000) / 1_000_000
 }
 
 function clampUnit(value: number): number {
@@ -306,10 +318,6 @@ function clampUnit(value: number): number {
 function wrapUnit(value: number): number {
   if (!Number.isFinite(value)) return 0
   return ((value % 1) + 1) % 1
-}
-
-function rounded(value: number): number {
-  return Math.round(value * 1_000_000) / 1_000_000
 }
 
 function byte(value: number): number {

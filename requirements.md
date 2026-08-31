@@ -306,21 +306,28 @@ Keyed reorder preserves both the parent component instance and every retained
 nested component/element. Joined owners suppress nested contour shadows and
 radii through owner tokens while keeping exactly one caller-facing `style`.
 
-## `UI-COMPILED-COLOR-INPUT-001` — controlled color semantics, partial presentation
+## `UI-COMPILED-COLOR-INPUT-001` — controlled color semantics and presentation
 
 `ColorInput` keeps immutable RGBA as its public controlled value, projects
 editable HSVA rows, parses and formats exact six/eight-digit hex, and renders
 alpha over a semantic DOM checker. `closed`, `open` and `expanded` remain
-distinct controlled presentations; the current `open` panel is an in-flow
-disclosure, not an accepted anchored picker substitute.
+distinct controlled presentations. `open` uses one standard same-Document
+`popover="auto"` editor and `showPopover({source})` with the exact production
+Button trigger. Renderer therefore owns source anchoring below the trigger,
+viewport flip/clamp, top-layer clipping and hit order; DOM owns light dismiss,
+Escape and focus restoration. Opening never changes the fieldset's normal-flow
+height. A native `toggle` close proposes `onOpenChange(false, event)` so the
+caller-controlled presentation stays synchronized. Initial `open` mounts are
+materialized only after the editor and trigger are connected.
 
-This owner is explicitly partial. Reference-compatible hue/saturation wheel,
-value plane/marker dragging and compact anchored top-layer placement remain
-blocked on generic platform capabilities, including
-`gap.html.anchored-popover`. Components must not add a private picker-plane
-renderer, manual viewport placement, pointer dispatcher, Canvas/WebGPU path or
-hardcoded story-only wheel. Hex/HSVA/checker tests prove the completed semantic
-slice only; they do not satisfy ColorInput visual/interaction acceptance.
+`expanded` is the explicit in-flow editor presentation and does not carry a
+popover state. This owner remains partial only for the reference-compatible
+hue/saturation wheel and value-plane/marker dragging. Components must not add a
+private picker-plane renderer, manual viewport placement, pointer dispatcher,
+Canvas/WebGPU path or hardcoded story-only wheel. Hex/HSVA/checker and standard
+Popover tests prove the completed semantic and placement slice only; they do
+not satisfy final ColorInput visual acceptance without equal-scale reference
+evidence and an explicit owner verdict.
 
 ## `UI-COMPILED-COLLECTIONS-001` — keyed List and Table
 

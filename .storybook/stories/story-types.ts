@@ -11,6 +11,7 @@ export type OwnerStoryPresentation = Readonly<{
   componentRoot: Pick<ComponentRoot, "readStyleSheets">
   source: OwnerStorySource
   props?: Readonly<Record<string, unknown>>
+  afterPresent?(): void
   dispose(): void
 }>
 
@@ -41,6 +42,9 @@ export function withStoryProps(
       componentRoot: routed.story.componentRoot,
       get source() { return routed.story.source },
       props: Object.freeze({...props}),
+      afterPresent: routed.story.afterPresent === undefined
+        ? undefined
+        : () => routed.story.afterPresent?.(),
       dispose: () => routed.story.dispose(),
     }),
   })

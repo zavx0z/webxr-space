@@ -1,5 +1,13 @@
 import {describe, expect, test} from "bun:test"
-import {Event, type Element, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
+import {
+  Event,
+  getPopoverVisibilityState,
+  type Element,
+  type HTMLButtonElement,
+  type HTMLElement,
+  type HTMLInputElement,
+  type ToggleEvent
+} from "@zavx0z/dom"
 import {createDocumentRenderer, type RectDisplayItem} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
@@ -28,6 +36,8 @@ describe("compiled production ColorInput", () => {
       presentation: "open",
       onInput: (next: ColorInputValue) => proposals.push(next)
     })
+    expect((host.querySelector('[aria-label="Color editor"]') as HTMLElement)
+      [getPopoverVisibilityState]()).toBe("showing")
     const valueChannel = host.querySelector('[data-color-channel="v"]')!
     const number = valueChannel.querySelector('input[type="number"]') as HTMLInputElement
     const range = valueChannel.querySelector('input[type="range"]') as HTMLInputElement
@@ -114,6 +124,82 @@ describe("compiled production ColorInput", () => {
     root.unmount()
   })
 
+  test("anchors open outside flow and reports native dismissals with exact focus return", async () => {
+    const document = createDocument()
+    const surface = document.createElement("section")
+    const host = document.createElement("main")
+    const outside = document.createElement("button")
+    document.appendChild(surface)
+    surface.append(host, outside)
+    surface.setAttribute("style", "display:flex; flex-direction:column; width:420px; height:420px")
+    outside.setAttribute("style", "width:80px; height:22px")
+    const root = createRoot(host)
+    const opens: boolean[] = []
+    const value = {r: 0.2, g: 0.55, b: 0.8, a: 1}
+    const props = {
+      value,
+      onOpenChange: (open: boolean) => opens.push(open)
+    }
+    root.render(ColorInput as any, {...props, presentation: "closed"})
+    const fieldset = host.querySelector("fieldset")!
+    const trigger = host.querySelector("button") as HTMLButtonElement
+    const editor = host.querySelector('[aria-label="Color editor"]') as HTMLElement
+    expect(editor.popover).toBe("auto")
+    expect(editor[getPopoverVisibilityState]()).toBe("hidden")
+
+    const renderer = createDocumentRenderer({
+      document,
+      root: surface,
+      viewport: {width: 420, height: 420}
+    })
+    const closed = renderer.flush()
+    const closedHeight = closed.boxByNode.get(fieldset)?.height
+    const openingSources: (Element | null)[] = []
+    editor.addEventListener("beforetoggle", event => {
+      const toggle = event as ToggleEvent
+      if (toggle.newState === "open") openingSources.push(toggle.source)
+    })
+    trigger.focus()
+    root.render(ColorInput as any, {...props, presentation: "open"})
+    expect(editor[getPopoverVisibilityState]()).toBe("showing")
+    expect(openingSources).toEqual([trigger])
+    const opened = renderer.flush()
+    expect(opened.boxByNode.get(fieldset)?.height).toBe(closedHeight)
+    expect(opened.boxByNode.get(editor)).toMatchObject({
+      x: opened.boxByNode.get(trigger)?.x,
+      y: (opened.boxByNode.get(trigger)?.y ?? 0) +
+        (opened.boxByNode.get(trigger)?.height ?? 0) + 4,
+      width: 280
+    })
+    await nextTask()
+
+    const hex = editor.querySelector('[aria-label="Hex color"]') as HTMLInputElement
+    hex.focus()
+    expect(document.lightDismissPopovers(outside)).toBe(true)
+    expect(editor[getPopoverVisibilityState]()).toBe("hidden")
+    expect(document.activeElement).toBe(trigger)
+    await nextTask()
+    expect(opens).toEqual([false])
+
+    root.render(ColorInput as any, {...props, presentation: "closed"})
+    root.render(ColorInput as any, {...props, presentation: "open"})
+    await nextTask()
+    hex.focus()
+    expect(document.dismissTopmostAutoPopover()).toBe(true)
+    expect(editor[getPopoverVisibilityState]()).toBe("hidden")
+    expect(document.activeElement).toBe(trigger)
+    await nextTask()
+    expect(opens).toEqual([false, false])
+
+    root.render(ColorInput as any, {...props, presentation: "expanded"})
+    const expanded = renderer.flush()
+    expect(editor.popover).toBeNull()
+    expect(expanded.boxByNode.get(fieldset)?.height).toBeGreaterThan(closedHeight ?? 0)
+    expect(expanded.boxByNode.has(editor)).toBe(true)
+    renderer.dispose()
+    root.unmount()
+  })
+
   test("projects checker theme channels as valid exact display colors", async () => {
     const source = await Bun.file(new URL("./color-input.tsx", import.meta.url)).text()
     expect(source).toContain("background: rgb(var(--surface-550))")
@@ -144,6 +230,10 @@ describe("compiled production ColorInput", () => {
     root.unmount()
   })
 })
+
+function nextTask(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0))
+}
 
 function background(
   frame: import("@zavx0z/renderer").RenderFrame,

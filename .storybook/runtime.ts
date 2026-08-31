@@ -6,6 +6,7 @@ type OwnerStoryResult = Readonly<{
     componentRoot: Readonly<{readStyleSheets(): unknown}>
     source: Readonly<{html: string; typescript: string}>
     props?: Readonly<Record<string, unknown>>
+    afterPresent?(): void
     dispose?(): void
   }>
 }>
@@ -62,6 +63,7 @@ export const runtime = Object.freeze({
           source: story.source,
           values: Object.freeze({props: story.props ?? Object.freeze({})}),
         }))
+        story.afterPresent?.()
       } catch (error) {
         context.reportDiagnostic(Object.freeze({
           phase: "runtime",
@@ -100,7 +102,8 @@ function ownerStoryResult(value: unknown, document: Document): OwnerStoryResult[
   if (story === null || typeof story !== "object" ||
     typeof story.element !== "object" || story.element.ownerDocument !== document ||
     story.componentRoot === null || typeof story.componentRoot !== "object" ||
-    typeof story.componentRoot.readStyleSheets !== "function") {
+    typeof story.componentRoot.readStyleSheets !== "function" ||
+    (story.afterPresent !== undefined && typeof story.afterPresent !== "function")) {
     throw new TypeError("UI owner story returned an incompatible DOM node")
   }
   return story

@@ -1,6 +1,12 @@
 /** Package-owned external Storybook story support. */
 import {describe, expect, test} from "bun:test"
-import {Event, createDocument, type HTMLButtonElement} from "@zavx0z/dom"
+import {
+  Event,
+  createDocument,
+  getPopoverVisibilityState,
+  type HTMLButtonElement,
+  type HTMLElement
+} from "@zavx0z/dom"
 import {
   createCompiledCollectionInputProductionStory,
   createCompiledColorInputProductionStory,
@@ -10,11 +16,14 @@ import {
 
 describe("compiled data production stories", () => {
   test("keeps ColorInput presentation in hook state", () => {
-    const mounted = createCompiledColorInputProductionStory(createDocument(), {
+    const document = createDocument()
+    const mounted = createCompiledColorInputProductionStory(document, {
       value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
       presentation: "closed",
     })
     const owner = mounted.story.element
+    document.appendChild(owner)
+    mounted.story.afterPresent?.()
     const trigger = owner.querySelector("button") as HTMLButtonElement
     trigger.click()
     expect(mounted.story.element).toBe(owner)
@@ -24,6 +33,26 @@ describe("compiled data production stories", () => {
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
     expect(mounted.story.source.typescript).not.toContain("createColorInput(")
+    mounted.story.dispose()
+  })
+
+  test("materializes an initially open ColorInput only after presentation", () => {
+    const document = createDocument()
+    const mounted = createCompiledColorInputProductionStory(document, {
+      value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
+      presentation: "open",
+    })
+    const owner = mounted.story.element
+    const trigger = owner.querySelector("button") as HTMLButtonElement
+    const editor = owner.querySelector('[aria-label="Color editor"]') as HTMLElement
+    expect(trigger.getAttribute("aria-expanded")).toBe("false")
+    expect(editor[getPopoverVisibilityState]()).toBe("hidden")
+
+    document.appendChild(owner)
+    mounted.story.afterPresent?.()
+    expect(mounted.story.element).toBe(owner)
+    expect(trigger.getAttribute("aria-expanded")).toBe("true")
+    expect(editor[getPopoverVisibilityState]()).toBe("showing")
     mounted.story.dispose()
   })
 

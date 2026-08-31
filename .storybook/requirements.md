@@ -151,6 +151,12 @@ production owner stylesheet.
 4. Adapter может хранить Storybook args, controls, events и source
    serialization, но не копирует DOM composition, interaction state machine,
    CSS либо visual defaults production owner.
+5. `ColorInput` story с начальным `presentation: "open"` не вызывает Popover
+   API на detached staging tree. UI runtime синхронно вставляет exact story node
+   через `context.present()`, после чего один package-owned `afterPresent`
+   lifecycle rerender переводит тот же retained production owner из закрытого
+   staging-состояния в требуемое controlled `open`. Anchoring, dismissal и
+   focus остаются production DOM/Renderer behavior; runtime их не копирует.
 
 ## `UI-STORYBOOK-PLATFORM-001` — supported HTML/CSS surface
 
