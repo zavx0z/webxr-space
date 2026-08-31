@@ -46,7 +46,7 @@ describe("superproject workspace contract", () => {
       {
         name: "@zavx0z/dom",
         path: "../renderer/packages/dom",
-        revision: "28a4ce08e94231bf6f2fd144f8e54bd8975946f3",
+        revision: "903df09d5ce350f74944cce54a4225d21addead5",
       },
       {
         name: "@zavx0z/highlighter",
