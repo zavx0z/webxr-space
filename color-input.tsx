@@ -39,8 +39,8 @@ function CheckerCell(props: Readonly<{dark: boolean}>) {
   return <span
     data-dark={props.dark ? "true" : undefined}
     style={css`
-      & { display: block; width: 12.5%; height: 25%; background: var(--surface-550); }
-      &[data-dark="true"] { background: var(--surface-750); }
+      & { display: block; width: 12.5%; height: 25%; background: rgb(var(--surface-550)); }
+      &[data-dark="true"] { background: rgb(var(--surface-750)); }
     `}
   ></span>
 }

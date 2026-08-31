@@ -1,6 +1,6 @@
 import {describe, expect, test} from "bun:test"
-import {Event, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {Event, type Element, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
+import {createDocumentRenderer, type RectDisplayItem} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {
@@ -113,4 +113,45 @@ describe("compiled production ColorInput", () => {
     renderer.dispose()
     root.unmount()
   })
+
+  test("projects checker theme channels as valid exact display colors", async () => {
+    const source = await Bun.file(new URL("./color-input.tsx", import.meta.url)).text()
+    expect(source).toContain("background: rgb(var(--surface-550))")
+    expect(source).toContain("background: rgb(var(--surface-750))")
+    expect(source).not.toContain("background: var(--surface-550)")
+    expect(source).not.toContain("background: var(--surface-750)")
+
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(ColorInput as any, {
+      value: {r: 0.2, g: 0.4, b: 0.8, a: 0.5},
+      presentation: "open"
+    })
+    const cells = Array.from(host.querySelectorAll('[aria-hidden="true"] span'))
+    const light = cells.find(cell => !cell.hasAttribute("data-dark"))!
+    const dark = cells.find(cell => cell.getAttribute("data-dark") === "true")!
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 340, height: 320}
+    })
+    const frame = renderer.flush()
+    expect(background(frame, light).color).toBe("rgb(89 89 89)")
+    expect(background(frame, dark).color).toBe("rgb(48 48 48)")
+    renderer.dispose()
+    root.unmount()
+  })
 })
+
+function background(
+  frame: import("@zavx0z/renderer").RenderFrame,
+  element: Element
+): RectDisplayItem {
+  const item = frame.displayList.find((candidate): candidate is RectDisplayItem =>
+    candidate.kind === "rect" && candidate.node === element && candidate.key === "background"
+  )
+  if (!item) throw new Error("Color checker background is missing")
+  return item
+}
