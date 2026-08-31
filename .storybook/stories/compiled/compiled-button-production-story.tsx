@@ -1,7 +1,9 @@
 /** Package-owned external Storybook story support. */
 import {
   Button,
-  type ButtonProps
+  IconButton,
+  type ButtonProps,
+  type IconButtonProps
 } from "@ui/components/button"
 import {createRoot} from "@zavx0z/react"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
@@ -53,6 +55,48 @@ export function createCompiledButtonProductionStory(
   return Object.freeze({story})
 }
 
+export function createCompiledIconButtonProductionStory(
+  document: Document,
+  props: IconButtonProps
+): RoutedProductionComponentStory {
+  const staging = document.createElement("div")
+  const root = createRoot(staging)
+  root.render(<IconButton
+    label={props.label}
+    iconSrc={props.iconSrc}
+    variant={props.variant}
+    tone={props.tone}
+    size={props.size}
+    disabled={props.disabled}
+    selected={props.selected}
+    title={props.title}
+    iconSize={props.iconSize}
+    onClick={props.onClick}
+  />)
+  const button = staging.querySelector("button") as HTMLElement | null
+  if (!button) {
+    root.unmount()
+    throw new Error("Compiled IconButton story mounted no button")
+  }
+  staging.removeChild(button)
+  button.setAttribute("data-story-component", "icon-button")
+  return Object.freeze({
+    story: Object.freeze({
+      element: button,
+      componentRoot: root,
+      get source() {
+        return Object.freeze({
+          html: serialize(button),
+          typescript: iconButtonSource(props)
+        })
+      },
+      dispose() {
+        root.unmount()
+      }
+    })
+  })
+}
+
 function source(props: ButtonProps): string {
   const serializable = JSON.stringify(props, (_key, value) =>
     typeof value === "function" ? undefined : value, 2)
@@ -70,6 +114,28 @@ function source(props: ButtonProps): string {
     "  disabled={props.disabled}",
     "  selected={props.selected}",
     "  title={props.title}",
+    "  iconSrc={props.iconSrc}",
+    "  startIcon={props.startIcon}",
+    "  endIcon={props.endIcon}",
+    "  iconPosition={props.iconPosition}",
+    "  iconOnly={props.iconOnly}",
+    "  iconSize={props.iconSize}",
+    "/>)"
+  ].join("\n")
+}
+
+function iconButtonSource(props: IconButtonProps): string {
+  return [
+    'import {IconButton} from "@ui/components/button"',
+    'import {uiIcons} from "@ui/components/icons"',
+    'import {createRoot} from "@zavx0z/react"',
+    "",
+    "const root = createRoot(container)",
+    "root.render(<IconButton",
+    `  label={${JSON.stringify(props.label)}}`,
+    "  iconSrc={uiIcons.settings}",
+    `  variant={${JSON.stringify(props.variant ?? "text")}}`,
+    `  size={${JSON.stringify(props.size ?? "medium")}}`,
     "/>)"
   ].join("\n")
 }

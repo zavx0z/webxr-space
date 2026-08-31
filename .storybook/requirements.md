@@ -33,13 +33,18 @@ exports, structural `storybook-runtime/3` adapter, linked production
 
 ## `UI-STORYBOOK-ROUTES-001` — complete exact route tree
 
-1. `.storybook/catalog.json` содержит 85 UI/HUD detail variants с exact legacy
-   leaf routes и static module/export references. Остальные 91 DOM/Elements
-   leaves принадлежат `@zavx0z/dom` в Renderer.
+1. `.storybook/catalog.json` сохраняет 85 exact legacy UI/HUD leaf routes и
+   добавляет current routes только для public TSX factory без подходящего exact
+   historical leaf. Остальные 91
+   legacy DOM/Elements leaves принадлежат `@zavx0z/dom` в Renderer. Source-derived
+   guard требует один direct `kind: component` category/subject на каждый exported
+   PascalCase TSX factory; legacy routes без production export не выдаются за
+   components.
 2. `.storybook/route-remap.json` сохраняет ordered baseline 176 leaves и 215
-   overview states. Former section overviews документированно collapse-ятся в
-   subject overview; section остаётся variant group metadata и не становится
-   отдельной panel. Неизвестный path fail-closed.
+   overview states. Promoted `Button` является primary component category;
+   `basic / icon / icon-label / sizes / color` являются exact secondary subject
+   overviews. Остальные former section overviews документированно collapse-ятся
+   в subject overview; неизвестный path fail-closed.
 3. Каждый overview создаёт stable aggregate wrapper и отдельный production
    story/controller для каждого непосредственного ребёнка. Если ребёнок сам
    overview, aggregate явно выбирает один bounded representative detail этого
@@ -67,6 +72,15 @@ semantic event без route navigation. Поиск использует group la
 `label`/`title`/`route`/`searchText` leaf metadata. Обновление catalog сохраняет
 DOM identities неизменившихся group и leaf nodes, active route и независимое
 состояние остальных групп.
+
+`Кнопка` является отдельной primary category внутри disclosure group
+`Компоненты` и отсутствует в `Основные`. Её secondary содержит ровно
+`Основные / Иконка / Иконка и подпись / Размер / Цвет`; dock содержит только
+variants выбранной section. Button/category и section/subject overview
+материализуют реальные children без hidden selection. Историческая secondary
+`Иконка` является exact public `IconButton` owner с route
+`components/foundation/button/icon/svg`; отдельный `Кнопка-иконка` в category
+`Основные` запрещён как дубликат того же Button contract.
 
 Эти шесть regions сохраняют историческую editor-композицию Workbench:
 catalog, secondary navigation, preview, scenarios и UI-owned Props Inspector образуют
@@ -128,7 +142,7 @@ production owner stylesheet.
 2. Standard DOM interface/element routes остаются прямыми platform proofs:
    они документируют `@zavx0z/dom` и не фабрикуют отсутствующий Component.
 3. Field, Inspector, CodeEditor и HUD продолжают использовать действующие
-   production factories. Button, TextField, Pane, Badge, Typography, Divider,
+   production factories. Button, IconButton, TextField, Pane, Badge, Typography, Divider,
    NumberInput, Checkbox, Switcher, ControlGroup, SliderControl,
    ProgressCheckbox, VectorInput, MatrixInput, ReferenceInput,
    CollectionInput, PathInput, ColorInput, List и Table получают собственные

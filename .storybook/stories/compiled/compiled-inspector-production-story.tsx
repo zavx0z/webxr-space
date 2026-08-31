@@ -3,6 +3,7 @@ import {
   Inspector,
   InspectorSection,
   InspectorSections,
+  InspectorTextSection,
   type InspectorCategory
 } from "@ui/components/inspector"
 import {type FieldDefinition} from "@ui/components/field"
@@ -17,6 +18,10 @@ const categories: readonly InspectorCategory[] = Object.freeze([
 ])
 
 const inspectorSections = Object.freeze([{id: "props"}] as const)
+const inspectorParts = Object.freeze([
+  Object.freeze({id: "props", label: "Свойства", content: "label · variant · disabled"}),
+  Object.freeze({id: "events", label: "События", content: "click · focus · input"})
+])
 
 const inspectorStoryProps = Object.freeze({
   ariaLabel: "Инспектор свойств",
@@ -64,6 +69,37 @@ function InspectorStoryComponent() {
   </Inspector>
 }
 
+function InspectorSectionsStoryComponent() {
+  return <InspectorSections>{inspectorParts.map(section => <InspectorTextSection
+    key={section.id}
+    id={section.id}
+    label={section.label}
+    expanded={true}
+    content={section.content}
+  />)}</InspectorSections>
+}
+
+function InspectorSectionContent() {
+  return <span>Содержимое секции</span>
+}
+
+function InspectorSectionStoryComponent() {
+  return <InspectorSection
+    id="properties"
+    label="Свойства"
+    expanded={true}
+  ><InspectorSectionContent /></InspectorSection>
+}
+
+function InspectorTextSectionStoryComponent() {
+  return <InspectorTextSection
+    id="source"
+    label="Исходный код"
+    expanded={true}
+    content="const value = 42"
+  />
+}
+
 export function createCompiledInspectorProductionStory(document: Document): RoutedProductionComponentStory {
   const staging = document.createElement("div")
   const root = createRoot(staging)
@@ -87,6 +123,97 @@ export function createCompiledInspectorProductionStory(document: Document): Rout
     }
   })
   return Object.freeze({story})
+}
+
+export function createCompiledInspectorSectionsProductionStory(
+  document: Document
+): RoutedProductionComponentStory {
+  return mountInspectorPart(
+    document,
+    InspectorSectionsStoryComponent,
+    "inspector-sections",
+    [
+      'import {InspectorSections, InspectorTextSection} from "@ui/components/inspector"',
+      "",
+      "createRoot(container).render(",
+      "  <InspectorSections>",
+      "    <InspectorTextSection id=\"props\" label=\"Свойства\" expanded content=\"label · variant · disabled\" />",
+      "    <InspectorTextSection id=\"events\" label=\"События\" expanded content=\"click · focus · input\" />",
+      "  </InspectorSections>",
+      ")"
+    ].join("\n"),
+    Object.freeze({sections: 2})
+  )
+}
+
+export function createCompiledInspectorSectionProductionStory(
+  document: Document
+): RoutedProductionComponentStory {
+  return mountInspectorPart(
+    document,
+    InspectorSectionStoryComponent,
+    "inspector-section",
+    [
+      'import {InspectorSection} from "@ui/components/inspector"',
+      "",
+      "createRoot(container).render(",
+      "  <InspectorSection id=\"properties\" label=\"Свойства\" expanded>",
+      "    <span>Содержимое секции</span>",
+      "  </InspectorSection>",
+      ")"
+    ].join("\n"),
+    Object.freeze({id: "properties", label: "Свойства", expanded: true})
+  )
+}
+
+export function createCompiledInspectorTextSectionProductionStory(
+  document: Document
+): RoutedProductionComponentStory {
+  return mountInspectorPart(
+    document,
+    InspectorTextSectionStoryComponent,
+    "inspector-text-section",
+    [
+      'import {InspectorTextSection} from "@ui/components/inspector"',
+      "",
+      "createRoot(container).render(",
+      "  <InspectorTextSection id=\"source\" label=\"Исходный код\" expanded content=\"const value = 42\" />",
+      ")"
+    ].join("\n"),
+    Object.freeze({id: "source", label: "Исходный код", expanded: true})
+  )
+}
+
+function mountInspectorPart(
+  document: Document,
+  component: unknown,
+  name: string,
+  typescript: string,
+  props: Readonly<Record<string, unknown>>
+): RoutedProductionComponentStory {
+  const staging = document.createElement("div")
+  const root = createRoot(staging)
+  root.render(component as any, {})
+  const owner = staging.firstElementChild as HTMLElement | null
+  if (owner === null) {
+    root.unmount()
+    throw new Error(`Compiled ${name} story mounted no owner`)
+  }
+  staging.removeChild(owner)
+  owner.setAttribute("data-story-component", name)
+  return Object.freeze({
+    story: Object.freeze({
+      element: owner,
+      componentRoot: root,
+      props,
+      get source() {
+        return Object.freeze({html: serialize(owner), typescript})
+      },
+      dispose() {
+        root.unmount()
+      }
+    })
+  })
 }
 
 function source(): string {

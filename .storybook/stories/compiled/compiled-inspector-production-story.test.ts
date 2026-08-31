@@ -1,7 +1,12 @@
 /** Package-owned external Storybook story support. */
 import {describe, expect, test} from "bun:test"
 import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
-import {createCompiledInspectorProductionStory} from "./compiled-inspector-production-story.tsx"
+import {
+  createCompiledInspectorProductionStory,
+  createCompiledInspectorSectionProductionStory,
+  createCompiledInspectorSectionsProductionStory,
+  createCompiledInspectorTextSectionProductionStory,
+} from "./compiled-inspector-production-story.tsx"
 
 describe("compiled Inspector production story", () => {
   test("uses the final keyed/hook-controlled owner", () => {
@@ -26,5 +31,25 @@ describe("compiled Inspector production story", () => {
     expect(owner.textContent).not.toContain("CSS")
     expect(mounted.story.source.html).not.toContain('class="')
     mounted.story.dispose()
+  })
+
+  test("mounts every public Inspector composition as its own production owner", () => {
+    const document = createDocument()
+    const stories = [
+      createCompiledInspectorSectionsProductionStory(document),
+      createCompiledInspectorSectionProductionStory(document),
+      createCompiledInspectorTextSectionProductionStory(document),
+    ]
+    expect(stories.map(({story}) => story.element.getAttribute("data-story-component"))).toEqual([
+      "inspector-sections",
+      "inspector-section",
+      "inspector-text-section",
+    ])
+    for (const {story} of stories) {
+      expect(story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
+      expect(story.source.html).not.toContain('class="')
+      expect(story.source.typescript).toContain("@ui/components/inspector")
+      story.dispose()
+    }
   })
 })

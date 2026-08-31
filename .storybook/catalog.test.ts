@@ -10,7 +10,7 @@ const packageRoot = resolve(import.meta.dir, "..")
 const projectRoot = resolve(packageRoot, "../..")
 
 describe("@ui/components external catalog", () => {
-  test("preserves all 85 ordered UI/HUD leaves through static module exports", () => {
+  test("preserves all legacy leaves and adds every current production component", () => {
     const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
     const variants = catalog.categories.flatMap((category) =>
       category.subjects.flatMap((subject) => subject.variants))
@@ -18,8 +18,17 @@ describe("@ui/components external catalog", () => {
     const expected = baseline.leafRoutes.filter((route) =>
       route.startsWith("components/") || route.startsWith("hud/"))
 
-    expect(variants.map(({route}) => route)).toEqual(expected)
-    expect(variants).toHaveLength(85)
+    const expectedSet = new Set(expected)
+    expect(variants.map(({route}) => route).filter(route => expectedSet.has(route))).toEqual(expected)
+    expect(variants.map(({route}) => route).filter(route => !expectedSet.has(route))).toEqual([
+      "components/data/inspector-sections/basic/default",
+      "components/data/inspector-section/basic/default",
+      "components/data/inspector-text-section/basic/default",
+    ])
+    expect(variants).toHaveLength(88)
+    expect(variants.filter(({route}) => route === "components/inputs/reference-input/basic/default" ||
+      route === "components/inputs/field/reference/default").map(({label}) => label))
+      .toEqual(["Выбрано", "Выбрано"])
     for (const subject of catalog.categories.flatMap(({subjects}) => subjects)) {
       const projection = subject.variants.every(({route}) => route.startsWith("hud/"))
         ? "hud"
@@ -41,6 +50,70 @@ describe("@ui/components external catalog", () => {
     }
   })
 
+  test("derives one direct catalog component node for every exported TSX factory", () => {
+    const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
+    const packageJson = json(join(packageRoot, "package.json")) as Readonly<{
+      exports: Readonly<Record<string, string>>
+    }>
+    const factories = new Set<string>()
+    for (const target of Object.values(packageJson.exports)) {
+      if (!target.endsWith(".tsx")) continue
+      const source = readFileSync(resolve(packageRoot, target), "utf8")
+      for (const match of source.matchAll(/export function ([A-Z][A-Za-z0-9_]*)\s*\(/gu)) {
+        factories.add(match[1]!)
+      }
+    }
+    const subjects = catalog.categories.flatMap(({subjects}) => subjects)
+    const componentApiNames = [
+      ...catalog.categories
+        .filter(({kind}) => kind === "component")
+        .map(({apiName}) => apiName!),
+      ...subjects
+        .filter(({kind}) => kind === "component")
+        .map(({apiName}) => apiName!),
+    ]
+      .sort()
+    expect(componentApiNames).toEqual([...factories].sort())
+    expect(subjects.filter(({kind}) => kind === "legacy").map(({route, kind}) => ({route, kind})))
+      .toEqual([
+        {route: "components/data/scrollbar", kind: "legacy"},
+        {route: "components/data/noti", kind: "legacy"},
+      ])
+  })
+
+  test("keeps the exact Button family in one primary category", () => {
+    const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
+    const button = catalog.categories.find(({id}) => id === "components-button")
+    const foundation = catalog.categories.find(({id}) => id === "components-foundation")
+    expect(button).toMatchObject({
+      label: "Кнопка",
+      route: "components/foundation/button",
+      kind: "component",
+      apiName: "Button",
+    })
+    expect(button?.subjects.map(({id, label, kind, apiName, variants}) => ({
+      id,
+      label,
+      kind,
+      apiName,
+      variants: variants.length,
+    }))).toEqual([
+      {id: "basic", label: "Основные", kind: "section", apiName: undefined, variants: 3},
+      {id: "icon", label: "Иконка", kind: "component", apiName: "IconButton", variants: 1},
+      {id: "icon-label", label: "Иконка и подпись", kind: "section", apiName: undefined, variants: 2},
+      {id: "sizes", label: "Размер", kind: "section", apiName: undefined, variants: 3},
+      {id: "color", label: "Цвет", kind: "section", apiName: undefined, variants: 5},
+    ])
+    expect(button?.subjects.flatMap(({variants}) => variants)
+      .every(variant => !Object.hasOwn(variant, "group"))).toBeTrue()
+    expect(foundation?.subjects.map(({apiName}) => apiName)).toEqual([
+      "Pane",
+      "Badge",
+      "Typography",
+      "Divider",
+    ])
+  })
+
   test("documents the complete 176-leaf and 215-overview owner split", () => {
     const baseline = json(join(projectRoot, ".storybook", "route-baseline.json")) as Baseline
     const remap = json(join(projectRoot, ".storybook", "route-remap.json")) as RouteRemap
@@ -52,6 +125,20 @@ describe("@ui/components external catalog", () => {
     expect(remap.leafMappings.filter(({to}) => to.packageId === "@zavx0z/dom")).toHaveLength(91)
     expect(remap.unknownRoutesFailClosed).toBeTrue()
     expect(remap.overviewFallback).toBeFalse()
+    expect(remap.overviewMappings.filter(({from}) =>
+      from.route === "components/foundation/button" ||
+      from.route.startsWith("components/foundation/button/")).map(({from, to}) => ({
+      from: from.route,
+      to: to.route,
+      kind: to.kind,
+    }))).toEqual([
+      {from: "components/foundation/button", to: "components/foundation/button", kind: "category"},
+      {from: "components/foundation/button/basic", to: "components/foundation/button/basic", kind: "subject"},
+      {from: "components/foundation/button/icon", to: "components/foundation/button/icon", kind: "subject"},
+      {from: "components/foundation/button/icon-label", to: "components/foundation/button/icon-label", kind: "subject"},
+      {from: "components/foundation/button/sizes", to: "components/foundation/button/sizes", kind: "subject"},
+      {from: "components/foundation/button/color", to: "components/foundation/button/color", kind: "subject"},
+    ])
     for (const mapping of remap.overviewMappings.filter(({to}) => to.kind === "section-collapse")) {
       expect(baseline.leafRoutes).not.toContain(mapping.to.route)
       expect(mapping.to.reason).toContain("without selecting a leaf")
@@ -137,14 +224,26 @@ describe("@ui/components external catalog", () => {
 
 type Catalog = Readonly<{
   categories: readonly Readonly<{
+    id: string
+    label?: string
+    route?: string
+    kind?: string
+    apiName?: string
     subjects: readonly Readonly<{
+      id: string
+      label?: string
+      kind: string
+      route: string
+      apiName?: string
       presentation: Readonly<{
         protocol: "story-presentation/1"
         projection: "display" | "hud"
         widgets: readonly ["props", "source", "diagnostics"]
       }>
       variants: readonly Readonly<{
+        label: string
         route: string
+        group?: Readonly<{id: string; label: string}>
         module: Readonly<{path: string; export: string}>
       }>[]
     }>[]

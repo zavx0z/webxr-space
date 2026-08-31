@@ -3,20 +3,21 @@
   "schemaVersion": 1,
   "categories": [
     {
-      "id": "components-foundation",
-      "label": "Основные",
-      "route": "components/foundation",
+      "id": "components-button",
+      "label": "Кнопка",
+      "kind": "component",
+      "apiName": "Button",
+      "route": "components/foundation/button",
       "group": {
         "id": "components",
         "label": "Компоненты"
       },
       "subjects": [
         {
-          "id": "button",
-          "label": "Кнопка",
-          "route": "components/foundation/button",
-          "apiName": "Button",
-          "kind": "component",
+          "id": "basic",
+          "label": "Основные",
+          "route": "components/foundation/button/basic",
+          "kind": "section",
           "tags": [
             "основные",
             "кнопка",
@@ -31,10 +32,6 @@
             {
               "id": "basic-text",
               "label": "Текстовая",
-              "group": {
-                "id": "basic",
-                "label": "Основные"
-              },
               "route": "components/foundation/button/basic/text",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -44,10 +41,6 @@
             {
               "id": "basic-contained",
               "label": "Заполненная",
-              "group": {
-                "id": "basic",
-                "label": "Основные"
-              },
               "route": "components/foundation/button/basic/contained",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -57,23 +50,30 @@
             {
               "id": "basic-outlined",
               "label": "Контурная",
-              "group": {
-                "id": "basic",
-                "label": "Основные"
-              },
               "route": "components/foundation/button/basic/outlined",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
                 "export": "story_basic_outlined"
               }
-            },
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "icon",
+          "label": "Иконка",
+          "route": "components/foundation/button/icon",
+          "kind": "component",
+          "apiName": "IconButton",
+          "tags": ["кнопка", "кнопка-иконка", "иконка", "iconbutton", "svg"],
+          "variants": [
             {
               "id": "icon-svg",
               "label": "SVG",
-              "group": {
-                "id": "icon",
-                "label": "Иконка"
-              },
               "route": "components/foundation/button/icon/svg",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -99,14 +99,24 @@
                   "./resources/references/icons/trash.svg"
                 ]
               }
-            },
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "icon-label",
+          "label": "Иконка и подпись",
+          "route": "components/foundation/button/icon-label",
+          "kind": "section",
+          "tags": ["кнопка", "иконка", "подпись"],
+          "variants": [
             {
               "id": "icon-label-left",
               "label": "Слева",
-              "group": {
-                "id": "icon-label",
-                "label": "Иконка и подпись"
-              },
               "route": "components/foundation/button/icon-label/left",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -116,23 +126,29 @@
             {
               "id": "icon-label-right",
               "label": "Справа",
-              "group": {
-                "id": "icon-label",
-                "label": "Иконка и подпись"
-              },
               "route": "components/foundation/button/icon-label/right",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
                 "export": "story_icon_label_right"
               }
-            },
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "sizes",
+          "label": "Размер",
+          "route": "components/foundation/button/sizes",
+          "kind": "section",
+          "tags": ["кнопка", "размер", "small", "medium", "large"],
+          "variants": [
             {
               "id": "sizes-small",
               "label": "Маленькая",
-              "group": {
-                "id": "sizes",
-                "label": "Размер"
-              },
               "route": "components/foundation/button/sizes/small",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -142,10 +158,6 @@
             {
               "id": "sizes-medium",
               "label": "Средняя",
-              "group": {
-                "id": "sizes",
-                "label": "Размер"
-              },
               "route": "components/foundation/button/sizes/medium",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -155,23 +167,29 @@
             {
               "id": "sizes-large",
               "label": "Большая",
-              "group": {
-                "id": "sizes",
-                "label": "Размер"
-              },
               "route": "components/foundation/button/sizes/large",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
                 "export": "story_sizes_large"
               }
-            },
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "color",
+          "label": "Цвет",
+          "route": "components/foundation/button/color",
+          "kind": "section",
+          "tags": ["кнопка", "цвет", "tone"],
+          "variants": [
             {
               "id": "color-primary",
               "label": "Основной",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
               "route": "components/foundation/button/color/primary",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -181,10 +199,6 @@
             {
               "id": "color-success",
               "label": "Успех",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
               "route": "components/foundation/button/color/success",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -194,10 +208,6 @@
             {
               "id": "color-warning",
               "label": "Предупреждение",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
               "route": "components/foundation/button/color/warning",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -207,10 +217,6 @@
             {
               "id": "color-error",
               "label": "Ошибка",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
               "route": "components/foundation/button/color/error",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -220,10 +226,6 @@
             {
               "id": "color-neutral",
               "label": "Нейтральный",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
               "route": "components/foundation/button/color/neutral",
               "module": {
                 "path": "./stories/subjects/components-foundation-button.ts",
@@ -240,7 +242,18 @@
               "diagnostics"
             ]
           }
-        },
+        }
+      ]
+    },
+    {
+      "id": "components-foundation",
+      "label": "Основные",
+      "route": "components/foundation",
+      "group": {
+        "id": "components",
+        "label": "Компоненты"
+      },
+      "subjects": [
         {
           "id": "pane",
           "label": "Панель",
@@ -660,7 +673,7 @@
             },
             {
               "id": "reference-default",
-              "label": "Ресурс",
+              "label": "Выбрано",
               "group": {
                 "id": "reference",
                 "label": "Ссылка"
@@ -1053,10 +1066,10 @@
           "variants": [
             {
               "id": "basic-default",
-              "label": "Ресурс",
+              "label": "Выбрано",
               "group": {
                 "id": "basic",
-                "label": "Основной"
+                "label": "Значение"
               },
               "route": "components/inputs/reference-input/basic/default",
               "module": {
@@ -1684,6 +1697,81 @@
           }
         },
         {
+          "id": "inspector-sections",
+          "label": "Секции инспектора",
+          "route": "components/data/inspector-sections",
+          "apiName": "InspectorSections",
+          "kind": "component",
+          "tags": ["данные", "инспектор", "секции", "inspector", "sections"],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "По умолчанию",
+              "group": {"id": "basic", "label": "Основной"},
+              "route": "components/data/inspector-sections/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-data-inspector-parts.ts",
+                "export": "story_sections_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "inspector-section",
+          "label": "Секция инспектора",
+          "route": "components/data/inspector-section",
+          "apiName": "InspectorSection",
+          "kind": "component",
+          "tags": ["данные", "инспектор", "секция", "inspector", "section"],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "По умолчанию",
+              "group": {"id": "basic", "label": "Основной"},
+              "route": "components/data/inspector-section/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-data-inspector-parts.ts",
+                "export": "story_section_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "inspector-text-section",
+          "label": "Текстовая секция инспектора",
+          "route": "components/data/inspector-text-section",
+          "apiName": "InspectorTextSection",
+          "kind": "component",
+          "tags": ["данные", "инспектор", "текст", "inspector", "text", "section"],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "По умолчанию",
+              "group": {"id": "basic", "label": "Основной"},
+              "route": "components/data/inspector-text-section/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-data-inspector-parts.ts",
+                "export": "story_text_section_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
           "id": "code-editor",
           "label": "Редактор кода",
           "route": "components/data/code-editor",
@@ -1807,10 +1895,10 @@
         },
         {
           "id": "scrollbar",
-          "label": "Полоса прокрутки",
+          "label": "Полоса прокрутки · legacy owner",
           "route": "components/data/scrollbar",
           "apiName": "scrollbar",
-          "kind": "component",
+          "kind": "legacy",
           "tags": [
             "данные",
             "полоса",
@@ -1823,7 +1911,7 @@
           "variants": [
             {
               "id": "vertical-default",
-              "label": "Основной",
+              "label": "Owner moved",
               "group": {
                 "id": "vertical",
                 "label": "Вертикальная"
@@ -1847,10 +1935,10 @@
         },
         {
           "id": "noti",
-          "label": "Уведомления",
+          "label": "Уведомления · нет owner",
           "route": "components/data/noti",
           "apiName": "Noti",
-          "kind": "component",
+          "kind": "legacy",
           "tags": [
             "данные",
             "уведомления",
@@ -1866,7 +1954,7 @@
           "variants": [
             {
               "id": "status-unavailable",
-              "label": "Не реализован",
+              "label": "Нет production owner",
               "group": {
                 "id": "status",
                 "label": "Статус"
@@ -1903,7 +1991,7 @@
           "id": "window",
           "label": "HUD-окно",
           "route": "hud/foundation/window",
-          "apiName": "HUD",
+          "apiName": "HudWindow",
           "kind": "component",
           "tags": [
             "HUD-окно",
@@ -1941,7 +2029,7 @@
           "id": "frame",
           "label": "Рамка",
           "route": "hud/foundation/frame",
-          "apiName": "HUDFrame",
+          "apiName": "HudFrame",
           "kind": "component",
           "tags": [
             "Рамка",

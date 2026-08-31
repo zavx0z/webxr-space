@@ -1,3 +1,4 @@
+import {uiIcons} from "@ui/components/icons"
 import {defineOwnerStory, withStoryProps} from "../story-types.ts"
 
 export const story_basic_text = defineOwnerStory("components/foundation/button/basic/text", async (document) => {
@@ -37,25 +38,27 @@ export const story_basic_outlined = defineOwnerStory("components/foundation/butt
 })
 
 export const story_icon_svg = defineOwnerStory("components/foundation/button/icon/svg", async (document) => {
-  const {createCompiledButtonProductionStory} = await import("../compiled/compiled-button-production-story.tsx")
+  const {createCompiledIconButtonProductionStory} = await import("../compiled/compiled-button-production-story.tsx")
   const props = {
-    "label": "▣ Output",
-    "variant": "contained",
-    "tone": "neutral",
-    "size": "medium",
-    "title": "SVG icon button"
+    label: "Настройки",
+    iconSrc: uiIcons.settings,
+    variant: "text",
+    tone: "neutral",
+    size: "medium",
+    title: "Настройки"
   } as const
-  return withStoryProps(createCompiledButtonProductionStory(document, props), props)
+  return withStoryProps(createCompiledIconButtonProductionStory(document, props), props)
 })
 
 export const story_icon_label_left = defineOwnerStory("components/foundation/button/icon-label/left", async (document) => {
   const {createCompiledButtonProductionStory} = await import("../compiled/compiled-button-production-story.tsx")
   const props = {
-    "label": "◆ Output",
-    "variant": "contained",
-    "tone": "neutral",
-    "size": "medium",
-    "title": "Icon left"
+    label: "Output",
+    variant: "contained",
+    tone: "neutral",
+    size: "medium",
+    startIcon: uiIcons.settings,
+    title: "Icon left"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -63,11 +66,12 @@ export const story_icon_label_left = defineOwnerStory("components/foundation/but
 export const story_icon_label_right = defineOwnerStory("components/foundation/button/icon-label/right", async (document) => {
   const {createCompiledButtonProductionStory} = await import("../compiled/compiled-button-production-story.tsx")
   const props = {
-    "label": "Output ◆",
-    "variant": "contained",
-    "tone": "neutral",
-    "size": "medium",
-    "title": "Icon right"
+    label: "Output",
+    variant: "contained",
+    tone: "neutral",
+    size: "medium",
+    endIcon: uiIcons.settings,
+    title: "Icon right"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
