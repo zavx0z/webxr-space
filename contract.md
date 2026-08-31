@@ -44,6 +44,28 @@ An explicitly supplied runtime font or font URL bypasses the document default.
 The meta declaration itself has no network side effect, so choosing another
 font never requests the Engine-owned default.
 
+## TrueType text geometry
+
+`Text` and `CachedText` materialize each Unicode code point from the exact
+`TrueTypeFont` supplied by the caller. Static glyph geometry is cached by the
+pair `(font identity, glyph id)` in a font-keyed `WeakMap`; equal glyph numbers
+from different fonts can never share outlines or cover bounds. The bounded
+string layout cache remains keyed by exact font identity, text, font size,
+letter spacing and optional space advance.
+
+The stencil cover for a glyph spans its complete horizontal advance cell,
+including left and right side bearings. Ink that overhangs that cell expands
+the cover by the existing bounded precision pad. The final glyph therefore
+cannot lose its rightmost samples merely because `outline.xMax` ends before
+`advanceWidth`; consumers do not compensate with padding, wider clips or a
+smaller font.
+
+Letter spacing is inserted only between adjacent code points, including on
+both sides of a space, and never after the final code point. Default spaces use
+the retained `0.3em` Engine advance unless a caller explicitly supplies
+`spaceAdvance`. Kerning, shaping, ligatures, bidi and fallback remain outside
+this bounded geometry contract.
+
 `bun run build:font` regenerates the accepted TTF from the pinned official
 Blender source with the repository-owned hash gates. It requires the MacPorts
 HarfBuzz/FreeType `hb-subset` toolchain and refuses to replace the asset when

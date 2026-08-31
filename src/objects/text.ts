@@ -156,7 +156,7 @@ export class Text extends Object3D {
    */
   public clipBounds: [number, number, number, number] | null = null
 
-  private static geometryCache: Map<number, { stencil: BufferGeometry; cover: BufferGeometry }> = new Map()
+  private static geometryCache: WeakMap<TrueTypeFont, Map<number, { stencil: BufferGeometry; cover: BufferGeometry }>> = new WeakMap()
   private static layoutCache: Map<string, TextLayoutCacheEntry> = new Map()
   private static cachedLayoutGeometries: WeakSet<BufferGeometry> = new WeakSet()
   private static evictedLayoutGeometries: BufferGeometry[] = []
@@ -212,15 +212,25 @@ export class Text extends Object3D {
 
     let penX = 0
     const scale = this.fontSize / this.font.unitsPerEm
+    const characters = Array.from(this.text)
+    let fontGeometryCache = Text.geometryCache.get(this.font)
+    if (fontGeometryCache === undefined) {
+      fontGeometryCache = new Map()
+      Text.geometryCache.set(this.font, fontGeometryCache)
+    }
 
-    for (const char of this.text) {
+    for (let characterIndex = 0; characterIndex < characters.length; characterIndex += 1) {
+      const char = characters[characterIndex]!
+      const hasNextCharacter = characterIndex + 1 < characters.length
       if (char === " ") {
         penX += this.spaceAdvance ?? this.font.unitsPerEm * 0.3 * scale
+        if (hasNextCharacter) penX += this.letterSpacing
         continue
       }
 
       const gid = this.font.mapCharToGlyph(char.codePointAt(0)!)
-      let cachedGeo = Text.geometryCache.get(gid)
+      const metric = this.font.getHMetric(gid)
+      let cachedGeo = fontGeometryCache.get(gid)
 
       if (!cachedGeo) {
         const outline = this.font.getGlyphOutline(gid)
@@ -247,25 +257,29 @@ export class Text extends Object3D {
             if (y > maxY) maxY = y
           }
 
-          // Padding cover-rect вокруг глифа. Большое значение (10% em)
-          // даёт видимые штрихи-артефакты по нижней кромке pad-зоны (особенно
-          // на кириллице без descender'ов): stencil не покрывает pad-bottom,
-          // но cover-rect там виден. 0.5% — достаточно для AA-краёв, без
-          // видимого padding.
-          const pad_fu = this.font.unitsPerEm * 0.005
-          minX -= pad_fu
-          minY -= pad_fu
-          maxX += pad_fu
-          maxY += pad_fu
+          // The horizontal cover owns the complete glyph advance cell, including
+          // its left/right side bearings. Ink overhang still expands beyond the
+          // cell by a small precision pad. This keeps the cover pass from ending
+          // on the final outline edge without introducing an arbitrary wide pad.
+          const padFu = this.font.unitsPerEm * 0.005
+          const coverMinX = Math.min(0, minX - padFu)
+          const coverMaxX = Math.max(metric.advanceWidth, maxX + padFu)
+          const coverMinY = minY - padFu
+          const coverMaxY = maxY + padFu
 
-          const coverVerts = new Float32Array([minX, minY, maxX, minY, minX, maxY, maxX, maxY])
+          const coverVerts = new Float32Array([
+            coverMinX, coverMinY,
+            coverMaxX, coverMinY,
+            coverMinX, coverMaxY,
+            coverMaxX, coverMaxY,
+          ])
           const coverIndices = new Uint32Array([0, 1, 2, 2, 1, 3])
           coverGeo.setAttribute("position", new BufferAttribute(coverVerts, 2))
           coverGeo.setIndex(new BufferAttribute(coverIndices, 1))
         }
 
         cachedGeo = { stencil: stencilGeo, cover: coverGeo }
-        Text.geometryCache.set(gid, cachedGeo)
+        fontGeometryCache.set(gid, cachedGeo)
       }
 
       const currentStencilVertexOffset = allStencilVerts.length / 3
@@ -296,8 +310,8 @@ export class Text extends Object3D {
         }
       }
 
-      const metric = this.font.getHMetric(gid)
-      penX += metric.advanceWidth * scale + this.letterSpacing
+      penX += metric.advanceWidth * scale
+      if (hasNextCharacter) penX += this.letterSpacing
     }
 
     const layout: TextLayoutCacheEntry = {
