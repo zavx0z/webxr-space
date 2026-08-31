@@ -25,9 +25,14 @@ route, and an unknown suffix cannot select another scene.
 
 ## Default font asset
 
-Engine owns the project-default TTF and exposes it through the explicit
-`@engine/core/fonts/jetbrains-mono-bold.ttf` asset subpath. The main
-`@engine/core` entrypoint does not import the asset.
+Engine owns the project-default regular UI TTF and exposes it through the
+explicit `@engine/core/fonts/inter-regular.ttf` asset subpath. It is the exact
+Blender v5.2.0 `Inter.woff2` source instantiated at `wght=400` into the sfnt
+form accepted by `TrueTypeFont`; its source, transform, hashes and OFL license
+are recorded next to the asset. The previous JetBrains Mono Bold asset remains
+available through `@engine/core/fonts/jetbrains-mono-bold.ttf` only for callers
+that choose it explicitly. The main `@engine/core` entrypoint does not import
+either asset.
 
 A browser composition root declares the URL it actually serves with
 `<meta name="engine-default-font" content="…">`. The optional
@@ -38,6 +43,11 @@ does not own a font route or copy.
 An explicitly supplied runtime font or font URL bypasses the document default.
 The meta declaration itself has no network side effect, so choosing another
 font never requests the Engine-owned default.
+
+`bun run build:font` regenerates the accepted TTF from the pinned official
+Blender source with the repository-owned hash gates. It requires the MacPorts
+HarfBuzz/FreeType `hb-subset` toolchain and refuses to replace the asset when
+the source or output bytes differ from the recorded provenance.
 
 ## Transform hierarchy
 

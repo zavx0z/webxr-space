@@ -19,6 +19,7 @@ describe("@engine/core external Storybook boundary", () => {
     expect(Object.keys(manifest.exports)).toEqual([
       ".",
       "./default-font",
+      "./fonts/inter-regular.ttf",
       "./fonts/jetbrains-mono-bold.ttf",
     ])
     expect(manifest.dependencies).toBeUndefined()
