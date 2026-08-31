@@ -24,8 +24,9 @@ describe("@ui/components external catalog", () => {
       "components/data/inspector-sections/basic/default",
       "components/data/inspector-section/basic/default",
       "components/data/inspector-text-section/basic/default",
+      "components/data/status-bar/basic/default",
     ])
-    expect(variants).toHaveLength(88)
+    expect(variants).toHaveLength(89)
     expect(variants.filter(({route}) => route === "components/inputs/reference-input/basic/default" ||
       route === "components/inputs/field/reference/default").map(({label}) => label))
       .toEqual(["Выбрано", "Выбрано"])
@@ -77,7 +78,6 @@ describe("@ui/components external catalog", () => {
     expect(subjects.filter(({kind}) => kind === "legacy").map(({route, kind}) => ({route, kind})))
       .toEqual([
         {route: "components/data/scrollbar", kind: "legacy"},
-        {route: "components/data/noti", kind: "legacy"},
       ])
   })
 

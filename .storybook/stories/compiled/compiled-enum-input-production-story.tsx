@@ -4,7 +4,7 @@ import {
   type EnumInputProps
 } from "@ui/components/enum-input"
 import {createRoot, useState} from "@zavx0z/react"
-import type {Document, Element, Event, HTMLElement, HTMLSelectElement, Node} from "@zavx0z/dom"
+import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
 function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps}>) {
@@ -16,7 +16,12 @@ function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps}>) {
   return <EnumInput
     value={value}
     options={props.initial.options}
+    presentation={props.initial.presentation}
+    state={props.initial.state}
+    density={props.initial.density}
     disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    popupLabel={props.initial.popupLabel}
     title={props.initial.title}
     onChange={onChange}
   />
@@ -29,21 +34,21 @@ export function createCompiledEnumInputProductionStory(
   const staging = document.createElement("div")
   const root = createRoot(staging)
   root.render(<EnumInputStoryComponent initial={props} />)
-  const select = staging.querySelector("select") as HTMLSelectElement | null
-  if (!select) {
+  const owner = staging.querySelector("[data-enum-input]") as HTMLElement | null
+  if (!owner) {
     root.unmount()
-    throw new Error("Compiled EnumInput story mounted no select")
+    throw new Error("Compiled EnumInput story mounted no owner")
   }
-  staging.removeChild(select)
-  select.setAttribute("data-story-component", "enum-input")
+  staging.removeChild(owner)
+  owner.setAttribute("data-story-component", "enum-input")
 
   const story = Object.freeze({
-    element: select,
+    element: owner,
     componentRoot: root,
     get source() {
       return Object.freeze({
-        html: serialize(select),
-        typescript: source(props, select.value)
+        html: serialize(owner),
+        typescript: source(props, currentValue(owner, props.value))
       })
     },
     dispose() {
@@ -65,12 +70,25 @@ function source(props: EnumInputProps, value: string): string {
     "  return <EnumInput",
     "    value={value}",
     "    options={options}",
+    `    presentation=${JSON.stringify(props.presentation ?? "cycle")}`,
+    `    state=${JSON.stringify(props.state ?? "ready")}`,
+    `    density=${JSON.stringify(props.density ?? "regular")}`,
     `    disabled={${String(props.disabled === true)}}`,
+    `    readOnly={${String(props.readOnly === true)}}`,
     "    onChange={setValue}",
     "  />",
     "}",
     "createRoot(container).render(<Story />)"
   ].join("\n")
+}
+
+function currentValue(owner: HTMLElement, fallback: string): string {
+  const controlled = owner.getAttribute("data-value")
+  if (controlled !== null) return controlled
+  const select = owner.querySelector("select") as unknown as {value: string} | null
+  if (select !== null) return select.value
+  const selected = owner.querySelector('[aria-pressed="true"] span')
+  return selected?.textContent ?? fallback
 }
 
 function serialize(element: Element, depth = 0): string {

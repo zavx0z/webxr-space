@@ -17,6 +17,8 @@ function IntegerInputStoryComponent(props: Readonly<{initial: IntegerInputProps}
     value={value}
     min={props.initial.min}
     max={props.initial.max}
+    softMin={props.initial.softMin}
+    softMax={props.initial.softMax}
     step={props.initial.step}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}

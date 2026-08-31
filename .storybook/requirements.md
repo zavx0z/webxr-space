@@ -145,7 +145,8 @@ production owner stylesheet.
    production factories. Button, IconButton, TextField, Pane, Badge, Typography, Divider,
    NumberInput, Checkbox, Switcher, ControlGroup, SliderControl,
    ProgressCheckbox, VectorInput, MatrixInput, ReferenceInput,
-   CollectionInput, PathInput, ColorInput, List и Table получают собственные
+   CollectionInput, PathInput, ColorInput, EnumInput, List, Table, StatusBar и
+   Notification получают собственные
    production owners до visual acceptance соответствующих routes.
 4. Adapter может хранить Storybook args, controls, events и source
    serialization, но не копирует DOM composition, interaction state machine,

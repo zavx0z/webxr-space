@@ -1894,6 +1894,45 @@
           }
         },
         {
+          "id": "status-bar",
+          "label": "Строка состояния",
+          "route": "components/data/status-bar",
+          "apiName": "StatusBar",
+          "kind": "component",
+          "tags": [
+            "данные",
+            "статус",
+            "status",
+            "bar",
+            "lower",
+            "chrome"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основной",
+              "group": {
+                "id": "basic",
+                "label": "Основной"
+              },
+              "route": "components/data/status-bar/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-data-status-bar.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
           "id": "scrollbar",
           "label": "Полоса прокрутки · legacy owner",
           "route": "components/data/scrollbar",
@@ -1935,26 +1974,23 @@
         },
         {
           "id": "noti",
-          "label": "Уведомления · нет owner",
+          "label": "Уведомления",
           "route": "components/data/noti",
-          "apiName": "Noti",
-          "kind": "legacy",
+          "apiName": "Notification",
+          "kind": "component",
           "tags": [
             "данные",
             "уведомления",
             "noti",
             "статус",
-            "не",
-            "реализован",
-            "·",
-            "нет",
-            "рабочего",
-            "экспорта"
+            "notification",
+            "alert",
+            "status"
           ],
           "variants": [
             {
               "id": "status-unavailable",
-              "label": "Нет production owner",
+              "label": "Production owner",
               "group": {
                 "id": "status",
                 "label": "Статус"

@@ -8,7 +8,7 @@ import {
   type TimelineProps
 } from "@ui/components/hud"
 import {Pane} from "@ui/components/pane"
-import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
+import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
@@ -33,21 +33,20 @@ function HudFrameStoryComponent(props: Readonly<{initial: HudFrameDefaultProps}>
 }
 
 function TimelineStoryComponent(props: Readonly<{initial: TimelineProps}>) {
-  const [current, setCurrent] = useState(props.initial.current)
-  const [playing, setPlaying] = useState(props.initial.playing)
-  const previous = (_event: Event) => setCurrent(value => Math.max(props.initial.min, value - 1))
-  const next = (_event: Event) => setCurrent(value => Math.min(props.initial.max, value + 1))
   return <Timeline
     title={props.initial.title}
-    min={props.initial.min}
-    max={props.initial.max}
-    current={current}
-    playing={playing}
-    tracks={props.initial.tracks}
+    frameStart={props.initial.frameStart}
+    frameEnd={props.initial.frameEnd}
+    frameCurrent={props.initial.frameCurrent}
+    visibleStart={props.initial.visibleStart}
+    visibleEnd={props.initial.visibleEnd}
+    previewStart={props.initial.previewStart}
+    previewEnd={props.initial.previewEnd}
+    showSeconds={props.initial.showSeconds}
+    framesPerSecond={props.initial.framesPerSecond}
+    keyframes={props.initial.keyframes}
+    markers={props.initial.markers}
     style={css`& { width: 100%; max-width: 640px; }`}
-    onPrevious={previous}
-    onPlayingChange={setPlaying}
-    onNext={next}
   />
 }
 
@@ -147,27 +146,25 @@ function hudWindowSource(props: HudWindowDefaultProps): string {
 function timelineSource(props: TimelineProps): string {
   return [
     'import {Timeline} from "@ui/components/hud"',
-    'import {createRoot, useState} from "@zavx0z/react"',
+    'import {createRoot} from "@zavx0z/react"',
     "",
     `const props = ${literal(props)} as const`,
     "",
-    "function Story() {",
-    "  const [current, setCurrent] = useState<number>(props.current)",
-    "  const [playing, setPlaying] = useState<boolean>(props.playing)",
-    "  return <Timeline",
+    "createRoot(container).render(<Timeline",
     "    title={props.title}",
-    "    min={props.min}",
-    "    max={props.max}",
-    "    current={current}",
-    "    playing={playing}",
-    "    tracks={props.tracks}",
+    "    frameStart={props.frameStart}",
+    "    frameEnd={props.frameEnd}",
+    "    frameCurrent={props.frameCurrent}",
+    "    visibleStart={props.visibleStart}",
+    "    visibleEnd={props.visibleEnd}",
+    "    previewStart={props.previewStart}",
+    "    previewEnd={props.previewEnd}",
+    "    showSeconds={props.showSeconds}",
+    "    framesPerSecond={props.framesPerSecond}",
+    "    keyframes={props.keyframes}",
+    "    markers={props.markers}",
     "    style={css`& { width: 100%; max-width: 640px; }`}",
-    "    onPrevious={() => setCurrent(value => Math.max(props.min, value - 1))}",
-    "    onPlayingChange={setPlaying}",
-    "    onNext={() => setCurrent(value => Math.min(props.max, value + 1))}",
-    "  />",
-    "}",
-    "createRoot(container).render(<Story />)"
+    "  />)"
   ].join("\n")
 }
 

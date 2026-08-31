@@ -23,8 +23,6 @@ function NumberInputStoryComponent(props: Readonly<{initial: NumberInputProps}>)
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
     title={props.initial.title}
-    decrementTitle={props.initial.decrementTitle}
-    incrementTitle={props.initial.incrementTitle}
     onInput={onInput}
     onChange={props.initial.onChange}
   />
