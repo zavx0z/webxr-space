@@ -43,21 +43,17 @@ function CheckerCell(props: Readonly<{dark: boolean}>) {
   ></span>
 }
 
-function CheckerCells() {
-  return <div aria-hidden="true" style={css`
-    & { position: absolute; inset: 0; display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; height: 100%; overflow: clip; }
-  `}>{checkerCells.split("").map((dark, index) => <CheckerCell
-    key={index}
-    dark={dark > "0"}
-  />)}</div>
-}
-
 function ColorSwatch(props: Readonly<{value: ColorInputValue; expanded: boolean}>) {
   return <div data-color-swatch="" data-expanded={props.expanded ? "true" : undefined} style={css`
-    & { box-sizing: border-box; position: relative; display: block; width: 100%; height: 34px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 3px; overflow: clip; }
+    & { box-sizing: border-box; position: relative; display: block; width: 0; min-width: 0; height: 34px; flex-grow: 1; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 3px; overflow: clip; }
     &[data-expanded="true"] { height: 48px; }
   `}>
-    <CheckerCells />
+    <div aria-hidden="true" style={css`
+      & { position: absolute; inset: 0; display: flex; flex-direction: row; flex-wrap: wrap; width: 100%; height: 100%; overflow: clip; }
+    `}>{checkerCells.split("").map((dark, index) => <CheckerCell
+      key={index}
+      dark={dark > "0"}
+    />)}</div>
     <span aria-hidden="true" style={css`
       & { position: absolute; inset: 0; display: block; background: ${rgbaCss(props.value)}; }
     `}></span>

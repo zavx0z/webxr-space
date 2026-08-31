@@ -124,6 +124,37 @@ describe("compiled production ColorInput", () => {
     root.unmount()
   })
 
+  test("keeps the flexible swatch and fixed Hex field inside the exact 280px editor", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(ColorInput as any, {
+      value: {r: 0.2, g: 0.4, b: 0.8, a: 0.5},
+      presentation: "open"
+    })
+    const editor = host.querySelector('[aria-label="Color editor"]') as HTMLElement
+    const swatch = editor.querySelector("[data-color-swatch]")!
+    const hex = editor.querySelector('[aria-label="Hex color"]') as HTMLInputElement
+    const renderer = createDocumentRenderer({
+      document,
+      root: host,
+      viewport: {width: 340, height: 320}
+    })
+    const frame = renderer.flush()
+    const editorBox = frame.boxByNode.get(editor)!
+    const swatchBox = frame.boxByNode.get(swatch)!
+    const hexBox = frame.boxByNode.get(hex)!
+    const contentRight = editorBox.contentX + editorBox.contentWidth
+    expect(editorBox.width).toBe(280)
+    expect(swatchBox.x).toBeGreaterThanOrEqual(editorBox.contentX)
+    expect(swatchBox.x + swatchBox.width).toBeLessThanOrEqual(hexBox.x)
+    expect(hexBox.x + hexBox.width).toBeLessThanOrEqual(contentRight)
+    expect(hexBox.width).toBe(92)
+    renderer.dispose()
+    root.unmount()
+  })
+
   test("anchors open outside flow and reports native dismissals with exact focus return", async () => {
     const document = createDocument()
     const surface = document.createElement("section")
