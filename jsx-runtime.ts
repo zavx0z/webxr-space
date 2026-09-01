@@ -12,6 +12,7 @@ import type {
   CssSourceValue,
   CssTemplateValue
 } from "./css.ts"
+import type {TemplateIntrinsicElements} from "./jsx-dom.ts"
 
 export interface CssCompilerIntrinsic {
   readonly "@zavx0z/template/css-compiler-intrinsic": true
@@ -26,16 +27,14 @@ declare global {
 
 export namespace JSX {
   export type Element = JsxSourceElement
-  export type ElementType = string | ((props: any) => Element)
+  export type ElementType = keyof IntrinsicElements | ((props: any) => Element)
   export interface ElementChildrenAttribute {
     children: unknown
   }
   export interface IntrinsicAttributes {
     key?: string | number
   }
-  export interface IntrinsicElements {
-    [tagName: string]: Readonly<Record<string, unknown>>
-  }
+  export type IntrinsicElements = TemplateIntrinsicElements
 }
 
 export function jsx(): never {

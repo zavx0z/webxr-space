@@ -1,4 +1,4 @@
-import {API, type Snapshot} from "typescript/unstable/async"
+import {API, type Project, type Snapshot} from "typescript/unstable/async"
 import {createHash} from "node:crypto"
 import {readFile} from "node:fs/promises"
 import {resolve} from "node:path"
@@ -6,11 +6,20 @@ import {JsxCompileError} from "./errors.ts"
 import {GovernedFiles} from "./governed-paths.ts"
 import {transformJsxSourceFile} from "./transform.ts"
 import {buildJsxTransformSymbols} from "./symbols.ts"
+import {
+  collectCapabilityUsages,
+  type CapabilityUsage,
+} from "./capability-usage.ts"
 
 export type JsxCompilerStats = Readonly<{
   cacheHits: number
   cacheMisses: number
   snapshots: number
+}>
+
+export type JsxCompileResult = Readonly<{
+  capabilityUsages: readonly CapabilityUsage[]
+  code: string
 }>
 
 export type JsxCompilerSessionOptions = Readonly<{
@@ -25,13 +34,13 @@ type DependencyFingerprint = Readonly<{
   path: string
 }>
 type CachedTransform = Readonly<{
-  code: string
   dependencies: readonly DependencyFingerprint[]
   hash: string
+  result: JsxCompileResult
 }>
 
 export class JsxCompilerSession {
-  private readonly api: API
+  private api: API
   private readonly cache = new Map<string, CachedTransform>()
   private readonly governedFiles: GovernedFiles
   private readonly hashes = new Map<string, string>()
@@ -77,10 +86,29 @@ export class JsxCompilerSession {
   }
 
   async transformFile(sourcePath: string): Promise<string> {
-    return this.exclusive(() => this.transformFileLocked(sourcePath))
+    const result = await this.exclusive(() => this.compileFileLocked(sourcePath))
+    return result.code
   }
 
-  private async transformFileLocked(sourcePath: string): Promise<string> {
+  /**
+  Compiles one governed source and retains its neutral usage projection.
+
+  The transformed code and usages share one dependency-aware cache entry, so a
+  cache hit returns the exact same immutable result object. A changed governed
+  semantic dependency recreates the TypeScript API session before reanalysis;
+  this avoids stale checker symbols across type-only re-export chains.
+  TypeScript semantic diagnostics fail before either artifact becomes observable.
+
+  @param sourcePath - File inside one configured governed source root.
+  @returns Transformed code and source-located capability usages.
+  @throws {@link JsxCompileError} when ownership, syntax, semantic typing or the
+    governed compiler profile rejects the source.
+  */
+  async compileFile(sourcePath: string): Promise<JsxCompileResult> {
+    return this.exclusive(() => this.compileFileLocked(sourcePath))
+  }
+
+  private async compileFileLocked(sourcePath: string): Promise<JsxCompileResult> {
     if (this.closed) throw new Error("JSX compiler session is closed")
     const absolute = this.requireGoverned(resolve(sourcePath))
     const text = await readFile(absolute, "utf8")
@@ -98,15 +126,11 @@ export class JsxCompilerSession {
       const changedDependencies = await this.changedDependencies(cached.dependencies)
       if (changedDependencies.length === 0) {
         this.cacheHits += 1
-        return cached.code
+        return cached.result
       }
       this.cache.clear()
-      this.api.clearSourceFileCache()
-      await this.updateSnapshot({
-        openFiles: [...changedDependencies],
-        fileChanges: {changed: [...changedDependencies]},
-      })
-      for (const dependency of changedDependencies) this.opened.add(dependency)
+      const semanticClosure = cached.dependencies.map(dependency => dependency.path)
+      await this.restartTypeScript([absolute, ...semanticClosure])
     }
 
     if (!this.snapshot || !this.opened.has(absolute)) {
@@ -115,12 +139,14 @@ export class JsxCompilerSession {
     }
     let project = await this.snapshot!.getDefaultProjectForFile(absolute)
     if (!project) throw new JsxCompileError("TypeScript 7 found no project", absolute)
+    assertConfiguredProject(project, absolute)
     let sourceFile = await project.program.getSourceFile(absolute)
     if (!sourceFile) throw new JsxCompileError("TypeScript 7 returned no source AST", absolute)
     if (sourceFile.text !== text) {
       await this.updateSnapshot({fileChanges: {changed: [absolute]}})
       project = await this.snapshot!.getDefaultProjectForFile(absolute)
       if (!project) throw new JsxCompileError("TypeScript 7 found no project", absolute)
+      assertConfiguredProject(project, absolute)
       sourceFile = await project.program.getSourceFile(absolute)
       if (!sourceFile || sourceFile.text !== text) {
         throw new JsxCompileError("on-disk source differs from compiler input", absolute)
@@ -134,16 +160,28 @@ export class JsxCompilerSession {
       )
     }
     const symbols = await buildJsxTransformSymbols(sourceFile, project, this.governedFiles)
+    const capabilityUsages = await collectCapabilityUsages(sourceFile, project, symbols)
     const styleSourceModuleId = this.styleSourceModuleId(absolute)
     const code = transformJsxSourceFile(
       sourceFile,
       symbols,
       styleSourceModuleId === undefined ? {} : {styleSourceModuleId},
     )
+    const semanticDiagnostics = await project.program.getSemanticDiagnostics(absolute)
+    if (semanticDiagnostics.length > 0) {
+      throw new JsxCompileError(
+        `TypeScript semantic diagnostics:\n${semanticDiagnostics.map(diagnostic => {
+          const position = sourceFile.getLineAndCharacterOfPosition(diagnostic.pos)
+          return `TS${diagnostic.code} ${position.line + 1}:${position.character + 1} ${diagnosticText(diagnostic)}`
+        }).join("\n")}`,
+        absolute,
+      )
+    }
     const dependencies = await this.fingerprintDependencies(symbols.dependencyPaths)
-    this.cache.set(absolute, Object.freeze({hash, code, dependencies}))
+    const result = Object.freeze({capabilityUsages, code})
+    this.cache.set(absolute, Object.freeze({hash, result, dependencies}))
     this.cacheMisses += 1
-    return code
+    return result
   }
 
   async close(): Promise<void> {
@@ -177,6 +215,18 @@ export class JsxCompilerSession {
     this.snapshot = await this.api.updateSnapshot(parameters)
     this.snapshots += 1
     await previous?.dispose()
+  }
+
+  private async restartTypeScript(sourcePaths: readonly string[]): Promise<void> {
+    const previous = this.snapshot
+    this.snapshot = null
+    await previous?.dispose()
+    await this.api.close()
+    this.api = new API({cwd: this.cwd})
+    this.opened.clear()
+    const files = [...new Set(sourcePaths)]
+    await this.updateSnapshot({openFiles: files})
+    for (const sourcePath of files) this.opened.add(sourcePath)
   }
 
   private async refreshFilesLocked(sourcePaths: readonly string[]): Promise<void> {
@@ -264,4 +314,28 @@ function normalizeStyleSourceRootIds(
 
 function sourceHash(source: string): string {
   return createHash("sha256").update(source).digest("hex")
+}
+
+function assertConfiguredProject(project: Project, sourcePath: string): void {
+  const configFileName = project.configFileName.replaceAll("\\", "/")
+  if (configFileName !== "/dev/null/inferred" || !/\.[cm]?tsx$/i.test(sourcePath)) return
+  throw new JsxCompileError(
+    "governed JSX source has no configured TypeScript project; include it in a tsconfig.json with compilerOptions jsx: preserve and jsxImportSource: @zavx0z/template",
+    sourcePath,
+  )
+}
+
+function diagnosticText(
+  diagnostic: Readonly<{
+    messageChain?: readonly unknown[] | undefined
+    text: string
+  }>,
+): string {
+  const nested = diagnostic.messageChain?.flatMap(message =>
+    diagnosticText(message as Readonly<{
+      messageChain?: readonly unknown[] | undefined
+      text: string
+    }>)
+  ) ?? []
+  return [diagnostic.text, ...nested].join(" ")
 }

@@ -71,6 +71,11 @@ export async function buildJsxTransformSymbols(
   const importedComponents = new Set<number>()
   const importedCustomHooks = new Set<number>()
   const dependencyPaths = new Set<string>()
+  for (const path of await governedSemanticDependencyPaths(
+    sourceFile,
+    project,
+    governedFiles,
+  )) dependencyPaths.add(path)
   const cssIntrinsicSymbols = new Set<number>()
   for (const symbol of new Set(objects.values())) {
     if (await isBrandedCssCompilerIntrinsic(symbol, project)) {
@@ -474,6 +479,37 @@ function isReactRuntimeModule(moduleName: string): boolean {
   return moduleName === "react" || moduleName.startsWith("react/") ||
     moduleName === "react-dom" || moduleName.startsWith("react-dom/") ||
     moduleName === "react-reconciler" || moduleName.startsWith("react-reconciler/")
+}
+
+async function governedSemanticDependencyPaths(
+  sourceFile: SourceFile,
+  project: Project,
+  governedFiles: GovernedFiles,
+): Promise<ReadonlySet<string>> {
+  const dependencies = new Set<string>()
+  const visited = new Set<string>([resolve(sourceFile.fileName)])
+  const queue: SourceFile[] = [sourceFile]
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    const moduleSymbols = await project.checker.getSymbolAtLocation(current.imports)
+    for (const symbol of moduleSymbols) {
+      if (!symbol) continue
+      for (const declaration of symbol.declarations) {
+        const match = governedFiles.matchFile(declaration.path)
+        if (match === null) continue
+        const dependencyPath = resolve(match.sourcePath)
+        if (visited.has(dependencyPath) || sameRegularFile(dependencyPath, sourceFile.fileName)) {
+          continue
+        }
+        visited.add(dependencyPath)
+        dependencies.add(dependencyPath)
+        const dependency = await project.program.getSourceFile(dependencyPath) ??
+          await project.program.getSourceFile(declaration.path)
+        if (dependency) queue.push(dependency)
+      }
+    }
+  }
+  return dependencies
 }
 
 function visit(node: Node, callback: (node: Node) => void): void {

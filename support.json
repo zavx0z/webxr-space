@@ -75,34 +75,50 @@
     {
       "blockedBy": [],
       "blocks": [],
-      "conformance": "unknown",
+      "conformance": "extension",
       "consumers": [],
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "11",
+          "lines": "16",
           "path": "compiler/bun.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "CreateTemplateJsxPluginOptions",
           "type": "implementation"
+        },
+        {
+          "doesNotProve": "Consumer identity or Renderer matrix policy.",
+          "path": "compiler/compiler.test.ts",
+          "proves": "A real Bun build exercises the typed explicit manifest output option.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capabilityManifestPath",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every bundler or build lifecycle.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed plugin option remains consumable from the public package.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capabilityManifestPath",
+          "type": "unit-test"
         }
       ],
       "id": "platform.at-zavx0z-template.export-paths.bun.symbols.createtemplatejsxpluginoptions",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
-      "limitations": [
-        "Export/type presence is not behavioral evidence."
-      ],
+      "limitations": [],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "unverified"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -1179,7 +1195,7 @@
           "path": "package.json",
           "proves": "The package export path exists.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "./compiler",
           "type": "implementation"
         }
@@ -1187,7 +1203,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
         "The export exists and a bounded implementation is present, but the complete observable contract is not behaviorally covered."
@@ -1207,11 +1223,11 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "4",
+          "lines": "32",
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "jsxAuthoringProfile",
           "type": "implementation"
         },
@@ -1220,7 +1236,7 @@
           "path": "compiled.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "jsxAuthoringProfile",
           "type": "unit-test"
         }
@@ -1228,7 +1244,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxauthoringprofile",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -1250,7 +1266,7 @@
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompileError",
           "type": "implementation"
         },
@@ -1259,7 +1275,7 @@
           "path": "compiled.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompileError",
           "type": "unit-test"
         }
@@ -1267,7 +1283,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxcompileerror",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -1289,7 +1305,7 @@
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompilerSession",
           "type": "implementation"
         },
@@ -1298,7 +1314,7 @@
           "path": "compiled.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompilerSession",
           "type": "unit-test"
         }
@@ -1306,7 +1322,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxcompilersession",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -1328,7 +1344,7 @@
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompilerSessionOptions",
           "type": "implementation"
         }
@@ -1336,7 +1352,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxcompilersessionoptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1360,7 +1376,7 @@
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxCompilerStats",
           "type": "implementation"
         }
@@ -1368,7 +1384,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxcompilerstats",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1388,11 +1404,11 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "5",
+          "lines": "33",
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxTransformOptions",
           "type": "implementation"
         }
@@ -1400,7 +1416,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxtransformoptions",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1420,11 +1436,11 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "5",
+          "lines": "33",
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "JsxTransformSymbols",
           "type": "implementation"
         }
@@ -1432,7 +1448,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxtransformsymbols",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
         "Export/type presence is not behavioral evidence."
@@ -1452,11 +1468,11 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "4",
+          "lines": "32",
           "path": "compiler/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "transformJsxSourceFile",
           "type": "implementation"
         },
@@ -1465,7 +1481,7 @@
           "path": "compiled.test.ts",
           "proves": "The bounded project API has behavioral coverage.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "transformJsxSourceFile",
           "type": "unit-test"
         }
@@ -1473,7 +1489,7 @@
       "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.transformjsxsourcefile",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -2944,7 +2960,7 @@
           "path": "compiler/transform.ts",
           "proves": "Governed TSX-to-fixed-slot ABI transform or explicit rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "callback refs",
           "type": "implementation"
         },
@@ -2953,7 +2969,7 @@
           "path": "compiler/compiler.test.ts",
           "proves": "Accepted/rejected syntax, symbol resolution, cache invalidation, and emitted ABI.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "callback refs",
           "type": "unit-test"
         }
@@ -2961,7 +2977,7 @@
       "id": "tsx.compiler.callback-refs",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -3495,7 +3511,7 @@
           "path": "compiler/transform.ts",
           "proves": "Governed TSX-to-fixed-slot ABI transform or explicit rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "event bindings",
           "type": "implementation"
         },
@@ -3504,7 +3520,7 @@
           "path": "compiler/compiler.test.ts",
           "proves": "Accepted/rejected syntax, symbol resolution, cache invalidation, and emitted ABI.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "event bindings",
           "type": "unit-test"
         }
@@ -3512,7 +3528,7 @@
       "id": "tsx.compiler.event-bindings",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -3533,7 +3549,7 @@
           "path": "compiler/transform.ts",
           "proves": "Governed TSX-to-fixed-slot ABI transform or explicit rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "event capture bindings",
           "type": "implementation"
         },
@@ -3542,7 +3558,7 @@
           "path": "compiler/compiler.test.ts",
           "proves": "Accepted/rejected syntax, symbol resolution, cache invalidation, and emitted ABI.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "event capture bindings",
           "type": "unit-test"
         }
@@ -3550,7 +3566,7 @@
       "id": "tsx.compiler.event-capture-bindings",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -3778,7 +3794,7 @@
           "path": "compiler/transform.ts",
           "proves": "Governed TSX-to-fixed-slot ABI transform or explicit rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "intrinsic elements",
           "type": "implementation"
         },
@@ -3787,7 +3803,7 @@
           "path": "compiler/compiler.test.ts",
           "proves": "Accepted/rejected syntax, symbol resolution, cache invalidation, and emitted ABI.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "intrinsic elements",
           "type": "unit-test"
         }
@@ -3795,7 +3811,7 @@
       "id": "tsx.compiler.intrinsic-elements",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [],
       "owner": {
@@ -4071,40 +4087,33 @@
     {
       "blockedBy": [],
       "blocks": [],
-      "conformance": "extension",
+      "conformance": "none",
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Syntax outside the project profile.",
-          "path": "compiler/transform.ts",
-          "proves": "Governed TSX-to-fixed-slot ABI transform or explicit rejection.",
+          "doesNotProve": "Runtime implementation or observable conformance.",
+          "path": "requirements.md",
+          "proves": "The pinned project inventory contains tsx.compiler.object-refs.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "object refs",
-          "type": "implementation"
-        },
-        {
-          "doesNotProve": "Downstream host behavior unless covered by integration tests.",
-          "path": "compiler/compiler.test.ts",
-          "proves": "Accepted/rejected syntax, symbol resolution, cache invalidation, and emitted ABI.",
-          "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
-          "symbol": "object refs",
-          "type": "unit-test"
+          "type": "requirement"
         }
       ],
       "id": "tsx.compiler.object-refs",
       "lastVerified": {
         "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
-      "limitations": [],
+      "limitations": [
+        "The governed JSX type profile and compiler admit callback refs only; object refs are rejected before runtime."
+      ],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "implemented"
+      "status": "unsupported"
     },
     {
       "blockedBy": [],
@@ -4415,33 +4424,49 @@
     {
       "blockedBy": [],
       "blocks": [],
-      "conformance": "none",
+      "conformance": "extension",
       "consumers": [],
       "evidence": [
         {
-          "doesNotProve": "Runtime implementation or observable conformance.",
-          "path": "requirements.md",
-          "proves": "The pinned project inventory contains tsx.compiler.semantic-diagnostics.",
+          "doesNotProve": "Runtime DOM behavior and matrix resolution outside Template.",
+          "path": "compiler/session.ts",
+          "proves": "The governed TypeScript project runs semantic diagnostics with exact authored line/column before code or usage artifacts become observable.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
-          "symbol": "semantic diagnostics",
-          "type": "requirement"
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "JsxCompilerSession.compileFile semantic diagnostics",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every lib.dom API or downstream runtime behavior.",
+          "path": "compiler/compiler.test.ts",
+          "proves": "Compiler builds reject unknown standard tags/properties/events and incompatible standard event handler types with source diagnostics.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "standard JSX semantic diagnostics",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Runtime platform conformance.",
+          "path": "compiler/jsx-types.test.ts",
+          "proves": "A strict tsc project proves valid event/currentTarget/ref inference and expected invalid forms.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "strict standard DOM JSX typing",
+          "type": "unit-test"
         }
       ],
       "id": "tsx.compiler.semantic-diagnostics",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
-      "limitations": [
-        "The governed TSX compiler rejects this syntax or does not provide the requested diagnostic/source-map contract."
-      ],
+      "limitations": [],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "unsupported"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -5373,38 +5398,38 @@
           "type": "external-spec"
         },
         {
-          "doesNotProve": "TypeScript-wide JSX runtime semantics or compiler acceptance.",
+          "doesNotProve": "Complete browser DOM behavior or TypeScript JSX profiles outside the governed compiler.",
           "path": "jsx-runtime.ts",
-          "proves": "Type namespace/runtime boundary used by the project compiler.",
+          "proves": "The governed JSX namespace maps the supported standard HTML tags, properties, event types, exact currentTarget and callback refs to global lib.dom interfaces.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "attribute type checking",
           "type": "implementation"
         },
         {
-          "doesNotProve": "Every TypeScript-accepted JSX program.",
-          "path": "compiler/compiler.test.ts",
-          "proves": "Current compiler typing/transform profile.",
+          "doesNotProve": "Runtime DOM behavior or every standard HTML interface.",
+          "path": "compiler/jsx-types.test.ts",
+          "proves": "A strict real tsc project proves standard tag/property rejection, exact event/currentTarget inference, callback ref targets and object-ref rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "attribute type checking",
           "type": "unit-test"
         }
       ],
       "id": "tsx.typescript.attribute-type-checking",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
-        "TypeScript typing is intentionally broader than the project compiler's accepted source profile."
+        "Implemented for the governed standard HTML JSX profile; TypeScript JSX modes outside that profile and complete browser runtime behavior remain outside this row."
       ],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "partial"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -5703,38 +5728,38 @@
           "type": "external-spec"
         },
         {
-          "doesNotProve": "TypeScript-wide JSX runtime semantics or compiler acceptance.",
+          "doesNotProve": "Complete browser DOM behavior or TypeScript JSX profiles outside the governed compiler.",
           "path": "jsx-runtime.ts",
-          "proves": "Type namespace/runtime boundary used by the project compiler.",
+          "proves": "The governed JSX namespace maps the supported standard HTML tags, properties, event types, exact currentTarget and callback refs to global lib.dom interfaces.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "intrinsic elements",
           "type": "implementation"
         },
         {
-          "doesNotProve": "Every TypeScript-accepted JSX program.",
-          "path": "compiler/compiler.test.ts",
-          "proves": "Current compiler typing/transform profile.",
+          "doesNotProve": "Runtime DOM behavior or every standard HTML interface.",
+          "path": "compiler/jsx-types.test.ts",
+          "proves": "A strict real tsc project proves standard tag/property rejection, exact event/currentTarget inference, callback ref targets and object-ref rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "intrinsic elements",
           "type": "unit-test"
         }
       ],
       "id": "tsx.typescript.intrinsic-elements",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
-        "TypeScript typing is intentionally broader than the project compiler's accepted source profile."
+        "Implemented for the governed standard HTML JSX profile; TypeScript JSX modes outside that profile and complete browser runtime behavior remain outside this row."
       ],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "partial"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -5751,38 +5776,38 @@
           "type": "external-spec"
         },
         {
-          "doesNotProve": "TypeScript-wide JSX runtime semantics or compiler acceptance.",
+          "doesNotProve": "Complete browser DOM behavior or TypeScript JSX profiles outside the governed compiler.",
           "path": "jsx-runtime.ts",
-          "proves": "Type namespace/runtime boundary used by the project compiler.",
+          "proves": "The governed JSX namespace maps the supported standard HTML tags, properties, event types, exact currentTarget and callback refs to global lib.dom interfaces.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "jsx namespace",
           "type": "implementation"
         },
         {
-          "doesNotProve": "Every TypeScript-accepted JSX program.",
-          "path": "compiler/compiler.test.ts",
-          "proves": "Current compiler typing/transform profile.",
+          "doesNotProve": "Runtime DOM behavior or every standard HTML interface.",
+          "path": "compiler/jsx-types.test.ts",
+          "proves": "A strict real tsc project proves standard tag/property rejection, exact event/currentTarget inference, callback ref targets and object-ref rejection.",
           "repository": "template",
-          "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
           "symbol": "jsx namespace",
           "type": "unit-test"
         }
       ],
       "id": "tsx.typescript.jsx-namespace",
       "lastVerified": {
-        "date": "2026-08-29",
-        "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5"
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
       },
       "limitations": [
-        "TypeScript typing is intentionally broader than the project compiler's accepted source profile."
+        "Implemented for the governed standard HTML JSX profile; TypeScript JSX modes outside that profile and complete browser runtime behavior remain outside this row."
       ],
       "owner": {
         "package": "@zavx0z/template",
         "repository": "template",
         "stage": "compiler"
       },
-      "status": "partial"
+      "status": "implemented"
     },
     {
       "blockedBy": [],
@@ -5969,10 +5994,1107 @@
         "stage": "compiler"
       },
       "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "22",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_GENERATOR_VERSION",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime conformance.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "The public manifest value participates in exact extraction, versioning and deterministic serialization behavior.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_GENERATOR_VERSION",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every consumer build integration.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed package exposes the public manifest value to an external consumer.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_GENERATOR_VERSION",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capability_usage_generator_version",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "22",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_SCHEMA_VERSION",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime conformance.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "The public manifest value participates in exact extraction, versioning and deterministic serialization behavior.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_SCHEMA_VERSION",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every consumer build integration.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed package exposes the public manifest value to an external consumer.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CAPABILITY_USAGE_SCHEMA_VERSION",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capability_usage_schema_version",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "28",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageFile",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageFile",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusagefile",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "28",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageManifest",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageManifest",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusagemanifest",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsagePosition",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsagePosition",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusageposition",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageSource",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageSource",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusagesource",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "22",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "createCapabilityUsageManifest",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime conformance.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "The public manifest value participates in exact extraction, versioning and deterministic serialization behavior.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "createCapabilityUsageManifest",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every consumer build integration.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed package exposes the public manifest value to an external consumer.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "createCapabilityUsageManifest",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.createcapabilityusagemanifest",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssPropertyCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssPropertyCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.csspropertycapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssPseudoCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssPseudoCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.csspseudocapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "DomMemberCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "DomMemberCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.dommembercapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "EventCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "EventCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.eventcapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "IntrinsicAttributeCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "IntrinsicAttributeCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.intrinsicattributecapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "IntrinsicElementCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "IntrinsicElementCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.intrinsicelementcapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "3",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "JsxCompileResult",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "JsxCompileResult",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.jsxcompileresult",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "RefCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "RefCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.refcapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "22",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "serializeCapabilityUsageManifest",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime conformance.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "The public manifest value participates in exact extraction, versioning and deterministic serialization behavior.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "serializeCapabilityUsageManifest",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Every consumer build integration.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed package exposes the public manifest value to an external consumer.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "serializeCapabilityUsageManifest",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.serializecapabilityusagemanifest",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Consumer identity, matrix policy or runtime conformance.",
+          "path": "compiler/bun.ts",
+          "proves": "An explicit Bun build option collects successful governed loads and writes one deterministic manifest at build end without inventing an implicit path.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capabilityManifestPath",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime DOM behavior.",
+          "path": "compiler/compiler.test.ts",
+          "proves": "A real Bun build writes one versioned manifest only after the governed build succeeds.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capabilityManifestPath",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Consumer-specific build orchestration.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed public Bun plugin exposes and executes the explicit manifest output option.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capabilityManifestPath",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.capability-usage-build-lifecycle",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Whether the requested platform behavior is implemented or conformant.",
+          "path": "compiler/capability-usage.ts",
+          "proves": "The compiler emits neutral intrinsic transport/operation/static-or-dynamic value facts, events, refs, CSS property values, CSS attribute/pseudo selectors and checker-resolved lib.dom members with exact source ranges.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "collectCapabilityUsages",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer matrix resolution or runtime conformance.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "Exact neutral usage kinds, literal checkbox/number/range values, dynamic values, attribute selectors, lib.dom symbol resolution, source ranges, immutable cache identity and extension separation are behaviorally proven.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capability-usage-extraction",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Complete CSS parsing or Renderer matching.",
+          "path": "css.test.ts",
+          "proves": "The shared CSS shape retains declaration values plus presence/exact-value attribute selectors consumed by capability extraction.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CSS shape attribute selectors and values",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.capability-usage-extraction",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Matrix resolution, gap reproduction or runtime conformance.",
+          "path": "compiler/capability-manifest.ts",
+          "proves": "Neutral usages become one stable, deterministic schema-version-2 interchange manifest without consumer or matrix knowledge.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "createCapabilityUsageManifest/serializeCapabilityUsageManifest",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Consumer matrix resolution.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "Manifest sorting, schema version 2, generator version v2 and byte-stable serialization are proven.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "capability-usage-manifest",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.capability-usage-manifest",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Runtime implementation or complete browser conformance.",
+          "path": "jsx-runtime.ts",
+          "proves": "Authored intrinsic TSX uses global lib.dom element/event interfaces with exact tag properties, handler currentTarget and callback ref targets, without @zavx0z/dom type imports.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "governed standard DOM JSX namespace",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime DOM behavior.",
+          "path": "compiler/jsx-types.test.ts",
+          "proves": "A strict tsc project proves valid standard DOM inference and rejects unknown tags/properties, wrong event types, wrong callback ref targets and object refs.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "standard-dom-jsx-typing",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Platform implementation of every typed member.",
+          "path": "script/package-proof.ts",
+          "proves": "The packed public package preserves standard DOM JSX typing for a real consumer.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "standard-dom-jsx-typing",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.standard-dom-jsx-typing",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Every TypeScript project topology or consumer build configuration.",
+          "path": "compiler/session.ts",
+          "proves": "Governed TSX must resolve through an explicit configured TypeScript project before semantic checking or transformation; inferred JSX outside TSX remains admitted for explicitly governed physical dependency roots.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "configured TypeScript project ownership",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime DOM behavior or matrix resolution.",
+          "path": "compiler/compiler.test.ts",
+          "proves": "A governed TSX source owned only by /dev/null/inferred fails with the precise tsconfig ownership diagnostic, while the explicit inferred JSX dependency contract remains covered separately.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "inferred TypeScript project rejection",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.configured-project-ownership",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageValue",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CapabilityUsageValue",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.capabilityusagevalue",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "compiler/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssAttributeSelectorCapabilityUsage",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime matrix resolution or standard DOM implementation.",
+          "path": "script/package-proof.ts",
+          "proves": "A packed-package consumer imports and uses the public neutral usage/result type contract.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "CssAttributeSelectorCapabilityUsage",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-template.export-paths.compiler.symbols.cssattributeselectorcapabilityusage",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Runtime behavior outside the admitted host property set or complete HTML reflection semantics.",
+          "path": "compiler/host-profile.ts",
+          "proves": "One shared compiler profile assigns exact content-attribute, live-property, style, event and callback-ref transport and preserves static/dynamic authored values for both lowering and capability evidence.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "hostAttributeTransport/hostAttributeValue",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Renderer implementation of every standard property.",
+          "path": "compiler/transform.ts",
+          "proves": "Intrinsic lowering consumes the same reviewed transport decision and never substitutes a content attribute for admitted indeterminate/tabIndex live properties.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "compileIntrinsic host transport",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every HTML property/reflection/default-action behavior.",
+          "path": "compiler/host-transport-runtime.test.ts",
+          "proves": "Dynamic and literal indeterminate/tabIndex values reach exact retained DOM properties, preserve identity across rerender, and do not create a false indeterminate content attribute.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "compiled host property transport",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Downstream browser pixels.",
+          "path": "compiler/compiler.test.ts",
+          "proves": "Generated code routes reviewed live properties through BindProperty and rejects stale attribute lowering.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "host transport ABI",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.host-attribute-transport",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Arbitrary dependencies outside governed roots.",
+          "path": "compiler/symbols.ts",
+          "proves": "Checker-resolved governed dependencies include transitive type-only ownership used by neutral lib.dom member classification.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "semantic dependency closure",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every editor/build-server topology or external filesystem race.",
+          "path": "compiler/session.ts",
+          "proves": "A changed transitive semantic dependency invalidates cached code/usages and restarts the TypeScript API snapshot before reclassification.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "fresh semantic snapshot restart",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Runtime platform implementation of showPicker.",
+          "path": "compiler/capability-usage.test.ts",
+          "proves": "Changing a transitive type alias from lib.dom HTMLInputElement to a consumer interface removes the stale showPicker standard usage and records a cache miss plus fresh snapshot.",
+          "repository": "template",
+          "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
+          "symbol": "transitive governed type-only dependency",
+          "type": "unit-test"
+        }
+      ],
+      "id": "tsx.compiler.semantic-dependency-invalidation",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/template",
+        "repository": "template",
+        "stage": "compiler"
+      },
+      "status": "implemented"
     }
   ],
   "repository": "template",
-  "revision": "c97d7113ad270a26a8ed8ec9ddf30eaf3bacf1a5",
+  "revision": "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty",
   "schemaVersion": 1,
   "verificationDate": "2026-09-01"
 }

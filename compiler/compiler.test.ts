@@ -1,5 +1,5 @@
 import {afterAll, beforeAll, describe, expect, test} from "bun:test"
-import {link, mkdir, mkdtemp, rename, rm, symlink, writeFile} from "node:fs/promises"
+import {link, mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile} from "node:fs/promises"
 import {tmpdir} from "node:os"
 import {resolve} from "node:path"
 import {createTemplateJsxBunPlugin} from "./bun.ts"
@@ -83,6 +83,29 @@ describe("Template JSX compiler", () => {
     expect(code).toContain('{capture: true}')
     expect(code).toContain('"for"')
     expect(code).not.toContain('"htmlFor"')
+  })
+
+  test("maps explicit JSX event aliases and rejects unknown event props", async () => {
+    const code = await compiled("event-alias.tsx")
+    expect(code.match(/"dblclick"/g)).toHaveLength(2)
+    expect(code).toContain('{capture: true}')
+    expect(code).not.toContain('"doubleclick"')
+    expect(code).toContain('"gotpointercapture"')
+    await expectRejected("unknown-event.tsx", "unknown standard JSX event prop onImaginaryEvent")
+  })
+
+  test("lowers literal live host state through dedicated property bindings", async () => {
+    const code = await compiled("host-transport.tsx")
+    expect(code).toMatch(/BindProperty\([^\n]+"indeterminate"\)/)
+    expect(code).toMatch(/BindProperty\([^\n]+"tabIndex"\)/)
+    expect(code).not.toContain('setAttribute("indeterminate"')
+    expect(code).not.toContain('setAttribute("tabIndex"')
+  })
+
+  test("fails standard JSX tag, property and event type diagnostics during compilation", async () => {
+    await expectRejected("invalid-standard-tag.tsx", "Property 'imaginary' does not exist")
+    await expectRejected("invalid-standard-prop.tsx", "imaginaryProperty")
+    await expectRejected("invalid-standard-event-type.tsx", "KeyboardEvent")
   })
 
   test("enforces the bounded Rules of Hooks profile by exact import symbol", async () => {
@@ -182,6 +205,7 @@ describe("Template JSX compiler", () => {
       mkdir(outsidePackage, {recursive: true}),
       mkdir(packageLinks, {recursive: true}),
     ])
+    await writeTemplateTsconfig(temporaryRoot)
     await Promise.all([
       writePackage(governedPackage, "@fixture/button", "Button"),
       writePackage(outsidePackage, "@fixture/outside", "OutsideButton"),
@@ -219,12 +243,56 @@ describe("Template JSX compiler", () => {
     expect(await result.outputs[0]!.text()).not.toContain("<button")
   })
 
+  test("writes one explicit deterministic capability manifest at successful build end", async () => {
+    const temporaryRoot = await mkdtemp(resolve(tmpdir(), "template-capability-manifest-"))
+    const manifestPath = resolve(temporaryRoot, "artifacts/capability-usage.json")
+    const sourcePath = resolve(fixtureRoot, "capability-usage.tsx")
+    try {
+      const result = await Bun.build({
+        entrypoints: [sourcePath],
+        external: ["@zavx0z/react", "@zavx0z/template/compiled"],
+        plugins: [createTemplateJsxBunPlugin({
+          capabilityManifestPath: manifestPath,
+          sourceRoots: [sourcePath],
+        })],
+        target: "browser",
+      })
+      expect(result.success).toBe(true)
+      const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as {
+        files: Array<{path: string; usages: Array<Record<string, unknown> & {kind: string}>}>
+        generatorVersion: string
+        schemaVersion: number
+      }
+      expect(manifest.schemaVersion).toBe(2)
+      expect(manifest.generatorVersion).toBe("template-capability-usage-v2")
+      expect(manifest.files).toHaveLength(1)
+      expect(manifest.files[0]!.path).toBe(sourcePath)
+      expect(manifest.files[0]!.usages.some(usage => usage.kind === "dom-member")).toBe(true)
+      expect(manifest.files[0]!.usages.some(usage => usage.kind === "css-property")).toBe(true)
+      expect(manifest.files[0]!.usages).toContainEqual(expect.objectContaining({
+        kind: "intrinsic-attribute",
+        name: "type",
+        operation: "mount",
+        transport: "content-attribute",
+        value: {kind: "static", value: "checkbox"},
+      }))
+      expect(manifest.files[0]!.usages).toContainEqual(expect.objectContaining({
+        kind: "css-attribute-selector",
+        name: "data-state",
+        value: "ready",
+      }))
+    } finally {
+      await rm(temporaryRoot, {force: true, recursive: true})
+    }
+  })
+
   test("transforms nested node_modules JSX only through an explicit physical source root", async () => {
     const temporaryRoot = await mkdtemp(resolve(tmpdir(), "template-jsx-node-modules-"))
     const projectRoot = resolve(temporaryRoot, "project")
     const physicalRoot = resolve(projectRoot, "node_modules/dependency")
     const sourcePath = resolve(physicalRoot, "src/component.jsx")
     await mkdir(resolve(physicalRoot, "src"), {recursive: true})
+    await writeTemplateTsconfig(projectRoot, [], [sourcePath])
     await writeFile(sourcePath, [
       "export function NestedDependency() {",
       "  return <span>Nested dependency</span>",
@@ -236,6 +304,7 @@ describe("Template JSX compiler", () => {
       external: [
         "@zavx0z/react",
         "@zavx0z/template/compiled",
+        "@zavx0z/template/jsx-dev-runtime",
         "@zavx0z/template/jsx-runtime",
         "react/jsx-dev-runtime",
         "react/jsx-runtime",
@@ -264,6 +333,7 @@ describe("Template JSX compiler", () => {
   test("supports direct Bun.plugin TSX loading without intercepting plain TypeScript", async () => {
     const temporaryRoot = await mkdtemp(resolve(tmpdir(), "template-jsx-runtime-"))
     const sourcePath = resolve(temporaryRoot, "badge.tsx")
+    await writeTemplateTsconfig(temporaryRoot)
     await writeFile(sourcePath, [
       "export function Badge() {",
       "  return <span>Runtime plugin</span>",
@@ -285,6 +355,32 @@ describe("Template JSX compiler", () => {
       expect(exitCode, stderr).toBe(0)
       expect(JSON.parse(stdout)).toEqual({displayName: "Badge", ok: true})
     } finally {
+      await rm(temporaryRoot, {force: true, recursive: true})
+    }
+  }, 30_000)
+
+  test("fails governed JSX that belongs only to an inferred TypeScript project", async () => {
+    const temporaryRoot = await mkdtemp(resolve(tmpdir(), "template-inferred-project-"))
+    const storyRoot = resolve(temporaryRoot, "packages/components/.storybook")
+    const sourcePath = resolve(storyRoot, "story.tsx")
+    await mkdir(storyRoot, {recursive: true})
+    await writeTemplateTsconfig(temporaryRoot, ["packages/components/src/**/*.tsx"])
+    await writeFile(sourcePath, [
+      "export function Story() {",
+      "  return <button>Configured ownership required</button>",
+      "}",
+      "",
+    ].join("\n"))
+    const isolated = new JsxCompilerSession({
+      cwd: temporaryRoot,
+      sourceRoots: [resolve(temporaryRoot, "packages/components")],
+    })
+    try {
+      await expect(isolated.compileFile(sourcePath)).rejects.toThrow(
+        "governed JSX source has no configured TypeScript project",
+      )
+    } finally {
+      await isolated.close()
       await rm(temporaryRoot, {force: true, recursive: true})
     }
   }, 30_000)
@@ -380,6 +476,7 @@ describe("Template JSX compiler", () => {
     const temporaryRoot = await mkdtemp(resolve(tmpdir(), "template-jsx-cache-"))
     const dependency = resolve(temporaryRoot, "dependency.tsx")
     const entry = resolve(temporaryRoot, "entry.tsx")
+    await writeTemplateTsconfig(temporaryRoot)
     await writeFile(dependency, [
       "export function Imported() {",
       "  return <span>first</span>",
@@ -415,6 +512,7 @@ describe("Template JSX compiler", () => {
     const applicationRoot = resolve(temporaryRoot, "application")
     const canonicalRoot = resolve(temporaryRoot, "canonical")
     const physicalRoot = resolve(temporaryRoot, "physical")
+    await writeTemplateTsconfig(temporaryRoot)
     await Promise.all([
       mkdir(applicationRoot, {recursive: true}),
       mkdir(canonicalRoot, {recursive: true}),
@@ -522,4 +620,30 @@ function workspaceEntry(packageName: string, component: string): string {
     `root.render(<${component} />)`,
     "",
   ].join("\n")
+}
+
+async function writeTemplateTsconfig(
+  root: string,
+  include: readonly string[] = ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  files?: readonly string[],
+): Promise<void> {
+  await writeFile(resolve(root, "tsconfig.json"), JSON.stringify({
+    compilerOptions: {
+      allowImportingTsExtensions: true,
+      jsx: "preserve",
+      jsxImportSource: "@zavx0z/template",
+      module: "Preserve",
+      moduleResolution: "bundler",
+      noEmit: true,
+      paths: {
+        "@zavx0z/react": [resolve(import.meta.dir, "../../renderer/packages/react/src/index.ts")],
+        "@zavx0z/template/compiled": [resolve(import.meta.dir, "../compiled.ts")],
+        "@zavx0z/template/jsx-runtime": [resolve(import.meta.dir, "../jsx-runtime.ts")],
+      },
+      skipLibCheck: true,
+      strict: true,
+      target: "ESNext",
+    },
+    ...(files === undefined ? {include} : {files}),
+  }))
 }

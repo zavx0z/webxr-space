@@ -237,3 +237,77 @@ participate in the direct DOM update path.
   approximately `6.3e-18`. Marker collisions remain probabilistically bounded;
   a realized execution-sheet id collision with different CSS additionally fails
   closed through the existing ABI/Document collision checks.
+- `TEMPLATE-COMPILED-024` — authored intrinsic JSX uses the standard global DOM
+  interface names supplied by the pinned TypeScript DOM library. Standard HTML
+  tag names resolve through `HTMLElementTagNameMap`; event handlers receive the
+  standard event interface with `currentTarget` narrowed to the exact authored
+  element; callback refs receive that same exact element or `null`. Ordinary
+  component source does not import author-facing `Event`, `Element`,
+  `HTMLElement` or specialized HTML element types from `@zavx0z/dom`.
+  Platform internals keep their explicit semantic class realm, and this typing
+  profile alone does not claim that an unverified standard member already has
+  observable runtime support.
+- `TEMPLATE-COMPILED-025` — the JSX host profile admits only known standard HTML
+  tags, governed standard attributes/properties, standard event bindings,
+  callback refs and the existing branded `style` channel. Unknown host tags,
+  properties and event props fail type checking or compilation. JSX event
+  aliases lower through an explicit standard-name table rather than mechanical
+  lowercasing; in particular `onDoubleClick` and its capture form bind the
+  standard `dblclick` event. Object refs remain outside the Template profile
+  until the component runtime implements and behaviorally proves them.
+- `TEMPLATE-COMPILED-026` — every governed compilation also produces an
+  immutable, source-located `CapabilityUsage` projection for the intrinsic
+  tags, attributes or live properties, event bindings and capture mode,
+  callback refs, parsed CSS properties and pseudo selectors, and checker-resolved
+  standard DOM member reads, writes and calls found in that source. The
+  projection records neutral standard identity and syntax facts only. Template
+  never reads a Renderer capability matrix, assigns a platform status or owner,
+  creates a capability request, or claims that consumer usage proves runtime
+  implementation or conformance.
+- `TEMPLATE-COMPILED-027` — `compileFile` returns transformed source together
+  with its capability usages while the existing `transformFile` string API
+  remains stable. The compiler cache retains both artifacts and returns the
+  same immutable usage projection on a cache hit. Usage extraction is
+  observational: enabling it does not change the transformed program, binding
+  slots, DOM identity or runtime bundle surface.
+- `TEMPLATE-COMPILED-028` — the Bun build adapter writes a neutral capability
+  manifest only when the caller supplies an explicit `capabilityManifestPath`
+  and the builder exposes complete start/end lifecycle hooks. Each build clears
+  the previous aggregate on start, records the successful governed `onLoad`
+  results, and writes the deterministic manifest after a successful
+  end. Ordinary builds and persistent runtime preload registration perform no
+  implicit filesystem write.
+- `TEMPLATE-COMPILED-029` — an explicitly governed TypeScript JSX source must
+  also belong to a configured TypeScript project. `sourceRoots` authorize Template
+  transformation but do not invent compiler options, a JSX runtime or module
+  paths for a source excluded from every `tsconfig.json`. An inferred project
+  fails before transformation with a precise ownership diagnostic requiring the
+  source to be included by a project configured with `jsx: preserve` and
+  `jsxImportSource: "@zavx0z/template"`.
+
+Capability-usage extraction deliberately resolves direct and optional-chain
+property-access expressions in its first slice. Computed property names and
+destructured member aliases are not guessed from spelling. CSS property and
+pseudo usages retain the enclosing branded `css`` callsite range because the
+parsed static shape does not yet retain a token-level authored offset map.
+- `TEMPLATE-COMPILED-030` — neutral intrinsic-attribute usages retain whether
+  the authored value is dynamic or a static string, number or boolean literal.
+  Parsed CSS property usages retain an exact static declaration value when the
+  existing CSS shape contains no slot, and each bounded CSS attribute selector
+  becomes its own name/value usage fact. Capability extraction consumes the
+  existing parsed CSS shape; it does not scan generated CSS or introduce a
+  second parser.
+- `TEMPLATE-COMPILED-031` — lowering and capability extraction use one host
+  transport classifier parameterized by the exact authored value transport.
+  It distinguishes static mount-time content attributes, addressed generic
+  content-attribute bindings, dedicated property bindings, style, events and
+  refs. `value`, `checked`, `indeterminate`, `selected`, `selectedIndex` and
+  `tabIndex` always use dedicated property bindings, including literal JSX, so
+  current DOM state rather than a same-spelling inert attribute is mutated.
+- `TEMPLATE-COMPILED-032` — the compiler fingerprints the transitive static
+  import/export closure inside the governed source roots because type-only
+  declarations can change contextual DOM symbol resolution and capability
+  usages without changing the importing component. A changed governed helper
+  invalidates the shared code/usage cache and refreshes the TypeScript snapshot
+  before reuse. External package and TypeScript standard-library revisions stay
+  session-level inputs and require a new compiler session.

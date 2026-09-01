@@ -66,6 +66,10 @@ import {
 } from "typescript/unstable/ast/is"
 import {JsxCompileError} from "./errors.ts"
 import {
+  hostAttributeTransport,
+  hostAttributeValue,
+} from "./host-profile.ts"
+import {
   extractComponentStyle,
   extractCompiledStyle,
   type CompiledCssTemplateSource,
@@ -599,27 +603,31 @@ function compileIntrinsic(
       throw compileError(context.sourcePath, "dangerouslySetInnerHTML is unsupported")
     }
     if (name === "style" && compileStaticStyle(attribute, variable, context)) continue
-    const value = attributeValue(attribute, context.sourceFile, context.sourcePath)
-    const event = /^on[A-Z]/.test(name)
-    const liveProperty = name === "value" || name === "checked" || name === "selected" ||
-      name === "selectedIndex"
-    const requiresBinding = name === "style" || name === "ref" || event || liveProperty ||
-      value.staticValue === undefined
-    if (!requiresBinding && value.staticValue !== undefined) {
+    const value = hostAttributeValue(attribute, context.sourceFile)
+    if (value === null) {
+      throw compileError(context.sourcePath, `unsupported JSX attribute ${name}`)
+    }
+    const transport = hostAttributeTransport(name, value.transport)
+    if (transport.kind === "unknown-event") {
+      throw compileError(context.sourcePath, `unknown standard JSX event prop ${name}`)
+    }
+    const requiresBinding = transport.operation !== "mount"
+    if (!requiresBinding && value.transport === "static") {
       if (value.staticValue === true) context.mount.push(`${variable}.setAttribute(${JSON.stringify(attributeName(name))}, "")`)
       else context.mount.push(`${variable}.setAttribute(${JSON.stringify(attributeName(name))}, ${JSON.stringify(value.staticValue)})`)
       continue
     }
-    if ((name === "ref" || event) && value.staticValue !== undefined) {
+    if ((transport.kind === "ref" || transport.kind === "event") &&
+      value.transport === "static") {
       throw compileError(context.sourcePath, `${name} requires a JSX expression`)
     }
     const slot = context.bindings.length
-    if (name === "style") context.bindings.push(`${context.helper}BindStyle(${variable})`)
-    else if (name === "ref") context.bindings.push(`${context.helper}BindRef(${variable})`)
-    else if (event) {
-      const options = name.endsWith("Capture") ? ", {capture: true}" : ""
+    if (transport.kind === "style") context.bindings.push(`${context.helper}BindStyle(${variable})`)
+    else if (transport.kind === "ref") context.bindings.push(`${context.helper}BindRef(${variable})`)
+    else if (transport.kind === "event") {
+      const options = transport.capture ? ", {capture: true}" : ""
       context.bindings.push(
-        `${context.helper}BindEvent(${variable}, ${JSON.stringify(eventName(name))}${options})`,
+        `${context.helper}BindEvent(${variable}, ${JSON.stringify(transport.type)}${options})`,
       )
     } else {
       context.bindings.push(
@@ -1181,8 +1189,11 @@ function componentProps(
       properties.push(`${JSON.stringify(name)}: ${componentStyleAttributeExpression(attribute, context)}`)
       continue
     }
-    const value = attributeValue(attribute, context.sourceFile, context.sourcePath)
-    const expressionValue = value.staticValue !== undefined
+    const value = hostAttributeValue(attribute, context.sourceFile)
+    if (value === null) {
+      throw compileError(context.sourcePath, `unsupported JSX attribute ${name}`)
+    }
+    const expressionValue = value.transport === "static"
       ? JSON.stringify(value.staticValue)
       : value.expression
     if (name === "key") key = expressionValue
@@ -1308,22 +1319,6 @@ function componentElementChildValue(
   return componentExpression(child, context).expression
 }
 
-function attributeValue(
-  attribute: JsxAttribute,
-  sourceFile: SourceFile,
-  sourcePath: string,
-): Readonly<{staticValue?: string | true; expression: string}> {
-  const initializer = attribute.initializer
-  if (!initializer) return Object.freeze({staticValue: true, expression: "true"})
-  if (isStringLiteral(initializer)) {
-    return Object.freeze({staticValue: initializer.text, expression: JSON.stringify(initializer.text)})
-  }
-  if (isJsxExpression(initializer) && initializer.expression) {
-    return Object.freeze({expression: initializer.expression.getText(sourceFile)})
-  }
-  throw compileError(sourcePath, `unsupported JSX attribute ${attribute.name.getText(sourceFile)}`)
-}
-
 function componentReturn(declaration: FunctionDeclaration): ReturnStatement | null {
   const body = declaration.body
   if (!body || !isBlock(body)) return null
@@ -1379,11 +1374,6 @@ function normalizeJsxText(value: string): string {
     if (index !== lastNonEmpty) result += " "
   }
   return result
-}
-
-function eventName(name: string): string {
-  const base = name.endsWith("Capture") ? name.slice(2, -"Capture".length) : name.slice(2)
-  return base.toLowerCase()
 }
 
 function attributeName(name: string): string {

@@ -122,6 +122,10 @@ describe("compiled template ABI", () => {
       copyFile(resolve(import.meta.dir, "tagged-template.ts"), resolve(second, "tagged-template.ts")),
       copyFile(resolve(import.meta.dir, "jsx-runtime.ts"), resolve(first, "jsx-runtime.ts")),
       copyFile(resolve(import.meta.dir, "jsx-runtime.ts"), resolve(second, "jsx-runtime.ts")),
+      copyFile(resolve(import.meta.dir, "jsx-dom.ts"), resolve(first, "jsx-dom.ts")),
+      copyFile(resolve(import.meta.dir, "jsx-dom.ts"), resolve(second, "jsx-dom.ts")),
+      copyFile(resolve(import.meta.dir, "jsx-events.ts"), resolve(first, "jsx-events.ts")),
+      copyFile(resolve(import.meta.dir, "jsx-events.ts"), resolve(second, "jsx-events.ts")),
       symlink(
         resolve(import.meta.dir, "node_modules/@zavx0z/dom"),
         resolve(temporaryRoot, "node_modules/@zavx0z/dom"),

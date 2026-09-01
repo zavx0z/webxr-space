@@ -139,6 +139,41 @@ Authoring TypeScript должен сохранять JSX до Template compiler:
 }
 ```
 
+Intrinsic JSX типизируется стандартными глобальными DOM-интерфейсами. Компонент
+не импортирует author-facing `Event`, `HTMLElement` или специализированный
+element type из `@zavx0z/dom`: tag задаёт точный `currentTarget` события и
+callback ref.
+
+```tsx
+function SearchField() {
+  return <input
+    onInput={event => {
+      const input: HTMLInputElement = event.currentTarget
+      const nativeEvent: InputEvent = event
+      void input
+      void nativeEvent
+    }}
+    ref={input => {
+      const exact: HTMLInputElement | null = input
+      void exact
+    }}
+  />
+}
+```
+
+Это стандартный authoring contract, а не утверждение, что весь DOM уже
+реализован. `compileFile()` возвращает тот же transformed code вместе с
+нейтральными source-located `capabilityUsages`. Platform tooling может собрать
+детерминированный interchange через `createCapabilityUsageManifest()` и
+`serializeCapabilityUsageManifest()`; Template не читает platform matrix и не
+назначает usage статус, owner или conformance.
+
+Manifest v2 различает mount-time content attribute, addressed content-attribute
+binding и dedicated DOM property transport. Статические JSX literals и CSS
+declaration values сохраняются как facts; bounded CSS attribute selectors
+экспортируются отдельно от pseudo. Поэтому downstream resolver может отличить
+`<input type="checkbox">` от generic `<input>` без повторного парсинга TSX/CSS.
+
 Для Bun build используется `createTemplateJsxBunPlugin()` из
 `@zavx0z/template/bun`. Это тонкий adapter только для JSX-bearing расширений
 (`.tsx`, `.jsx` и их `m`/`c` variants); обычные `.ts`/`.js` modules он не

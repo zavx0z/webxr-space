@@ -6,6 +6,11 @@
     "module": "Preserve",
     "moduleResolution": "bundler",
     "noEmit": true,
+    "paths": {
+      "@zavx0z/react": ["../../../renderer/packages/react/src/index.ts"],
+      "@zavx0z/template/compiled": ["../../compiled.ts"],
+      "@zavx0z/template/jsx-runtime": ["../../jsx-runtime.ts"]
+    },
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",

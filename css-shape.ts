@@ -12,9 +12,16 @@ export type CssTemplateDeclaration = Readonly<{
   segments: readonly TaggedTemplateSegment[]
 }>
 
+export type CssTemplateAttributeSelector = Readonly<{
+  name: string
+  value: string | null
+}>
+
 export type CssTemplateRule = Readonly<{
+  attributeSelectors: readonly CssTemplateAttributeSelector[]
   type: "rule"
   pseudo: string
+  pseudoClass: string
   declarations: readonly CssTemplateDeclaration[]
 }>
 
@@ -67,8 +74,10 @@ export function parseCssTemplateShape(strings: readonly string[]): CssTemplateSh
   const flushDirectDeclarations = (): void => {
     if (directDeclarations.length === 0) return
     const rule = Object.freeze({
+      attributeSelectors: Object.freeze([]),
       type: "rule" as const,
       pseudo: "",
+      pseudoClass: "",
       declarations: Object.freeze(directDeclarations),
     })
     rules.push(rule)
@@ -100,7 +109,7 @@ export function parseCssTemplateShape(strings: readonly string[]): CssTemplateSh
     if (boundary.type === "open") {
       flushDirectDeclarations()
       const selector = source.slice(cursor, boundary.index).trim()
-      const pseudo = parseScopedSelector(selector)
+      const parsedSelector = parseScopedSelector(selector)
       const close = findRuleClose(source, boundary.index + 1)
       const declarations = parseDeclarations(
         source.slice(boundary.index + 1, close),
@@ -109,8 +118,10 @@ export function parseCssTemplateShape(strings: readonly string[]): CssTemplateSh
       )
       if (declarations.length === 0) throw new Error(`Scoped CSS selector ${selector} has no declarations`)
       const rule = Object.freeze({
+        attributeSelectors: parsedSelector.attributeSelectors,
         type: "rule" as const,
-        pseudo,
+        pseudo: parsedSelector.suffix,
+        pseudoClass: parsedSelector.pseudoClass,
         declarations: Object.freeze(declarations)
       })
       rules.push(rule)
@@ -180,7 +191,11 @@ function parseDeclaration(
   return Object.freeze({property, segments: Object.freeze(segments)})
 }
 
-function parseScopedSelector(value: string): string {
+function parseScopedSelector(value: string): Readonly<{
+  attributeSelectors: readonly CssTemplateAttributeSelector[]
+  pseudoClass: string
+  suffix: string
+}> {
   if (containsTaggedTemplateMarker(value)) throw new Error("CSS selectors cannot contain interpolations")
   if (value === "&") {
     throw new Error(
@@ -192,6 +207,7 @@ function parseScopedSelector(value: string): string {
   }
   let cursor = 1
   let suffix = ""
+  const attributeSelectors: CssTemplateAttributeSelector[] = []
   while (value[cursor] === "[") {
     const match = /^\[([a-zA-Z_][a-zA-Z0-9_.:-]*)(?:=(["'])([^"'\\\]]*)\2)?\]/.exec(
       value.slice(cursor),
@@ -199,6 +215,10 @@ function parseScopedSelector(value: string): string {
     if (match === null) throw new Error(`Unsupported component CSS selector ${value}`)
     const name = match[1]!.toLowerCase()
     const attributeValue = match[3]
+    attributeSelectors.push(Object.freeze({
+      name,
+      value: attributeValue ?? null,
+    }))
     suffix += attributeValue === undefined
       ? `[${name}]`
       : `[${name}=${JSON.stringify(attributeValue)}]`
@@ -209,7 +229,11 @@ function parseScopedSelector(value: string): string {
     throw new Error(`Unsupported component CSS selector ${value}`)
   }
   if (suffix === "" && pseudo === "") throw new Error(`Unsupported component CSS selector ${value}`)
-  return `${suffix}${pseudo}`
+  return Object.freeze({
+    attributeSelectors: Object.freeze(attributeSelectors),
+    pseudoClass: pseudo,
+    suffix: `${suffix}${pseudo}`,
+  })
 }
 
 type TopLevelBoundary = Readonly<{

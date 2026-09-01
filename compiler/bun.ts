@@ -1,5 +1,5 @@
 import {statSync} from "node:fs"
-import {stat} from "node:fs/promises"
+import {mkdir, stat, writeFile} from "node:fs/promises"
 import {dirname, extname, resolve, sep} from "node:path"
 import {
   GovernedFiles,
@@ -7,10 +7,17 @@ import {
   selectGovernedCompilerSource,
 } from "./governed-paths.ts"
 import {JsxCompilerSession} from "./session.ts"
+import {
+  createCapabilityUsageManifest,
+  serializeCapabilityUsageManifest,
+} from "./capability-manifest.ts"
+import type {CapabilityUsage} from "./capability-usage.ts"
 
 export type CreateTemplateJsxPluginOptions = Readonly<{
   /** Base for relative source roots and TypeScript project discovery. */
   cwd?: string
+  /** Explicit successful-build output for the neutral capability usage manifest. */
+  capabilityManifestPath?: string
   /** Keep the TypeScript session across incremental dev-server rebuilds. */
   persistent?: boolean
   sourceRoots: readonly string[]
@@ -22,6 +29,13 @@ export function createTemplateJsxBunPlugin(
   options: CreateTemplateJsxPluginOptions,
 ): Bun.BunPlugin {
   const configuredCwd = resolve(options.cwd ?? process.cwd())
+  if (options.capabilityManifestPath !== undefined &&
+    options.capabilityManifestPath.trim() === "") {
+    throw new TypeError("capabilityManifestPath requires a non-empty path")
+  }
+  const capabilityManifestPath = options.capabilityManifestPath === undefined
+    ? null
+    : resolve(configuredCwd, options.capabilityManifestPath)
   const roots = options.sourceRoots.map((root) => resolve(configuredCwd, root))
   if (roots.length === 0) throw new TypeError("Template JSX plugin requires at least one source root")
   const governedFiles = new GovernedFiles(roots)
@@ -32,6 +46,7 @@ export function createTemplateJsxBunPlugin(
       ? {}
       : {styleSourceRootIds: options.styleSourceRootIds}),
   })
+  const capabilityUsages = new Map<string, readonly CapabilityUsage[]>()
   let refresh = Promise.resolve()
   return {
     name: "zavx0z-template-jsx",
@@ -43,8 +58,14 @@ export function createTemplateJsxBunPlugin(
           "runtime Bun.plugin registration requires persistent: true for the Template JSX compiler",
         )
       }
+      if (!hasBuildLifecycle && capabilityManifestPath !== null) {
+        throw new Error(
+          "capabilityManifestPath requires Bun build start/end lifecycle hooks",
+        )
+      }
       if (hasBuildLifecycle) {
         builder.onStart(() => {
+          capabilityUsages.clear()
           governedFiles.refresh()
           refresh = discoverSourceFiles(roots).then(files => session.refreshFiles(files))
           return refresh
@@ -53,10 +74,34 @@ export function createTemplateJsxBunPlugin(
       builder.onLoad({filter: /\.(?:[cm]?jsx|[cm]?tsx)$/}, async ({path}) => {
         if (selectGovernedCompilerSource(governedFiles, path) === null) return undefined
         await refresh
-        const code = await session.transformFile(path)
-        return {contents: code, loader: sourceLoader(extname(path))}
+        if (capabilityManifestPath === null) {
+          const code = await session.transformFile(path)
+          return {contents: code, loader: sourceLoader(extname(path))}
+        }
+        const result = await session.compileFile(path)
+        capabilityUsages.set(path, result.capabilityUsages)
+        return {contents: result.code, loader: sourceLoader(extname(path))}
       })
-      if (hasBuildLifecycle && options.persistent !== true) builder.onEnd(() => session.close())
+      if (hasBuildLifecycle) {
+        builder.onEnd(async result => {
+          try {
+            if (result.success && capabilityManifestPath !== null) {
+              const usages = [...capabilityUsages]
+                .sort(([left], [right]) => left.localeCompare(right))
+                .flatMap(([, values]) => values)
+              const manifest = createCapabilityUsageManifest(usages)
+              await mkdir(dirname(capabilityManifestPath), {recursive: true})
+              await writeFile(
+                capabilityManifestPath,
+                serializeCapabilityUsageManifest(manifest),
+                "utf8",
+              )
+            }
+          } finally {
+            if (options.persistent !== true) await session.close()
+          }
+        })
+      }
     },
   }
 }

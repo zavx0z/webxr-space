@@ -48,13 +48,28 @@ try {
     "function Pane(props: Readonly<{children: JsxSourceElement}>) {",
     "  return <section>{props.children}</section>",
     "}",
+    "function StandardDomInput() {",
+    "  return <input",
+    "    onInput={event => {",
+    "      const input: HTMLInputElement = event.currentTarget",
+    "      const nativeEvent: InputEvent = event",
+    "      void input",
+    "      void nativeEvent",
+    "    }}",
+    "    ref={input => {",
+    "      const exact: HTMLInputElement | null = input",
+    "      void exact",
+    "    }}",
+    "  />",
+    "}",
     "export function Badge() {",
     "  return <Pane><Child /></Pane>",
     "}",
+    "void StandardDomInput",
     "",
   ].join("\n"))
   await writeFile(resolve(consumerRoot, "compiler-types.ts"), [
-    'import type {JsxCompilerSessionOptions, JsxCompilerStats} from "@zavx0z/template/compiler"',
+    'import type {CapabilityUsage, CapabilityUsageManifest, CapabilityUsageValue, CssAttributeSelectorCapabilityUsage, JsxCompileResult, JsxCompilerSessionOptions, JsxCompilerStats} from "@zavx0z/template/compiler"',
     'import type {CompiledStyleSheet, CompiledTemplate} from "@zavx0z/template/compiled"',
     'import type {CssDeclarationValue, CssSourceValue, CssStyleValue, CssTemplateResult, CssTemplateValue} from "@zavx0z/template"',
     'import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"',
@@ -68,6 +83,11 @@ try {
     "declare const cssDeclaration: CssDeclarationValue",
     "declare const cssStyle: CssStyleValue",
     "declare const cssValue: CssTemplateValue",
+    "declare const compileResult: JsxCompileResult",
+    "declare const usage: CapabilityUsage",
+    "declare const usageManifest: CapabilityUsageManifest",
+    "declare const usageValue: CapabilityUsageValue",
+    "declare const attributeSelectorUsage: CssAttributeSelectorCapabilityUsage",
     "void options",
     "void stats",
     "void template",
@@ -78,6 +98,11 @@ try {
     "void cssDeclaration",
     "void cssStyle",
     "void cssValue",
+    "void compileResult",
+    "void usage",
+    "void usageManifest",
+    "void usageValue",
+    "void attributeSelectorUsage",
     "",
   ].join("\n"))
   await writeFile(resolve(consumerRoot, "global-css.tsx"), [
@@ -101,10 +126,12 @@ try {
   }))
   await writeFile(resolve(consumerRoot, "build-proof.ts"), [
     'import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"',
+    'const manifestPath = new URL("./capability-usage.json", import.meta.url).pathname',
     "const result = await Bun.build({",
     '  entrypoints: [new URL("./app.tsx", import.meta.url).pathname],',
     '  external: ["@zavx0z/react", "@zavx0z/template/compiled"],',
     "  plugins: [createTemplateJsxBunPlugin({",
+    "    capabilityManifestPath: manifestPath,",
     "    cwd: import.meta.dir,",
     '    sourceRoots: ["app.tsx"],',
     "  })],",
@@ -115,6 +142,10 @@ try {
     'if (output.includes("<span") || output.includes("<Pane")) throw new Error("JSX survived package build")',
     'if (!output.includes("bindChild")) throw new Error("component children did not use the compiled ABI")',
     'if (!output.includes("styleSheets") || output.includes("css`")) throw new Error("scoped css did not use compiled metadata")',
+    "const manifest = await Bun.file(manifestPath).json()",
+    'if (manifest.schemaVersion !== 2 || manifest.files.length !== 1) throw new Error("capability manifest unavailable")',
+    'if (!manifest.files[0].usages.some((usage: {kind: string}) => usage.kind === "event")) throw new Error("event usage missing")',
+    'if (!manifest.files[0].usages.some((usage: {kind: string; name?: string; value?: {kind: string; value?: unknown}}) => usage.kind === "css-property" && usage.name === "color" && usage.value?.kind === "static" && usage.value.value === "red")) throw new Error("static CSS usage missing")',
     "",
   ].join("\n"))
 
@@ -145,6 +176,8 @@ try {
     [
       'const compiler = await import("@zavx0z/template/compiler")',
       'if (typeof compiler.JsxCompilerSession !== "function") throw new Error("compiler core unavailable")',
+      'if (typeof compiler.createCapabilityUsageManifest !== "function") throw new Error("capability manifest unavailable")',
+      'if (typeof compiler.serializeCapabilityUsageManifest !== "function") throw new Error("capability manifest serializer unavailable")',
     ].join(";"),
   ], consumerRoot)
 

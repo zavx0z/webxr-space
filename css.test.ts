@@ -21,8 +21,10 @@ describe("scoped css tagged template", () => {
     expect(Object.isFrozen(first.values)).toBe(true)
     expect(firstShape.rules).toHaveLength(2)
     expect(firstShape.rules[0]).toMatchObject({
+      attributeSelectors: [],
       type: "rule",
       pseudo: "",
+      pseudoClass: "",
       declarations: [
         {property: "color"},
         {property: "transform"},
@@ -101,6 +103,10 @@ describe("scoped css tagged template", () => {
     )).toEqual([["display"], ["color"], ["visibility"]])
     expect(getCssTemplateShape(nested.strings).rules[0]?.pseudo)
       .toBe('[data-size="large"]:hover')
+    expect(getCssTemplateShape(nested.strings).rules[0]?.pseudoClass)
+      .toBe(":hover")
+    expect(getCssTemplateShape(nested.strings).rules[0]?.attributeSelectors)
+      .toEqual([{name: "data-size", value: "large"}])
     expect(() => css`display: block; ${"color: red"}`).toThrow("CSS rule fragments require")
     expect(() => css`display: block; ${[nested] as never}`).toThrow("CSS rule fragments require")
   })
