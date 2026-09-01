@@ -6,16 +6,14 @@ function EngineStorybookPreview() {
     data-engine-storybook-preview=""
     aria-label="Живая сцена @engine/core"
     style={css`
-      & {
-        box-sizing: border-box;
-        display: block;
-        width: 100%;
-        height: 100%;
-        min-height: 220px;
-        border: 1px solid #30343c;
-        border-radius: 4px;
-        background: transparent;
-      }
+      box-sizing: border-box;
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+      border: 1px solid #30343c;
+      border-radius: 4px;
+      background: transparent;
     `}
   ></section>
 }
