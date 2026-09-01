@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {
   clampUnit,
   colorChannelDisplayValue,

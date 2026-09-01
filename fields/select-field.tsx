@@ -1,4 +1,3 @@
-import type {Event, HTMLSelectElement} from "@zavx0z/dom"
 import {
   findSelectionOption,
   selectionExceptionalLabel,
@@ -54,8 +53,7 @@ export function SelectField(props: SelectFieldProps) {
     ? [Object.freeze({key: "__invalid__", value: props.value, label: props.value, disabled: true}), ...(options ?? [])]
     : options ?? []
   const hasLabel = props.label !== undefined
-  const onChange = (event: Event) => {
-    const select = event.target as HTMLSelectElement
+  const onChange = (select: HTMLSelectElement, event: Event) => {
     if (props.readOnly === true) {
       select.value = props.value
       return
@@ -109,7 +107,7 @@ export function SelectField(props: SelectFieldProps) {
       data-readonly={props.readOnly === true ? "true" : undefined}
       disabled={props.disabled === true || exceptionalLabel !== undefined}
       title={selected?.description ?? props.title}
-      onChange={onChange}
+      onChange={event => onChange(event.currentTarget, event)}
       style={css`
         box-sizing: border-box;
         display: block;

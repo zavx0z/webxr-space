@@ -1,5 +1,3 @@
-import type {Event, MouseEvent} from "@zavx0z/dom"
-
 export type TableColumn = Readonly<{
   key: string
   label: string
@@ -133,7 +131,7 @@ function DataCell(props: DataCellProps) {
     disabled: props.disabled
   })
   const interactive = !props.disabled && props.isInteractive?.(context) === true && props.onActivate !== undefined
-  const onClick = (event: Event) => {
+  const onClick = (event: PointerEvent) => {
     if (!interactive) return
     event.stopPropagation()
     props.onActivate?.(context, event)
@@ -175,15 +173,14 @@ type TableRowViewProps = Readonly<{
 }>
 
 function TableRowView(props: TableRowViewProps) {
-  const onClick = (event: Event) => {
+  const onClick = (event: PointerEvent) => {
     if (props.disabled) return
-    const pointer = event as MouseEvent
     props.onSelectionChange?.(tableSelectionAfterClick(
       props.rowKeys,
       props.selectedKeys,
       props.row.key,
       props.anchorKey,
-      pointer
+      event
     ), event)
     props.onActivate?.(props.row.key, event)
   }

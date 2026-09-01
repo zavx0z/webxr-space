@@ -1,4 +1,3 @@
-import type {Event, HTMLElement, ToggleEvent} from "@zavx0z/dom"
 import {useCallback, useState} from "@zavx0z/react"
 import {Button} from "../button.tsx"
 import {formatColorValue, normalizeColorValue, type ColorValue} from "../src/color/value.ts"
@@ -28,18 +27,18 @@ export function ColorField(props: ColorFieldProps) {
     if (props.open === undefined) setInternalOpen(next)
     props.onOpenChange?.(next, event)
   }
-  const bindPicker = useCallback((element: HTMLElement | null) => {
+  const bindPicker = useCallback((element: HTMLDivElement | null) => {
     if (!element?.isConnected) return
-    const trigger = element.parentElement?.querySelector("button") as HTMLElement | null
+    const trigger = element.parentElement?.querySelector("button")
     if (!trigger?.isConnected) return
     if (open) element.showPopover({source: trigger})
     else if (element.popover !== null) element.hidePopover()
   }, [open])
-  const onToggle = (event: Event) => {
+  const onToggle = (event: PointerEvent) => {
     if (props.disabled !== true) setOpen(!open, event)
   }
-  const onPickerToggle = (event: Event) => {
-    const showing = (event as ToggleEvent).newState === "open"
+  const onPickerToggle = (event: ToggleEvent) => {
+    const showing = event.newState === "open"
     if (showing !== open) setOpen(showing, event)
   }
   return <div

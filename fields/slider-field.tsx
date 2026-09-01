@@ -1,5 +1,3 @@
-import type {Event, HTMLInputElement} from "@zavx0z/dom"
-
 export type SliderFieldProps = Readonly<{
   label?: string | undefined
   value: number
@@ -17,17 +15,17 @@ export type SliderFieldProps = Readonly<{
 export function SliderField(props: SliderFieldProps) {
   const step = validateSliderField(props)
   const hasLabel = props.label !== undefined
-  const readValue = (event: Event): number => (event.target as HTMLInputElement).valueAsNumber
-  const restore = (event: Event): void => {
-    (event.target as HTMLInputElement).valueAsNumber = props.value
+  const readValue = (input: HTMLInputElement): number => input.valueAsNumber
+  const restore = (input: HTMLInputElement): void => {
+    input.valueAsNumber = props.value
   }
-  const onInput = (event: Event) => {
-    if (props.readOnly === true) return restore(event)
-    props.onInput?.(readValue(event), event)
+  const onInput = (input: HTMLInputElement, event: InputEvent) => {
+    if (props.readOnly === true) return restore(input)
+    props.onInput?.(readValue(input), event)
   }
-  const onChange = (event: Event) => {
-    if (props.readOnly === true) return restore(event)
-    props.onChange?.(readValue(event), event)
+  const onChange = (input: HTMLInputElement, event: Event) => {
+    if (props.readOnly === true) return restore(input)
+    props.onChange?.(readValue(input), event)
   }
   return <label
     data-has-label={hasLabel ? "true" : undefined}
@@ -80,8 +78,8 @@ export function SliderField(props: SliderFieldProps) {
       step={step}
       value={props.value}
       disabled={props.disabled === true}
-      onInput={onInput}
-      onChange={onChange}
+      onInput={event => onInput(event.currentTarget, event)}
+      onChange={event => onChange(event.currentTarget, event)}
       style={css`
         box-sizing: border-box;
         display: block;

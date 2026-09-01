@@ -1,5 +1,3 @@
-import type {Event} from "@zavx0z/dom"
-
 export type ListItem = Readonly<{
   key: string
   label: string
@@ -30,7 +28,7 @@ type ListRowProps = Readonly<{
 }>
 
 function ListRow(props: ListRowProps) {
-  const onClick = (event: Event) => {
+  const onClick = (event: PointerEvent) => {
     if (!props.disabled) props.onSelect?.(props.item.key, event)
   }
   return <li

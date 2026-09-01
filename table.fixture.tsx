@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {useState} from "@zavx0z/react"
 import {Table, type TableProps} from "./table.tsx"
 

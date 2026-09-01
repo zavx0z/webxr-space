@@ -16,7 +16,12 @@ import {SwitchField} from "@ui/components/fields/switch-field"
 import {TextField} from "@ui/components/fields/text-field"
 import {VectorField} from "@ui/components/fields/vector-field"
 import {uiIcons} from "@ui/components/icons"
-import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
+import type {
+  Document as SemanticDocument,
+  Element as SemanticElement,
+  HTMLElement as SemanticHTMLElement,
+  Node as SemanticNode
+} from "@zavx0z/dom"
 import {createRoot, useState, type ComponentRoot} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
@@ -70,7 +75,7 @@ function FieldGroupStory(props: Readonly<{initial: FieldGroupStoryProps}>) {
 
 function TextFieldStory(props: Readonly<{initial: TextFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
-  const onInput = (next: string, event: Event) => {
+  const onInput: NonNullable<TextFieldProps["onInput"]> = (next, event) => {
     setValue(next)
     props.initial.onInput?.(next, event)
   }
@@ -429,28 +434,28 @@ function CollectionFieldStory(props: Readonly<{initial: CollectionFieldProps}>) 
   />
 }
 
-export function createCompiledFieldGroupProductionStory(document: Document, props: FieldGroupStoryProps) {
+export function createCompiledFieldGroupProductionStory(document: SemanticDocument, props: FieldGroupStoryProps) {
   return mountCompiledStory(document, FieldGroupStory, {initial: props}, "field-group", fieldGroupSource(props))
 }
-export function createCompiledTextFieldProductionStory(document: Document, props: TextFieldProps) {
+export function createCompiledTextFieldProductionStory(document: SemanticDocument, props: TextFieldProps) {
   return mountCompiledStory(document, TextFieldStory, {initial: props}, "text-field", componentSource("TextField", "text-field", props, "value", "onInput"))
 }
-export function createCompiledNumberFieldProductionStory(document: Document, props: NumberFieldProps) {
+export function createCompiledNumberFieldProductionStory(document: SemanticDocument, props: NumberFieldProps) {
   return mountCompiledStory(document, NumberFieldStory, {initial: props}, "number-field", componentSource("NumberField", "number-field", props, "value", "onInput"))
 }
-export function createCompiledSliderFieldProductionStory(document: Document, props: SliderFieldProps) {
+export function createCompiledSliderFieldProductionStory(document: SemanticDocument, props: SliderFieldProps) {
   return mountCompiledStory(document, SliderFieldStory, {initial: props}, "slider-field", componentSource("SliderField", "slider-field", props, "value", "onInput"))
 }
-export function createCompiledCheckboxFieldProductionStory(document: Document, props: CheckboxFieldProps) {
+export function createCompiledCheckboxFieldProductionStory(document: SemanticDocument, props: CheckboxFieldProps) {
   return mountCompiledStory(document, CheckboxFieldStory, {initial: props}, "checkbox-field", componentSource("CheckboxField", "checkbox-field", props, "checked", "onChange"))
 }
-export function createCompiledSwitchFieldProductionStory(document: Document, props: SwitchFieldProps) {
+export function createCompiledSwitchFieldProductionStory(document: SemanticDocument, props: SwitchFieldProps) {
   return mountCompiledStory(document, SwitchFieldStory, {initial: props}, "switch-field", componentSource("SwitchField", "switch-field", props, "checked", "onChange"))
 }
-export function createCompiledSelectFieldProductionStory(document: Document, props: SelectFieldProps) {
+export function createCompiledSelectFieldProductionStory(document: SemanticDocument, props: SelectFieldProps) {
   return mountCompiledStory(document, SelectFieldStory, {initial: props}, "select-field", componentSource("SelectField", "select-field", props, "value", "onChange"))
 }
-export function createCompiledCycleFieldProductionStory(document: Document, props: CycleFieldProps) {
+export function createCompiledCycleFieldProductionStory(document: SemanticDocument, props: CycleFieldProps) {
   return mountCompiledStory(
     document,
     CycleFieldStory,
@@ -460,10 +465,10 @@ export function createCompiledCycleFieldProductionStory(document: Document, prop
     root => root.render(CycleFieldStory as any, {initial: props, presented: true}),
   )
 }
-export function createCompiledOptionGroupFieldProductionStory(document: Document, props: OptionGroupFieldProps) {
+export function createCompiledOptionGroupFieldProductionStory(document: SemanticDocument, props: OptionGroupFieldProps) {
   return mountCompiledStory(document, OptionGroupFieldStory, {initial: props}, "option-group-field", componentSource("OptionGroupField", "option-group-field", props, "value", "onChange"))
 }
-export function createCompiledColorFieldProductionStory(document: Document, props: ColorFieldProps) {
+export function createCompiledColorFieldProductionStory(document: SemanticDocument, props: ColorFieldProps) {
   return mountCompiledStory(
     document,
     ColorFieldStory,
@@ -473,22 +478,22 @@ export function createCompiledColorFieldProductionStory(document: Document, prop
     root => root.render(ColorFieldStory as any, {initial: props, presented: true}),
   )
 }
-export function createCompiledColorPickerFieldProductionStory(document: Document, props: ColorPickerFieldProps) {
+export function createCompiledColorPickerFieldProductionStory(document: SemanticDocument, props: ColorPickerFieldProps) {
   return mountCompiledStory(document, ColorPickerFieldStory, {initial: props}, "color-picker-field", componentSource("ColorPickerField", "color-picker-field", props, "value", "onInput"))
 }
-export function createCompiledVectorFieldProductionStory(document: Document, props: VectorFieldProps) {
+export function createCompiledVectorFieldProductionStory(document: SemanticDocument, props: VectorFieldProps) {
   return mountCompiledStory(document, VectorFieldStory, {initial: props}, "vector-field", componentSource("VectorField", "vector-field", props, "value", "onInput"))
 }
-export function createCompiledMatrixFieldProductionStory(document: Document, props: MatrixFieldProps) {
+export function createCompiledMatrixFieldProductionStory(document: SemanticDocument, props: MatrixFieldProps) {
   return mountCompiledStory(document, MatrixFieldStory, {initial: props}, "matrix-field", componentSource("MatrixField", "matrix-field", props, "value", "onInput"))
 }
-export function createCompiledReferenceFieldProductionStory(document: Document, props: ReferenceFieldProps) {
+export function createCompiledReferenceFieldProductionStory(document: SemanticDocument, props: ReferenceFieldProps) {
   return mountCompiledStory(document, ReferenceFieldStory, {initial: props}, "reference-field", referenceSource(props))
 }
-export function createCompiledPathFieldProductionStory(document: Document, props: PathFieldProps) {
+export function createCompiledPathFieldProductionStory(document: SemanticDocument, props: PathFieldProps) {
   return mountCompiledStory(document, PathFieldStory, {initial: props}, "path-field", componentSource("PathField", "path-field", props, "value", "onInput"))
 }
-export function createCompiledCollectionFieldProductionStory(document: Document, props: CollectionFieldProps) {
+export function createCompiledCollectionFieldProductionStory(document: SemanticDocument, props: CollectionFieldProps) {
   return mountCompiledStory(document, CollectionFieldStory, {initial: props}, "collection-field", collectionSource(props))
 }
 
@@ -503,7 +508,7 @@ function moveItem(items: readonly CollectionItem[], id: string, direction: MoveD
 }
 
 function mountCompiledStory(
-  document: Document,
+  document: SemanticDocument,
   component: unknown,
   props: unknown,
   name: string,
@@ -513,7 +518,7 @@ function mountCompiledStory(
   const staging = document.createElement("div")
   const root = createRoot(staging)
   root.render(component as any, props as any)
-  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as HTMLElement | undefined
+  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as SemanticHTMLElement | undefined
   if (!owner) {
     root.unmount()
     throw new Error(`Compiled ${name} story mounted no owner`)
@@ -528,11 +533,13 @@ function mountCompiledStory(
       get source() {
         return Object.freeze({html: serialize(owner), typescript})
       },
-      afterPresent: afterPresent === undefined ? undefined : () => {
-        if (presented) return
-        presented = true
-        afterPresent(root)
-      },
+      ...(afterPresent === undefined ? {} : {
+        afterPresent() {
+          if (presented) return
+          presented = true
+          afterPresent(root)
+        }
+      }),
       dispose() {
         root.unmount()
       },
@@ -667,16 +674,16 @@ function literal(value: unknown): string {
   return source
 }
 
-function serialize(element: Element, depth = 0): string {
+function serialize(element: SemanticElement, depth = 0): string {
   const indent = "  ".repeat(depth)
   const attributes = element.getAttributeNames().sort().map(name =>
     ` ${name}="${escapeHtml(element.getAttribute(name) ?? "")}"`
   ).join("")
   const children = [...element.childNodes].filter(node => node.nodeType === 1 || node.nodeType === 3)
   if (children.length === 0) return `${indent}<${element.localName}${attributes}></${element.localName}>`
-  const body = children.map((node: Node) => node.nodeType === 3
+  const body = children.map((node: SemanticNode) => node.nodeType === 3
     ? `${"  ".repeat(depth + 1)}${escapeHtml(node.textContent ?? "")}`
-    : serialize(node as HTMLElement, depth + 1)).join("\n")
+    : serialize(node as SemanticHTMLElement, depth + 1)).join("\n")
   return `${indent}<${element.localName}${attributes}>\n${body}\n${indent}</${element.localName}>`
 }
 

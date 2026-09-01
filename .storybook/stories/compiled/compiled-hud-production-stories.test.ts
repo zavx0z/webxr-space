@@ -15,7 +15,7 @@ describe("compiled HUD production stories", () => {
     const minimize = [...mounted.story.element.querySelectorAll("button")].find(button => button.getAttribute("title") === "Minimize") as HTMLButtonElement
     const minimizeIcon = minimize.querySelector("img")!
     expect(minimizeIcon.getAttribute("src")).toBe(uiIcons.minus)
-    expect([...mounted.story.element.querySelectorAll("button")].find(button => button.title === "Pin")?.querySelector("img")?.getAttribute("src"))
+    expect([...mounted.story.element.querySelectorAll("button")].find(button => button.getAttribute("title") === "Pin")?.querySelector("img")?.getAttribute("src"))
       .toBe(uiIcons.pin)
     minimize.click()
     expect(minimize.textContent).toBe("Restore")

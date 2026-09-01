@@ -6,11 +6,16 @@ import {
   type IconButtonProps
 } from "@ui/components/button"
 import {createRoot} from "@zavx0z/react"
-import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
+import type {
+  Document as SemanticDocument,
+  Element as SemanticElement,
+  HTMLElement as SemanticHTMLElement,
+  Node as SemanticNode
+} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
 export function createCompiledButtonProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: ButtonProps
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -31,7 +36,7 @@ export function createCompiledButtonProductionStory(
     iconSize={props.iconSize}
     onClick={props.onClick}
   />)
-  const button = staging.querySelector("button") as HTMLElement | null
+  const button = staging.querySelector("button") as SemanticHTMLElement | null
   if (!button) {
     root.unmount()
     throw new Error("Compiled Button story mounted no button")
@@ -56,7 +61,7 @@ export function createCompiledButtonProductionStory(
 }
 
 export function createCompiledIconButtonProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: IconButtonProps
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
@@ -73,7 +78,7 @@ export function createCompiledIconButtonProductionStory(
     iconSize={props.iconSize}
     onClick={props.onClick}
   />)
-  const button = staging.querySelector("button") as HTMLElement | null
+  const button = staging.querySelector("button") as SemanticHTMLElement | null
   if (!button) {
     root.unmount()
     throw new Error("Compiled IconButton story mounted no button")
@@ -140,7 +145,7 @@ function iconButtonSource(props: IconButtonProps): string {
   ].join("\n")
 }
 
-function serialize(element: Element, depth = 0): string {
+function serialize(element: SemanticElement, depth = 0): string {
   const indent = "  ".repeat(depth)
   const attributes = element.getAttributeNames().sort().map(name =>
     ` ${name}="${escapeHtml(element.getAttribute(name) ?? "")}"`
@@ -150,9 +155,9 @@ function serialize(element: Element, depth = 0): string {
   if (children.every(node => node.nodeType === 3)) {
     return `${indent}<${element.localName}${attributes}>${escapeHtml(element.textContent ?? "")}</${element.localName}>`
   }
-  const body = children.map((node: Node) => node.nodeType === 3
+  const body = children.map((node: SemanticNode) => node.nodeType === 3
     ? `${"  ".repeat(depth + 1)}${escapeHtml(node.textContent ?? "")}`
-    : serialize(node as HTMLElement, depth + 1)).join("\n")
+    : serialize(node as SemanticHTMLElement, depth + 1)).join("\n")
   return `${indent}<${element.localName}${attributes}>\n${body}\n${indent}</${element.localName}>`
 }
 

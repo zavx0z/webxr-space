@@ -1,5 +1,3 @@
-import type {Event, HTMLInputElement} from "@zavx0z/dom"
-
 export type CheckboxFieldProps = Readonly<{
   label?: string | undefined
   checked: boolean
@@ -13,8 +11,7 @@ export type CheckboxFieldProps = Readonly<{
 
 export function CheckboxField(props: CheckboxFieldProps) {
   const hasLabel = props.label !== undefined
-  const onChange = (event: Event) => {
-    const input = event.target as HTMLInputElement
+  const onChange = (input: HTMLInputElement, event: Event) => {
     if (props.readOnly === true) {
       input.checked = props.checked
       input.indeterminate = props.indeterminate === true
@@ -84,7 +81,7 @@ export function CheckboxField(props: CheckboxFieldProps) {
         indeterminate={props.indeterminate === true}
         disabled={props.disabled === true}
         data-readonly={props.readOnly === true ? "true" : undefined}
-        onChange={onChange}
+        onChange={event => onChange(event.currentTarget, event)}
         style={css`
           box-sizing: border-box;
           display: block;

@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {normalizeVectorValue, updateVectorValue} from "../src/vector/value.ts"
 import {FieldGroup} from "./field-group.tsx"
 import {NumberField} from "./number-field.tsx"

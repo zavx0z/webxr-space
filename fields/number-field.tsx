@@ -1,9 +1,3 @@
-import type {
-  Event,
-  HTMLInputElement,
-  KeyboardEvent,
-  PointerEvent
-} from "@zavx0z/dom"
 import {useRef} from "@zavx0z/react"
 import {
   resolveNumberDragRange,
@@ -57,12 +51,12 @@ export function NumberField(props: NumberFieldProps) {
   const propose = (value: number, event: Event) => {
     if (!locked && Number.isFinite(value)) props.onInput?.(normalizeNumberValue(value, props), event)
   }
-  const onInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber
+  const onInput = (input: HTMLInputElement, event: InputEvent) => {
+    const value = input.valueAsNumber
     if (Number.isFinite(value)) propose(value, event)
   }
-  const onChange = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber
+  const onChange = (input: HTMLInputElement, event: Event) => {
+    const value = input.valueAsNumber
     if (!locked && Number.isFinite(value)) props.onChange?.(normalizeNumberValue(value, props), event)
   }
   const onFocus = () => {
@@ -75,9 +69,8 @@ export function NumberField(props: NumberFieldProps) {
     scrub.current = null
     props.onInput?.(editBaseline.current, event)
   }
-  const onPointerDown = (event: PointerEvent) => {
+  const onPointerDown = (target: HTMLInputElement, event: PointerEvent) => {
     if (locked) return
-    const target = event.currentTarget as HTMLInputElement
     target.setPointerCapture(event.pointerId)
     const origin = normalizeNumberValue(props.value, props)
     editBaseline.current = origin
@@ -134,8 +127,8 @@ export function NumberField(props: NumberFieldProps) {
     props.onInput?.(next, event)
     props.onChange?.(next, event)
   }
-  const decrease = (event: Event) => stepAtEdge(-1, event)
-  const increase = (event: Event) => stepAtEdge(1, event)
+  const decrease = (event: PointerEvent) => stepAtEdge(-1, event)
+  const increase = (event: PointerEvent) => stepAtEdge(1, event)
 
   return <div
     data-has-label={hasLabel ? "true" : undefined}
@@ -248,11 +241,11 @@ export function NumberField(props: NumberFieldProps) {
         step={step}
         disabled={props.disabled === true}
         readOnly={props.readOnly === true}
-        onInput={onInput}
-        onChange={onChange}
+        onInput={event => onInput(event.currentTarget, event)}
+        onChange={event => onChange(event.currentTarget, event)}
         onFocus={onFocus}
         onKeyDown={onKeyDown}
-        onPointerDown={onPointerDown}
+        onPointerDown={event => onPointerDown(event.currentTarget, event)}
         onPointerMove={onPointerMove}
         onPointerUp={endScrub}
         onPointerCancel={cancelScrub}

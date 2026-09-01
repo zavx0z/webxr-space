@@ -7,12 +7,17 @@ import {
   Typography,
   type TypographyProps
 } from "@ui/components/typography"
-import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
+import type {
+  Document as SemanticDocument,
+  Element as SemanticElement,
+  HTMLElement as SemanticHTMLElement,
+  Node as SemanticNode
+} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
 export function createCompiledPaneProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: PaneProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(document, Pane, props, "pane", paneSource(props))
@@ -32,21 +37,21 @@ function PanelStoryComponent(props: PanelStoryProps) {
 }
 
 export function createCompiledPanelProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: PanelStoryProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(document, PanelStoryComponent, props, "panel", panelSource(props))
 }
 
 export function createCompiledBadgeProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: BadgeProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(document, Badge, props, "badge", badgeSource(props))
 }
 
 export function createCompiledTypographyProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: TypographyProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
@@ -59,7 +64,7 @@ export function createCompiledTypographyProductionStory(
 }
 
 export function createCompiledDividerProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: DividerProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
@@ -72,7 +77,7 @@ export function createCompiledDividerProductionStory(
 }
 
 function mountCompiledStory(
-  document: Document,
+  document: SemanticDocument,
   component: unknown,
   props: unknown,
   name: string,
@@ -81,7 +86,7 @@ function mountCompiledStory(
   const staging = document.createElement("div")
   const root = createRoot(staging)
   root.render(component as any, props as any)
-  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as HTMLElement | undefined
+  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as SemanticHTMLElement | undefined
   if (!owner) {
     root.unmount()
     throw new Error(`Compiled ${name} story mounted no owner`)
@@ -179,16 +184,16 @@ function literal(value: unknown): string {
   return JSON.stringify(value, (_key, entry) => typeof entry === "function" ? undefined : entry, 2)
 }
 
-function serialize(element: Element, depth = 0): string {
+function serialize(element: SemanticElement, depth = 0): string {
   const indent = "  ".repeat(depth)
   const attributes = element.getAttributeNames().sort().map(name =>
     ` ${name}="${escapeHtml(element.getAttribute(name) ?? "")}"`
   ).join("")
   const children = [...element.childNodes].filter(node => node.nodeType === 1 || node.nodeType === 3)
   if (children.length === 0) return `${indent}<${element.localName}${attributes}></${element.localName}>`
-  const body = children.map((node: Node) => node.nodeType === 3
+  const body = children.map((node: SemanticNode) => node.nodeType === 3
     ? `${"  ".repeat(depth + 1)}${escapeHtml(node.textContent ?? "")}`
-    : serialize(node as HTMLElement, depth + 1)).join("\n")
+    : serialize(node as SemanticHTMLElement, depth + 1)).join("\n")
   return `${indent}<${element.localName}${attributes}>\n${body}\n${indent}</${element.localName}>`
 }
 

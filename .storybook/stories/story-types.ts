@@ -1,4 +1,4 @@
-import type {HTMLElement} from "@zavx0z/dom"
+import type {HTMLElement as SemanticHTMLElement} from "@zavx0z/dom"
 import type {ComponentRoot} from "@zavx0z/react"
 
 export type OwnerStorySource = Readonly<{
@@ -7,7 +7,7 @@ export type OwnerStorySource = Readonly<{
 }>
 
 export type OwnerStoryPresentation = Readonly<{
-  element: HTMLElement
+  element: SemanticHTMLElement
   componentRoot: Pick<ComponentRoot, "readStyleSheets">
   source: OwnerStorySource
   props?: Readonly<Record<string, unknown>>
@@ -36,15 +36,14 @@ export function withStoryProps(
   routed: RoutedProductionComponentStory,
   props: Readonly<Record<string, unknown>>,
 ): RoutedProductionComponentStory {
+  const afterPresent = routed.story.afterPresent
   return Object.freeze({
     story: Object.freeze({
       element: routed.story.element,
       componentRoot: routed.story.componentRoot,
       get source() { return routed.story.source },
       props: Object.freeze({...props}),
-      afterPresent: routed.story.afterPresent === undefined
-        ? undefined
-        : () => routed.story.afterPresent?.(),
+      ...(afterPresent === undefined ? {} : {afterPresent}),
       dispose: () => routed.story.dispose(),
     }),
   })

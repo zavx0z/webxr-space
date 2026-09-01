@@ -1,9 +1,14 @@
-import type {Event} from "@zavx0z/dom"
-
 export type ButtonVariant = "text" | "outlined" | "contained" | "glass"
 export type ButtonTone = "neutral" | "primary" | "success" | "warning" | "error"
 export type ButtonSize = "small" | "medium" | "large"
 export type ButtonIconPosition = "start" | "end"
+
+type ButtonPointerEvent = PointerEvent & Readonly<{
+  currentTarget: HTMLButtonElement
+}>
+type ButtonKeyboardEvent = KeyboardEvent & Readonly<{
+  currentTarget: HTMLButtonElement
+}>
 
 export type ButtonProps = Readonly<{
   label: string
@@ -27,8 +32,8 @@ export type ButtonProps = Readonly<{
   iconOnly?: boolean | undefined
   iconSize?: number | undefined
   style?: CssStyle | undefined
-  onClick?: ((event: Event) => void) | undefined
-  onKeyDown?: ((event: Event) => void) | undefined
+  onClick?: ((event: ButtonPointerEvent) => void) | undefined
+  onKeyDown?: ((event: ButtonKeyboardEvent) => void) | undefined
 }>
 
 export type IconButtonProps = Readonly<{
@@ -42,7 +47,7 @@ export type IconButtonProps = Readonly<{
   title?: string | undefined
   iconSize?: number | undefined
   style?: CssStyle | undefined
-  onClick?: ((event: Event) => void) | undefined
+  onClick?: ((event: ButtonPointerEvent) => void) | undefined
 }>
 
 export function Button(props: ButtonProps) {

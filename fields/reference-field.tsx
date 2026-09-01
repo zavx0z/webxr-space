@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {Button, IconButton} from "../button.tsx"
 import {closeIcon, pickerIcon, resourceIcon} from "../icon-assets.ts"
 

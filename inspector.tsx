@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button, IconButton} from "./button.tsx"
 import {TextField} from "./fields/text-field.tsx"

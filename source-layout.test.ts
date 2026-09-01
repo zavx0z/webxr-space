@@ -21,7 +21,51 @@ const publicFieldTargets = [
   "./fields/vector-field.tsx"
 ] as const
 
+function sourceImportDeclarations(source: string): string[] {
+  const declarations: string[] = []
+  let current: string[] = []
+  for (const line of source.split("\n")) {
+    if (current.length === 0) {
+      if (!line.startsWith("import ")) continue
+      current = [line]
+    } else {
+      current.push(line)
+    }
+    const declaration = current.join("\n")
+    if (/\bfrom\s+["'][^"']+["']\s*$/u.test(declaration) || /^import\s+["'][^"']+["']\s*$/u.test(declaration)) {
+      declarations.push(declaration)
+      current = []
+    }
+  }
+  return declarations
+}
+
+function isVendorDomTypeImport(declaration: string): boolean {
+  if (!/\bfrom\s+["']@zavx0z\/dom(?:\/[^"']*)?["']\s*$/u.test(declaration)) return false
+  return /^import\s+type\b/u.test(declaration) || /^import\s*\{[^}]*\btype\s+/su.test(declaration)
+}
+
 describe("component source layout", () => {
+  test("uses standard global DOM interfaces in production TSX and authored fixtures", async () => {
+    const productionConfig = await Bun.file(`${componentsRoot}/tsconfig.production.json`).json() as {
+      include: string[]
+    }
+    const rootFilenames = await readdir(componentsRoot)
+    const fieldFilenames = await readdir(`${componentsRoot}/fields`)
+    const authoredSources = [
+      ...productionConfig.include.filter(filename => filename.endsWith(".tsx")),
+      ...rootFilenames.filter(filename => filename.endsWith(".fixture.tsx")),
+      ...fieldFilenames.filter(filename => filename.endsWith(".fixture.tsx"))
+        .map(filename => `fields/${filename}`)
+    ]
+
+    for (const filename of authoredSources) {
+      const source = await Bun.file(`${componentsRoot}/${filename}`).text()
+      const vendorTypeImports = sourceImportDeclarations(source).filter(isVendorDomTypeImport)
+      expect(vendorTypeImports, `${filename} must use standard global DOM interface types`).toEqual([])
+    }
+  })
+
   test("keeps component owners, specifications and TSX fixtures on one stem", async () => {
     const rootFilenames = await readdir(componentsRoot)
     const nestedFilenames = await Promise.all(["fields"].map(async directory =>

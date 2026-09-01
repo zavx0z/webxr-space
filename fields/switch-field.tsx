@@ -1,5 +1,3 @@
-import type {Event} from "@zavx0z/dom"
-
 export type SwitchFieldProps = Readonly<{
   label?: string | undefined
   checked: boolean
@@ -12,7 +10,7 @@ export type SwitchFieldProps = Readonly<{
 
 export function SwitchField(props: SwitchFieldProps) {
   const hasLabel = props.label !== undefined
-  const onClick = (event: Event) => {
+  const onClick = (event: PointerEvent) => {
     if (props.readOnly !== true) props.onChange?.(!props.checked, event)
   }
   return <div

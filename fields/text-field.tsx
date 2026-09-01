@@ -1,6 +1,8 @@
-import type {Event, HTMLInputElement} from "@zavx0z/dom"
-
 export type TextFieldType = "text" | "search" | "password" | "email" | "url"
+
+type TextFieldInputEvent = InputEvent & Readonly<{
+  currentTarget: HTMLInputElement
+}>
 
 export type TextFieldProps = Readonly<{
   label?: string | undefined
@@ -11,18 +13,18 @@ export type TextFieldProps = Readonly<{
   readOnly?: boolean | undefined
   title?: string | undefined
   style?: CssStyle | undefined
-  onInput?: ((value: string, event: Event) => void) | undefined
+  onInput?: ((value: string, event: TextFieldInputEvent) => void) | undefined
   onChange?: ((value: string, event: Event) => void) | undefined
 }>
 
 export function TextField(props: TextFieldProps) {
   const hasLabel = props.label !== undefined
-  const onInput = (event: Event) => props.onInput?.(
-    (event.target as HTMLInputElement).value,
+  const onInput = (input: HTMLInputElement, event: TextFieldInputEvent) => props.onInput?.(
+    input.value,
     event
   )
-  const onChange = (event: Event) => props.onChange?.(
-    (event.target as HTMLInputElement).value,
+  const onChange = (input: HTMLInputElement, event: Event) => props.onChange?.(
+    input.value,
     event
   )
   return <label
@@ -74,8 +76,8 @@ export function TextField(props: TextFieldProps) {
       placeholder={props.placeholder}
       disabled={props.disabled === true}
       readOnly={props.readOnly === true}
-      onInput={onInput}
-      onChange={onChange}
+      onInput={event => onInput(event.currentTarget, event)}
+      onChange={event => onChange(event.currentTarget, event)}
       style={css`
         box-sizing: border-box;
         display: block;

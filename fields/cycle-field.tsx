@@ -1,4 +1,3 @@
-import type {Event, HTMLElement, KeyboardEvent, ToggleEvent} from "@zavx0z/dom"
 import {useCallback, useId, useState} from "@zavx0z/react"
 import {Button} from "../button.tsx"
 import {chevronDownIcon} from "../icon-assets.ts"
@@ -33,8 +32,8 @@ type CycleOptionProps = Readonly<{
   selected: boolean
   focusable: boolean
   disabled: boolean
-  onSelect(key: string, event: Event): void
-  onKeyDown(key: string, event: Event): void
+  onSelect(key: string, event: PointerEvent): void
+  onKeyDown(key: string, event: KeyboardEvent, source: HTMLButtonElement): void
 }>
 
 function CycleOption(props: CycleOptionProps) {
@@ -57,7 +56,7 @@ function CycleOption(props: CycleOptionProps) {
       box-shadow: none;
     `}
     onClick={event => props.onSelect(props.option.key, event)}
-    onKeyDown={event => props.onKeyDown(props.option.key, event)}
+    onKeyDown={event => props.onKeyDown(props.option.key, event, event.currentTarget)}
   />
 }
 
@@ -76,18 +75,18 @@ export function CycleField(props: CycleFieldProps) {
     if (props.open === undefined) setInternalOpen(next)
     props.onOpenChange?.(next, event)
   }
-  const bindPopover = useCallback((element: HTMLElement | null) => {
+  const bindPopover = useCallback((element: HTMLDivElement | null) => {
     if (!element?.isConnected) return
-    const trigger = element.parentElement?.querySelector("button") as HTMLElement | null
+    const trigger = element.parentElement?.querySelector("button")
     if (!trigger?.isConnected) return
     if (open) element.showPopover({source: trigger})
     else if (element.popover !== null) element.hidePopover()
   }, [open])
-  const onToggle = (event: Event) => {
+  const onToggle = (event: PointerEvent) => {
     if (props.disabled !== true) setOpen(!open, event)
   }
-  const onPopoverToggle = (event: Event) => {
-    const showing = (event as ToggleEvent).newState === "open"
+  const onPopoverToggle = (event: ToggleEvent) => {
+    const showing = event.newState === "open"
     if (showing !== open) setOpen(showing, event)
   }
   const onSelect = (key: string, event: Event) => {
@@ -96,21 +95,19 @@ export function CycleField(props: CycleFieldProps) {
     props.onChange?.(option.value, event)
     setOpen(false, event)
   }
-  const onKeyDown = (key: string, event: Event) => {
-    const keyboard = event as KeyboardEvent
-    if (keyboard.key === "Enter" || keyboard.key === " ") {
-      keyboard.preventDefault()
+  const onKeyDown = (key: string, event: KeyboardEvent, current: HTMLButtonElement) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
       onSelect(key, event)
       return
     }
-    if (keyboard.key !== "ArrowDown" && keyboard.key !== "ArrowUp") return
-    const current = event.target as HTMLElement
-    const optionButtons = [...(current.parentElement?.querySelectorAll('[role="option"]') ?? [])]
-      .filter(option => option.getAttribute("aria-disabled") !== "true") as HTMLElement[]
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
+    const optionButtons = [...(current.parentElement?.querySelectorAll<HTMLButtonElement>('[role="option"]') ?? [])]
+      .filter(option => option.getAttribute("aria-disabled") !== "true")
     const currentIndex = optionButtons.indexOf(current)
-    const target = optionButtons[(currentIndex + (keyboard.key === "ArrowDown" ? 1 : -1) + optionButtons.length) % optionButtons.length]
+    const target = optionButtons[(currentIndex + (event.key === "ArrowDown" ? 1 : -1) + optionButtons.length) % optionButtons.length]
     if (target === undefined) return
-    keyboard.preventDefault()
+    event.preventDefault()
     target.focus()
   }
   return <div

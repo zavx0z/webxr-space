@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {normalizeMatrixValue, updateMatrixValue} from "../src/matrix/value.ts"
 import {FieldGroup} from "./field-group.tsx"
 import {NumberField} from "./number-field.tsx"

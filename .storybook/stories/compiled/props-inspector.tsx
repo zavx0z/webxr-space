@@ -4,14 +4,17 @@ import {NumberField} from "@ui/components/fields/number-field"
 import {TextField} from "@ui/components/fields/text-field"
 import {Inspector} from "@ui/components/inspector"
 import {Panel} from "@ui/components/panel"
-import type {Document, HTMLElement} from "@zavx0z/dom"
+import type {
+  Document as SemanticDocument,
+  HTMLElement as SemanticHTMLElement
+} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import {PROPS_INSPECTOR_COPY} from "./props-inspector-copy.ts"
 
 export type StoryProps = Readonly<Record<string, unknown>>
 
 export type StoryPropsInspector = Readonly<{
-  element: HTMLElement
+  element: SemanticHTMLElement
   update(context: Readonly<{label: string; title: string}>, props: StoryProps): void
   dispose(): void
 }>
@@ -21,6 +24,14 @@ export type StoryPropsFieldDescriptor =
   | Readonly<{kind: "boolean"; id: string; label: string; value: boolean; readOnly: true}>
   | Readonly<{kind: "integer"; id: string; label: string; value: number; readOnly: true}>
   | Readonly<{kind: "number"; id: string; label: string; value: number; readOnly: true}>
+  | Readonly<{
+    kind: "enum"
+    id: string
+    label: string
+    value: string
+    readOnly: true
+    options: readonly Readonly<{value: string; label: string}>[]
+  }>
   | Readonly<{kind: "text"; id: string; label: string; value: string; readOnly: true}>
   | Readonly<{kind: "readonly"; id: string; label: string; value: string}>
 
@@ -116,7 +127,7 @@ function PropsInspectorView(props: PropsInspectorViewProps) {
 }
 
 export function createStoryPropsInspector(
-  document: Document,
+  document: SemanticDocument,
   context: Readonly<{label: string; title: string}>,
   props: StoryProps,
 ): StoryPropsInspector {
@@ -129,7 +140,7 @@ export function createStoryPropsInspector(
     })
   }
   render(context, props)
-  const element = staging.querySelector("aside") as HTMLElement | null
+  const element = staging.querySelector("aside") as SemanticHTMLElement | null
   if (!element) {
     root.unmount()
     throw new Error("Props Inspector mounted no aside")

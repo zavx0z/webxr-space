@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {Button} from "../button.tsx"
 import {validateSelectionOptions} from "../src/selection/options.ts"
 

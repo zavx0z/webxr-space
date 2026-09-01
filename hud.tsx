@@ -1,4 +1,3 @@
-import type {Event} from "@zavx0z/dom"
 import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button} from "./button.tsx"

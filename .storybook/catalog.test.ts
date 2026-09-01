@@ -213,8 +213,8 @@ describe("@ui/components external catalog", () => {
     expect(baseline.overviewRoutes).toHaveLength(215)
     const legacyLeaves = remap.leafMappings.filter(({from}) => from.packageId === "@ui/storybook")
     const legacyOverviews = remap.overviewMappings.filter(({from}) => from.packageId === "@ui/storybook")
-    expect(legacyLeaves.map(({from}) => from.route)).toEqual(baseline.leafRoutes)
-    expect(legacyOverviews.map(({from}) => from.route)).toEqual(baseline.overviewRoutes)
+    expect(legacyLeaves.map(({from}) => from.route)).toEqual([...baseline.leafRoutes])
+    expect(legacyOverviews.map(({from}) => from.route)).toEqual([...baseline.overviewRoutes])
     expect(legacyLeaves.filter(({to}) => to.packageId === "@ui/components")).toHaveLength(85)
     expect(legacyLeaves.filter(({to}) => to.packageId === "@zavx0z/dom")).toHaveLength(91)
     expect(remap.leafMappings.filter(({from}) => from.packageId === "@ui/components")).toHaveLength(3)
@@ -254,12 +254,13 @@ describe("@ui/components external catalog", () => {
 
   test("mounts one owner story through the structural runtime and disposes it", async () => {
     const document = createDocument()
-    let presentation: Readonly<Record<string, unknown>> | null = null
+    type Presentation = Parameters<Parameters<typeof runtime.create>[0]["present"]>[0]
+    const presented: {current: Presentation | null} = {current: null}
     const session = runtime.create({
       document,
       signal: new AbortController().signal,
       present(value) {
-        presentation = value
+        presented.current = value
         document.appendChild(value.node)
       },
       reportDiagnostic() {},
@@ -270,15 +271,16 @@ describe("@ui/components external catalog", () => {
       signal: new AbortController().signal,
     })
     expect(document.childNodes).toHaveLength(1)
+    const presentation = presented.current
+    if (presentation === null) throw new Error("UI owner story published no presentation")
     expect(presentation).toEqual(expect.objectContaining({
       protocol: "story-presentation/1",
       node: document.firstChild,
       source: expect.objectContaining({html: expect.any(String), typescript: expect.any(String)}),
       values: {props: expect.any(Object)},
     }))
-    expect(Object.keys((presentation as {source: object}).source).sort()).toEqual(["html", "typescript"])
-    expect(typeof (presentation as {componentRoot: {readStyleSheets?: unknown}})
-      .componentRoot.readStyleSheets).toBe("function")
+    expect(Object.keys(presentation.source).sort()).toEqual(["html", "typescript"])
+    expect(typeof presentation.componentRoot.readStyleSheets).toBe("function")
     session.unmount()
     expect(document.childNodes).toHaveLength(0)
     session.dispose()

@@ -6,7 +6,12 @@ import {
   StatusBar,
   type StatusBarProps
 } from "@ui/components/status-bar"
-import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
+import type {
+  Document as SemanticDocument,
+  Element as SemanticElement,
+  HTMLElement as SemanticHTMLElement,
+  Node as SemanticNode
+} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
@@ -31,21 +36,21 @@ function NotificationStoryComponent(props: Readonly<{value: NotificationProps}>)
 }
 
 export function createCompiledStatusBarProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: StatusBarProps
 ): RoutedProductionComponentStory {
   return mount(document, StatusBarStoryComponent, {value: props}, "status-bar", statusBarSource(props))
 }
 
 export function createCompiledNotificationProductionStory(
-  document: Document,
+  document: SemanticDocument,
   props: NotificationProps
 ): RoutedProductionComponentStory {
   return mount(document, NotificationStoryComponent, {value: props}, "notification", notificationSource(props))
 }
 
 function mount(
-  document: Document,
+  document: SemanticDocument,
   component: unknown,
   props: unknown,
   name: string,
@@ -54,7 +59,7 @@ function mount(
   const staging = document.createElement("div")
   const root = createRoot(staging)
   root.render(component as any, props as any)
-  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as HTMLElement | undefined
+  const owner = [...staging.childNodes].find(node => node.nodeType === 1) as SemanticHTMLElement | undefined
   if (!owner) {
     root.unmount()
     throw new Error(`Compiled ${name} story mounted no owner`)
@@ -100,16 +105,16 @@ function notificationSource(props: NotificationProps): string {
   ].join("\n")
 }
 
-function serialize(element: Element, depth = 0): string {
+function serialize(element: SemanticElement, depth = 0): string {
   const indent = "  ".repeat(depth)
   const attributes = element.getAttributeNames().sort().map(name =>
     ` ${name}="${escapeHtml(element.getAttribute(name) ?? "")}"`
   ).join("")
   const children = [...element.childNodes].filter(node => node.nodeType === 1 || node.nodeType === 3)
   if (children.length === 0) return `${indent}<${element.localName}${attributes}></${element.localName}>`
-  const body = children.map((node: Node) => node.nodeType === 3
+  const body = children.map((node: SemanticNode) => node.nodeType === 3
     ? `${"  ".repeat(depth + 1)}${escapeHtml(node.textContent ?? "")}`
-    : serialize(node as HTMLElement, depth + 1)).join("\n")
+    : serialize(node as SemanticHTMLElement, depth + 1)).join("\n")
   return `${indent}<${element.localName}${attributes}>\n${body}\n${indent}</${element.localName}>`
 }
 

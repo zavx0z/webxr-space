@@ -163,6 +163,45 @@ Platform inheritance остаётся в `@zavx0z/dom`:
 `EventTarget → Node → Element → HTMLElement` и специализированные
 `HTML*Element`. Components не создаёт параллельные element classes.
 
+## `UI-COMPILED-STANDARD-DOM-TYPES-001` — standard DOM authoring types
+
+Production TSX, authored compiler fixtures и authored Storybook TSX используют
+стандартные global DOM interfaces из configured `@zavx0z/template` JSX profile.
+Public callback contracts называют стандартные `Event`, `InputEvent`,
+`KeyboardEvent`, `PointerEvent`, `ToggleEvent` и стандартные `HTML*Element`;
+production Component source, authored fixtures и JSX-facing story code не
+импортируют эти type names из `@zavx0z/dom`.
+
+Intrinsic event handler получает стандартный event type и exact
+`currentTarget` authored tag. Input/select state читается через этот
+`currentTarget`, callback ref принимает exact element type, а casts к
+vendor-specific element/event classes не являются authoring boundary.
+
+`@zavx0z/dom` остаётся runtime implementation semantic tree. Runtime и test
+setup могут явно импортировать `createDocument`, event constructors и другие
+realm-owned runtime values; platform/controller code вне production Component
+authoring может явно называть semantic realm, когда использует его
+нестандартное owner API. Standard authoring type сам по себе не доказывает
+runtime support: фактическое использование проверяется capability inventory и
+behavioral evidence владельца платформы.
+
+## `UI-COMPILED-CAPABILITY-REPORT-001` — generated production demand
+
+Repository check читает exact public TSX targets из `package.json`, компилирует
+их одним production browser build через public
+`createTemplateJsxBunPlugin({capabilityManifestPath})` и получает neutral
+Template capability usage manifest. Entry list не дублируется вручную, а
+manifest не восстанавливается scanner'ом или handwritten mapping.
+
+После успешной компиляции build передаёт manifest canonical Renderer
+`consumer-check` вместе с explicit consumer identity `ui` / `@ui/components` /
+production и policy `report`. Generated manifest и validated capability request
+report находятся только под ignored `dist/capabilities`; они не становятся
+вторым platform registry, gap evidence или production package export. UI build
+не редактирует Renderer matrix, owner support, gaps либо capability requests
+вручную. `bun run check` выполняет capability report после typecheck и до
+component tests.
+
 ## Accessibility scope
 
 Accessibility не является самостоятельным product priority или обязательной
