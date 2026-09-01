@@ -34,7 +34,7 @@ export const parameterSocketStoryDefaultProps: ParameterSocketProps = Object.fre
   parameters: Object.freeze([
     Object.freeze({
       id: "text",
-      fieldKind: "text",
+      valueKind: "text",
       variant: "both" as const,
       label: "Текст",
       title: "Текстовый Parameter",

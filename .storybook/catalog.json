@@ -335,8 +335,8 @@
           "tags": [
             "Параметры",
             "Текст",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -347,7 +347,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/text/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -410,8 +410,8 @@
           "tags": [
             "Параметры",
             "Число",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -422,7 +422,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/number/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -486,8 +486,8 @@
             "Параметры",
             "Целое",
             "число",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -498,7 +498,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/integer/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -562,8 +562,8 @@
             "Параметры",
             "Логическое",
             "значение",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -574,7 +574,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/boolean/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -637,8 +637,8 @@
           "tags": [
             "Параметры",
             "Выбор",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -649,7 +649,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/enum/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -712,8 +712,8 @@
           "tags": [
             "Параметры",
             "Цвет",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -724,7 +724,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/color/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -787,8 +787,8 @@
           "tags": [
             "Параметры",
             "Вектор",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -799,7 +799,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/vector/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -862,8 +862,8 @@
           "tags": [
             "Параметры",
             "Вращение",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -874,7 +874,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/rotation/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -937,8 +937,8 @@
           "tags": [
             "Параметры",
             "Матрица",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -949,7 +949,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/matrix/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -1012,8 +1012,8 @@
           "tags": [
             "Параметры",
             "Ссылка",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -1024,7 +1024,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/reference/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -1087,8 +1087,8 @@
           "tags": [
             "Параметры",
             "Коллекция",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -1099,7 +1099,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/collection/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -1162,8 +1162,8 @@
           "tags": [
             "Параметры",
             "Путь",
-            "Только",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -1174,7 +1174,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/path/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",
@@ -1238,7 +1238,8 @@
             "Параметры",
             "Только",
             "чтение",
-            "Field",
+            "Без",
+            "сокетов",
             "Parameter",
             "Вход",
             "Выход",
@@ -1249,7 +1250,7 @@
           "variants": [
             {
               "id": "field",
-              "label": "Только Field",
+              "label": "Без сокетов",
               "route": "ui/parameter/readonly/field",
               "module": {
                 "path": "../storybook/dom/production-node-story.ts",

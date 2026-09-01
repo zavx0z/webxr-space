@@ -5,20 +5,20 @@ import type {
   ParameterSocketProps,
 } from "../../dom/parameter-socket.ts"
 import {
-  NODE_PARAMETER_FIELD_KINDS,
-  NODE_PARAMETER_FIELD_LABELS,
+  NODE_PARAMETER_KINDS,
+  NODE_PARAMETER_LABELS,
   NODE_PARAMETER_VARIANTS,
   NODE_PARAMETER_VARIANT_LABELS,
-  type NodeParameterFieldKind,
+  type NodeParameterKind,
   type NodeParameterStoryRoute,
   type NodeParameterVariant,
 } from "../parameter-catalog.ts"
 
 export type ParameterDomRoute = "ui/parameter" |
-  `ui/parameter/${NodeParameterFieldKind}` |
+  `ui/parameter/${NodeParameterKind}` |
   `ui/${NodeParameterStoryRoute}`
 
-const SOCKET_KIND_BY_FIELD: Readonly<Record<NodeParameterFieldKind, string>> = Object.freeze({
+const SOCKET_KIND_BY_PARAMETER: Readonly<Record<NodeParameterKind, string>> = Object.freeze({
   text: "string",
   number: "float",
   integer: "integer",
@@ -39,35 +39,35 @@ export function createParameterDomProps(route: ParameterDomRoute): ParameterSock
   if (route === "ui/parameter") {
     return props(
       "Параметры · standard DOM projections",
-      NODE_PARAMETER_FIELD_KINDS.map((kind) => parameter(kind, "field")),
+      NODE_PARAMETER_KINDS.map((kind) => parameter(kind, "field")),
     )
   }
   const kind = segments[2]
-  if (!isFieldKind(kind)) throw new Error(`Unknown Parameter DOM field kind: ${String(kind)}`)
+  if (!isParameterKind(kind)) throw new Error(`Unknown Parameter DOM value kind: ${String(kind)}`)
   if (segments.length === 3) {
     return props(
-      `${NODE_PARAMETER_FIELD_LABELS[kind]} · все варианты`,
+      `${NODE_PARAMETER_LABELS[kind]} · все варианты`,
       NODE_PARAMETER_VARIANTS.map((variant) => parameter(kind, variant)),
     )
   }
   const variant = segments[3]
   if (!isVariant(variant) || segments.length !== 4) throw new Error(`Unknown Parameter DOM variant: ${route}`)
   return props(
-    `${NODE_PARAMETER_FIELD_LABELS[kind]} · ${NODE_PARAMETER_VARIANT_LABELS[variant]}`,
+    `${NODE_PARAMETER_LABELS[kind]} · ${NODE_PARAMETER_VARIANT_LABELS[variant]}`,
     [parameter(kind, variant)],
   )
 }
 
-function parameter(kind: NodeParameterFieldKind, variant: NodeParameterVariant): ParameterControl {
+function parameter(kind: NodeParameterKind, variant: NodeParameterVariant): ParameterControl {
   const control = standardControl(kind)
   const connected = variant === "connected"
   return Object.freeze({
     id: `${kind}-${variant}`,
-    fieldKind: kind,
+    valueKind: kind,
     variant,
     label: variant === "field"
-      ? NODE_PARAMETER_FIELD_LABELS[kind]
-      : `${NODE_PARAMETER_FIELD_LABELS[kind]} · ${NODE_PARAMETER_VARIANT_LABELS[variant]}`,
+      ? NODE_PARAMETER_LABELS[kind]
+      : `${NODE_PARAMETER_LABELS[kind]} · ${NODE_PARAMETER_VARIANT_LABELS[variant]}`,
     title: `Parameter ${kind}/${variant}`,
     ...control,
     controlVisible: true,
@@ -78,16 +78,16 @@ function parameter(kind: NodeParameterFieldKind, variant: NodeParameterVariant):
   })
 }
 
-function sockets(kind: NodeParameterFieldKind, variant: NodeParameterVariant): readonly ParameterSocket[] {
+function sockets(kind: NodeParameterKind, variant: NodeParameterVariant): readonly ParameterSocket[] {
   if (variant === "field") return Object.freeze([])
-  const socketKind = SOCKET_KIND_BY_FIELD[kind]
+  const socketKind = SOCKET_KIND_BY_PARAMETER[kind]
   const input: ParameterSocket = Object.freeze({
     id: `${kind}-${variant}-input`,
     side: "left",
     kind: socketKind,
     direction: "input",
-    label: `${NODE_PARAMETER_FIELD_LABELS[kind]} input`,
-    title: `${NODE_PARAMETER_FIELD_LABELS[kind]} input Socket`,
+    label: `${NODE_PARAMETER_LABELS[kind]} input`,
+    title: `${NODE_PARAMETER_LABELS[kind]} input Socket`,
     selected: variant === "connected",
     disabled: false,
   })
@@ -96,8 +96,8 @@ function sockets(kind: NodeParameterFieldKind, variant: NodeParameterVariant): r
     side: "right",
     kind: socketKind,
     direction: "output",
-    label: `${NODE_PARAMETER_FIELD_LABELS[kind]} output`,
-    title: `${NODE_PARAMETER_FIELD_LABELS[kind]} output Socket`,
+    label: `${NODE_PARAMETER_LABELS[kind]} output`,
+    title: `${NODE_PARAMETER_LABELS[kind]} output Socket`,
     selected: false,
     disabled: false,
   })
@@ -106,9 +106,9 @@ function sockets(kind: NodeParameterFieldKind, variant: NodeParameterVariant): r
   return Object.freeze([input, output])
 }
 
-function standardControl(kind: NodeParameterFieldKind): Omit<
+function standardControl(kind: NodeParameterKind): Omit<
   ParameterControl,
-  "id" | "fieldKind" | "variant" | "label" | "title" | "controlVisible" |
+  "id" | "valueKind" | "variant" | "label" | "title" | "controlVisible" |
     "connected" | "disabled" | "sockets"
 > {
   const base = {
@@ -159,8 +159,8 @@ function options(values: readonly (readonly [string, string])[]): readonly Param
 function props(title: string, parameters: readonly ParameterControl[]): ParameterSocketProps {
   return Object.freeze({title, width: 620, parameters: Object.freeze(parameters)})
 }
-function isFieldKind(value: string | undefined): value is NodeParameterFieldKind {
-  return value !== undefined && (NODE_PARAMETER_FIELD_KINDS as readonly string[]).includes(value)
+function isParameterKind(value: string | undefined): value is NodeParameterKind {
+  return value !== undefined && (NODE_PARAMETER_KINDS as readonly string[]).includes(value)
 }
 function isVariant(value: string | undefined): value is NodeParameterVariant {
   return value !== undefined && (NODE_PARAMETER_VARIANTS as readonly string[]).includes(value)

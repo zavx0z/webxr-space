@@ -21,20 +21,23 @@ function noiseNode(actions: string[]): NodeDefinition {
       image: {src: "data:image/png;base64,AA==", width: 320, height: 180, alt: "Noise"},
       onToggle: (enabled) => actions.push(`preview:${enabled}`),
     },
-    properties: [{
+    parameters: [{
       id: "operation",
       kind: "enum",
       label: "Dimensions",
       value: "3d",
       options: [{value: "2d", label: "2D"}, {value: "3d", label: "3D"}],
-    }],
-    parameters: [{
+    }, {
       id: "vector",
-      field: {id: "vector", kind: "vector", label: "Vector", value: [0, 0, 0]},
+      kind: "vector",
+      label: "Vector",
+      value: [0, 0, 0],
       sockets: [{id: "vector-in", kind: "vector", direction: "input", side: "left", label: "Vector"}],
     }, {
       id: "scale",
-      field: {id: "scale", kind: "number", label: "Scale", value: 5},
+      kind: "number",
+      label: "Scale",
+      value: 5,
       sockets: [{id: "scale-in", kind: "float", direction: "input", side: "left", label: "Scale"}],
     }],
     sockets: [{id: "color-out", kind: "color", direction: "output", side: "right", label: "Color"}],
@@ -42,7 +45,7 @@ function noiseNode(actions: string[]): NodeDefinition {
 }
 
 describe("Blender-like standard-DOM Node", () => {
-  test("restores compact header, preview, shared Fields and typed endpoints", () => {
+  test("restores compact header, preview, concrete Fields and typed endpoints", () => {
     const actions: string[] = []
     const controller = createNode(createDocument(), noiseNode(actions))
     expect(controller.element.localName).toBe("article")
@@ -50,7 +53,7 @@ describe("Blender-like standard-DOM Node", () => {
     expect(controller.refs.header.getAttribute("style")).toBe("background: #5b466b")
     expect(controller.refs.collapseText.data).toBe("▾")
     expect(controller.refs.preview.hasAttribute("hidden")).toBeFalse()
-    expect(controller.refs.property("operation")?.getAttribute("data-field-kind")).toBe("enum")
+    expect(controller.refs.parameter("operation")?.refs.field.getAttribute("data-field-kind")).toBe("enum")
     expect(controller.refs.parameter("vector")?.refs.field.getAttribute("data-field-kind")).toBe("vector")
     expect([...controller.refs.parameter("vector")!.refs.field.querySelectorAll("[data-control-key]")]
       .map((element) => element.getAttribute("data-control-key")))
@@ -67,7 +70,7 @@ describe("Blender-like standard-DOM Node", () => {
   test("keeps keyed child identities through collapse, selection and value updates", () => {
     const controller = createNode(createDocument(), noiseNode([]))
     const root = controller.element
-    const property = controller.refs.property("operation")!
+    const operation = controller.refs.parameter("operation")!
     const vector = controller.refs.parameter("vector")!
     const vectorInput = vector.refs.field.querySelector('[data-control-key="X"] input') as HTMLInputElement
     const socket = controller.refs.socket("vector-in")!
@@ -77,12 +80,12 @@ describe("Blender-like standard-DOM Node", () => {
       selected: false,
       collapsed: true,
       parameters: next.parameters!.map((parameter) => {
-        if (parameter.id !== "vector" || parameter.field.kind !== "vector") return parameter
-        return {...parameter, field: {...parameter.field, value: [2, 3, 4]}}
+        if (parameter.id !== "vector" || parameter.kind !== "vector") return parameter
+        return {...parameter, value: [2, 3, 4]}
       }),
     })
     expect(controller.element).toBe(root)
-    expect(controller.refs.property("operation")).toBe(property)
+    expect(controller.refs.parameter("operation")).toBe(operation)
     expect(controller.refs.parameter("vector")).toBe(vector)
     expect(vector.refs.field.querySelector('[data-control-key="X"] input')).toBe(vectorInput)
     expect(controller.refs.socket("vector-in")).toBe(socket)
@@ -107,7 +110,6 @@ describe("Blender-like standard-DOM Node", () => {
     expect(controller.refs.sockets).toBe(right)
     expect(controller.refs.body.childNodes).toEqual([
       right,
-      controller.refs.properties,
       controller.refs.parameters,
       left,
     ])

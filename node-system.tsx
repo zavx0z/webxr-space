@@ -1,7 +1,18 @@
-import type {Event, HTMLInputElement} from "@zavx0z/dom"
+import {BooleanField} from "@ui/components/fields/boolean-field"
+import {
+  ColorField,
+  type ColorFieldValue,
+} from "@ui/components/fields/color-field"
+import {IntegerField} from "@ui/components/fields/integer-field"
+import {MatrixField} from "@ui/components/fields/matrix-field"
+import {NumberField} from "@ui/components/fields/number-field"
+import {PathField} from "@ui/components/fields/path-field"
+import {ReadonlyField} from "@ui/components/fields/readonly-field"
+import {RotationField} from "@ui/components/fields/rotation-field"
+import {TextField} from "@ui/components/fields/text-field"
+import {VectorField} from "@ui/components/fields/vector-field"
 import {
   memo,
-  useId,
   useMemo,
   useSyncExternalStore,
   type FunctionComponent,
@@ -381,8 +392,6 @@ export function ParameterRow(props: ParameterRowProps) {
   }), [props.parameter])
   const store = props.store ?? fallbackStore
   const parameter = useSyncExternalStore(store.subscribe, store.getSnapshot)
-  const controlId = useId()
-  const labelId = `${controlId}-label`
   const left = props.sockets.filter(socket => socketSide(socket) === "left")
   const right = props.sockets.filter(socket => socketSide(socket) === "right")
   const label = metadataString(parameter.presentation, "label", parameter.id)
@@ -393,9 +402,19 @@ export function ParameterRow(props: ParameterRowProps) {
     parameterId: parameter.id,
     value,
   }))
+  const description = metadataString(parameter.presentation, "description", "") || undefined
+  const valueType = parameter.valueType?.id
+  const vectorValue = numericVectorValue(parameter.value)
+  const matrixValue = numericMatrixValue(parameter.value)
+  const colorValue = colorFieldValue(parameter.value)
+  const concreteComposite =
+    valueType === "vector" && vectorValue !== null ||
+    valueType === "rotation" && vectorValue !== null ||
+    valueType === "matrix" && matrixValue !== null ||
+    valueType === "color" && colorValue !== null
   return <div
     role="group"
-    aria-labelledby={labelId}
+    aria-label={label}
     data-parameter-id={parameter.id}
     style={css`
       & {
@@ -427,27 +446,109 @@ export function ParameterRow(props: ParameterRowProps) {
         connected={isSocketConnected(props.links, props.nodeId, socket.id, props.connectedSocketKeys)}
       />)}
     </span>
-    <label id={labelId} htmlFor={activeControlId(controlId, parameter.value)} style={css`
-      & {
-        display: block;
-        width: 82px;
-        min-width: 64px;
-        overflow: hidden;
-        color: rgb(211 211 211);
-        font-size: 10px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-    `}>
-      {label}
-    </label>
-    <ParameterControl
-      id={controlId}
-      parameter={parameter}
+    {typeof parameter.value === "boolean" ? <BooleanField
+      id={parameter.id}
+      label={label}
+      value={parameter.value}
       disabled={disabled}
       readOnly={readOnly}
-      onInput={onInput}
-    />
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {typeof parameter.value === "number" && valueType === "integer" ? <IntegerField
+      id={parameter.id}
+      label={label}
+      value={parameter.value}
+      min={metadataNumber(parameter.presentation, "min")}
+      max={metadataNumber(parameter.presentation, "max")}
+      step={metadataNumber(parameter.presentation, "step") ?? 1}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {typeof parameter.value === "number" && valueType !== "integer" ? <NumberField
+      id={parameter.id}
+      label={label}
+      value={parameter.value}
+      min={metadataNumber(parameter.presentation, "min")}
+      max={metadataNumber(parameter.presentation, "max")}
+      step={metadataNumber(parameter.presentation, "step") ?? .1}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {typeof parameter.value === "string" && valueType === "path" ? <PathField
+      id={parameter.id}
+      label={label}
+      value={parameter.value}
+      placeholder={metadataString(parameter.presentation, "placeholder", "") || undefined}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {typeof parameter.value === "string" && valueType !== "path" ? <TextField
+      id={parameter.id}
+      label={label}
+      value={parameter.value}
+      placeholder={metadataString(parameter.presentation, "placeholder", "") || undefined}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {valueType === "vector" && vectorValue !== null ? <VectorField
+      id={parameter.id}
+      label={label}
+      value={vectorValue}
+      min={metadataNumber(parameter.presentation, "min")}
+      max={metadataNumber(parameter.presentation, "max")}
+      step={metadataNumber(parameter.presentation, "step")}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {valueType === "rotation" && vectorValue !== null ? <RotationField
+      id={parameter.id}
+      label={label}
+      value={vectorValue}
+      min={metadataNumber(parameter.presentation, "min")}
+      max={metadataNumber(parameter.presentation, "max")}
+      step={metadataNumber(parameter.presentation, "step")}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {valueType === "matrix" && matrixValue !== null ? <MatrixField
+      id={parameter.id}
+      label={label}
+      value={matrixValue}
+      step={metadataNumber(parameter.presentation, "step")}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {valueType === "color" && colorValue !== null ? <ColorField
+      id={parameter.id}
+      label={label}
+      value={colorValue}
+      disabled={disabled}
+      readOnly={readOnly}
+      description={description}
+      onChange={onInput}
+    /> : null}
+    {typeof parameter.value !== "boolean" && typeof parameter.value !== "number" && typeof parameter.value !== "string" && !concreteComposite ? <ReadonlyField
+      id={parameter.id}
+      label={label}
+      value={JSON.stringify(parameter.value) ?? "null"}
+      disabled={disabled}
+      description={description}
+    /> : null}
     <span style={css`
       & {
         display: flex;
@@ -465,175 +566,6 @@ export function ParameterRow(props: ParameterRowProps) {
       />)}
     </span>
   </div>
-}
-
-type ParameterControlProps = Readonly<{
-  id: string
-  parameter: NodeSystemParameterSnapshot
-  disabled: boolean
-  readOnly: boolean
-  onInput(value: NodeSystemJsonValue): void
-}>
-
-function ParameterControl(props: ParameterControlProps) {
-  const booleanValue = typeof props.parameter.value === "boolean"
-  const numberValue = typeof props.parameter.value === "number"
-  const stringValue = typeof props.parameter.value === "string"
-  const complexValue = !booleanValue && !numberValue && !stringValue
-  return <span style={css`
-    & {
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      min-width: 0;
-      flex-grow: 1;
-      height: 22px;
-      overflow: hidden;
-      border: 1px solid rgb(80 80 80);
-      border-radius: 3px;
-      background: rgb(68 68 68);
-      color: rgb(238 238 238);
-    }
-  `}>
-    {booleanValue ? <BooleanParameterControl
-      id={props.id}
-      parameter={props.parameter}
-      disabled={props.disabled}
-      readOnly={props.readOnly}
-      onInput={props.onInput}
-    /> : null}
-    {numberValue ? <NumberParameterControl
-      id={props.id}
-      parameter={props.parameter}
-      disabled={props.disabled}
-      readOnly={props.readOnly}
-      onInput={props.onInput}
-    /> : null}
-    {stringValue ? <StringParameterControl
-      id={props.id}
-      parameter={props.parameter}
-      disabled={props.disabled}
-      readOnly={props.readOnly}
-      onInput={props.onInput}
-    /> : null}
-    {complexValue ? <ComplexParameterControl
-      id={props.id}
-      parameter={props.parameter}
-      disabled={props.disabled}
-      readOnly={props.readOnly}
-      onInput={props.onInput}
-    /> : null}
-  </span>
-}
-
-function BooleanParameterControl(props: ParameterControlProps) {
-  const onChange = (event: Event) => props.onInput((event.target as HTMLInputElement).checked)
-  return <input
-    id={`${props.id}-boolean`}
-    aria-label={metadataString(props.parameter.presentation, "label", props.parameter.id)}
-    type="checkbox"
-    checked={props.parameter.value === true}
-    disabled={props.disabled}
-    onChange={onChange}
-    style={css`
-      & {
-        box-sizing: border-box;
-        display: block;
-        width: 14px;
-        min-width: 14px;
-        height: 14px;
-        margin: 3px 5px;
-      }
-    `}
-  />
-}
-
-function NumberParameterControl(props: ParameterControlProps) {
-  const onInput = (event: Event) => {
-    const value = (event.target as HTMLInputElement).valueAsNumber
-    if (Number.isFinite(value)) props.onInput(value)
-  }
-  return <input
-    id={`${props.id}-number`}
-    aria-label={metadataString(props.parameter.presentation, "label", props.parameter.id)}
-    type="number"
-    value={props.parameter.value as number}
-    min={metadataNumber(props.parameter.presentation, "min")}
-    max={metadataNumber(props.parameter.presentation, "max")}
-    step={metadataNumber(props.parameter.presentation, "step") ?? 0.1}
-    disabled={props.disabled}
-    readOnly={props.readOnly}
-    onInput={onInput}
-    style={css`
-      & {
-        box-sizing: border-box;
-        display: block;
-        width: 100%;
-        min-width: 0;
-        height: 20px;
-        padding: 2px 5px;
-        border: none;
-        border-radius: 2px;
-        background: transparent;
-        color: rgb(238 238 238);
-        font-size: 10px;
-      }
-      &:focus { background: rgb(38 38 38); }
-    `}
-  />
-}
-
-function StringParameterControl(props: ParameterControlProps) {
-  const onInput = (event: Event) => props.onInput((event.target as HTMLInputElement).value)
-  return <input
-    id={`${props.id}-string`}
-    aria-label={metadataString(props.parameter.presentation, "label", props.parameter.id)}
-    type="text"
-    value={props.parameter.value as string}
-    disabled={props.disabled}
-    readOnly={props.readOnly}
-    onInput={onInput}
-    style={css`
-      & {
-        box-sizing: border-box;
-        display: block;
-        width: 100%;
-        min-width: 0;
-        height: 20px;
-        padding: 2px 5px;
-        border: none;
-        border-radius: 2px;
-        background: transparent;
-        color: rgb(238 238 238);
-        font-size: 10px;
-      }
-      &:focus { background: rgb(38 38 38); }
-    `}
-  />
-}
-
-function ComplexParameterControl(props: ParameterControlProps) {
-  const text = JSON.stringify(props.parameter.value)
-  return <output
-    id={`${props.id}-complex`}
-    aria-label={metadataString(props.parameter.presentation, "label", props.parameter.id)}
-    style={css`
-      & {
-        display: block;
-        width: 100%;
-        min-width: 0;
-        padding: 2px 5px;
-        overflow: hidden;
-        color: rgb(183 204 226);
-        font-size: 9px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-    `}
-  >
-    {text}
-  </output>
 }
 
 export function SocketPort(props: SocketPortProps) {
@@ -982,12 +914,14 @@ function createNodeGeometryIndex(nodes: readonly NodeSystemNodeSnapshot[]): Read
     for (let socketIndex = 0; socketIndex < node.sockets.length; socketIndex += 1) {
       const socket = node.sockets[socketIndex]!
       const side = socketSide(socket)
-      const parameterIndex = socket.parameterId === undefined
-        ? socketIndex
-        : parameterIndexById.get(socket.parameterId) ?? 0
+      const parameterIndex = parameterIndexById.get(socket.parameterId ?? "") ?? 0
+      const y = socket.parameterId === undefined
+        ? placement.y + 46.5 + socketIndex * 30
+        // Concrete Fields own a 28px row; NodeCard adds a 3px row gap.
+        : placement.y + 47 + parameterIndex * 31
       endpointBySocketId.set(socket.id, Object.freeze({
         x: side === "right" ? placement.x + placement.width : placement.x,
-        y: placement.y + 46.5 + parameterIndex * 30,
+        y,
         kind: socket.valueType?.id ?? "custom",
         side,
       }))
@@ -1088,16 +1022,38 @@ function socketSide(socket: NodeSystemSocketSnapshot): "left" | "right" {
   return socket.side ?? (socket.direction === "output" ? "right" : "left")
 }
 
-function activeControlId(id: string, value: NodeSystemJsonValue): string {
-  if (typeof value === "boolean") return `${id}-boolean`
-  if (typeof value === "number") return `${id}-number`
-  if (typeof value === "string") return `${id}-string`
-  return `${id}-complex`
-}
-
 function metadataString(value: NodeSystemJsonValue | undefined, key: string, fallback: string): string {
   const candidate = metadata(value, key)
   return typeof candidate === "string" && candidate.length > 0 ? candidate : fallback
+}
+
+function numericVectorValue(value: NodeSystemJsonValue): readonly number[] | null {
+  if (
+    !Array.isArray(value) || value.length < 2 || value.length > 4 ||
+    !value.every((entry) => typeof entry === "number" && Number.isFinite(entry))
+  ) return null
+  return value as readonly number[]
+}
+
+function numericMatrixValue(value: NodeSystemJsonValue): readonly (readonly number[])[] | null {
+  if (
+    !Array.isArray(value) || value.length < 2 || value.length > 4 ||
+    !value.every((row) => Array.isArray(row) && row.length === value.length &&
+      row.every((entry) => typeof entry === "number" && Number.isFinite(entry)))
+  ) return null
+  return value as readonly (readonly number[])[]
+}
+
+function colorFieldValue(value: NodeSystemJsonValue): ColorFieldValue | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null
+  const object = value as NodeSystemJsonObject
+  if (
+    typeof object.r !== "number" || !Number.isFinite(object.r) ||
+    typeof object.g !== "number" || !Number.isFinite(object.g) ||
+    typeof object.b !== "number" || !Number.isFinite(object.b) ||
+    typeof object.a !== "number" || !Number.isFinite(object.a)
+  ) return null
+  return Object.freeze({r: object.r, g: object.g, b: object.b, a: object.a})
 }
 
 function metadataNumber(value: NodeSystemJsonValue | undefined, key: string): number | undefined {

@@ -20,6 +20,10 @@ describe("compiled general Node system Storybook route", () => {
     expect(root.getAttribute("aria-label")).toBe("General compiled node system")
     expect(story.element.querySelectorAll("article")).toHaveLength(3)
     expect(story.element.querySelectorAll('[data-link-id]')).toHaveLength(2)
+    expect(firstNode.querySelector('[data-parameter-id="seed"] [data-field-kind="integer"]')).not.toBeNull()
+    expect(firstNode.querySelector('[data-parameter-id="scale"] [data-field-kind="number"]')).not.toBeNull()
+    expect(firstNode.querySelector('[data-parameter-id="profile"] [data-field-kind="vector"]')).not.toBeNull()
+    expect(firstNode.querySelector('[data-parameter-id="geometry"] [data-field-kind="readonly"]')).not.toBeNull()
     expect(input.checked).toBeTrue()
     expect(before).toMatchObject({revision: 0, topologyRevision: 0})
 
@@ -41,8 +45,8 @@ describe("compiled general Node system Storybook route", () => {
     const styleSheets = (story.componentRoot.readStyleSheets() as {styleSheets: readonly unknown[]}).styleSheets
     expect(styleSheets.length).toBeGreaterThan(0)
     expect(source.html).toContain("data-node-system")
-    expect(source.html).toContain('d="M 618 244.5')
-    expect(source.html).toContain("674 208.5")
+    expect(source.html).toContain('d="M 618 250')
+    expect(source.html).toContain("674 210")
 
     const renderer = createDocumentRenderer({
       document,

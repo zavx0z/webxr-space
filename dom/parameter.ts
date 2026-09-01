@@ -1,4 +1,16 @@
-import type {FieldDefinition} from "@ui/components/field"
+import type {BooleanFieldProps} from "@ui/components/fields/boolean-field"
+import type {CollectionFieldProps} from "@ui/components/fields/collection-field"
+import type {ColorFieldProps} from "@ui/components/fields/color-field"
+import type {EnumFieldProps} from "@ui/components/fields/enum-field"
+import type {IntegerFieldProps} from "@ui/components/fields/integer-field"
+import type {MatrixFieldProps} from "@ui/components/fields/matrix-field"
+import type {NumberFieldProps} from "@ui/components/fields/number-field"
+import type {PathFieldProps} from "@ui/components/fields/path-field"
+import type {ReadonlyFieldProps} from "@ui/components/fields/readonly-field"
+import type {ReferenceFieldProps} from "@ui/components/fields/reference-field"
+import type {RotationFieldProps} from "@ui/components/fields/rotation-field"
+import type {TextFieldProps} from "@ui/components/fields/text-field"
+import type {VectorFieldProps} from "@ui/components/fields/vector-field"
 import {
   HTMLDivElement,
   type Document,
@@ -10,15 +22,45 @@ import {
   type SocketController,
   type SocketDefinition,
 } from "./socket.ts"
-import {mountField} from "./field-mount.ts"
+import {mountParameterField} from "./parameter-field-mount.ts"
 
-export type ParameterDefinition = Readonly<{
-  id: string
-  field: FieldDefinition
+type ParameterTopology = Readonly<{
   sockets?: readonly SocketDefinition[]
   connected?: boolean
   hidden?: boolean
 }>
+
+type ParameterDefinitionFor<Kind extends string, Props> =
+  ParameterTopology & Omit<Props, "style"> & Readonly<{kind: Kind; style?: never}>
+
+export type TextParameterDefinition = ParameterDefinitionFor<"text", TextFieldProps>
+export type NumberParameterDefinition = ParameterDefinitionFor<"number", NumberFieldProps>
+export type IntegerParameterDefinition = ParameterDefinitionFor<"integer", IntegerFieldProps>
+export type BooleanParameterDefinition = ParameterDefinitionFor<"boolean", BooleanFieldProps>
+export type EnumParameterDefinition = ParameterDefinitionFor<"enum", EnumFieldProps>
+export type ColorParameterDefinition = ParameterDefinitionFor<"color", ColorFieldProps>
+export type VectorParameterDefinition = ParameterDefinitionFor<"vector", VectorFieldProps>
+export type RotationParameterDefinition = ParameterDefinitionFor<"rotation", RotationFieldProps>
+export type MatrixParameterDefinition = ParameterDefinitionFor<"matrix", MatrixFieldProps>
+export type ReferenceParameterDefinition = ParameterDefinitionFor<"reference", ReferenceFieldProps>
+export type CollectionParameterDefinition = ParameterDefinitionFor<"collection", CollectionFieldProps>
+export type PathParameterDefinition = ParameterDefinitionFor<"path", PathFieldProps>
+export type ReadonlyParameterDefinition = ParameterDefinitionFor<"readonly", ReadonlyFieldProps>
+
+export type ParameterDefinition =
+  | TextParameterDefinition
+  | NumberParameterDefinition
+  | IntegerParameterDefinition
+  | BooleanParameterDefinition
+  | EnumParameterDefinition
+  | ColorParameterDefinition
+  | VectorParameterDefinition
+  | RotationParameterDefinition
+  | MatrixParameterDefinition
+  | ReferenceParameterDefinition
+  | CollectionParameterDefinition
+  | PathParameterDefinition
+  | ReadonlyParameterDefinition
 
 export type ParameterController = Readonly<{
   element: HTMLDivElement
@@ -75,7 +117,7 @@ export function createParameter(document: Document, initial: ParameterDefinition
   const root = document.createElement("div")
   const sockets = new Map<string, SocketController>()
   const id = definition.id
-  const field = mountField(document, definition.field)
+  const field = mountParameterField(document, definition)
   let current = definition
   let disposed = false
 
@@ -86,7 +128,7 @@ export function createParameter(document: Document, initial: ParameterDefinition
     if (disposed) throw new Error("Parameter controller is disposed")
     const next = normalizeParameter(nextDefinition)
     if (next.id !== id) throw new Error(`Parameter id cannot change: ${id} -> ${next.id}`)
-    field.update(next.field)
+    field.update(next)
 
     const socketDefinitions = next.sockets ?? []
     const retained = new Set(socketDefinitions.map(({id: socketId}) => socketId))
@@ -103,7 +145,8 @@ export function createParameter(document: Document, initial: ParameterDefinition
     }
 
     root.setAttribute("data-parameter-id", next.id)
-    root.setAttribute("data-field-kind", next.field.kind)
+    root.setAttribute("data-field-kind", next.kind)
+    root.setAttribute("data-socket-count", String(socketDefinitions.length))
     root.setAttribute("data-connected", String(next.connected === true))
     syncBooleanAttribute(root, "hidden", next.hidden === true)
     const fieldControl = field.element.querySelector('[role="group"]')
@@ -142,8 +185,14 @@ export function createParameter(document: Document, initial: ParameterDefinition
 function normalizeParameter(definition: ParameterDefinition): ParameterDefinition {
   if (!definition || typeof definition !== "object") throw new TypeError("Parameter definition must be an object")
   if (typeof definition.id !== "string" || definition.id.trim() === "") throw new TypeError("Parameter id must be non-empty")
-  if (!definition.field || typeof definition.field !== "object") throw new TypeError(`Parameter ${definition.id} Field must be an object`)
-  if (definition.field.id !== definition.id) throw new Error(`Parameter ${definition.id} must own Field with the same id`)
+  if (Object.prototype.hasOwnProperty.call(definition, "style")) {
+    throw new TypeError(`Parameter ${definition.id} style is not allowed`)
+  }
+  const kind = (definition as Readonly<{kind?: unknown}>).kind
+  if (typeof kind !== "string" || ![
+    "text", "number", "integer", "boolean", "enum", "color", "vector",
+    "rotation", "matrix", "reference", "collection", "path", "readonly",
+  ].includes(kind)) throw new TypeError(`Parameter ${definition.id} kind is invalid`)
   const sockets = definition.sockets ?? []
   if (!Array.isArray(sockets)) throw new TypeError(`Parameter ${definition.id} Sockets must be an array`)
   const ids = new Set<string>()

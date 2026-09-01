@@ -33,7 +33,7 @@ export type ParameterSocket = Readonly<{
 
 export type ParameterControl = Readonly<{
   id: string
-  fieldKind: string
+  valueKind: string
   variant: ParameterVariant
   label: string
   title: string
@@ -105,7 +105,7 @@ export const parameterSocketDefaultProps: ParameterSocketProps = Object.freeze({
   parameters: Object.freeze([
     Object.freeze({
       id: "name",
-      fieldKind: "text",
+      valueKind: "text",
       variant: "input" as const,
       label: "Name",
       title: "Node name",
@@ -136,7 +136,7 @@ export const parameterSocketDefaultProps: ParameterSocketProps = Object.freeze({
     }),
     Object.freeze({
       id: "strength",
-      fieldKind: "number",
+      valueKind: "number",
       variant: "both" as const,
       label: "Strength",
       title: "Output strength",
@@ -411,7 +411,7 @@ function syncParameter(record: ParameterRecord, parameter: ParameterControl): vo
   const {refs} = record
   syncText(refs.labelText, parameter.label)
   syncAttribute(refs.row, "data-parameter-id", parameter.id)
-  syncAttribute(refs.row, "data-field-kind", parameter.fieldKind)
+  syncAttribute(refs.row, "data-value-kind", parameter.valueKind)
   syncAttribute(refs.row, "data-variant", parameter.variant)
   syncAttribute(refs.row, "data-control-visible", String(parameter.controlVisible))
   syncAttribute(refs.row, "data-connected", String(parameter.connected))
@@ -504,7 +504,7 @@ function normalizeProps(props: ParameterSocketProps): ParameterSocketProps {
     assertNonEmpty(parameter.id, `ParameterSocket Parameter ${index} id`)
     if (parameterIds.has(parameter.id)) throw new Error(`ParameterSocket Parameter id must be unique: ${parameter.id}`)
     parameterIds.add(parameter.id)
-    assertNonEmpty(parameter.fieldKind, `ParameterSocket Parameter ${parameter.id} fieldKind`)
+    assertNonEmpty(parameter.valueKind, `ParameterSocket Parameter ${parameter.id} valueKind`)
     if (!["field", "input", "output", "both", "connected"].includes(parameter.variant)) {
       throw new TypeError(`ParameterSocket Parameter ${parameter.id} variant is invalid`)
     }

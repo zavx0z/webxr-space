@@ -40,7 +40,7 @@ import {
   type SocketKind,
 } from "@nodes/ui/socket"
 import {createRoot} from "@zavx0z/react"
-import {mountedFieldStyleSheetRoot} from "../../dom/field-mount.ts"
+import {mountedParameterFieldStyleSheetRoot} from "../../dom/parameter-field-mount.ts"
 
 export type ProductionNodeStory = Readonly<{
   element: HTMLElement
@@ -308,7 +308,13 @@ function createComparisonStory(document: Document, route: string): ProductionNod
 function comparisonNoiseNode(): NodeDefinition {
   const number = (id: string, label: string, value: number, min: number, max: number, step: number): ParameterDefinition => Object.freeze({
     id,
-    field: Object.freeze({id, label, description: `${label} · accepted comparison`, kind: "number", value, min, max, step}),
+    label,
+    description: `${label} · accepted comparison`,
+    kind: "number",
+    value,
+    min,
+    max,
+    step,
     sockets: Object.freeze([socket(`${id}-input`, "float", "input", "left", label)]),
   })
   return Object.freeze({
@@ -322,7 +328,7 @@ function comparisonNoiseNode(): NodeDefinition {
     width: 216,
     selected: false,
     collapsed: false,
-    properties: Object.freeze([
+    parameters: Object.freeze([
       Object.freeze({
         id: "noise-dimensions",
         label: "Dimensions",
@@ -355,18 +361,14 @@ function comparisonNoiseNode(): NodeDefinition {
         kind: "boolean",
         value: true,
       }),
-    ]),
-    parameters: Object.freeze([
+
       Object.freeze({
         id: "noise-vector",
-        field: Object.freeze({
-          id: "noise-vector",
-          label: "Vector",
-          description: "Connected vector input",
-          kind: "vector",
-          value: Object.freeze([0, 0, 0]),
-          axes: Object.freeze(["X", "Y", "Z"]),
-        }),
+        label: "Vector",
+        description: "Connected vector input",
+        kind: "vector",
+        value: Object.freeze([0, 0, 0]),
+        axes: Object.freeze(["X", "Y", "Z"]),
         sockets: Object.freeze([socket("noise-vector-input", "vector", "input", "left", "Vector")]),
         connected: true,
       }),
@@ -467,10 +469,8 @@ function richNoiseNode(
     height: 314,
     selected,
     collapsed,
-    properties: Object.freeze([
-      field("noise-color", "color", "Цвет"),
-    ]),
     parameters: Object.freeze([
+      plainParameter("noise-color", "color", "Цвет"),
       parameter("noise-scale", "number", "Масштаб", "both"),
       parameter("noise-detail", "integer", "Детализация", "input"),
       parameter("noise-vector", "vector", "Вектор", "input"),
@@ -547,7 +547,7 @@ function parameterDefinitionFromRoute(route: string): ParameterDefinition {
   const variantCandidate = segments[3]
   const kind = parameterKinds.includes(kindCandidate as ParameterKind) ? kindCandidate as ParameterKind : "number"
   const variant = isParameterVariant(variantCandidate) ? variantCandidate : "both"
-  return parameter(`parameter-${kind}`, kind, fieldLabel(kind), variant)
+  return parameter(`parameter-${kind}`, kind, parameterLabel(kind), variant)
 }
 
 function parameter(id: string, kind: ParameterKind, label: string, variant: ParameterVariant): ParameterDefinition {
@@ -561,15 +561,14 @@ function parameter(id: string, kind: ParameterKind, label: string, variant: Para
             socket(`${id}-output`, socketKind(kind), "output", "right", label),
           ]
   return Object.freeze({
-    id,
-    field: field(id, kind, label),
+    ...plainParameter(id, kind, label),
     sockets: Object.freeze(sockets),
     connected: variant === "connected",
   })
 }
 
-function field(id: string, kind: ParameterKind, label: string): ParameterDefinition["field"] {
-  const base = {id, label, description: `${label} · production Field`}
+function plainParameter(id: string, kind: ParameterKind, label: string): ParameterDefinition {
+  const base = {id, label, description: `${label} · production concrete Field`}
   switch (kind) {
     case "text": return Object.freeze({...base, kind, value: "Output"})
     case "number": return Object.freeze({...base, kind, value: 5, min: 0, max: 10, step: .1})
@@ -624,7 +623,7 @@ function socketKind(kind: ParameterKind): SocketKind {
   return SOCKET_KINDS.includes(kind as SocketKind) ? kind as SocketKind : "custom"
 }
 
-function fieldLabel(kind: ParameterKind): string {
+function parameterLabel(kind: ParameterKind): string {
   return ({
     text: "Текст",
     number: "Число",
@@ -667,7 +666,7 @@ function result(options: Readonly<{
   const ownerDocument = options.element.ownerDocument
   if (ownerDocument === null) throw new Error("Production Node story element has no owner Document")
   const lifecycleRoot = createRoot(ownerDocument.createDocumentFragment())
-  const fieldRoot = mountedFieldStyleSheetRoot(options.element)
+  const fieldRoot = mountedParameterFieldStyleSheetRoot(options.element)
   const componentRoot = Object.freeze({
     readStyleSheets() {
       const lifecycle = lifecycleRoot.readStyleSheets()

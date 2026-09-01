@@ -166,7 +166,6 @@
   padding: 0 8px 1px;
 }
 .node-article__body[hidden] { display: none; }
-.node-article__properties,
 .node-article__parameters,
 .node-article__sockets {
   box-sizing: border-box;
@@ -177,14 +176,7 @@
   gap: 3px;
 }
 .node-article__sockets[hidden] { display: none; }
-.node-article__properties > [data-field-id] { min-height: 20px; padding: 0; }
-.node-article__properties > [data-field-id] > span { height: 20px; min-height: 20px; font-size: 10px; }
-.node-article__properties > [data-field-id] > [role="group"] { min-height: 20px; }
-.node-article__properties > [data-field-kind="enum"] > span { display: none; }
-.node-article__properties [data-field-id] input,
-.node-article__properties [data-field-id] select,
-.node-article__properties [data-field-id] button { min-height: 20px; height: 20px; padding: 2px 5px; border-radius: 3px; font-size: 10px; }
-.node-article__properties [data-field-kind="boolean"] input[type="checkbox"] { margin-top: 0; }
+.node-article .node-parameter[data-socket-count="0"][data-field-kind="enum"] > [data-field-id] > span { display: none; }
 .node-article .node-socket[data-side="left"] { margin-left: -13px; }
 .node-article .node-socket[data-side="right"] { margin-right: -13px; }
 .node-article__socket-row {

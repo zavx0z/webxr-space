@@ -1,4 +1,3 @@
-import type {FieldDefinition} from "@ui/components/field"
 import type {
   Document,
   Event,
@@ -19,11 +18,6 @@ import {
   type SocketController,
   type SocketDefinition,
 } from "./socket.ts"
-import {
-  mountField,
-  type FieldMount,
-} from "./field-mount.ts"
-
 export type NodePreviewImage = Readonly<{
   src: string
   width: number
@@ -50,7 +44,6 @@ export type NodeDefinition = Readonly<{
   selected?: boolean
   collapsed?: boolean
   preview?: NodePreview
-  properties?: readonly FieldDefinition[]
   parameters?: readonly ParameterDefinition[]
   sockets?: readonly SocketDefinition[]
   onCollapseChange?(collapsed: boolean): void
@@ -72,12 +65,10 @@ export type NodeController = Readonly<{
     previewToggle: HTMLButtonElement
     previewToggleText: Text
     body: HTMLDivElement
-    properties: HTMLDivElement
     parameters: HTMLDivElement
     sockets: HTMLDivElement
     rightSockets: HTMLDivElement
     leftSockets: HTMLDivElement
-    property(id: string): HTMLDivElement | null
     parameter(id: string): ParameterController | null
     socket(id: string): SocketController | null
   }>
@@ -179,7 +170,6 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   padding: 0 8px 1px;
 }
 .node-article__body[hidden] { display: none; }
-.node-article__properties,
 .node-article__parameters,
 .node-article__sockets {
   box-sizing: border-box;
@@ -190,14 +180,7 @@ export const nodeCss = /* @__PURE__ */ [parameterCss, /* @__PURE__ */ String.raw
   gap: 3px;
 }
 .node-article__sockets[hidden] { display: none; }
-.node-article__properties > [data-field-id] { min-height: 20px; padding: 0; }
-.node-article__properties > [data-field-id] > span { height: 20px; min-height: 20px; font-size: 10px; }
-.node-article__properties > [data-field-id] > [role="group"] { min-height: 20px; }
-.node-article__properties > [data-field-kind="enum"] > span { display: none; }
-.node-article__properties [data-field-id] input,
-.node-article__properties [data-field-id] select,
-.node-article__properties [data-field-id] button { min-height: 20px; height: 20px; padding: 2px 5px; border-radius: 3px; font-size: 10px; }
-.node-article__properties [data-field-kind="boolean"] input[type="checkbox"] { margin-top: 0; }
+.node-article .node-parameter[data-socket-count="0"][data-field-kind="enum"] > [data-field-id] > span { display: none; }
 .node-article .node-socket[data-side="left"] { margin-left: -13px; }
 .node-article .node-socket[data-side="right"] { margin-right: -13px; }
 .node-article__socket-row {
@@ -226,11 +209,9 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
   const previewToggle = document.createElement("button")
   const previewToggleText = document.createTextNode("")
   const body = document.createElement("div")
-  const propertiesElement = document.createElement("div")
   const parametersElement = document.createElement("div")
   const rightSocketsElement = document.createElement("div")
   const leftSocketsElement = document.createElement("div")
-  const properties = new Map<string, FieldMount>()
   const parameters = new Map<string, ParameterController>()
   const looseSockets = new Map<string, LooseSocketRecord>()
   const id = definition.id
@@ -256,11 +237,10 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
   previewToggle.appendChild(previewToggleText)
   header.append(collapse, title, previewToggle)
   body.className = "node-article__body"
-  propertiesElement.className = "node-article__properties"
   parametersElement.className = "node-article__parameters"
   rightSocketsElement.className = "node-article__sockets node-article__sockets--right"
   leftSocketsElement.className = "node-article__sockets node-article__sockets--left"
-  body.append(rightSocketsElement, propertiesElement, parametersElement, leftSocketsElement)
+  body.append(rightSocketsElement, parametersElement, leftSocketsElement)
   root.append(preview, header, body)
 
   const onCollapse = (event: Event): void => {
@@ -310,7 +290,6 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
       preview.setAttribute("style", `width: ${Math.max(1, next.width ?? 140) - 6}px`)
     }
 
-    reconcileProperties(document, propertiesElement, properties, next.properties ?? [])
     reconcileParameters(document, parametersElement, parameters, next.parameters ?? [])
     reconcileLooseSockets(document, rightSocketsElement, leftSocketsElement, looseSockets, next.sockets ?? [])
     current = next
@@ -330,12 +309,10 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
     previewToggle,
     previewToggleText,
     body,
-    properties: propertiesElement,
     parameters: parametersElement,
     sockets: rightSocketsElement,
     rightSockets: rightSocketsElement,
     leftSockets: leftSocketsElement,
-    property(fieldId: string) { return properties.get(String(fieldId))?.element ?? null },
     parameter(parameterId: string) { return parameters.get(String(parameterId)) ?? null },
     socket(socketId: string) {
       const loose = looseSockets.get(String(socketId))?.socket
@@ -357,36 +334,14 @@ export function createNode(document: Document, initial: NodeDefinition): NodeCon
       disposed = true
       collapse.removeEventListener("click", onCollapse)
       previewToggle.removeEventListener("click", onPreview)
-      for (const field of properties.values()) field.dispose()
       for (const parameter of parameters.values()) parameter.dispose()
       for (const socket of looseSockets.values()) socket.socket.dispose()
-      properties.clear()
       parameters.clear()
       looseSockets.clear()
     },
   })
   update(definition)
   return controller
-}
-
-function reconcileProperties(
-  document: Document,
-  parent: HTMLDivElement,
-  records: Map<string, FieldMount>,
-  definitions: readonly FieldDefinition[],
-): void {
-  const retained = new Set(definitions.map(({id}) => id))
-  for (const [id, controller] of records) if (!retained.has(id)) {
-    controller.element.remove()
-    controller.dispose()
-    records.delete(id)
-  }
-  for (const definition of definitions) {
-    const current = records.get(definition.id)
-    if (current) current.update(definition)
-    else records.set(definition.id, mountField(document, definition))
-  }
-  reconcileChildren(parent, definitions.map(({id}) => records.get(id)!.element))
 }
 
 function reconcileParameters(
@@ -464,10 +419,8 @@ export function normalizeNodeDefinition(definition: NodeDefinition): NodeDefinit
   if (typeof definition.id !== "string" || definition.id.trim() === "") throw new TypeError("Node id must be non-empty")
   if (typeof definition.label !== "string" || definition.label.trim() === "") throw new TypeError(`Node ${definition.id} label must be non-empty`)
   if (definition.headerColor !== undefined && !/^#[0-9a-f]{6}$/i.test(definition.headerColor)) throw new TypeError(`Node ${definition.id} headerColor must be #rrggbb`)
-  const properties = definition.properties ?? []
   const parameters = definition.parameters ?? []
   const sockets = definition.sockets ?? []
-  assertUnique(properties.map(({id}) => id), `Node ${definition.id} Property`)
   assertUnique(parameters.map(({id}) => id), `Node ${definition.id} Parameter`)
   assertUnique([
     ...sockets.map(({id}) => id),
@@ -475,9 +428,6 @@ export function normalizeNodeDefinition(definition: NodeDefinition): NodeDefinit
   ], `Node ${definition.id} Socket`)
   return Object.freeze({
     ...definition,
-    ...(definition.properties === undefined ? {} : {
-      properties: Object.freeze(properties.map((property) => Object.freeze({...property}))),
-    }),
     ...(definition.parameters === undefined ? {} : {
       parameters: Object.freeze(parameters.map((parameter) => Object.freeze({...parameter}))),
     }),

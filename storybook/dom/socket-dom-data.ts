@@ -44,7 +44,7 @@ function socketRow(kind: NodeSocketKind, direction: NodeSocketDirection): Parame
   const side = direction === "output" ? "right" : "left"
   return Object.freeze({
     id: `${kind}-${direction}`,
-    fieldKind: `socket:${kind}`,
+    valueKind: `socket:${kind}`,
     variant: "field",
     label: `${NODE_SOCKET_LABELS[kind]} · ${NODE_SOCKET_DIRECTION_LABELS[direction]}`,
     title: `${kind}/${direction} Socket`,

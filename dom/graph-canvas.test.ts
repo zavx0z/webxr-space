@@ -87,7 +87,6 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(process.header.childNodes).toEqual([process.collapse, process.title, process.previewToggle])
     expect(process.body.childNodes).toEqual([
       process.rightSockets,
-      process.properties,
       process.parameters,
       process.leftSockets,
     ])

@@ -84,7 +84,7 @@ describe("node-specific DOM Parameter/Socket composition", () => {
         },
         {
           id: "mode",
-          fieldKind: "text",
+          valueKind: "text",
           variant: "output",
           label: "Mode",
           title: "Mode parameter",
@@ -208,7 +208,7 @@ describe("node-specific DOM Parameter/Socket composition", () => {
         {
           ...name,
           id: "boolean-field",
-          fieldKind: "boolean",
+          valueKind: "boolean",
           variant: "field",
           label: "Boolean",
           value: "true",
@@ -219,7 +219,7 @@ describe("node-specific DOM Parameter/Socket composition", () => {
         {
           ...strength,
           id: "enum-output",
-          fieldKind: "enum",
+          valueKind: "enum",
           variant: "output",
           label: "Enum",
           value: "multiply",
@@ -237,7 +237,7 @@ describe("node-specific DOM Parameter/Socket composition", () => {
         {
           ...name,
           id: "text-connected",
-          fieldKind: "text",
+          valueKind: "text",
           variant: "connected",
           label: "Connected",
           connected: true,

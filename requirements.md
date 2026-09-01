@@ -12,7 +12,7 @@ package не получает renderer host или ручной paint surface.
 
 Нормативная поведенческая база миграции — public Node UI из parent revision
 `8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7`: compact coloured Node header,
-collapse, preview, embedded Parameter/Property Fields, typed Socket endpoints,
+collapse, preview, embedded concrete Parameter Fields, typed Socket endpoints,
 Frame/Link/Node paint order, controlled selection, fit/pan/zoom, grid, culling,
 hit semantics и stable keyed identity. Реализация не обязана сохранять прежние
 `UiSurface` signatures, но обязана сохранять наблюдаемое поведение и данные.
@@ -35,7 +35,7 @@ Public exports ограничены следующими exact subpaths:
 - `@nodes/ui/parameter-socket` → `createParameterSocket`, CSS и control types;
 - `@nodes/ui/node-tree-editor` → `createNodeTreeEditor`, CSS и tree types.
 - `@nodes/ui/node` → Blender-like Node article, typed presets and controller;
-- `@nodes/ui/parameter` → embedded Parameter/Property Field composition;
+- `@nodes/ui/parameter` → embedded concrete Parameter Field composition;
 - `@nodes/ui/socket` → typed Socket kinds, shapes, colors and controller;
 - `@nodes/ui/link` → typed orthogonal/cubic routes, one semantic
   `HTMLVectorPathElement` and keyed stroked-path hits;
@@ -61,8 +61,8 @@ hierarchy.
 
 ### `NODES-UI-DOM-PUBLIC-002` — package boundary
 
-Production DOM owners импортируют `@zavx0z/dom`, exact
-`@ui/components/field` contract и друг друга. Compiled owners дополнительно
+Production DOM owners импортируют `@zavx0z/dom`, exact concrete
+`@ui/components/fields/*` contracts и друг друга. Compiled owners дополнительно
 используют только `@zavx0z/react` runtime и build-time
 `@zavx0z/template`; npm React/Fiber отсутствуют. Engine, generic retained Layout
 runtime, Elements, Surface/Runtime owners и renderer отсутствуют в production
@@ -81,22 +81,23 @@ production dependency graph.
 Package boundary собирает один minified browser artifact из public
 `GraphCanvas`, `NodeWorkbench`, `ParameterSocket` и `NodeTreeEditor`.
 `NodeWorkbench` транзитивно включает `NodeEditor → GraphCanvas → Node →
-Parameter → exact compiled Field`; поэтому это полный all-controller + one-DOM-
+Parameter → exact concrete compiled Field`; поэтому это полный all-controller + one-DOM-
 realm budget, а не размер отдельного UI package или одного lazy subpath.
 
-После восстановления native controls, DOM Node behavior и generic retained
+После перехода на 13 exact concrete Fields, DOM Node behavior и generic retained
 Path измерение текущего linked owner graph после bounded tree-shaking составляет
-`229209` raw / `59121` gzip bytes. Ceiling не расширялся; запас равен `791` raw и
-`879` gzip bytes. Side-effect-free literal initializers удаляют из consumer четыре
+`244300` raw / `60660` gzip bytes (`108` metafile inputs, один output, SHA-256
+`4d5afe740797998484c0155d050d98798a23dd040426f1052549fbf5b109d085`).
+Tight ceiling равен `245000 / 61000`; запас — `700` raw и `340` gzip bytes.
+Side-effect-free literal initializers удаляют из consumer четыре
 неиспользуемых public CSS documents (`Socket`, `Link`, `NodeTreeEditor`,
 `ParameterSocket`) без изменения их exact импортируемых bytes и экономят `6266`
 raw / `1440` gzip bytes. Повторные controller imports также дедуплицированы.
 
-Предыдущий gate `215000 / 55000`, снятый до этих platform/control contracts, не
-описывает тот же observable scope. Действующий tight ceiling остаётся `230000`
-raw / `60000` gzip bytes. Увеличение этого ceiling требует нового metafile
-evidence; уменьшение bundle не разрешает удалять owner behavior, validators,
-standard DOM state или exact shared Field kinds. Отдельный UI bundle budget не
+Предыдущие gates `215000 / 55000` и `230000 / 60000`, снятые до concrete Field
+owner graph, не описывают тот же observable scope. Следующее увеличение ceiling
+требует нового metafile evidence; уменьшение bundle не разрешает удалять owner behavior, validators,
+standard DOM state или exact concrete Field kinds. Отдельный UI bundle budget не
 подменяет этот full-realm gate.
 
 ### `NODES-UI-COMPILED-001` — canonical store projection
@@ -111,8 +112,10 @@ Node, Parameter, Socket и Link materialize-ятся keyed по canonical id. О
 Link materialize-ится одним `<vector-path>` без segment/hit child rectangles.
 Value и topology commits сохраняют identity каждого surviving semantic element.
 Произвольное количество Parameters/Sockets компонуется без slot limit;
-boolean, number и string имеют native controlled inputs, а составное JSON
-value остаётся read-only canonical representation, не string Store.
+boolean, integer/number, string/path и shape-verified
+vector/rotation/matrix/color композируют соответствующие exact concrete Fields.
+Неизвестное составное JSON value использует exact ReadonlyField; базовые Controls
+остаются собственностью `@ui/components`, не локальной реализацией Nodes.
 
 Каждый compiled public component имеет один `style` prop. Author-facing style
 является только настоящим `css\`\``: один top-level template содержит owner
@@ -200,35 +203,41 @@ identity; stale/foreign metadata проходит обычную полную va
 
 `createNode()` возвращает stable semantic `article` с compact 24px coloured
 header, controlled disclosure, optional preview toggle/panel, embedded
-Properties и Parameters, loose typed Sockets и symmetrical selection shadow.
-Properties монтируют exact compiled `Field`; Parameter сохраняет один Field
-element и не дублирует value/control implementation. Collapse скрывает body,
+Parameters, loose typed Sockets и symmetrical selection shadow. Socketless
+Parameter представляет прежнюю visual property-row без второй Property identity
+или отдельного value contract. Каждый Parameter сохраняет один root конкретного
+Field и не дублирует value/control implementation. Collapse скрывает body,
 сохраняя Node, Field, Parameter и Socket identities.
 
 Public socket inventory сохраняет 19 kinds и 8 shapes parent contract. Kind
 задаёт color/shape preset, а `side` и capability `direction` остаются
 независимыми. Socket является standard button endpoint с exact Node/Socket ids.
 Loose right-side Sockets materialize-ятся сразу под header в definition order;
-Properties и Parameters следуют за ними, а loose left-side Sockets завершают
+Parameters следуют за ними, а loose left-side Sockets завершают
 body. Перенос между сторонами сохраняет Socket identity и не создаёт второй
 presentation owner.
 
 Accepted compact density использует `24px` header, `8px` horizontal body inset,
 `20px` Field/Parameter rows, `10px` text и `10px` filled Socket с `1px` dark
 outline. Node CSS уменьшает public Field chrome только через обычный cascade:
-full-row enum Property скрывает дублирующий внешний painted label и сохраняет
-тот же Field/`aria-labelledby`; numeric control, value transport и continuous
+socketless full-row enum Parameter скрывает дублирующий внешний painted label и
+сохраняет тот же Field/`aria-labelledby`; numeric control, value transport и continuous
 fill остаются собственностью `@ui/components`.
 
 ## Parameter
 
-### `NODES-UI-DOM-PARAMETER-002` — exact shared Field
+### `NODES-UI-DOM-PARAMETER-002` — exact concrete Field
 
-`createParameter()` принимает `FieldDefinition` из `@ui/components/field` и
-монтирует exact compiled `Field` через один `@zavx0z/react` root между максимум
-одним левым и одним правым Socket. Mount не создаёт второй props Store или
-параллельное control tree: update передаёт текущий immutable definition тому же
-Field component, а public ref является его реальным standard DOM element.
+`createParameter()` принимает плоский Node-owned discriminated
+`ParameterDefinition`: `id`, `kind`, direct props соответствующего concrete
+Field и topology presentation находятся в одном immutable value. Private mount
+выбирает exact `@ui/components/fields/*` owner и монтирует его через один
+`@zavx0z/react` root между максимум одним левым и одним правым Socket. Kind
+неизменяем внутри Parameter identity; update передаёт direct props тому же
+concrete Field component, а public ref является его реальным standard DOM element.
+Node-owned definition объявляет `style?: never`: forged own `style` отклоняется
+до render/mutation, а private transport дополнительно никогда не передаёт его
+concrete Field. Компактный Node layout остаётся parent-owned cascade.
 Color, vector, rotation, matrix, reference, collection и path не сериализуются
 в строковый substitute. Connected state скрывает только editor, сохраняя label,
 Field element и endpoint identities. Standard `hidden` исключает control group
@@ -286,7 +295,7 @@ hit owners как consumer workaround.
 Frame/Link/Node selection, fit, wheel pan, anchor-preserving zoom, pointer pan,
 two-pointer pinch, transform-only scene mutation и viewport culling. Standard
 DOM events являются единственным input API. Transform меняет stable scene и
-не пересоздаёт Frame, Link, Node, Parameter, Field или Socket subtrees.
+не пересоздаёт Frame, Link, Node, Parameter, concrete Field или Socket subtrees.
 Link видим, если видим source Node, видим target Node либо stored route bounds
 пересекает viewport. Fit/culling читают immutable Node-owned bounds и не делают
 Renderer readback или повторный Path parse. Cubic bounds используют безопасный
@@ -351,10 +360,13 @@ Legacy standalone catalog owner поддерживает standard projections:
 
 Она не является production Node Parameter contract и не может использоваться
 для embedded Node или visual parity. Production Parameter использует exact
-`@ui/components/field` definitions.
-Каждый Parameter отражает `fieldKind`, variant
+concrete `@ui/components/fields/*` owners.
+Каждый legacy catalog Parameter отражает `valueKind`, historical route variant
 `field|input|output|both|connected`, value/checked/options/range metadata,
-visibility, disabled/readOnly and connected state. Connected input скрывает
+visibility, disabled/readOnly and connected state.
+Здесь `field` означает только сохранённый id socketless story и показывается
+пользователю как «Без сокетов»; generic production Field owner не существует.
+Connected input скрывает
 editor стандартным `hidden`, не меняя Parameter identity.
 
 Socket содержит независимые `kind`, capability
@@ -420,9 +432,9 @@ public GraphCanvas controller and remains outside package exports.
 2. Все factories возвращают elements того же `@zavx0z/dom` realm.
 3. CPU renderer smoke подтверждает geometry, transform, culling и hit identity
    без renderer imports в production package.
-4. Source and manifest scans подтверждают отсутствие retained owners при exact
-   dependency на `@ui/components/field`.
-5. Focused tests доказывают rich Node structure, Field identity, Socket presets,
+4. Source and manifest scans подтверждают отсутствие retained owners и generic
+   Field facade при exact dependencies на `@ui/components/fields/*`.
+5. Focused tests доказывают rich Node structure, concrete Field identity, Socket presets,
    Link corridors, selection, pan/zoom/pinch, grid и keyed reconciliation.
 6. Exact Blender-reference capture остаётся обязательным browser acceptance
    gate; route count и non-black canvas его не заменяют. Comparison route

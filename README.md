@@ -26,8 +26,8 @@ document.appendChild(graph.element)
 
 Public subpaths:
 
-- `@nodes/ui/node` — compact coloured Node with embedded shared Fields and typed Sockets
-- `@nodes/ui/parameter` — exact `@ui/components/field` composition
+- `@nodes/ui/node` — compact coloured Node with embedded Parameter Fields and typed Sockets
+- `@nodes/ui/parameter` — Node-owned Parameter discriminant composed with exact `@ui/components/fields/*`
 - `@nodes/ui/link` — typed route segments and hit corridors
 - `@nodes/ui/node-editor` — grid, selection, fit, pan, zoom, pinch and culling
 - `@nodes/ui/node-system` — compiled TSX composition subscribed directly to a

@@ -3,7 +3,7 @@ import {createDocument, Event, MouseEvent} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {parameterSocketCss} from "../../dom/parameter-socket.ts"
 import {
-  NODE_PARAMETER_FIELD_KINDS,
+  NODE_PARAMETER_KINDS,
   NODE_PARAMETER_VARIANTS,
 } from "../parameter-catalog.ts"
 import {
@@ -17,7 +17,7 @@ import {
 
 const parameterRoutes = (): readonly ParameterSocketDomRoute[] => [
   "ui/parameter",
-  ...NODE_PARAMETER_FIELD_KINDS.flatMap((kind) => [
+  ...NODE_PARAMETER_KINDS.flatMap((kind) => [
     `ui/parameter/${kind}` as const,
     ...NODE_PARAMETER_VARIANTS.map((variant) => `ui/parameter/${kind}/${variant}` as const),
   ]),
@@ -61,7 +61,7 @@ describe("complete Parameter/Socket DOM route family", () => {
 
     const vector = await createParameterSocketRouteStory(createDocument(), "ui/parameter/vector/output")
     expect(vector.props.parameters[0]).toMatchObject({
-      fieldKind: "vector",
+      valueKind: "vector",
       variant: "output",
       value: "1, 2, 3",
       type: "text",

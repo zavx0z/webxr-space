@@ -68,13 +68,13 @@ describe("@nodes/ui public standard-DOM contract", () => {
   test("returns exact @zavx0z/dom identities from every factory", () => {
     const document = createDocument()
     const graph = createGraphCanvas(document)
-    const field = {
+    const parameterDefinition = {
       id: "value",
       kind: "number" as const,
       label: "Value",
       value: 1,
     }
-    const parameter = createParameter(document, {id: "value", field})
+    const parameter = createParameter(document, parameterDefinition)
     const socket = createSocket(document, {
       id: "value-output",
       kind: "float",
@@ -82,7 +82,7 @@ describe("@nodes/ui public standard-DOM contract", () => {
       side: "right",
       label: "Value",
     })
-    const node = createNode(document, {id: "node", label: "Math", parameters: [{id: "value", field}]})
+    const node = createNode(document, {id: "node", label: "Math", parameters: [parameterDefinition]})
     const link = createLink(document, {
       id: "link",
       title: "Value",

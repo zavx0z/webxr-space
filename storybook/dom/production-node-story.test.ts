@@ -72,11 +72,12 @@ describe("production Node Storybook adapters", () => {
     }).styleSheets
     expect(styleSheets.length).toBeGreaterThan(0)
     expect(styleSheets.every(sheet => sheet.source?.kind === "authored-css")).toBeTrue()
-    expect(styleSheets.some(sheet => sheet.source?.moduleId === "@ui/components/field.tsx")).toBeTrue()
+    expect(styleSheets.some(sheet => sheet.source?.moduleId?.startsWith("@ui/components/fields/"))).toBeTrue()
+    expect(styleSheets.some(sheet => sheet.source?.moduleId === "@ui/components/field.tsx")).toBeFalse()
     story.dispose()
   })
 
-  test("uses exact Parameter plus Field for every catalog kind", () => {
+  test("uses exact Parameter plus one concrete Field for every catalog kind", () => {
     for (const kind of parameterKinds) {
       const story = createProductionNodeStory(createDocument(), `ui/parameter/${kind}/both`)
       const parameter = story.element.querySelector(".node-parameter")
@@ -244,7 +245,7 @@ describe("production Node Storybook adapters", () => {
     const header = story.element.querySelector(".node-article__header")!
     const body = story.element.querySelector(".node-article__body")!
     const rightSockets = story.element.querySelector(".node-article__sockets--right")!
-    const properties = story.element.querySelector(".node-article__properties")!
+    const parameters = story.element.querySelector(".node-article__parameters")!
     const dimensions = story.element.querySelector('[data-field-id="noise-dimensions"]')!
     const dimensionsLabel = dimensions.querySelector("span")!
     const vector = story.element.querySelector('[data-field-id="noise-vector"]')!
@@ -260,7 +261,7 @@ describe("production Node Storybook adapters", () => {
     expect(headerBox).toMatchObject({width: 214, height: 24})
     expect(bodyBox.width).toBe(214)
     expect(bodyBox.height).toBeLessThanOrEqual(260)
-    expect(frame.boxByNode.get(rightSockets)!.y).toBeLessThan(frame.boxByNode.get(properties)!.y)
+    expect(frame.boxByNode.get(rightSockets)!.y).toBeLessThan(frame.boxByNode.get(parameters)!.y)
     expect(frame.boxByNode.has(dimensionsLabel)).toBeFalse()
     expect(frame.boxByNode.has(vectorControl)).toBeFalse()
     expect(frame.boxByNode.get(socket)).toMatchObject({width: 10, height: 10})
