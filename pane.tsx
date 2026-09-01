@@ -22,21 +22,32 @@ export function Pane(props: PaneProps) {
     data-variant={variant}
     data-active={props.active === true ? "true" : undefined}
     style={css`
-        & {
-          box-sizing: border-box;
-          display: block;
-          min-width: 0;
-          padding: 8px;
-          overflow: hidden;
-          border: 1px solid var(--widget-box-outline);
-          border-radius: 4px;
-          background: var(--widget-box-background);
-          color: var(--widget-box-content);
-        }
-        &[data-variant="outlined"] { background: transparent; }
-        &[data-variant="transparent"] { border-color: transparent; background: transparent; }
-        &[data-active="true"] { border-color: var(--material-editor-outline-active); }
-        ${props.style}
-      `}
-  >{props.children}{props.content}</section>
+      box-sizing: border-box;
+      display: block;
+      min-width: 0;
+      padding: 8px;
+      overflow: hidden;
+      border: 1px solid var(--widget-box-outline);
+      border-radius: 4px;
+      background: var(--widget-box-background);
+      color: var(--widget-box-content);
+
+      &[data-variant="outlined"] {
+        background: transparent;
+      }
+
+      &[data-variant="transparent"] {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      &[data-active="true"] {
+        border-color: var(--material-editor-outline-active);
+      }
+
+      ${props.style}
+    `}
+  >
+    {props.children}{props.content}
+  </section>
 }

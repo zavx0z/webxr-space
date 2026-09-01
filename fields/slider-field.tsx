@@ -33,15 +33,43 @@ export function SliderField(props: SliderFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; min-height: 28px; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        min-height: 28px;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 40%;
+        min-width: 0;
+        height: 28px;
+        color: var(--widget-list-content);
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
     <input
       data-slider-field-value=""
       data-labelled={hasLabel ? "true" : undefined}
@@ -55,13 +83,42 @@ export function SliderField(props: SliderFieldProps) {
       onInput={onInput}
       onChange={onChange}
       style={css`
-        & { box-sizing: border-box; display: block; width: var(--slider-field-width, 180px); height: var(--slider-field-height, var(--control-height-large)); padding: var(--slider-field-padding, 3px 6px); border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 4px; background: var(--widget-regular-background); box-shadow: 0 1px 0 var(--material-widget-emboss); color: var(--widget-regular-background-selected); }
-        &[data-labelled="true"] { width: 0; flex-grow: 1; }
-        &:hover { background: var(--widget-hover-background); }
-        &:active { background: var(--widget-active-background); }
-        &:focus { border-color: var(--widget-focus-outline); }
-        &:disabled { opacity: 0.5; box-shadow: none; }
-        &[data-readonly="true"] { color: var(--widget-text-content-readonly); }
+        box-sizing: border-box;
+        display: block;
+        width: var(--slider-field-width, 180px);
+        height: var(--slider-field-height, var(--control-height-large));
+        padding: var(--slider-field-padding, 3px 6px);
+        border: var(--border-width-control) solid var(--widget-regular-outline);
+        border-radius: 4px;
+        background: var(--widget-regular-background);
+        box-shadow: 0 1px 0 var(--material-widget-emboss);
+        color: var(--widget-regular-background-selected);
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+
+        &:active {
+          background: var(--widget-active-background);
+        }
+
+        &:focus {
+          border-color: var(--widget-focus-outline);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          box-shadow: none;
+        }
+
+        &[data-readonly="true"] {
+          color: var(--widget-text-content-readonly);
+        }
       `}
     />
   </label>

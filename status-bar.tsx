@@ -23,14 +23,32 @@ function StatusBarItemView(props: StatusBarItemViewProps) {
     data-status-item={props.item.id}
     data-highlighted={props.item.highlighted === true ? "true" : undefined}
     style={css`
-      & { display: flex; flex-direction: row; min-width: 0; flex-shrink: 0; color: var(--status-bar-content); white-space: nowrap; text-shadow: 0 1px 0 var(--status-bar-content-shadow); }
-      &[data-highlighted="true"] { color: var(--status-bar-content-highlight); }
+      display: flex;
+      flex-direction: row;
+      min-width: 0;
+      flex-shrink: 0;
+      color: var(--status-bar-content);
+      white-space: nowrap;
+      text-shadow: 0 1px 0 var(--status-bar-content-shadow);
+
+      &[data-highlighted="true"] {
+        color: var(--status-bar-content-highlight);
+      }
     `}
   >
-    <span aria-hidden="true" hidden={props.first} style={css`
-      & { display: inline; }
-      &[hidden] { display: none; }
-    `}>{props.separator}</span>
+    <span
+      aria-hidden="true"
+      hidden={props.first}
+      style={css`
+        display: inline;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.separator}
+    </span>
     <span>{props.item.text}</span>
   </span>
 }
@@ -40,16 +58,32 @@ function StatusBarItems(props: Readonly<{
   separator: string
   alignment: "start" | "end"
 }>) {
-  return <span data-alignment={props.alignment} style={css`
-    & { box-sizing: border-box; display: flex; flex-direction: row; min-width: 0; overflow: clip; }
-    &[data-alignment="start"] { flex-grow: 1; justify-content: flex-start; }
-    &[data-alignment="end"] { justify-content: flex-end; }
-  `}>{props.items.map(item => <StatusBarItemView
-    key={item.id}
-    item={item}
-    first={item.id === props.items[0]?.id}
-    separator={props.separator}
-  />)}</span>
+  return <span
+    data-alignment={props.alignment}
+    style={css`
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      min-width: 0;
+      overflow: clip;
+
+      &[data-alignment="start"] {
+        flex-grow: 1;
+        justify-content: flex-start;
+      }
+
+      &[data-alignment="end"] {
+        justify-content: flex-end;
+      }
+    `}
+  >
+    {props.items.map(item => <StatusBarItemView
+      key={item.id}
+      item={item}
+      first={item.id === props.items[0]?.id}
+      separator={props.separator}
+    />)}
+  </span>
 }
 
 /** Passive owner-supplied status line with the preserved lower-chrome contour. */
@@ -63,25 +97,24 @@ export function StatusBar(props: StatusBarProps) {
     aria-label={props.title ?? "Status"}
     title={props.title}
     style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        height: 24px;
-        min-height: 24px;
-        gap: 12px;
-        padding: 2px 12px 0;
-        border: 0 solid transparent;
-        border-top: 2px solid var(--status-bar-top);
-        border-radius: 0;
-        background: var(--status-bar-background);
-        color: var(--status-bar-content);
-        font-size: 11px;
-        line-height: 20px;
-        overflow: clip;
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      height: 24px;
+      min-height: 24px;
+      gap: 12px;
+      padding: 2px 12px 0;
+      border: 0 solid transparent;
+      border-top: 2px solid var(--status-bar-top);
+      border-radius: 0;
+      background: var(--status-bar-background);
+      color: var(--status-bar-content);
+      font-size: 11px;
+      line-height: 20px;
+      overflow: clip;
+
       ${props.style}
     `}
   >

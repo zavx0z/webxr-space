@@ -144,33 +144,57 @@ export const timelineDefaultProps: TimelineProps = Object.freeze({
 })
 
 const ownerCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    border: var(--border-width-control) solid var(--widget-toolbar-outline);
-    border-radius: 6px;
-    background: var(--space-node-navigation-background);
-    color: var(--widget-toolbar-content);
-    overflow: clip;
-  }
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: var(--border-width-control) solid var(--widget-toolbar-outline);
+  border-radius: 6px;
+  background: var(--space-node-navigation-background);
+  color: var(--widget-toolbar-content);
+  overflow: clip;
 `
 const headerCss = css`
-  & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; height: 28px; gap: 4px; padding: 3px 6px; background: var(--space-node-header-background); }
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 28px;
+  gap: 4px;
+  padding: 3px 6px;
+  background: var(--space-node-header-background);
 `
 const titleCss = css`
-  & { display: inline; min-width: 0; flex-grow: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: var(--font-size-sm); }
+  display: inline;
+  min-width: 0;
+  flex-grow: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--font-size-sm);
 `
-const subtitleCss = css`
-  & { display: inline; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }
+const navCss = css`
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
 `
-const navCss = css`& { display: flex; flex-direction: row; gap: 4px; }`
-const bodyCss = css`& { box-sizing: border-box; display: block; flex-grow: 1; padding: 6px; }`
-const hiddenCss = css`& { display: none; }`
-const buttonStyle: CssStyle = css`& { width: 52px; min-width: 22px; height: 22px; padding: 2px 6px; font-size: 10px; }`
-const iconActionStyle: CssStyle = css`& { width: 22px; padding: 2px; }`
-const minimizeButtonStyle: CssStyle = css`& { width: 22px; }`
+const bodyCss = css`
+  box-sizing: border-box;
+  display: block;
+  flex-grow: 1;
+  padding: 6px;
+`
+const buttonStyle: CssStyle = css`
+  width: 52px;
+  min-width: 22px;
+  height: 22px;
+  padding: 2px 6px;
+  font-size: 10px;
+`
+const iconActionStyle: CssStyle = css`
+  width: 22px;
+  padding: 2px;
+`
 
 type HudWindowActionButtonProps = Readonly<{
   action: HudWindowAction
@@ -186,7 +210,11 @@ function HudWindowActionButton(props: HudWindowActionButtonProps) {
     title={props.action.label}
     aria-label={props.action.label}
     disabled={props.action.disabled}
-    style={css`${buttonStyle}${props.action.iconSrc !== undefined && iconActionStyle}`}
+    style={css`
+      ${buttonStyle}
+
+      ${props.action.iconSrc !== undefined && iconActionStyle}
+    `}
     onClick={onClick}
   />
 }
@@ -205,7 +233,11 @@ function HudFrameHandleButton(props: HudFrameHandleButtonProps) {
     title={props.handle.label}
     aria-label={props.handle.label}
     disabled={props.handle.disabled}
-    style={css`${buttonStyle}${props.handle.iconSrc !== undefined && iconActionStyle}`}
+    style={css`
+      ${buttonStyle}
+
+      ${props.handle.iconSrc !== undefined && iconActionStyle}
+    `}
     onClick={onClick}
   />
 }
@@ -220,8 +252,14 @@ export function HudWindow(props: HudWindowProps) {
     data-active={props.active ? "true" : undefined}
     style={css`
       ${ownerCss}
-      & { width: 320px; min-height: 160px; }
-      &[data-active="true"] { border-color: var(--material-editor-outline-active); }
+
+      width: 320px;
+      min-height: 160px;
+
+      &[data-active="true"] {
+        border-color: var(--material-editor-outline-active);
+      }
+
       ${props.style}
     `}
   >
@@ -234,16 +272,44 @@ export function HudWindow(props: HudWindowProps) {
         aria-label={props.minimized ? "Restore" : "Minimize"}
         aria-expanded={String(!props.minimized)}
         aria-controls={bodyId}
-        style={css`${buttonStyle}${minimizeButtonStyle}`}
+        style={css`
+          ${buttonStyle}
+
+          width: 22px;
+        `}
         onClick={onMinimize}
       />
       <span style={titleCss}>{props.title}</span>
-      <span style={subtitleCss}>{props.subtitle}</span>
+      <span
+        style={css`
+          display: inline;
+          color: var(--widget-text-content-readonly);
+          font-size: var(--font-size-2xs);
+        `}
+      >
+        {props.subtitle}
+      </span>
       <nav aria-label="Window actions" style={navCss}>
-        {props.actions.map(action => <HudWindowActionButton key={action.key} action={action} onAction={props.onAction} />)}
+        {props.actions.map(action => <HudWindowActionButton
+          key={action.key}
+          action={action}
+          onAction={props.onAction}
+        />)}
       </nav>
     </header>
-    <section id={bodyId} hidden={props.minimized} style={css`${bodyCss}${props.minimized && hiddenCss}`}>{props.children}</section>
+    <section
+      id={bodyId}
+      hidden={props.minimized}
+      style={css`
+        ${bodyCss}
+
+        ${props.minimized && css`
+          display: none;
+        `}
+      `}
+    >
+      {props.children}
+    </section>
   </section>
 }
 
@@ -253,20 +319,65 @@ export function HudFrame(props: HudFrameProps) {
   assertButtons(props.handles, "HudFrame handle")
   return <section
     aria-label={props.title}
-    style={css`${ownerCss}${css`& { width: 300px; min-height: 140px; }`}${props.style}`}
+    style={css`
+      ${ownerCss}
+
+      width: 300px;
+      min-height: 140px;
+
+      ${props.style}
+    `}
   >
-    <span aria-hidden="true" data-edge={props.edge} style={css`
-      & { position: absolute; display: block; background: var(--widget-toolbar-background-selected); }
-      &[data-edge="floating"] { display: none; }
-      &[data-edge="left"] { left: 0; top: 0; width: 1px; height: 100%; }
-      &[data-edge="right"] { right: 0; top: 0; width: 1px; height: 100%; }
-      &[data-edge="top"] { left: 0; top: 0; width: 100%; height: 1px; }
-      &[data-edge="bottom"] { left: 0; bottom: 0; width: 100%; height: 1px; }
-    `}></span>
+    <span
+      aria-hidden="true"
+      data-edge={props.edge}
+      style={css`
+        position: absolute;
+        display: block;
+        background: var(--widget-toolbar-background-selected);
+
+        &[data-edge="floating"] {
+          display: none;
+        }
+
+        &[data-edge="left"] {
+          left: 0;
+          top: 0;
+          width: 1px;
+          height: 100%;
+        }
+
+        &[data-edge="right"] {
+          right: 0;
+          top: 0;
+          width: 1px;
+          height: 100%;
+        }
+
+        &[data-edge="top"] {
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 1px;
+        }
+
+        &[data-edge="bottom"] {
+          left: 0;
+          bottom: 0;
+          width: 100%;
+          height: 1px;
+        }
+      `}
+    >
+    </span>
     <header style={headerCss}>
       <span style={titleCss}>{props.title}</span>
       <nav aria-label="Frame handles" style={navCss}>
-        {props.handles.map(handle => <HudFrameHandleButton key={handle.key} handle={handle} onHandle={props.onHandle} />)}
+        {props.handles.map(handle => <HudFrameHandleButton
+          key={handle.key}
+          handle={handle}
+          onHandle={props.onHandle}
+        />)}
       </nav>
     </header>
     <section style={bodyCss}>{props.children}</section>
@@ -307,7 +418,11 @@ function TimelineKeyframeView(props: TimelineKeyframeViewProps) {
     data-keyframe-key={props.item.key}
     data-frame={String(frame)}
     style={css`
-      & { position: absolute; top: 17px; left: ${timelinePercent(frame, props.visibleStart, props.visibleEnd)}%; display: block; transform: translateX(-50%); }
+      position: absolute;
+      top: 17px;
+      left: ${timelinePercent(frame, props.visibleStart, props.visibleEnd)}%;
+      display: block;
+      transform: translateX(-50%);
     `}
   >
     <button
@@ -317,12 +432,31 @@ function TimelineKeyframeView(props: TimelineKeyframeViewProps) {
       aria-pressed={String(props.item.selected === true)}
       onClick={onClick}
       style={css`
-        & { box-sizing: border-box; display: block; width: 10px; height: 10px; padding: 0; border: 1px solid var(--widget-regular-content); border-radius: 1px; background: var(--widget-toolbar-background); transform: rotate(45deg); }
-        &:hover { background: var(--widget-hover-background); }
-        &:focus { border-color: var(--widget-focus-outline); }
-        &[aria-pressed="true"] { background: var(--widget-toolbar-background-selected); border-color: var(--widget-toolbar-content-selected); }
+        box-sizing: border-box;
+        display: block;
+        width: 10px;
+        height: 10px;
+        padding: 0;
+        border: 1px solid var(--widget-regular-content);
+        border-radius: 1px;
+        background: var(--widget-toolbar-background);
+        transform: rotate(45deg);
+
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+
+        &:focus {
+          border-color: var(--widget-focus-outline);
+        }
+
+        &[aria-pressed="true"] {
+          background: var(--widget-toolbar-background-selected);
+          border-color: var(--widget-toolbar-content-selected);
+        }
       `}
-    ></button>
+    >
+    </button>
   </li>
 }
 
@@ -333,16 +467,28 @@ function TimelineKeyframes(props: Readonly<{
   onActivate?: TimelineProps["onKeyframeActivate"]
   onLegacyActivate?: TimelineProps["onMarkerActivate"]
 }>) {
-  return <ol aria-label="Summary keyframes" style={css`
-    & { position: relative; display: block; width: 100%; height: 44px; margin: 0; padding: 0; border-top: var(--border-width-control) solid var(--widget-regular-outline); border-bottom: var(--border-width-control) solid var(--widget-regular-outline); }
-  `}>{props.items.map(item => <TimelineKeyframeView
-    key={item.key}
-    item={item}
-    visibleStart={props.visibleStart}
-    visibleEnd={props.visibleEnd}
-    onActivate={props.onActivate}
-    onLegacyActivate={props.onLegacyActivate}
-  />)}</ol>
+  return <ol
+    aria-label="Summary keyframes"
+    style={css`
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 44px;
+      margin: 0;
+      padding: 0;
+      border-top: var(--border-width-control) solid var(--widget-regular-outline);
+      border-bottom: var(--border-width-control) solid var(--widget-regular-outline);
+    `}
+  >
+    {props.items.map(item => <TimelineKeyframeView
+      key={item.key}
+      item={item}
+      visibleStart={props.visibleStart}
+      visibleEnd={props.visibleEnd}
+      onActivate={props.onActivate}
+      onLegacyActivate={props.onLegacyActivate}
+    />)}
+  </ol>
 }
 
 type TimelineMarkerViewProps = Readonly<{
@@ -359,7 +505,11 @@ function TimelineMarkerView(props: TimelineMarkerViewProps) {
     data-marker-key={props.marker.key}
     data-frame={String(frame)}
     style={css`
-      & { position: absolute; top: 0; left: ${timelinePercent(frame, props.visibleStart, props.visibleEnd)}%; display: block; transform: translateX(-50%); }
+      position: absolute;
+      top: 0;
+      left: ${timelinePercent(frame, props.visibleStart, props.visibleEnd)}%;
+      display: block;
+      transform: translateX(-50%);
     `}
   >
     <button
@@ -369,11 +519,30 @@ function TimelineMarkerView(props: TimelineMarkerViewProps) {
       aria-pressed={String(props.marker.selected === true)}
       onClick={onClick}
       style={css`
-        & { box-sizing: border-box; display: block; width: auto; min-width: 32px; height: 20px; padding: 2px 4px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 2px; background: var(--widget-toolbar-background); color: var(--widget-toolbar-content); font-size: var(--font-size-2xs); }
-        &:hover { background: var(--widget-hover-background); }
-        &[aria-pressed="true"] { background: var(--widget-toolbar-background-selected); color: var(--widget-toolbar-content-selected); }
+        box-sizing: border-box;
+        display: block;
+        width: auto;
+        min-width: 32px;
+        height: 20px;
+        padding: 2px 4px;
+        border: var(--border-width-control) solid var(--widget-regular-outline);
+        border-radius: 2px;
+        background: var(--widget-toolbar-background);
+        color: var(--widget-toolbar-content);
+        font-size: var(--font-size-2xs);
+
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+
+        &[aria-pressed="true"] {
+          background: var(--widget-toolbar-background-selected);
+          color: var(--widget-toolbar-content-selected);
+        }
       `}
-    >{props.marker.label}</button>
+    >
+      {props.marker.label}
+    </button>
   </li>
 }
 
@@ -383,15 +552,25 @@ function TimelineMarkers(props: Readonly<{
   visibleEnd: number
   onActivate?: TimelineProps["onSceneMarkerActivate"]
 }>) {
-  return <ol aria-label="Timeline markers" style={css`
-    & { position: relative; display: block; width: 100%; height: 22px; margin: 0; padding: 0; }
-  `}>{props.items.map(marker => <TimelineMarkerView
-    key={marker.key}
-    marker={marker}
-    visibleStart={props.visibleStart}
-    visibleEnd={props.visibleEnd}
-    onActivate={props.onActivate}
-  />)}</ol>
+  return <ol
+    aria-label="Timeline markers"
+    style={css`
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+    `}
+  >
+    {props.items.map(marker => <TimelineMarkerView
+      key={marker.key}
+      marker={marker}
+      visibleStart={props.visibleStart}
+      visibleEnd={props.visibleEnd}
+      onActivate={props.onActivate}
+    />)}
+  </ol>
 }
 
 export function Timeline(props: TimelineProps) {
@@ -406,20 +585,54 @@ export function Timeline(props: TimelineProps) {
     data-frame-start={String(model.frameStart)}
     data-frame-end={String(model.frameEnd)}
     data-frame-current={String(model.frameCurrent)}
-    style={css`${ownerCss}${css`& { width: 640px; min-height: 140px; }`}${props.style}`}
+    style={css`
+      ${ownerCss}
+
+      width: 640px;
+      min-height: 140px;
+
+      ${props.style}
+    `}
   >
     <header style={headerCss}>
       <span style={titleCss}>{props.title}</span>
-      <output aria-label={`Current frame ${model.frameCurrent}`} style={css`
-        & { display: inline; color: var(--widget-toolbar-content-selected); font-size: var(--font-size-xs); }
-      `}>{currentLabel}</output>
+      <output
+        aria-label={`Current frame ${model.frameCurrent}`}
+        style={css`
+          display: inline;
+          color: var(--widget-toolbar-content-selected);
+          font-size: var(--font-size-xs);
+        `}
+      >
+        {currentLabel}
+      </output>
     </header>
-    <div data-time-view="" style={css`
-      & { box-sizing: border-box; position: relative; display: flex; flex-direction: column; flex-grow: 1; width: 100%; gap: 2px; padding: 4px 10px 6px; overflow: clip; }
-    `}>
-      <div aria-label="Visible frame range" style={css`
-        & { display: flex; flex-direction: row; justify-content: space-between; width: 100%; height: 16px; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }
-      `}>
+    <div
+      data-time-view=""
+      style={css`
+        box-sizing: border-box;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        width: 100%;
+        gap: 2px;
+        padding: 4px 10px 6px;
+        overflow: clip;
+      `}
+    >
+      <div
+        aria-label="Visible frame range"
+        style={css`
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          width: 100%;
+          height: 16px;
+          color: var(--widget-text-content-readonly);
+          font-size: var(--font-size-2xs);
+        `}
+      >
         <span>{formatTimelineFrame(model.visibleStart, model.showSeconds, model.framesPerSecond)}</span>
         <span>{formatTimelineFrame(model.visibleEnd, model.showSeconds, model.framesPerSecond)}</span>
       </div>
@@ -427,10 +640,20 @@ export function Timeline(props: TimelineProps) {
         aria-label="Preview range"
         hidden={!previewVisible}
         style={css`
-          & { position: absolute; left: ${previewLeft}%; top: 20px; width: ${Math.max(0, previewRight - previewLeft)}%; height: 44px; background: var(--widget-regular-background-selected); opacity: 0.22; }
-          &[hidden] { display: none; }
+          position: absolute;
+          left: ${previewLeft}%;
+          top: 20px;
+          width: ${Math.max(0, previewRight - previewLeft)}%;
+          height: 44px;
+          background: var(--widget-regular-background-selected);
+          opacity: 0.22;
+
+          &[hidden] {
+            display: none;
+          }
         `}
-      ></span>
+      >
+      </span>
       <TimelineKeyframes
         items={model.keyframes}
         visibleStart={model.visibleStart}
@@ -444,9 +667,19 @@ export function Timeline(props: TimelineProps) {
         visibleEnd={model.visibleEnd}
         onActivate={props.onSceneMarkerActivate}
       />
-      <span aria-label={`Playhead at frame ${model.frameCurrent}`} style={css`
-        & { position: absolute; left: ${timelinePercent(model.frameCurrent, model.visibleStart, model.visibleEnd)}%; top: 18px; display: block; width: 1px; height: 50px; background: var(--state-error); }
-      `}></span>
+      <span
+        aria-label={`Playhead at frame ${model.frameCurrent}`}
+        style={css`
+          position: absolute;
+          left: ${timelinePercent(model.frameCurrent, model.visibleStart, model.visibleEnd)}%;
+          top: 18px;
+          display: block;
+          width: 1px;
+          height: 50px;
+          background: var(--state-error);
+        `}
+      >
+      </span>
     </div>
   </section>
 }

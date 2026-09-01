@@ -207,6 +207,20 @@ the document renderer instead of a `data-ui-state` bridge. Новые owners н�
 `defineStyles`: exact CSS объявляется `css\`\`` непосредственно у intrinsic
 owner и переносится Template compiler в compiled metadata.
 
+Base declarations внутри каждого governed `css\`\`` пишутся только напрямую на
+top level. Эквивалентная обёртка `& { ... }` запрещена: `&` резервируется для
+реального scoped selector, например `&:hover` или `&[disabled]`. Это одна
+каноническая author grammar для production owners, tests и private Storybook
+stories/fixtures; Template compiler отклоняет альтернативную форму вместо её
+нормализации.
+
+Неэкспортируемый module-level `CssStyle`/`css\`\`` constant существует только
+если один exact fragment используется минимум в двух различных `style` sites.
+Fragment с единственным consumer объявляется непосредственно внутри owning
+`style={css\`...\`}`; имя само по себе не оправдывает одноразовый constant.
+Module CSS constants не экспортируются и не используются вне compiled style
+sites. Публичная общая тема публикуется только настоящим `.css` export.
+
 ## Fields and events
 
 Input, textarea, select, button, progress, meter и image используют standard

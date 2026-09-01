@@ -52,18 +52,14 @@ export type InspectorProps = Readonly<{
   onQueryChange?: ((query: string, event: Event) => void) | undefined
 }>
 
-const searchStyle: CssStyle = css`
-  & { width: 100%; height: 22px; --text-field-width: 100%; --text-field-height: 22px; --text-field-padding: 2px 8px 2px 23px; }
-`
-const categoryStyle: CssStyle = css`
-  & { width: 26px; min-width: 26px; height: 28px; margin-left: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-`
-const categoryGroupStartStyle: CssStyle = css`& { margin-top: 8px; }`
-const selectedCategoryStyle: CssStyle = css`
-  & { border-radius: 4px 0 0 4px; background: var(--widget-number-background-readonly); color: rgb(var(--surface-50)); }
-`
 const actionStyle: CssStyle = css`
-  & { width: 22px; min-width: 22px; height: 22px; padding: 2px; border: 0; background: transparent; box-shadow: none; }
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 `
 
 type CategoryButtonProps = Readonly<{
@@ -83,7 +79,27 @@ function CategoryButton(props: CategoryButtonProps) {
     aria-label={props.category.title ?? props.category.label}
     disabled={props.category.disabled === true}
     selected={props.selected}
-    style={css`${categoryStyle}${props.category.groupStart === true && categoryGroupStartStyle}${props.selected && selectedCategoryStyle}`}
+    style={css`
+      width: 26px;
+      min-width: 26px;
+      height: 28px;
+      margin-left: 4px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+
+      ${props.category.groupStart === true && css`
+        margin-top: 8px;
+      `}
+
+      ${props.selected && css`
+        border-radius: 4px 0 0 4px;
+        background: var(--widget-number-background-readonly);
+        color: rgb(var(--surface-50));
+      `}
+    `}
     onClick={onClick}
   />
 }
@@ -96,8 +112,19 @@ function InspectorContextRowView(props: Readonly<{
     data-secondary={props.secondary ? "true" : undefined}
     title={props.context.title ?? props.context.label}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 28px; gap: 4px; padding: 3px 6px; background: var(--widget-number-background-readonly); }
-      &[data-secondary="true"] { height: 24px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      height: 28px;
+      gap: 4px;
+      padding: 3px 6px;
+      background: var(--widget-number-background-readonly);
+
+      &[data-secondary="true"] {
+        height: 24px;
+      }
     `}
   >
     <img
@@ -108,24 +135,49 @@ function InspectorContextRowView(props: Readonly<{
       height={16}
       hidden={props.context.iconSrc === undefined}
       style={css`
-        & { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
-        &[hidden] { display: none; }
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+        flex-shrink: 0;
+
+        &[hidden] {
+          display: none;
+        }
       `}
     />
-    <span style={css`& { display: inline; min-width: 0; flex-grow: 1; overflow: clip; white-space: nowrap; text-overflow: ellipsis; }`}>{props.context.label}</span>
-    <nav aria-label={`${props.context.label} actions`} style={css`
-      & { display: flex; flex-direction: row; align-items: center; gap: 2px; }
-    `}>{(props.context.actions ?? []).map(action => <IconButton
-      key={action.id}
-      label={action.label}
-      iconSrc={action.iconSrc}
-      title={action.title ?? action.label}
-      disabled={action.disabled === true}
-      selected={action.selected}
-      iconSize={14}
-      style={actionStyle}
-      onClick={action.action}
-    />)}</nav>
+    <span
+      style={css`
+        display: inline;
+        min-width: 0;
+        flex-grow: 1;
+        overflow: clip;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      `}
+    >
+      {props.context.label}
+    </span>
+    <nav
+      aria-label={`${props.context.label} actions`}
+      style={css`
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2px;
+      `}
+    >
+      {(props.context.actions ?? []).map(action => <IconButton
+        key={action.id}
+        label={action.label}
+        iconSrc={action.iconSrc}
+        title={action.title ?? action.label}
+        disabled={action.disabled === true}
+        selected={action.selected}
+        iconSize={14}
+        style={actionStyle}
+        onClick={action.action}
+      />)}
+    </nav>
   </div>
 }
 
@@ -135,41 +187,66 @@ export function Inspector(props: InspectorProps) {
   return <aside
     aria-label={props.ariaLabel ?? "Inspector"}
     style={css`
-        & {
-          box-sizing: border-box;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-          height: 100%;
-          overflow: clip;
-          border: var(--border-width-control) solid var(--material-editor-border);
-          border-radius: 6px;
-          background: var(--widget-number-background-readonly);
-          color: rgb(var(--surface-150));
-          font-size: var(--font-size-sm);
-        }
-        ${props.style}
-      `}
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      overflow: clip;
+      border: var(--border-width-control) solid var(--material-editor-border);
+      border-radius: 6px;
+      background: var(--widget-number-background-readonly);
+      color: rgb(var(--surface-150));
+      font-size: var(--font-size-sm);
+
+      ${props.style}
+    `}
   >
-    <header style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 30px; gap: 4px; padding: 4px; background: var(--widget-number-background-readonly); }
-    `}>
-      <div style={css`
-        & { display: flex; flex-direction: row; align-items: center; width: 0; min-width: 22px; flex-grow: 1; gap: 2px; }
-      `}>{(props.toolbarLeadingActions ?? []).map(action => <IconButton
-        key={action.id}
-        label={action.label}
-        iconSrc={action.iconSrc}
-        title={action.title ?? action.label}
-        disabled={action.disabled === true}
-        selected={action.selected}
-        iconSize={14}
-        style={actionStyle}
-        onClick={action.action}
-      />)}</div>
-      <div style={css`
-        & { position: relative; display: block; width: 115px; min-width: 115px; height: 22px; }
-      `}>
+    <header
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        height: 30px;
+        gap: 4px;
+        padding: 4px;
+        background: var(--widget-number-background-readonly);
+      `}
+    >
+      <div
+        style={css`
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          width: 0;
+          min-width: 22px;
+          flex-grow: 1;
+          gap: 2px;
+        `}
+      >
+        {(props.toolbarLeadingActions ?? []).map(action => <IconButton
+          key={action.id}
+          label={action.label}
+          iconSrc={action.iconSrc}
+          title={action.title ?? action.label}
+          disabled={action.disabled === true}
+          selected={action.selected}
+          iconSize={14}
+          style={actionStyle}
+          onClick={action.action}
+        />)}
+      </div>
+      <div
+        style={css`
+          position: relative;
+          display: block;
+          width: 115px;
+          min-width: 115px;
+          height: 22px;
+        `}
+      >
         <img
           src={searchIcon}
           alt=""
@@ -177,7 +254,13 @@ export function Inspector(props: InspectorProps) {
           width={13}
           height={13}
           style={css`
-            & { position: absolute; left: 6px; top: 4px; width: 13px; height: 13px; object-fit: contain; pointer-events: none; }
+            position: absolute;
+            left: 6px;
+            top: 4px;
+            width: 13px;
+            height: 13px;
+            object-fit: contain;
+            pointer-events: none;
           `}
         />
         <TextField
@@ -185,28 +268,62 @@ export function Inspector(props: InspectorProps) {
           value={props.query}
           placeholder={props.searchPlaceholder}
           title={props.searchLabel}
-          style={searchStyle}
+          style={css`
+            width: 100%;
+            height: 22px;
+            --text-field-width: 100%;
+            --text-field-height: 22px;
+            --text-field-padding: 2px 8px 2px 23px;
+          `}
           onInput={onInput}
         />
       </div>
-      <div style={css`
-        & { display: flex; flex-direction: row; align-items: center; justify-content: flex-end; width: 0; min-width: 22px; flex-grow: 1; gap: 2px; }
-      `}>{(props.toolbarActions ?? []).map(action => <IconButton
-        key={action.id}
-        label={action.label}
-        iconSrc={action.iconSrc}
-        title={action.title ?? action.label}
-        disabled={action.disabled === true}
-        selected={action.selected}
-        iconSize={14}
-        style={actionStyle}
-        onClick={action.action}
-      />)}</div>
+      <div
+        style={css`
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-end;
+          width: 0;
+          min-width: 22px;
+          flex-grow: 1;
+          gap: 2px;
+        `}
+      >
+        {(props.toolbarActions ?? []).map(action => <IconButton
+          key={action.id}
+          label={action.label}
+          iconSrc={action.iconSrc}
+          title={action.title ?? action.label}
+          disabled={action.disabled === true}
+          selected={action.selected}
+          iconSize={14}
+          style={actionStyle}
+          onClick={action.action}
+        />)}
+      </div>
     </header>
-    <div style={css`& { display: flex; flex-direction: row; width: 100%; flex-grow: 1; }`}>
-      <nav aria-label={props.categoriesLabel ?? "Categories"} style={css`
-        & { box-sizing: border-box; display: flex; flex-direction: column; width: 30px; height: 100%; gap: 0; padding: 8px 0; background: var(--widget-text-background); }
-      `}>
+    <div
+      style={css`
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        flex-grow: 1;
+      `}
+    >
+      <nav
+        aria-label={props.categoriesLabel ?? "Categories"}
+        style={css`
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          width: 30px;
+          height: 100%;
+          gap: 0;
+          padding: 8px 0;
+          background: var(--widget-text-background);
+        `}
+      >
         {props.categories.map(category => <CategoryButton
           key={category.id}
           category={category}
@@ -214,14 +331,44 @@ export function Inspector(props: InspectorProps) {
           onChange={props.onCategoryChange}
         />)}
       </nav>
-      <div role="region" aria-label="Inspector content" style={css`
-        & { display: flex; flex-direction: column; min-width: 0; min-height: 0; flex-grow: 1; background: var(--widget-number-background-readonly); }
-      `}>
-        {props.context === undefined ? null : <InspectorContextRowView context={props.context} secondary={false} />}
-        {props.context?.secondary === undefined ? null : <InspectorContextRowView context={props.context.secondary} secondary={true} />}
-        <div data-inspector-panels="" style={css`
-          & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-height: 0; flex-grow: 1; gap: 2px; padding: 7px; overflow-y: auto; scrollbar-width: thin; background: var(--widget-number-background-readonly); }
-        `}>{props.children}</div>
+      <div
+        role="region"
+        aria-label="Inspector content"
+        style={css`
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          min-height: 0;
+          flex-grow: 1;
+          background: var(--widget-number-background-readonly);
+        `}
+      >
+        {props.context === undefined ? null : <InspectorContextRowView
+          context={props.context}
+          secondary={false}
+        />}
+        {props.context?.secondary === undefined ? null : <InspectorContextRowView
+          context={props.context.secondary}
+          secondary={true}
+        />}
+        <div
+          data-inspector-panels=""
+          style={css`
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 0;
+            flex-grow: 1;
+            gap: 2px;
+            padding: 7px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            background: var(--widget-number-background-readonly);
+          `}
+        >
+          {props.children}
+        </div>
       </div>
     </div>
   </aside>

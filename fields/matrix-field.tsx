@@ -15,10 +15,6 @@ export type MatrixFieldProps = Readonly<{
   onChange?: ((value: readonly (readonly number[])[], event: Event) => void) | undefined
 }>
 
-const rowStyle: CssStyle = css`& { width: 100%; }`
-const cellStyle: CssStyle = css`& { width: 0; min-width: 0; height: 26px; flex-grow: 1; --field-label-width: 20px; --number-field-width: 100%; --number-field-height: 26px; --number-field-border-width: 0px; --number-field-radius: 0px; --number-field-shadow: none; }`
-const separatorStyle: CssStyle = css`& { border-right: var(--border-width-control) solid var(--widget-regular-outline); }`
-
 type MatrixRowProps = Readonly<{
   row: readonly number[]
   rowIndex: number
@@ -33,17 +29,38 @@ type MatrixRowProps = Readonly<{
 function MatrixRow(props: MatrixRowProps) {
   const update = (column: number, value: number): readonly (readonly number[])[] =>
     updateMatrixValue(props.matrix, props.rowIndex, column, value)
-  return <FieldGroup style={rowStyle}>{props.row.map((value, column) => <NumberField
-    key={String(column)}
-    label={`${props.rowIndex + 1}${column + 1}`}
-    value={value}
-    step={props.step}
-    disabled={props.disabled}
-    readOnly={props.readOnly}
-    style={css`${cellStyle}${column < props.row.length - 1 && separatorStyle}`}
-    onInput={(next, event) => props.onInput?.(update(column, next), event)}
-    onChange={(next, event) => props.onChange?.(update(column, next), event)}
-  />)}</FieldGroup>
+  return <FieldGroup
+    style={css`
+      width: 100%;
+    `}
+  >
+    {props.row.map((value, column) => <NumberField
+      key={String(column)}
+      label={`${props.rowIndex + 1}${column + 1}`}
+      value={value}
+      step={props.step}
+      disabled={props.disabled}
+      readOnly={props.readOnly}
+      style={css`
+        width: 0;
+        min-width: 0;
+        height: 26px;
+        flex-grow: 1;
+        --field-label-width: 20px;
+        --number-field-width: 100%;
+        --number-field-height: 26px;
+        --number-field-border-width: 0px;
+        --number-field-radius: 0px;
+        --number-field-shadow: none;
+
+        ${column < props.row.length - 1 && css`
+          border-right: var(--border-width-control) solid var(--widget-regular-outline);
+        `}
+      `}
+      onInput={(next, event) => props.onInput?.(update(column, next), event)}
+      onChange={(next, event) => props.onChange?.(update(column, next), event)}
+    />)}
+  </FieldGroup>
 }
 
 export function MatrixField(props: MatrixFieldProps) {
@@ -53,28 +70,69 @@ export function MatrixField(props: MatrixFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
-    <div data-labelled={hasLabel ? "true" : undefined} style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-width: 0; gap: 2px; }
-      &[data-labelled="true"] { width: 0; flex-grow: 1; }
-    `}>{normalized.value.map((row, rowIndex) => <MatrixRow
-      key={String(rowIndex)}
-      row={row}
-      rowIndex={rowIndex}
-      step={normalized.step}
-      matrix={normalized.value}
-      disabled={props.disabled === true}
-      readOnly={props.readOnly === true}
-      onInput={props.onInput}
-      onChange={props.onChange}
-    />)}</div>
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 40%;
+        min-width: 0;
+        height: 28px;
+        color: var(--widget-list-content);
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
+    <div
+      data-labelled={hasLabel ? "true" : undefined}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        gap: 2px;
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+      `}
+    >
+      {normalized.value.map((row, rowIndex) => <MatrixRow
+        key={String(rowIndex)}
+        row={row}
+        rowIndex={rowIndex}
+        step={normalized.step}
+        matrix={normalized.value}
+        disabled={props.disabled === true}
+        readOnly={props.readOnly === true}
+        onInput={props.onInput}
+        onChange={props.onChange}
+      />)}
+    </div>
   </div>
 }

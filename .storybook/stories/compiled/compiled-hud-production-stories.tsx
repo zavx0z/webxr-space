@@ -22,7 +22,9 @@ function HudWindowStoryComponent(props: Readonly<{initial: HudWindowDefaultProps
     minimized={minimized}
     actions={props.initial.actions}
     onMinimizedChange={setMinimized}
-  ><Pane content="Window body" variant="transparent" /></HudWindow>
+  >
+    <Pane content="Window body" variant="transparent" />
+  </HudWindow>
 }
 
 function HudFrameStoryComponent(props: Readonly<{initial: HudFrameDefaultProps}>) {
@@ -30,7 +32,9 @@ function HudFrameStoryComponent(props: Readonly<{initial: HudFrameDefaultProps}>
     title={props.initial.title}
     edge={props.initial.edge}
     handles={props.initial.handles}
-  ><Pane content="Frame body" variant="transparent" /></HudFrame>
+  >
+    <Pane content="Frame body" variant="transparent" />
+  </HudFrame>
 }
 
 function TimelineStoryComponent(props: Readonly<{initial: TimelineProps}>) {
@@ -47,7 +51,10 @@ function TimelineStoryComponent(props: Readonly<{initial: TimelineProps}>) {
     framesPerSecond={props.initial.framesPerSecond}
     keyframes={props.initial.keyframes}
     markers={props.initial.markers}
-    style={css`& { width: 100%; max-width: 640px; }`}
+    style={css`
+      width: 100%;
+      max-width: 640px;
+    `}
   />
 }
 
@@ -166,7 +173,10 @@ function timelineSource(props: TimelineProps): string {
     "    framesPerSecond={props.framesPerSecond}",
     "    keyframes={props.keyframes}",
     "    markers={props.markers}",
-    "    style={css`& { width: 100%; max-width: 640px; }`}",
+    "    style={css`",
+    "      width: 100%;",
+    "      max-width: 640px;",
+    "    `}",
     "  />)"
   ].join("\n")
 }

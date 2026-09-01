@@ -28,11 +28,6 @@ export type CycleFieldProps = Readonly<{
   onOpenChange?: ((open: boolean, event: Event) => void) | undefined
 }>
 
-const triggerStyle: CssStyle = css`& { width: 100%; height: var(--control-height-large); justify-content: flex-start; padding: 3px 7px; }`
-const openTriggerStyle: CssStyle = css`& { background: var(--widget-regular-background-selected); color: var(--widget-regular-content-selected); }`
-const compactTriggerStyle: CssStyle = css`& { height: var(--control-height-medium); padding: 2px 6px; }`
-const optionStyle: CssStyle = css`& { width: 100%; height: 26px; justify-content: flex-start; border: 0; background: transparent; box-shadow: none; }`
-
 type CycleOptionProps = Readonly<{
   option: CycleFieldOption
   selected: boolean
@@ -53,7 +48,14 @@ function CycleOption(props: CycleOptionProps) {
     variant={props.selected ? "contained" : "text"}
     tone={props.selected ? "primary" : "neutral"}
     disabled={props.disabled || props.option.disabled === true}
-    style={optionStyle}
+    style={css`
+      width: 100%;
+      height: 26px;
+      justify-content: flex-start;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    `}
     onClick={event => props.onSelect(props.option.key, event)}
     onKeyDown={event => props.onKeyDown(props.option.key, event)}
   />
@@ -115,20 +117,63 @@ export function CycleField(props: CycleFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; min-height: 28px; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        min-height: 28px;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
-    <div data-labelled={hasLabel ? "true" : undefined} data-density={density} data-readonly={props.readOnly === true ? "true" : undefined} style={css`
-      & { box-sizing: border-box; display: block; width: 180px; min-width: 0; }
-      &[data-labelled="true"] { width: 0; flex-grow: 1; }
-      &[data-readonly="true"] { color: var(--widget-text-content-readonly); }
-    `}>
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 40%;
+        min-width: 0;
+        height: 28px;
+        color: var(--widget-list-content);
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
+    <div
+      data-labelled={hasLabel ? "true" : undefined}
+      data-density={density}
+      data-readonly={props.readOnly === true ? "true" : undefined}
+      style={css`
+        box-sizing: border-box;
+        display: block;
+        width: 180px;
+        min-width: 0;
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+
+        &[data-readonly="true"] {
+          color: var(--widget-text-content-readonly);
+        }
+      `}
+    >
       <Button
         label={selected?.label ?? props.value}
         startIcon={selected?.iconSrc}
@@ -138,7 +183,22 @@ export function CycleField(props: CycleFieldProps) {
         aria-expanded={String(open)}
         aria-haspopup="listbox"
         aria-controls={popupId}
-        style={css`${triggerStyle}${density === "compact" && compactTriggerStyle}${open && openTriggerStyle}`}
+        style={css`
+          width: 100%;
+          height: var(--control-height-large);
+          justify-content: flex-start;
+          padding: 3px 7px;
+
+          ${density === "compact" && css`
+            height: var(--control-height-medium);
+            padding: 2px 6px;
+          `}
+
+          ${open && css`
+            background: var(--widget-regular-background-selected);
+            color: var(--widget-regular-content-selected);
+          `}
+        `}
         onClick={onToggle}
       />
       <div
@@ -149,17 +209,25 @@ export function CycleField(props: CycleFieldProps) {
         title={props.title}
         onToggle={onPopoverToggle}
         style={css`
-          & { box-sizing: border-box; display: block; width: 180px; padding: 3px; border: var(--border-width-control) solid var(--widget-popup-outline); border-radius: 4px; background: var(--widget-popup-background); }
+          box-sizing: border-box;
+          display: block;
+          width: 180px;
+          padding: 3px;
+          border: var(--border-width-control) solid var(--widget-popup-outline);
+          border-radius: 4px;
+          background: var(--widget-popup-background);
         `}
-      >{options.map(option => <CycleOption
-        key={option.key}
-        option={option}
-        selected={option.value === props.value}
-        focusable={option.key === focusKey}
-        disabled={props.disabled === true}
-        onSelect={onSelect}
-        onKeyDown={onKeyDown}
-      />)}</div>
+      >
+        {options.map(option => <CycleOption
+          key={option.key}
+          option={option}
+          selected={option.value === props.value}
+          focusable={option.key === focusKey}
+          disabled={props.disabled === true}
+          onSelect={onSelect}
+          onKeyDown={onKeyDown}
+        />)}
+      </div>
     </div>
   </div>
 }

@@ -43,9 +43,16 @@ export function StoryPropsFields(props: StoryPropsFieldsProps) {
 
 function StoryPropsField(props: Readonly<{field: StoryPropsFieldDescriptor}>) {
   const field = props.field
-  return <div data-storybook-prop-field={field.id} style={css`
-    & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-width: 0; }
-  `}>
+  return <div
+    data-storybook-prop-field={field.id}
+    style={css`
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-width: 0;
+    `}
+  >
     {field.kind === "boolean" ? <CheckboxField
       label={field.label}
       checked={field.value}
@@ -95,7 +102,8 @@ function PropsInspectorView(props: PropsInspectorViewProps) {
     searchPlaceholder={PROPS_INSPECTOR_COPY.searchLabel}
     context={props.context}
     onQueryChange={setQuery}
-  >{inspectorPanels.map(panel => <Panel
+  >
+    {inspectorPanels.map(panel => <Panel
       key={panel.id}
       label={PROPS_INSPECTOR_COPY.panelLabel}
       title={PROPS_INSPECTOR_COPY.panelTitle}
@@ -103,7 +111,8 @@ function PropsInspectorView(props: PropsInspectorViewProps) {
       onToggle={setExpanded}
     >
       <StoryPropsFields fields={fields} />
-    </Panel>)}</Inspector>
+    </Panel>)}
+  </Inspector>
 }
 
 export function createStoryPropsInspector(

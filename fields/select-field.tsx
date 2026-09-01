@@ -37,7 +37,9 @@ function SelectOption(props: Readonly<{option: SelectFieldOption; selected: bool
     disabled={props.option.disabled === true}
     hidden={props.hidden}
     title={props.option.title ?? props.option.description}
-  >{props.option.label}</option>
+  >
+    {props.option.label}
+  </option>
 }
 
 export function SelectField(props: SelectFieldProps) {
@@ -64,15 +66,43 @@ export function SelectField(props: SelectFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; min-height: 28px; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        min-height: 28px;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 40%;
+        min-width: 0;
+        height: 28px;
+        color: var(--widget-list-content);
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
     <select
       data-density={density}
       data-labelled={hasLabel ? "true" : undefined}
@@ -81,18 +111,63 @@ export function SelectField(props: SelectFieldProps) {
       title={selected?.description ?? props.title}
       onChange={onChange}
       style={css`
-        & { box-sizing: border-box; display: block; min-width: 0; width: 180px; height: var(--control-height-large); padding: 3px 8px; border: var(--border-width-control) solid var(--widget-regular-outline); border-radius: 4px; background: var(--widget-regular-background); box-shadow: 0 1px 0 var(--material-widget-emboss); color: var(--widget-regular-content); font-size: var(--font-size-sm); }
-        &[data-labelled="true"] { width: 0; flex-grow: 1; }
-        &:hover { background: var(--widget-hover-background); }
-        &:active { border-color: var(--widget-focus-outline); background: var(--widget-text-background-focus); }
-        &:focus { border-color: var(--widget-focus-outline); background: var(--widget-text-background-focus); }
-        &:disabled { opacity: 0.5; box-shadow: none; }
-        &[data-density="compact"] { height: var(--control-height-medium); padding: 2px 6px; font-size: var(--font-size-xs); }
-        &[data-readonly="true"] { color: var(--widget-text-content-readonly); }
+        box-sizing: border-box;
+        display: block;
+        min-width: 0;
+        width: 180px;
+        height: var(--control-height-large);
+        padding: 3px 8px;
+        border: var(--border-width-control) solid var(--widget-regular-outline);
+        border-radius: 4px;
+        background: var(--widget-regular-background);
+        box-shadow: 0 1px 0 var(--material-widget-emboss);
+        color: var(--widget-regular-content);
+        font-size: var(--font-size-sm);
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+
+        &:active {
+          border-color: var(--widget-focus-outline);
+          background: var(--widget-text-background-focus);
+        }
+
+        &:focus {
+          border-color: var(--widget-focus-outline);
+          background: var(--widget-text-background-focus);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          box-shadow: none;
+        }
+
+        &[data-density="compact"] {
+          height: var(--control-height-medium);
+          padding: 2px 6px;
+          font-size: var(--font-size-xs);
+        }
+
+        &[data-readonly="true"] {
+          color: var(--widget-text-content-readonly);
+        }
       `}
     >
       <optgroup label="">
-        <option value="" selected={exceptionalLabel !== undefined} disabled={true} hidden={exceptionalLabel === undefined}>{exceptionalLabel ?? ""}</option>
+        <option
+          value=""
+          selected={exceptionalLabel !== undefined}
+          disabled={true}
+          hidden={exceptionalLabel === undefined}
+        >
+          {exceptionalLabel ?? ""}
+        </option>
         {displayedOptions.map(option => <SelectOption
           key={option.key}
           option={option}

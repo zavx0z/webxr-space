@@ -18,10 +18,6 @@ export type ColorFieldProps = Readonly<{
   onOpenChange?: ((open: boolean, event: Event) => void) | undefined
 }>
 
-const triggerStyle: CssStyle = css`& { width: 100%; height: 28px; justify-content: flex-start; padding: 3px 7px; }`
-const openTriggerStyle: CssStyle = css`& { background: var(--widget-active-background); }`
-const pickerStyle: CssStyle = css`& { width: 280px; }`
-
 export function ColorField(props: ColorFieldProps) {
   if (!props.value || typeof props.value !== "object") throw new TypeError("ColorField value must be an object")
   const value = normalizeColorValue(props.value)
@@ -50,23 +46,100 @@ export function ColorField(props: ColorFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; min-height: 28px; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        min-height: 28px;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
-    <div data-labelled={hasLabel ? "true" : undefined} data-readonly={props.readOnly === true ? "true" : undefined} style={css`
-      & { box-sizing: border-box; display: block; width: 280px; min-width: 0; }
-      &[data-labelled="true"] { width: 0; flex-grow: 1; }
-      &[data-readonly="true"] { color: var(--widget-text-content-readonly); }
-    `}>
-      <Button label={formatColorValue(value)} disabled={props.disabled === true} selected={open} aria-expanded={String(open)} style={css`${triggerStyle}${open && openTriggerStyle}`} onClick={onToggle} />
-      <div ref={bindPicker} popover="auto" onToggle={onPickerToggle} style={css`& { box-sizing: border-box; display: block; width: 280px; }`}>
-        <ColorPickerField value={value} disabled={props.disabled} readOnly={props.readOnly} title={props.title} style={pickerStyle} onInput={props.onInput} onChange={props.onChange} />
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 40%;
+        min-width: 0;
+        height: 28px;
+        color: var(--widget-list-content);
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
+    <div
+      data-labelled={hasLabel ? "true" : undefined}
+      data-readonly={props.readOnly === true ? "true" : undefined}
+      style={css`
+        box-sizing: border-box;
+        display: block;
+        width: 280px;
+        min-width: 0;
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+
+        &[data-readonly="true"] {
+          color: var(--widget-text-content-readonly);
+        }
+      `}
+    >
+      <Button
+        label={formatColorValue(value)}
+        disabled={props.disabled === true}
+        selected={open}
+        aria-expanded={String(open)}
+        style={css`
+          width: 100%;
+          height: 28px;
+          justify-content: flex-start;
+          padding: 3px 7px;
+
+          ${open && css`
+            background: var(--widget-active-background);
+          `}
+        `}
+        onClick={onToggle}
+      />
+      <div
+        ref={bindPicker}
+        popover="auto"
+        onToggle={onPickerToggle}
+        style={css`
+          box-sizing: border-box;
+          display: block;
+          width: 280px;
+        `}
+      >
+        <ColorPickerField
+          value={value}
+          disabled={props.disabled}
+          readOnly={props.readOnly}
+          title={props.title}
+          style={css`
+            width: 280px;
+          `}
+          onInput={props.onInput}
+          onChange={props.onChange}
+        />
       </div>
     </div>
   </div>

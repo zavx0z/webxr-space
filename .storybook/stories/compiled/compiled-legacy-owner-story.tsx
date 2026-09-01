@@ -10,17 +10,17 @@ type LegacyOwnerNoticeProps = Readonly<{
 }>
 
 function LegacyOwnerNoticeContent(props: LegacyOwnerNoticeProps) {
-  return <div style={css`
-      & {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        gap: 8px;
-      }
-    `}>
-      <Typography text={props.title} variant="title" />
-      <Typography text={props.detail} variant="body" />
-    </div>
+  return <div
+    style={css`
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    `}
+  >
+    <Typography text={props.title} variant="title" />
+    <Typography text={props.detail} variant="body" />
+  </div>
 }
 
 function LegacyOwnerNotice(props: LegacyOwnerNoticeProps) {

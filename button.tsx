@@ -76,52 +76,100 @@ export function Button(props: ButtonProps) {
     onClick={props.onClick}
     onKeyDown={props.onKeyDown}
     style={css`
-        & {
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 92px;
-          min-width: 22px;
-          height: var(--control-height-medium);
-          gap: var(--control-content-gap);
-          padding: 2px 6px;
-          border: var(--border-width-control) solid var(--widget-regular-outline);
-          border-radius: 3px;
-          background: var(--widget-regular-background);
-          box-shadow: 0 1px 0 var(--material-widget-emboss);
-          color: var(--widget-regular-content);
-          font-size: var(--font-size-xs);
-          line-height: var(--line-height-control);
-          overflow: clip;
-        }
-        &:hover {
-          background: var(--widget-hover-background);
-        }
-        &:active {
-          background: var(--widget-regular-background-selected);
-          color: var(--widget-regular-content-selected);
-        }
-        &:focus {
-          border-color: var(--widget-focus-outline);
-        }
-        &:disabled {
-          opacity: 0.5;
-          box-shadow: none;
-        }
-        &[data-variant="text"] { border-color: transparent; background: transparent; box-shadow: none; }
-        &[data-variant="outlined"] { background: transparent; box-shadow: none; }
-        &[data-variant="glass"] { background: var(--widget-regular-background-glass); }
-        &[data-size="small"] { width: 76px; height: var(--control-height-small); min-width: 18px; padding: 1px 5px; font-size: var(--font-size-xs); }
-        &[data-size="large"] { width: 112px; height: var(--control-height-large); min-width: 28px; padding: 3px 8px; font-size: var(--font-size-sm); }
-        &[data-variant="contained"][data-tone="primary"] { background: var(--widget-regular-background-selected); }
-        &[data-variant="contained"][data-tone="success"] { background: var(--state-success); }
-        &[data-variant="contained"][data-tone="warning"] { background: var(--state-warning); }
-        &[data-variant="contained"][data-tone="error"] { background: var(--state-error); }
-        &[aria-pressed="true"] { background: var(--widget-regular-background-selected); color: var(--widget-regular-content-selected); }
-        &[aria-pressed="true"]:hover { background: var(--widget-regular-background-selected); }
-        ${props.style}
-      `}
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 92px;
+      min-width: 22px;
+      height: var(--control-height-medium);
+      gap: var(--control-content-gap);
+      padding: 2px 6px;
+      border: var(--border-width-control) solid var(--widget-regular-outline);
+      border-radius: 3px;
+      background: var(--widget-regular-background);
+      box-shadow: 0 1px 0 var(--material-widget-emboss);
+      color: var(--widget-regular-content);
+      font-size: var(--font-size-xs);
+      line-height: var(--line-height-control);
+      overflow: clip;
+
+      &:hover {
+        background: var(--widget-hover-background);
+      }
+
+      &:active {
+        background: var(--widget-regular-background-selected);
+        color: var(--widget-regular-content-selected);
+      }
+
+      &:focus {
+        border-color: var(--widget-focus-outline);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        box-shadow: none;
+      }
+
+      &[data-variant="text"] {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      &[data-variant="outlined"] {
+        background: transparent;
+        box-shadow: none;
+      }
+
+      &[data-variant="glass"] {
+        background: var(--widget-regular-background-glass);
+      }
+
+      &[data-size="small"] {
+        width: 76px;
+        height: var(--control-height-small);
+        min-width: 18px;
+        padding: 1px 5px;
+        font-size: var(--font-size-xs);
+      }
+
+      &[data-size="large"] {
+        width: 112px;
+        height: var(--control-height-large);
+        min-width: 28px;
+        padding: 3px 8px;
+        font-size: var(--font-size-sm);
+      }
+
+      &[data-variant="contained"][data-tone="primary"] {
+        background: var(--widget-regular-background-selected);
+      }
+
+      &[data-variant="contained"][data-tone="success"] {
+        background: var(--state-success);
+      }
+
+      &[data-variant="contained"][data-tone="warning"] {
+        background: var(--state-warning);
+      }
+
+      &[data-variant="contained"][data-tone="error"] {
+        background: var(--state-error);
+      }
+
+      &[aria-pressed="true"] {
+        background: var(--widget-regular-background-selected);
+        color: var(--widget-regular-content-selected);
+      }
+
+      &[aria-pressed="true"]:hover {
+        background: var(--widget-regular-background-selected);
+      }
+
+      ${props.style}
+    `}
   >
     <img
       src={startIcon}
@@ -131,25 +179,32 @@ export function Button(props: ButtonProps) {
       height={iconSize}
       hidden={startIcon === ""}
       style={css`
-          & {
-            width: var(--control-icon-size);
-            height: var(--control-icon-size);
-            object-fit: contain;
-            flex-shrink: 0;
-          }
-          &[hidden] { display: none; }
-        `}
-    />
-    <span hidden={!showLabel} style={css`
-        & {
-          display: inline;
-          min-width: 0;
-          overflow: clip;
-          white-space: nowrap;
-          text-overflow: ellipsis;
+        width: var(--control-icon-size);
+        height: var(--control-icon-size);
+        object-fit: contain;
+        flex-shrink: 0;
+
+        &[hidden] {
+          display: none;
         }
-        &[hidden] { display: none; }
-      `}>{props.label}</span>
+      `}
+    />
+    <span
+      hidden={!showLabel}
+      style={css`
+        display: inline;
+        min-width: 0;
+        overflow: clip;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label}
+    </span>
     <img
       src={endIcon}
       alt=""
@@ -158,14 +213,15 @@ export function Button(props: ButtonProps) {
       height={iconSize}
       hidden={endIcon === ""}
       style={css`
-          & {
-            width: var(--control-icon-size);
-            height: var(--control-icon-size);
-            object-fit: contain;
-            flex-shrink: 0;
-          }
-          &[hidden] { display: none; }
-        `}
+        width: var(--control-icon-size);
+        height: var(--control-icon-size);
+        object-fit: contain;
+        flex-shrink: 0;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
     />
   </button>
 }

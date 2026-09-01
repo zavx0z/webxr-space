@@ -141,32 +141,105 @@ export function NumberField(props: NumberFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
-      &[data-has-label="true"] { width: 100%; min-height: 28px; gap: 4px; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
+
+      &[data-has-label="true"] {
+        width: 100%;
+        min-height: 28px;
+        gap: 4px;
+      }
+
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & { box-sizing: border-box; display: flex; align-items: center; width: var(--field-label-width, 40%); min-width: 0; height: 28px; color: var(--field-label-content, var(--widget-list-content)); font-size: var(--font-size-sm); }
-      &[hidden] { display: none; }
-    `}>{props.label ?? ""}</span>
+    <span
+      hidden={!hasLabel}
+      style={css`
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: var(--field-label-width, 40%);
+        min-width: 0;
+        height: 28px;
+        color: var(--field-label-content, var(--widget-list-content));
+        font-size: var(--font-size-sm);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
     <div
       data-number-field-value=""
       data-labelled={hasLabel ? "true" : undefined}
       data-readonly={props.readOnly === true ? "true" : undefined}
       style={css`
-        & { box-sizing: border-box; position: relative; display: block; width: var(--number-field-width, 120px); height: var(--number-field-height, var(--control-height-medium)); min-width: 0; padding: 0; border-width: var(--number-field-border-width, var(--border-width-control)); border-style: solid; border-color: var(--number-field-outline, var(--widget-number-outline)); border-radius: var(--number-field-radius, 3px); background: var(--number-field-background, var(--widget-number-background)); box-shadow: var(--number-field-shadow, 0 1px 0 var(--material-widget-emboss)); overflow: clip; }
-        &[data-labelled="true"] { width: 0; flex-grow: 1; }
-        &:hover { background: var(--widget-hover-background); }
-        &:focus-within { border-color: var(--widget-focus-outline); background: var(--widget-number-background-focus); }
-        &[data-readonly="true"] { color: var(--widget-number-content-readonly); }
-        ${props.disabled === true && css`& { opacity: 0.5; box-shadow: none; }`}
+        box-sizing: border-box;
+        position: relative;
+        display: block;
+        width: var(--number-field-width, 120px);
+        height: var(--number-field-height, var(--control-height-medium));
+        min-width: 0;
+        padding: 0;
+        border-width: var(--number-field-border-width, var(--border-width-control));
+        border-style: solid;
+        border-color: var(--number-field-outline, var(--widget-number-outline));
+        border-radius: var(--number-field-radius, 3px);
+        background: var(--number-field-background, var(--widget-number-background));
+        box-shadow: var(--number-field-shadow, 0 1px 0 var(--material-widget-emboss));
+        overflow: clip;
+
+        &[data-labelled="true"] {
+          width: 0;
+          flex-grow: 1;
+        }
+
+        &:hover {
+          background: var(--widget-hover-background);
+        }
+
+        &:focus-within {
+          border-color: var(--widget-focus-outline);
+          background: var(--widget-number-background-focus);
+        }
+
+        &[data-readonly="true"] {
+          color: var(--widget-number-content-readonly);
+        }
+
+        ${props.disabled === true && css`
+          opacity: 0.5;
+          box-shadow: none;
+        `}
       `}
     >
-      <span data-number-fill="" hidden={fillPercentage === null} style={css`
-        & { position: absolute; left: 0; top: 0; display: block; width: ${fillPercentage ?? 0}%; height: 100%; background: var(--widget-number-fill); }
-        &[hidden] { display: none; }
-      `}></span>
+      <span
+        data-number-fill=""
+        hidden={fillPercentage === null}
+        style={css`
+          position: absolute;
+          left: 0;
+          top: 0;
+          display: block;
+          width: ${fillPercentage ?? 0}%;
+          height: 100%;
+          background: var(--widget-number-fill);
+
+          &[hidden] {
+            display: none;
+          }
+        `}
+      >
+      </span>
       <input
         type="number"
         value={props.value}
@@ -184,16 +257,70 @@ export function NumberField(props: NumberFieldProps) {
         onPointerUp={endScrub}
         onPointerCancel={cancelScrub}
         style={css`
-          & { box-sizing: border-box; position: relative; z-index: 1; display: block; width: 100%; height: 100%; min-width: 0; padding: var(--number-field-padding, 2px 7px); border: 0 solid transparent; border-radius: 0; background: transparent; color: var(--widget-number-content); font-size: var(--number-field-font-size, var(--font-size-xs)); line-height: var(--line-height-control); text-align: var(--number-field-text-align, right); overflow: clip; cursor: ew-resize; }
-          &[readonly] { color: var(--widget-number-content-readonly); cursor: default; }
+          box-sizing: border-box;
+          position: relative;
+          z-index: 1;
+          display: block;
+          width: 100%;
+          height: 100%;
+          min-width: 0;
+          padding: var(--number-field-padding, 2px 7px);
+          border: 0 solid transparent;
+          border-radius: 0;
+          background: transparent;
+          color: var(--widget-number-content);
+          font-size: var(--number-field-font-size, var(--font-size-xs));
+          line-height: var(--line-height-control);
+          text-align: var(--number-field-text-align, right);
+          overflow: clip;
+          cursor: ew-resize;
+
+          &[readonly] {
+            color: var(--widget-number-content-readonly);
+            cursor: default;
+          }
         `}
       />
-      <button type="button" disabled={locked} onClick={decrease} style={css`
-        & { position: absolute; left: 0; top: 0; z-index: 2; display: block; width: 16px; height: 100%; padding: 0; border: 0 solid transparent; background: transparent; color: transparent; box-shadow: none; }
-      `}></button>
-      <button type="button" disabled={locked} onClick={increase} style={css`
-        & { position: absolute; right: 0; top: 0; z-index: 2; display: block; width: 16px; height: 100%; padding: 0; border: 0 solid transparent; background: transparent; color: transparent; box-shadow: none; }
-      `}></button>
+      <button
+        type="button"
+        disabled={locked}
+        onClick={decrease}
+        style={css`
+          position: absolute;
+          left: 0;
+          top: 0;
+          z-index: 2;
+          display: block;
+          width: 16px;
+          height: 100%;
+          padding: 0;
+          border: 0 solid transparent;
+          background: transparent;
+          color: transparent;
+          box-shadow: none;
+        `}
+      >
+      </button>
+      <button
+        type="button"
+        disabled={locked}
+        onClick={increase}
+        style={css`
+          position: absolute;
+          right: 0;
+          top: 0;
+          z-index: 2;
+          display: block;
+          width: 16px;
+          height: 100%;
+          padding: 0;
+          border: 0 solid transparent;
+          background: transparent;
+          color: transparent;
+          box-shadow: none;
+        `}
+      >
+      </button>
     </div>
   </div>
 }

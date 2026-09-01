@@ -48,47 +48,40 @@ export type TableProps = Readonly<{
   onCellActivate?: ((context: TableCellContext, event: Event) => void) | undefined
 }>
 
-const rootCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    width: 100%;
-    border: var(--border-width-control) solid var(--widget-regular-outline);
-    border-radius: 4px;
-    overflow: clip;
-    background: var(--widget-text-background);
-  }
+const sectionCss = css`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 `
-const sectionCss = css`& { display: flex; flex-direction: column; width: 100%; }`
 const rowCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    min-height: 28px;
-    border-bottom: var(--border-width-control) solid var(--widget-regular-outline);
-    background: var(--widget-number-background-readonly);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 28px;
+  border-bottom: var(--border-width-control) solid var(--widget-regular-outline);
+  background: var(--widget-number-background-readonly);
+
+  &:hover {
+    background: var(--widget-regular-background);
   }
-  &:hover { background: var(--widget-regular-background); }
 `
 const cellCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    min-height: 28px;
-    flex-grow: 1;
-    padding: 3px 7px;
-    border-right: var(--border-width-control) solid var(--widget-regular-outline);
-    background: transparent;
-    color: var(--widget-list-content);
-    font-size: var(--font-size-xs);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 28px;
+  flex-grow: 1;
+  padding: 3px 7px;
+  border-right: var(--border-width-control) solid var(--widget-regular-outline);
+  background: transparent;
+  color: var(--widget-list-content);
+  font-size: var(--font-size-xs);
+
+  &[data-last="true"] {
+    border-right: 0;
   }
-  &[data-last="true"] { border-right: 0; }
 `
 
 type HeaderCellProps = Readonly<{column: TableColumn; last: boolean}>
@@ -99,8 +92,19 @@ function HeaderCell(props: HeaderCellProps) {
   return <th
     data-column-key={props.column.key}
     data-last={props.last ? "true" : undefined}
-    style={css`${cellCss}${css`& { color: var(--widget-regular-content); width: ${width}; flex-grow: ${grow}; flex-shrink: ${grow}; }`}`}
-  >{props.column.label}</th>
+    style={css`
+      ${cellCss}
+
+      ${css`
+        color: var(--widget-regular-content);
+        width: ${width};
+        flex-grow: ${grow};
+        flex-shrink: ${grow};
+      `}
+    `}
+  >
+    {props.column.label}
+  </th>
 }
 
 type DataCellProps = Readonly<{
@@ -140,8 +144,18 @@ function DataCell(props: DataCellProps) {
     data-interactive={interactive ? "true" : undefined}
     aria-disabled={String(props.disabled)}
     onClick={onClick}
-    style={css`${cellCss}${css`& { width: ${width}; flex-grow: ${grow}; flex-shrink: ${grow}; }`}`}
-  >{formatTableCellValue(props.value)}</td>
+    style={css`
+      ${cellCss}
+
+      ${css`
+        width: ${width};
+        flex-grow: ${grow};
+        flex-shrink: ${grow};
+      `}
+    `}
+  >
+    {formatTableCellValue(props.value)}
+  </td>
 }
 
 type TableRowViewProps = Readonly<{
@@ -181,9 +195,19 @@ function TableRowView(props: TableRowViewProps) {
     onClick={onClick}
     style={css`
       ${rowCss}
-      &[data-last="true"] { border-bottom: 0; }
-      &[aria-selected="true"] { background: var(--widget-list-background-selected); color: var(--widget-list-content-selected); }
-      &[aria-disabled="true"] { opacity: 0.5; }
+
+      &[data-last="true"] {
+        border-bottom: 0;
+      }
+
+      &[aria-selected="true"] {
+        background: var(--widget-list-background-selected);
+        color: var(--widget-list-content-selected);
+      }
+
+      &[aria-disabled="true"] {
+        opacity: 0.5;
+      }
     `}
   >
     {props.columns.map((column, index) => <DataCell
@@ -204,9 +228,32 @@ function TableRowView(props: TableRowViewProps) {
 
 export function Table(props: TableProps) {
   const selection = assertTableProps(props)
-  return <table title={props.title} style={css`${rootCss}${props.style}`}>
+  return <table
+    title={props.title}
+    style={css`
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      width: 100%;
+      border: var(--border-width-control) solid var(--widget-regular-outline);
+      border-radius: 4px;
+      overflow: clip;
+      background: var(--widget-text-background);
+
+      ${props.style}
+    `}
+  >
     <thead style={sectionCss}>
-      <tr style={css`${rowCss}${css`& { background: var(--widget-regular-outline); }`}`}>
+      <tr
+        style={css`
+          ${rowCss}
+
+          ${css`
+            background: var(--widget-regular-outline);
+          `}
+        `}
+      >
         {props.columns.map((column, index) => <HeaderCell
           key={column.key}
           column={column}
@@ -234,7 +281,6 @@ export function Table(props: TableProps) {
     </tbody>
   </table>
 }
-
 
 function assertTableProps(props: TableProps): Readonly<{
   rowKeys: readonly string[]

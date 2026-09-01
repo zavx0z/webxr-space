@@ -20,49 +20,6 @@ export type ListProps = Readonly<{
   onSelect?: ((key: string, event: Event) => void) | undefined
 }>
 
-const rootCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    width: 300px;
-    max-height: 180px;
-    gap: 0;
-    padding: 2px;
-    overflow-y: auto;
-    border: var(--border-width-control) solid var(--widget-regular-outline);
-    border-radius: 4px;
-    background: var(--widget-text-background);
-  }
-`
-
-const itemCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    min-height: 28px;
-    padding: 3px 7px;
-    border-radius: 3px;
-    color: var(--widget-list-content);
-    font-size: var(--font-size-xs);
-  }
-  &:hover { background: var(--widget-regular-background); }
-`
-
-const labelCss = css`& { display: inline; min-width: 0; flex-grow: 1; }`
-const iconCss = css`
-  & { display: block; width: 16px; min-width: 16px; height: 16px; margin-right: 6px; object-fit: contain; }
-  &[hidden] { display: none; }
-`
-const detailCss = css`& { display: inline; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }`
-const emptyCss = css`
-  & { display: block; min-height: 24px; padding: 4px 8px; color: var(--widget-text-content-readonly); font-size: var(--font-size-xs); }
-`
-
 type ListRowProps = Readonly<{
   item: ListItem
   selected: boolean
@@ -86,11 +43,38 @@ function ListRow(props: ListRowProps) {
     title={props.item.detail ?? props.item.label}
     onClick={onClick}
     style={css`
-      ${itemCss}
-      &[data-embedded="true"] { min-height: 26px; }
-      &[data-dense="true"] { min-height: 24px; padding: 2px 6px; }
-      &[aria-selected="true"] { background: var(--widget-list-background-selected); color: var(--widget-list-content-selected); }
-      &[aria-disabled="true"] { opacity: 0.5; }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      min-height: 28px;
+      padding: 3px 7px;
+      border-radius: 3px;
+      color: var(--widget-list-content);
+      font-size: var(--font-size-xs);
+
+      &:hover {
+        background: var(--widget-regular-background);
+      }
+
+      &[data-embedded="true"] {
+        min-height: 26px;
+      }
+
+      &[data-dense="true"] {
+        min-height: 24px;
+        padding: 2px 6px;
+      }
+
+      &[aria-selected="true"] {
+        background: var(--widget-list-background-selected);
+        color: var(--widget-list-content-selected);
+      }
+
+      &[aria-disabled="true"] {
+        opacity: 0.5;
+      }
     `}
   >
     <img
@@ -100,15 +84,53 @@ function ListRow(props: ListRowProps) {
       width={16}
       height={16}
       hidden={props.item.iconSrc === undefined}
-      style={iconCss}
+      style={css`
+        display: block;
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        object-fit: contain;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
     />
-    <span style={labelCss}>{props.item.label}</span>
-    <span style={detailCss}>{props.item.detail ?? ""}</span>
+    <span
+      style={css`
+        display: inline;
+        min-width: 0;
+        flex-grow: 1;
+      `}
+    >
+      {props.item.label}
+    </span>
+    <span
+      style={css`
+        display: inline;
+        color: var(--widget-text-content-readonly);
+        font-size: var(--font-size-2xs);
+      `}
+    >
+      {props.item.detail ?? ""}
+    </span>
   </li>
 }
 
 function EmptyListRow(props: Readonly<{label: string}>) {
-  return <li aria-disabled="true" style={emptyCss}>{props.label}</li>
+  return <li
+    aria-disabled="true"
+    style={css`
+      display: block;
+      min-height: 24px;
+      padding: 4px 8px;
+      color: var(--widget-text-content-readonly);
+      font-size: var(--font-size-xs);
+    `}
+  >
+    {props.label}
+  </li>
 }
 
 export function List(props: ListProps) {
@@ -117,7 +139,22 @@ export function List(props: ListProps) {
     role="listbox"
     title={props.title}
     aria-disabled={String(props.disabled === true)}
-    style={css`${rootCss}${props.style}`}
+    style={css`
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      width: 300px;
+      max-height: 180px;
+      gap: 0;
+      padding: 2px;
+      overflow-y: auto;
+      border: var(--border-width-control) solid var(--widget-regular-outline);
+      border-radius: 4px;
+      background: var(--widget-text-background);
+
+      ${props.style}
+    `}
   >
     {props.items.length === 0 ? <EmptyListRow label={props.emptyLabel ?? ""} /> : null}
     {props.items.map(item => <ListRow
@@ -131,7 +168,6 @@ export function List(props: ListProps) {
     />)}
   </ul>
 }
-
 
 function assertListProps(props: ListProps): string | null {
   if (!Array.isArray(props.items)) throw new TypeError("List items must be an array")

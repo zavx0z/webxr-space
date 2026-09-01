@@ -26,16 +26,14 @@ export function CheckboxField(props: CheckboxFieldProps) {
     data-has-label={hasLabel ? "true" : undefined}
     title={props.title}
     style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        width: auto;
-        min-width: 0;
-        padding: 0;
-        color: var(--widget-list-content);
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: auto;
+      min-width: 0;
+      padding: 0;
+      color: var(--widget-list-content);
 
       &[data-has-label="true"] {
         width: 100%;
@@ -46,8 +44,9 @@ export function CheckboxField(props: CheckboxFieldProps) {
       ${props.style}
     `}
   >
-    <span hidden={!hasLabel} style={css`
-      & {
+    <span
+      hidden={!hasLabel}
+      style={css`
         box-sizing: border-box;
         display: flex;
         align-items: center;
@@ -56,26 +55,29 @@ export function CheckboxField(props: CheckboxFieldProps) {
         height: 28px;
         color: var(--widget-list-content);
         font-size: var(--font-size-sm);
-      }
 
-      &[hidden] {
-        display: none;
-      }
-    `}>{props.label ?? ""}</span>
-    <span data-labelled={hasLabel ? "true" : undefined} style={css`
-      & {
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.label ?? ""}
+    </span>
+    <span
+      data-labelled={hasLabel ? "true" : undefined}
+      style={css`
         box-sizing: border-box;
         display: flex;
         align-items: flex-start;
         min-width: 0;
-      }
 
-      &[data-labelled="true"] {
-        min-height: 28px;
-        padding-top: 5px;
-        flex-grow: 1;
-      }
-    `}>
+        &[data-labelled="true"] {
+          min-height: 28px;
+          padding-top: 5px;
+          flex-grow: 1;
+        }
+      `}
+    >
       <input
         type="checkbox"
         checked={props.checked}
@@ -84,18 +86,16 @@ export function CheckboxField(props: CheckboxFieldProps) {
         data-readonly={props.readOnly === true ? "true" : undefined}
         onChange={onChange}
         style={css`
-          & {
-            box-sizing: border-box;
-            display: block;
-            width: 18px;
-            height: 18px;
-            padding: 0;
-            border: var(--border-width-control) solid var(--widget-option-outline);
-            border-radius: 3px;
-            background: var(--widget-option-background);
-            box-shadow: 0 1px 0 var(--material-widget-emboss);
-            color: var(--widget-option-content);
-          }
+          box-sizing: border-box;
+          display: block;
+          width: 18px;
+          height: 18px;
+          padding: 0;
+          border: var(--border-width-control) solid var(--widget-option-outline);
+          border-radius: 3px;
+          background: var(--widget-option-background);
+          box-shadow: 0 1px 0 var(--material-widget-emboss);
+          color: var(--widget-option-content);
 
           &:checked {
             background: var(--widget-option-background-selected);
