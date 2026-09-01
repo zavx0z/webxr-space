@@ -144,6 +144,18 @@ Platform inheritance остаётся в `@zavx0z/dom`:
 `EventTarget → Node → Element → HTMLElement` и специализированные
 `HTML*Element`. Components не создаёт параллельные element classes.
 
+## Accessibility scope
+
+Accessibility не является самостоятельным product priority или обязательной
+acceptance-плоскостью `@ui/components`. Компоненты сохраняют нативную семантику
+выбранных HTML elements, но без отдельного решения владельца accessibility не
+расширяет public props, component graph, Storybook catalog, tests или bundle.
+
+В частности, отсутствие visible label само по себе не вводит общий контракт
+`aria-label`, shared accessibility types или ARIA-only wrapper. ARIA остаётся
+допустимой внутренней деталью конкретного уже принятого поведения, но не
+источником новой архитектуры или публичного API.
+
 ## Styling and layout
 
 Один flat CSS document владеет flow, Flex, dimensions, spacing, overflow,
