@@ -3,8 +3,8 @@ import {describe, expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {
   createCompiledControlGroupProductionStory,
-  createCompiledMatrixInputProductionStory,
-  createCompiledVectorInputProductionStory
+  createCompiledMatrixControlProductionStory,
+  createCompiledVectorControlProductionStory
 } from "./compiled-group-production-stories.tsx"
 
 describe("compiled grouped production stories", () => {
@@ -21,20 +21,20 @@ describe("compiled grouped production stories", () => {
     mounted.story.dispose()
   })
 
-  test("mounts VectorInput through nested keyed ControlGroup composition", () => {
-    const mounted = createCompiledVectorInputProductionStory(createDocument(), {value: [1, 2, 3]})
+  test("mounts VectorControl through nested keyed ControlGroup composition", () => {
+    const mounted = createCompiledVectorControlProductionStory(createDocument(), {value: [1, 2, 3]})
     expect(mounted.story.element.querySelectorAll("input")).toHaveLength(3)
-    expect(mounted.story.source.typescript).toContain("<VectorInput")
+    expect(mounted.story.source.typescript).toContain("<VectorControl")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
     expect(mounted.story.source.html).toContain('data-control-key="X"')
     mounted.story.dispose()
   })
 
-  test("mounts MatrixInput through two keyed composition levels", () => {
-    const mounted = createCompiledMatrixInputProductionStory(createDocument(), {value: [[1, 0], [0, 1]]})
+  test("mounts MatrixControl through two keyed composition levels", () => {
+    const mounted = createCompiledMatrixControlProductionStory(createDocument(), {value: [[1, 0], [0, 1]]})
     expect(mounted.story.element.querySelectorAll("input")).toHaveLength(4)
-    expect(mounted.story.source.typescript).toContain("<MatrixInput")
+    expect(mounted.story.source.typescript).toContain("<MatrixControl")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
     expect(mounted.story.source.html).not.toContain('class="')

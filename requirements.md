@@ -15,8 +15,8 @@ rectangular low-radius controls, плотные rows/groups, тонкие border
 rounded cards и увеличенные пустые интервалы запрещены без отдельного
 scope-specific owner decision и reference evidence.
 
-Один и тот же production owner используется standalone, внутри `Field` и у
-consumer-композиций. DOM migration не разрешает заменять production component
+Один и тот же production Control используется standalone, внутри соответствующего
+specialized Field и у consumer-композиций. DOM migration не разрешает заменять production component
 частным Storybook sample, упрощать состав либо расходиться по visible
 height/radius/border/gap/icon/text rhythm. Проверка нового или изменённого
 visible slice включает equal-scale comparison с точным 5.2 reference;
@@ -69,28 +69,41 @@ Document renderer исполняет native pseudo-state cascade. Production Com
 
 ## Public boundary
 
-Пакет публикует ровно 31 exact production subpaths:
+Пакет публикует ровно 44 exact production subpaths:
 
 - `@ui/components/button`
-- `@ui/components/field`
 - `@ui/components/pane`
-- `@ui/components/checkbox`
 - `@ui/components/badge`
 - `@ui/components/typography`
-- `@ui/components/text-field`
-- `@ui/components/control-group`
-- `@ui/components/number-input`
-- `@ui/components/integer-input`
-- `@ui/components/color-input`
-- `@ui/components/vector-input`
-- `@ui/components/matrix-input`
-- `@ui/components/reference-input`
-- `@ui/components/enum-input`
-- `@ui/components/collection-input`
-- `@ui/components/path-input`
-- `@ui/components/switcher`
-- `@ui/components/progress-checkbox`
-- `@ui/components/slider-control`
+- `@ui/components/controls/checkbox`
+- `@ui/components/controls/collection-control`
+- `@ui/components/controls/color-control`
+- `@ui/components/controls/control-group`
+- `@ui/components/controls/enum-control`
+- `@ui/components/controls/integer-control`
+- `@ui/components/controls/matrix-control`
+- `@ui/components/controls/number-control`
+- `@ui/components/controls/path-control`
+- `@ui/components/controls/progress-checkbox`
+- `@ui/components/controls/reference-control`
+- `@ui/components/controls/readonly-control`
+- `@ui/components/controls/slider-control`
+- `@ui/components/controls/switcher`
+- `@ui/components/controls/text-control`
+- `@ui/components/controls/vector-control`
+- `@ui/components/fields/boolean-field`
+- `@ui/components/fields/collection-field`
+- `@ui/components/fields/color-field`
+- `@ui/components/fields/enum-field`
+- `@ui/components/fields/integer-field`
+- `@ui/components/fields/matrix-field`
+- `@ui/components/fields/number-field`
+- `@ui/components/fields/path-field`
+- `@ui/components/fields/readonly-field`
+- `@ui/components/fields/reference-field`
+- `@ui/components/fields/rotation-field`
+- `@ui/components/fields/text-field`
+- `@ui/components/fields/vector-field`
 - `@ui/components/divider`
 - `@ui/components/list`
 - `@ui/components/table`
@@ -111,12 +124,13 @@ implementations, `*-component.tsx` aliases и `createX` re-exports нет.
 
 Общий minified browser proof всех финальных owners должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
-130 kB / 32 kB gzip при external DOM, highlighter, React-shaped runtime и
+150 kB / 35 kB gzip при external DOM, highlighter, React-shaped runtime и
 Template ABI.
 Этот ceiling включает `UI-COMPILED-ICONS-001` с keyboard-operable icon cycle;
-предыдущие 120/30 были checkpoint неполной DOM-миграции и не являются
-разрешением снова удалить production behavior. Другие owners не используют
-этот bounded рост как общий запас.
+предыдущий 130/32 gate относился к 31-subpath surface. Прямое owner-решение
+разделить API на 16 Controls и 13 specialized Fields расширило пакет до 44
+exact exports; 150/35 является measured acceptance этого exact surface, а не
+общим запасом для других owners.
 
 ## DOM ownership
 
@@ -180,20 +194,22 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 
 - `button`, `pane`, `badge`, `typography` и `divider` владеют neutral
   foundation compositions и Blender-compatible CSS states.
-- `text-field`, `checkbox`, `switcher`, `number-input`, `integer-input`,
+- `text-control`, `readonly-control`, `checkbox`, `switcher`, `number-control`, `integer-control`,
   `slider-control` и `progress-checkbox` владеют standard live control
   properties и interaction semantics.
-- `control-group`, `vector-input` и `matrix-input` владеют keyed joined cells с
+- `control-group`, `vector-control` и `matrix-control` владеют keyed joined cells с
   одним outer contour.
-- `enum-input`, `reference-input`, `collection-input`, `path-input` и
-  `color-input` остаются самостоятельными production controls; `Field` только
-  композирует их semantic contracts и не становится их единственным API.
+- `enum-control`, `reference-control`, `collection-control`, `path-control` и
+  `color-control` остаются самостоятельными production controls.
+- `text-field`, `number-field`, `integer-field`, `boolean-field`, `enum-field`,
+  `color-field`, `vector-field`, `rotation-field`, `matrix-field`,
+  `reference-field`, `collection-field`, `path-field` и `readonly-field`
+  владеют подписанными строками и напрямую композируют соответствующие Controls.
 - `list` и `table` владеют semantic keyed collections и сохраняют descendant
   identities при reorder.
 - `status-bar` владеет passive 24px lower-chrome status line, а
   `notification` — compact semantic `status`/`alert`; очередь, доставка и
   product commands остаются caller-owned.
-- `field` владеет discriminated Field composition и keyed complex values.
 - `inspector` владеет toolbar, category rail, sections и native search;
   основной contract id — `UI-DOM-INSPECTOR-001`, а search ref имеет exact
   `HTMLInputElement`.
@@ -228,16 +244,16 @@ exact значения без второй копии.
 `Inspector` сохраняет category/context/action icons, toolbar actions, search
 glyph и disclosure chevrons; отсутствие optional category icon оставляет
 текстовый fallback. `ListItem.iconSrc` владеет стабильным image slot, который
-сохраняет identity при keyed reorder; `CollectionInput` прокидывает item icons
+сохраняет identity при keyed reorder; `CollectionControl` прокидывает item icons
 и использует exact plus/minus `IconButton`. `HudWindow` использует icon-only
-minimize/restore и optional action icons. `ReferenceInput` сохраняет resource,
+minimize/restore и optional action icons. `ReferenceControl` сохраняет resource,
 picker и close glyphs; dismiss/close никогда не подменяется trash/clear glyph.
 
 Нативный `select > option` не умеет отображать arbitrary image URL. Поэтому
-iconless `EnumInput` cycle остаётся standard `select`, а cycle с `iconSrc`
+iconless `EnumControl` cycle остаётся standard `select`, а cycle с `iconSrc`
 композирует same-Document Button + `popover="auto"` List и materializes
 реальные `<img>` для trigger и option rows. Component-specific Renderer parsing
-`data-icon-src` запрещён. Popup options сохраняют `EnumInputOption.key`, roving
+`data-icon-src` запрещён. Popup options сохраняют `EnumControlOption.key`, roving
 focus по Arrow Up/Down и activation по Enter/Space; `aria-controls` указывает
 на exact `role="listbox"`. Initial controlled open materializes только после
 same-Document connection. Expanded presentation продолжает использовать те же
@@ -276,9 +292,9 @@ variant rules остаются conditional compiled chunks и не создаю�
 environment без необходимости. Components не создают instance-specific CSS
 rules и не заменяют native pseudo states JavaScript-ом.
 
-## `UI-COMPILED-TEXT-FIELD-001` — controlled native text owner
+## `UI-COMPILED-TEXT-CONTROL-001` — controlled native text owner
 
-`@ui/components/text-field` exports TSX `TextField(props)` over one exact
+`@ui/components/controls/text-control` exports TSX `TextControl(props)` over one exact
 `HTMLInputElement`. Its `value` is a live controlled property; `input` and
 `change` callbacks read the proposed value from the standard Event target and
 never fabricate another event or buffer. Updates preserve the input identity.
@@ -286,14 +302,14 @@ Owner geometry is the compact 160×22 regression contour with 11px text, thin
 border and low radius. `readOnly` is a conditional owner token, interaction
 uses native pseudos, and caller `style` remains the only public override.
 
-The production Storybook TextField route composes `TextField` inside a small
+The production Storybook TextControl route composes `TextControl` inside a small
 hook component using `useState`. Its HTML source does not fabricate a `value`
 content attribute for live state; executable TypeScript carries the current
 value instead.
 
-## `UI-COMPILED-NUMBER-INPUT-001` — continuous scalar interaction owner
+## `UI-COMPILED-NUMBER-CONTROL-001` — continuous scalar interaction owner
 
-`@ui/components/number-input` exports controlled TSX `NumberInput(props)` as
+`@ui/components/controls/number-control` exports controlled TSX `NumberControl(props)` as
 one 120×22 standard Number input and continuous scalar contour. The control has
 no visible decrement/increment buttons. Source-compatible left/right edge
 zones remain invisible step affordances; the center remains the same exact
@@ -316,20 +332,20 @@ DOM/Renderer owner. Native `input`/`change` remain standard bubbling events.
 The component stores only transient gesture/edit refs and never owns a second
 value Store. The Storybook route wraps this exact owner with `useState`.
 
-`IntegerInput` is not a second numeric implementation: its TSX component
-returns `NumberInput`, supplies integer step/value semantics and rounds every
+`IntegerControl` is not a second numeric implementation: its TSX component
+returns `NumberControl`, supplies integer step/value semantics and rounds every
 proposal before forwarding it. The composed component identities remain
 visible in runtime evidence.
 
 ## `UI-COMPILED-COMPOSITION-001` — nested owners, not copied markup
 
 Final compound controls reuse final components as compiled component calls.
-`ControlGroup` owns keyed cells and composes one `TextField` per cell;
-`VectorInput` returns `ControlGroup`; `MatrixInput` owns keyed rows of keyed
-`ControlGroup` cells. `ProgressCheckbox` returns `Checkbox`. `PathInput`
-composes `TextField` and `IconButton`; `ReferenceInput` composes `Button` and
-two `IconButton` actions. `ColorInput` composes `Button`, `TextField` and
-`SliderControl`. `CollectionInput` composes `List` and `Button` actions.
+`ControlGroup` owns keyed cells and composes one `TextControl` per cell;
+`VectorControl` returns `ControlGroup`; `MatrixControl` owns keyed rows of keyed
+`ControlGroup` cells. `ProgressCheckbox` returns `Checkbox`. `PathControl`
+composes `TextControl` and `IconButton`; `ReferenceControl` composes `Button` and
+two `IconButton` actions. `ColorControl` composes `Button`, `TextControl` and
+`SliderControl`. `CollectionControl` composes `List` and `Button` actions.
 
 These are runtime-visible component boundaries with independent hook slots and
 stable semantic element identities, not source-only helpers or copied DOM.
@@ -337,9 +353,9 @@ Keyed reorder preserves both the parent component instance and every retained
 nested component/element. Joined owners suppress nested contour shadows and
 radii through owner tokens while keeping exactly one caller-facing `style`.
 
-## `UI-COMPILED-COLOR-INPUT-001` — controlled color semantics and presentation
+## `UI-COMPILED-COLOR-CONTROL-001` — controlled color semantics and presentation
 
-`ColorInput` keeps immutable RGBA as its public controlled value, projects
+`ColorControl` keeps immutable RGBA as its public controlled value, projects
 editable HSVA rows, parses and formats exact six/eight-digit hex, and renders
 alpha over a semantic DOM checker. `closed`, `open` and `expanded` remain
 distinct controlled presentations. `open` uses one standard same-Document
@@ -357,7 +373,7 @@ hue/saturation wheel and value-plane/marker dragging. Components must not add a
 private picker-plane renderer, manual viewport placement, pointer dispatcher,
 Canvas/WebGPU path or hardcoded story-only wheel. Hex/HSVA/checker and standard
 Popover tests prove the completed semantic and placement slice only; they do
-not satisfy final ColorInput visual acceptance without equal-scale reference
+not satisfy final ColorControl visual acceptance without equal-scale reference
 evidence and an explicit owner verdict.
 
 ## `UI-COMPILED-COLLECTIONS-001` — keyed List and Table
@@ -366,7 +382,7 @@ evidence and an explicit owner verdict.
 columns, rows and the cells within every row. Reordering either axis performs
 minimal retained placements and never calls `replaceChildren()` for the final
 path. Selection and disabled state are semantic ARIA plus owner tokens; hover
-is a native pseudo. `CollectionInput` consumes the same `List` owner rather
+is a native pseudo. `CollectionControl` consumes the same `List` owner rather
 than maintaining a second list implementation and preserves the historical
 1–8 visible-row height table.
 
@@ -377,26 +393,22 @@ or row state disables both cell and row activation. Cells accept primitive or
 structured values through the owner formatter instead of narrowing the data
 contract to strings.
 
-## `UI-COMPILED-FIELD-001` — one discriminated component graph
+## `UI-COMPILED-FIELDS-001` — direct specialized Field owners
 
-`Field({definition, style})` owns one stable semantic Field row and dispatches
-all supported definitions to the exact final owners: text, numeric input,
-slider, integer, checkbox, switch, enum, color, vector, rotation, matrix,
-reference, collection, path and readonly. It does not own parallel control
-markup or a second value store. Controlled proposals flow directly to the
-callback on the current definition. Changing a value preserves the active
-owner; changing the discriminant replaces only that conditional control range
-while preserving the Field row and label relation.
+Каждый semantic вид подписанной строки имеет свой exact owner с direct props:
+`TextField`, `NumberField`, `IntegerField`, `BooleanField`, `EnumField`,
+`ColorField`, `VectorField`, `RotationField`, `MatrixField`, `ReferenceField`,
+`CollectionField`, `PathField` и `ReadonlyField`. Props передаются напрямую как
+`id`, `label`, `value` и принадлежащие этому виду options/callbacks; публичных
+`Field`, `FieldDefinition`, `FIELD_KINDS`, `definition={{...}}`, root barrel и
+generic dispatcher в Components нет.
 
-`number` with `presentation: "input"` composes the continuous `NumberInput`.
-`presentation: "slider"` composes the exact proportional `SliderControl` with
-the declared min/max/step; it does not overlay step buttons or a private
-numeric replica.
-
-The definition is semantic data and therefore exposes no class or style
-escape hatch. `style` belongs only to the `Field` component itself. The
-control area uses `role="group"` plus `aria-labelledby` so composite owners
-retain a standard accessible label without inventing a non-DOM event model.
+Каждый Field владеет своей стабильной 28px строкой, label и control area с
+`role="group"` плюс `aria-labelledby`, а редактирование делегирует exact
+production Control. `NumberField` выбирает только собственные `control` и
+`slider` presentations; `BooleanField` — `checkbox` и `switch` presentations.
+Динамическая схема и выбор одного из специализированных Fields принадлежат
+consumer-у этой схемы, а не универсальному UI component.
 
 ## `UI-COMPILED-CODE-EDITOR-001` — keyed semantic source projection
 
@@ -418,7 +430,7 @@ separate standard DOM capabilities rather than hidden component state.
 `Inspector` owns the exact toolbar, search, category rail, context and content
 regions. `InspectorSections` receives a compiler-owned keyed children
 collection; each `InspectorSection` receives one direct authored component
-child. A product can therefore place the actual compiled `Field`, node panel or
+child. A product can therefore place an actual specialized Field, node panel or
 other owner in a section without passing raw DOM Nodes or constructing a
 parallel section tree. `InspectorTextSection` is only the primitive-text
 composition of the same `InspectorSection`, not a second section owner.
@@ -426,7 +438,7 @@ composition of the same `InspectorSection`, not a second section owner.
 Category and section reorder preserve their nested component identities.
 Selection/query/expanded state remains controlled in the caller, standard
 input/click events carry proposals, and `isInspectorSectionVisible` is a pure
-projection used by the container. Search composes `TextField`; category and
+projection used by the container. Search composes `TextControl`; category and
 section headers compose `Button`. Geometry remains the compact 30px rail,
 115×22 search and 26px section header contour.
 
@@ -471,25 +483,25 @@ range or keyed component collection—not a virtual element tree. The explicit
 primitive `content` binding remains for text-only call sites; supplying both is
 an error. No imperative compatibility controller exists beside the TSX owner.
 
-## `UI-COMPILED-RESOURCE-INPUTS-001` — joined resource controls
+## `UI-COMPILED-RESOURCE-CONTROLS-001` — joined resource controls
 
-`PathInput` and `ReferenceInput` are controlled class-free TSX compositions
-with one public `style` applied after owner defaults. `PathInput` composes the
-exact production `TextField` and folder `IconButton`; `ReferenceInput` composes
+`PathControl` and `ReferenceControl` are controlled class-free TSX compositions
+with one public `style` applied after owner defaults. `PathControl` composes the
+exact production `TextControl` and folder `IconButton`; `ReferenceControl` composes
 one value `Button` with picker and clear `IconButton` actions. Their standard
 input/change/click events report proposed owner intent and never create a
 second value Store or fabricate browser events. Missing actions stay mounted
 and hidden so later updates preserve their Button and image identities.
 
-Each composition owns one joined outer contour. Nested TextField/Button cells
+Each composition owns one joined outer contour. Nested TextControl/Button cells
 have zero radius and no shadow, so no emboss islands appear between them;
 native `:hover`, `:active`, `:focus` and `:disabled` behavior continues through
 the already-owned controls and resource-specific cell tokens.
 The exact regression geometry remains 320×28 regular / 220×24 compact for
-PathInput and 260×28 regular / 190×24 compact for ReferenceInput, with 26px
+PathControl and 260×28 regular / 190×24 compact for ReferenceControl, with 26px
 regular and 22px compact inner cells.
 
-`PathInputProps` and `ReferenceInputProps` expose `style`, never `className`;
+`PathControlProps` and `ReferenceControlProps` expose `style`, never `className`;
 imperative compatibility adapters are absent.
 
 ## Dependency boundary
@@ -525,7 +537,7 @@ The legacy `*-consumer-fixture.tsx`, `*-dedup-fixture.tsx`,
 
 ## Acceptance
 
-1. Manifest exports exactly the 29 subpaths above and every target exists.
+1. Manifest exports exactly the 44 subpaths above and every target exists.
 2. Production typecheck succeeds from `tsconfig.production.json`.
 3. Focused component tests prove stable identity, controlled state, standard
    event propagation, validation-before-mutation and disposal.

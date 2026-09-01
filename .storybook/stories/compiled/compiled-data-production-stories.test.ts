@@ -8,17 +8,17 @@ import {
   type HTMLElement
 } from "@zavx0z/dom"
 import {
-  createCompiledCollectionInputProductionStory,
-  createCompiledColorInputProductionStory,
+  createCompiledCollectionControlProductionStory,
+  createCompiledColorControlProductionStory,
   createCompiledListProductionStory,
   createCompiledTableProductionStory,
 } from "./compiled-data-production-stories.tsx"
 import {uiIcons} from "@ui/components/icons"
 
 describe("compiled data production stories", () => {
-  test("keeps ColorInput presentation in hook state", () => {
+  test("keeps ColorControl presentation in hook state", () => {
     const document = createDocument()
-    const mounted = createCompiledColorInputProductionStory(document, {
+    const mounted = createCompiledColorControlProductionStory(document, {
       value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
       presentation: "closed",
     })
@@ -29,17 +29,17 @@ describe("compiled data production stories", () => {
     trigger.click()
     expect(mounted.story.element).toBe(owner)
     expect(trigger.getAttribute("aria-expanded")).toBe("true")
-    expect(mounted.story.source.typescript).toContain("<ColorInput")
+    expect(mounted.story.source.typescript).toContain("<ColorControl")
     expect(mounted.story.source.typescript).toContain("useState")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createColorInput(")
+    expect(mounted.story.source.typescript).not.toContain("createColorControl(")
     mounted.story.dispose()
   })
 
-  test("materializes an initially open ColorInput only after presentation", () => {
+  test("materializes an initially open ColorControl only after presentation", () => {
     const document = createDocument()
-    const mounted = createCompiledColorInputProductionStory(document, {
+    const mounted = createCompiledColorControlProductionStory(document, {
       value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
       presentation: "open",
     })
@@ -57,8 +57,8 @@ describe("compiled data production stories", () => {
     mounted.story.dispose()
   })
 
-  test("keeps CollectionInput selection and keyed rows", () => {
-    const mounted = createCompiledCollectionInputProductionStory(createDocument(), {
+  test("keeps CollectionControl selection and keyed rows", () => {
+    const mounted = createCompiledCollectionControlProductionStory(createDocument(), {
       items: [
         {id: "input", label: "Input", iconSrc: uiIcons.log},
         {id: "output", label: "Output", iconSrc: uiIcons.run},
@@ -76,11 +76,11 @@ describe("compiled data production stories", () => {
     expect([...owner.querySelectorAll("button")].find(button => button.title === "Add item")?.querySelector("img")?.getAttribute("src"))
       .toBe(uiIcons.plus)
     expect(mounted.story.source.typescript).toContain("uiIcons.run")
-    expect(mounted.story.source.typescript).toContain("<CollectionInput")
+    expect(mounted.story.source.typescript).toContain("<CollectionControl")
     expect(mounted.story.source.typescript).toContain("useState")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createCollectionInput(")
+    expect(mounted.story.source.typescript).not.toContain("createCollectionControl(")
     mounted.story.dispose()
   })
 

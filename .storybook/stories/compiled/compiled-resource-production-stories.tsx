@@ -1,18 +1,18 @@
 /** Package-owned external Storybook story support. */
 import {
-  PathInput,
-  type PathInputProps
-} from "@ui/components/path-input"
+  PathControl,
+  type PathControlProps
+} from "@ui/components/controls/path-control"
 import {
-  ReferenceInput,
-  type ReferenceInputProps,
-  type ReferenceInputValue
-} from "@ui/components/reference-input"
+  ReferenceControl,
+  type ReferenceControlProps,
+  type ReferenceControlValue
+} from "@ui/components/controls/reference-control"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
-function PathInputStoryComponent(props: Readonly<{initial: PathInputProps}>) {
+function PathControlStoryComponent(props: Readonly<{initial: PathControlProps}>) {
   const [value, setValue] = useState(props.initial.value)
   const onInput = (next: string, event: Event) => {
     setValue(next)
@@ -26,7 +26,7 @@ function PathInputStoryComponent(props: Readonly<{initial: PathInputProps}>) {
     setValue("/project/selected.exr")
     props.initial.onBrowse?.(event)
   }
-  return <PathInput
+  return <PathControl
     value={value}
     placeholder={props.initial.placeholder}
     disabled={props.initial.disabled}
@@ -40,10 +40,10 @@ function PathInputStoryComponent(props: Readonly<{initial: PathInputProps}>) {
   />
 }
 
-type ReferenceInputStoryState = Readonly<{value: ReferenceInputValue | null}>
+type ReferenceControlStoryState = Readonly<{value: ReferenceControlValue | null}>
 
-function ReferenceInputStoryComponent(props: Readonly<{initial: ReferenceInputProps}>) {
-  const [state, setState] = useState<ReferenceInputStoryState>({value: props.initial.value})
+function ReferenceControlStoryComponent(props: Readonly<{initial: ReferenceControlProps}>) {
+  const [state, setState] = useState<ReferenceControlStoryState>({value: props.initial.value})
   const onActivate = (event: Event) => props.initial.onActivate?.(event)
   const onPick = (event: Event) => {
     setState({value: {id: "viewport", label: "Viewport", kind: "view"}})
@@ -53,7 +53,7 @@ function ReferenceInputStoryComponent(props: Readonly<{initial: ReferenceInputPr
     setState({value: null})
     props.initial.onClear?.(event)
   }
-  return <ReferenceInput
+  return <ReferenceControl
     value={state.value}
     placeholder={props.initial.placeholder}
     title={props.initial.title}
@@ -66,29 +66,29 @@ function ReferenceInputStoryComponent(props: Readonly<{initial: ReferenceInputPr
   />
 }
 
-export function createCompiledPathInputProductionStory(
+export function createCompiledPathControlProductionStory(
   document: Document,
-  props: PathInputProps
+  props: PathControlProps
 ): RoutedProductionComponentStory {
   const mounted = mountCompiledStory(
     document,
-    PathInputStoryComponent,
+    PathControlStoryComponent,
     {initial: props},
-    "path-input",
+    "path-control",
     owner => pathSource(props, (owner.querySelector("input") as HTMLInputElement).value)
   )
   return mounted
 }
 
-export function createCompiledReferenceInputProductionStory(
+export function createCompiledReferenceControlProductionStory(
   document: Document,
-  props: ReferenceInputProps
+  props: ReferenceControlProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
     document,
-    ReferenceInputStoryComponent,
+    ReferenceControlStoryComponent,
     {initial: props},
-    "reference-input",
+    "reference-control",
     () => referenceSource(props)
   )
 }
@@ -123,15 +123,15 @@ function mountCompiledStory(
   return Object.freeze({story})
 }
 
-function pathSource(props: PathInputProps, value: string): string {
+function pathSource(props: PathControlProps, value: string): string {
   return [
-    'import {PathInput} from "@ui/components/path-input"',
+    'import {PathControl} from "@ui/components/controls/path-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [value, setValue] = useState(${JSON.stringify(value)})`,
     "  const onBrowse = () => setValue(\"/project/selected.exr\")",
-    "  return <PathInput",
+    "  return <PathControl",
     "    value={value}",
     `    placeholder={${JSON.stringify(props.placeholder ?? "")}}`,
     `    density={${JSON.stringify(props.density ?? "regular")}}`,
@@ -143,14 +143,14 @@ function pathSource(props: PathInputProps, value: string): string {
   ].join("\n")
 }
 
-function referenceSource(props: ReferenceInputProps): string {
+function referenceSource(props: ReferenceControlProps): string {
   return [
-    'import {ReferenceInput, type ReferenceInputValue} from "@ui/components/reference-input"',
+    'import {ReferenceControl, type ReferenceControlValue} from "@ui/components/controls/reference-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
-    `  const [value, setValue] = useState<ReferenceInputValue | null>(${literal(props.value)})`,
-    "  return <ReferenceInput",
+    `  const [value, setValue] = useState<ReferenceControlValue | null>(${literal(props.value)})`,
+    "  return <ReferenceControl",
     "    value={value}",
     `    placeholder={${JSON.stringify(props.placeholder ?? "Not selected")}}`,
     "    onActivate={() => {}}",

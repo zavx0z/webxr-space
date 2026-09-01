@@ -33,9 +33,17 @@ exports, structural `storybook-runtime/3` adapter, linked production
 
 ## `UI-STORYBOOK-ROUTES-001` — complete exact route tree
 
-1. `.storybook/catalog.json` сохраняет 85 exact legacy UI/HUD leaf routes и
-   добавляет current routes только для public TSX factory без подходящего exact
-   historical leaf. Остальные 91
+1. `.storybook/route-remap.json` сохраняет все 85 historical UI/HUD leaf
+   mappings, а `.storybook/catalog.json` содержит их canonical current
+   destinations и добавляет current routes только для public TSX factory без
+   подходящего historical leaf. Historical `from` routes остаются неизменными,
+   даже когда current production taxonomy разделяет прежний `Ввод` на
+   `Контролы` и `Поля`. Many-to-one допустим только для доказанного
+   дубликата одного current owner: historical
+   `components/inputs/field/integer/input` и
+   `components/inputs/integer-input/basic/labeled` оба ведут в единственный
+   `components/fields/integer-field/basic/default`; отдельный current
+   `basic/labeled` запрещён. Остальные 91
    legacy DOM/Elements leaves принадлежат `@zavx0z/dom` в Renderer. Source-derived
    guard требует один direct `kind: component` category/subject на каждый exported
    PascalCase TSX factory; legacy routes без production export не выдаются за
@@ -141,17 +149,27 @@ production owner stylesheet.
    imported `*Css` production control запрещены.
 2. Standard DOM interface/element routes остаются прямыми platform proofs:
    они документируют `@zavx0z/dom` и не фабрикуют отсутствующий Component.
-3. Field, Inspector, CodeEditor и HUD продолжают использовать действующие
-   production factories. Button, IconButton, TextField, Pane, Badge, Typography, Divider,
-   NumberInput, Checkbox, Switcher, ControlGroup, SliderControl,
-   ProgressCheckbox, VectorInput, MatrixInput, ReferenceInput,
-   CollectionInput, PathInput, ColorInput, EnumInput, List, Table, StatusBar и
-   Notification получают собственные
+3. Каталог содержит две отдельные primary-категории `Контролы` и `Поля`.
+   `Контролы` публикуют `ControlGroup`, `TextControl`, `NumberControl`,
+   `IntegerControl`, `ColorControl`, `VectorControl`, `MatrixControl`,
+   `ReferenceControl`, `EnumControl`, `CollectionControl`, `PathControl`,
+   `Checkbox`, `Switcher`, `ProgressCheckbox`, `SliderControl` и
+   current-only `ReadonlyControl`. Для `ReadonlyControl` нет fabricated
+   historical `from`: его canonical leaf —
+   `components/controls/readonly-control/basic/default`.
+   `Поля` публикуют concrete `TextField`, `NumberField`, `IntegerField`,
+   `BooleanField`, `EnumField`, `ColorField`, `VectorField`,
+   `RotationField`, `MatrixField`, `ReferenceField`, `CollectionField`,
+   `PathField` и `ReadonlyField`. Public generic `Field`, общий
+   `FieldDefinition`, subject `field` и route `components/inputs`
+   запрещены. Inspector, CodeEditor и HUD продолжают использовать действующие
+   production factories. Button, IconButton, Pane, Badge, Typography, Divider,
+   List, Table, StatusBar и Notification получают собственные
    production owners до visual acceptance соответствующих routes.
 4. Adapter может хранить Storybook args, controls, events и source
    serialization, но не копирует DOM composition, interaction state machine,
    CSS либо visual defaults production owner.
-5. `ColorInput` story с начальным `presentation: "open"` не вызывает Popover
+5. `ColorControl` story с начальным `presentation: "open"` не вызывает Popover
    API на detached staging tree. UI runtime синхронно вставляет exact story node
    через `context.present()`, после чего один package-owned `afterPresent`
    lifecycle rerender переводит тот же retained production owner из закрытого

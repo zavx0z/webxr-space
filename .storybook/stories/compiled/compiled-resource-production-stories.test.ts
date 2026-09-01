@@ -2,14 +2,14 @@
 import {describe, expect, test} from "bun:test"
 import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
 import {
-  createCompiledPathInputProductionStory,
-  createCompiledReferenceInputProductionStory,
+  createCompiledPathControlProductionStory,
+  createCompiledReferenceControlProductionStory,
 } from "./compiled-resource-production-stories.tsx"
 import {uiIcons} from "@ui/components/icons"
 
 describe("compiled resource production stories", () => {
-  test("keeps PathInput hook-controlled through input and browse proposals", () => {
-    const mounted = createCompiledPathInputProductionStory(createDocument(), {
+  test("keeps PathControl hook-controlled through input and browse proposals", () => {
+    const mounted = createCompiledPathControlProductionStory(createDocument(), {
       value: "/project/output.exr",
       placeholder: "Choose file",
     })
@@ -26,16 +26,16 @@ describe("compiled resource production stories", () => {
 
     browse.click()
     expect(input.value).toBe("/project/selected.exr")
-    expect(mounted.story.source.typescript).toContain("<PathInput")
+    expect(mounted.story.source.typescript).toContain("<PathControl")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createPathInput(")
+    expect(mounted.story.source.typescript).not.toContain("createPathControl(")
     expect(mounted.story.source.html).not.toContain('class="')
     mounted.story.dispose()
   })
 
-  test("keeps ReferenceInput value, pick and clear actions in hook state", () => {
-    const mounted = createCompiledReferenceInputProductionStory(createDocument(), {
+  test("keeps ReferenceControl value, pick and clear actions in hook state", () => {
+    const mounted = createCompiledReferenceControlProductionStory(createDocument(), {
       value: {id: "output", label: "Output", kind: "view"},
       placeholder: "Not selected",
     })
@@ -53,11 +53,11 @@ describe("compiled resource production stories", () => {
     buttons[2]!.click()
     expect(valueButton.textContent).toBe("Not selected")
     expect(mounted.story.element).toBe(owner)
-    expect(mounted.story.source.typescript).toContain("<ReferenceInput")
+    expect(mounted.story.source.typescript).toContain("<ReferenceControl")
     expect(mounted.story.source.typescript).toContain("useState")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createReferenceInput(")
+    expect(mounted.story.source.typescript).not.toContain("createReferenceControl(")
     expect(mounted.story.source.html).not.toContain('class="')
     mounted.story.dispose()
   })

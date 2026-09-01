@@ -2,7 +2,7 @@
 import {
   ProgressCheckbox,
   type ProgressCheckboxProps
-} from "@ui/components/progress-checkbox"
+} from "@ui/components/controls/progress-checkbox"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -67,7 +67,7 @@ function source(
   indeterminate: boolean
 ): string {
   return [
-    'import {ProgressCheckbox} from "@ui/components/progress-checkbox"',
+    'import {ProgressCheckbox} from "@ui/components/controls/progress-checkbox"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",

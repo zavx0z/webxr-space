@@ -1,5 +1,5 @@
 import {useState} from "@zavx0z/react"
-import {Field} from "./field.tsx"
+import {TextField} from "./fields/text-field.tsx"
 import {uiIcons} from "./icons.ts"
 import {
   Inspector,
@@ -65,7 +65,7 @@ export function InspectorFieldFixture() {
   >
     <InspectorSections>
       {sections.map(section => <InspectorSection key={section.id} id={section.id} label={section.label} expanded={true}>
-        <Field definition={{id: "output", label: "Output", kind: "text", value: "Ready"}} />
+        <TextField id="output" label="Output" value="Ready" />
       </InspectorSection>)}
     </InspectorSections>
   </Inspector>

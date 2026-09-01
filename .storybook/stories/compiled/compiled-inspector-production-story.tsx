@@ -7,12 +7,14 @@ import {
   type InspectorCategory
 } from "@ui/components/inspector"
 import {uiIcons} from "@ui/components/icons"
-import {type FieldDefinition} from "@ui/components/field"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 import {PROPS_INSPECTOR_COPY} from "./props-inspector-copy.ts"
-import {StoryPropsFields} from "./props-inspector.tsx"
+import {
+  StoryPropsFields,
+  type StoryPropsFieldDescriptor,
+} from "./props-inspector.tsx"
 
 const categories: readonly InspectorCategory[] = Object.freeze([
   Object.freeze({id: "props", label: "P", iconSrc: uiIcons.settings, title: "Props", sectionIds: Object.freeze(["props"])})
@@ -31,7 +33,7 @@ const inspectorStoryProps = Object.freeze({
   context: Object.freeze({label: "Button", title: "Кнопка Output"}),
 })
 
-const propFields: readonly FieldDefinition[] = Object.freeze([
+const propFields: readonly StoryPropsFieldDescriptor[] = Object.freeze([
   Object.freeze({id: "label", label: "label", kind: "text", value: "Output", readOnly: true}),
   Object.freeze({id: "variant", label: "variant", kind: "enum", value: "contained", readOnly: true, options: Object.freeze([
     Object.freeze({value: "contained", label: "Contained"}),
@@ -224,11 +226,12 @@ function source(): string {
   return [
     'import {Inspector, InspectorSection, InspectorSections} from "@ui/components/inspector"',
     'import {uiIcons} from "@ui/components/icons"',
-    'import {Field} from "@ui/components/field"',
+    'import {BooleanField} from "@ui/components/fields/boolean-field"',
+    'import {EnumField} from "@ui/components/fields/enum-field"',
+    'import {TextField} from "@ui/components/fields/text-field"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     'const categories = [{id: "props", label: "P", iconSrc: uiIcons.settings, title: "Props", sectionIds: ["props"]}] as const',
-    `const fields = ${JSON.stringify(propFields, null, 2)} as const`,
     "",
     "function Story() {",
     '  const [query, setQuery] = useState("")',
@@ -236,7 +239,11 @@ function source(): string {
     '  return <Inspector categories={categories} selectedCategoryId="props" query={query} context={{label: "Button", iconSrc: uiIcons.resource}} onQueryChange={setQuery}>',
     "    <InspectorSections><InspectorSection id=\"props\" label=\"Свойства\" expanded={expanded}",
     "      onToggle={(_id, next) => setExpanded(next)}>",
-    "      <div>{fields.map(field => <Field key={field.id} definition={field} />)}</div>",
+    '      <div>',
+    '        <TextField id="label" label="label" value="Output" readOnly />',
+    '        <EnumField id="variant" label="variant" value="contained" options={[{value: "contained", label: "Contained"}]} readOnly />',
+    '        <BooleanField id="disabled" label="disabled" value={false} readOnly />',
+    '      </div>',
     "    </InspectorSection></InspectorSections>",
     "  </Inspector>",
     "}",

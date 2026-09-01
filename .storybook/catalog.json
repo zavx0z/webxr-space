@@ -469,9 +469,9 @@
       ]
     },
     {
-      "id": "components-inputs",
-      "label": "Ввод",
-      "route": "components/inputs",
+      "id": "components-controls",
+      "label": "Контролы",
+      "route": "components/controls",
       "group": {
         "id": "components",
         "label": "Компоненты"
@@ -480,23 +480,13 @@
         {
           "id": "control-group",
           "label": "Группа контролов",
-          "route": "components/inputs/control-group",
+          "route": "components/controls/control-group",
           "apiName": "ControlGroup",
           "kind": "component",
           "tags": [
-            "ввод",
-            "группа",
-            "контролов",
+            "группа контролов",
             "controlgroup",
-            "основная",
-            "три",
-            "строки",
-            "·",
-            "соединённые",
-            "input",
-            "group",
-            "joined",
-            "grid"
+            "контрол"
           ],
           "variants": [
             {
@@ -506,9 +496,9 @@
                 "id": "basic",
                 "label": "Основная"
               },
-              "route": "components/inputs/control-group/basic/default",
+              "route": "components/controls/control-group/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-control-group.ts",
+                "path": "./stories/subjects/components-controls-control-group.ts",
                 "export": "story_basic_default"
               }
             }
@@ -524,228 +514,15 @@
           }
         },
         {
-          "id": "field",
-          "label": "Поле",
-          "route": "components/inputs/field",
-          "apiName": "Field",
+          "id": "text-control",
+          "label": "Текстовый контрол",
+          "route": "components/controls/text-control",
+          "apiName": "TextControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "поле",
-            "field",
-            "текст",
-            "основное",
-            "·",
-            "input",
-            "controlled",
-            "universal"
-          ],
-          "variants": [
-            {
-              "id": "text-default",
-              "label": "Основное",
-              "group": {
-                "id": "text",
-                "label": "Текст"
-              },
-              "route": "components/inputs/field/text/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_text_default"
-              }
-            },
-            {
-              "id": "number-input",
-              "label": "Ввод",
-              "group": {
-                "id": "number",
-                "label": "Число"
-              },
-              "route": "components/inputs/field/number/input",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_number_input"
-              }
-            },
-            {
-              "id": "number-slider",
-              "label": "Слайдер",
-              "group": {
-                "id": "number",
-                "label": "Число"
-              },
-              "route": "components/inputs/field/number/slider",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_number_slider"
-              }
-            },
-            {
-              "id": "integer-input",
-              "label": "Iterations",
-              "group": {
-                "id": "integer",
-                "label": "Целое"
-              },
-              "route": "components/inputs/field/integer/input",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_integer_input"
-              }
-            },
-            {
-              "id": "boolean-switch",
-              "label": "Switcher",
-              "group": {
-                "id": "boolean",
-                "label": "Переключатель"
-              },
-              "route": "components/inputs/field/boolean/switch",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_boolean_switch"
-              }
-            },
-            {
-              "id": "enum-default",
-              "label": "Основной",
-              "group": {
-                "id": "enum",
-                "label": "Выбор"
-              },
-              "route": "components/inputs/field/enum/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_enum_default"
-              }
-            },
-            {
-              "id": "color-input",
-              "label": "RGBA",
-              "group": {
-                "id": "color",
-                "label": "Цвет"
-              },
-              "route": "components/inputs/field/color/input",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_color_input"
-              }
-            },
-            {
-              "id": "vector-default",
-              "label": "XYZ",
-              "group": {
-                "id": "vector",
-                "label": "Вектор"
-              },
-              "route": "components/inputs/field/vector/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_vector_default"
-              }
-            },
-            {
-              "id": "rotation-default",
-              "label": "XYZ",
-              "group": {
-                "id": "rotation",
-                "label": "Вращение"
-              },
-              "route": "components/inputs/field/rotation/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_rotation_default"
-              }
-            },
-            {
-              "id": "matrix-default",
-              "label": "2×2",
-              "group": {
-                "id": "matrix",
-                "label": "Матрица"
-              },
-              "route": "components/inputs/field/matrix/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_matrix_default"
-              }
-            },
-            {
-              "id": "reference-default",
-              "label": "Выбрано",
-              "group": {
-                "id": "reference",
-                "label": "Ссылка"
-              },
-              "route": "components/inputs/field/reference/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_reference_default"
-              }
-            },
-            {
-              "id": "collection-default",
-              "label": "Элементы",
-              "group": {
-                "id": "collection",
-                "label": "Коллекция"
-              },
-              "route": "components/inputs/field/collection/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_collection_default"
-              }
-            },
-            {
-              "id": "path-default",
-              "label": "Файл",
-              "group": {
-                "id": "path",
-                "label": "Путь"
-              },
-              "route": "components/inputs/field/path/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_path_default"
-              }
-            },
-            {
-              "id": "readonly-default",
-              "label": "Результат",
-              "group": {
-                "id": "readonly",
-                "label": "Только чтение"
-              },
-              "route": "components/inputs/field/readonly/default",
-              "module": {
-                "path": "./stories/subjects/components-inputs-field.ts",
-                "export": "story_readonly_default"
-              }
-            }
-          ],
-          "presentation": {
-            "protocol": "story-presentation/1",
-            "projection": "display",
-            "widgets": [
-              "props",
-              "source",
-              "diagnostics"
-            ]
-          }
-        },
-        {
-          "id": "text-field",
-          "label": "Текстовый ввод",
-          "route": "components/inputs/text-field",
-          "apiName": "TextField",
-          "kind": "component",
-          "tags": [
-            "ввод",
-            "текстовый",
-            "textfield",
-            "основной",
-            "·"
+            "текстовый контрол",
+            "textcontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -755,9 +532,9 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/text-field/basic/default",
+              "route": "components/controls/text-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-text-field.ts",
+                "path": "./stories/subjects/components-controls-text-control.ts",
                 "export": "story_basic_default"
               }
             }
@@ -773,17 +550,15 @@
           }
         },
         {
-          "id": "number-input",
-          "label": "Числовой ввод",
-          "route": "components/inputs/number-input",
-          "apiName": "NumberInput",
+          "id": "number-control",
+          "label": "Числовой контрол",
+          "route": "components/controls/number-control",
+          "apiName": "NumberControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "числовой",
-            "numberinput",
-            "основной",
-            "·"
+            "числовой контрол",
+            "numbercontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -793,9 +568,9 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/number-input/basic/default",
+              "route": "components/controls/number-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-number-input.ts",
+                "path": "./stories/subjects/components-controls-number-control.ts",
                 "export": "story_basic_default"
               }
             }
@@ -811,18 +586,15 @@
           }
         },
         {
-          "id": "integer-input",
-          "label": "Целочисленный ввод",
-          "route": "components/inputs/integer-input",
-          "apiName": "IntegerInput",
+          "id": "integer-control",
+          "label": "Целочисленный контрол",
+          "route": "components/controls/integer-control",
+          "apiName": "IntegerControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "целочисленный",
-            "integerinput",
-            "основной",
-            "значение",
-            "·"
+            "целочисленный контрол",
+            "integercontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -832,23 +604,10 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/integer-input/basic/value",
+              "route": "components/controls/integer-control/basic/value",
               "module": {
-                "path": "./stories/subjects/components-inputs-integer-input.ts",
+                "path": "./stories/subjects/components-controls-integer-control.ts",
                 "export": "story_basic_value"
-              }
-            },
-            {
-              "id": "basic-labeled",
-              "label": "С подписью",
-              "group": {
-                "id": "basic",
-                "label": "Основной"
-              },
-              "route": "components/inputs/integer-input/basic/labeled",
-              "module": {
-                "path": "./stories/subjects/components-inputs-integer-input.ts",
-                "export": "story_basic_labeled"
               }
             },
             {
@@ -858,9 +617,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/integer-input/state/disabled",
+              "route": "components/controls/integer-control/state/disabled",
               "module": {
-                "path": "./stories/subjects/components-inputs-integer-input.ts",
+                "path": "./stories/subjects/components-controls-integer-control.ts",
                 "export": "story_state_disabled"
               }
             },
@@ -871,9 +630,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/integer-input/state/readonly",
+              "route": "components/controls/integer-control/state/readonly",
               "module": {
-                "path": "./stories/subjects/components-inputs-integer-input.ts",
+                "path": "./stories/subjects/components-controls-integer-control.ts",
                 "export": "story_state_readonly"
               }
             }
@@ -889,33 +648,28 @@
           }
         },
         {
-          "id": "color-input",
-          "label": "Ввод цвета",
-          "route": "components/inputs/color-input",
-          "apiName": "ColorInput",
+          "id": "color-control",
+          "label": "Контрол цвета",
+          "route": "components/controls/color-control",
+          "apiName": "ColorControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "цвета",
-            "colorinput",
-            "основной",
-            "закрыт",
-            "·",
-            "закрытый",
-            "picker"
+            "контрол цвета",
+            "colorcontrol",
+            "контрол"
           ],
           "variants": [
             {
-              "id": "basic-color-input",
+              "id": "basic-default",
               "label": "Закрыт",
               "group": {
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/color-input/basic/color-input",
+              "route": "components/controls/color-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-color-input.ts",
-                "export": "story_basic_color_input"
+                "path": "./stories/subjects/components-controls-color-control.ts",
+                "export": "story_basic_default"
               }
             },
             {
@@ -925,9 +679,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/color-input/state/open",
+              "route": "components/controls/color-control/state/open",
               "module": {
-                "path": "./stories/subjects/components-inputs-color-input.ts",
+                "path": "./stories/subjects/components-controls-color-control.ts",
                 "export": "story_state_open"
               }
             },
@@ -938,9 +692,9 @@
                 "id": "presentation",
                 "label": "Представление"
               },
-              "route": "components/inputs/color-input/presentation/expanded",
+              "route": "components/controls/color-control/presentation/expanded",
               "module": {
-                "path": "./stories/subjects/components-inputs-color-input.ts",
+                "path": "./stories/subjects/components-controls-color-control.ts",
                 "export": "story_presentation_expanded"
               }
             }
@@ -956,24 +710,15 @@
           }
         },
         {
-          "id": "vector-input",
-          "label": "Ввод вектора",
-          "route": "components/inputs/vector-input",
-          "apiName": "VectorInput",
+          "id": "vector-control",
+          "label": "Векторный контрол",
+          "route": "components/controls/vector-control",
+          "apiName": "VectorControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "вектора",
-            "vectorinput",
-            "основной",
-            "xyz",
-            "·",
-            "вектор",
-            "input",
-            "vector",
-            "2d",
-            "3d",
-            "4d"
+            "векторный контрол",
+            "vectorcontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -983,9 +728,9 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/vector-input/basic/default",
+              "route": "components/controls/vector-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-vector-input.ts",
+                "path": "./stories/subjects/components-controls-vector-control.ts",
                 "export": "story_basic_default"
               }
             }
@@ -1001,23 +746,15 @@
           }
         },
         {
-          "id": "matrix-input",
-          "label": "Ввод матрицы",
-          "route": "components/inputs/matrix-input",
-          "apiName": "MatrixInput",
+          "id": "matrix-control",
+          "label": "Матричный контрол",
+          "route": "components/controls/matrix-control",
+          "apiName": "MatrixControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "матрицы",
-            "matrixinput",
-            "основной",
-            "2×2",
-            "·",
-            "матрица",
-            "input",
-            "matrix",
-            "3×3",
-            "4×4"
+            "матричный контрол",
+            "matrixcontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -1027,9 +764,9 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/matrix-input/basic/default",
+              "route": "components/controls/matrix-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-matrix-input.ts",
+                "path": "./stories/subjects/components-controls-matrix-control.ts",
                 "export": "story_basic_default"
               }
             }
@@ -1045,23 +782,15 @@
           }
         },
         {
-          "id": "reference-input",
-          "label": "Выбор ссылки",
-          "route": "components/inputs/reference-input",
-          "apiName": "ReferenceInput",
+          "id": "reference-control",
+          "label": "Контрол ссылки",
+          "route": "components/controls/reference-control",
+          "apiName": "ReferenceControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "выбор",
-            "ссылки",
-            "referenceinput",
-            "основной",
-            "ресурс",
-            "·",
-            "ресурса",
-            "input",
-            "reference",
-            "ссылка"
+            "контрол ссылки",
+            "referencecontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -1071,9 +800,9 @@
                 "id": "basic",
                 "label": "Значение"
               },
-              "route": "components/inputs/reference-input/basic/default",
+              "route": "components/controls/reference-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-reference-input.ts",
+                "path": "./stories/subjects/components-controls-reference-control.ts",
                 "export": "story_basic_default"
               }
             }
@@ -1089,23 +818,15 @@
           }
         },
         {
-          "id": "enum-input",
-          "label": "Выбор значения",
-          "route": "components/inputs/enum-input",
-          "apiName": "EnumInput",
+          "id": "enum-control",
+          "label": "Контрол выбора",
+          "route": "components/controls/enum-control",
+          "apiName": "EnumControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "выбор",
-            "значения",
-            "enuminput",
-            "представление",
-            "цикл",
-            "·",
-            "циклический",
-            "input",
-            "enum",
-            "варианты"
+            "контрол выбора",
+            "enumcontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -1115,9 +836,9 @@
                 "id": "presentation",
                 "label": "Представление"
               },
-              "route": "components/inputs/enum-input/presentation/cycle",
+              "route": "components/controls/enum-control/presentation/cycle",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_presentation_cycle"
               }
             },
@@ -1128,9 +849,9 @@
                 "id": "presentation",
                 "label": "Представление"
               },
-              "route": "components/inputs/enum-input/presentation/expanded",
+              "route": "components/controls/enum-control/presentation/expanded",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_presentation_expanded"
               }
             },
@@ -1141,9 +862,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/enum-input/value/selected-description",
+              "route": "components/controls/enum-control/value/selected-description",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_value_selected_description"
               }
             },
@@ -1154,9 +875,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/enum-input/value/header-icons",
+              "route": "components/controls/enum-control/value/header-icons",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_value_header_icons"
               }
             },
@@ -1167,9 +888,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/enum-input/value/mixed-icons",
+              "route": "components/controls/enum-control/value/mixed-icons",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_value_mixed_icons"
               }
             },
@@ -1180,9 +901,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/enum-input/value/invalid-legacy",
+              "route": "components/controls/enum-control/value/invalid-legacy",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_value_invalid_legacy"
               }
             },
@@ -1193,9 +914,9 @@
                 "id": "exception",
                 "label": "Исключения"
               },
-              "route": "components/inputs/enum-input/exception/no-items",
+              "route": "components/controls/enum-control/exception/no-items",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_exception_no_items"
               }
             },
@@ -1206,9 +927,9 @@
                 "id": "exception",
                 "label": "Исключения"
               },
-              "route": "components/inputs/enum-input/exception/menu-undefined",
+              "route": "components/controls/enum-control/exception/menu-undefined",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_exception_menu_undefined"
               }
             },
@@ -1219,9 +940,9 @@
                 "id": "exception",
                 "label": "Исключения"
               },
-              "route": "components/inputs/enum-input/exception/menu-error",
+              "route": "components/controls/enum-control/exception/menu-error",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_exception_menu_error"
               }
             },
@@ -1232,9 +953,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/enum-input/state/disabled",
+              "route": "components/controls/enum-control/state/disabled",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_state_disabled"
               }
             },
@@ -1245,9 +966,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/enum-input/state/readonly",
+              "route": "components/controls/enum-control/state/readonly",
               "module": {
-                "path": "./stories/subjects/components-inputs-enum-input.ts",
+                "path": "./stories/subjects/components-controls-enum-control.ts",
                 "export": "story_state_readonly"
               }
             }
@@ -1263,27 +984,15 @@
           }
         },
         {
-          "id": "collection-input",
-          "label": "Редактор коллекции",
-          "route": "components/inputs/collection-input",
-          "apiName": "CollectionInput",
+          "id": "collection-control",
+          "label": "Контрол коллекции",
+          "route": "components/controls/collection-control",
+          "apiName": "CollectionControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "редактор",
-            "коллекции",
-            "collectioninput",
-            "значение",
-            "выбрано",
-            "·",
-            "выбранный",
-            "элемент",
-            "input",
-            "collection",
-            "список",
-            "выбор",
-            "добавление",
-            "удаление"
+            "контрол коллекции",
+            "collectioncontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -1293,9 +1002,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/collection-input/value/selected",
+              "route": "components/controls/collection-control/value/selected",
               "module": {
-                "path": "./stories/subjects/components-inputs-collection-input.ts",
+                "path": "./stories/subjects/components-controls-collection-control.ts",
                 "export": "story_value_selected"
               }
             },
@@ -1306,9 +1015,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/collection-input/value/empty",
+              "route": "components/controls/collection-control/value/empty",
               "module": {
-                "path": "./stories/subjects/components-inputs-collection-input.ts",
+                "path": "./stories/subjects/components-controls-collection-control.ts",
                 "export": "story_value_empty"
               }
             },
@@ -1319,9 +1028,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/collection-input/state/disabled",
+              "route": "components/controls/collection-control/state/disabled",
               "module": {
-                "path": "./stories/subjects/components-inputs-collection-input.ts",
+                "path": "./stories/subjects/components-controls-collection-control.ts",
                 "export": "story_state_disabled"
               }
             },
@@ -1332,9 +1041,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/collection-input/state/readonly",
+              "route": "components/controls/collection-control/state/readonly",
               "module": {
-                "path": "./stories/subjects/components-inputs-collection-input.ts",
+                "path": "./stories/subjects/components-controls-collection-control.ts",
                 "export": "story_state_readonly"
               }
             },
@@ -1345,9 +1054,9 @@
                 "id": "density",
                 "label": "Плотность"
               },
-              "route": "components/inputs/collection-input/density/compact",
+              "route": "components/controls/collection-control/density/compact",
               "module": {
-                "path": "./stories/subjects/components-inputs-collection-input.ts",
+                "path": "./stories/subjects/components-controls-collection-control.ts",
                 "export": "story_density_compact"
               }
             }
@@ -1363,24 +1072,15 @@
           }
         },
         {
-          "id": "path-input",
-          "label": "Ввод пути",
-          "route": "components/inputs/path-input",
-          "apiName": "PathInput",
+          "id": "path-control",
+          "label": "Контрол пути",
+          "route": "components/controls/path-control",
+          "apiName": "PathControl",
           "kind": "component",
           "tags": [
-            "ввод",
-            "пути",
-            "pathinput",
-            "значение",
-            "путь",
-            "·",
-            "к",
-            "файлу",
-            "input",
-            "path",
-            "файл",
-            "выбор"
+            "контрол пути",
+            "pathcontrol",
+            "контрол"
           ],
           "variants": [
             {
@@ -1390,9 +1090,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/path-input/value/path",
+              "route": "components/controls/path-control/value/path",
               "module": {
-                "path": "./stories/subjects/components-inputs-path-input.ts",
+                "path": "./stories/subjects/components-controls-path-control.ts",
                 "export": "story_value_path"
               }
             },
@@ -1403,9 +1103,9 @@
                 "id": "value",
                 "label": "Значение"
               },
-              "route": "components/inputs/path-input/value/empty",
+              "route": "components/controls/path-control/value/empty",
               "module": {
-                "path": "./stories/subjects/components-inputs-path-input.ts",
+                "path": "./stories/subjects/components-controls-path-control.ts",
                 "export": "story_value_empty"
               }
             },
@@ -1416,9 +1116,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/path-input/state/disabled",
+              "route": "components/controls/path-control/state/disabled",
               "module": {
-                "path": "./stories/subjects/components-inputs-path-input.ts",
+                "path": "./stories/subjects/components-controls-path-control.ts",
                 "export": "story_state_disabled"
               }
             },
@@ -1429,9 +1129,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/path-input/state/readonly",
+              "route": "components/controls/path-control/state/readonly",
               "module": {
-                "path": "./stories/subjects/components-inputs-path-input.ts",
+                "path": "./stories/subjects/components-controls-path-control.ts",
                 "export": "story_state_readonly"
               }
             },
@@ -1442,9 +1142,9 @@
                 "id": "density",
                 "label": "Плотность"
               },
-              "route": "components/inputs/path-input/density/compact",
+              "route": "components/controls/path-control/density/compact",
               "module": {
-                "path": "./stories/subjects/components-inputs-path-input.ts",
+                "path": "./stories/subjects/components-controls-path-control.ts",
                 "export": "story_density_compact"
               }
             }
@@ -1462,16 +1162,13 @@
         {
           "id": "checkbox",
           "label": "Флажок",
-          "route": "components/inputs/checkbox",
+          "route": "components/controls/checkbox",
           "apiName": "Checkbox",
           "kind": "component",
           "tags": [
-            "ввод",
             "флажок",
             "checkbox",
-            "состояние",
-            "выключен",
-            "·"
+            "контрол"
           ],
           "variants": [
             {
@@ -1481,9 +1178,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/checkbox/state/unchecked",
+              "route": "components/controls/checkbox/state/unchecked",
               "module": {
-                "path": "./stories/subjects/components-inputs-checkbox.ts",
+                "path": "./stories/subjects/components-controls-checkbox.ts",
                 "export": "story_state_unchecked"
               }
             },
@@ -1494,9 +1191,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/checkbox/state/checked",
+              "route": "components/controls/checkbox/state/checked",
               "module": {
-                "path": "./stories/subjects/components-inputs-checkbox.ts",
+                "path": "./stories/subjects/components-controls-checkbox.ts",
                 "export": "story_state_checked"
               }
             }
@@ -1514,16 +1211,13 @@
         {
           "id": "switcher",
           "label": "Переключатель",
-          "route": "components/inputs/switcher",
+          "route": "components/controls/switcher",
           "apiName": "Switcher",
           "kind": "component",
           "tags": [
-            "ввод",
             "переключатель",
             "switcher",
-            "состояние",
-            "выключен",
-            "·"
+            "контрол"
           ],
           "variants": [
             {
@@ -1533,9 +1227,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/switcher/state/off",
+              "route": "components/controls/switcher/state/off",
               "module": {
-                "path": "./stories/subjects/components-inputs-switcher.ts",
+                "path": "./stories/subjects/components-controls-switcher.ts",
                 "export": "story_state_off"
               }
             },
@@ -1546,9 +1240,9 @@
                 "id": "state",
                 "label": "Состояние"
               },
-              "route": "components/inputs/switcher/state/on",
+              "route": "components/controls/switcher/state/on",
               "module": {
-                "path": "./stories/subjects/components-inputs-switcher.ts",
+                "path": "./stories/subjects/components-controls-switcher.ts",
                 "export": "story_state_on"
               }
             }
@@ -1566,17 +1260,13 @@
         {
           "id": "progress-checkbox",
           "label": "Флажок прогресса",
-          "route": "components/inputs/progress-checkbox",
+          "route": "components/controls/progress-checkbox",
           "apiName": "ProgressCheckbox",
           "kind": "component",
           "tags": [
-            "ввод",
-            "флажок",
-            "прогресса",
+            "флажок прогресса",
             "progresscheckbox",
-            "прогресс",
-            "основной",
-            "·"
+            "контрол"
           ],
           "variants": [
             {
@@ -1586,9 +1276,9 @@
                 "id": "progress",
                 "label": "Прогресс"
               },
-              "route": "components/inputs/progress-checkbox/progress/default",
+              "route": "components/controls/progress-checkbox/progress/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-progress-checkbox.ts",
+                "path": "./stories/subjects/components-controls-progress-checkbox.ts",
                 "export": "story_progress_default"
               }
             }
@@ -1606,15 +1296,13 @@
         {
           "id": "slider-control",
           "label": "Слайдер",
-          "route": "components/inputs/slider-control",
+          "route": "components/controls/slider-control",
           "apiName": "SliderControl",
           "kind": "component",
           "tags": [
-            "ввод",
             "слайдер",
             "slidercontrol",
-            "основной",
-            "·"
+            "контрол"
           ],
           "variants": [
             {
@@ -1624,9 +1312,537 @@
                 "id": "basic",
                 "label": "Основной"
               },
-              "route": "components/inputs/slider-control/basic/default",
+              "route": "components/controls/slider-control/basic/default",
               "module": {
-                "path": "./stories/subjects/components-inputs-slider-control.ts",
+                "path": "./stories/subjects/components-controls-slider-control.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "readonly-control",
+          "label": "Только чтение",
+          "route": "components/controls/readonly-control",
+          "apiName": "ReadonlyControl",
+          "kind": "component",
+          "tags": [
+            "только чтение",
+            "readonlycontrol",
+            "контрол"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основной",
+              "group": {
+                "id": "basic",
+                "label": "Основной"
+              },
+              "route": "components/controls/readonly-control/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-controls-readonly-control.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "components-fields",
+      "label": "Поля",
+      "route": "components/fields",
+      "group": {
+        "id": "components",
+        "label": "Компоненты"
+      },
+      "subjects": [
+        {
+          "id": "text-field",
+          "label": "Текстовое поле",
+          "route": "components/fields/text-field",
+          "apiName": "TextField",
+          "kind": "component",
+          "tags": [
+            "текстовое поле",
+            "textfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основное",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/text-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-text-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "number-field",
+          "label": "Числовое поле",
+          "route": "components/fields/number-field",
+          "apiName": "NumberField",
+          "kind": "component",
+          "tags": [
+            "числовое поле",
+            "numberfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Контрол",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/number-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-number-field.ts",
+                "export": "story_basic_default"
+              }
+            },
+            {
+              "id": "presentation-slider",
+              "label": "Слайдер",
+              "group": {
+                "id": "presentation",
+                "label": "Представление"
+              },
+              "route": "components/fields/number-field/presentation/slider",
+              "module": {
+                "path": "./stories/subjects/components-fields-number-field.ts",
+                "export": "story_presentation_slider"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "integer-field",
+          "label": "Целочисленное поле",
+          "route": "components/fields/integer-field",
+          "apiName": "IntegerField",
+          "kind": "component",
+          "tags": [
+            "целочисленное поле",
+            "integerfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основное",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/integer-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-integer-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "boolean-field",
+          "label": "Логическое поле",
+          "route": "components/fields/boolean-field",
+          "apiName": "BooleanField",
+          "kind": "component",
+          "tags": [
+            "логическое поле",
+            "booleanfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "presentation-switch",
+              "label": "Переключатель",
+              "group": {
+                "id": "presentation",
+                "label": "Представление"
+              },
+              "route": "components/fields/boolean-field/presentation/switch",
+              "module": {
+                "path": "./stories/subjects/components-fields-boolean-field.ts",
+                "export": "story_presentation_switch"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "enum-field",
+          "label": "Поле выбора",
+          "route": "components/fields/enum-field",
+          "apiName": "EnumField",
+          "kind": "component",
+          "tags": [
+            "поле выбора",
+            "enumfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основное",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/enum-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-enum-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "color-field",
+          "label": "Поле цвета",
+          "route": "components/fields/color-field",
+          "apiName": "ColorField",
+          "kind": "component",
+          "tags": [
+            "поле цвета",
+            "colorfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "RGBA",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/color-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-color-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "vector-field",
+          "label": "Векторное поле",
+          "route": "components/fields/vector-field",
+          "apiName": "VectorField",
+          "kind": "component",
+          "tags": [
+            "векторное поле",
+            "vectorfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "XYZ",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/vector-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-vector-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "rotation-field",
+          "label": "Поле вращения",
+          "route": "components/fields/rotation-field",
+          "apiName": "RotationField",
+          "kind": "component",
+          "tags": [
+            "поле вращения",
+            "rotationfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "XYZ",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/rotation-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-rotation-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "matrix-field",
+          "label": "Матричное поле",
+          "route": "components/fields/matrix-field",
+          "apiName": "MatrixField",
+          "kind": "component",
+          "tags": [
+            "матричное поле",
+            "matrixfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "2×2",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/matrix-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-matrix-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "reference-field",
+          "label": "Поле ссылки",
+          "route": "components/fields/reference-field",
+          "apiName": "ReferenceField",
+          "kind": "component",
+          "tags": [
+            "поле ссылки",
+            "referencefield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Выбрано",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/reference-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-reference-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "collection-field",
+          "label": "Поле коллекции",
+          "route": "components/fields/collection-field",
+          "apiName": "CollectionField",
+          "kind": "component",
+          "tags": [
+            "поле коллекции",
+            "collectionfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Элементы",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/collection-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-collection-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "path-field",
+          "label": "Поле пути",
+          "route": "components/fields/path-field",
+          "apiName": "PathField",
+          "kind": "component",
+          "tags": [
+            "поле пути",
+            "pathfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Файл",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/path-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-path-field.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
+        },
+        {
+          "id": "readonly-field",
+          "label": "Поле только для чтения",
+          "route": "components/fields/readonly-field",
+          "apiName": "ReadonlyField",
+          "kind": "component",
+          "tags": [
+            "поле только для чтения",
+            "readonlyfield",
+            "поле"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Результат",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/fields/readonly-field/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-fields-readonly-field.ts",
                 "export": "story_basic_default"
               }
             }

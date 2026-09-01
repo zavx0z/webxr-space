@@ -2,7 +2,7 @@
 import {
   Switcher,
   type SwitcherProps
-} from "@ui/components/switcher"
+} from "@ui/components/controls/switcher"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -54,7 +54,7 @@ export function createCompiledSwitcherProductionStory(
 
 function source(props: SwitcherProps, checked: boolean): string {
   return [
-    'import {Switcher} from "@ui/components/switcher"',
+    'import {Switcher} from "@ui/components/controls/switcher"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",

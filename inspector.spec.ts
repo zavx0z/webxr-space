@@ -63,7 +63,7 @@ describe("compiled production Inspector", () => {
     root.unmount()
   })
 
-  test("composes a compiled Field as an authored section child", () => {
+  test("composes a compiled specialized Field as an authored section child", () => {
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)

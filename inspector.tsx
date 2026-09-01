@@ -2,8 +2,8 @@ import type {Event} from "@zavx0z/dom"
 import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button, IconButton} from "./button.tsx"
+import {TextControl} from "./controls/text-control.tsx"
 import {chevronDownIcon, chevronRightIcon, searchIcon} from "./icon-assets.ts"
-import {TextField} from "./text-field.tsx"
 
 export type InspectorCategory = Readonly<{
   id: string
@@ -205,7 +205,7 @@ export function Inspector(props: InspectorProps) {
             & { position: absolute; left: 6px; top: 4px; width: 13px; height: 13px; object-fit: contain; pointer-events: none; }
           `}
         />
-        <TextField
+        <TextControl
           type="search"
           value={props.query}
           placeholder={props.searchPlaceholder}

@@ -2,15 +2,15 @@
 import {
   ControlGroup,
   type ControlGroupProps
-} from "@ui/components/control-group"
+} from "@ui/components/controls/control-group"
 import {
-  MatrixInput,
-  type MatrixInputProps
-} from "@ui/components/matrix-input"
+  MatrixControl,
+  type MatrixControlProps
+} from "@ui/components/controls/matrix-control"
 import {
-  VectorInput,
-  type VectorInputProps
-} from "@ui/components/vector-input"
+  VectorControl,
+  type VectorControlProps
+} from "@ui/components/controls/vector-control"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -33,7 +33,7 @@ function ControlGroupStoryComponent(props: Readonly<{initial: ControlGroupProps}
   />
 }
 
-function VectorInputStoryComponent(props: Readonly<{initial: VectorInputProps}>) {
+function VectorControlStoryComponent(props: Readonly<{initial: VectorControlProps}>) {
   const [value, setValue] = useState(props.initial.value)
   const onInput = (next: readonly number[], event: Event) => {
     setValue(next)
@@ -43,7 +43,7 @@ function VectorInputStoryComponent(props: Readonly<{initial: VectorInputProps}>)
     setValue(next)
     props.initial.onChange?.(next, event)
   }
-  return <VectorInput
+  return <VectorControl
     value={value}
     axes={props.initial.axes}
     min={props.initial.min}
@@ -57,7 +57,7 @@ function VectorInputStoryComponent(props: Readonly<{initial: VectorInputProps}>)
   />
 }
 
-function MatrixInputStoryComponent(props: Readonly<{initial: MatrixInputProps}>) {
+function MatrixControlStoryComponent(props: Readonly<{initial: MatrixControlProps}>) {
   const [value, setValue] = useState(props.initial.value)
   const onInput = (next: readonly (readonly number[])[], event: Event) => {
     setValue(next)
@@ -67,7 +67,7 @@ function MatrixInputStoryComponent(props: Readonly<{initial: MatrixInputProps}>)
     setValue(next)
     props.initial.onChange?.(next, event)
   }
-  return <MatrixInput
+  return <MatrixControl
     value={value}
     step={props.initial.step}
     disabled={props.initial.disabled}
@@ -91,28 +91,28 @@ export function createCompiledControlGroupProductionStory(
   )
 }
 
-export function createCompiledVectorInputProductionStory(
+export function createCompiledVectorControlProductionStory(
   document: Document,
-  props: VectorInputProps
+  props: VectorControlProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
     document,
-    VectorInputStoryComponent,
+    VectorControlStoryComponent,
     {initial: props},
-    "vector-input",
+    "vector-control",
     vectorSource(props)
   )
 }
 
-export function createCompiledMatrixInputProductionStory(
+export function createCompiledMatrixControlProductionStory(
   document: Document,
-  props: MatrixInputProps
+  props: MatrixControlProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
     document,
-    MatrixInputStoryComponent,
+    MatrixControlStoryComponent,
     {initial: props},
-    "matrix-input",
+    "matrix-control",
     matrixSource(props)
   )
 }
@@ -149,7 +149,7 @@ function mountCompiledStory(
 
 function controlGroupSource(props: ControlGroupProps): string {
   return [
-    'import {ControlGroup, type ControlGroupItem} from "@ui/components/control-group"',
+    'import {ControlGroup, type ControlGroupItem} from "@ui/components/controls/control-group"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -162,27 +162,27 @@ function controlGroupSource(props: ControlGroupProps): string {
   ].join("\n")
 }
 
-function vectorSource(props: VectorInputProps): string {
+function vectorSource(props: VectorControlProps): string {
   return [
-    'import {VectorInput} from "@ui/components/vector-input"',
+    'import {VectorControl} from "@ui/components/controls/vector-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [value, setValue] = useState<readonly number[]>(${literal(props.value)})`,
-    "  return <VectorInput value={value} onInput={setValue} />",
+    "  return <VectorControl value={value} onInput={setValue} />",
     "}",
     "createRoot(container).render(<Story />)"
   ].join("\n")
 }
 
-function matrixSource(props: MatrixInputProps): string {
+function matrixSource(props: MatrixControlProps): string {
   return [
-    'import {MatrixInput} from "@ui/components/matrix-input"',
+    'import {MatrixControl} from "@ui/components/controls/matrix-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
     `  const [value, setValue] = useState<readonly (readonly number[])[]>(${literal(props.value)})`,
-    "  return <MatrixInput value={value} onInput={setValue} />",
+    "  return <MatrixControl value={value} onInput={setValue} />",
     "}",
     "createRoot(container).render(<Story />)"
   ].join("\n")

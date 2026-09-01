@@ -5,31 +5,48 @@ import {dirname, join, resolve} from "node:path"
 import {createDocument, getPopoverVisibilityState, type HTMLElement} from "@zavx0z/dom"
 import {runtime} from "./runtime.ts"
 import {story_status_unavailable} from "./stories/subjects/components-data-noti.ts"
-import {story_state_open as story_color_input_open} from "./stories/subjects/components-inputs-color-input.ts"
+import {story_state_open as story_color_control_open} from "./stories/subjects/components-controls-color-control.ts"
 
 const packageRoot = resolve(import.meta.dir, "..")
 const projectRoot = resolve(packageRoot, "../..")
 
 describe("@ui/components external catalog", () => {
-  test("preserves all legacy leaves and adds every current production component", () => {
+  test("maps every legacy leaf to the current catalog and adds every current production component", () => {
     const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
     const variants = catalog.categories.flatMap((category) =>
       category.subjects.flatMap((subject) => subject.variants))
-    const baseline = json(join(projectRoot, ".storybook", "route-baseline.json")) as Baseline
-    const expected = baseline.leafRoutes.filter((route) =>
-      route.startsWith("components/") || route.startsWith("hud/"))
-
+    const remap = json(join(projectRoot, ".storybook", "route-remap.json")) as RouteRemap
+    const expected = remap.leafMappings
+      .filter(({to}) => to.packageId === "@ui/components")
+      .map(({to}) => to.route)
     const expectedSet = new Set(expected)
-    expect(variants.map(({route}) => route).filter(route => expectedSet.has(route))).toEqual(expected)
+    expect(expected).toHaveLength(85)
+    expect(expectedSet.size).toBe(84)
+    expect(variants.map(({route}) => route).filter(route => expectedSet.has(route)).sort())
+      .toEqual([...expectedSet].sort())
     expect(variants.map(({route}) => route).filter(route => !expectedSet.has(route))).toEqual([
+      "components/controls/readonly-control/basic/default",
       "components/data/inspector-sections/basic/default",
       "components/data/inspector-section/basic/default",
       "components/data/inspector-text-section/basic/default",
       "components/data/status-bar/basic/default",
     ])
     expect(variants).toHaveLength(89)
-    expect(variants.filter(({route}) => route === "components/inputs/reference-input/basic/default" ||
-      route === "components/inputs/field/reference/default").map(({label}) => label))
+    expect(remap.leafMappings.filter(({from}) =>
+      from.route === "components/inputs/field/integer/input" ||
+      from.route === "components/inputs/integer-input/basic/labeled"
+    ).map(({from, to}) => ({from: from.route, to: to.route}))).toEqual([
+      {
+        from: "components/inputs/field/integer/input",
+        to: "components/fields/integer-field/basic/default",
+      },
+      {
+        from: "components/inputs/integer-input/basic/labeled",
+        to: "components/fields/integer-field/basic/default",
+      },
+    ])
+    expect(variants.filter(({route}) => route === "components/controls/reference-control/basic/default" ||
+      route === "components/fields/reference-field/basic/default").map(({label}) => label))
       .toEqual(["Выбрано", "Выбрано"])
     for (const subject of catalog.categories.flatMap(({subjects}) => subjects)) {
       const projection = subject.variants.every(({route}) => route.startsWith("hud/"))
@@ -47,9 +64,64 @@ describe("@ui/components external catalog", () => {
     for (const variant of variants) {
       const path = resolve(import.meta.dir, variant.module.path)
       expect(existsSync(path), variant.route).toBeTrue()
-      expect(readFileSync(path, "utf8"), variant.route)
-        .toContain(`export const ${variant.module.export} = defineOwnerStory(`)
+      const source = readFileSync(path, "utf8")
+      const marker = `export const ${variant.module.export} = defineOwnerStory(`
+      const exportIndex = source.indexOf(marker)
+      expect(exportIndex, variant.route).toBeGreaterThanOrEqual(0)
+      expect(source.slice(exportIndex, exportIndex + 256), variant.route)
+        .toContain(JSON.stringify(variant.route))
     }
+  })
+
+  test("declares exactly Controls and concrete Fields without a generic Field subject", () => {
+    const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
+    const controls = catalog.categories.find(({id}) => id === "components-controls")
+    const fields = catalog.categories.find(({id}) => id === "components-fields")
+    expect(controls).toMatchObject({label: "Контролы", route: "components/controls"})
+    expect(fields).toMatchObject({label: "Поля", route: "components/fields"})
+    expect(controls?.subjects.map(({apiName}) => apiName)).toEqual([
+      "ControlGroup",
+      "TextControl",
+      "NumberControl",
+      "IntegerControl",
+      "ColorControl",
+      "VectorControl",
+      "MatrixControl",
+      "ReferenceControl",
+      "EnumControl",
+      "CollectionControl",
+      "PathControl",
+      "Checkbox",
+      "Switcher",
+      "ProgressCheckbox",
+      "SliderControl",
+      "ReadonlyControl",
+    ])
+    expect(fields?.subjects.map(({apiName}) => apiName)).toEqual([
+      "TextField",
+      "NumberField",
+      "IntegerField",
+      "BooleanField",
+      "EnumField",
+      "ColorField",
+      "VectorField",
+      "RotationField",
+      "MatrixField",
+      "ReferenceField",
+      "CollectionField",
+      "PathField",
+      "ReadonlyField",
+    ])
+    expect(fields?.subjects.find(({id}) => id === "integer-field")?.variants.map(({route}) => route))
+      .toEqual(["components/fields/integer-field/basic/default"])
+    expect(catalog.categories.some(({id, route}) =>
+      id === "components-inputs" || route === "components/inputs")).toBeFalse()
+    expect(catalog.categories.flatMap(({subjects}) => subjects)
+      .some(({id, apiName, route}) => id === "field" || apiName === "Field" ||
+        route === "components/fields/field")).toBeFalse()
+    expect(catalog.categories.flatMap(({subjects}) => subjects)
+      .flatMap(({variants}) => variants)
+      .some(({route}) => route.startsWith("components/inputs/"))).toBeFalse()
   })
 
   test("derives one direct catalog component node for every exported TSX factory", () => {
@@ -201,8 +273,8 @@ describe("@ui/components external catalog", () => {
       reportDiagnostic() {},
     })
     await session.mount({
-      route: story_color_input_open.route,
-      story: story_color_input_open,
+      route: story_color_control_open.route,
+      story: story_color_control_open,
       signal: new AbortController().signal,
     })
     const owner = document.firstChild as HTMLElement

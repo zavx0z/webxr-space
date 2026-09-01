@@ -5,7 +5,11 @@ const componentsRoot = import.meta.dir
 
 describe("component source layout", () => {
   test("keeps component owners, specifications and TSX fixtures on one stem", async () => {
-    const filenames = await readdir(componentsRoot)
+    const rootFilenames = await readdir(componentsRoot)
+    const nestedFilenames = await Promise.all(["controls", "fields"].map(async directory =>
+      (await readdir(`${componentsRoot}/${directory}`)).map(filename => `${directory}/${filename}`)
+    ))
+    const filenames = [...rootFilenames, ...nestedFilenames.flat()].sort()
     const filenameSet = new Set(filenames)
     const productionStems = new Set(filenames.flatMap(filename => {
       const match = filename.match(/^(.+)\.(?:tsx|ts|css)$/u)
@@ -34,6 +38,17 @@ describe("component source layout", () => {
       const stem = filename.slice(0, -".test.ts".length)
       expect(filenameSet.has(`${stem}.tsx`), `${filename} must remain cross-owner or package-level`)
         .toBe(false)
+    }
+
+    const manifest = await Bun.file(`${componentsRoot}/package.json`).json() as {
+      exports: Record<string, string>
+    }
+    const governedComponents = Object.values(manifest.exports)
+      .filter(target => /^\.\/(?:controls|fields)\/.+\.tsx$/u.test(target))
+      .map(target => target.slice(2, -".tsx".length))
+    for (const stem of governedComponents) {
+      expect(filenameSet.has(`${stem}.spec.ts`), `${stem}.tsx must have an adjacent focused specification`)
+        .toBe(true)
     }
   })
 })

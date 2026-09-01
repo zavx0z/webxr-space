@@ -1,16 +1,16 @@
 /** Package-owned external Storybook story support. */
 import {
-  CollectionInput,
-  type CollectionInputItem,
-  type CollectionInputMoveDirection,
-  type CollectionInputProps
-} from "@ui/components/collection-input"
+  CollectionControl,
+  type CollectionControlItem,
+  type CollectionControlMoveDirection,
+  type CollectionControlProps
+} from "@ui/components/controls/collection-control"
 import {
-  ColorInput,
-  type ColorInputPresentation,
-  type ColorInputProps,
-  type ColorInputValue
-} from "@ui/components/color-input"
+  ColorControl,
+  type ColorControlPresentation,
+  type ColorControlProps,
+  type ColorControlValue
+} from "@ui/components/controls/color-control"
 import {List, type ListProps} from "@ui/components/list"
 import {uiIcons} from "@ui/components/icons"
 import {Table, type TableProps} from "@ui/components/table"
@@ -18,26 +18,26 @@ import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState, type ComponentRoot} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
-type ColorInputStoryState = Readonly<{
-  value: ColorInputValue
-  presentation: ColorInputPresentation
+type ColorControlStoryState = Readonly<{
+  value: ColorControlValue
+  presentation: ColorControlPresentation
 }>
 
-type ColorInputStoryProps = Readonly<{
-  initial: ColorInputProps
+type ColorControlStoryProps = Readonly<{
+  initial: ColorControlProps
   presented: boolean
 }>
 
-function ColorInputStoryComponent(props: ColorInputStoryProps) {
-  const [state, setState] = useState<ColorInputStoryState>({
+function ColorControlStoryComponent(props: ColorControlStoryProps) {
+  const [state, setState] = useState<ColorControlStoryState>({
     value: props.initial.value,
     presentation: props.initial.presentation ?? "closed"
   })
-  const onInput = (value: ColorInputValue, event: Event) => {
+  const onInput = (value: ColorControlValue, event: Event) => {
     setState(current => ({...current, value}))
     props.initial.onInput?.(value, event)
   }
-  const onChange = (value: ColorInputValue, event: Event) => {
+  const onChange = (value: ColorControlValue, event: Event) => {
     setState(current => ({...current, value}))
     props.initial.onChange?.(value, event)
   }
@@ -45,7 +45,7 @@ function ColorInputStoryComponent(props: ColorInputStoryProps) {
     setState(current => ({...current, presentation: open ? "open" : "closed"}))
     props.initial.onOpenChange?.(open, event)
   }
-  return <ColorInput
+  return <ColorControl
     value={state.value}
     label={props.initial.label}
     presentation={!props.presented && state.presentation === "open" ? "closed" : state.presentation}
@@ -58,13 +58,13 @@ function ColorInputStoryComponent(props: ColorInputStoryProps) {
   />
 }
 
-type CollectionInputStoryState = Readonly<{
-  items: readonly CollectionInputItem[]
+type CollectionControlStoryState = Readonly<{
+  items: readonly CollectionControlItem[]
   selectedId: string | null
 }>
 
-function CollectionInputStoryComponent(props: Readonly<{initial: CollectionInputProps}>) {
-  const [state, setState] = useState<CollectionInputStoryState>({
+function CollectionControlStoryComponent(props: Readonly<{initial: CollectionControlProps}>) {
+  const [state, setState] = useState<CollectionControlStoryState>({
     items: props.initial.items,
     selectedId: props.initial.selectedId
   })
@@ -86,11 +86,11 @@ function CollectionInputStoryComponent(props: Readonly<{initial: CollectionInput
     })
     props.initial.onRemove?.(id, event)
   }
-  const onMove = (id: string, direction: CollectionInputMoveDirection, event: Event) => {
+  const onMove = (id: string, direction: CollectionControlMoveDirection, event: Event) => {
     setState(current => ({...current, items: moveItem(current.items, id, direction)}))
     props.initial.onMove?.(id, direction, event)
   }
-  return <CollectionInput
+  return <CollectionControl
     items={state.items}
     selectedId={state.selectedId}
     visibleRows={props.initial.visibleRows}
@@ -140,29 +140,29 @@ function TableStoryComponent(props: Readonly<{initial: TableProps}>) {
   />
 }
 
-export function createCompiledColorInputProductionStory(
+export function createCompiledColorControlProductionStory(
   document: Document,
-  props: ColorInputProps
+  props: ColorControlProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
     document,
-    ColorInputStoryComponent,
+    ColorControlStoryComponent,
     {initial: props, presented: false},
-    "color-input",
+    "color-control",
     colorSource(props),
-    root => root.render(ColorInputStoryComponent as any, {initial: props, presented: true})
+    root => root.render(ColorControlStoryComponent as any, {initial: props, presented: true})
   )
 }
 
-export function createCompiledCollectionInputProductionStory(
+export function createCompiledCollectionControlProductionStory(
   document: Document,
-  props: CollectionInputProps
+  props: CollectionControlProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(
     document,
-    CollectionInputStoryComponent,
+    CollectionControlStoryComponent,
     {initial: props},
-    "collection-input",
+    "collection-control",
     collectionSource(props)
   )
 }
@@ -194,10 +194,10 @@ export function createCompiledTableProductionStory(
 }
 
 function moveItem(
-  items: readonly CollectionInputItem[],
+  items: readonly CollectionControlItem[],
   id: string,
-  direction: CollectionInputMoveDirection
-): readonly CollectionInputItem[] {
+  direction: CollectionControlMoveDirection
+): readonly CollectionControlItem[] {
   const next = [...items]
   const source = next.findIndex(item => item.id === id)
   const target = source + (direction === "up" ? -1 : 1)
@@ -244,14 +244,14 @@ function mountCompiledStory(
   return Object.freeze({story})
 }
 
-function colorSource(props: ColorInputProps): string {
+function colorSource(props: ColorControlProps): string {
   return [
-    'import {ColorInput, type ColorInputPresentation, type ColorInputValue} from "@ui/components/color-input"',
+    'import {ColorControl, type ColorControlPresentation, type ColorControlValue} from "@ui/components/controls/color-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
-    `  const [state, setState] = useState<{value: ColorInputValue; presentation: ColorInputPresentation}>({value: ${literal(props.value)}, presentation: ${JSON.stringify(props.presentation ?? "closed")}})`,
-    "  return <ColorInput",
+    `  const [state, setState] = useState<{value: ColorControlValue; presentation: ColorControlPresentation}>({value: ${literal(props.value)}, presentation: ${JSON.stringify(props.presentation ?? "closed")}})`,
+    "  return <ColorControl",
     "    value={state.value}",
     "    presentation={state.presentation}",
     "    onInput={value => setState(current => ({...current, value}))}",
@@ -262,15 +262,15 @@ function colorSource(props: ColorInputProps): string {
   ].join("\n")
 }
 
-function collectionSource(props: CollectionInputProps): string {
+function collectionSource(props: CollectionControlProps): string {
   return [
-    'import {CollectionInput, type CollectionInputItem} from "@ui/components/collection-input"',
+    'import {CollectionControl, type CollectionControlItem} from "@ui/components/controls/collection-control"',
     'import {uiIcons} from "@ui/components/icons"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
-    `  const [state, setState] = useState<{items: readonly CollectionInputItem[]; selectedId: string | null}>({items: ${literal(props.items)}, selectedId: ${literal(props.selectedId)}})`,
-    "  return <CollectionInput",
+    `  const [state, setState] = useState<{items: readonly CollectionControlItem[]; selectedId: string | null}>({items: ${literal(props.items)}, selectedId: ${literal(props.selectedId)}})`,
+    "  return <CollectionControl",
     "    items={state.items}",
     "    selectedId={state.selectedId}",
     "    onSelect={selectedId => setState(current => ({...current, selectedId}))}",

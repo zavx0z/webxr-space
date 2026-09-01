@@ -4,7 +4,7 @@ import {createDocument, type HTMLInputElement} from "@zavx0z/dom"
 import {createStoryPropsInspector, fieldsFromProps} from "./props-inspector.tsx"
 
 describe("UI Storybook Props Inspector", () => {
-  test("renders the production Inspector and Field components from actual props", () => {
+  test("renders the production Inspector and concrete Field components from actual props", () => {
     const document = createDocument()
     const inspector = createStoryPropsInspector(
       document,
@@ -52,7 +52,7 @@ describe("UI Storybook Props Inspector", () => {
     })
 
     expect(fields.map(({kind}) => kind)).toEqual(["readonly", "readonly", "readonly"])
-    expect(fields[1]).toMatchObject({value: "ƒ activate", readOnly: true})
-    expect(fields[2]).toMatchObject({value: "undefined", readOnly: true})
+    expect(fields[1]).toMatchObject({value: "ƒ activate"})
+    expect(fields[2]).toMatchObject({value: "undefined"})
   })
 })

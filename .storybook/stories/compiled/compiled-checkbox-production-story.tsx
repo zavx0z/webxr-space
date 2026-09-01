@@ -2,7 +2,7 @@
 import {
   Checkbox,
   type CheckboxProps
-} from "@ui/components/checkbox"
+} from "@ui/components/controls/checkbox"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -55,7 +55,7 @@ export function createCompiledCheckboxProductionStory(
 
 function source(props: CheckboxProps, checked: boolean): string {
   return [
-    'import {Checkbox} from "@ui/components/checkbox"',
+    'import {Checkbox} from "@ui/components/controls/checkbox"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",

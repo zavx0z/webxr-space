@@ -2,7 +2,7 @@
 import {
   SliderControl,
   type SliderControlProps
-} from "@ui/components/slider-control"
+} from "@ui/components/controls/slider-control"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, HTMLInputElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
@@ -58,7 +58,7 @@ export function createCompiledSliderControlProductionStory(
 
 function source(props: SliderControlProps, value: number): string {
   return [
-    'import {SliderControl} from "@ui/components/slider-control"',
+    'import {SliderControl} from "@ui/components/controls/slider-control"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
