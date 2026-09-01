@@ -4,7 +4,7 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {ControlGroup} from "./control-group.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production ControlGroup", () => {
   test("composes TextField cells and retains keyed identities through reorder", () => {

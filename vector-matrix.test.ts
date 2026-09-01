@@ -3,7 +3,7 @@ import {Event, type HTMLInputElement} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {MatrixInput} from "./matrix-input.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 import {VectorInput} from "./vector-input.tsx"
 
 describe("compiled vector and matrix compositions", () => {

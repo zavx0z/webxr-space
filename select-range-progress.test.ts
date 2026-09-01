@@ -22,7 +22,7 @@ import {
 } from "./enum-input.tsx"
 import {ProgressCheckbox} from "./progress-checkbox.tsx"
 import {SliderControl} from "./slider-control.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled select, range and progress controls", () => {
   test("retains keyed options and proposes the standard select value", () => {

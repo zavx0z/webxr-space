@@ -4,8 +4,8 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Field, type FieldDefinition} from "./field.tsx"
-import {DuplicateIdFieldsFixture} from "./field-consumer-fixture.tsx"
-import {createDocument} from "./test-document.ts"
+import {DuplicateIdFieldsFixture} from "./field.fixture.tsx"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled discriminated Field composition", () => {
   test("retains the owner and exact native control while proposing controlled text", () => {

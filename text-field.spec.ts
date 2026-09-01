@@ -7,7 +7,7 @@ import {
 } from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 import {TextField} from "./text-field.tsx"
 
 describe("compiled production TextField", () => {

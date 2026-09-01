@@ -5,7 +5,7 @@ import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Notification} from "./notification.tsx"
 import {uiIcons} from "./icons.ts"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production Notification", () => {
   test("owns semantic status/alert tone and optional dismissal without a queue store", () => {

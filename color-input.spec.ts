@@ -20,7 +20,7 @@ import {
   parseColorInputValue,
   type ColorInputValue
 } from "./color-input.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production ColorInput", () => {
   test("composes Button, TextField and SliderControl with retained channel identities", () => {

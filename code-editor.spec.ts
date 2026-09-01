@@ -3,7 +3,7 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {CodeEditor} from "./code-editor.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production CodeEditor", () => {
   test("retains keyed line and token identities across source updates", () => {

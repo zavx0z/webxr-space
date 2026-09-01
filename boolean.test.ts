@@ -5,7 +5,7 @@ import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Checkbox} from "./checkbox.tsx"
 import {Switcher} from "./switcher.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled boolean controls", () => {
   test("keeps Checkbox live checked/indeterminate state and controlled proposals", () => {

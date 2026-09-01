@@ -4,9 +4,9 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Inspector} from "./inspector.tsx"
-import {InspectorFieldFixture, InspectorFixture} from "./inspector-consumer-fixture.tsx"
+import {InspectorFieldFixture, InspectorFixture} from "./inspector.fixture.tsx"
 import {uiIcons} from "./icons.ts"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production Inspector", () => {
   test("retains keyed category and section components through controlled interaction", () => {

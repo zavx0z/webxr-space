@@ -7,7 +7,7 @@ const componentsRoot = import.meta.dir
 describe("final public component bundle", () => {
   test("contains only natural compiled owners and class-free stylesheets", async () => {
     const result = await Bun.build({
-      entrypoints: [resolve(componentsRoot, "final-owner-bundle-fixture.ts")],
+      entrypoints: [resolve(componentsRoot, "final-owner-bundle.fixture.ts")],
       target: "browser",
       format: "esm",
       minify: true,

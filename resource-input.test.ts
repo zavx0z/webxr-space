@@ -16,7 +16,7 @@ import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {PathInput} from "./path-input.tsx"
 import {ReferenceInput} from "./reference-input.tsx"
 import {uiIcons} from "./icons.ts"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production resource inputs", () => {
   test("composes PathInput from TextField and IconButton with stable events", () => {

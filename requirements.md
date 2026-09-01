@@ -500,6 +500,29 @@ subpaths: `@zavx0z/dom`, `@zavx0z/react`, `@zavx0z/template` and
 `@engine/core`, `@layout/core`, `@ui/elements`, `@ui/hud`,
 `@zavx0z/renderer`, Storybook or product packages are forbidden.
 
+## Source and evidence filenames
+
+A component module uses one shared stem for its production owner, focused
+specification and authored compiler fixture:
+
+```text
+<component>.tsx
+<component>.spec.ts
+<component>.fixture.tsx
+```
+
+`*.spec.ts` describes the focused executable specification of one production
+component module. `*.fixture.tsx` is its real compiled consumer composition and
+is test-only: it is never a package export or a production typecheck input.
+Multiple fixture scenarios for the same component are exported from that one
+fixture module instead of receiving purpose-specific filename suffixes.
+
+`*.test.ts` is reserved for complex cross-owner or package-level acceptance
+whose subject cannot be attributed to one component module. Shared non-TSX
+evidence support uses the same dot role, for example `document.fixture.ts`.
+The legacy `*-consumer-fixture.tsx`, `*-dedup-fixture.tsx`,
+`*-test-support.ts` and component-level `*.test.ts` forms are forbidden.
+
 ## Acceptance
 
 1. Manifest exports exactly the 29 subpaths above and every target exists.

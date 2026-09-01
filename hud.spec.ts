@@ -9,9 +9,9 @@ import {
   Timeline,
   timelineDefaultProps
 } from "./hud.tsx"
-import {HudFrameFixture, HudWindowFixture} from "./hud-consumer-fixture.tsx"
+import {HudFrameFixture, HudWindowFixture} from "./hud.fixture.tsx"
 import {uiIcons} from "./icons.ts"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production HUD compositions", () => {
   test("HudWindow retains keyed actions and authored Pane body while minimizing", () => {

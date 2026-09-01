@@ -20,7 +20,7 @@ import {
   stepNumberInputValue
 } from "./number-input.tsx"
 import {IntegerInput} from "./integer-input.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production NumberInput", () => {
   test("keeps one continuous scalar input identity and proposes controlled edits", () => {

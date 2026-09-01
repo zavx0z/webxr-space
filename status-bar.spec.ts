@@ -3,7 +3,7 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {StatusBar, statusBarText} from "./status-bar.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production StatusBar", () => {
   test("retains keyed status items and the exact passive lower-chrome contour", () => {

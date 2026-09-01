@@ -5,7 +5,7 @@ import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {CollectionInput} from "./collection-input.tsx"
 import {uiIcons} from "./icons.ts"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production CollectionInput", () => {
   test("composes List and Buttons with retained keyed items and standard actions", () => {

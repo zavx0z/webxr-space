@@ -22,7 +22,7 @@ import {Button as runtimeButton, type ButtonProps} from "./button.tsx"
 import {
   ButtonDedupFixture,
   type ButtonDedupFixtureProps
-} from "./button-dedup-fixture.tsx"
+} from "./button.fixture.tsx"
 
 const packageRoot = resolve(import.meta.dir)
 let outputDirectory = ""
@@ -168,7 +168,7 @@ describe("compiled production Button", () => {
     const consumerDirectory = await mkdtemp(join(packageRoot, ".button-consumer-test-"))
     try {
       const result = await Bun.build({
-        entrypoints: [join(packageRoot, "button-consumer-fixture.tsx")],
+        entrypoints: [join(packageRoot, "button.fixture.tsx")],
         outdir: consumerDirectory,
         target: "bun",
         format: "esm",

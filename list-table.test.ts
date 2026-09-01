@@ -10,7 +10,7 @@ import {
   normalizeTableSelection,
   tableSelectionAfterClick
 } from "./table.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 
 describe("compiled keyed collections", () => {
   test("List retains keyed rows and standard selection proposals", () => {

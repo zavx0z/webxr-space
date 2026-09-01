@@ -5,9 +5,9 @@ import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Badge} from "./badge.tsx"
 import {Divider} from "./divider.tsx"
 import {Pane} from "./pane.tsx"
-import {createDocument} from "./test-document.ts"
+import {createDocument} from "./document.fixture.ts"
 import {Typography} from "./typography.tsx"
-import {PaneComposition} from "./pane-children-consumer-fixture.tsx"
+import {PaneComposition} from "./pane.fixture.tsx"
 
 describe("compiled production visual primitives", () => {
   test("retains Pane root and primitive Text while applying caller style last", () => {
