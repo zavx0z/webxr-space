@@ -3,6 +3,10 @@ import {ViewPoint} from "../core/view-point"
 import {Mesh} from "../core/mesh"
 import {InstancedMesh} from "../core/instanced-mesh"
 import {InstancedRoundedRect} from "../core/instanced-rounded-rect"
+import {
+  InstancedStrokedPath,
+  StrokedPathInstanceLayer,
+} from "../core/instanced-stroked-path"
 import {SkinnedMesh} from "../core/skinned-mesh"
 import {BufferAttribute, BufferGeometry} from "../core/buffer-geometry"
 import {WireframeInstancedMesh} from "../core/wireframe-instanced-mesh"
@@ -26,6 +30,7 @@ import {
   radialBackdropShader as radialBackdropShaderCode,
   roundedShader as roundedShaderCode,
   roundedInstancedShader as roundedInstancedShaderCode,
+  strokedPathInstancedShader as strokedPathInstancedShaderCode,
   textShader as textShaderCode,
 } from "./shaders/ui-shaders"
 import {TEXT_COVER_FACE_STATE, TEXT_STENCIL_BACK_FACE_STATE, TEXT_STENCIL_FACE_STATE} from "./text-stencil"
@@ -97,6 +102,7 @@ if (import.meta.hot) {
     "./shaders/image-external.wgsl",
     "./shaders/rounded.wgsl",
     "./shaders/rounded-instanced.wgsl",
+    "./shaders/stroked-path-instanced.wgsl",
     "./shaders/color-picker.wgsl",
   ], () => {
     if (typeof location !== "undefined") location.reload()
@@ -125,6 +131,9 @@ interface GeometryBuffers {
   instanceBuffer?: GPUBuffer // для WireframeInstancedMesh (матрица + параметры материала)
   roundedRectRecordBuffer?: GPUBuffer
   roundedRectOrderBuffer?: GPUBuffer
+  strokedPathStyleRecordBuffer?: GPUBuffer
+  strokedPathSegmentRecordBuffer?: GPUBuffer
+  strokedPathSegmentOrderBuffer?: GPUBuffer
 }
 
 type OptionalGeometryBufferKey = Exclude<keyof GeometryBuffers, "positionBuffer">
@@ -138,6 +147,19 @@ interface RoundedRectInstanceBindGroupEntry {
   readonly recordBuffer: GPUBuffer
   readonly orderBuffer: GPUBuffer
   readonly bindGroup: GPUBindGroup
+}
+
+interface StrokedPathInstanceBindGroupEntry {
+  readonly styleRecordBuffer: GPUBuffer
+  readonly segmentRecordBuffer: GPUBuffer
+  readonly segmentOrderBuffer: GPUBuffer
+  readonly bindGroup: GPUBindGroup
+}
+
+interface StrokedPathStorageValidationEntry {
+  readonly styleBytes: number
+  readonly segmentBytes: number
+  readonly orderBytes: number
 }
 
 interface PreparedRenderLayer {
@@ -200,6 +222,7 @@ export class Renderer {
   private uiExternalImagePipeline: GPURenderPipeline | null = null
   private uiRoundedPipeline: GPURenderPipeline | null = null
   private uiInstancedRoundedRectPipeline: GPURenderPipeline | null = null
+  private uiInstancedStrokedPathPipeline: GPURenderPipeline | null = null
   private radialBackdropPipeline: GPURenderPipeline | null = null
   private uiRadialBackdropPipeline: GPURenderPipeline | null = null
   private colorPickerPipeline: GPURenderPipeline | null = null
@@ -207,9 +230,15 @@ export class Renderer {
   private imageBindGroupLayout: GPUBindGroupLayout | null = null
   private externalImageBindGroupLayout: GPUBindGroupLayout | null = null
   private roundedRectInstanceBindGroupLayout: GPUBindGroupLayout | null = null
+  private strokedPathInstanceBindGroupLayout: GPUBindGroupLayout | null = null
   private imageSampler: GPUSampler | null = null
   private imageBindGroupCache: WeakMap<GPUTexture, GPUBindGroup> = new WeakMap()
   private roundedRectInstanceBindGroupCache = new Map<BufferGeometry, RoundedRectInstanceBindGroupEntry>()
+  private strokedPathInstanceBindGroupCache = new Map<BufferGeometry, StrokedPathInstanceBindGroupEntry>()
+  private strokedPathStorageValidationCache = new WeakMap<
+    StrokedPathInstanceLayer,
+    StrokedPathStorageValidationEntry
+  >()
 
   // --- Глобальные ресурсы ---
   private globalBindGroupLayout: GPUBindGroupLayout | null = null
@@ -384,6 +413,26 @@ export class Renderer {
       ],
     })
 
+    this.strokedPathInstanceBindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {type: "read-only-storage"},
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {type: "read-only-storage"},
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {type: "read-only-storage"},
+        },
+      ],
+    })
+
     this.createPerObjectResources(INITIAL_RENDERABLE_CAPACITY)
 
     this.imageBindGroupLayout = this.device.createBindGroupLayout({
@@ -435,6 +484,14 @@ export class Renderer {
       ],
     })
 
+    const strokedPathInstancePipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts: [
+        globalBindGroupLayout,
+        perObjectBindGroupLayout,
+        this.strokedPathInstanceBindGroupLayout,
+      ],
+    })
+
     const imagePipelineLayout = this.device.createPipelineLayout({
       bindGroupLayouts: [globalBindGroupLayout, perObjectBindGroupLayout, this.imageBindGroupLayout],
     })
@@ -476,6 +533,9 @@ export class Renderer {
     })
     const roundedInstancedShaderModule = this.device.createShaderModule({
       code: roundedInstancedShaderCode,
+    })
+    const strokedPathInstancedShaderModule = this.device.createShaderModule({
+      code: strokedPathInstancedShaderCode,
     })
     const textShaderModule = this.device.createShaderModule({
       code: textShaderCode,
@@ -866,6 +926,32 @@ export class Renderer {
       },
       fragment: {
         module: roundedInstancedShaderModule,
+        entryPoint: "fs_main",
+        targets: [{
+          format: this.presentationFormat,
+          blend: {
+            color: {srcFactor: "src-alpha", dstFactor: "one-minus-src-alpha", operation: "add"},
+            alpha: {srcFactor: "one", dstFactor: "one-minus-src-alpha", operation: "add"},
+          },
+        }],
+      },
+      primitive: {topology: "triangle-list", cullMode: "none"},
+      depthStencil: uiDepthStencil,
+      multisample: {count: this.sampleCount},
+    })
+
+    this.uiInstancedStrokedPathPipeline = await this.device.createRenderPipelineAsync({
+      label: "InstancedStrokedPath.ui",
+      layout: strokedPathInstancePipelineLayout,
+      vertex: {
+        module: strokedPathInstancedShaderModule,
+        entryPoint: "vs_main",
+        buffers: [
+          {arrayStride: 12, attributes: [{shaderLocation: 0, offset: 0, format: "float32x3"}]},
+        ],
+      },
+      fragment: {
+        module: strokedPathInstancedShaderModule,
         entryPoint: "fs_main",
         targets: [{
           format: this.presentationFormat,
@@ -1492,6 +1578,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.roundedPipeline &&
       this.uiRoundedPipeline &&
       this.uiInstancedRoundedRectPipeline &&
+      this.uiInstancedStrokedPathPipeline &&
       this.radialBackdropPipeline &&
       this.uiRadialBackdropPipeline &&
       this.colorPickerPipeline &&
@@ -1507,6 +1594,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.boneMatricesBuffer &&
       this.perObjectBindGroupLayout &&
       this.roundedRectInstanceBindGroupLayout &&
+      this.strokedPathInstanceBindGroupLayout &&
       this.perObjectBindGroup &&
       this.perObjectDataCPU &&
       this.boneMatricesDataCPU &&
@@ -2029,6 +2117,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         case "instanced-rounded-rect":
           this.updateInstancedRoundedRectData(item.worldMatrix, offsetFloats)
           break
+        case "instanced-stroked-path":
+          this.updateInstancedStrokedPathData(item.worldMatrix, offsetFloats)
+          break
         case "instanced-line":
           this.updateInstancedLineData(item.object as WireframeInstancedMesh, item.worldMatrix, offsetFloats)
           break
@@ -2216,6 +2307,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.perObjectDataCPU!.set(worldMatrix.elements, offsetFloats)
   }
 
+  private updateInstancedStrokedPathData(worldMatrix: Matrix4, offsetFloats: number): void {
+    this.perObjectDataCPU!.set(worldMatrix.elements, offsetFloats)
+  }
+
   private updateInstancedLineData(lines: WireframeInstancedMesh, worldMatrix: Matrix4, offsetFloats: number): void {
     if (!lines.visible) return
 
@@ -2343,6 +2438,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         case "instanced-rounded-rect":
           pipeline = this.uiInstancedRoundedRectPipeline
           break
+        case "instanced-stroked-path":
+          pipeline = this.uiInstancedStrokedPathPipeline
+          break
         case "instanced-line":
           pipeline = this.instancedLinePipeline
           break
@@ -2392,6 +2490,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             renderIndex,
           )
           break
+        case "instanced-stroked-path":
+          this.renderInstancedStrokedPath(
+            passEncoder,
+            item.object as InstancedStrokedPath,
+            renderIndex,
+          )
+          break
         case "instanced-line":
           this.renderInstancedLines(passEncoder, item.object as WireframeInstancedMesh, renderIndex)
           break
@@ -2427,6 +2532,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.geometryCache.delete(geometry)
     this.geometryAttributeSources.delete(geometry)
     this.roundedRectInstanceBindGroupCache.delete(geometry)
+    this.strokedPathInstanceBindGroupCache.delete(geometry)
   }
 
   private destroyGeometryBuffers(buffers: GeometryBuffers): void {
@@ -2441,6 +2547,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     buffers.instanceBuffer?.destroy()
     buffers.roundedRectRecordBuffer?.destroy()
     buffers.roundedRectOrderBuffer?.destroy()
+    buffers.strokedPathStyleRecordBuffer?.destroy()
+    buffers.strokedPathSegmentRecordBuffer?.destroy()
+    buffers.strokedPathSegmentOrderBuffer?.destroy()
   }
 
   private createAndUploadBuffer(
@@ -2648,6 +2757,30 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.synchronizeOptionalGeometryAttribute(
       buffers,
       sources,
+      "strokedPathStyleRecords",
+      "strokedPathStyleRecordBuffer",
+      geometry.attributes.strokedPathStyleRecords,
+      GPUBufferUsage.STORAGE,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "strokedPathSegmentRecords",
+      "strokedPathSegmentRecordBuffer",
+      geometry.attributes.strokedPathSegmentRecords,
+      GPUBufferUsage.STORAGE,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
+      "strokedPathSegmentOrder",
+      "strokedPathSegmentOrderBuffer",
+      geometry.attributes.strokedPathSegmentOrder,
+      GPUBufferUsage.STORAGE,
+    )
+    this.synchronizeOptionalGeometryAttribute(
+      buffers,
+      sources,
       "$index",
       "indexBuffer",
       geometry.index ?? undefined,
@@ -2802,6 +2935,44 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     this.roundedRectInstanceBindGroupCache.set(geometry, {
       recordBuffer: buffers.roundedRectRecordBuffer,
       orderBuffer: buffers.roundedRectOrderBuffer,
+      bindGroup,
+    })
+    return bindGroup
+  }
+
+  private getStrokedPathInstanceBindGroup(
+    geometry: BufferGeometry,
+    buffers: GeometryBuffers,
+  ): GPUBindGroup {
+    if (
+      !this.device
+      || !this.strokedPathInstanceBindGroupLayout
+      || !buffers.strokedPathStyleRecordBuffer
+      || !buffers.strokedPathSegmentRecordBuffer
+      || !buffers.strokedPathSegmentOrderBuffer
+    ) {
+      throw new Error("InstancedStrokedPath bind group is unavailable")
+    }
+
+    const cached = this.strokedPathInstanceBindGroupCache.get(geometry)
+    if (
+      cached?.styleRecordBuffer === buffers.strokedPathStyleRecordBuffer
+      && cached.segmentRecordBuffer === buffers.strokedPathSegmentRecordBuffer
+      && cached.segmentOrderBuffer === buffers.strokedPathSegmentOrderBuffer
+    ) return cached.bindGroup
+
+    const bindGroup = this.device.createBindGroup({
+      layout: this.strokedPathInstanceBindGroupLayout,
+      entries: [
+        {binding: 0, resource: {buffer: buffers.strokedPathStyleRecordBuffer}},
+        {binding: 1, resource: {buffer: buffers.strokedPathSegmentRecordBuffer}},
+        {binding: 2, resource: {buffer: buffers.strokedPathSegmentOrderBuffer}},
+      ],
+    })
+    this.strokedPathInstanceBindGroupCache.set(geometry, {
+      styleRecordBuffer: buffers.strokedPathStyleRecordBuffer,
+      segmentRecordBuffer: buffers.strokedPathSegmentRecordBuffer,
+      segmentOrderBuffer: buffers.strokedPathSegmentOrderBuffer,
       bindGroup,
     })
     return bindGroup
@@ -2968,6 +3139,88 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       index.array instanceof Uint32Array ? "uint32" : "uint16",
     )
     passEncoder.drawIndexed(index.count, batch.count, 0, 0, batch.firstInstance)
+  }
+
+  private renderInstancedStrokedPath(
+    passEncoder: GPURenderPassEncoder | null,
+    batch: InstancedStrokedPath,
+    renderIndex: number,
+  ): void {
+    if (
+      !passEncoder
+      || !this.device
+      || !this.perObjectUniformBuffer
+      || !this.perObjectBindGroup
+      || batch.count === 0
+    ) return
+    if (batch.firstInstance + batch.count > batch.layer.segments.count) {
+      throw new RangeError(
+        `InstancedStrokedPath draw range [${batch.firstInstance}, ${batch.firstInstance + batch.count}) exceeds segment count ${batch.layer.segments.count}`,
+      )
+    }
+    if (batch.layer.styles.count === 0) {
+      throw new Error("InstancedStrokedPath requires at least one live style")
+    }
+    batch.layer.validatePackedRecords()
+    this.validateStrokedPathStorageLimits(batch)
+
+    const dynamicOffset = renderIndex * PER_OBJECT_UNIFORM_SIZE
+    const boneMatricesOffset = renderIndex * BONE_MATRICES_SIZE
+    passEncoder.setBindGroup(1, this.perObjectBindGroup, [dynamicOffset, boneMatricesOffset])
+
+    const buffers = this.getOrCreateGeometryBuffers(batch.geometry)
+    if (
+      !buffers.indexBuffer
+      || !buffers.strokedPathStyleRecordBuffer
+      || !buffers.strokedPathSegmentRecordBuffer
+      || !buffers.strokedPathSegmentOrderBuffer
+    ) {
+      throw new Error("InstancedStrokedPath GPU buffers are incomplete")
+    }
+    passEncoder.setBindGroup(2, this.getStrokedPathInstanceBindGroup(batch.geometry, buffers))
+    passEncoder.setVertexBuffer(0, buffers.positionBuffer)
+    const index = batch.geometry.index
+    if (index === null) throw new Error("InstancedStrokedPath unit quad requires an index")
+    passEncoder.setIndexBuffer(
+      buffers.indexBuffer,
+      index.array instanceof Uint32Array ? "uint32" : "uint16",
+    )
+    passEncoder.drawIndexed(index.count, batch.count, 0, 0, batch.firstInstance)
+  }
+
+  private validateStrokedPathStorageLimits(batch: InstancedStrokedPath): void {
+    const limits = this.device?.limits
+    if (limits === undefined) return
+    const styleBytes = batch.layer.styles.recordAttribute.array.byteLength
+    const segmentBytes = batch.layer.segments.recordAttribute.array.byteLength
+    const orderBytes = batch.layer.segments.orderAttribute.array.byteLength
+    const cached = this.strokedPathStorageValidationCache.get(batch.layer)
+    if (
+      cached?.styleBytes === styleBytes
+      && cached.segmentBytes === segmentBytes
+      && cached.orderBytes === orderBytes
+    ) return
+    const maxStorageBytes = Math.min(limits.maxStorageBufferBindingSize, limits.maxBufferSize)
+    this.validateStrokedPathStorageResource("style records", styleBytes, maxStorageBytes)
+    this.validateStrokedPathStorageResource("segment records", segmentBytes, maxStorageBytes)
+    this.validateStrokedPathStorageResource("segment order", orderBytes, maxStorageBytes)
+    this.strokedPathStorageValidationCache.set(batch.layer, {
+      styleBytes,
+      segmentBytes,
+      orderBytes,
+    })
+  }
+
+  private validateStrokedPathStorageResource(
+    label: string,
+    byteLength: number,
+    maxStorageBytes: number,
+  ): void {
+    if (byteLength > maxStorageBytes) {
+      throw new RangeError(
+        `InstancedStrokedPath ${label} require ${byteLength} bytes, device limit is ${maxStorageBytes}`,
+      )
+    }
   }
 
   private renderLines(

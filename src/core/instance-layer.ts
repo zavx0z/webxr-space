@@ -33,6 +33,7 @@ function asBytes(record: ArrayBufferView): Uint8Array {
   if (!ArrayBuffer.isView(record)) {
     throw new TypeError("Instance record must be an ArrayBuffer view")
   }
+  if (record instanceof Uint8Array) return record
   return new Uint8Array(record.buffer, record.byteOffset, record.byteLength)
 }
 
@@ -57,9 +58,12 @@ export class InstanceLayer {
 
   private _count = 0
   private _nextSlot = 0
+  private _ownershipVersion = 0
   private _generations: Uint32Array
   private _alive: Uint8Array
   private _orderIndexBySlot: Int32Array
+  private _reorderMarks: Uint32Array
+  private _reorderEpoch = 0
   private readonly _freeSlots: number[] = []
   private _handles: Array<InstanceHandle | undefined>
 
@@ -99,6 +103,7 @@ export class InstanceLayer {
     this._alive = new Uint8Array(initialCapacity)
     this._orderIndexBySlot = new Int32Array(initialCapacity)
     this._orderIndexBySlot.fill(-1)
+    this._reorderMarks = new Uint32Array(initialCapacity)
     this._handles = new Array(initialCapacity)
   }
 
@@ -108,6 +113,11 @@ export class InstanceLayer {
 
   public get capacity(): number {
     return this.recordAttribute.count
+  }
+
+  /** Lifecycle revision. Paint order and record edits do not change it. */
+  public get ownershipVersion(): number {
+    return this._ownershipVersion
   }
 
   public get records(): Uint8Array {
@@ -146,12 +156,15 @@ export class InstanceLayer {
     const nextOrderIndices = new Int32Array(nextCapacity)
     nextOrderIndices.fill(-1)
     nextOrderIndices.set(this._orderIndexBySlot)
+    const nextReorderMarks = new Uint32Array(nextCapacity)
+    nextReorderMarks.set(this._reorderMarks)
 
     this.recordAttribute.array = nextRecords
     this.orderAttribute.array = nextOrder
     this._generations = nextGenerations
     this._alive = nextAlive
     this._orderIndexBySlot = nextOrderIndices
+    this._reorderMarks = nextReorderMarks
     this._handles.length = nextCapacity
     return this
   }
@@ -178,6 +191,7 @@ export class InstanceLayer {
     this.records.set(bytes, recordOffset)
     this.recordAttribute.addUpdateRange(recordOffset, this.recordByteLength)
     this.insertOrderSlot(slot, orderIndex)
+    this._ownershipVersion += 1
     return handle
   }
 
@@ -242,32 +256,128 @@ export class InstanceLayer {
     return this._handles[slot]!
   }
 
+  /** Returns the canonical live handle for one physical slot, or null. */
+  public handleForSlot(slot: number): InstanceHandle | null {
+    if (
+      !Number.isInteger(slot)
+      || slot < 0
+      || slot >= this._nextSlot
+      || this._alive[slot] !== 1
+    ) return null
+    return this._handles[slot] ?? null
+  }
+
+  /** Returns the current dense presentation index for one canonical live handle in O(1). */
+  public orderIndexOf(handle: InstanceHandle): number {
+    const slot = this.requireSlot(handle)
+    return this._orderIndexBySlot[slot]!
+  }
+
   /** Moves presentation order without moving the physical record. */
   public move(handle: InstanceHandle, orderIndex: number): this {
     const slot = this.requireSlot(handle)
     this.assertOrderIndex(orderIndex)
     const previousIndex = this._orderIndexBySlot[slot]!
-    if (previousIndex === orderIndex) return this
+    return this.moveRange(previousIndex, 1, orderIndex)
+  }
 
-    if (previousIndex < orderIndex) {
-      for (let index = previousIndex; index < orderIndex; index++) {
-        const shiftedSlot = this.order[index + 1]!
-        this.order[index] = shiftedSlot
-        this._orderIndexBySlot[shiftedSlot] = index
-      }
-    } else {
-      for (let index = previousIndex; index > orderIndex; index--) {
-        const shiftedSlot = this.order[index - 1]!
-        this.order[index] = shiftedSlot
-        this._orderIndexBySlot[shiftedSlot] = index
-      }
+  /**
+   * Moves one consecutive dense-order block in O(the affected interval).
+   *
+   * `toIndex` is the block's final start index in the resulting order, not an
+   * insertion index in an intermediate post-removal array. The complete source
+   * and destination ranges are validated before mutation. Physical records,
+   * canonical handles, generations and {@link ownershipVersion} never change.
+   * One exact interval covering the rotated range becomes upload-dirty.
+   */
+  public moveRange(firstIndex: number, count: number, toIndex: number): this {
+    if (!Number.isInteger(firstIndex) || firstIndex < 0) {
+      throw new RangeError(
+        `InstanceLayer moveRange firstIndex must be a non-negative integer, received ${firstIndex}`,
+      )
     }
-    this.order[orderIndex] = slot
-    this._orderIndexBySlot[slot] = orderIndex
-    this.orderAttribute.addUpdateRange(
-      Math.min(previousIndex, orderIndex),
-      Math.abs(previousIndex - orderIndex) + 1,
-    )
+    if (!Number.isInteger(count) || count <= 0) {
+      throw new RangeError(
+        `InstanceLayer moveRange count must be a positive integer, received ${count}`,
+      )
+    }
+    if (firstIndex + count > this._count) {
+      throw new RangeError(
+        `InstanceLayer moveRange source [${firstIndex}, ${firstIndex + count}) exceeds count ${this._count}`,
+      )
+    }
+    if (!Number.isInteger(toIndex) || toIndex < 0 || toIndex + count > this._count) {
+      throw new RangeError(
+        `InstanceLayer moveRange final range [${toIndex}, ${toIndex + count}) exceeds count ${this._count}`,
+      )
+    }
+    if (firstIndex === toIndex) return this
+
+    const dirtyStart = Math.min(firstIndex, toIndex)
+    const dirtyEnd = Math.max(firstIndex, toIndex) + count
+    if (firstIndex < toIndex) {
+      this.reverseOrder(firstIndex, firstIndex + count)
+      this.reverseOrder(firstIndex + count, dirtyEnd)
+      this.reverseOrder(firstIndex, dirtyEnd)
+    } else {
+      this.reverseOrder(toIndex, firstIndex)
+      this.reverseOrder(firstIndex, firstIndex + count)
+      this.reverseOrder(toIndex, firstIndex + count)
+    }
+    for (let orderIndex = dirtyStart; orderIndex < dirtyEnd; orderIndex += 1) {
+      this._orderIndexBySlot[this.order[orderIndex]!] = orderIndex
+    }
+    this.orderAttribute.addUpdateRange(dirtyStart, dirtyEnd - dirtyStart)
+    return this
+  }
+
+  /**
+   * Atomically replaces the complete dense presentation order in O(n).
+   *
+   * The supplied list must contain every canonical live handle exactly once.
+   * Validation completes before storage changes, so stale, foreign, duplicate
+   * or incomplete input leaves the previous order and dirty state untouched.
+   */
+  public setOrder(handles: readonly InstanceHandle[]): this {
+    if (!Array.isArray(handles)) {
+      throw new TypeError("InstanceLayer order must be an array of canonical handles")
+    }
+    if (handles.length !== this._count) {
+      throw new RangeError(
+        `InstanceLayer order contains ${handles.length} handles, expected ${this._count}`,
+      )
+    }
+
+    if (this._reorderEpoch === 0xffff_ffff) {
+      this._reorderMarks.fill(0)
+      this._reorderEpoch = 1
+    } else {
+      this._reorderEpoch += 1
+    }
+    for (const handle of handles) {
+      if (!this.has(handle)) {
+        throw new Error(`InstanceLayer order contains a stale or foreign handle`)
+      }
+      if (this._reorderMarks[handle.slot] === this._reorderEpoch) {
+        throw new Error(`InstanceLayer order contains duplicate slot ${handle.slot}`)
+      }
+      this._reorderMarks[handle.slot] = this._reorderEpoch
+    }
+
+    let firstChanged = this._count
+    let lastChanged = -1
+    for (let orderIndex = 0; orderIndex < handles.length; orderIndex += 1) {
+      const slot = handles[orderIndex]!.slot
+      if (this.order[orderIndex] !== slot) {
+        firstChanged = Math.min(firstChanged, orderIndex)
+        lastChanged = orderIndex
+        this.order[orderIndex] = slot
+      }
+      this._orderIndexBySlot[slot] = orderIndex
+    }
+    if (lastChanged >= firstChanged) {
+      this.orderAttribute.addUpdateRange(firstChanged, lastChanged - firstChanged + 1)
+    }
     return this
   }
 
@@ -295,6 +405,7 @@ export class InstanceLayer {
       this._generations[slot] = this._generations[slot]! + 1
       this._freeSlots.push(slot)
     }
+    this._ownershipVersion += 1
   }
 
   /** Releases every live item while preserving allocated capacity for reuse. */
@@ -317,6 +428,7 @@ export class InstanceLayer {
     }
     this._count = 0
     this.orderAttribute.addUpdateRange(0, previousCount)
+    this._ownershipVersion += 1
   }
 
   private insertOrderSlot(slot: number, orderIndex: number): void {
@@ -329,6 +441,14 @@ export class InstanceLayer {
     this._orderIndexBySlot[slot] = orderIndex
     this._count += 1
     this.orderAttribute.addUpdateRange(orderIndex, this._count - orderIndex)
+  }
+
+  private reverseOrder(start: number, end: number): void {
+    for (let left = start, right = end - 1; left < right; left += 1, right -= 1) {
+      const value = this.order[left]!
+      this.order[left] = this.order[right]!
+      this.order[right] = value
+    }
   }
 
   private requireSlot(handle: InstanceHandle): number {

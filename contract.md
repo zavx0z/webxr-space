@@ -207,6 +207,18 @@ objects, choose a shader, or introduce DOM, UI, Node, and product semantics.
 A renderer adapter owns the concrete record layout, binding kind, draw
 submission, culling, picking, and GPU-visible interpretation.
 
+`InstanceLayer.ownershipVersion` changes only when live slot ownership changes;
+record edits and paint-order changes do not affect it. `setOrder()` atomically
+validates one complete canonical handle permutation and rebuilds dense order
+and reverse indexes in O(n), marking one bounded changed interval. It never
+implements a selected-last sequence as repeated O(n) moves.
+`moveRange(firstIndex, count, toIndex)` is the allocation-free contiguous-block
+path: `toIndex` is the block's final start in the resulting order. It rotates
+only the affected interval, refreshes its reverse indexes and marks that one
+exact order range without changing physical identity or ownership.
+`orderIndexOf(handle)` validates canonical live identity and reads that reverse
+index in O(1), so adapters do not maintain a second token-to-order projection.
+
 `RoundedRectInstanceLayer` is the first concrete Engine presentation ABI over
 that generic storage. One layer owns one indexed unit quad, 128-byte records
 and the dense order buffer. `InstancedRoundedRect` is only a retained draw-range
@@ -221,6 +233,50 @@ This pipeline intentionally has no presentation-clip binding. A renderer
 adapter may admit only items whose exact paint and clipping result it has
 proved equivalent; every other item remains on its existing scalar owner.
 `RenderFrame.hits` and consumer identity never enter the packed GPU record.
+
+## Instanced stroked paths
+
+`StrokedPathInstanceLayer` is the generic retained presentation ABI for paths
+that have already been reduced to sampled line segments. It owns independent
+`InstanceLayer` stores for styles and segments plus one indexed unit quad.
+`InstancedStrokedPath` is a consecutive draw-range view over the dense segment
+order; several runs share the same records and geometry.
+
+Both record strides are exactly 32 bytes. A style contains RGBA followed by
+stroke width, opacity, local Z and one reserved float. A segment contains two
+layer-local endpoints, one `u32` physical style slot, its exact generation and
+two reserved words. Pre-submit validation rejects stale generation aliases,
+non-finite packed values, degenerate segments and unsupported styles before GPU
+upload. The GPU follows the explicit physical slot; the style order buffer
+remains a CPU ownership projection and is neither uploaded nor bound by this
+pipeline.
+
+Each sampled segment is one analytical round capsule with derivative-based
+edge antialiasing and an outer support band large enough for its bounded
+coverage filter. A run submits one indexed instanced draw, inherits one
+`Object3D.matrixWorld`, and does not allocate a Mesh, geometry, material or
+transform per style or segment. Style-only mutation uploads only the changed
+style words; route-only mutation uploads only the changed segment words. A
+pure run transform changes only the normal per-object transform block.
+
+The instanced capsule path admits only styles whose color alpha and opacity are
+both exactly one. Opaque collinear and right-angle join profiles must retain an
+opaque core without pinholes or dark blobs across supported scales. Independent
+capsules can still create bounded over-coverage in the outer AA fringe, so this
+pipeline does not claim exact continuous translucent joins. Any translucent or
+otherwise unsupported path stays on a retained connected scalar geometry
+fallback with normal presentation clips; admission is not a substitute for
+that fallback.
+
+`Object3D.presentationClips` is supported exactly through the shared clip-chain
+storage and fragment evaluator. Invalid or unsupported resources fail closed;
+the Renderer owns the three path storage buffers, bind group, pipeline cache,
+range validation and buffer destruction through normal geometry invalidation.
+
+Engine does not parse path commands, choose curve sampling, infer joins,
+provide hit corridors, or know DOM, UI controls, Nodes and product identity.
+Those owners may batch compatible sampled segments as long as stable semantic
+identity and interaction remain outside these GPU records.
 
 ## Plain and skinned meshes
 

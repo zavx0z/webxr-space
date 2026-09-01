@@ -8,6 +8,7 @@ import {
   meshBasicShader,
   radialBackdropShader,
   roundedShader,
+  strokedPathInstancedShader,
   textShader,
 } from "./ui-shaders"
 
@@ -19,6 +20,7 @@ const clippedShaders = [
   roundedShader,
   colorPickerShader,
   radialBackdropShader,
+  strokedPathInstancedShader,
 ]
 
 describe("presentation clip shader composition", () => {
