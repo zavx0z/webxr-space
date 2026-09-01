@@ -134,10 +134,13 @@ participate in the direct DOM update path.
 - `TEMPLATE-COMPILED-015` — component-local intrinsic `style` accepts only the
   typed global `css`` compiler intrinsic supplied by the exact Template JSX
   profile. JavaScript objects, camelCase declarations, author arrays and raw
-  strings fail compilation. Module-stable base declarations and supported
+  strings fail compilation. Base declarations have one canonical syntax: they
+  are written directly at the top level of `css``. A redundant `& { ... }`
+  base wrapper fails compilation with a migration diagnostic telling the author
+  to remove the wrapper. Module-stable base declarations and supported
   selector blocks become immutable scoped
   `CompiledStyleSheet` metadata plus generated `data-z-*` markers. A static
-  fragment guarded by `condition && {...}` uses an addressed boolean marker
+  fragment guarded by `condition && css`` uses an addressed boolean marker
   binding; no component instance reparses that fragment.
 - `TEMPLATE-COMPILED-016` — declaration values that depend on props, component locals
   or hook state remain in the existing inline `bindStyle` channel, preserving
@@ -148,7 +151,7 @@ participate in the direct DOM update path.
   final `${props.style}` remains the caller inline fragment.
 - `TEMPLATE-COMPILED-016A` — an author may explicitly bridge one dynamic base
   value into a static pseudo rule with a named CSS custom property, for example
-  `css` source `& { --hover-color: ${props.hoverColor}; }` plus
+  `css` source `--hover-color: ${props.hoverColor};` plus
   `&:hover { background: var(--hover-color); }`. Template keeps the named
   custom property in the addressed inline binding and preserves `var(...)`,
   including fallback text, unchanged in compiled CSS. It never synthesizes a
@@ -183,29 +186,40 @@ participate in the direct DOM update path.
   Generic runtime style consumption fails explicitly; the result is never
   coerced with `String.raw`, `String()` or object-style enumeration.
 - `TEMPLATE-COMPILED-020` — the global `css` intrinsic may be attached to an
-  intrinsic `style` directly or through one same-module immutable const. `&`,
-  bounded static attribute compounds (`&[attr]`, `&[attr="value"]`, repeated
+  intrinsic `style` directly or through one canonical same-module immutable
+  const. Direct top-level declarations represent the base element. Bounded
+  static attribute compounds (`&[attr]`, `&[attr="value"]`, repeated
   attributes) and an admitted native pseudo suffix lower into the existing
   `CompiledStyleSheet`/marker IR. Selector interpolation, combinators and general
   selector grammar remain rejected.
   Module-stable value slots enter static metadata; instance-dependent slots are
-  allowed only in base `&` declarations and remain addressed inline values.
+  allowed only in direct base declarations and remain addressed inline values.
+  A non-exported module CSS const must be referenced from at least two distinct
+  compiled style sites; one-site private indirection fails with a precise
+  diagnostic requiring inline `css``. It must be the only declaration in its
+  `const` statement and may have no references outside those compiled style
+  sites, so its compile-time intrinsic is always erased completely. A module
+  CSS const may not be exported:
+  the governed `css` intrinsic is compile-time-only and cross-module target
+  ownership is intentionally unsupported. Shared public themes use real `.css`
+  exports instead.
 - `TEMPLATE-COMPILED-021` — css interpolation is restricted to declaration
   values. Selector/property/rule interpolation, unscoped/global selectors,
   at-rules, descendant/combinator selectors, nested rules and instance-dependent
   pseudo slots fail during compilation. A component `style` prop accepts one
   base-only css fragment and lowers it to inline CSS; attribute/pseudo rules in
-  caller style fail closed. Non-exported module css consts used only
-  by compiled components are removed from production output; no global theme
-  owner or editor-plugin contract is introduced.
+  caller style fail closed. Admitted reusable non-exported module css consts
+  used only by compiled components are removed from production output; no
+  global theme owner or editor-plugin contract is introduced.
 - `TEMPLATE-COMPILED-022` — source-oriented builds may opt in with one public
   source id per governed compiler root. Only in that mode each compiled
   Component sheet carries immutable `authored-css` provenance containing
   the public module id, component name and normalized scoped CSS text. The
   source projection concatenates every compiler-extracted `css`` fragment in
-  authored order and contains no tag/backticks or TypeScript interpolation: dynamic
-  base declarations stay represented by their exact inline HTML style, while
-  static declarations and pseudos remain syntax-highlightable CSS. Ordinary
+  authored order and contains no tag/backticks or TypeScript interpolation.
+  Static base declarations remain direct rather than being rewrapped in `& {}`;
+  dynamic base declarations stay represented by their exact inline HTML style,
+  while static declarations and pseudos remain syntax-highlightable CSS. Ordinary
   production builds omit this metadata and its bytes. Runtime execution uses
   only deterministic sheet id and compiled `cssText`; provenance is a read-only
   Storybook/source projection and never a second stylesheet owner.

@@ -552,14 +552,14 @@ function serializeAuthoredRules(rules: readonly CssRule[]): string {
   const parts: string[] = []
   for (const rule of rules) {
     if (rule.declarations.length === 0) continue
-    appendStatic(parts, `&${rule.pseudo}{`)
+    if (rule.pseudo !== "") appendStatic(parts, `&${rule.pseudo}{`)
     for (let index = 0; index < rule.declarations.length; index += 1) {
       const declaration = rule.declarations[index]!
       if (index > 0) appendStatic(parts, ";")
       appendStatic(parts, `${declaration.property}:`)
       parts.push(declaration.value.code)
     }
-    appendStatic(parts, "}")
+    appendStatic(parts, rule.pseudo === "" ? ";" : "}")
   }
   return parts.length === 0 ? JSON.stringify("") : parts.join(" + ")
 }

@@ -192,7 +192,8 @@ author-facing `defineStyles`, class name или экспорт CSS не треб
 ```tsx
 function Button(props: Readonly<{selected?: boolean; style?: CssStyle}>) {
   return <button style={css`
-    & { display: flex; height: 22px; }
+    display: flex;
+    height: 22px;
     &[aria-pressed="true"] { background: rgb(71 114 179); }
     &:hover { background: rgb(101 101 101); }
     &:active { background: rgb(71 114 179); }
@@ -226,11 +227,9 @@ function Button(props: Readonly<{
   width: number
 }>) {
   return <button style={css`
-    & {
-      display: flex;
-      --hover-color: ${props.hoverColor};
-      width: ${props.width}px;
-    }
+    display: flex;
+    --hover-color: ${props.hoverColor};
+    width: ${props.width}px;
     &:hover { background: var(--hover-color); }
     ${props.style}
   `}>Output</button>
@@ -243,20 +242,35 @@ marker encoding и segment parser, что и `html``. Compiler связывае�
 checker-branded global `css` symbol с конкретным intrinsic target и понижает rules в существующие
 `CompiledStyleSheet`, marker и `bindStyle` operations.
 
-Первый selector profile намеренно мал: `&`, static `&[attr]`,
+Базовые declarations имеют одну каноническую форму: они пишутся прямо на
+верхнем уровне `css``. Избыточный base wrapper `& { ... }` является compiler
+error с migration diagnostic, предлагающим удалить wrapper. `&` используется
+только там, где действительно задаётся scoped selector.
+
+Первый selector profile намеренно мал: static `&[attr]`,
 `&[attr="value"]`, repeated attributes и optional suffix `&:active`, `&:checked`,
 `&:disabled`, `&:focus`, `&:focus-within`, `&:hover`, `&:indeterminate`.
 Интерполяции разрешены только внутри declaration value. Instance-dependent
-values допустимы только в `&`; внутри pseudo они остаются compiler error.
+values допустимы только в прямых base declarations; внутри pseudo они остаются
+compiler error.
 Selectors, property names, whole declarations/rules, at-rules, globals,
 descendants/combinators и nested rules не могут быть dynamic и пока не входят в
 профиль.
 
-Static owner template можно вынести в same-module immutable const и приложить к
-intrinsic element. Такой const всё равно остаётся scoped, не становится global
-theme sheet и удаляется из production bundle, когда после lowering больше не
-нужен. Передача `css` template через component `style` prop пока запрещена:
-compiler не ищет скрытый intrinsic target.
+Static owner template можно вынести в private same-module immutable const только
+для реального reuse как минимум в двух разных compiled `style` sites. Private
+const с нулём или одним site является compiler error: неиспользуемый const
+удаляется, а одноразовый `css`` встраивается прямо в owning `style`. Module CSS
+const должен быть единственной declaration в своём `const` statement и не может
+иметь ссылок вне compiled style sites, иначе compile-time intrinsic не удалось
+бы гарантированно стереть. Такой const нельзя экспортировать: global `css`
+является compile-time intrinsic, а
+cross-module target ownership намеренно не поддерживается. Общая public theme
+публикуется настоящим `.css` export. Допущенный private reusable const всё равно
+остаётся scoped, не становится global theme
+sheet и удаляется из production bundle, когда после lowering больше не нужен.
+Component `style` prop принимает один base-only `css`` fragment и отклоняет
+attribute/pseudo selectors; caller fragment остаётся последним.
 
 Source-oriented tools могут явно передать compiler-у `styleSourceRootIds`.
 Тогда, и только тогда, compiled sheet сохраняет public module id, component
@@ -284,7 +298,7 @@ custom property; compiler не придумывает переменную:
 
 ```tsx
 <button style={css`
-  & { --hover-color: ${props.hoverColor}; }
+  --hover-color: ${props.hoverColor};
   &:hover {
     background: var(--hover-color);
     color: var(--hover-text, rgb(255 255 255));

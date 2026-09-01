@@ -63,12 +63,29 @@ export function parseCssTemplateShape(strings: readonly string[]): CssTemplateSh
   const items: CssTemplateItem[] = []
   const fragmentSlots: number[] = []
   const seenSlots = new Set<number>()
+  let directDeclarations: CssTemplateDeclaration[] = []
+  const flushDirectDeclarations = (): void => {
+    if (directDeclarations.length === 0) return
+    const rule = Object.freeze({
+      type: "rule" as const,
+      pseudo: "",
+      declarations: Object.freeze(directDeclarations),
+    })
+    rules.push(rule)
+    items.push(rule)
+    directDeclarations = []
+  }
   let cursor = 0
   while (true) {
     cursor = skipWhitespace(source, cursor)
     if (cursor >= source.length) break
     const fragment = readTaggedTemplateMarker(source, cursor, slotCount)
     if (fragment !== null) {
+      const afterFragment = skipWhitespace(source, fragment.end)
+      if (source[afterFragment] === ":") {
+        throw new Error("CSS property names cannot contain interpolations")
+      }
+      flushDirectDeclarations()
       if (seenSlots.has(fragment.index)) throw new Error(`Duplicate CSS interpolation ${fragment.index}`)
       seenSlots.add(fragment.index)
       fragmentSlots.push(fragment.index)
@@ -76,31 +93,38 @@ export function parseCssTemplateShape(strings: readonly string[]): CssTemplateSh
       cursor = fragment.end
       continue
     }
-    const open = source.indexOf("{", cursor)
-    if (open < 0) throw new Error("Scoped CSS rule is missing an opening brace")
-    const unexpectedClose = source.indexOf("}", cursor)
-    if (unexpectedClose >= 0 && unexpectedClose < open) {
+    const boundary = findTopLevelBoundary(source, cursor)
+    if (boundary.type === "close") {
       throw new Error("Scoped CSS contains an unexpected closing brace")
     }
-    const selector = source.slice(cursor, open).trim()
-    const pseudo = parseScopedSelector(selector)
-    const close = findRuleClose(source, open + 1)
-    const declarations = parseDeclarations(
-      source.slice(open + 1, close),
-      slotCount,
-      seenSlots,
-    )
-    if (declarations.length === 0) throw new Error(`Scoped CSS selector ${selector} has no declarations`)
-    const rule = Object.freeze({
-      type: "rule" as const,
-      pseudo,
-      declarations: Object.freeze(declarations)
-    })
-    rules.push(rule)
-    items.push(rule)
-    cursor = close + 1
+    if (boundary.type === "open") {
+      flushDirectDeclarations()
+      const selector = source.slice(cursor, boundary.index).trim()
+      const pseudo = parseScopedSelector(selector)
+      const close = findRuleClose(source, boundary.index + 1)
+      const declarations = parseDeclarations(
+        source.slice(boundary.index + 1, close),
+        slotCount,
+        seenSlots,
+      )
+      if (declarations.length === 0) throw new Error(`Scoped CSS selector ${selector} has no declarations`)
+      const rule = Object.freeze({
+        type: "rule" as const,
+        pseudo,
+        declarations: Object.freeze(declarations)
+      })
+      rules.push(rule)
+      items.push(rule)
+      cursor = close + 1
+      continue
+    }
+    const end = boundary.type === "semicolon" ? boundary.index : source.length
+    const declaration = parseDeclaration(source.slice(cursor, end), slotCount, seenSlots)
+    directDeclarations.push(declaration)
+    cursor = boundary.type === "semicolon" ? boundary.index + 1 : source.length
   }
-  if (items.length === 0) throw new Error("A css template requires at least one scoped rule or fragment")
+  flushDirectDeclarations()
+  if (items.length === 0) throw new Error("A css template requires at least one declaration, scoped rule, or fragment")
   for (let index = 0; index < slotCount; index += 1) {
     if (!seenSlots.has(index)) {
       throw new Error(`CSS interpolation ${index} must occur in a declaration value or between rules`)
@@ -123,33 +147,46 @@ function parseDeclarations(
   for (const entry of splitCss(source, ";")) {
     const value = entry.trim()
     if (value.length === 0) continue
-    const colon = findCssSeparator(value, ":")
-    if (colon < 0) throw new Error(`Scoped CSS declaration is missing a colon: ${value}`)
-    const property = value.slice(0, colon).trim()
-    const declarationValue = value.slice(colon + 1).trim()
-    if (containsTaggedTemplateMarker(property)) {
-      throw new Error("CSS property names cannot contain interpolations")
-    }
-    if (!/^(?:--[a-zA-Z0-9_-]+|-?[a-z][a-z0-9-]*)$/.test(property)) {
-      throw new Error(`Invalid scoped CSS property ${property}`)
-    }
-    if (declarationValue.length === 0) {
-      throw new Error(`Scoped CSS property ${property} requires a value`)
-    }
-    const segments = parseTaggedTemplateSegments(declarationValue, slotCount)
-    for (const segment of segments) {
-      if (segment.type !== "slot") continue
-      if (seenSlots.has(segment.index)) throw new Error(`Duplicate CSS interpolation ${segment.index}`)
-      seenSlots.add(segment.index)
-    }
-    declarations.push(Object.freeze({property, segments: Object.freeze(segments)}))
+    declarations.push(parseDeclaration(value, slotCount, seenSlots))
   }
   return declarations
 }
 
+function parseDeclaration(
+  source: string,
+  slotCount: number,
+  seenSlots: Set<number>,
+): CssTemplateDeclaration {
+  const value = source.trim()
+  const colon = findCssSeparator(value, ":")
+  if (colon < 0) throw new Error(`Scoped CSS declaration is missing a colon: ${value}`)
+  const property = value.slice(0, colon).trim()
+  const declarationValue = value.slice(colon + 1).trim()
+  if (containsTaggedTemplateMarker(property)) {
+    throw new Error("CSS property names cannot contain interpolations")
+  }
+  if (!/^(?:--[a-zA-Z0-9_-]+|-?[a-z][a-z0-9-]*)$/.test(property)) {
+    throw new Error(`Invalid scoped CSS property ${property}`)
+  }
+  if (declarationValue.length === 0) {
+    throw new Error(`Scoped CSS property ${property} requires a value`)
+  }
+  const segments = parseTaggedTemplateSegments(declarationValue, slotCount)
+  for (const segment of segments) {
+    if (segment.type !== "slot") continue
+    if (seenSlots.has(segment.index)) throw new Error(`Duplicate CSS interpolation ${segment.index}`)
+    seenSlots.add(segment.index)
+  }
+  return Object.freeze({property, segments: Object.freeze(segments)})
+}
+
 function parseScopedSelector(value: string): string {
   if (containsTaggedTemplateMarker(value)) throw new Error("CSS selectors cannot contain interpolations")
-  if (value === "&") return ""
+  if (value === "&") {
+    throw new Error(
+      "Redundant component CSS selector & { ... }; write base declarations directly and remove the & { } wrapper",
+    )
+  }
   if (!value.startsWith("&")) {
     throw new Error(`Component CSS selector must start with &: ${value}`)
   }
@@ -173,6 +210,44 @@ function parseScopedSelector(value: string): string {
   }
   if (suffix === "" && pseudo === "") throw new Error(`Unsupported component CSS selector ${value}`)
   return `${suffix}${pseudo}`
+}
+
+type TopLevelBoundary = Readonly<{
+  index: number
+  type: "close" | "open" | "semicolon"
+}> | Readonly<{
+  type: "end"
+}>
+
+function findTopLevelBoundary(source: string, start: number): TopLevelBoundary {
+  let quote: "\"" | "'" | null = null
+  let parentheses = 0
+  for (let cursor = start; cursor < source.length; cursor += 1) {
+    const character = source[cursor]
+    if (quote) {
+      if (character === "\\") cursor += 1
+      else if (character === quote) quote = null
+      continue
+    }
+    if (character === "\"" || character === "'") {
+      quote = character
+      continue
+    }
+    if (character === "(") parentheses += 1
+    else if (character === ")") {
+      parentheses -= 1
+      if (parentheses < 0) throw new Error("Scoped CSS contains an unexpected closing parenthesis")
+    } else if (parentheses === 0 && character === "{") {
+      return Object.freeze({type: "open", index: cursor})
+    } else if (parentheses === 0 && character === "}") {
+      return Object.freeze({type: "close", index: cursor})
+    } else if (parentheses === 0 && character === ";") {
+      return Object.freeze({type: "semicolon", index: cursor})
+    }
+  }
+  if (quote) throw new Error("Scoped CSS contains an unclosed string")
+  if (parentheses !== 0) throw new Error("Scoped CSS contains unbalanced parentheses")
+  return Object.freeze({type: "end"})
 }
 
 function findRuleClose(source: string, start: number): number {

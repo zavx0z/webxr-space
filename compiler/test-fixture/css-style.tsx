@@ -5,16 +5,6 @@ import {
 import {createRoot} from "@zavx0z/react"
 
 const focusColor = "rgb(113 168 255)"
-const ownerCss = css`
-  & {
-    box-sizing: border-box;
-    display: flex;
-    height: 22px;
-  }
-  &:focus { border-color: ${focusColor}; }
-  &[data-variant="text"] { background: transparent; }
-  &[data-variant="text"][aria-pressed="true"]:hover { color: rgb(255 255 255); }
-`
 
 export function CssButton(props: Readonly<{
   hoverColor: string
@@ -22,24 +12,46 @@ export function CssButton(props: Readonly<{
   style?: CssStyle
   width: number
 }>) {
-  return <button style={css`
-    ${ownerCss}
-    ${css`
-      & {
+  return <button
+    style={css`
+      box-sizing: border-box;
+      display: flex;
+      height: 22px;
+
+      &:focus {
+        border-color: ${focusColor};
+      }
+
+      &[data-variant="text"] {
+        background: transparent;
+      }
+
+      &[data-variant="text"][aria-pressed="true"]:hover {
+        color: rgb(255 255 255);
+      }
+
+      ${css`
         --hover-color: ${props.hoverColor};
         width: ${props.width}px;
-      }
-      &:hover {
-        background: var(--hover-color);
-        color: var(--hover-text, rgb(255 255 255));
-      }
-    `}
-    ${props.selected && css`
-      & { color: rgb(255 255 255); }
-      &:active { background: rgb(71 114 179); }
-    `}
-    ${props.style}
-  `}>CSS Button</button>
+
+        &:hover {
+          background: var(--hover-color);
+          color: var(--hover-text, rgb(255 255 255));
+        }
+      `}
+
+      ${props.selected && css`
+        color: rgb(255 255 255);
+
+        &:active {
+          background: rgb(71 114 179);
+        }
+      `}
+
+      ${props.style}
+    `}>
+    CSS Button
+  </button>
 }
 
 export function CallerStyledButton() {
@@ -47,7 +59,9 @@ export function CallerStyledButton() {
     hoverColor="rgb(12 34 56)"
     selected={false}
     width={40}
-    style={css`& { color: rgb(1 2 3); }`}
+    style={css`
+      color: rgb(1 2 3);
+    `}
   />
 }
 
@@ -61,7 +75,9 @@ export function DynamicCallerStyledButton(props: Readonly<{
     hoverColor={props.hoverColor}
     selected={props.selected}
     width={props.width}
-    style={css`& { color: ${props.color}; }`}
+    style={css`
+      color: ${props.color};
+    `}
   />
 }
 

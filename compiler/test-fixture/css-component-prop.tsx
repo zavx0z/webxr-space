@@ -6,5 +6,7 @@ createRoot(container).render(<CssButton
   hoverColor="red"
   selected={false}
   width={22}
-  style={css`& { color: red; }`}
+  style={css`
+    color: red;
+  `}
 />)

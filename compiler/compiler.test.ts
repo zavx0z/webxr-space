@@ -25,6 +25,11 @@ describe("Template JSX compiler", () => {
     expect(code).toContain('from "@zavx0z/template/compiled"')
     expect(code).toContain('from "@zavx0z/react"')
     expect(code).toContain("defineCompiledTemplate")
+    expect(jsxAuthoringProfile.styles).toMatchObject({
+      baseDeclarations: "direct-only",
+      privateCssConstants: "reuse-only",
+      redundantBaseSelector: false,
+    })
   })
 
   test("reuses one TypeScript project snapshot for unchanged source", async () => {
@@ -319,7 +324,7 @@ describe("Template JSX compiler", () => {
     }))
     const source = [
       "export function Owner() {",
-      "  return <button style={css`& { display: block; }`}>Owner</button>",
+      "  return <button style={css`display: block;`}>Owner</button>",
       "}",
       "",
     ].join("\n")

@@ -47,8 +47,8 @@ describe("Template static style compiler", () => {
     expect(code.match(/, \{kind: "authored-css"/g)).toHaveLength(1)
     expect(code).toContain('moduleId: "@fixture/styles/static-style.tsx"')
     expect(code).toContain('componentName: "StyledButton"')
-    expect(code).toContain('cssText: "&{box-sizing:"')
-    expect(code).toContain(' + "\\n" + "&{background:"')
+    expect(code).toContain('cssText: "box-sizing:"')
+    expect(code).toContain(' + "\\n" + "background:"')
   })
 
   test("emits deterministic metadata for an unchanged source", async () => {
@@ -59,8 +59,8 @@ describe("Template static style compiler", () => {
 
   test("preserves owner fragment order and leaves caller precedence in the inline channel", async () => {
     const code = await compiled("style-precedence.tsx")
-    const baseRule = code.search(/cssText: "&\{display:" \+ "inline;color:"/)
-    const hiddenRule = code.search(/ \+ "\\n" \+ "&\{display:" \+ "none\}"/)
+    const baseRule = code.search(/cssText: "display:" \+ "inline;color:"/)
+    const hiddenRule = code.search(/ \+ "\\n" \+ "display:" \+ "none;"/)
     expect(baseRule).toBeGreaterThan(-1)
     expect(hiddenRule).toBeGreaterThan(baseRule)
     expect(code).toMatch(/setAttribute\("data-z-[A-Za-z0-9_-]{16}", ""\)/)

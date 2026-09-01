@@ -5,13 +5,17 @@ import {
 import {createRoot} from "@zavx0z/react"
 
 export function HoverButton(props: Readonly<{hoverColor: string}>) {
-  return <button style={css`
-    & { --hover-color: ${props.hoverColor}; }
-    &:hover {
-      background: var(--hover-color);
-      color: var(--hover-text, rgb(255 255 255));
-    }
-  `}>Hover</button>
+  return <button
+    style={css`
+      --hover-color: ${props.hoverColor};
+
+      &:hover {
+        background: var(--hover-color);
+        color: var(--hover-text, rgb(255 255 255));
+      }
+    `}>
+    Hover
+  </button>
 }
 
 export function createStyleRuntimeRoot() {

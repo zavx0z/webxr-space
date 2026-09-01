@@ -19,6 +19,15 @@ beforeAll(() => session.prepareFiles([
   resolve(fixtureRoot, "css-component-prop.tsx"),
   resolve(fixtureRoot, "css-component-pseudo.tsx"),
   resolve(fixtureRoot, "css-invalid-selector.tsx"),
+  resolve(fixtureRoot, "css-redundant-base.tsx"),
+  resolve(fixtureRoot, "css-direct-order.tsx"),
+  resolve(fixtureRoot, "css-single-use-const.tsx"),
+  resolve(fixtureRoot, "css-unused-const.tsx"),
+  resolve(fixtureRoot, "css-multi-declarator-const.tsx"),
+  resolve(fixtureRoot, "css-extra-reference-const.tsx"),
+  resolve(fixtureRoot, "css-reused-const.tsx"),
+  resolve(fixtureRoot, "css-exported-const.tsx"),
+  resolve(fixtureRoot, "css-export-list-const.tsx"),
   resolve(fixtureRoot, "css-shadow.tsx"),
 ]))
 afterAll(() => session.close())
@@ -48,7 +57,7 @@ describe("Template scoped css JSX compiler", () => {
     expect(component).toContain('"&:hover{background:" + "var(--hover-color)')
     expect(component.match(/, \{kind: "authored-css"/g)).toHaveLength(1)
     expect(component).toContain(' + "\\n" + "&:hover{background:"')
-    expect(component).toContain(' + "\\n" + "&{color:"')
+    expect(component).toContain(' + "\\n" + "color:"')
     expect(component).toContain('&[data-variant=\\"text\\"]')
     expect(component).toContain('&[data-variant=\\"text\\"][aria-pressed=\\"true\\"]:hover')
     expect(component).not.toContain('cssText: "[&]')
@@ -62,11 +71,53 @@ describe("Template scoped css JSX compiler", () => {
     expect(code).not.toContain("css`")
   })
 
+  test("admits a private CSS const only for same-module reuse", async () => {
+    const reused = await compiled("css-reused-const.tsx")
+    expect(reused).not.toContain("const sharedCss")
+    expect(reused.match(/box-sizing:/g)).toHaveLength(2)
+  })
+
+  test("preserves mixed direct declarations, rules, fragments, and source provenance", async () => {
+    const code = await compiled("css-direct-order.tsx")
+    const source = code.slice(code.indexOf('{kind: "authored-css"'))
+    const display = source.indexOf('cssText: "display:"')
+    const focus = source.indexOf("&:focus")
+    const localColor = source.indexOf("rgb(4 4 4)")
+    const middlePseudo = source.indexOf("&:hover")
+    const middleBase = source.indexOf("rgb(3 3 3)")
+    const conditionalBase = source.indexOf('"opacity:"')
+    const conditionalPseudo = source.indexOf("&:active")
+    const conditionalTail = source.indexOf("height:")
+    const finalBase = source.indexOf("min-width:")
+
+    expect(display).toBeGreaterThan(-1)
+    expect(focus).toBeGreaterThan(display)
+    expect(localColor).toBeGreaterThan(focus)
+    expect(middlePseudo).toBeGreaterThan(localColor)
+    expect(middleBase).toBeGreaterThan(middlePseudo)
+    expect(conditionalBase).toBeGreaterThan(middleBase)
+    expect(conditionalPseudo).toBeGreaterThan(conditionalBase)
+    expect(conditionalTail).toBeGreaterThan(conditionalPseudo)
+    expect(finalBase).toBeGreaterThan(conditionalTail)
+    expect(code).toContain('"width: " + String(props.width) + "px"')
+    expect(code).toContain("Boolean(props.active)")
+    expect(code).toContain("props.style")
+    expect(code).not.toContain('cssText: "&{display:')
+    expect(code).not.toContain("css`")
+  })
+
   test("rejects imports, shadows, caller pseudos, invalid selectors and dynamic owner selectors", async () => {
     const cases = [
       ["css-dynamic-pseudo.tsx", "cannot depend on props or component state"],
       ["css-component-pseudo.tsx", "component style prop rejects selector &:hover"],
       ["css-invalid-selector.tsx", "must start with &"],
+      ["css-redundant-base.tsx", "write base declarations directly and remove the & { } wrapper"],
+      ["css-single-use-const.tsx", "private module CSS const singleUseCss requires at least two compiled style sites, received 1"],
+      ["css-unused-const.tsx", "private module CSS const unusedCss requires at least two compiled style sites, received 0"],
+      ["css-multi-declarator-const.tsx", "a module CSS const must be the only declaration in its const statement"],
+      ["css-extra-reference-const.tsx", "private module CSS const sharedCss may only be referenced by compiled style sites"],
+      ["css-exported-const.tsx", "module CSS const publicCss cannot be exported"],
+      ["css-export-list-const.tsx", "module CSS const listedCss cannot be exported"],
       ["css-alias.tsx", "remove the css import"],
       ["css-shadow.tsx", "intrinsic style authoring requires a css tagged template"],
       ["css-fake-global.tsx", "intrinsic style authoring requires a css tagged template"],

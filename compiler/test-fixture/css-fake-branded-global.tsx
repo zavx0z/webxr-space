@@ -8,7 +8,12 @@ interface FakeCss {
 declare const css: FakeCss
 
 function Invalid() {
-  return <button style={css`& { color: red; }`}>Bad</button>
+  return <button
+    style={css`
+      color: red;
+    `}>
+    Bad
+  </button>
 }
 
 declare const container: Parameters<typeof createRoot>[0]

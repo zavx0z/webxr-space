@@ -83,6 +83,8 @@ type CompileContext = {
   readonly consumedJsx: Set<Node>
   readonly cssTagSymbols: ReadonlySet<number>
   readonly cssTemplates: ReadonlyMap<number, TaggedTemplateExpression>
+  readonly cssTemplateReferences: Map<number, Set<Node>>
+  readonly cssTemplateSites: Map<number, Set<Node>>
   readonly childrenExpressionKinds: ReadonlyMap<Node, JsxChildrenExpressionKind>
   readonly helper: string
   readonly propsSymbol: number | null
@@ -117,6 +119,8 @@ type ComponentExpressionContext = Readonly<{
   consumedJsx: Set<Node>
   cssTagSymbols: ReadonlySet<number>
   cssTemplates: ReadonlyMap<number, TaggedTemplateExpression>
+  cssTemplateReferences: Map<number, Set<Node>>
+  cssTemplateSites: Map<number, Set<Node>>
   helper: string
   propsSymbol: number | null
   sourceFile: SourceFile
@@ -164,6 +168,7 @@ export const jsxAuthoringProfile = Object.freeze({
   customHooks: true,
   sourceMaps: false,
   styles: Object.freeze({
+    baseDeclarations: "direct-only" as const,
     cssTaggedTemplates: true,
     componentLocalObjects: false,
     conditionalStaticFragments: "nested-css" as const,
@@ -171,6 +176,8 @@ export const jsxAuthoringProfile = Object.freeze({
     componentStyleProps: "base-only-inline" as const,
     dynamicBaseDeclarations: "inline-binding" as const,
     dynamicPseudos: false,
+    privateCssConstants: "reuse-only" as const,
+    redundantBaseSelector: false,
     scopedCssSelectors: "owner-and-pseudos" as const,
     scopedAttributeSelectors: true,
     staticPseudos: Object.freeze([
@@ -234,6 +241,8 @@ export function transformJsxSourceFile(
     symbols.byNode,
     sourcePath,
   )
+  const cssTemplateReferences = new Map<number, Set<Node>>()
+  const cssTemplateSites = new Map<number, Set<Node>>()
   const componentDeclarations = sourceFile.statements.filter(
     (statement): statement is FunctionDeclaration =>
       isFunctionDeclaration(statement) &&
@@ -325,6 +334,8 @@ export function transformJsxSourceFile(
         symbols.stylePrimitiveKinds,
         runtimeBindings.css,
         cssTemplates,
+        cssTemplateReferences,
+        cssTemplateSites,
         consumedCss,
         consumedJsx,
       ),
@@ -340,7 +351,6 @@ export function transformJsxSourceFile(
     runtimeBindings.css,
     symbols.byNode,
     consumedCss,
-    componentRanges,
   )) {
     edits.push({start: statement.getStart(sourceFile), end: statement.getEnd(), text: ""})
   }
@@ -370,6 +380,8 @@ export function transformJsxSourceFile(
       consumedCss,
       cssTagSymbols: runtimeBindings.css,
       cssTemplates,
+      cssTemplateReferences,
+      cssTemplateSites,
       helper,
       propsSymbol: null,
       sourceFile,
@@ -393,6 +405,15 @@ export function transformJsxSourceFile(
       "JSX is outside a supported final-return function component or exact createRoot render",
     )
   })
+
+  assertCanonicalCssTemplateReuse(
+    sourceFile,
+    cssTemplates,
+    cssTemplateReferences,
+    cssTemplateSites,
+    symbols.byNode,
+    sourcePath,
+  )
 
   const declaredCssTemplates = new Set(cssTemplates.values())
   visit(sourceFile, node => {
@@ -449,6 +470,8 @@ function compileComponent(
   stylePrimitiveKinds: ReadonlyMap<Node, JsxStylePrimitiveKind>,
   cssTagSymbols: ReadonlySet<number>,
   cssTemplates: ReadonlyMap<number, TaggedTemplateExpression>,
+  cssTemplateReferences: Map<number, Set<Node>>,
+  cssTemplateSites: Map<number, Set<Node>>,
   consumedCss: Set<Node>,
   consumedJsx: Set<Node>,
 ): string {
@@ -486,6 +509,8 @@ function compileComponent(
     consumedJsx,
     cssTagSymbols,
     cssTemplates,
+    cssTemplateReferences,
+    cssTemplateSites,
     helper,
     propsSymbol: declaration.parameters[0] && isIdentifier(declaration.parameters[0].name)
       ? symbolId(symbols, declaration.parameters[0].name)
@@ -634,7 +659,7 @@ function compileStaticStyle(
     },
     primitiveKinds: context.stylePrimitiveKinds,
     isPassThrough: expression => isDirectPropsStyleExpression(expression, context),
-    resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context),
+    resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context, attribute),
     styleEncoder: `${context.helper}EncodeStyle`,
     sourceFile: context.sourceFile,
     sourcePath: context.sourcePath,
@@ -696,6 +721,7 @@ function concatenateStyleExpressions(expressions: readonly string[]): string {
 function resolveCompiledCssTemplate(
   expression: Expression,
   context: CompileContext | ComponentExpressionContext,
+  styleSite: Node,
 ): CompiledCssTemplateSource | null {
   const value = skipParentheses(expression)
   let tagged: TaggedTemplateExpression | undefined
@@ -703,7 +729,23 @@ function resolveCompiledCssTemplate(
     tagged = value
   } else if (isIdentifier(value)) {
     const id = symbolId(context.symbols, value)
-    if (id !== null) tagged = context.cssTemplates.get(id)
+    if (id !== null) {
+      tagged = context.cssTemplates.get(id)
+      if (tagged) {
+        let references = context.cssTemplateReferences.get(id)
+        if (!references) {
+          references = new Set()
+          context.cssTemplateReferences.set(id, references)
+        }
+        references.add(value)
+        let sites = context.cssTemplateSites.get(id)
+        if (!sites) {
+          sites = new Set()
+          context.cssTemplateSites.set(id, sites)
+        }
+        sites.add(styleSite)
+      }
+    }
   }
   if (!tagged) return null
   context.consumedCss.add(tagged)
@@ -742,6 +784,12 @@ function collectCssTemplateConstants(
     for (const declaration of statement.declarationList.declarations) {
       if (!declaration.initializer || !isTaggedTemplateExpression(declaration.initializer) ||
         !isExactCssTag(declaration.initializer, cssTagSymbols, symbols)) continue
+      if (statement.declarationList.declarations.length !== 1) {
+        throw compileError(
+          sourcePath,
+          "a module CSS const must be the only declaration in its const statement",
+        )
+      }
       if (!constant || !isIdentifier(declaration.name)) {
         throw compileError(sourcePath, "module css templates require one immutable identifier const")
       }
@@ -752,12 +800,84 @@ function collectCssTemplateConstants(
   return templates
 }
 
+function assertCanonicalCssTemplateReuse(
+  sourceFile: SourceFile,
+  templates: ReadonlyMap<number, TaggedTemplateExpression>,
+  referencesByTemplate: ReadonlyMap<number, ReadonlySet<Node>>,
+  sitesByTemplate: ReadonlyMap<number, ReadonlySet<Node>>,
+  symbols: ReadonlyMap<Node, number>,
+  sourcePath: string,
+): void {
+  if (templates.size === 0) return
+  const exported = exportedSymbolIds(sourceFile, symbols)
+  for (const statement of sourceFile.statements) {
+    if (!isVariableStatement(statement)) continue
+    const statementExported = statement.modifiers?.some(
+      modifier => modifier.getText(sourceFile) === "export",
+    ) ?? false
+    for (const declaration of statement.declarationList.declarations) {
+      if (!isIdentifier(declaration.name)) continue
+      const id = symbolId(symbols, declaration.name)
+      if (id === null || !templates.has(id)) continue
+      if (statementExported || exported.has(id)) {
+        throw compileError(
+          sourcePath,
+          `module CSS const ${declaration.name.text} cannot be exported; keep component CSS in its owning TSX and publish reusable themes through a .css export`,
+        )
+      }
+      const references = referencesByTemplate.get(id) ?? new Set<Node>()
+      let unsupportedReference: Node | null = null
+      visit(sourceFile, node => {
+        if (unsupportedReference !== null || !isIdentifier(node) || node === declaration.name ||
+          symbolId(symbols, node) !== id || references.has(node)) return
+        unsupportedReference = node
+      })
+      if (unsupportedReference !== null) {
+        throw compileError(
+          sourcePath,
+          `private module CSS const ${declaration.name.text} may only be referenced by compiled style sites`,
+        )
+      }
+      const siteCount = sitesByTemplate.get(id)?.size ?? 0
+      if (siteCount >= 2) continue
+      throw compileError(
+        sourcePath,
+        `private module CSS const ${declaration.name.text} requires at least two compiled style sites, received ${siteCount}; inline its css template at its only use or remove the unused const`,
+      )
+    }
+  }
+}
+
+function exportedSymbolIds(
+  sourceFile: SourceFile,
+  symbols: ReadonlyMap<Node, number>,
+): ReadonlySet<number> {
+  const exported = new Set<number>()
+  const exportedNames = new Set<string>()
+  for (const statement of sourceFile.statements) {
+    if (!isExportDeclaration(statement) || statement.moduleSpecifier ||
+      statement.exportClause?.kind !== SyntaxKind.NamedExports) continue
+    for (const element of statement.exportClause.elements) {
+      exportedNames.add((element.propertyName ?? element.name).text)
+    }
+  }
+  if (exportedNames.size === 0) return exported
+  for (const statement of sourceFile.statements) {
+    if (!isVariableStatement(statement)) continue
+    for (const declaration of statement.declarationList.declarations) {
+      if (!isIdentifier(declaration.name) || !exportedNames.has(declaration.name.text)) continue
+      const id = symbolId(symbols, declaration.name)
+      if (id !== null) exported.add(id)
+    }
+  }
+  return exported
+}
+
 function removableCssTemplateStatements(
   sourceFile: SourceFile,
   cssTagSymbols: ReadonlySet<number>,
   symbols: ReadonlyMap<Node, number>,
   consumedCss: ReadonlySet<Node>,
-  componentRanges: readonly Readonly<{start: number; end: number}>[],
 ): readonly import("typescript/unstable/ast").VariableStatement[] {
   const removable: import("typescript/unstable/ast").VariableStatement[] = []
   for (const statement of sourceFile.statements) {
@@ -768,17 +888,7 @@ function removableCssTemplateStatements(
       !isTaggedTemplateExpression(declaration.initializer) ||
       !isExactCssTag(declaration.initializer, cssTagSymbols, symbols) ||
       !consumedCss.has(declaration.initializer)) continue
-    const id = symbolId(symbols, declaration.name)
-    if (id === null) continue
-    let outsideCompiledComponent = false
-    visit(sourceFile, node => {
-      if (outsideCompiledComponent || !isIdentifier(node) || symbolId(symbols, node) !== id) return
-      const start = node.getStart(sourceFile)
-      if (start >= statement.getStart(sourceFile) && start < statement.getEnd()) return
-      if (componentRanges.some(range => start >= range.start && start < range.end)) return
-      outsideCompiledComponent = true
-    })
-    if (!outsideCompiledComponent) removable.push(statement)
+    removable.push(statement)
   }
   return removable
 }
@@ -1094,7 +1204,7 @@ function componentStyleAttributeExpression(
   return extractComponentStyle(skipParentheses(initializer.expression), {
     primitiveKinds: context.stylePrimitiveKinds,
     isPassThrough: expression => isDirectPropsStyleExpression(expression, context),
-    resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context),
+    resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context, attribute),
     styleEncoder: `${context.helper}EncodeStyle`,
     sourceFile: context.sourceFile,
     sourcePath: context.sourcePath,

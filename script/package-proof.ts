@@ -43,7 +43,7 @@ try {
   await writeFile(resolve(consumerRoot, "app.tsx"), [
     'import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"',
     "function Child() {",
-    "  return <span style={css`& { color: red; }`}>Package proof</span>",
+    "  return <span style={css`color: red;`}>Package proof</span>",
     "}",
     "function Pane(props: Readonly<{children: JsxSourceElement}>) {",
     "  return <section>{props.children}</section>",
@@ -82,7 +82,7 @@ try {
   ].join("\n"))
   await writeFile(resolve(consumerRoot, "global-css.tsx"), [
     "export function GlobalCssOnly() {",
-    "  return <span style={css`& { color: red; }`}>Global CSS</span>",
+    "  return <span style={css`color: red;`}>Global CSS</span>",
     "}",
     "",
   ].join("\n"))
