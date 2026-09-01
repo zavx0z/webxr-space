@@ -6,6 +6,10 @@ import {
   useSyncExternalStore,
   type FunctionComponent,
 } from "@zavx0z/react"
+import {
+  projectLinkRoute,
+  type LinkPathProjection,
+} from "./dom/link-path.ts"
 
 export type NodeSystemJsonValue =
   | null
@@ -105,6 +109,7 @@ export type NodeCardProps = Readonly<{
   offsetX?: number
   offsetY?: number
   style?: CssStyle
+  connectedSocketKeys?: ReadonlySet<string> | undefined
   parameterStore?: ((nodeId: string, parameterId: string) => NodeSystemParameterExternalStore) | undefined
   onParameterInput?: ((change: NodeSystemParameterInput) => void) | undefined
 }>
@@ -114,6 +119,7 @@ export type ParameterRowProps = Readonly<{
   parameter: NodeSystemParameterSnapshot
   sockets: readonly NodeSystemSocketSnapshot[]
   links: readonly NodeSystemLinkSnapshot[]
+  connectedSocketKeys?: ReadonlySet<string> | undefined
   store?: NodeSystemParameterExternalStore | undefined
   style?: CssStyle
   onParameterInput?: ((change: NodeSystemParameterInput) => void) | undefined
@@ -133,6 +139,8 @@ export type NodeConnectionProps = Readonly<{
   offsetY?: number
   style?: CssStyle
 }>
+
+const EMPTY_NODE_SYSTEM_LINKS: readonly NodeSystemLinkSnapshot[] = Object.freeze([])
 
 export function NodeSystem(props: NodeSystemProps) {
   const viewStore = useMemo(
@@ -199,17 +207,15 @@ export function NodeSystem(props: NodeSystemProps) {
         height: 100%;
       }
     `}>
-      {view.links.map(link => <MemoNodeConnection
-        key={link.id}
-        link={link}
-        nodes={view.nodes}
-        offsetX={offsetX}
-        offsetY={offsetY}
+      {view.connections.map(connection => <MemoPlannedNodeConnection
+        key={connection.link.id}
+        connection={connection}
       />)}
       {view.entries.map(entry => <MemoNodeCard
         key={entry.node.id}
         node={entry.node}
-        links={view.links}
+        links={EMPTY_NODE_SYSTEM_LINKS}
+        connectedSocketKeys={view.connectedSocketKeys}
         index={entry.index}
         offsetX={offsetX}
         offsetY={offsetY}
@@ -309,6 +315,7 @@ export function NodeCard(props: NodeCardProps) {
         parameter={parameter}
         sockets={props.node.sockets.filter(socket => socket.parameterId === parameter.id)}
         links={props.links}
+        connectedSocketKeys={props.connectedSocketKeys}
         store={props.parameterStore?.(props.node.id, parameter.id)}
         onParameterInput={props.onParameterInput}
       />)}
@@ -317,6 +324,7 @@ export function NodeCard(props: NodeCardProps) {
         nodeId={props.node.id}
         socket={socket}
         links={props.links}
+        connectedSocketKeys={props.connectedSocketKeys}
       />)}
     </section>
   </article>
@@ -326,6 +334,7 @@ type LooseSocketRowProps = Readonly<{
   nodeId: string
   socket: NodeSystemSocketSnapshot
   links: readonly NodeSystemLinkSnapshot[]
+  connectedSocketKeys?: ReadonlySet<string> | undefined
 }>
 
 function LooseSocketRow(props: LooseSocketRowProps) {
@@ -346,7 +355,7 @@ function LooseSocketRow(props: LooseSocketRowProps) {
     <MemoSocketPort
       nodeId={props.nodeId}
       socket={props.socket}
-      connected={isSocketConnected(props.links, props.nodeId, props.socket.id)}
+      connected={isSocketConnected(props.links, props.nodeId, props.socket.id, props.connectedSocketKeys)}
     />
     <span style={css`
       & {
@@ -415,7 +424,7 @@ export function ParameterRow(props: ParameterRowProps) {
         key={socket.id}
         nodeId={props.nodeId}
         socket={socket}
-        connected={isSocketConnected(props.links, props.nodeId, socket.id)}
+        connected={isSocketConnected(props.links, props.nodeId, socket.id, props.connectedSocketKeys)}
       />)}
     </span>
     <label id={labelId} htmlFor={activeControlId(controlId, parameter.value)} style={css`
@@ -452,7 +461,7 @@ export function ParameterRow(props: ParameterRowProps) {
         key={socket.id}
         nodeId={props.nodeId}
         socket={socket}
-        connected={isSocketConnected(props.links, props.nodeId, socket.id)}
+        connected={isSocketConnected(props.links, props.nodeId, socket.id, props.connectedSocketKeys)}
       />)}
     </span>
   </div>
@@ -671,22 +680,29 @@ export function SocketPort(props: SocketPortProps) {
 }
 
 export function NodeConnection(props: NodeConnectionProps) {
-  const from = endpointPosition(props.nodes, props.link.from.nodeId, props.link.from.socketId)
-  const to = endpointPosition(props.nodes, props.link.to.nodeId, props.link.to.socketId)
-  const offsetX = props.offsetX ?? 0
-  const offsetY = props.offsetY ?? 0
-  const localFrom = Object.freeze({...from, x: from.x - offsetX, y: from.y - offsetY})
-  const localTo = Object.freeze({...to, x: to.x - offsetX, y: to.y - offsetY})
-  const middleX = Math.round((localFrom.x + localTo.x) / 2)
-  const horizontalOne = horizontalSegment(localFrom.x, localFrom.y, middleX)
-  const vertical = verticalSegment(middleX, localFrom.y, localTo.y)
-  const horizontalTwo = horizontalSegment(middleX, localTo.y, localTo.x)
-  const color = socketColor(from.kind)
-  const label = metadataString(props.link.metadata, "label", `${props.link.from.nodeId} → ${props.link.to.nodeId}`)
-  return <span
+  const index = createNodeGeometryIndex(props.nodes)
+  const connection = planNodeConnection(
+    props.link,
+    index,
+    props.offsetX ?? 0,
+    props.offsetY ?? 0,
+  )
+  return <PlannedNodeConnection connection={connection} style={props.style} />
+}
+
+type PlannedNodeConnectionProps = Readonly<{
+  connection: NodeConnectionView
+  style?: CssStyle | undefined
+}>
+
+function PlannedNodeConnection(props: PlannedNodeConnectionProps) {
+  const {connection} = props
+  return <vector-path
     role="img"
-    aria-label={label}
-    data-link-id={props.link.id}
+    aria-label={connection.label}
+    data-link-id={connection.link.id}
+    data-path-segments={connection.path.segmentCount}
+    d={connection.path.d}
     style={css`
       & {
         box-sizing: border-box;
@@ -695,61 +711,16 @@ export function NodeConnection(props: NodeConnectionProps) {
         display: block;
         left: 0;
         top: 0;
-        width: 100%;
-        height: 100%;
+        width: 0;
+        height: 0;
+        color: ${connection.color};
+        stroke: ${connection.color};
+        stroke-width: 2.2px;
+        pointer-hit-width: 16px;
       }
       ${props.style}
     `}
-  >
-    <span aria-hidden="true" style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        display: block;
-        left: ${horizontalOne.x}px;
-        top: ${horizontalOne.y}px;
-        width: ${horizontalOne.width}px;
-        height: ${horizontalOne.height}px;
-        min-width: 2px;
-        min-height: 2px;
-        border-radius: 2px;
-        background: ${color};
-        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
-      }
-    `}></span>
-    <span aria-hidden="true" style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        display: block;
-        left: ${vertical.x}px;
-        top: ${vertical.y}px;
-        width: ${vertical.width}px;
-        height: ${vertical.height}px;
-        min-width: 2px;
-        min-height: 2px;
-        border-radius: 2px;
-        background: ${color};
-        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
-      }
-    `}></span>
-    <span aria-hidden="true" style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        display: block;
-        left: ${horizontalTwo.x}px;
-        top: ${horizontalTwo.y}px;
-        width: ${horizontalTwo.width}px;
-        height: ${horizontalTwo.height}px;
-        min-width: 2px;
-        min-height: 2px;
-        border-radius: 2px;
-        background: ${color};
-        box-shadow: 0 0 4px rgba(0, 0, 0, .7);
-      }
-    `}></span>
-  </span>
+  ></vector-path>
 }
 
 export type NodeSystemComponent = FunctionComponent<NodeSystemProps>
@@ -761,17 +732,31 @@ export type NodeConnectionComponent = FunctionComponent<NodeConnectionProps>
 const MemoNodeCard = memo(NodeCard, sameNodeCardProps)
 const MemoParameterRow = memo(ParameterRow, sameParameterRowProps)
 const MemoSocketPort = memo(SocketPort, sameSocketPortProps)
-const MemoNodeConnection = memo(NodeConnection, sameNodeConnectionProps)
+const MemoPlannedNodeConnection = memo(PlannedNodeConnection, samePlannedNodeConnectionProps)
 const MemoLooseSocketRow = memo(LooseSocketRow, sameLooseSocketRowProps)
 
 type Placement = Readonly<{x: number; y: number; width: number}>
-type EndpointPosition = Readonly<{x: number; y: number; kind: string}>
-type SegmentPlacement = Readonly<{x: number; y: number; width: number; height: number}>
+type EndpointPosition = Readonly<{x: number; y: number; kind: string; side: "left" | "right"}>
 type VisibleNodeEntry = Readonly<{node: NodeSystemNodeSnapshot; index: number}>
+type NodeGeometry = Readonly<{
+  node: NodeSystemNodeSnapshot
+  index: number
+  placement: Placement
+  endpointBySocketId: ReadonlyMap<string, EndpointPosition>
+}>
+type NodeConnectionView = Readonly<{
+  link: NodeSystemLinkSnapshot
+  path: LinkPathProjection
+  bounds: LinkPathProjection["bounds"]
+  color: string
+  label: string
+}>
 type NodeSystemViewSnapshot = Readonly<{
   entries: readonly VisibleNodeEntry[]
   nodes: readonly NodeSystemNodeSnapshot[]
   links: readonly NodeSystemLinkSnapshot[]
+  connections: readonly NodeConnectionView[]
+  connectedSocketKeys: ReadonlySet<string>
 }>
 
 function createNodeSystemViewStore(
@@ -796,12 +781,32 @@ function createNodeSystemViewStore(
     }
     const nodes = Object.freeze(entries.map(entry => entry.node))
     const nodeIds = new Set(nodes.map(node => node.id))
-    const links = Object.freeze(snapshot.links.filter(link =>
-      nodeIds.has(link.from.nodeId) && nodeIds.has(link.to.nodeId)))
+    const geometry = createNodeGeometryIndex(snapshot.nodes)
+    const viewportRect = nodeSystemViewportRect(viewport)
+    const offsetX = viewport?.x ?? 0
+    const offsetY = viewport?.y ?? 0
+    const connections: NodeConnectionView[] = []
+    const connectedSocketKeys = new Set<string>()
+    for (const link of snapshot.links) {
+      const from = endpointPosition(geometry, link.from.nodeId, link.from.socketId)
+      const to = endpointPosition(geometry, link.to.nodeId, link.to.socketId)
+      const endpointVisible = nodeIds.has(link.from.nodeId) || nodeIds.has(link.to.nodeId)
+      const routeVisible = viewportRect === null || intersectsBounds(viewportRect, connectionBounds(from, to))
+      if (endpointVisible || routeVisible) connections.push(planNodeConnection(link, geometry, offsetX, offsetY))
+      if (nodeIds.has(link.from.nodeId)) connectedSocketKeys.add(socketKey(link.from.nodeId, link.from.socketId))
+      if (nodeIds.has(link.to.nodeId)) connectedSocketKeys.add(socketKey(link.to.nodeId, link.to.socketId))
+    }
+    const links = Object.freeze(connections.map(({link}) => link))
     source = snapshot
     if (selected !== undefined && sameVisibleEntries(selected.entries, entries) &&
-      sameLinks(selected.links, links)) return selected
-    selected = Object.freeze({entries, nodes, links})
+      sameLinks(selected.links, links) && sameConnections(selected.connections, connections)) return selected
+    selected = Object.freeze({
+      entries,
+      nodes,
+      links,
+      connections: Object.freeze(connections),
+      connectedSocketKeys: Object.freeze(connectedSocketKeys),
+    })
     return selected
   }
   return Object.freeze({subscribe, getSnapshot})
@@ -845,12 +850,14 @@ function sameNodeCardProps(previous: NodeCardProps, next: NodeCardProps): boolea
   return previous.index === next.index && previous.offsetX === next.offsetX &&
     previous.offsetY === next.offsetY && previous.style === next.style &&
     previous.onParameterInput === next.onParameterInput && previous.parameterStore === next.parameterStore &&
+    previous.connectedSocketKeys === next.connectedSocketKeys &&
     sameNodeSnapshot(previous.node, next.node) && sameLinks(previous.links, next.links)
 }
 
 function sameParameterRowProps(previous: ParameterRowProps, next: ParameterRowProps): boolean {
   return previous.nodeId === next.nodeId && previous.style === next.style &&
     previous.onParameterInput === next.onParameterInput && previous.store === next.store &&
+    previous.connectedSocketKeys === next.connectedSocketKeys &&
     sameParameter(previous.parameter, next.parameter) &&
     sameSockets(previous.sockets, next.sockets) && sameLinks(previous.links, next.links)
 }
@@ -860,16 +867,13 @@ function sameSocketPortProps(previous: SocketPortProps, next: SocketPortProps): 
     previous.style === next.style && sameSocket(previous.socket, next.socket)
 }
 
-function sameNodeConnectionProps(previous: NodeConnectionProps, next: NodeConnectionProps): boolean {
-  return previous.offsetX === next.offsetX && previous.offsetY === next.offsetY &&
-    previous.style === next.style && sameLink(previous.link, next.link) &&
-    sameEndpointNode(previous.nodes, next.nodes, next.link.from.nodeId) &&
-    sameEndpointNode(previous.nodes, next.nodes, next.link.to.nodeId)
+function samePlannedNodeConnectionProps(previous: PlannedNodeConnectionProps, next: PlannedNodeConnectionProps): boolean {
+  return previous.style === next.style && sameConnection(previous.connection, next.connection)
 }
 
 function sameLooseSocketRowProps(previous: LooseSocketRowProps, next: LooseSocketRowProps): boolean {
   return previous.nodeId === next.nodeId && sameSocket(previous.socket, next.socket) &&
-    sameLinks(previous.links, next.links)
+    previous.connectedSocketKeys === next.connectedSocketKeys && sameLinks(previous.links, next.links)
 }
 
 function sameNodeSnapshot(previous: NodeSystemNodeSnapshot, next: NodeSystemNodeSnapshot): boolean {
@@ -906,20 +910,23 @@ function sameLinks(
     previous.every((link, index) => sameLink(link, next[index]!))
 }
 
+function sameConnections(
+  previous: readonly NodeConnectionView[],
+  next: readonly NodeConnectionView[],
+): boolean {
+  return previous === next || previous.length === next.length &&
+    previous.every((connection, index) => sameConnection(connection, next[index]!))
+}
+
+function sameConnection(previous: NodeConnectionView, next: NodeConnectionView): boolean {
+  return previous === next || sameLink(previous.link, next.link) &&
+    previous.path.d === next.path.d && previous.color === next.color && previous.label === next.label
+}
+
 function sameLink(previous: NodeSystemLinkSnapshot, next: NodeSystemLinkSnapshot): boolean {
   return previous === next || previous.id === next.id && sameJson(previous.metadata, next.metadata) &&
     previous.from.nodeId === next.from.nodeId && previous.from.socketId === next.from.socketId &&
     previous.to.nodeId === next.to.nodeId && previous.to.socketId === next.to.socketId
-}
-
-function sameEndpointNode(
-  previous: readonly NodeSystemNodeSnapshot[],
-  next: readonly NodeSystemNodeSnapshot[],
-  id: string,
-): boolean {
-  const before = previous.find(node => node.id === id)
-  const after = next.find(node => node.id === id)
-  return before === undefined || after === undefined ? before === after : sameNodeSnapshot(before, after)
 }
 
 function sameValueType(previous: NodeSystemValueType | undefined, next: NodeSystemValueType | undefined): boolean {
@@ -965,54 +972,116 @@ function nodePlacement(node: NodeSystemNodeSnapshot, index: number): Placement {
   })
 }
 
+function createNodeGeometryIndex(nodes: readonly NodeSystemNodeSnapshot[]): ReadonlyMap<string, NodeGeometry> {
+  const result = new Map<string, NodeGeometry>()
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index]!
+    const placement = nodePlacement(node, index)
+    const endpointBySocketId = new Map<string, EndpointPosition>()
+    const parameterIndexById = new Map(node.parameters.map((parameter, parameterIndex) => [parameter.id, parameterIndex]))
+    for (let socketIndex = 0; socketIndex < node.sockets.length; socketIndex += 1) {
+      const socket = node.sockets[socketIndex]!
+      const side = socketSide(socket)
+      const parameterIndex = socket.parameterId === undefined
+        ? socketIndex
+        : parameterIndexById.get(socket.parameterId) ?? 0
+      endpointBySocketId.set(socket.id, Object.freeze({
+        x: side === "right" ? placement.x + placement.width : placement.x,
+        y: placement.y + 46.5 + parameterIndex * 30,
+        kind: socket.valueType?.id ?? "custom",
+        side,
+      }))
+    }
+    result.set(node.id, Object.freeze({node, index, placement, endpointBySocketId}))
+  }
+  return result
+}
+
 function endpointPosition(
-  nodes: readonly NodeSystemNodeSnapshot[],
+  nodes: ReadonlyMap<string, NodeGeometry>,
   nodeId: string,
   socketId: string,
 ): EndpointPosition {
-  const index = Math.max(0, nodes.findIndex(node => node.id === nodeId))
-  const node = nodes[index]
-  if (node === undefined) return Object.freeze({x: 0, y: 0, kind: "custom"})
-  const placement = nodePlacement(node, index)
-  const socketIndex = Math.max(0, node.sockets.findIndex(socket => socket.id === socketId))
-  const socket = node.sockets[socketIndex]
-  const side = socket === undefined ? "right" : socketSide(socket)
-  const parameterIndex = socket?.parameterId === undefined
-    ? socketIndex
-    : Math.max(0, node.parameters.findIndex(parameter => parameter.id === socket.parameterId))
+  return nodes.get(nodeId)?.endpointBySocketId.get(socketId) ?? Object.freeze({x: 0, y: 0, kind: "custom", side: "right"})
+}
+
+function planNodeConnection(
+  link: NodeSystemLinkSnapshot,
+  nodes: ReadonlyMap<string, NodeGeometry>,
+  offsetX: number,
+  offsetY: number,
+): NodeConnectionView {
+  const from = endpointPosition(nodes, link.from.nodeId, link.from.socketId)
+  const to = endpointPosition(nodes, link.to.nodeId, link.to.socketId)
+  const localFrom = Object.freeze({x: from.x - offsetX, y: from.y - offsetY})
+  const localTo = Object.freeze({x: to.x - offsetX, y: to.y - offsetY})
+  const sameEndpoint = localFrom.x === localTo.x && localFrom.y === localTo.y
+  const loopX = localFrom.x + (from.side === "left" ? -30 : 30)
+  const middleX = Math.round((localFrom.x + localTo.x) / 2)
+  const candidates = sameEndpoint
+    ? [
+      localFrom,
+      {x: loopX, y: localFrom.y},
+      {x: loopX, y: localFrom.y + 30},
+      {x: localFrom.x, y: localFrom.y + 30},
+      localTo,
+    ]
+    : [localFrom, {x: middleX, y: localFrom.y}, {x: middleX, y: localTo.y}, localTo]
+  const points = candidates.filter((point, index) => index === 0 ||
+    point.x !== candidates[index - 1]!.x || point.y !== candidates[index - 1]!.y)
+  const path = projectLinkRoute({kind: "orthogonal", points})
   return Object.freeze({
-    x: side === "right" ? placement.x + placement.width : placement.x,
-    y: placement.y + 45.5 + parameterIndex * 30,
-    kind: socket?.valueType?.id ?? "custom",
+    link,
+    path,
+    bounds: path.bounds,
+    color: socketColor(from.kind),
+    label: metadataString(link.metadata, "label", `${link.from.nodeId} → ${link.to.nodeId}`),
   })
 }
 
-function horizontalSegment(fromX: number, y: number, toX: number): SegmentPlacement {
+function connectionBounds(from: EndpointPosition, to: EndpointPosition): LinkPathProjection["bounds"] {
+  if (from.x === to.x && from.y === to.y) {
+    const loopX = from.x + (from.side === "left" ? -30 : 30)
+    return Object.freeze({x: Math.min(from.x, loopX), y: from.y, width: 30, height: 30})
+  }
+  const x = Math.min(from.x, to.x)
+  const y = Math.min(from.y, to.y)
+  return Object.freeze({x, y, width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y)})
+}
+
+function nodeSystemViewportRect(viewport: NodeSystemViewport | undefined): LinkPathProjection["bounds"] | null {
+  if (viewport === undefined) return null
+  const overscan = finiteNonNegative(viewport.overscan ?? 160, "NodeSystem viewport overscan")
   return Object.freeze({
-    x: Math.min(fromX, toX),
-    y,
-    width: Math.max(2, Math.abs(toX - fromX)),
-    height: 2,
+    x: finite(viewport.x, "NodeSystem viewport x") - overscan,
+    y: finite(viewport.y, "NodeSystem viewport y") - overscan,
+    width: finitePositive(viewport.width, "NodeSystem viewport width") + overscan * 2,
+    height: finitePositive(viewport.height, "NodeSystem viewport height") + overscan * 2,
   })
 }
 
-function verticalSegment(x: number, fromY: number, toY: number): SegmentPlacement {
-  return Object.freeze({
-    x,
-    y: Math.min(fromY, toY),
-    width: 2,
-    height: Math.max(2, Math.abs(toY - fromY)),
-  })
+function intersectsBounds(
+  left: LinkPathProjection["bounds"],
+  right: LinkPathProjection["bounds"],
+): boolean {
+  return left.x <= right.x + right.width && left.x + left.width >= right.x &&
+    left.y <= right.y + right.height && left.y + left.height >= right.y
 }
 
 function isSocketConnected(
   links: readonly NodeSystemLinkSnapshot[],
   nodeId: string,
   socketId: string,
+  index?: ReadonlySet<string>,
 ): boolean {
+  if (index !== undefined) return index.has(socketKey(nodeId, socketId))
   return links.some(link =>
     link.from.nodeId === nodeId && link.from.socketId === socketId ||
     link.to.nodeId === nodeId && link.to.socketId === socketId)
+}
+
+function socketKey(nodeId: string, socketId: string): string {
+  return `${nodeId}\u0000${socketId}`
 }
 
 function socketSide(socket: NodeSystemSocketSnapshot): "left" | "right" {

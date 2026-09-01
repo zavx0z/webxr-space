@@ -135,7 +135,7 @@ export function createNodeEditor(document: Document, initial: NodeEditorProps): 
   }
 
   const fitToView = (): boolean => {
-    const bounds = graphBounds(graph.props)
+    const bounds = graphBounds(graph)
     if (!bounds) return false
     const padding = Math.max(0, current.fitPadding ?? 24)
     const viewportWidth = graph.props.width
@@ -303,6 +303,7 @@ function applyCulling(graph: GraphCanvasController, diagnostics: {
   let culledFrames = 0
   let culledLinks = 0
   let culledNodes = 0
+  const visibleNodeIds = new Set<string>()
   for (const frame of graph.props.frames) {
     const visible = intersects(viewport, projectRect(frame, scale, translateX, translateY))
     syncAttribute(graph.frameRefs(frame.id)!.element, "data-culled", String(!visible))
@@ -312,9 +313,15 @@ function applyCulling(graph: GraphCanvasController, diagnostics: {
     const visible = intersects(viewport, projectRect(node, scale, translateX, translateY))
     syncAttribute(graph.nodeRefs(node.id)!.element, "data-culled", String(!visible))
     if (!visible) culledNodes += 1
+    else visibleNodeIds.add(node.id)
   }
   for (const link of graph.props.links) {
-    const visible = link.segments.some((segment) => intersects(viewport, projectSegment(segment, scale, translateX, translateY)))
+    const endpointVisible = link.from !== undefined && visibleNodeIds.has(link.from.nodeId) ||
+      link.to !== undefined && visibleNodeIds.has(link.to.nodeId)
+    const visible = endpointVisible || intersects(
+      viewport,
+      projectPathBounds(graph.linkRefs(link.id)!.bounds, scale, translateX, translateY),
+    )
     syncAttribute(graph.linkRefs(link.id)!.element, "data-culled", String(!visible))
     if (!visible) culledLinks += 1
   }
@@ -323,16 +330,12 @@ function applyCulling(graph: GraphCanvasController, diagnostics: {
   diagnostics.culledNodes = culledNodes
 }
 
-function graphBounds(props: GraphCanvasProps): Readonly<{x: number; y: number; width: number; height: number}> | null {
+function graphBounds(graph: GraphCanvasController): Readonly<{x: number; y: number; width: number; height: number}> | null {
+  const props = graph.props
   const rects = [
     ...props.frames.map(({x, y, width, height}) => ({x, y, width, height})),
     ...props.nodes.map(({x, y, width, height}) => ({x, y, width, height})),
-    ...props.links.flatMap(({segments}) => segments.map((segment) => ({
-      x: Math.min(segment.x1, segment.x2),
-      y: Math.min(segment.y1, segment.y2),
-      width: Math.max(1, Math.abs(segment.x2 - segment.x1)),
-      height: Math.max(1, Math.abs(segment.y2 - segment.y1)),
-    }))),
+    ...props.links.map(({id}) => graph.linkRefs(id)!.bounds),
   ]
   if (rects.length === 0) return null
   const x = Math.min(...rects.map((rect) => rect.x))
@@ -414,19 +417,18 @@ function projectRect(
   }
 }
 
-function projectSegment(
-  segment: Readonly<{x1: number; y1: number; x2: number; y2: number}>,
+function projectPathBounds(
+  bounds: Readonly<{x: number; y: number; width: number; height: number}>,
   scale: number,
   translateX: number,
   translateY: number,
 ) {
-  const x = Math.min(segment.x1, segment.x2) * scale + translateX
-  const y = Math.min(segment.y1, segment.y2) * scale + translateY
+  const hitHalfWidth = Math.max(8, 8 * scale)
   return {
-    x,
-    y,
-    width: Math.max(16, Math.abs(segment.x2 - segment.x1) * scale),
-    height: Math.max(16, Math.abs(segment.y2 - segment.y1) * scale),
+    x: bounds.x * scale + translateX - hitHalfWidth,
+    y: bounds.y * scale + translateY - hitHalfWidth,
+    width: bounds.width * scale + hitHalfWidth * 2,
+    height: bounds.height * scale + hitHalfWidth * 2,
   }
 }
 

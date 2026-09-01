@@ -31,7 +31,7 @@ describe("package-owned GraphCanvas DOM story", () => {
     )
     expect(source.html).toContain('<section class="graph-canvas"')
     expect(source.html).toContain('data-link-id="process-output"')
-    expect(source.html).toContain('data-segment-index="1"')
+    expect(source.html).toContain('d="M 402 171')
     expect(Object.keys(source).sort()).toEqual(["html", "typescript"])
     expect(story.componentRoot.readStyleSheets()).toEqual({revision: 0, styleSheets: []})
     expect(source.typescript).toContain('from "../../dom/graph-canvas.ts"')
@@ -45,7 +45,7 @@ describe("package-owned GraphCanvas DOM story", () => {
     const refs = story.refs
     const frame = story.frameRefs("pipeline")!
     const link = story.linkRefs("process-output")!
-    const segment = link.segmentRefs(1)!
+    const path = link.element
     const node = story.nodeRefs("process")!
     const source = story.source()
 
@@ -57,7 +57,7 @@ describe("package-owned GraphCanvas DOM story", () => {
     expect(story.refs).toBe(refs)
     expect(story.frameRefs("pipeline")).toBe(frame)
     expect(story.linkRefs("process-output")).toBe(link)
-    expect(story.linkRefs("process-output")?.segmentRefs(1)).toBe(segment)
+    expect(story.linkRefs("process-output")?.element).toBe(path)
     expect(story.nodeRefs("process")).toBe(node)
     expect(story.refs.scene.getAttribute("style")).toBe(
       "transform: translate(-22px, 38px) scale(1.32); transform-origin: 0 0",
@@ -73,7 +73,7 @@ describe("package-owned GraphCanvas DOM story", () => {
     const host = document.createElement("div")
     const story = createGraphStory(document)
     const frameLabel = story.frameRefs("pipeline")!.label
-    const inputSegment = story.linkRefs("input-process")!.segmentRefs(0)!.element
+    const inputPath = story.linkRefs("input-process")!.element
     const output = story.nodeRefs("output")!.element
     const fabricated: string[] = []
     document.appendChild(host)
@@ -87,7 +87,7 @@ describe("package-owned GraphCanvas DOM story", () => {
     expect(output.getAttribute("aria-selected")).toBe("true")
     expect(story.linkRefs("process-output")?.element.getAttribute("aria-selected")).toBe("false")
 
-    inputSegment.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
+    inputPath.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     expect(story.selection).toEqual({kind: "link", id: "input-process"})
     expect(story.linkRefs("input-process")?.element.getAttribute("aria-selected")).toBe("true")
     expect(output.getAttribute("aria-selected")).toBe("false")
@@ -115,15 +115,16 @@ describe("package-owned GraphCanvas DOM story", () => {
       styleSheets: [graphCanvasCss],
     })
     const first = renderer.flush()
-    const selectedLinkSegment = story.linkRefs("process-output")!.segmentRefs(1)!.element
+    const selectedLinkPath = story.linkRefs("process-output")!.element
     const input = story.nodeRefs("input")!.element
 
-    expect(background(first, selectedLinkSegment).color).toBe(socketPreset("custom").color)
+    expect(path(first, selectedLinkPath)).toBeDefined()
+    expect(selectedLinkPath.getAttribute("style")).toContain(`stroke: ${socketPreset("custom").color}`)
     expect(story.selection).toEqual({kind: "link", id: "process-output"})
     input.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     const selectedNode = renderer.flush()
     expect(story.selection).toEqual({kind: "node", id: "input"})
-    expect(background(selectedNode, selectedLinkSegment).color).toBe(socketPreset("custom").color)
+    expect(path(selectedNode, selectedLinkPath)).toBeDefined()
     expect(background(selectedNode, input).border.colors.top).toBe("#171717")
     const selectedShadow = selectedNode.displayList.find((candidate): candidate is Extract<DisplayItem, {kind: "rect"}> =>
       candidate.kind === "rect" && candidate.node === input && candidate.key === "shadow"
@@ -199,4 +200,9 @@ function background(frame: RenderFrame, node: unknown): Extract<DisplayItem, {ki
   )
   if (!item) throw new Error("Expected background display item")
   return item
+}
+
+function path(frame: RenderFrame, node: unknown): Extract<DisplayItem, {kind: "path"}> | undefined {
+  return frame.displayList.find((candidate): candidate is Extract<DisplayItem, {kind: "path"}> =>
+    candidate.kind === "path" && candidate.node === node)
 }

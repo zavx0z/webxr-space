@@ -11,6 +11,7 @@ import {createDocumentRenderer, type RenderFrame} from "@zavx0z/renderer"
 import {RendererWebGpuBackend} from "@zavx0z/renderer-webgpu"
 import {createRoot} from "@zavx0z/react"
 import {
+  NodeConnection,
   NodeSystem,
   type NodeSystemParameterInput,
 } from "./node-system.tsx"
@@ -116,6 +117,69 @@ describe("compiled general Node system", () => {
     expect(snapshot.styleSheets.map(sheet => sheet.source?.moduleId)).toEqual(["@nodes/ui/node-system.tsx"])
     root.unmount()
     tree.dispose()
+  })
+
+  test("plans a bounded orthogonal self-loop when exact compiled endpoints coincide", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    const root = createRoot(host)
+    const node = Object.freeze({
+      id: "self",
+      parameters: Object.freeze([]),
+      sockets: Object.freeze([Object.freeze({id: "loop", direction: "bidirectional" as const})]),
+      metadata: Object.freeze({x: 40, y: 40, width: 220}),
+    })
+    root.render(<NodeConnection
+      link={Object.freeze({
+        id: "self-loop",
+        from: Object.freeze({nodeId: "self", socketId: "loop"}),
+        to: Object.freeze({nodeId: "self", socketId: "loop"}),
+      })}
+      nodes={Object.freeze([node])}
+    />)
+    const path = host.querySelector('[data-link-id="self-loop"]')!
+    expect(path.localName).toBe("vector-path")
+    expect(path.getAttribute("d")).toContain(" C ")
+    expect(path.getAttribute("d")).toContain("10 96.5")
+    expect(path.getAttribute("d")).toContain("20 116.5")
+    expect(path.getAttribute("d")).toEndWith(" 40 86.5")
+    root.unmount()
+  })
+
+  test("keeps an offscreen left-side self-loop when its outward bounds cross the viewport", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    const root = createRoot(host)
+    const snapshot = Object.freeze({
+      revision: 0,
+      topologyRevision: 0,
+      nodes: Object.freeze([Object.freeze({
+        id: "outside",
+        parameters: Object.freeze([]),
+        sockets: Object.freeze([Object.freeze({
+          id: "loop",
+          direction: "bidirectional" as const,
+          side: "left" as const,
+        })]),
+        metadata: Object.freeze({x: 40, y: 20, width: 220}),
+      })]),
+      links: Object.freeze([Object.freeze({
+        id: "outside-loop",
+        from: Object.freeze({nodeId: "outside", socketId: "loop"}),
+        to: Object.freeze({nodeId: "outside", socketId: "loop"}),
+      })]),
+    })
+    const store = Object.freeze({
+      subscribe: (_listener: () => void) => () => {},
+      getSnapshot: () => snapshot,
+    })
+    root.render(<NodeSystem
+      store={store}
+      viewport={Object.freeze({x: 0, y: 0, width: 30, height: 180, overscan: 0})}
+    />)
+    expect(host.querySelectorAll("article")).toHaveLength(0)
+    expect(host.querySelector('[data-link-id="outside-loop"]')?.localName).toBe("vector-path")
+    root.unmount()
   })
 
   test("culls a 1k canonical tree and scopes offscreen value/topology work to zero DOM mutations", () => {

@@ -1,44 +1,46 @@
 import {describe, expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
-import {createLink, linkCss} from "./link.ts"
+import {createDocumentRenderer, hitTest} from "@zavx0z/renderer"
+import {createCubicLinkRoute, createLink, linkCss} from "./link.ts"
 
 describe("typed DOM Link", () => {
-  test("keeps keyed route visuals and 16px hit corridors", () => {
+  test("keeps one keyed semantic Path with the historical route law", () => {
     const controller = createLink(createDocument(), {
       id: "value-link",
       title: "Value",
       kind: "float",
       from: {nodeId: "source", socketId: "value-out"},
       to: {nodeId: "target", socketId: "value-in"},
-      segments: [
-        {x1: 10, y1: 20, x2: 80, y2: 20},
-        {x1: 80, y1: 20, x2: 80, y2: 90},
-      ],
+      route: {kind: "orthogonal", points: [{x: 10, y: 20}, {x: 80, y: 20}, {x: 80, y: 90}]},
     })
-    const first = controller.refs.segment(0)!
-    const second = controller.refs.segment(1)!
-    expect(first.element.getAttribute("style")).toContain("background: #9e9e9e")
-    expect(first.hit.getAttribute("style")).toContain("height: 16px")
-    expect(second.hit.getAttribute("style")).toContain("width: 16px")
-    controller.update({...controller.definition, selected: true, segments: [
-      {x1: 12, y1: 24, x2: 82, y2: 24},
-      {x1: 82, y1: 24, x2: 82, y2: 94},
-      {x1: 82, y1: 94, x2: 120, y2: 94},
-    ]})
-    expect(controller.refs.segment(0)).toBe(first)
-    expect(controller.refs.segment(1)).toBe(second)
-    expect(controller.refs.segment(2)).not.toBeNull()
+    const element = controller.element
+    const before = controller.projection
+    expect(element.localName).toBe("vector-path")
+    expect(element.childNodes).toEqual([])
+    expect(element.getAttribute("style")).toBe("stroke: #9e9e9e")
+    expect(element.getAttribute("data-socket-kind")).toBe("float")
+    expect(element.getAttribute("d")).toContain(" C ")
+    expect(element.d).toBe(controller.projection.d)
+    expect(linkCss).toContain("stroke-width: 2.2px")
+    expect(linkCss).toContain("pointer-hit-width: 16px")
+    expect(linkCss).not.toContain("box-shadow")
+    controller.update({...controller.definition, selected: true, route: {
+      kind: "orthogonal",
+      points: [{x: 12, y: 24}, {x: 82, y: 24}, {x: 82, y: 94}, {x: 120, y: 94}],
+    }})
+    expect(controller.element).toBe(element)
+    expect(controller.projection).not.toBe(before)
+    expect(controller.element.getAttribute("d")).toBe(controller.projection.d)
     expect(controller.element.getAttribute("aria-selected")).toBe("true")
   })
 
-  test("renders both visual and hit children and rejects diagonal geometry", () => {
+  test("renders one stroked Path hit owner and rejects diagonal geometry", () => {
     const document = createDocument()
     const controller = createLink(document, {
       id: "shader-link",
       title: "Shader",
       kind: "shader",
-      segments: [{x1: 0, y1: 12, x2: 100, y2: 12}],
+      route: {kind: "orthogonal", points: [{x: 0, y: 12}, {x: 100, y: 12}]},
     })
     document.appendChild(controller.element)
     const renderer = createDocumentRenderer({
@@ -48,9 +50,67 @@ describe("typed DOM Link", () => {
       styleSheets: [linkCss],
     })
     const frame = renderer.flush()
-    expect(frame.hits.get(controller.refs.segment(0)!.hit)).toBeDefined()
+    expect(frame.hits.get(controller.element)).toBeDefined()
+    expect(hitTest(frame, 50, 19)?.node).toBe(controller.element)
+    expect(hitTest(frame, 50, 22)).toBeNull()
     renderer.dispose()
-    expect(() => controller.update({...controller.definition, segments: [{x1: 0, y1: 0, x2: 10, y2: 10}]}))
-      .toThrow("must be strictly axis-aligned")
+    expect(() => controller.update({...controller.definition, route: {
+      kind: "orthogonal",
+      points: [{x: 0, y: 0}, {x: 10, y: 10}],
+    }}))
+      .toThrow("run 0 not axis-aligned")
+  })
+
+  test("keeps disabled opacity as a correctness fallback outside the opaque fast-path claim", () => {
+    const document = createDocument()
+    const controller = createLink(document, {
+      id: "disabled-link",
+      title: "Disabled",
+      disabled: true,
+      route: {kind: "orthogonal", points: [{x: 8, y: 8}, {x: 88, y: 8}]},
+    })
+    document.appendChild(controller.element)
+    const renderer = createDocumentRenderer({
+      document,
+      root: controller.element,
+      viewport: {width: 100, height: 24},
+      styleSheets: [linkCss],
+    })
+    const item = renderer.flush().displayList.find((candidate) => candidate.kind === "path")
+    expect(controller.element.getAttribute("aria-disabled")).toBe("true")
+    expect(item?.kind).toBe("path")
+    if (item?.kind !== "path") throw new Error("Expected disabled Link Path")
+    expect(item.opacity).toBe(.45)
+    expect(item.strokeWidth).toBe(2.2)
+    renderer.dispose()
+    controller.dispose()
+  })
+
+  test("renders a direct cubic self-loop through the same semantic owner", () => {
+    const document = createDocument()
+    const controller = createLink(document, {
+      id: "self-loop",
+      title: "Self loop",
+      route: createCubicLinkRoute([{
+        startPoint: {x: 40, y: 40},
+        controlPoints: [{x: 90, y: -20}, {x: -10, y: -20}],
+        endPoint: {x: 40, y: 40},
+      }]),
+    })
+    document.appendChild(controller.element)
+    const renderer = createDocumentRenderer({
+      document,
+      root: controller.element,
+      viewport: {width: 100, height: 60},
+      styleSheets: [linkCss],
+    })
+    const item = renderer.flush().displayList.find((candidate) => candidate.kind === "path")
+    expect(item?.kind).toBe("path")
+    if (item?.kind !== "path") throw new Error("Expected self-loop Path")
+    expect(item.geometry.cubics).toHaveLength(1)
+    expect(item.geometry.segments.length).toBeGreaterThan(1)
+    expect(item.geometry.bounds.width).toBeGreaterThan(0)
+    renderer.dispose()
+    controller.dispose()
   })
 })

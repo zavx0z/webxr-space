@@ -187,11 +187,15 @@ function createLinkStory(document: Document, route: string): ProductionNodeStory
     selected: route.endsWith("/selected") || route === "ui/link" || route === "ui/link/orthogonal",
     from: {nodeId: "link-source", socketId: "link-source-output"},
     to: {nodeId: "link-target", socketId: "link-target-input"},
-    segments: Object.freeze([
-      Object.freeze({x1: 240, y1: 96, x2: 300, y2: 96}),
-      Object.freeze({x1: 300, y1: 96, x2: 300, y2: 170}),
-      Object.freeze({x1: 300, y1: 170, x2: 386, y2: 170}),
-    ]),
+    route: Object.freeze({
+      kind: "orthogonal" as const,
+      points: Object.freeze([
+        Object.freeze({x: 240, y: 96}),
+        Object.freeze({x: 300, y: 96}),
+        Object.freeze({x: 300, y: 170}),
+        Object.freeze({x: 386, y: 170}),
+      ]),
+    }),
   })
   const link = createLink(document, linkDefinition)
   const onClick = (): void => link.update({...link.definition, selected: !link.definition.selected})
@@ -430,11 +434,15 @@ function nodeEditorProps(
       selected: route.includes("rotation-linked") || route.startsWith("ui/link"),
       from: {nodeId: "noise", socketId: "noise-color-output"},
       to: {nodeId: "output", socketId: "output-color-input"},
-      segments: Object.freeze([
-        Object.freeze({x1: 338, y1: 198, x2: 394, y2: 198}),
-        Object.freeze({x1: 394, y1: 198, x2: 394, y2: 230}),
-        Object.freeze({x1: 394, y1: 230, x2: 452, y2: 230}),
-      ]),
+      route: Object.freeze({
+        kind: "orthogonal" as const,
+        points: Object.freeze([
+          Object.freeze({x: 338, y: 198}),
+          Object.freeze({x: 394, y: 198}),
+          Object.freeze({x: 394, y: 230}),
+          Object.freeze({x: 452, y: 230}),
+        ]),
+      }),
     })]),
     nodes: Object.freeze(nodes),
   })

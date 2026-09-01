@@ -5,7 +5,7 @@ import {
   PointerEvent,
   WheelEvent,
 } from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer, hitTest} from "@zavx0z/renderer"
 import {graphCanvasDefaultProps} from "./graph-canvas.ts"
 import {createNodeEditor, nodeEditorCss} from "./node-editor.ts"
 
@@ -19,14 +19,19 @@ describe("standard-DOM NodeEditor interaction", () => {
     })
     const process = controller.graph.nodeRefs("process")!
     const input = controller.graph.nodeRefs("input")!
-    const segment = controller.graph.linkRefs("input-process")!.segmentRefs(0)!
+    const link = controller.graph.linkRefs("input-process")!.element
     expect(controller.refs.grid.childNodes.length).toBeGreaterThan(600)
     input.title.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     expect(controller.selection).toEqual({kind: "node", id: "input"})
     expect(controller.graph.nodeRefs("process")).toBe(process)
     expect(controller.graph.nodeRefs("input")).toBe(input)
-    segment.hit.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
+    link.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     expect(controller.selection).toEqual({kind: "link", id: "input-process"})
+    expect([...controller.refs.scene.children]
+      .filter((element) => element.hasAttribute("data-link-id"))
+      .map((element) => element.getAttribute("data-link-id")))
+      .toEqual(["input-process", "process-output"])
+    expect(controller.graph.linkRefs("input-process")!.element).toBe(link)
     expect(selections).toEqual([{kind: "node", id: "input"}, {kind: "link", id: "input-process"}])
   })
 
@@ -102,5 +107,40 @@ describe("standard-DOM NodeEditor interaction", () => {
     expect(second.boxByNode.get(controller.refs.scene)?.transform.scaleX).toBe(1.25)
     expect(second.boxByNode.get(controller.refs.grid)?.transform.scaleX).toBe(1.25)
     renderer.dispose()
+  })
+
+  test("selects the semantic Link through the actual rounded Path tube", () => {
+    const document = createDocument()
+    const controller = createNodeEditor(document, graphCanvasDefaultProps)
+    document.appendChild(controller.element)
+    const renderer = createDocumentRenderer({
+      document,
+      root: controller.element,
+      viewport: {width: 800, height: 520},
+      styleSheets: [nodeEditorCss],
+    })
+    const frame = renderer.flush()
+    const path = controller.graph.linkRefs("input-process")!.element
+    const item = frame.displayList.find((candidate) => candidate.kind === "path" && candidate.node === path)
+    expect(item?.kind).toBe("path")
+    if (item?.kind !== "path") throw new Error("Expected rounded Node Link Path")
+    const curved = item.geometry.segments[3]!
+    const local = {
+      x: item.x + (curved.from.x + curved.to.x) / 2,
+      y: item.y + (curved.from.y + curved.to.y) / 2,
+    }
+    const transform = item.presentationOwner === null
+      ? item.transform
+      : frame.presentationTransforms?.get(item.presentationOwner) ?? item.transform
+    const hit = hitTest(
+      frame,
+      local.x * transform.scaleX + transform.translateX,
+      local.y * transform.scaleY + transform.translateY,
+    )
+    expect(hit?.node).toBe(path)
+    hit!.node.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
+    expect(controller.selection).toEqual({kind: "link", id: "input-process"})
+    renderer.dispose()
+    controller.dispose()
   })
 })

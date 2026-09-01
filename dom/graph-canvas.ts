@@ -1,6 +1,7 @@
 import type {
   Document,
   HTMLDivElement,
+  HTMLVectorPathElement,
   HTMLElement,
   Text,
 } from "@zavx0z/dom"
@@ -10,7 +11,9 @@ import {
   normalizeLinkDefinition,
   type LinkController,
   type LinkEndpoint,
-  type LinkSegmentRefs,
+  type LinkPathBounds,
+  type LinkPathProjection,
+  type LinkRoute,
 } from "./link.ts"
 import {
   createNode,
@@ -38,13 +41,6 @@ export type GraphCanvasFrame = Readonly<{
   selected: boolean
 }>
 
-export type GraphCanvasLinkSegment = Readonly<{
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-}>
-
 export type GraphCanvasLink = Readonly<{
   id: string
   title: string
@@ -53,7 +49,7 @@ export type GraphCanvasLink = Readonly<{
   from?: LinkEndpoint
   to?: LinkEndpoint
   disabled?: boolean
-  segments: readonly GraphCanvasLinkSegment[]
+  route: LinkRoute
 }>
 
 export type GraphCanvasNode = NodeDefinition & Readonly<{
@@ -80,11 +76,10 @@ export type GraphCanvasFrameRefs = Readonly<{
   labelText: Text
 }>
 
-export type GraphCanvasLinkSegmentRefs = LinkSegmentRefs
-
 export type GraphCanvasLinkRefs = Readonly<{
-  element: HTMLDivElement
-  segmentRefs(index: number): GraphCanvasLinkSegmentRefs | null
+  element: HTMLVectorPathElement
+  projection: LinkPathProjection
+  bounds: LinkPathBounds
 }>
 
 export type GraphCanvasNodeRefs = NodeController["refs"]
@@ -109,6 +104,10 @@ export type GraphCanvasController = Readonly<{
 }>
 
 type LinkRecord = {controller: LinkController; refs: GraphCanvasLinkRefs}
+const normalizedLinkChanges = new WeakMap<object, Readonly<{
+  previous: WeakRef<readonly GraphCanvasLink[]>
+  indices: readonly number[]
+}>>()
 
 const defaultFrames = Object.freeze([
   Object.freeze({
@@ -128,21 +127,29 @@ const defaultLinks = Object.freeze([
     id: "input-process",
     title: "Input to Process",
     selected: false,
-    segments: Object.freeze([
-      Object.freeze({x1: 180, y1: 106, x2: 216, y2: 106}),
-      Object.freeze({x1: 216, y1: 106, x2: 216, y2: 171}),
-      Object.freeze({x1: 216, y1: 171, x2: 250, y2: 171}),
-    ]),
+    route: Object.freeze({
+      kind: "orthogonal" as const,
+      points: Object.freeze([
+        Object.freeze({x: 180, y: 106}),
+        Object.freeze({x: 216, y: 106}),
+        Object.freeze({x: 216, y: 171}),
+        Object.freeze({x: 250, y: 171}),
+      ]),
+    }),
   }),
   Object.freeze({
     id: "process-output",
     title: "Process to Output",
     selected: true,
-    segments: Object.freeze([
-      Object.freeze({x1: 402, y1: 171, x2: 420, y2: 171}),
-      Object.freeze({x1: 420, y1: 171, x2: 420, y2: 109}),
-      Object.freeze({x1: 420, y1: 109, x2: 440, y2: 109}),
-    ]),
+    route: Object.freeze({
+      kind: "orthogonal" as const,
+      points: Object.freeze([
+        Object.freeze({x: 402, y: 171}),
+        Object.freeze({x: 420, y: 171}),
+        Object.freeze({x: 420, y: 109}),
+        Object.freeze({x: 440, y: 109}),
+      ]),
+    }),
   }),
 ])
 
@@ -259,13 +266,7 @@ export const graphCanvasCss = /* @__PURE__ */ [nodeCss, linkCss, /* @__PURE__ */
   font-size: 11px;
 }
 
-.graph-canvas__link {
-  box-sizing: border-box;
-  display: block;
-  width: 0;
-  height: 0;
-}
-.graph-canvas__node { position: absolute; }
+.graph-canvas__node { position: absolute; z-index: 3; }
 `] .join("\n")
 
 export function createGraphCanvas(
@@ -307,14 +308,21 @@ export function createGraphCanvas(
       const framesChanged = next.frames !== currentProps.frames || frameRecords.size !== next.frames.length
       const linksChanged = next.links !== currentProps.links || linkRecords.size !== next.links.length
       const nodesChanged = next.nodes !== currentProps.nodes || nodeRecords.size !== next.nodes.length
+      const linkChange = linksChanged ? normalizedLinkChanges.get(next.links) : undefined
+      const stableLinkOrder = linkRecords.size === currentProps.links.length && linkChange?.previous.deref() === currentProps.links
+      const orderChanged = scene.childNodes.length === 0 || !sameIds(currentProps.frames, next.frames) ||
+        linksChanged && !stableLinkOrder ||
+        !sameIds(currentProps.nodes, next.nodes)
       if (framesChanged) reconcileFrames(document, frameRecords, next.frames)
-      if (linksChanged) reconcileLinks(document, linkRecords, next.links)
+      if (linksChanged) reconcileLinks(document, linkRecords, next.links, stableLinkOrder ? linkChange.indices : undefined)
       if (nodesChanged) reconcileNodes(document, nodeRecords, next.nodes)
-      if (framesChanged || linksChanged || nodesChanged) reorderScene(scene, [
-        ...next.frames.map(({id}) => frameRecords.get(id)!.element),
-        ...next.links.map(({id}) => linkRecords.get(id)!.refs.element),
-        ...next.nodes.map(({id}) => nodeRecords.get(id)!.element),
-      ])
+      if (orderChanged) {
+        reorderScene(scene, [
+          ...next.frames.map(({id}) => frameRecords.get(id)!.element),
+          ...next.links.map(({id}) => linkRecords.get(id)!.refs.element),
+          ...next.nodes.map(({id}) => nodeRecords.get(id)!.element),
+        ])
+      }
       currentProps = next
     })
   }
@@ -329,13 +337,7 @@ export function createGraphCanvas(
     nodeRefs(id) { return nodeRecords.get(String(id))?.refs ?? null },
     update(props) {
       if (disposed) throw new Error("GraphCanvas controller is disposed")
-      const next = normalizeProps(props)
-      apply(Object.freeze({
-        ...next,
-        frames: props.frames === currentProps.frames ? currentProps.frames : next.frames,
-        links: props.links === currentProps.links ? currentProps.links : next.links,
-        nodes: props.nodes === currentProps.nodes ? currentProps.nodes : next.nodes,
-      }))
+      apply(normalizeProps(props, currentProps))
     },
     dispose() {
       if (disposed) return
@@ -379,7 +381,15 @@ function reconcileLinks(
   document: Document,
   records: Map<string, LinkRecord>,
   links: readonly GraphCanvasLink[],
+  changes?: readonly number[],
 ): void {
+  if (changes !== undefined) {
+    for (const index of changes) {
+      const link = links[index]!
+      records.get(link.id)!.controller.update(link)
+    }
+    return
+  }
   removeMissing(records, new Set(links.map(({id}) => id)), ({controller}) => {
     controller.element.remove()
     controller.dispose()
@@ -390,11 +400,12 @@ function reconcileLinks(
       const controller = createLink(document, link)
       const refs: GraphCanvasLinkRefs = Object.freeze({
         element: controller.element,
-        segmentRefs(index) { return controller.refs.segment(index) },
+        get projection() { return controller.projection },
+        get bounds() { return controller.projection.bounds },
       })
       record = {controller, refs}
       records.set(link.id, record)
-    } else record.controller.update(link)
+    } else if (record.controller.definition !== link) record.controller.update(link)
   }
 }
 
@@ -438,7 +449,7 @@ function reorderScene(scene: HTMLDivElement, elements: readonly HTMLElement[]): 
   }
 }
 
-function normalizeProps(props: GraphCanvasProps): GraphCanvasProps {
+function normalizeProps(props: GraphCanvasProps, previous?: GraphCanvasProps): GraphCanvasProps {
   if (typeof props !== "object" || props === null) throw new TypeError("GraphCanvas props must be an object")
   assertString(props.title, "GraphCanvas title")
   assertPositive(props.width, "GraphCanvas width")
@@ -448,40 +459,10 @@ function normalizeProps(props: GraphCanvasProps): GraphCanvasProps {
   assertFinite(props.scene.translateY, "GraphCanvas scene translateY")
   assertPositive(props.scene.scale, "GraphCanvas scene scale")
 
-  const frames = normalizePositioned(props.frames, "Frame")
-  const nodes = Object.freeze(normalizePositioned(props.nodes, "Node")
+  const frames = props.frames === previous?.frames ? previous.frames : normalizePositioned(props.frames, "Frame")
+  const nodes = props.nodes === previous?.nodes ? previous.nodes : Object.freeze(normalizePositioned(props.nodes, "Node")
     .map((node) => normalizeNodeDefinition(node) as GraphCanvasNode))
-  if (!Array.isArray(props.links)) throw new TypeError("GraphCanvas Links must be an array")
-  const linkIds = new Set<string>()
-  const links = props.links.map((link, linkIndex) => {
-    if (typeof link !== "object" || link === null) throw new TypeError(`GraphCanvas Link ${linkIndex} must be an object`)
-    assertNonEmpty(link.id, `GraphCanvas Link ${linkIndex} id`)
-    if (linkIds.has(link.id)) throw new Error(`GraphCanvas Link id must be unique: ${link.id}`)
-    linkIds.add(link.id)
-    assertNonEmpty(link.title, `GraphCanvas Link ${link.id} title`)
-    assertBoolean(link.selected, `GraphCanvas Link ${link.id} selected`)
-    if (!Array.isArray(link.segments) || link.segments.length === 0) {
-      throw new TypeError(`GraphCanvas Link ${link.id} segments must be a non-empty array`)
-    }
-    const segments = link.segments.map((
-      segment: GraphCanvasLinkSegment,
-      segmentIndex: number,
-    ) => {
-      if (typeof segment !== "object" || segment === null) {
-        throw new TypeError(`GraphCanvas Link ${link.id} segment ${segmentIndex} must be an object`)
-      }
-      for (const coordinate of ["x1", "y1", "x2", "y2"] as const) {
-        assertFinite(segment[coordinate], `GraphCanvas Link ${link.id} segment ${segmentIndex} ${coordinate}`)
-      }
-      const horizontal = segment.y1 === segment.y2 && segment.x1 !== segment.x2
-      const vertical = segment.x1 === segment.x2 && segment.y1 !== segment.y2
-      if (!horizontal && !vertical) {
-        throw new Error(`GraphCanvas Link ${link.id} segment ${segmentIndex} must be strictly axis-aligned`)
-      }
-      return Object.freeze({...segment})
-    })
-    return normalizeLinkDefinition({...link, segments: Object.freeze(segments)}) as GraphCanvasLink
-  })
+  const links = props.links === previous?.links ? previous.links : normalizeLinks(props.links, previous?.links)
 
   return Object.freeze({
     title: props.title,
@@ -489,9 +470,68 @@ function normalizeProps(props: GraphCanvasProps): GraphCanvasProps {
     height: props.height,
     scene: Object.freeze({...props.scene}),
     frames,
-    links: Object.freeze(links),
+    links,
     nodes,
   })
+}
+
+function normalizeLinks(
+  links: readonly GraphCanvasLink[],
+  previous?: readonly GraphCanvasLink[],
+): readonly GraphCanvasLink[] {
+  if (!Array.isArray(links)) throw new TypeError("GraphCanvas Links must be an array")
+  if (previous !== undefined && normalizedLinkChanges.get(links)?.previous.deref() === previous) return links
+  const linkIds = new Set<string>()
+  return Object.freeze(links.map((link, linkIndex) => {
+    if (typeof link !== "object" || link === null) throw new TypeError(`GraphCanvas Link ${linkIndex} must be an object`)
+    assertNonEmpty(link.id, `GraphCanvas Link ${linkIndex} id`)
+    if (linkIds.has(link.id)) throw new Error(`GraphCanvas Link id must be unique: ${link.id}`)
+    linkIds.add(link.id)
+    assertNonEmpty(link.title, `GraphCanvas Link ${link.id} title`)
+    assertBoolean(link.selected, `GraphCanvas Link ${link.id} selected`)
+    return normalizeLinkDefinition(link) as GraphCanvasLink
+  }))
+}
+
+export function replaceGraphCanvasLink(
+  links: readonly GraphCanvasLink[],
+  index: number,
+  nextLink: GraphCanvasLink,
+): readonly GraphCanvasLink[] {
+  return replaceGraphCanvasLinks(links, [{index, link: nextLink}])
+}
+
+export function replaceGraphCanvasLinks(
+  links: readonly GraphCanvasLink[],
+  replacements: readonly Readonly<{index: number; link: GraphCanvasLink}>[],
+): readonly GraphCanvasLink[] {
+  if (!Array.isArray(replacements) || replacements.length === 0) throw new TypeError("GraphCanvas Link replacements must not be empty")
+  const result = links.slice()
+  const indices: number[] = []
+  const seen = new Set<number>()
+  for (const {index, link} of replacements) {
+    if (!Number.isSafeInteger(index) || index < 0 || index >= links.length || seen.has(index)) {
+      throw new RangeError("GraphCanvas Link replacement index is invalid or duplicated")
+    }
+    seen.add(index)
+    const previous = links[index]!
+    const next = normalizeLinkDefinition(link) as GraphCanvasLink
+    if (next.id !== previous.id) throw new Error(`GraphCanvas Link id cannot change: ${previous.id} -> ${next.id}`)
+    if (next === previous) continue
+    result[index] = next
+    indices.push(index)
+  }
+  if (indices.length === 0) return links
+  const frozen = Object.freeze(result)
+  normalizedLinkChanges.set(frozen, Object.freeze({previous: new WeakRef(links), indices: Object.freeze(indices)}))
+  return frozen
+}
+
+function sameIds(
+  previous: readonly Readonly<{id: string}>[],
+  next: readonly Readonly<{id: string}>[],
+): boolean {
+  return previous.length === next.length && previous.every(({id}, index) => next[index]!.id === id)
 }
 
 function normalizePositioned<Positioned extends GraphCanvasFrame | GraphCanvasNode>(

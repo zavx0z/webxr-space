@@ -201,23 +201,14 @@
 
 
 .node-link {
-  box-sizing: border-box;
-  display: block;
-  width: 0;
-  height: 0;
-}
-.node-link__segment,
-.node-link__hit {
-  box-sizing: border-box;
   position: absolute;
-  display: block;
+  left: 0;
+  top: 0;
+  stroke: #9e9e9e;
+  stroke-width: 2.2px;
+  pointer-hit-width: 16px;
 }
-.node-link__segment {
-  border-radius: 2px;
-  background: #9e9e9e;
-}
-.node-link__hit { background: transparent; }
-.node-link[aria-selected="true"] .node-link__segment { box-shadow: 0 0 6px currentcolor; }
+.node-link[aria-selected="true"] { z-index: 2; stroke-width: 3.4px; }
 .node-link[aria-disabled="true"] { opacity: .45; }
 
 
@@ -290,13 +281,7 @@
   font-size: 11px;
 }
 
-.graph-canvas__link {
-  box-sizing: border-box;
-  display: block;
-  width: 0;
-  height: 0;
-}
-.graph-canvas__node { position: absolute; }
+.graph-canvas__node { position: absolute; z-index: 3; }
 
 
 .node-editor { position: relative; }

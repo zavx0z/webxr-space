@@ -69,17 +69,13 @@ function graphFor(route: RemainingDomRoute): GraphCanvasProps {
   const links = nodeEditorLinks().filter(({id}) => id !== removedLinkId).map((link) => ({
     ...link,
     selected: false,
-    segments: link.segments.map((segment) => ({...segment})),
+    route: cloneRoute(link.route),
   }))
   if (route.includes("rotation-linked")) links.push({
     id: "scalar-transform-rotation",
     title: "Shifted Rotation Link",
     selected: false,
-    segments: [
-      {x1: 300, y1: 150, x2: 330, y2: 150},
-      {x1: 330, y1: 150, x2: 330, y2: 190},
-      {x1: 330, y1: 190, x2: 340, y2: 190},
-    ],
+    route: orthogonalRoute([[300, 150, 330, 150], [330, 150, 330, 190], [330, 190, 340, 190]]),
   })
   return Object.freeze({
     title: titleFor(route),
@@ -90,7 +86,7 @@ function graphFor(route: RemainingDomRoute): GraphCanvasProps {
       Object.freeze({id: "catalog-frame", label: "Система компонентов нод", title: "Catalog Frame", x: 10, y: 10, width: 1080, height: 700, selected: false}),
       Object.freeze({id: "data-frame", label: "Обработка данных", title: "Data Frame", x: 80, y: 320, width: 950, height: 330, selected: false}),
     ]),
-    links: Object.freeze(links.map((link) => Object.freeze({...link, segments: Object.freeze(link.segments.map((segment) => Object.freeze(segment)))}))),
+    links: Object.freeze(links.map((link) => Object.freeze({...link, route: cloneRoute(link.route)}))),
     nodes: Object.freeze(nodes.map((node) => Object.freeze(node))),
   })
 }
@@ -124,7 +120,7 @@ function link(
     id,
     title,
     selected: false,
-    segments: Object.freeze(segments.map(([x1, y1, x2, y2]) => Object.freeze({x1, y1, x2, y2}))),
+    route: orthogonalRoute(segments),
   })
 }
 
@@ -180,10 +176,29 @@ function linkGraph(route: RemainingDomRoute): GraphCanvasProps {
     links: Object.freeze(base.links.map((link) => Object.freeze({
       ...link,
       selected: false,
-      segments: Object.freeze(link.segments.map((segment) => Object.freeze({...segment}))),
+      route: cloneRoute(link.route),
     }))),
     nodes: Object.freeze(base.nodes.map((node) => Object.freeze({...node, selected: false}))),
   })
+}
+
+function orthogonalRoute(
+  segments: readonly (readonly [number, number, number, number])[],
+): Extract<GraphCanvasProps["links"][number]["route"], {kind: "orthogonal"}> {
+  if (segments.length === 0) throw new Error("Story Link route must contain at least one segment")
+  const points = [{x: segments[0]![0], y: segments[0]![1]}]
+  for (const [index, [x1, y1, x2, y2]] of segments.entries()) {
+    const previous = points.at(-1)!
+    if (previous.x !== x1 || previous.y !== y1) throw new Error(`Story Link segment ${index} is disconnected`)
+    points.push({x: x2, y: y2})
+  }
+  return Object.freeze({kind: "orthogonal", points: Object.freeze(points.map((point) => Object.freeze(point)))})
+}
+
+function cloneRoute(route: GraphCanvasProps["links"][number]["route"]): GraphCanvasProps["links"][number]["route"] {
+  return route.kind === "orthogonal"
+    ? Object.freeze({...route, points: Object.freeze(route.points.map((point) => Object.freeze({...point})))})
+    : route
 }
 
 function parametersFor(route: RemainingDomRoute): ParameterSocketProps {

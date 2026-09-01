@@ -12,7 +12,16 @@ export type {NodeController, NodeDefinition, NodePreview, NodePreviewImage} from
 export {createParameter, parameterCss} from "./dom/parameter.ts"
 export type {ParameterController, ParameterDefinition} from "./dom/parameter.ts"
 export {createLink, linkCss} from "./dom/link.ts"
-export type {LinkController, LinkDefinition, LinkEndpoint, LinkSegment, LinkSegmentRefs} from "./dom/link.ts"
+export type {
+  LinkController,
+  LinkCubicCurve,
+  LinkDefinition,
+  LinkEndpoint,
+  LinkPathBounds,
+  LinkPathPoint,
+  LinkPathProjection,
+  LinkRoute,
+} from "./dom/link.ts"
 export {createNodeEditor, nodeEditorCss} from "./dom/node-editor.ts"
 export type {
   NodeEditorController,

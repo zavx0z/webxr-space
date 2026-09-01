@@ -53,7 +53,9 @@ export const graphStoryDefaultProps: GraphCanvasProps = Object.freeze({
     ...link,
     title: link.id === "process-output" ? "Выбранная связь" : "Связь узлов",
     selected: link.id === "process-output",
-    segments: freezeEntries(link.segments),
+    route: link.route.kind === "orthogonal"
+      ? Object.freeze({...link.route, points: freezeEntries(link.route.points)})
+      : link.route,
   }))),
   nodes: freezeEntries(graphCanvasDefaultProps.nodes.map((node) => ({
     ...node,

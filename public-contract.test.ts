@@ -58,6 +58,8 @@ describe("@nodes/ui public standard-DOM contract", () => {
       "parameterCss",
       "parameterSocketCss",
       "parameterSocketDefaultProps",
+      "replaceGraphCanvasLink",
+      "replaceGraphCanvasLinks",
       "socketCss",
       "socketPreset",
     ])
@@ -81,7 +83,11 @@ describe("@nodes/ui public standard-DOM contract", () => {
       label: "Value",
     })
     const node = createNode(document, {id: "node", label: "Math", parameters: [{id: "value", field}]})
-    const link = createLink(document, {id: "link", title: "Value", segments: [{x1: 0, y1: 0, x2: 40, y2: 0}]})
+    const link = createLink(document, {
+      id: "link",
+      title: "Value",
+      route: {kind: "orthogonal", points: [{x: 0, y: 0}, {x: 40, y: 0}]},
+    })
     const editor = createNodeEditor(document, graphCanvasDefaultProps)
     const parameters = createParameterSocket(document)
     const tree = createNodeTreeEditor(document)

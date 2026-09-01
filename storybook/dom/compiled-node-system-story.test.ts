@@ -41,8 +41,8 @@ describe("compiled general Node system Storybook route", () => {
     const styleSheets = (story.componentRoot.readStyleSheets() as {styleSheets: readonly unknown[]}).styleSheets
     expect(styleSheets.length).toBeGreaterThan(0)
     expect(source.html).toContain("data-node-system")
-    expect(source.html).toContain("top: 243.5px")
-    expect(source.html).toContain("top: 207.5px")
+    expect(source.html).toContain('d="M 618 244.5')
+    expect(source.html).toContain("674 208.5")
 
     const renderer = createDocumentRenderer({
       document,
@@ -53,28 +53,33 @@ describe("compiled general Node system Storybook route", () => {
     const fieldSocket = story.element.querySelector('[data-socket-id="field-output"]')!
     const surfaceSocket = story.element.querySelector('[data-socket-id="surface-input"]')!
     const surfaceLink = story.element.querySelector('[data-link-id="surface-link"]')!
-    const firstSegment = surfaceLink.children[0]!
-    const lastSegment = surfaceLink.children[2]!
+    expect(surfaceLink.localName).toBe("vector-path")
+    expect(surfaceLink.childNodes).toEqual([])
     const fieldBox = frame.boxByNode.get(fieldSocket)!
     const surfaceBox = frame.boxByNode.get(surfaceSocket)!
-    const firstBox = frame.boxByNode.get(firstSegment)!
-    const lastBox = frame.boxByNode.get(lastSegment)!
     const geometryOutput = frame.boxByNode.get(story.element.querySelector('[data-socket-id="geometry-output"]')!)!
     const geometryInput = frame.boxByNode.get(story.element.querySelector('[data-socket-id="geometry-input"]')!)!
     const geometryLink = story.element.querySelector('[data-link-id="geometry-link"]')!
-    const geometryFirst = frame.boxByNode.get(geometryLink.children[0]!)!
-    const geometryLast = frame.boxByNode.get(geometryLink.children[2]!)!
+    const surfacePath = frame.displayList.find((item) => item.kind === "path" && item.node === surfaceLink)
+    const geometryPath = frame.displayList.find((item) => item.kind === "path" && item.node === geometryLink)
+    expect(surfacePath?.kind).toBe("path")
+    expect(geometryPath?.kind).toBe("path")
+    if (surfacePath?.kind !== "path" || geometryPath?.kind !== "path") throw new Error("Expected compiled Link Paths")
+    const surfaceFirst = surfacePath.geometry.cubics[0]!.from
+    const surfaceLast = surfacePath.geometry.cubics.at(-1)!.to
+    const geometryFirst = geometryPath.geometry.cubics[0]!.from
+    const geometryLast = geometryPath.geometry.cubics.at(-1)!.to
     expect(Math.abs(
-      geometryFirst.y + geometryFirst.height / 2 - geometryOutput.y - geometryOutput.height / 2,
+      geometryPath.y + geometryFirst.y - geometryOutput.y - geometryOutput.height / 2,
     )).toBeLessThanOrEqual(0.5)
     expect(Math.abs(
-      geometryLast.y + geometryLast.height / 2 - geometryInput.y - geometryInput.height / 2,
+      geometryPath.y + geometryLast.y - geometryInput.y - geometryInput.height / 2,
     )).toBeLessThanOrEqual(0.5)
     expect(Math.abs(
-      firstBox.y + firstBox.height / 2 - fieldBox.y - fieldBox.height / 2,
+      surfacePath.y + surfaceFirst.y - fieldBox.y - fieldBox.height / 2,
     )).toBeLessThanOrEqual(0.5)
     expect(Math.abs(
-      lastBox.y + lastBox.height / 2 - surfaceBox.y - surfaceBox.height / 2,
+      surfacePath.y + surfaceLast.y - surfaceBox.y - surfaceBox.height / 2,
     )).toBeLessThanOrEqual(0.5)
     renderer.dispose()
     story.dispose()

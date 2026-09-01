@@ -29,14 +29,16 @@ retained imports или размеру bundle.
 
 Public exports ограничены следующими exact subpaths:
 
-- `@nodes/ui/graph-canvas` → `createGraphCanvas`, CSS и Graph types;
+- `@nodes/ui/graph-canvas` → `createGraphCanvas`, pure
+  `replaceGraphCanvasLink` / `replaceGraphCanvasLinks`, CSS и Graph types;
 - `@nodes/ui/node-workbench` → `createNodeWorkbench`, CSS и composition types;
 - `@nodes/ui/parameter-socket` → `createParameterSocket`, CSS и control types;
 - `@nodes/ui/node-tree-editor` → `createNodeTreeEditor`, CSS и tree types.
 - `@nodes/ui/node` → Blender-like Node article, typed presets and controller;
 - `@nodes/ui/parameter` → embedded Parameter/Property Field composition;
 - `@nodes/ui/socket` → typed Socket kinds, shapes, colors and controller;
-- `@nodes/ui/link` → typed Link geometry and keyed hit corridors;
+- `@nodes/ui/link` → typed orthogonal/cubic routes, one semantic
+  `HTMLVectorPathElement` and keyed stroked-path hits;
 - `@nodes/ui/node-editor` → Graph composition and interaction controller.
 - `@nodes/ui/node-system` → compiled TSX `NodeSystem → NodeCard → ParameterRow
   → SocketPort / NodeConnection` composition over a structural external-store
@@ -82,20 +84,16 @@ Package boundary собирает один minified browser artifact из public
 Parameter → exact compiled Field`; поэтому это полный all-controller + one-DOM-
 realm budget, а не размер отдельного UI package или одного lazy subpath.
 
-После восстановления native pointer capture, select picker, text/input state,
-полных Color/Number/Enum contracts и DOM Node behavior измерение текущего
-linked owner graph после bounded tree-shaking составляет `222462` raw / `56981`
-gzip bytes. Metafile раскладывает raw contribution на Renderer DOM `73004`,
-React runtime `33913`, UI controls `57881`, Nodes UI controllers `52176`,
-Template `5155` и fixture `232` bytes; оставшиеся bytes являются bundler
-framing. Side-effect-free literal initializers удаляют из consumer четыре
+После восстановления native controls, DOM Node behavior и generic retained
+Path измерение текущего linked owner graph после bounded tree-shaking составляет
+`229209` raw / `59121` gzip bytes. Ceiling не расширялся; запас равен `791` raw и
+`879` gzip bytes. Side-effect-free literal initializers удаляют из consumer четыре
 неиспользуемых public CSS documents (`Socket`, `Link`, `NodeTreeEditor`,
 `ParameterSocket`) без изменения их exact импортируемых bytes и экономят `6266`
 raw / `1440` gzip bytes. Повторные controller imports также дедуплицированы.
 
-Даже после этой оптимизации предыдущий gate `215000 / 55000`, снятый до этих
-platform/control contracts, не описывает тот же observable scope: current
-artifact превышает его на `7462` raw / `1981` gzip bytes. Новый tight ceiling — `230000`
+Предыдущий gate `215000 / 55000`, снятый до этих platform/control contracts, не
+описывает тот же observable scope. Действующий tight ceiling остаётся `230000`
 raw / `60000` gzip bytes. Увеличение этого ceiling требует нового metafile
 evidence; уменьшение bundle не разрешает удалять owner behavior, validators,
 standard DOM state или exact shared Field kinds. Отдельный UI bundle budget не
@@ -109,8 +107,9 @@ standard DOM state или exact shared Field kinds. Отдельный UI bundle
 локальный store. Запись Parameter является callback boundary; canonical
 adapter вызывает `NodeTreeEditor.setParameterValue()` с текущей revision.
 
-Node, Parameter, Socket и Link materialize-ятся keyed по canonical id. Value и
-topology commits сохраняют identity каждого surviving semantic element.
+Node, Parameter, Socket и Link materialize-ятся keyed по canonical id. Один
+Link materialize-ится одним `<vector-path>` без segment/hit child rectangles.
+Value и topology commits сохраняют identity каждого surviving semantic element.
 Произвольное количество Parameters/Sockets компонуется без slot limit;
 boolean, number и string имеют native controlled inputs, а составное JSON
 value остаётся read-only canonical representation, не string Store.
@@ -130,8 +129,12 @@ public styling paths. Compile-time `css` tag предоставляет configur
 Reproducible gate запускается `bun run bench:node-system` на сценах 1 000 и
 10 000 canonical Nodes. Каждый Node имеет четыре Parameters (vector source,
 number, boolean, vector result), два typed Sockets и участвует в ordered Link
-chain. Viewport `850 × 500` materialize-ит шесть Nodes; culling является pure
-projection над snapshot и не хранит второй tree/index.
+chain. Viewport `850 × 500` materialize-ит шесть Nodes и восемь Links по закону
+`visible endpoint OR route-bounds intersection`; culling
+является pure projection над snapshot и не хранит второй tree/index. Поэтому
+`999 / 9999` canonical Links проверяют стоимость store/culling, а массовая
+stroke-производительность отдельно закрывается `bun run bench:node-paths` на
+`512 / 2048 / 10000` materialized Links.
 
 Budgets выводятся из 90 Hz (`11.111 ms`) и 60 Hz (`16.667 ms`):
 
@@ -150,7 +153,9 @@ Acceptance также требует: ≤3 renders visible value; 0 renders offs
 0 root renders culled topology; 0 DOM/state mutations offscreen/topology;
 surviving Node/Input identity; exact renderer frame reuse; WebGPU backend
 `rectPlanReused` с `rectPreparedItems=0`; default automatic safe Rect instancing
-без manual backend hints. Benchmark завершает process non-zero при любом
+без manual backend hints; восемь visible Link являются восемью semantic Paths,
+одним opaque instanced Path draw run и `120` historical sampled segments. Offscreen/topology no-op
+не выполняет Path uploads. Benchmark завершает process non-zero при любом
 budget/correctness failure.
 
 ## GraphCanvas
@@ -164,22 +169,30 @@ translate, positive scale and ordered keyed Frames, Links and Nodes.
 Scene children всегда имеют semantic paint order:
 
 1. Frame `section` backgrounds/labels;
-2. Link groups с ordered absolute horizontal/vertical segment `div`;
+2. ordered semantic Link `<vector-path>` elements;
 3. Node `article` elements.
 
 Frame/Node rectangles используют finite absolute coordinates and positive
-size. Link segment имеет четыре finite endpoints, меняет ровно одну axis и не
-может быть diagonal или zero-length. Invalid complete props отклоняются до
-mutation.
+size. Orthogonal Link route содержит минимум две finite точки; каждый run
+меняет ровно одну axis и не может быть diagonal или zero-length. Cubic route
+содержит непрерывную непустую chain с двумя control points на segment. Invalid
+complete props отклоняются до mutation.
 
 Frame, Link and Node IDs unique внутри entity family. Их Element/Text identity
-сохраняется через update/reorder. Link segment identity сохраняется по
-`(link id, segment index)`. Removed key detach-ится; повторное добавление
-создаёт новую identity.
+сохраняется через update/reorder. Path data и bounds меняются на том же exact
+Link Element. Removed key detach-ится; повторное добавление создаёт новую
+identity.
 
 GraphCanvas является keyed paint owner. Он materializes production Node и Link
 controllers, а не label-only substitutes. Selection отражается controlled
 `aria-selected`; interaction listeners принадлежат exact NodeEditor owner.
+`replaceGraphCanvasLink()` и atomic `replaceGraphCanvasLinks()` являются pure
+immutable hot-path helpers: они normalizes только указанные Links, сохраняют
+exact previous-array provenance через `WeakRef` и changed indices в private
+WeakMap, не удерживая цепочку старых immutable массивов, и возвращают одну
+frozen shallow copy. Следующий полный
+`graph.update({...props, links})` принимает delta только при exact previous-array
+identity; stale/foreign metadata проходит обычную полную validation/reconcile.
 
 ## Node
 
@@ -226,10 +239,44 @@ Field element и endpoint identities. Standard `hidden` исключает contr
 
 ### `NODES-UI-DOM-LINK-001` — route and hit identity
 
-`createLink()` принимает typed Socket kind, optional exact endpoints и ordered
-axis-aligned route segments. Segment visuals и 16px hit corridors имеют stable
-identity `(link id, segment index)`. Kind color совпадает с Socket preset;
-selected Link остаётся последним среди Links, но перед Nodes.
+`createLink()` принимает typed Socket kind, optional exact endpoints и один
+discriminated route: ordered axis-aligned points либо готовую typed Path
+projection. Exact `createCubicLinkRoute()` adapter принимает непрерывную cubic
+chain; forged projected routes fail closed before DOM mutation.
+Orthogonal route сохраняет exact endpoints, прямые runs кодирует `M/L`, а
+каждый реальный corner — локальным cubic radius
+`min(10, adjacentLength / 2)` с historical controls `2/3` к corner. Готовая
+top-down/Coffman cubic chain adapter передаёт в `M/C` без sampling в Nodes.
+Projected route содержит не больше `256` non-degenerate `L/C` commands — exact
+generic Path bound. Orthogonal validation считает уже скруглённые line+cubic
+commands и отклоняет overflow до любой DOM mutation.
+Каждая authored coordinate использует тот же public DOM ABI bound
+`VECTOR_PATH_COORDINATE_LIMIT = 16777216`; большие finite числа отклоняются до
+вычисления bounds и не переполняют Float32 backend.
+
+Один Link является одним semantic `<vector-path>` owner без visual/hit
+children. Kind color совпадает с Socket preset; local stroke равен `2.2px`,
+selected — `3.4px`; `pointer-hit-width: 16px` сохраняет local corridor и
+screen minimum. Selected Link через стандартный stacking `z-index` рисуется
+последним среди Links без semantic DOM reparent, но остаётся перед Nodes.
+Transform/clip
+наследуются от общего scene; pan/zoom не меняют `d` или retained Path geometry.
+
+Нормативный pre-DOM owner baseline `8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7`
+рисовал Link только type color и width `2.2 / 3.4`, без glow/shadow. Поздний
+`box-shadow` на прямоугольных DOM segments не подтверждён Link reference или
+owner law и не переносится в Path как новый visual contract. Generic Path
+shadow остаётся отдельной platform capability; Nodes не добавляет локальный
+эффект или второй paint owner.
+
+Hit parity сохраняет semantic target, local width `16`, screen minimum,
+transform/clip и paint-order winner. Старый retained host использовал broad
+axis-aligned AABB отдельных orthogonal runs; это была backend hit approximation,
+не accepted visual geometry и не отдельный public hit-shape option. Generic Path
+теперь владеет точной tube-distance проверкой вокруг уже скруглённого stroke.
+Около внешних углов envelope поэтому уже прежнего AABB; Nodes фиксирует это как
+осознанную generic Path semantics и не восстанавливает прямоугольные invisible
+hit owners как consumer workaround.
 
 ## NodeEditor
 
@@ -240,6 +287,53 @@ Frame/Link/Node selection, fit, wheel pan, anchor-preserving zoom, pointer pan,
 two-pointer pinch, transform-only scene mutation и viewport culling. Standard
 DOM events являются единственным input API. Transform меняет stable scene и
 не пересоздаёт Frame, Link, Node, Parameter, Field или Socket subtrees.
+Link видим, если видим source Node, видим target Node либо stored route bounds
+пересекает viewport. Fit/culling читают immutable Node-owned bounds и не делают
+Renderer readback или повторный Path parse. Cubic bounds используют безопасный
+control hull: он может быть шире математической кривой, но никогда не cull-ит
+видимый stroke.
+
+Compiled connection с совпавшими exact endpoints остаётся bounded self-loop:
+он выходит на `30px` наружу через resolved Socket side, делает один
+ортогональный detour и возвращается в тот же center. Его outward bounds входят
+в тот же viewport predicate, поэтому петля не исчезает вместе с offscreen Node.
+
+### `NODES-UI-PATH-PERF-001` — retained dense Link gate
+
+`bun run bench:node-paths` materialize-ит один semantic Path на Link в трёх
+сценариях: `512`, `2048` и synthetic `10000`. Каждый route использует три
+orthogonal runs и два historical cubic corners: generic Renderer sample даёт
+ровно `15` retained stroke segments, но DOM остаётся одним Element.
+
+Benchmark записывает initial CPU/backend materialization и 100 samples каждого
+interaction: stable frame, shared transform-only pan/zoom, atomic selection
+switch между двумя Links и изменение route одного Link. Report содержит renderer/backend/total
+p50/p95/p99, initial/final/post-GC retained heap, draw runs, styles, segments и
+upload bytes. GC выполняется после measured interactions и отдельного event-loop
+yield, поэтому WeakRef predecessor chain может быть собрана, но frame timings не
+содержат GC pause. Acceptance:
+
+1. одна shared transform/clip group даёт один Path draw run;
+2. transform сохраняет все geometry/style/order slots и выполняет zero uploads;
+3. GraphCanvas selection сохраняет semantic DOM order, но paints тот же Link
+   последним через CSS stacking; пишет только bounded style/order fields и zero
+   geometry segments;
+4. route update меняет geometry ровно одного Link и пишет только изменившиеся
+   sampled-segment fields (`16` bytes на изменённый segment), без полного
+   style/geometry-buffer rewrite;
+5. semantic Element identity сохраняется, children отсутствуют;
+6. interactive total p95 каждого сценария не превышает один 60 Hz frame.
+
+Dense timing использует ordinary/selected opaque Links (`opacity=1`), чтобы
+доказывать retained fast path. Disabled Link с owner opacity `.45` остаётся
+обязательным correctness fallback и проверяется focused render test, но не
+выдаётся за часть opaque throughput claim.
+
+Per-apply acceptance читает `pathStyleWriteBytes`, `pathSegmentWriteBytes` и
+`pathOrderWriteBytes`. `pendingPath*UploadBytes` описывает ещё не acknowledged
+Engine buffer capacity и не является delta текущего interaction. Report также
+фиксирует `pathInstancedDraws=1`, `pathScalarDraws=0`, style/segment capacities,
+retained record bytes и unit geometry bytes.
 
 ## ParameterSocket
 

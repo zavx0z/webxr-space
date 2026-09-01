@@ -15,11 +15,13 @@ import {
   createGraphCanvas,
   graphCanvasCss,
   graphCanvasDefaultProps,
+  replaceGraphCanvasLink,
+  replaceGraphCanvasLinks,
   type GraphCanvasProps,
 } from "./graph-canvas.ts"
 
 describe("keyed standard-DOM GraphCanvas", () => {
-  test("creates exact Frame, Link-segment and Node semantic order", () => {
+  test("creates exact Frame, one-Path Link and Node semantic order", () => {
     const controller = createGraphCanvas(createDocument())
     const {root, header, headerText, viewport, scene} = controller.refs
     const frame = controller.frameRefs("pipeline")!
@@ -67,16 +69,14 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(frame.element.childNodes).toEqual([frame.label])
 
     expect(firstLink.element.getAttribute("data-link-id")).toBe("input-process")
+    expect(firstLink.element.localName).toBe("vector-path")
     expect(firstLink.element.getAttribute("role")).toBe("option")
     expect(firstLink.element.getAttribute("aria-selected")).toBe("false")
-    expect(firstLink.segmentRefs(0)?.element.className).toContain("--horizontal")
-    expect(firstLink.segmentRefs(0)?.element.getAttribute("style")).toBe("left: 180px; top: 105px; width: 36px; height: 2px; background: #d659d1")
-    expect(firstLink.segmentRefs(1)?.element.className).toContain("--vertical")
-    expect(firstLink.segmentRefs(1)?.element.getAttribute("style")).toBe("left: 215px; top: 106px; width: 2px; height: 65px; background: #d659d1")
-    expect(firstLink.segmentRefs(2)?.element.getAttribute("style")).toBe("left: 216px; top: 170px; width: 34px; height: 2px; background: #d659d1")
-    expect(firstLink.segmentRefs(3)).toBeNull()
-    expect(firstLink.segmentRefs(-1)).toBeNull()
-    expect(firstLink.segmentRefs(0)?.element.getAttribute("aria-hidden")).toBe("true")
+    expect(firstLink.element.childNodes).toEqual([])
+    expect(firstLink.element.getAttribute("style")).toBe("stroke: #d659d1")
+    expect(firstLink.element.getAttribute("d")).toBe(firstLink.projection.d)
+    expect(firstLink.projection.d).toStartWith("M 180 106 L 206 106 C")
+    expect(firstLink.projection.d).toEndWith("L 250 171")
     expect(selectedLink.element.getAttribute("aria-selected")).toBe("true")
 
     expect(process.element.localName).toBe("article")
@@ -97,19 +97,21 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(Object.isFrozen(controller.props.scene)).toBeTrue()
     expect(Object.isFrozen(controller.props.frames)).toBeTrue()
     expect(Object.isFrozen(controller.props.links)).toBeTrue()
-    expect(Object.isFrozen(controller.props.links[0]?.segments)).toBeTrue()
+    expect(Object.isFrozen(controller.props.links[0]?.route)).toBeTrue()
+    expect(Object.isFrozen(controller.props.links[0]?.route.kind === "orthogonal"
+      ? controller.props.links[0].route.points
+      : controller.props.links[0]?.route.projection)).toBeTrue()
     expect(Object.isFrozen(controller.props.nodes)).toBeTrue()
   })
 
-  test("reconciles entity ids and Link segment indices without replacing retained refs", () => {
+  test("reconciles entity ids and Path geometry without replacing retained Link identity", () => {
     const controller = createGraphCanvas(createDocument())
     const fixed = controller.refs
     const pipeline = controller.frameRefs("pipeline")!
     const removedLink = controller.linkRefs("input-process")!
     const retainedLink = controller.linkRefs("process-output")!
-    const segment0 = retainedLink.segmentRefs(0)!
-    const segment1 = retainedLink.segmentRefs(1)!
-    const removedSegment2 = retainedLink.segmentRefs(2)!
+    const retainedPath = retainedLink.element
+    const previousProjection = retainedLink.projection
     const input = controller.nodeRefs("input")!
     const removedProcess = controller.nodeRefs("process")!
     const output = controller.nodeRefs("output")!
@@ -133,16 +135,13 @@ describe("keyed standard-DOM GraphCanvas", () => {
         {
           ...controller.props.links[1]!,
           title: "Updated output route",
-          segments: [
-            {x1: 400, y1: 180, x2: 440, y2: 180},
-            {x1: 440, y1: 180, x2: 440, y2: 110},
-          ],
+          route: {kind: "orthogonal", points: [{x: 400, y: 180}, {x: 440, y: 180}, {x: 440, y: 110}]},
         },
         {
           id: "preview-output",
           title: "Preview to output",
           selected: false,
-          segments: [{x1: 360, y1: 236, x2: 500, y2: 236}],
+          route: {kind: "orthogonal", points: [{x: 360, y: 236}, {x: 500, y: 236}]},
         },
       ],
       nodes: [
@@ -170,10 +169,9 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(controller.frameRefs("pipeline")).toBe(pipeline)
     expect(pipeline.labelText.data).toBe("Pipeline A")
     expect(controller.linkRefs("process-output")).toBe(retainedLink)
-    expect(retainedLink.segmentRefs(0)).toBe(segment0)
-    expect(retainedLink.segmentRefs(1)).toBe(segment1)
-    expect(retainedLink.segmentRefs(2)).toBeNull()
-    expect(removedSegment2.element.parentNode).toBeNull()
+    expect(retainedLink.element).toBe(retainedPath)
+    expect(retainedLink.projection).not.toBe(previousProjection)
+    expect(retainedLink.element.getAttribute("d")).toBe(retainedLink.projection.d)
     expect(controller.linkRefs("input-process")).toBeNull()
     expect(removedLink.element.parentNode).toBeNull()
     expect(controller.nodeRefs("output")).toBe(output)
@@ -201,7 +199,7 @@ describe("keyed standard-DOM GraphCanvas", () => {
     const recreatedLink = controller.linkRefs("input-process")!
     const recreatedNode = controller.nodeRefs("process")!
     expect(recreatedLink).not.toBe(removedLink)
-    expect(recreatedLink.segmentRefs(0)?.element).not.toBe(removedLink.segmentRefs(0)?.element)
+    expect(recreatedLink.element).not.toBe(removedLink.element)
     expect(recreatedNode).not.toBe(removedProcess)
 
     controller.update({
@@ -246,12 +244,89 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(batches).toHaveLength(1)
   })
 
-  test("keeps Frame, Link segment and Node clicks standard and controlled", () => {
+  test("paints one selected Path last without reparenting semantic DOM order", () => {
+    const document = createDocument()
+    const controller = createGraphCanvas(document)
+    const selected = controller.linkRefs("input-process")!.element
+    const previous = controller.linkRefs("process-output")!.element
+    const batches: MutationBatch[] = []
+    document.appendChild(controller.element)
+    document.subscribeMutations((batch) => batches.push(batch))
+
+    controller.update({...controller.props, links: replaceGraphCanvasLinks(controller.props.links, [
+      {index: 0, link: {...controller.props.links[0]!, selected: true}},
+      {index: 1, link: {...controller.props.links[1]!, selected: false}},
+    ])})
+
+    expect(controller.linkRefs("input-process")!.element).toBe(selected)
+    expect(controller.linkRefs("process-output")!.element).toBe(previous)
+    expect([...controller.refs.scene.children]
+      .filter((element) => element.hasAttribute("data-link-id")))
+      .toEqual([selected, previous])
+    expect(batches).toHaveLength(1)
+    expect(batches[0]!.records.filter(({type}) => type === "childList")).toHaveLength(0)
+    const renderer = createDocumentRenderer({
+      document,
+      root: controller.element,
+      viewport: {width: 800, height: 520},
+      styleSheets: [graphCanvasCss],
+    })
+    const paths = renderer.flush().displayList.filter((item) => item.kind === "path")
+    expect(paths.map(({node}) => node)).toEqual([previous, selected])
+    renderer.dispose()
+  })
+
+  test("keeps keyed Link replacement pure, atomic, weak and provenance-fenced", async () => {
+    const controller = createGraphCanvas(createDocument())
+    const initial = controller.props
+    const retained = controller.linkRefs("input-process")!.element
+    expect(() => replaceGraphCanvasLink(initial.links, -1, initial.links[0]!)).toThrow("index is invalid")
+    expect(() => replaceGraphCanvasLinks(initial.links, [
+      {index: 0, link: initial.links[0]!},
+      {index: 0, link: initial.links[0]!},
+    ])).toThrow("duplicated")
+    expect(() => replaceGraphCanvasLink(initial.links, 0, {...initial.links[0]!, id: "other"})).toThrow("id cannot change")
+    expect(() => replaceGraphCanvasLink(initial.links, 0, {
+      ...initial.links[0]!,
+      route: {kind: "orthogonal", points: [{x: 0, y: 0}, {x: 1, y: 1}]},
+    })).toThrow("not axis-aligned")
+    expect(controller.props).toBe(initial)
+
+    const selectedFirst = replaceGraphCanvasLink(initial.links, 0, {...initial.links[0]!, selected: true})
+    const staleSecond = replaceGraphCanvasLink(initial.links, 1, {...initial.links[1]!, selected: false})
+    controller.update({...controller.props, links: selectedFirst})
+    expect(controller.linkRefs("input-process")!.element).toBe(retained)
+    controller.update({...controller.props, links: staleSecond})
+    expect(controller.props.links[0]!.selected).toBeFalse()
+    expect(controller.props.links[1]!.selected).toBeFalse()
+    expect(controller.linkRefs("input-process")!.element).toBe(retained)
+
+    const collectable = ((links: typeof controller.props.links) => {
+      const predecessor = Object.freeze([...links])
+      return Object.freeze({
+        predecessor: new WeakRef(predecessor),
+        result: replaceGraphCanvasLink(predecessor, 0, {...predecessor[0]!, selected: true}),
+      })
+    })(controller.props.links)
+    for (let attempt = 0; attempt < 4 && collectable.predecessor.deref() !== undefined; attempt++) {
+      await Bun.sleep(0)
+      Bun.gc(true)
+    }
+    expect(collectable.predecessor.deref()).toBeUndefined()
+
+    const foreign = createGraphCanvas(createDocument())
+    foreign.update({...foreign.props, links: collectable.result})
+    expect(foreign.props.links).not.toBe(collectable.result)
+    expect(foreign.props.links[0]!.selected).toBeTrue()
+    foreign.dispose()
+  })
+
+  test("keeps Frame, exact Link Path and Node clicks standard and controlled", () => {
     const document = createDocument()
     const host = document.createElement("div")
     const controller = createGraphCanvas(document)
     const frameLabel = controller.frameRefs("pipeline")!.label
-    const linkSegment = controller.linkRefs("input-process")!.segmentRefs(1)!.element
+    const linkPath = controller.linkRefs("input-process")!.element
     const node = controller.nodeRefs("output")!.element
     const props = controller.props
     const clicks: unknown[] = []
@@ -263,10 +338,10 @@ describe("keyed standard-DOM GraphCanvas", () => {
       host.addEventListener(type, (event) => fabricated.push(event.type))
     }
 
-    for (const target of [frameLabel, linkSegment, node]) {
+    for (const target of [frameLabel, linkPath, node]) {
       expect(target.dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))).toBeTrue()
     }
-    expect(clicks).toEqual([frameLabel, linkSegment, node])
+    expect(clicks).toEqual([frameLabel, linkPath, node])
     expect(fabricated).toEqual([])
     expect(controller.props).toBe(props)
     expect(controller.frameRefs("pipeline")?.element.getAttribute("aria-selected")).toBe("false")
@@ -274,33 +349,33 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(controller.nodeRefs("output")?.element.getAttribute("aria-selected")).toBe("false")
   })
 
-  test("rejects diagonal, zero-length and non-finite Link segments before mutation", () => {
+  test("rejects diagonal, zero-length and non-finite Link routes before mutation", () => {
     const controller = createGraphCanvas(createDocument())
     const props = controller.props
     const sceneChildren = [...controller.refs.scene.childNodes]
-    const firstStyle = controller.linkRefs("input-process")?.segmentRefs(0)?.element.getAttribute("style")
+    const firstPath = controller.linkRefs("input-process")?.element.getAttribute("d")
 
-    const updateSegment = (segment: {x1: number; y1: number; x2: number; y2: number}) => controller.update({
+    const updateRoute = (points: readonly Readonly<{x: number; y: number}>[]) => controller.update({
       ...controller.props,
       links: controller.props.links.map((link) => link.id === "input-process"
-        ? {...link, segments: [segment]}
+        ? {...link, route: {kind: "orthogonal", points}}
         : link),
     })
-    expect(() => updateSegment({x1: 0, y1: 0, x2: 10, y2: 10}))
-      .toThrow("GraphCanvas Link input-process segment 0 must be strictly axis-aligned")
-    expect(() => updateSegment({x1: 4, y1: 4, x2: 4, y2: 4}))
-      .toThrow("GraphCanvas Link input-process segment 0 must be strictly axis-aligned")
-    expect(() => updateSegment({x1: Number.NaN, y1: 0, x2: 10, y2: 0}))
-      .toThrow("GraphCanvas Link input-process segment 0 x1 must be finite")
+    expect(() => updateRoute([{x: 0, y: 0}, {x: 10, y: 10}]))
+      .toThrow("run 0 not axis-aligned")
+    expect(() => updateRoute([{x: 4, y: 4}, {x: 4, y: 4}]))
+      .toThrow("point 1 repeats previous")
+    expect(() => updateRoute([{x: Number.NaN, y: 0}, {x: 10, y: 0}]))
+      .toThrow("finite point")
     expect(() => controller.update({
       ...controller.props,
       links: controller.props.links.map((link) => link.id === "input-process"
-        ? {...link, segments: []}
+        ? {...link, route: {kind: "orthogonal", points: []}}
         : link),
-    })).toThrow("GraphCanvas Link input-process segments must be a non-empty array")
+    })).toThrow("needs >=2 orthogonal points")
     expect(controller.props).toBe(props)
     expect(controller.refs.scene.childNodes).toEqual(sceneChildren)
-    expect(controller.linkRefs("input-process")?.segmentRefs(0)?.element.getAttribute("style")).toBe(firstStyle)
+    expect(controller.linkRefs("input-process")?.element.getAttribute("d")).toBe(firstPath)
   })
 
   test("rejects duplicate entity ids and malformed geometry before mutation", () => {
@@ -344,10 +419,12 @@ describe("keyed standard-DOM GraphCanvas", () => {
     })
     const first = renderer.flush()
     const frame = controller.frameRefs("pipeline")!.element
-    const segment = controller.linkRefs("input-process")!.segmentRefs(1)!.element
+    const path = controller.linkRefs("input-process")!.element
+    const selectedPath = controller.linkRefs("process-output")!.element
     const node = controller.nodeRefs("process")!.element
     const framePaint = backgroundIndex(first.displayList, frame)
-    const segmentPaint = backgroundIndex(first.displayList, segment)
+    const pathPaint = pathIndex(first.displayList, path)
+    const selectedPathPaint = pathIndex(first.displayList, selectedPath)
     const nodePaint = backgroundIndex(first.displayList, node)
     const frameShadow = rectIndex(first.displayList, frame, "shadow")
     const nodeShadow = rectIndex(first.displayList, node, "shadow")
@@ -355,13 +432,14 @@ describe("keyed standard-DOM GraphCanvas", () => {
     expect(frameShadow).toBeGreaterThan(-1)
     expect(frameShadow).toBeLessThan(framePaint)
     expect(framePaint).toBeGreaterThan(-1)
-    expect(segmentPaint).toBeGreaterThan(framePaint)
-    expect(nodeShadow).toBeGreaterThan(segmentPaint)
+    expect(pathPaint).toBeGreaterThan(framePaint)
+    expect(selectedPathPaint).toBeGreaterThan(pathPaint)
+    expect(nodeShadow).toBeGreaterThan(pathPaint)
+    expect(nodeShadow).toBeGreaterThan(selectedPathPaint)
     expect(nodeShadow).toBeLessThan(nodePaint)
-    expect(nodePaint).toBeGreaterThan(segmentPaint)
+    expect(nodePaint).toBeGreaterThan(pathPaint)
     expect(renderer.flush()).toBe(first)
     const nodeBox = first.boxByNode.get(node)!
-    const segmentBox = first.boxByNode.get(segment)!
 
     controller.update({
       ...controller.props,
@@ -378,11 +456,15 @@ describe("keyed standard-DOM GraphCanvas", () => {
       height: nodeBox.height,
     })
     expect(transformed.hits.get(node)?.transform).toEqual(sceneTransform)
-    expect(transformed.hits.get(segment)?.transform).toEqual(sceneTransform)
+    const pathHit = transformed.hits.get(path)?.path
+    expect(pathHit?.presentationOwner).toBe(controller.refs.scene)
+    const pathTransform = transformed.presentationTransforms?.get(controller.refs.scene)!
     expect(node.contains(hitTestAtBoxCenter(transformed, nodeBox, sceneTransform)?.node ?? null)).toBeTrue()
-    expect(controller.linkRefs("input-process")!.element.contains(
-      hitTestAtBoxCenter(transformed, segmentBox, sceneTransform)?.node ?? null,
-    )).toBeTrue()
+    expect(hitTest(
+      transformed,
+      (pathHit!.originX + 190) * pathTransform.scaleX + pathTransform.translateX,
+      (pathHit!.originY + 106) * pathTransform.scaleY + pathTransform.translateY,
+    )?.node).toBe(path)
     expect(renderer.flush()).toBe(transformed)
     renderer.dispose()
   })
@@ -442,7 +524,8 @@ describe("keyed standard-DOM GraphCanvas", () => {
     ]) expect(source).not.toContain(forbidden)
     expect(graphCanvasCss).toContain("position: absolute")
     expect(graphCanvasCss).toContain(".graph-canvas__frame")
-    expect(graphCanvasCss).toContain(".node-link__segment")
+    expect(graphCanvasCss).toContain("pointer-hit-width: 16px")
+    expect(graphCanvasCss).not.toContain(".node-link__segment")
     expect(graphCanvasCss).toContain(".node-article")
     expect(graphCanvasCss).toContain("box-shadow: 0 0 12px")
     expect(graphCanvasCss).toContain("box-shadow: 0 2px 10px")
@@ -460,6 +543,13 @@ function backgroundIndex(
   node: unknown,
 ): number {
   return rectIndex(displayList, node, "background")
+}
+
+function pathIndex(
+  displayList: readonly Readonly<{kind: string; node: unknown}>[],
+  node: unknown,
+): number {
+  return displayList.findIndex((item) => item.kind === "path" && item.node === node)
 }
 
 function rectIndex(
