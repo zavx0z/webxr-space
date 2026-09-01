@@ -4,7 +4,7 @@ export const PROPS_INSPECTOR_COPY = Object.freeze({
   categoriesLabel: "Категории инспектора",
   categoryTitle: "Props",
   searchLabel: "Поиск свойств",
-  sectionLabel: "Свойства",
-  sectionTitle: "Props компонента",
+  panelLabel: "Свойства",
+  panelTitle: "Props компонента",
   empty: "Нет публичных props",
 })

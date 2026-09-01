@@ -75,19 +75,20 @@ describe("@ui/components icons", () => {
     ])
   })
 
-  test("keeps production control imports tree-shakeable without the aggregate catalog", async () => {
+  test("keeps production owner imports tree-shakeable without the aggregate catalog", async () => {
     const sources = await Promise.all([
-      Bun.file(new URL("controls/path-control.tsx", import.meta.url)).text(),
-      Bun.file(new URL("controls/reference-control.tsx", import.meta.url)).text(),
+      Bun.file(new URL("fields/path-field.tsx", import.meta.url)).text(),
+      Bun.file(new URL("fields/reference-field.tsx", import.meta.url)).text(),
       Bun.file(new URL("notification.tsx", import.meta.url)).text(),
-      Bun.file(new URL("controls/collection-control.tsx", import.meta.url)).text(),
+      Bun.file(new URL("fields/collection-field.tsx", import.meta.url)).text(),
       Bun.file(new URL("inspector.tsx", import.meta.url)).text(),
+      Bun.file(new URL("panel.tsx", import.meta.url)).text(),
       Bun.file(new URL("hud.tsx", import.meta.url)).text(),
-      Bun.file(new URL("controls/enum-control.tsx", import.meta.url)).text(),
+      Bun.file(new URL("fields/cycle-field.tsx", import.meta.url)).text(),
     ])
     expect(sources.every((source) => /from "\.\.?\/icon-assets\.ts"/u.test(source))).toBeTrue()
     expect(sources.every((source) => !/from "\.\.?\/icons\.ts"/u.test(source))).toBeTrue()
-    expect(await Bun.file(new URL("controls/number-control.tsx", import.meta.url)).text()).not.toContain("icon-assets")
+    expect(await Bun.file(new URL("fields/number-field.tsx", import.meta.url)).text()).not.toContain("icon-assets")
     expect(await Bun.file(new URL("icon-assets.ts", import.meta.url)).text()).not.toContain("uiIcons")
   })
 

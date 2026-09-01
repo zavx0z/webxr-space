@@ -2,10 +2,16 @@ import {describe, expect, test} from "bun:test"
 import {createHash} from "node:crypto"
 import {existsSync, readFileSync} from "node:fs"
 import {dirname, join, resolve} from "node:path"
-import {createDocument, getPopoverVisibilityState, type HTMLElement} from "@zavx0z/dom"
+import {
+  createDocument,
+  getPopoverVisibilityState,
+  type HTMLElement,
+  type HTMLInputElement
+} from "@zavx0z/dom"
 import {runtime} from "./runtime.ts"
 import {story_status_unavailable} from "./stories/subjects/components-data-noti.ts"
-import {story_state_open as story_color_control_open} from "./stories/subjects/components-controls-color-control.ts"
+import {story_state_open as story_color_field_open} from "./stories/subjects/components-fields-color-field.ts"
+import {story_step_one as story_number_step_one} from "./stories/subjects/components-fields-number-field.ts"
 
 const packageRoot = resolve(import.meta.dir, "..")
 const projectRoot = resolve(packageRoot, "../..")
@@ -20,34 +26,56 @@ describe("@ui/components external catalog", () => {
       .filter(({to}) => to.packageId === "@ui/components")
       .map(({to}) => to.route)
     const expectedSet = new Set(expected)
-    expect(expected).toHaveLength(85)
-    expect(expectedSet.size).toBe(84)
+    expect(expected).toHaveLength(88)
+    expect(expectedSet.size).toBe(72)
     expect(variants.map(({route}) => route).filter(route => expectedSet.has(route)).sort())
       .toEqual([...expectedSet].sort())
     expect(variants.map(({route}) => route).filter(route => !expectedSet.has(route))).toEqual([
-      "components/controls/readonly-control/basic/default",
-      "components/data/inspector-sections/basic/default",
-      "components/data/inspector-section/basic/default",
-      "components/data/inspector-text-section/basic/default",
       "components/data/status-bar/basic/default",
     ])
-    expect(variants).toHaveLength(89)
+    expect(variants).toHaveLength(73)
     expect(remap.leafMappings.filter(({from}) =>
       from.route === "components/inputs/field/integer/input" ||
+      from.route === "components/inputs/integer-input/basic/value" ||
       from.route === "components/inputs/integer-input/basic/labeled"
     ).map(({from, to}) => ({from: from.route, to: to.route}))).toEqual([
       {
         from: "components/inputs/field/integer/input",
-        to: "components/fields/integer-field/basic/default",
+        to: "components/fields/number-field/step/one",
+      },
+      {
+        from: "components/inputs/integer-input/basic/value",
+        to: "components/fields/number-field/step/one",
       },
       {
         from: "components/inputs/integer-input/basic/labeled",
-        to: "components/fields/integer-field/basic/default",
+        to: "components/fields/number-field/step/one",
       },
     ])
-    expect(variants.filter(({route}) => route === "components/controls/reference-control/basic/default" ||
-      route === "components/fields/reference-field/basic/default").map(({label}) => label))
-      .toEqual(["Выбрано", "Выбрано"])
+    expect(remap.leafMappings.filter(({from}) =>
+      from.route === "components/inputs/enum-input/presentation/cycle" ||
+      from.route === "components/inputs/enum-input/presentation/expanded" ||
+      from.route === "components/inputs/enum-input/value/header-icons" ||
+      from.route === "components/inputs/color-input/presentation/expanded" ||
+      from.route === "components/inputs/progress-checkbox/progress/default"
+    ).map(({from, to}) => [from.route, to.route])).toEqual([
+      ["components/inputs/color-input/presentation/expanded", "components/fields/color-picker-field/basic/default"],
+      ["components/inputs/enum-input/presentation/cycle", "components/fields/select-field/basic/default"],
+      ["components/inputs/enum-input/presentation/expanded", "components/fields/option-group-field/basic/default"],
+      ["components/inputs/enum-input/value/header-icons", "components/fields/cycle-field/value/header-icons"],
+      ["components/inputs/progress-checkbox/progress/default", "components/fields/checkbox-field/state/indeterminate"],
+    ])
+    expect(remap.leafMappings.some(({to}) =>
+      to.packageId === "@ui/components" && to.route.startsWith("components/controls/")
+    )).toBeFalse()
+    expect(remap.leafMappings.filter(({from}) => from.packageId === "@ui/components")
+      .map(({from, to}) => [from.route, to.route])).toEqual([
+        ["components/data/inspector-sections/basic/default", "components/data/inspector/basic/default"],
+        ["components/data/inspector-section/basic/default", "components/foundation/panel/basic/default"],
+        ["components/data/inspector-text-section/basic/default", "components/foundation/panel/basic/default"],
+      ])
+    expect(variants.filter(({route}) => route === "components/fields/reference-field/basic/default")
+      .map(({label}) => label)).toEqual(["Выбрано"])
     for (const subject of catalog.categories.flatMap(({subjects}) => subjects)) {
       const projection = subject.variants.every(({route}) => route.startsWith("hud/"))
         ? "hud"
@@ -73,47 +101,31 @@ describe("@ui/components external catalog", () => {
     }
   })
 
-  test("declares exactly Controls and concrete Fields without a generic Field subject", () => {
+  test("declares one category with exactly the concrete interaction Fields", () => {
     const catalog = json(join(import.meta.dir, "catalog.json")) as Catalog
     const controls = catalog.categories.find(({id}) => id === "components-controls")
     const fields = catalog.categories.find(({id}) => id === "components-fields")
-    expect(controls).toMatchObject({label: "Контролы", route: "components/controls"})
+    expect(controls).toBeUndefined()
     expect(fields).toMatchObject({label: "Поля", route: "components/fields"})
-    expect(controls?.subjects.map(({apiName}) => apiName)).toEqual([
-      "ControlGroup",
-      "TextControl",
-      "NumberControl",
-      "IntegerControl",
-      "ColorControl",
-      "VectorControl",
-      "MatrixControl",
-      "ReferenceControl",
-      "EnumControl",
-      "CollectionControl",
-      "PathControl",
-      "Checkbox",
-      "Switcher",
-      "ProgressCheckbox",
-      "SliderControl",
-      "ReadonlyControl",
-    ])
     expect(fields?.subjects.map(({apiName}) => apiName)).toEqual([
+      "FieldGroup",
       "TextField",
       "NumberField",
-      "IntegerField",
-      "BooleanField",
-      "EnumField",
+      "SliderField",
+      "CheckboxField",
+      "SwitchField",
+      "SelectField",
+      "CycleField",
+      "OptionGroupField",
       "ColorField",
+      "ColorPickerField",
       "VectorField",
-      "RotationField",
       "MatrixField",
       "ReferenceField",
-      "CollectionField",
       "PathField",
-      "ReadonlyField",
+      "CollectionField",
     ])
-    expect(fields?.subjects.find(({id}) => id === "integer-field")?.variants.map(({route}) => route))
-      .toEqual(["components/fields/integer-field/basic/default"])
+    expect(fields?.subjects.flatMap(({variants}) => variants)).toHaveLength(40)
     expect(catalog.categories.some(({id, route}) =>
       id === "components-inputs" || route === "components/inputs")).toBeFalse()
     expect(catalog.categories.flatMap(({subjects}) => subjects)
@@ -122,6 +134,9 @@ describe("@ui/components external catalog", () => {
     expect(catalog.categories.flatMap(({subjects}) => subjects)
       .flatMap(({variants}) => variants)
       .some(({route}) => route.startsWith("components/inputs/"))).toBeFalse()
+    expect(catalog.categories.flatMap(({subjects}) => subjects)
+      .flatMap(({variants}) => variants)
+      .some(({route}) => route.startsWith("components/controls/"))).toBeFalse()
   })
 
   test("derives one direct catalog component node for every exported TSX factory", () => {
@@ -181,10 +196,14 @@ describe("@ui/components external catalog", () => {
       .every(variant => !Object.hasOwn(variant, "group"))).toBeTrue()
     expect(foundation?.subjects.map(({apiName}) => apiName)).toEqual([
       "Pane",
+      "Panel",
       "Badge",
       "Typography",
       "Divider",
     ])
+    expect(foundation?.subjects.filter(({label}) => label === "Панель").map(({apiName}) => apiName))
+      .toEqual(["Panel"])
+    expect(foundation?.subjects.find(({apiName}) => apiName === "Pane")?.label).toBe("Область")
   })
 
   test("documents the complete 176-leaf and 215-overview owner split", () => {
@@ -192,10 +211,14 @@ describe("@ui/components external catalog", () => {
     const remap = json(join(projectRoot, ".storybook", "route-remap.json")) as RouteRemap
     expect(baseline.leafRoutes).toHaveLength(176)
     expect(baseline.overviewRoutes).toHaveLength(215)
-    expect(remap.leafMappings.map(({from}) => from.route)).toEqual(baseline.leafRoutes)
-    expect(remap.overviewMappings.map(({from}) => from.route)).toEqual(baseline.overviewRoutes)
-    expect(remap.leafMappings.filter(({to}) => to.packageId === "@ui/components")).toHaveLength(85)
-    expect(remap.leafMappings.filter(({to}) => to.packageId === "@zavx0z/dom")).toHaveLength(91)
+    const legacyLeaves = remap.leafMappings.filter(({from}) => from.packageId === "@ui/storybook")
+    const legacyOverviews = remap.overviewMappings.filter(({from}) => from.packageId === "@ui/storybook")
+    expect(legacyLeaves.map(({from}) => from.route)).toEqual(baseline.leafRoutes)
+    expect(legacyOverviews.map(({from}) => from.route)).toEqual(baseline.overviewRoutes)
+    expect(legacyLeaves.filter(({to}) => to.packageId === "@ui/components")).toHaveLength(85)
+    expect(legacyLeaves.filter(({to}) => to.packageId === "@zavx0z/dom")).toHaveLength(91)
+    expect(remap.leafMappings.filter(({from}) => from.packageId === "@ui/components")).toHaveLength(3)
+    expect(remap.overviewMappings.filter(({from}) => from.packageId === "@ui/components")).toHaveLength(6)
     expect(remap.unknownRoutesFailClosed).toBeTrue()
     expect(remap.overviewFallback).toBeFalse()
     expect(remap.overviewMappings.filter(({from}) =>
@@ -212,7 +235,7 @@ describe("@ui/components external catalog", () => {
       {from: "components/foundation/button/sizes", to: "components/foundation/button/sizes", kind: "subject"},
       {from: "components/foundation/button/color", to: "components/foundation/button/color", kind: "subject"},
     ])
-    for (const mapping of remap.overviewMappings.filter(({to}) => to.kind === "section-collapse")) {
+    for (const mapping of legacyOverviews.filter(({to}) => to.kind === "section-collapse")) {
       expect(baseline.leafRoutes).not.toContain(mapping.to.route)
       expect(mapping.to.reason).toContain("without selecting a leaf")
     }
@@ -273,15 +296,23 @@ describe("@ui/components external catalog", () => {
       reportDiagnostic() {},
     })
     await session.mount({
-      route: story_color_control_open.route,
-      story: story_color_control_open,
+      route: story_color_field_open.route,
+      story: story_color_field_open,
       signal: new AbortController().signal,
     })
     const owner = document.firstChild as HTMLElement
-    const editor = owner.querySelector('[aria-label="Color editor"]') as HTMLElement
+    const editor = owner.querySelector("[popover]") as HTMLElement
     expect(owner.querySelector("button")?.getAttribute("aria-expanded")).toBe("true")
     expect(editor[getPopoverVisibilityState]()).toBe("showing")
     session.dispose()
+  })
+
+  test("keeps the historical discrete number configuration on NumberField step 1", async () => {
+    const mounted = await story_number_step_one.create(createDocument())
+    const input = mounted.story.element.querySelector("input") as HTMLInputElement
+    expect(input.getAttribute("step")).toBe("1")
+    expect(mounted.story.props).toMatchObject({step: 1})
+    mounted.story.dispose()
   })
 
   test("declares runtime/3 and the exact linked production theme without custom widgets", () => {
@@ -350,11 +381,11 @@ type RouteRemap = Readonly<{
   unknownRoutesFailClosed: boolean
   overviewFallback: boolean
   leafMappings: readonly Readonly<{
-    from: Readonly<{route: string}>
+    from: Readonly<{packageId: string; route: string}>
     to: Readonly<{packageId: string; route: string}>
   }>[]
   overviewMappings: readonly Readonly<{
-    from: Readonly<{route: string}>
+    from: Readonly<{packageId: string; route: string}>
     to: Readonly<{kind: string; route: string; reason: string}>
   }>[]
 }>

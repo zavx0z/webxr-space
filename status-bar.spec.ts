@@ -2,12 +2,14 @@ import {describe, expect, test} from "bun:test"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
+import {StatusBarFixture} from "./status-bar.fixture.tsx"
 import {StatusBar, statusBarText} from "./status-bar.tsx"
 import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production StatusBar", () => {
   test("retains keyed status items and the exact passive lower-chrome contour", () => {
     expect(isCompiledTemplate(StatusBar)).toBe(true)
+    expect(isCompiledTemplate(StatusBarFixture)).toBe(true)
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)
@@ -17,7 +19,7 @@ describe("compiled production StatusBar", () => {
       {id: "faces", text: "Faces:6"},
       {id: "version", text: "5.2.0", highlighted: true}
     ]
-    root.render(StatusBar as any, {start: [{id: "mode", text: "Ready"}], end})
+    root.render(StatusBarFixture as any, {start: [{id: "mode", text: "Ready"}], end})
     const owner = host.querySelector("footer")!
     const version = host.querySelector('[data-status-item="version"]')!
     const vertices = host.querySelector('[data-status-item="vertices"]')!
@@ -25,7 +27,7 @@ describe("compiled production StatusBar", () => {
     expect(owner.getAttribute("role")).toBe("status")
     expect(version.getAttribute("data-highlighted")).toBe("true")
 
-    root.render(StatusBar as any, {end: [end[2]!, end[0]!, end[1]!]})
+    root.render(StatusBarFixture as any, {end: [end[2]!, end[0]!, end[1]!]})
     expect(host.querySelector('[data-status-item="version"]')).toBe(version)
     expect(host.querySelector('[data-status-item="vertices"]')).toBe(vertices)
     expect([...host.querySelectorAll("[data-status-item]")].map(item => item.getAttribute("data-status-item")))

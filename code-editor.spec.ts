@@ -2,23 +2,25 @@ import {describe, expect, test} from "bun:test"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
+import {CodeEditorFixture} from "./code-editor.fixture.tsx"
 import {CodeEditor} from "./code-editor.tsx"
 import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production CodeEditor", () => {
   test("retains keyed line and token identities across source updates", () => {
     expect(isCompiledTemplate(CodeEditor)).toBe(true)
+    expect(isCompiledTemplate(CodeEditorFixture)).toBe(true)
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
-    root.render(CodeEditor as any, {value: "const x = 1\nreturn x", readOnly: true, languageId: "typescript"})
+    root.render(CodeEditorFixture as any, {value: "const x = 1\nreturn x", readOnly: true, languageId: "typescript"})
     const owner = host.querySelector("section")!
     const firstLine = owner.querySelector('code [data-line-index="0"]')!
     const firstToken = firstLine.querySelector("span")!
     const secondLine = owner.querySelector('code [data-line-index="1"]')!
 
-    root.render(CodeEditor as any, {value: "const y = 2\nreturn y", readOnly: true, languageId: "typescript"})
+    root.render(CodeEditorFixture as any, {value: "const y = 2\nreturn y", readOnly: true, languageId: "typescript"})
     expect(host.querySelector("section")).toBe(owner)
     expect(owner.querySelector('code [data-line-index="0"]')).toBe(firstLine)
     expect(owner.querySelector('code [data-line-index="1"]')).toBe(secondLine)
@@ -33,7 +35,7 @@ describe("compiled production CodeEditor", () => {
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
-    root.render(CodeEditor as any, {value: "let value = true", readOnly: true, path: "sample.ts"})
+    root.render(CodeEditorFixture as any, {value: "let value = true", readOnly: true, path: "sample.ts"})
     const owner = host.querySelector("section")!
     const renderer = createDocumentRenderer({
       document,
@@ -60,7 +62,7 @@ describe("compiled production CodeEditor", () => {
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
-    root.render(CodeEditor as any, {value: "const answer = 42", readOnly: true})
+    root.render(CodeEditorFixture as any, {value: "const answer = 42", readOnly: true})
     const owner = host.querySelector("section")!
     expect(owner.querySelector("pre code")).not.toBeNull()
     expect(owner.querySelector("textarea")).toBeNull()
@@ -73,7 +75,7 @@ describe("compiled production CodeEditor", () => {
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
-    root.render(CodeEditor as any, {
+    root.render(CodeEditorFixture as any, {
       value: "  token  ",
       readOnly: true,
       languageId: "supplied",

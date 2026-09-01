@@ -1,9 +1,8 @@
 import type {Event} from "@zavx0z/dom"
-import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button, IconButton} from "./button.tsx"
-import {TextControl} from "./controls/text-control.tsx"
-import {chevronDownIcon, chevronRightIcon, searchIcon} from "./icon-assets.ts"
+import {TextField} from "./fields/text-field.tsx"
+import {searchIcon} from "./icon-assets.ts"
 
 export type InspectorCategory = Readonly<{
   id: string
@@ -12,7 +11,7 @@ export type InspectorCategory = Readonly<{
   title?: string | undefined
   disabled?: boolean | undefined
   groupStart?: boolean | undefined
-  sectionIds?: readonly string[] | undefined
+  panelIds?: readonly string[] | undefined
 }>
 
 export type InspectorAction = Readonly<{
@@ -47,35 +46,15 @@ export type InspectorProps = Readonly<{
   toolbarLeadingActions?: readonly InspectorAction[] | undefined
   toolbarActions?: readonly InspectorAction[] | undefined
   context?: InspectorContext | undefined
-  children: JsxSourceElement
+  children: readonly JsxSourceElement[]
   style?: CssStyle | undefined
   onCategoryChange?: ((id: string, event: Event) => void) | undefined
   onQueryChange?: ((query: string, event: Event) => void) | undefined
 }>
 
-export type InspectorSectionsProps = Readonly<{
-  children: readonly JsxSourceElement[]
-  style?: CssStyle | undefined
-}>
-
-export type InspectorSectionProps = Readonly<{
-  id: string
-  label: string
-  title?: string | undefined
-  expanded: boolean
-  disabled?: boolean | undefined
-  hidden?: boolean | undefined
-  actions?: readonly InspectorAction[] | undefined
-  children: JsxSourceElement
-  style?: CssStyle | undefined
-  onToggle?: ((id: string, expanded: boolean, event: Event) => void) | undefined
-}>
-
-export type InspectorTextSectionProps = Omit<InspectorSectionProps, "children"> & Readonly<{
-  content: string
-}>
-
-const searchStyle: CssStyle = css`& { width: 100%; height: 22px; padding: 2px 8px 2px 23px; }`
+const searchStyle: CssStyle = css`
+  & { width: 100%; height: 22px; --text-field-width: 100%; --text-field-height: 22px; --text-field-padding: 2px 8px 2px 23px; }
+`
 const categoryStyle: CssStyle = css`
   & { width: 26px; min-width: 26px; height: 28px; margin-left: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 `
@@ -83,10 +62,6 @@ const categoryGroupStartStyle: CssStyle = css`& { margin-top: 8px; }`
 const selectedCategoryStyle: CssStyle = css`
   & { border-radius: 4px 0 0 4px; background: var(--widget-number-background-readonly); color: rgb(var(--surface-50)); }
 `
-const sectionHeaderStyle: CssStyle = css`
-  & { width: 0; min-width: 0; height: 26px; flex-grow: 1; padding: 0 5px; border: 0; border-radius: 4px; background: transparent; box-shadow: none; justify-content: flex-start; }
-`
-const expandedHeaderStyle: CssStyle = css`& { border-radius: 4px 4px 0 0; }`
 const actionStyle: CssStyle = css`
   & { width: 22px; min-width: 22px; height: 22px; padding: 2px; border: 0; background: transparent; box-shadow: none; }
 `
@@ -205,11 +180,11 @@ export function Inspector(props: InspectorProps) {
             & { position: absolute; left: 6px; top: 4px; width: 13px; height: 13px; object-fit: contain; pointer-events: none; }
           `}
         />
-        <TextControl
+        <TextField
           type="search"
           value={props.query}
           placeholder={props.searchPlaceholder}
-          aria-label={props.searchLabel ?? props.searchPlaceholder ?? "Search"}
+          title={props.searchLabel}
           style={searchStyle}
           onInput={onInput}
         />
@@ -240,99 +215,29 @@ export function Inspector(props: InspectorProps) {
         />)}
       </nav>
       <div role="region" aria-label="Inspector content" style={css`
-        & { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; background: var(--widget-number-background-readonly); }
+        & { display: flex; flex-direction: column; min-width: 0; min-height: 0; flex-grow: 1; background: var(--widget-number-background-readonly); }
       `}>
         {props.context === undefined ? null : <InspectorContextRowView context={props.context} secondary={false} />}
         {props.context?.secondary === undefined ? null : <InspectorContextRowView context={props.context.secondary} secondary={true} />}
-        {props.children}
+        <div data-inspector-panels="" style={css`
+          & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-height: 0; flex-grow: 1; gap: 2px; padding: 7px; overflow-y: auto; scrollbar-width: thin; background: var(--widget-number-background-readonly); }
+        `}>{props.children}</div>
       </div>
     </div>
   </aside>
 }
 
-export function InspectorSections(props: InspectorSectionsProps) {
-  return <div style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-height: 0; flex-grow: 1; gap: 2px; padding: 7px; overflow-y: auto; scrollbar-width: thin; background: var(--widget-number-background-readonly); }
-      ${props.style}
-    `}>{props.children}</div>
-}
-
-export function InspectorSection(props: InspectorSectionProps) {
-  const contentId = useId()
-  const onClick = (event: Event) => props.onToggle?.(props.id, !props.expanded, event)
-  return <section
-    data-section-id={props.id}
-    hidden={props.hidden === true}
-    style={css`
-        & { display: flex; flex-direction: column; width: 100%; overflow: clip; border-radius: 4px; background: var(--widget-regular-outline); }
-        &[hidden] { display: none; }
-        ${props.style}
-      `}
-  >
-    <header style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 26px; gap: 2px; background: var(--widget-regular-outline); }
-    `}>
-      <Button
-        label={props.label}
-        startIcon={props.expanded ? chevronDownIcon : chevronRightIcon}
-        iconSize={14}
-        title={props.title ?? props.label}
-        aria-expanded={String(props.expanded)}
-        aria-controls={contentId}
-        disabled={props.disabled === true}
-        style={css`${sectionHeaderStyle}${props.expanded && expandedHeaderStyle}`}
-        onClick={onClick}
-      />
-      <nav aria-label={`${props.label} actions`} style={css`
-        & { display: flex; flex-direction: row; align-items: center; gap: 2px; padding-right: 2px; }
-      `}>{(props.actions ?? []).map(action => <IconButton
-        key={action.id}
-        label={action.label}
-        iconSrc={action.iconSrc}
-        title={action.title ?? action.label}
-        disabled={action.disabled === true}
-        selected={action.selected}
-        iconSize={14}
-        style={actionStyle}
-        onClick={action.action}
-      />)}</nav>
-    </header>
-    <div id={contentId} hidden={!props.expanded} style={css`
-        & { box-sizing: border-box; display: block; width: 100%; padding: 6px; background: var(--widget-regular-outline); }
-        &[hidden] { display: none; }
-      `}>{props.children}</div>
-  </section>
-}
-
-function InspectorTextContent(props: Readonly<{content: string}>) {
-  return <span>{props.content}</span>
-}
-
-export function InspectorTextSection(props: InspectorTextSectionProps) {
-  return <InspectorSection
-    id={props.id}
-    label={props.label}
-    title={props.title}
-    expanded={props.expanded}
-    disabled={props.disabled}
-    hidden={props.hidden}
-    actions={props.actions}
-    style={props.style}
-    onToggle={props.onToggle}
-  ><InspectorTextContent content={props.content} /></InspectorSection>
-}
-
-export function isInspectorSectionVisible(
+export function isInspectorPanelVisible(
   categories: readonly InspectorCategory[],
   selectedCategoryId: string,
   query: string,
-  section: Readonly<{id: string; label: string}>
+  panel: Readonly<{id: string; label: string}>
 ): boolean {
   const selected = categories.find(category => category.id === selectedCategoryId)
-  const allowed = selected?.sectionIds === undefined ? null : new Set(selected.sectionIds)
-  const categoryVisible = selected !== undefined && (allowed === null || allowed.has(section.id))
+  const allowed = selected?.panelIds === undefined ? null : new Set(selected.panelIds)
+  const categoryVisible = selected !== undefined && (allowed === null || allowed.has(panel.id))
   const normalizedQuery = query.trim().toLocaleLowerCase()
-  return categoryVisible && (normalizedQuery.length === 0 || section.label.toLocaleLowerCase().includes(normalizedQuery))
+  return categoryVisible && (normalizedQuery.length === 0 || panel.label.toLocaleLowerCase().includes(normalizedQuery))
 }
 
 function assertInspectorProps(props: InspectorProps): void {

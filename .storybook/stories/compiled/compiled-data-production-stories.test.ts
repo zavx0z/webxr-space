@@ -1,89 +1,13 @@
 /** Package-owned external Storybook story support. */
 import {describe, expect, test} from "bun:test"
+import {Event, createDocument} from "@zavx0z/dom"
+import {uiIcons} from "@ui/components/icons"
 import {
-  Event,
-  createDocument,
-  getPopoverVisibilityState,
-  type HTMLButtonElement,
-  type HTMLElement
-} from "@zavx0z/dom"
-import {
-  createCompiledCollectionControlProductionStory,
-  createCompiledColorControlProductionStory,
   createCompiledListProductionStory,
   createCompiledTableProductionStory,
 } from "./compiled-data-production-stories.tsx"
-import {uiIcons} from "@ui/components/icons"
 
 describe("compiled data production stories", () => {
-  test("keeps ColorControl presentation in hook state", () => {
-    const document = createDocument()
-    const mounted = createCompiledColorControlProductionStory(document, {
-      value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
-      presentation: "closed",
-    })
-    const owner = mounted.story.element
-    document.appendChild(owner)
-    mounted.story.afterPresent?.()
-    const trigger = owner.querySelector("button") as HTMLButtonElement
-    trigger.click()
-    expect(mounted.story.element).toBe(owner)
-    expect(trigger.getAttribute("aria-expanded")).toBe("true")
-    expect(mounted.story.source.typescript).toContain("<ColorControl")
-    expect(mounted.story.source.typescript).toContain("useState")
-    expect(mounted.story.source.typescript).not.toContain("Css")
-    expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createColorControl(")
-    mounted.story.dispose()
-  })
-
-  test("materializes an initially open ColorControl only after presentation", () => {
-    const document = createDocument()
-    const mounted = createCompiledColorControlProductionStory(document, {
-      value: {r: 0.2, g: 0.55, b: 0.8, a: 1},
-      presentation: "open",
-    })
-    const owner = mounted.story.element
-    const trigger = owner.querySelector("button") as HTMLButtonElement
-    const editor = owner.querySelector('[aria-label="Color editor"]') as HTMLElement
-    expect(trigger.getAttribute("aria-expanded")).toBe("false")
-    expect(editor[getPopoverVisibilityState]()).toBe("hidden")
-
-    document.appendChild(owner)
-    mounted.story.afterPresent?.()
-    expect(mounted.story.element).toBe(owner)
-    expect(trigger.getAttribute("aria-expanded")).toBe("true")
-    expect(editor[getPopoverVisibilityState]()).toBe("showing")
-    mounted.story.dispose()
-  })
-
-  test("keeps CollectionControl selection and keyed rows", () => {
-    const mounted = createCompiledCollectionControlProductionStory(createDocument(), {
-      items: [
-        {id: "input", label: "Input", iconSrc: uiIcons.log},
-        {id: "output", label: "Output", iconSrc: uiIcons.run},
-        {id: "viewport", label: "Viewport", iconSrc: uiIcons.visibilityOn},
-      ],
-      selectedId: "output",
-    })
-    const owner = mounted.story.element
-    const output = owner.querySelector('[data-item-key="output"]')
-    const viewport = owner.querySelector('[data-item-key="viewport"]')!
-    viewport.dispatchEvent(new Event("click", {bubbles: true}))
-    expect(viewport.getAttribute("aria-selected")).toBe("true")
-    expect(owner.querySelector('[data-item-key="output"]')).toBe(output)
-    expect(output?.querySelector("img")?.getAttribute("src")).toBe(uiIcons.run)
-    expect([...owner.querySelectorAll("button")].find(button => button.title === "Add item")?.querySelector("img")?.getAttribute("src"))
-      .toBe(uiIcons.plus)
-    expect(mounted.story.source.typescript).toContain("uiIcons.run")
-    expect(mounted.story.source.typescript).toContain("<CollectionControl")
-    expect(mounted.story.source.typescript).toContain("useState")
-    expect(mounted.story.source.typescript).not.toContain("Css")
-    expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-    expect(mounted.story.source.typescript).not.toContain("createCollectionControl(")
-    mounted.story.dispose()
-  })
-
   test("keeps List and Table selection on retained keyed rows", () => {
     const document = createDocument()
     const list = createCompiledListProductionStory(document, {

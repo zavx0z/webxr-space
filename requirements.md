@@ -15,9 +15,9 @@ rectangular low-radius controls, плотные rows/groups, тонкие border
 rounded cards и увеличенные пустые интервалы запрещены без отдельного
 scope-specific owner decision и reference evidence.
 
-Один и тот же production Control используется standalone, внутри соответствующего
-specialized Field и у consumer-композиций. DOM migration не разрешает заменять production component
-частным Storybook sample, упрощать состав либо расходиться по visible
+Один production Field владеет как standalone редактором, так и его optional
+labelled presentation в consumer-композициях. DOM migration не разрешает
+заменять production component частным Storybook sample, упрощать состав либо расходиться по visible
 height/radius/border/gap/icon/text rhythm. Проверка нового или изменённого
 visible slice включает equal-scale comparison с точным 5.2 reference;
 typecheck, unit tests и non-black canvas не являются visual acceptance.
@@ -57,8 +57,8 @@ Production Components не импортируют runtime `uiTheme`,
 `resolveWidgetColors`, `rgba8ToColor` или `widgetCssVariables`. TypeScript
 `@ui/components/theme` отсутствует. Переход не схлопывает разные widget roles
 в один generic hover law и не меняет exact owner pixels/states. Standalone
-filled control сохраняет один logical-pixel widget emboss; joined
-`ControlGroup` владеет одним outer contour и не создаёт emboss islands на
+filled Field сохраняет один logical-pixel widget emboss; joined
+`FieldGroup` владеет одним outer contour и не создаёт emboss islands на
 middle cells. Exact visual owner хранит собственный radius, если роль ещё не
 принята как общая foundation metric.
 
@@ -69,39 +69,27 @@ Document renderer исполняет native pseudo-state cascade. Production Com
 
 ## Public boundary
 
-Пакет публикует ровно 44 exact production subpaths:
+Пакет публикует ровно 32 exact production subpath:
 
 - `@ui/components/button`
 - `@ui/components/pane`
+- `@ui/components/panel`
 - `@ui/components/badge`
 - `@ui/components/typography`
-- `@ui/components/controls/checkbox`
-- `@ui/components/controls/collection-control`
-- `@ui/components/controls/color-control`
-- `@ui/components/controls/control-group`
-- `@ui/components/controls/enum-control`
-- `@ui/components/controls/integer-control`
-- `@ui/components/controls/matrix-control`
-- `@ui/components/controls/number-control`
-- `@ui/components/controls/path-control`
-- `@ui/components/controls/progress-checkbox`
-- `@ui/components/controls/reference-control`
-- `@ui/components/controls/readonly-control`
-- `@ui/components/controls/slider-control`
-- `@ui/components/controls/switcher`
-- `@ui/components/controls/text-control`
-- `@ui/components/controls/vector-control`
-- `@ui/components/fields/boolean-field`
+- `@ui/components/fields/checkbox-field`
 - `@ui/components/fields/collection-field`
 - `@ui/components/fields/color-field`
-- `@ui/components/fields/enum-field`
-- `@ui/components/fields/integer-field`
+- `@ui/components/fields/color-picker-field`
+- `@ui/components/fields/cycle-field`
+- `@ui/components/fields/field-group`
 - `@ui/components/fields/matrix-field`
 - `@ui/components/fields/number-field`
+- `@ui/components/fields/option-group-field`
 - `@ui/components/fields/path-field`
-- `@ui/components/fields/readonly-field`
 - `@ui/components/fields/reference-field`
-- `@ui/components/fields/rotation-field`
+- `@ui/components/fields/select-field`
+- `@ui/components/fields/slider-field`
+- `@ui/components/fields/switch-field`
 - `@ui/components/fields/text-field`
 - `@ui/components/fields/vector-field`
 - `@ui/components/divider`
@@ -148,15 +136,20 @@ Visible TSX, DOM composition и governed ``style={css`...`}`` не перено�
 слой. Существующие flat internal modules переносятся под `src/` вместе с
 изменением их настоящего owner, а не отдельной механической перестановкой.
 
-Общий minified browser proof всех финальных owners должен содержать ноль
+Общий minified browser runtime proof всех 29 public TSX subpaths и всех 32
+экспортированных Component factories должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
-150 kB / 35 kB gzip при external DOM, highlighter, React-shaped runtime и
+131.5 kB / 31.75 kB gzip при external DOM, highlighter, React-shaped runtime и
 Template ABI.
-Этот ceiling включает `UI-COMPILED-ICONS-001` с keyboard-operable icon cycle;
-предыдущий 130/32 gate относился к 31-subpath surface. Прямое owner-решение
-разделить API на 16 Controls и 13 specialized Fields расширило пакет до 44
-exact exports; 150/35 является measured acceptance этого exact surface, а не
-общим запасом для других owners.
+Этот measured ceiling включает named production icons из
+`UI-COMPILED-ICONS-001` и native popover Fields, но не выдаётся за bundle
+всех 32 package exports. Три non-TSX owner доказываются отдельно:
+`icons.spec.ts` проверяет exact public aggregate и named asset identity,
+`syntax-theme.spec.ts` — полный source-backed data artifact и runtime
+projection, `theme.spec.ts` — exact linked CSS resource. Exact runtime
+cutover bundle измерен как 130251 bytes / 31322 bytes gzip; 131500/31750
+оставляет малый проверяемый запас этого exact runtime surface, а не общий
+резерв для data/resource owners или будущих компонентов.
 
 ## DOM ownership
 
@@ -214,7 +207,7 @@ the document renderer instead of a `data-ui-state` bridge. Новые owners н�
 `defineStyles`: exact CSS объявляется `css\`\`` непосредственно у intrinsic
 owner и переносится Template compiler в compiled metadata.
 
-## Controls and events
+## Fields and events
 
 Input, textarea, select, button, progress, meter и image используют standard
 DOM properties and events. Controlled component публикует proposed value через
@@ -232,17 +225,19 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 
 - `button`, `pane`, `badge`, `typography` и `divider` владеют neutral
   foundation compositions и Blender-compatible CSS states.
-- `text-control`, `readonly-control`, `checkbox`, `switcher`, `number-control`, `integer-control`,
-  `slider-control` и `progress-checkbox` владеют standard live control
-  properties и interaction semantics.
-- `control-group`, `vector-control` и `matrix-control` владеют keyed joined cells с
-  одним outer contour.
-- `enum-control`, `reference-control`, `collection-control`, `path-control` и
-  `color-control` остаются самостоятельными production controls.
-- `text-field`, `number-field`, `integer-field`, `boolean-field`, `enum-field`,
-  `color-field`, `vector-field`, `rotation-field`, `matrix-field`,
-  `reference-field`, `collection-field`, `path-field` и `readonly-field`
-  владеют подписанными строками и напрямую композируют соответствующие Controls.
+- `text-field`, `number-field`, `slider-field`, `checkbox-field` и
+  `switch-field` владеют exact standard live interaction mechanism и
+  optional label presentation без второго Control owner.
+- `select-field`, `cycle-field` и `option-group-field` являются тремя
+  разными choice interaction mechanisms; ни один из них не выбирает
+  другой по variant или содержимом options.
+- `color-field` владеет trigger/popover lifecycle и композирует
+  `color-picker-field`, который владеет in-flow color editing.
+- `field-group`, `vector-field` и `matrix-field` владеют keyed joined cells с
+  одним outer contour; vector/matrix не кодируют integer или rotation
+  semantics.
+- `reference-field`, `collection-field` и `path-field` остаются
+  самостоятельными joined production Fields.
 - `list` и `table` владеют semantic keyed collections и сохраняют descendant
   identities при reorder.
 - `status-bar` владеет passive 24px lower-chrome status line, а
@@ -282,20 +277,20 @@ exact значения без второй копии.
 `Inspector` сохраняет category/context/action icons, toolbar actions, search
 glyph и disclosure chevrons; отсутствие optional category icon оставляет
 текстовый fallback. `ListItem.iconSrc` владеет стабильным image slot, который
-сохраняет identity при keyed reorder; `CollectionControl` прокидывает item icons
+сохраняет identity при keyed reorder; `CollectionField` прокидывает item icons
 и использует exact plus/minus `IconButton`. `HudWindow` использует icon-only
-minimize/restore и optional action icons. `ReferenceControl` сохраняет resource,
+minimize/restore и optional action icons. `ReferenceField` сохраняет resource,
 picker и close glyphs; dismiss/close никогда не подменяется trash/clear glyph.
 
 Нативный `select > option` не умеет отображать arbitrary image URL. Поэтому
-iconless `EnumControl` cycle остаётся standard `select`, а cycle с `iconSrc`
-композирует same-Document Button + `popover="auto"` List и materializes
-реальные `<img>` для trigger и option rows. Component-specific Renderer parsing
-`data-icon-src` запрещён. Popup options сохраняют `EnumControlOption.key`, roving
+`SelectField` остаётся standard `select`, а icon-capable `CycleField` композирует
+same-Document Button + `popover="auto"` List и materializes реальные `<img>` для
+trigger и option rows. Component-specific Renderer parsing `data-icon-src` запрещён.
+Popup options сохраняют `CycleFieldOption.key`, roving
 focus по Arrow Up/Down и activation по Enter/Space; `aria-controls` указывает
 на exact `role="listbox"`. Initial controlled open materializes только после
-same-Document connection. Expanded presentation продолжает использовать те же
-Button image slots.
+same-Document connection. `OptionGroupField` использует те же Button image slots,
+но не является presentation `SelectField` или `CycleField`.
 
 ## `UI-COMPILED-BUTTON-001` — first final component owner
 
@@ -330,24 +325,26 @@ variant rules остаются conditional compiled chunks и не создаю�
 environment без необходимости. Components не создают instance-specific CSS
 rules и не заменяют native pseudo states JavaScript-ом.
 
-## `UI-COMPILED-TEXT-CONTROL-001` — controlled native text owner
+## `UI-COMPILED-TEXT-FIELD-001` — controlled native text owner
 
-`@ui/components/controls/text-control` exports TSX `TextControl(props)` over one exact
+`@ui/components/fields/text-field` exports TSX `TextField(props)` over one exact
 `HTMLInputElement`. Its `value` is a live controlled property; `input` and
 `change` callbacks read the proposed value from the standard Event target and
 never fabricate another event or buffer. Updates preserve the input identity.
 Owner geometry is the compact 160×22 regression contour with 11px text, thin
-border and low radius. `readOnly` is a conditional owner token, interaction
-uses native pseudos, and caller `style` remains the only public override.
+border and low radius when `label` is absent. An optional label adds the accepted
+28px row without changing input identity. `readOnly` is a conditional owner
+state, interaction uses native pseudos, and caller `style` remains the only
+public override.
 
-The production Storybook TextControl route composes `TextControl` inside a small
+The production Storybook TextField route composes `TextField` inside a small
 hook component using `useState`. Its HTML source does not fabricate a `value`
 content attribute for live state; executable TypeScript carries the current
 value instead.
 
-## `UI-COMPILED-NUMBER-CONTROL-001` — continuous scalar interaction owner
+## `UI-COMPILED-NUMBER-FIELD-001` — continuous scalar interaction owner
 
-`@ui/components/controls/number-control` exports controlled TSX `NumberControl(props)` as
+`@ui/components/fields/number-field` exports controlled TSX `NumberField(props)` as
 one 120×22 standard Number input and continuous scalar contour. The control has
 no visible decrement/increment buttons. Source-compatible left/right edge
 zones remain invisible step affordances; the center remains the same exact
@@ -370,20 +367,19 @@ DOM/Renderer owner. Native `input`/`change` remain standard bubbling events.
 The component stores only transient gesture/edit refs and never owns a second
 value Store. The Storybook route wraps this exact owner with `useState`.
 
-`IntegerControl` is not a second numeric implementation: its TSX component
-returns `NumberControl`, supplies integer step/value semantics and rounds every
-proposal before forwarding it. The composed component identities remain
-visible in runtime evidence.
+Integer/float validation is data-owner semantics: Components exposes no
+`IntegerField`, `numberKind` or rounding branch.
 
 ## `UI-COMPILED-COMPOSITION-001` — nested owners, not copied markup
 
-Final compound controls reuse final components as compiled component calls.
-`ControlGroup` owns keyed cells and composes one `TextControl` per cell;
-`VectorControl` returns `ControlGroup`; `MatrixControl` owns keyed rows of keyed
-`ControlGroup` cells. `ProgressCheckbox` returns `Checkbox`. `PathControl`
-composes `TextControl` and `IconButton`; `ReferenceControl` composes `Button` and
-two `IconButton` actions. `ColorControl` composes `Button`, `TextControl` and
-`SliderControl`. `CollectionControl` composes `List` and `Button` actions.
+Final compound Fields reuse final Components as compiled component calls.
+`FieldGroup` owns authored keyed children; `VectorField` and `MatrixField`
+compose its joined contour. `PathField` composes `TextField` and `IconButton`;
+`ReferenceField` composes `Button` and two `IconButton` actions. `ColorField`
+composes `ColorPickerField`; the picker composes `TextField` and `SliderField`.
+`CollectionField` composes `List` and `Button` actions. `CheckboxField` owns
+checked and indeterminate state directly; a `ProgressCheckbox` alias does not
+exist.
 
 These are runtime-visible component boundaries with independent hook slots and
 stable semantic element identities, not source-only helpers or copied DOM.
@@ -391,27 +387,26 @@ Keyed reorder preserves both the parent component instance and every retained
 nested component/element. Joined owners suppress nested contour shadows and
 radii through owner tokens while keeping exactly one caller-facing `style`.
 
-## `UI-COMPILED-COLOR-CONTROL-001` — controlled color semantics and presentation
+## `UI-COMPILED-COLOR-FIELDS-001` — controlled color semantics and lifecycle
 
-`ColorControl` keeps immutable RGBA as its public controlled value, projects
+`ColorPickerField` keeps immutable RGBA as its public controlled value, projects
 editable HSVA rows, parses and formats exact six/eight-digit hex, and renders
-alpha over a semantic DOM checker. `closed`, `open` and `expanded` remain
-distinct controlled presentations. `open` uses one standard same-Document
-`popover="auto"` editor and `showPopover({source})` with the exact production
-Button trigger. Renderer therefore owns source anchoring below the trigger,
-viewport flip/clamp, top-layer clipping and hit order; DOM owns light dismiss,
-Escape and focus restoration. Opening never changes the fieldset's normal-flow
-height. A native `toggle` close proposes `onOpenChange(false, event)` so the
-caller-controlled presentation stays synchronized. Initial `open` mounts are
-materialized only after the editor and trigger are connected.
+alpha over a semantic DOM checker. It is an in-flow editor and has no popover
+state. `ColorField` owns the separate trigger/open lifecycle and mounts the exact
+picker inside one standard same-Document `popover="auto"` using
+`showPopover({source})`. Renderer owns source anchoring, viewport flip/clamp,
+top-layer clipping and hit order; DOM owns light dismiss, Escape and focus
+restoration. Opening never changes the Field's normal-flow height. A native
+`toggle` close proposes `onOpenChange(false, event)` so caller-controlled state
+stays synchronized. Initial open mounts materialize only after editor and trigger
+are connected.
 
-`expanded` is the explicit in-flow editor presentation and does not carry a
-popover state. This owner remains partial only for the reference-compatible
+The picker remains partial only for the reference-compatible
 hue/saturation wheel and value-plane/marker dragging. Components must not add a
 private picker-plane renderer, manual viewport placement, pointer dispatcher,
 Canvas/WebGPU path or hardcoded story-only wheel. Hex/HSVA/checker and standard
 Popover tests prove the completed semantic and placement slice only; they do
-not satisfy final ColorControl visual acceptance without equal-scale reference
+not satisfy final Color Field visual acceptance without equal-scale reference
 evidence and an explicit owner verdict.
 
 ## `UI-COMPILED-COLLECTIONS-001` — keyed List and Table
@@ -420,7 +415,7 @@ evidence and an explicit owner verdict.
 columns, rows and the cells within every row. Reordering either axis performs
 minimal retained placements and never calls `replaceChildren()` for the final
 path. Selection and disabled state are semantic ARIA plus owner tokens; hover
-is a native pseudo. `CollectionControl` consumes the same `List` owner rather
+is a native pseudo. `CollectionField` consumes the same `List` owner rather
 than maintaining a second list implementation and preserves the historical
 1–8 visible-row height table.
 
@@ -431,22 +426,21 @@ or row state disables both cell and row activation. Cells accept primitive or
 structured values through the owner formatter instead of narrowing the data
 contract to strings.
 
-## `UI-COMPILED-FIELDS-001` — direct specialized Field owners
+## `UI-COMPILED-FIELDS-001` — one owner per interaction mechanism
 
-Каждый semantic вид подписанной строки имеет свой exact owner с direct props:
-`TextField`, `NumberField`, `IntegerField`, `BooleanField`, `EnumField`,
-`ColorField`, `VectorField`, `RotationField`, `MatrixField`, `ReferenceField`,
-`CollectionField`, `PathField` и `ReadonlyField`. Props передаются напрямую как
-`id`, `label`, `value` и принадлежащие этому виду options/callbacks; публичных
-`Field`, `FieldDefinition`, `FIELD_KINDS`, `definition={{...}}`, root barrel и
-generic dispatcher в Components нет.
+Смысл данных, способ взаимодействия и текущее состояние
+классифицируются независимо. Новая абстракция вводится только
+при наличии собственных инвариантов, поведения или lifecycle. Различия в
+названии, оформлении, конфигурации, ограничениях или состоянии не
+являются основанием для второго owner. Связь между смыслом и
+представлением задаётся композицией, не смешением их контрактов.
 
-Каждый Field владеет своей стабильной 28px строкой, label и control area с
-`role="group"` плюс `aria-labelledby`, а редактирование делегирует exact
-production Control. `NumberField` выбирает только собственные `control` и
-`slider` presentations; `BooleanField` — `checkbox` и `switch` presentations.
-Динамическая схема и выбор одного из специализированных Fields принадлежат
-consumer-у этой схемы, а не универсальному UI component.
+Каждый Field объявляет свои exact props без `BaseFieldProps`, `FieldKind`, root
+barrel и generic dispatcher. `label` optional и не меняет interaction mechanism:
+без label владелец сохраняет standalone contour, с label — подписанную
+28px row. `readOnly` существует там, где запрет mutation и доступное
+немутирующее взаимодействие имеют разный смысл; он не подменяется
+`disabled` и не создаёт `ReadonlyField`.
 
 ## `UI-COMPILED-CODE-EDITOR-001` — keyed semantic source projection
 
@@ -463,22 +457,34 @@ The public contract remains `readOnly: true`. It exposes no clipboard,
 selection Store, editor mutation protocol, className or `sx`; those would be
 separate standard DOM capabilities rather than hidden component state.
 
-## `UI-COMPILED-INSPECTOR-001` — authored section composition
+## `UI-COMPILED-PANEL-001` — Blender-like disclosure Panel
 
-`Inspector` owns the exact toolbar, search, category rail, context and content
-regions. `InspectorSections` receives a compiler-owned keyed children
-collection; each `InspectorSection` receives one direct authored component
-child. A product can therefore place an actual specialized Field, node panel or
-other owner in a section without passing raw DOM Nodes or constructing a
-parallel section tree. `InspectorTextSection` is only the primitive-text
-composition of the same `InspectorSection`, not a second section owner.
+`@ui/components/panel` exports the one neutral `Panel` owner for a collapsible
+header/body composition. `PanelProps` has no required domain id: `label`,
+controlled `expanded`, optional native `hidden`, keyed `actions`,
+authored `children`, caller `style` and `onToggle(expanded, event)` are its exact
+contract. The header is always present, the body is hidden only by the controlled
+state, and header/action/body identities survive updates. `PanelAction` describes
+only a header action; product delivery and commands remain caller-owned.
 
-Category and section reorder preserve their nested component identities.
+`Panel` is not a Tree item. Catalog navigation retains its independent tree
+hierarchy, selection, focus, keyboard traversal and windowing owner even though
+both presentations use a disclosure chevron. `Pane` remains a non-collapsible
+visual area and is not an alias for `Panel`.
+
+## `UI-COMPILED-INSPECTOR-001` — authored Panel composition
+
+`Inspector` owns the exact toolbar, search, category rail, context and scrolling
+content stack. Its direct compiler-owned keyed `children` array contains authored
+`Panel` instances or another accepted owner; there is no public
+`InspectorSections`, `InspectorSection` or `InspectorTextSection` layer.
+
+Category and Panel reorder preserve their nested component identities.
 Selection/query/expanded state remains controlled in the caller, standard
-input/click events carry proposals, and `isInspectorSectionVisible` is a pure
-projection used by the container. Search composes `TextControl`; category and
-section headers compose `Button`. Geometry remains the compact 30px rail,
-115×22 search and 26px section header contour.
+input/click events carry proposals, and `isInspectorPanelVisible` is a pure
+projection over `InspectorCategory.panelIds`. Search composes an unlabelled
+`TextField`; Panel headers compose `Button`. Geometry remains the compact 30px
+rail, 115×22 search, 7px scrolling stack padding and 26px Panel header contour.
 
 ## `UI-COMPILED-HUD-001` — Window, Frame and Timeline compositions
 
@@ -521,25 +527,25 @@ range or keyed component collection—not a virtual element tree. The explicit
 primitive `content` binding remains for text-only call sites; supplying both is
 an error. No imperative compatibility controller exists beside the TSX owner.
 
-## `UI-COMPILED-RESOURCE-CONTROLS-001` — joined resource controls
+## `UI-COMPILED-RESOURCE-FIELDS-001` — joined resource Fields
 
-`PathControl` and `ReferenceControl` are controlled class-free TSX compositions
-with one public `style` applied after owner defaults. `PathControl` composes the
-exact production `TextControl` and folder `IconButton`; `ReferenceControl` composes
+`PathField` and `ReferenceField` are controlled class-free TSX compositions
+with one public `style` applied after owner defaults. `PathField` composes the
+exact production `TextField` and folder `IconButton`; `ReferenceField` composes
 one value `Button` with picker and clear `IconButton` actions. Their standard
 input/change/click events report proposed owner intent and never create a
 second value Store or fabricate browser events. Missing actions stay mounted
 and hidden so later updates preserve their Button and image identities.
 
-Each composition owns one joined outer contour. Nested TextControl/Button cells
+Each composition owns one joined outer contour. Nested TextField/Button cells
 have zero radius and no shadow, so no emboss islands appear between them;
 native `:hover`, `:active`, `:focus` and `:disabled` behavior continues through
-the already-owned controls and resource-specific cell tokens.
+the already-owned Fields and resource-specific cell tokens.
 The exact regression geometry remains 320×28 regular / 220×24 compact for
-PathControl and 260×28 regular / 190×24 compact for ReferenceControl, with 26px
+PathField and 260×28 regular / 190×24 compact for ReferenceField, with 26px
 regular and 22px compact inner cells.
 
-`PathControlProps` and `ReferenceControlProps` expose `style`, never `className`;
+`PathFieldProps` and `ReferenceFieldProps` expose `style`, never `className`;
 imperative compatibility adapters are absent.
 
 ## Dependency boundary

@@ -2,12 +2,13 @@
 import {Badge, type BadgeProps} from "@ui/components/badge"
 import {Divider, type DividerProps} from "@ui/components/divider"
 import {Pane, type PaneProps} from "@ui/components/pane"
+import {Panel} from "@ui/components/panel"
 import {
   Typography,
   type TypographyProps
 } from "@ui/components/typography"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
-import {createRoot} from "@zavx0z/react"
+import {createRoot, useState} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
 export function createCompiledPaneProductionStory(
@@ -15,6 +16,26 @@ export function createCompiledPaneProductionStory(
   props: PaneProps
 ): RoutedProductionComponentStory {
   return mountCompiledStory(document, Pane, props, "pane", paneSource(props))
+}
+
+export type PanelStoryProps = Readonly<{label: string; expanded: boolean}>
+
+function PanelStoryContent() {
+  return <span>Panel content</span>
+}
+
+function PanelStoryComponent(props: PanelStoryProps) {
+  const [expanded, setExpanded] = useState(props.expanded)
+  return <Panel label={props.label} expanded={expanded} onToggle={setExpanded}>
+    <PanelStoryContent />
+  </Panel>
+}
+
+export function createCompiledPanelProductionStory(
+  document: Document,
+  props: PanelStoryProps
+): RoutedProductionComponentStory {
+  return mountCompiledStory(document, PanelStoryComponent, props, "panel", panelSource(props))
 }
 
 export function createCompiledBadgeProductionStory(
@@ -92,6 +113,22 @@ function paneSource(props: PaneProps): string {
       "  active={props.active}"
     ]
   )
+}
+
+function panelSource(props: PanelStoryProps): string {
+  return [
+    'import {Panel} from "@ui/components/panel"',
+    'import {createRoot, useState} from "@zavx0z/react"',
+    "",
+    `const initial = ${literal(props)} as const`,
+    "function Story() {",
+    "  const [expanded, setExpanded] = useState(initial.expanded)",
+    "  return <Panel label={initial.label} expanded={expanded} onToggle={setExpanded}>",
+    "    <span>Panel content</span>",
+    "  </Panel>",
+    "}",
+    "createRoot(container).render(<Story />)"
+  ].join("\n")
 }
 
 function badgeSource(props: BadgeProps): string {

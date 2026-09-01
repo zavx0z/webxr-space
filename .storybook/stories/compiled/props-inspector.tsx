@@ -1,14 +1,9 @@
 /** Package-owned external Storybook story support. */
-import {BooleanField} from "@ui/components/fields/boolean-field"
-import {IntegerField} from "@ui/components/fields/integer-field"
+import {CheckboxField} from "@ui/components/fields/checkbox-field"
 import {NumberField} from "@ui/components/fields/number-field"
-import {ReadonlyField} from "@ui/components/fields/readonly-field"
 import {TextField} from "@ui/components/fields/text-field"
-import {
-  Inspector,
-  InspectorSection,
-  InspectorSections,
-} from "@ui/components/inspector"
+import {Inspector} from "@ui/components/inspector"
+import {Panel} from "@ui/components/panel"
 import type {Document, HTMLElement} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
 import {PROPS_INSPECTOR_COPY} from "./props-inspector-copy.ts"
@@ -23,7 +18,7 @@ export type StoryPropsInspector = Readonly<{
 
 /** Storybook-private descriptor for the bounded props projection. */
 export type StoryPropsFieldDescriptor =
-  | Readonly<{kind: "boolean"; id: string; label: string; value: boolean; readOnly: true; presentation: "checkbox"}>
+  | Readonly<{kind: "boolean"; id: string; label: string; value: boolean; readOnly: true}>
   | Readonly<{kind: "integer"; id: string; label: string; value: number; readOnly: true}>
   | Readonly<{kind: "number"; id: string; label: string; value: number; readOnly: true}>
   | Readonly<{kind: "text"; id: string; label: string; value: string; readOnly: true}>
@@ -38,7 +33,7 @@ export type StoryPropsFieldsProps = Readonly<{
   fields: readonly StoryPropsFieldDescriptor[]
 }>
 
-const inspectorSections = Object.freeze([{id: "props"}] as const)
+const inspectorPanels = Object.freeze([{id: "props"}] as const)
 
 export function StoryPropsFields(props: StoryPropsFieldsProps) {
   return <div>{props.fields.map(field =>
@@ -51,35 +46,31 @@ function StoryPropsField(props: Readonly<{field: StoryPropsFieldDescriptor}>) {
   return <div data-storybook-prop-field={field.id} style={css`
     & { box-sizing: border-box; display: flex; flex-direction: column; width: 100%; min-width: 0; }
   `}>
-    {field.kind === "boolean" ? <BooleanField
-      id={field.id}
+    {field.kind === "boolean" ? <CheckboxField
       label={field.label}
-      value={field.value}
+      checked={field.value}
       readOnly={field.readOnly}
-      presentation={field.presentation}
     /> : null}
-    {field.kind === "integer" ? <IntegerField
-      id={field.id}
+    {field.kind === "integer" ? <NumberField
       label={field.label}
       value={field.value}
       readOnly={field.readOnly}
+      step={1}
     /> : null}
     {field.kind === "number" ? <NumberField
-      id={field.id}
       label={field.label}
       value={field.value}
       readOnly={field.readOnly}
     /> : null}
     {field.kind === "text" ? <TextField
-      id={field.id}
       label={field.label}
       value={field.value}
       readOnly={field.readOnly}
     /> : null}
-    {field.kind === "readonly" ? <ReadonlyField
-      id={field.id}
+    {field.kind === "readonly" ? <TextField
       label={field.label}
       value={field.value}
+      readOnly={true}
     /> : null}
   </div>
 }
@@ -97,25 +88,22 @@ function PropsInspectorView(props: PropsInspectorViewProps) {
   return <Inspector
     ariaLabel={PROPS_INSPECTOR_COPY.ariaLabel}
     categoriesLabel={PROPS_INSPECTOR_COPY.categoriesLabel}
-    categories={[{id: "props", label: "P", title: PROPS_INSPECTOR_COPY.categoryTitle, sectionIds: ["props"]}]}
+    categories={[{id: "props", label: "P", title: PROPS_INSPECTOR_COPY.categoryTitle, panelIds: ["props"]}]}
     selectedCategoryId="props"
     query={query}
     searchLabel={PROPS_INSPECTOR_COPY.searchLabel}
     searchPlaceholder={PROPS_INSPECTOR_COPY.searchLabel}
     context={props.context}
     onQueryChange={setQuery}
-  >
-    <InspectorSections>{inspectorSections.map(section => <InspectorSection
-      key={section.id}
-      id={section.id}
-      label={PROPS_INSPECTOR_COPY.sectionLabel}
-      title={PROPS_INSPECTOR_COPY.sectionTitle}
+  >{inspectorPanels.map(panel => <Panel
+      key={panel.id}
+      label={PROPS_INSPECTOR_COPY.panelLabel}
+      title={PROPS_INSPECTOR_COPY.panelTitle}
       expanded={expanded}
-      onToggle={(_id, next) => setExpanded(next)}
+      onToggle={setExpanded}
     >
       <StoryPropsFields fields={fields} />
-    </InspectorSection>)}</InspectorSections>
-  </Inspector>
+    </Panel>)}</Inspector>
 }
 
 export function createStoryPropsInspector(
@@ -169,7 +157,7 @@ function fieldFromProp(key: string, value: unknown): StoryPropsFieldDescriptor {
     label: key,
   })
   if (typeof value === "boolean") {
-    return Object.freeze({...base, kind: "boolean", value, readOnly: true, presentation: "checkbox"})
+    return Object.freeze({...base, kind: "boolean", value, readOnly: true})
   }
   if (typeof value === "number" && Number.isFinite(value)) {
     return Number.isInteger(value)

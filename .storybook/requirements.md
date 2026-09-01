@@ -37,17 +37,23 @@ exports, structural `storybook-runtime/3` adapter, linked production
    mappings, а `.storybook/catalog.json` содержит их canonical current
    destinations и добавляет current routes только для public TSX factory без
    подходящего historical leaf. Historical `from` routes остаются неизменными,
-   даже когда current production taxonomy разделяет прежний `Ввод` на
-   `Контролы` и `Поля`. Many-to-one допустим только для доказанного
-   дубликата одного current owner: historical
-   `components/inputs/field/integer/input` и
-   `components/inputs/integer-input/basic/labeled` оба ведут в единственный
-   `components/fields/integer-field/basic/default`; отдельный current
-   `basic/labeled` запрещён. Остальные 91
+   даже когда current production taxonomy сводит прежние `Ввод`, `Контролы` и
+   specialized wrappers в одну категорию `Поля`. Many-to-one допустим только
+   для доказанных состояний одного current interaction owner: historical text,
+   number, rotation и read-only routes ведут к конкретному Field, который
+   теперь владеет этим поведением. Active historical integer routes сохраняют
+   discrete interaction через neutral `NumberField` configuration
+   `components/fields/number-field/step/one` с `step: 1`; это variant
+   существующего owner, а не `IntegerField`. Разные механизмы остаются разными
+   subjects: `NumberField` и `SliderField`, `SelectField`, `CycleField` и
+   `OptionGroupField`, `ColorField` и `ColorPickerField`. Остальные 91
    legacy DOM/Elements leaves принадлежат `@zavx0z/dom` в Renderer. Source-derived
    guard требует один direct `kind: component` category/subject на каждый exported
    PascalCase TSX factory; legacy routes без production export не выдаются за
-   components.
+   components. Три более новых same-package Inspector section leaves такж
+   сохранены как exact aliases: section stack ведёт в `Inspector`, а оба
+   section owners — в нейтральный `Panel`. Исходные 176/215 baseline routes
+   остаются неизменным ordered subset remap.
 2. `.storybook/route-remap.json` сохраняет ordered baseline 176 leaves и 215
    overview states. Promoted `Button` является primary component category;
    `basic / icon / icon-label / sizes / color` являются exact secondary subject
@@ -149,27 +155,30 @@ production owner stylesheet.
    imported `*Css` production control запрещены.
 2. Standard DOM interface/element routes остаются прямыми platform proofs:
    они документируют `@zavx0z/dom` и не фабрикуют отсутствующий Component.
-3. Каталог содержит две отдельные primary-категории `Контролы` и `Поля`.
-   `Контролы` публикуют `ControlGroup`, `TextControl`, `NumberControl`,
-   `IntegerControl`, `ColorControl`, `VectorControl`, `MatrixControl`,
-   `ReferenceControl`, `EnumControl`, `CollectionControl`, `PathControl`,
-   `Checkbox`, `Switcher`, `ProgressCheckbox`, `SliderControl` и
-   current-only `ReadonlyControl`. Для `ReadonlyControl` нет fabricated
-   historical `from`: его canonical leaf —
-   `components/controls/readonly-control/basic/default`.
-   `Поля` публикуют concrete `TextField`, `NumberField`, `IntegerField`,
-   `BooleanField`, `EnumField`, `ColorField`, `VectorField`,
-   `RotationField`, `MatrixField`, `ReferenceField`, `CollectionField`,
-   `PathField` и `ReadonlyField`. Public generic `Field`, общий
-   `FieldDefinition`, subject `field` и route `components/inputs`
-   запрещены. Inspector, CodeEditor и HUD продолжают использовать действующие
-   production factories. Button, IconButton, Pane, Badge, Typography, Divider,
+3. Каталог содержит одну primary-категорию `Поля` с ровно 16 concrete
+   subjects: `FieldGroup`, `TextField`, `NumberField`, `SliderField`,
+   `CheckboxField`, `SwitchField`, `SelectField`, `CycleField`,
+   `OptionGroupField`, `ColorField`, `ColorPickerField`, `VectorField`,
+   `MatrixField`, `ReferenceField`, `PathField` и `CollectionField`,
+   образующих 40 exact Field leaves внутри 73 exact current catalog leaves.
+   Visible label является optional state того же owner, а не вторым
+   Control/Field story. `Integer`, `Boolean`, `Enum`, `Rotation` и `Readonly`
+   не являются отдельными interaction owners; `ProgressCheckbox` представлен
+   состоянием `indeterminate` у `CheckboxField`. Public generic `Field`,
+   категория/namespace Controls, общий `FieldDefinition`, subject `field` и
+   current route `components/inputs` запрещены. Inspector, CodeEditor и HUD
+   продолжают использовать действующие
+   production factories. `Panel` является единственным subject с human-facing
+   label `Панель`; non-collapsible `Pane` назван `Область` и не является
+   alias. `Inspector` композирует direct keyed `Panel` children; отдельные
+   `InspectorSections`, `InspectorSection` и `InspectorTextSection` subjects отсутствуют.
+   Button, IconButton, Pane, Panel, Badge, Typography, Divider,
    List, Table, StatusBar и Notification получают собственные
    production owners до visual acceptance соответствующих routes.
 4. Adapter может хранить Storybook args, controls, events и source
    serialization, но не копирует DOM composition, interaction state machine,
    CSS либо visual defaults production owner.
-5. `ColorControl` story с начальным `presentation: "open"` не вызывает Popover
+5. `ColorField` story с начальным `open: true` не вызывает Popover
    API на detached staging tree. UI runtime синхронно вставляет exact story node
    через `context.present()`, после чего один package-owned `afterPresent`
    lifecycle rerender переводит тот же retained production owner из закрытого

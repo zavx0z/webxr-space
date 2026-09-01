@@ -1,64 +1,107 @@
 /** Package-owned external Storybook story support. */
-import {BooleanField, type BooleanFieldProps} from "@ui/components/fields/boolean-field"
-import {CollectionField, type CollectionFieldProps} from "@ui/components/fields/collection-field"
-import {ColorField, type ColorFieldProps, type ColorFieldValue} from "@ui/components/fields/color-field"
-import {EnumField, type EnumFieldProps} from "@ui/components/fields/enum-field"
-import {IntegerField, type IntegerFieldProps} from "@ui/components/fields/integer-field"
-import {MatrixField, type MatrixFieldProps} from "@ui/components/fields/matrix-field"
-import {NumberField, type NumberFieldProps} from "@ui/components/fields/number-field"
-import {PathField, type PathFieldProps} from "@ui/components/fields/path-field"
-import {ReadonlyField, type ReadonlyFieldProps} from "@ui/components/fields/readonly-field"
-import {ReferenceField, type ReferenceFieldProps} from "@ui/components/fields/reference-field"
-import {RotationField, type RotationFieldProps} from "@ui/components/fields/rotation-field"
-import {TextField, type TextFieldProps} from "@ui/components/fields/text-field"
-import {VectorField, type VectorFieldProps} from "@ui/components/fields/vector-field"
-import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
-import {createRoot, useState} from "@zavx0z/react"
+import {CheckboxField} from "@ui/components/fields/checkbox-field"
+import {CollectionField} from "@ui/components/fields/collection-field"
+import {ColorField} from "@ui/components/fields/color-field"
+import {ColorPickerField} from "@ui/components/fields/color-picker-field"
+import {CycleField} from "@ui/components/fields/cycle-field"
+import {FieldGroup} from "@ui/components/fields/field-group"
+import {MatrixField} from "@ui/components/fields/matrix-field"
+import {NumberField} from "@ui/components/fields/number-field"
+import {OptionGroupField} from "@ui/components/fields/option-group-field"
+import {PathField} from "@ui/components/fields/path-field"
+import {ReferenceField} from "@ui/components/fields/reference-field"
+import {SelectField} from "@ui/components/fields/select-field"
+import {SliderField} from "@ui/components/fields/slider-field"
+import {SwitchField} from "@ui/components/fields/switch-field"
+import {TextField} from "@ui/components/fields/text-field"
+import {VectorField} from "@ui/components/fields/vector-field"
+import {uiIcons} from "@ui/components/icons"
+import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
+import {createRoot, useState, type ComponentRoot} from "@zavx0z/react"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
+
+type CheckboxFieldProps = Parameters<typeof CheckboxField>[0]
+type CollectionFieldProps = Parameters<typeof CollectionField>[0]
+type ColorFieldProps = Parameters<typeof ColorField>[0]
+type ColorPickerFieldProps = Parameters<typeof ColorPickerField>[0]
+type CycleFieldProps = Parameters<typeof CycleField>[0]
+type MatrixFieldProps = Parameters<typeof MatrixField>[0]
+type NumberFieldProps = Parameters<typeof NumberField>[0]
+type OptionGroupFieldProps = Parameters<typeof OptionGroupField>[0]
+type PathFieldProps = Parameters<typeof PathField>[0]
+type ReferenceFieldProps = Parameters<typeof ReferenceField>[0]
+type SelectFieldProps = Parameters<typeof SelectField>[0]
+type SliderFieldProps = Parameters<typeof SliderField>[0]
+type SwitchFieldProps = Parameters<typeof SwitchField>[0]
+type TextFieldProps = Parameters<typeof TextField>[0]
+type VectorFieldProps = Parameters<typeof VectorField>[0]
+
+export type FieldGroupStoryItem = Readonly<{
+  key: string
+  label: string
+  value: number
+  min?: number | undefined
+  max?: number | undefined
+  step?: number | undefined
+}>
+export type FieldGroupStoryProps = Readonly<{
+  label?: string | undefined
+  items: readonly FieldGroupStoryItem[]
+  title?: string | undefined
+}>
+
+function FieldGroupStory(props: Readonly<{initial: FieldGroupStoryProps}>) {
+  const [items, setItems] = useState(props.initial.items)
+  const update = (key: string, value: number) => {
+    setItems(current => current.map(item => item.key === key ? {...item, value} : item))
+  }
+  return <FieldGroup label={props.initial.label} title={props.initial.title}>
+    {items.map(item => <NumberField
+      key={item.key}
+      value={item.value}
+      min={item.min}
+      max={item.max}
+      step={item.step}
+      title={item.label}
+      onInput={value => update(item.key, value)}
+    />)}
+  </FieldGroup>
+}
 
 function TextFieldStory(props: Readonly<{initial: TextFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
   return <TextField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
+    type={props.initial.type}
     placeholder={props.initial.placeholder}
-    description={props.initial.description}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
 function NumberFieldStory(props: Readonly<{initial: NumberFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: number, event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: number, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
   return <NumberField
-    id={props.initial.id}
-    label={props.initial.label}
-    value={value}
-    presentation={props.initial.presentation}
-    min={props.initial.min}
-    max={props.initial.max}
-    softMin={props.initial.softMin}
-    softMax={props.initial.softMax}
-    step={props.initial.step}
-    description={props.initial.description}
-    disabled={props.initial.disabled}
-    readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
-  />
-}
-
-function IntegerFieldStory(props: Readonly<{initial: IntegerFieldProps}>) {
-  const [value, setValue] = useState(props.initial.value)
-  return <IntegerField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
     min={props.initial.min}
@@ -66,368 +109,562 @@ function IntegerFieldStory(props: Readonly<{initial: IntegerFieldProps}>) {
     softMin={props.initial.softMin}
     softMax={props.initial.softMax}
     step={props.initial.step}
-    description={props.initial.description}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
-function BooleanFieldStory(props: Readonly<{initial: BooleanFieldProps}>) {
+function SliderFieldStory(props: Readonly<{initial: SliderFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
-  return <BooleanField
-    id={props.initial.id}
+  const onInput = (next: number, event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: number, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  return <SliderField
     label={props.initial.label}
     value={value}
-    presentation={props.initial.presentation}
-    description={props.initial.description}
+    min={props.initial.min}
+    max={props.initial.max}
+    step={props.initial.step}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
-function EnumFieldStory(props: Readonly<{initial: EnumFieldProps}>) {
+function CheckboxFieldStory(props: Readonly<{initial: CheckboxFieldProps}>) {
+  const [state, setState] = useState({checked: props.initial.checked, indeterminate: props.initial.indeterminate === true})
+  const onChange = (checked: boolean, event: Event) => {
+    setState({checked, indeterminate: false})
+    props.initial.onChange?.(checked, event)
+  }
+  return <CheckboxField
+    label={props.initial.label}
+    checked={state.checked}
+    indeterminate={state.indeterminate}
+    disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onChange={onChange}
+  />
+}
+
+function SwitchFieldStory(props: Readonly<{initial: SwitchFieldProps}>) {
+  const [checked, setChecked] = useState(props.initial.checked)
+  const onChange = (next: boolean, event: Event) => {
+    setChecked(next)
+    props.initial.onChange?.(next, event)
+  }
+  return <SwitchField
+    label={props.initial.label}
+    checked={checked}
+    disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onChange={onChange}
+  />
+}
+
+function SelectFieldStory(props: Readonly<{initial: SelectFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
-  return <EnumField
-    id={props.initial.id}
+  const onChange = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  return <SelectField
     label={props.initial.label}
     value={value}
     options={props.initial.options}
-    description={props.initial.description}
+    state={props.initial.state}
+    density={props.initial.density}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onChange={onChange}
   />
 }
 
-function ColorFieldStory(props: Readonly<{initial: ColorFieldProps}>) {
+function CycleFieldStory(props: Readonly<{initial: CycleFieldProps; presented: boolean}>) {
   const [value, setValue] = useState(props.initial.value)
-  return <ColorField
-    id={props.initial.id}
+  const [open, setOpen] = useState(props.initial.open ?? false)
+  const onChange = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  const onOpenChange = (next: boolean, event: Event) => {
+    setOpen(next)
+    props.initial.onOpenChange?.(next, event)
+  }
+  return <CycleField
     label={props.initial.label}
     value={value}
-    description={props.initial.description}
+    options={props.initial.options}
+    density={props.initial.density}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={(next: ColorFieldValue) => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    open={!props.presented && props.initial.open === true ? false : open}
+    title={props.initial.title}
+    onChange={onChange}
+    onOpenChange={onOpenChange}
+  />
+}
+
+function OptionGroupFieldStory(props: Readonly<{initial: OptionGroupFieldProps}>) {
+  const [value, setValue] = useState(props.initial.value)
+  const onChange = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  return <OptionGroupField
+    label={props.initial.label}
+    value={value}
+    options={props.initial.options}
+    density={props.initial.density}
+    disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onChange={onChange}
+  />
+}
+
+function ColorFieldStory(props: Readonly<{initial: ColorFieldProps; presented: boolean}>) {
+  const [value, setValue] = useState(props.initial.value)
+  const [open, setOpen] = useState(props.initial.open ?? false)
+  const onInput = (next: ColorFieldProps["value"], event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: ColorFieldProps["value"], event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  const onOpenChange = (next: boolean, event: Event) => {
+    setOpen(next)
+    props.initial.onOpenChange?.(next, event)
+  }
+  return <ColorField
+    label={props.initial.label}
+    value={value}
+    open={!props.presented && props.initial.open === true ? false : open}
+    disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
+    onOpenChange={onOpenChange}
+  />
+}
+
+function ColorPickerFieldStory(props: Readonly<{initial: ColorPickerFieldProps}>) {
+  const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: ColorPickerFieldProps["value"], event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: ColorPickerFieldProps["value"], event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  return <ColorPickerField
+    label={props.initial.label}
+    value={value}
+    disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
 function VectorFieldStory(props: Readonly<{initial: VectorFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: readonly number[], event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: readonly number[], event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
   return <VectorField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
     axes={props.initial.axes}
-    numberKind={props.initial.numberKind}
     min={props.initial.min}
     max={props.initial.max}
     step={props.initial.step}
-    description={props.initial.description}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
-  />
-}
-
-function RotationFieldStory(props: Readonly<{initial: RotationFieldProps}>) {
-  const [value, setValue] = useState(props.initial.value)
-  return <RotationField
-    id={props.initial.id}
-    label={props.initial.label}
-    value={value}
-    axes={props.initial.axes}
-    numberKind={props.initial.numberKind}
-    min={props.initial.min}
-    max={props.initial.max}
-    step={props.initial.step}
-    description={props.initial.description}
-    disabled={props.initial.disabled}
-    readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
 function MatrixFieldStory(props: Readonly<{initial: MatrixFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: readonly (readonly number[])[], event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: readonly (readonly number[])[], event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
   return <MatrixField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
     step={props.initial.step}
-    description={props.initial.description}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
+    title={props.initial.title}
+    onInput={onInput}
+    onChange={onChange}
   />
 }
 
 function ReferenceFieldStory(props: Readonly<{initial: ReferenceFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onPick = (event: Event) => {
+    setValue({id: "viewport", label: "Viewport", kind: "view"})
+    props.initial.onPick?.(event)
+  }
+  const onClear = (event: Event) => {
+    setValue(null)
+    props.initial.onClear?.(event)
+  }
   return <ReferenceField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
     placeholder={props.initial.placeholder}
-    description={props.initial.description}
+    density={props.initial.density}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
+    title={props.initial.title}
     onActivate={props.initial.onActivate}
-    onPick={props.initial.onPick}
-    onClear={() => {
-      setValue(null)
-      props.initial.onClear?.()
-    }}
-  />
-}
-
-function CollectionFieldStory(props: Readonly<{initial: CollectionFieldProps}>) {
-  const [selectedId, setSelectedId] = useState(props.initial.selectedId)
-  return <CollectionField
-    id={props.initial.id}
-    label={props.initial.label}
-    items={props.initial.items}
-    selectedId={selectedId}
-    visibleRows={props.initial.visibleRows}
-    emptyLabel={props.initial.emptyLabel}
-    description={props.initial.description}
-    disabled={props.initial.disabled}
-    readOnly={props.initial.readOnly}
-    onSelect={next => {
-      setSelectedId(next)
-      props.initial.onSelect?.(next)
-    }}
-    onAdd={props.initial.onAdd}
-    onRemove={props.initial.onRemove}
-    onMove={props.initial.onMove}
+    onPick={onPick}
+    onClear={onClear}
   />
 }
 
 function PathFieldStory(props: Readonly<{initial: PathFieldProps}>) {
   const [value, setValue] = useState(props.initial.value)
+  const onInput = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onInput?.(next, event)
+  }
+  const onChange = (next: string, event: Event) => {
+    setValue(next)
+    props.initial.onChange?.(next, event)
+  }
+  const onBrowse = (event: Event) => {
+    setValue("/project/selected.exr")
+    props.initial.onBrowse?.(event)
+  }
   return <PathField
-    id={props.initial.id}
     label={props.initial.label}
     value={value}
     placeholder={props.initial.placeholder}
-    description={props.initial.description}
+    density={props.initial.density}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
-    onChange={next => {
-      setValue(next)
-      props.initial.onChange?.(next)
-    }}
-    onBrowse={props.initial.onBrowse}
+    title={props.initial.title}
+    browseTitle={props.initial.browseTitle}
+    onInput={onInput}
+    onChange={onChange}
+    onBrowse={onBrowse}
   />
 }
 
-function ReadonlyFieldStory(props: Readonly<{initial: ReadonlyFieldProps}>) {
-  return <ReadonlyField
-    id={props.initial.id}
+type CollectionItem = CollectionFieldProps["items"][number]
+type MoveDirection = Parameters<NonNullable<CollectionFieldProps["onMove"]>>[1]
+
+function CollectionFieldStory(props: Readonly<{initial: CollectionFieldProps}>) {
+  const [state, setState] = useState({items: props.initial.items, selectedId: props.initial.selectedId})
+  const onSelect = (selectedId: string, event: Event) => {
+    setState(current => ({...current, selectedId}))
+    props.initial.onSelect?.(selectedId, event)
+  }
+  const onAdd = (event: Event) => {
+    setState(current => {
+      const index = current.items.length + 1
+      return {...current, items: [...current.items, {id: `item-${index}`, label: `Item ${index}`}]}
+    })
+    props.initial.onAdd?.(event)
+  }
+  const onRemove = (id: string, event: Event) => {
+    setState(current => {
+      const items = current.items.filter(item => item.id !== id)
+      return {items, selectedId: items[0]?.id ?? null}
+    })
+    props.initial.onRemove?.(id, event)
+  }
+  const onMove = (id: string, direction: MoveDirection, event: Event) => {
+    setState(current => ({...current, items: moveItem(current.items, id, direction)}))
+    props.initial.onMove?.(id, direction, event)
+  }
+  return <CollectionField
     label={props.initial.label}
-    value={props.initial.value}
-    description={props.initial.description}
+    items={state.items}
+    selectedId={state.selectedId}
+    visibleRows={props.initial.visibleRows}
+    emptyLabel={props.initial.emptyLabel}
+    density={props.initial.density}
     disabled={props.initial.disabled}
+    readOnly={props.initial.readOnly}
+    title={props.initial.title}
+    onSelect={onSelect}
+    onAdd={onAdd}
+    onRemove={onRemove}
+    onMove={onMove}
   />
 }
 
-export function createCompiledTextFieldProductionStory(
-  document: Document,
-  props: TextFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "text-field", TextFieldStory, props, source("TextField", "text-field", props, "value", "onChange"))
+export function createCompiledFieldGroupProductionStory(document: Document, props: FieldGroupStoryProps) {
+  return mountCompiledStory(document, FieldGroupStory, {initial: props}, "field-group", fieldGroupSource(props))
+}
+export function createCompiledTextFieldProductionStory(document: Document, props: TextFieldProps) {
+  return mountCompiledStory(document, TextFieldStory, {initial: props}, "text-field", componentSource("TextField", "text-field", props, "value", "onInput"))
+}
+export function createCompiledNumberFieldProductionStory(document: Document, props: NumberFieldProps) {
+  return mountCompiledStory(document, NumberFieldStory, {initial: props}, "number-field", componentSource("NumberField", "number-field", props, "value", "onInput"))
+}
+export function createCompiledSliderFieldProductionStory(document: Document, props: SliderFieldProps) {
+  return mountCompiledStory(document, SliderFieldStory, {initial: props}, "slider-field", componentSource("SliderField", "slider-field", props, "value", "onInput"))
+}
+export function createCompiledCheckboxFieldProductionStory(document: Document, props: CheckboxFieldProps) {
+  return mountCompiledStory(document, CheckboxFieldStory, {initial: props}, "checkbox-field", componentSource("CheckboxField", "checkbox-field", props, "checked", "onChange"))
+}
+export function createCompiledSwitchFieldProductionStory(document: Document, props: SwitchFieldProps) {
+  return mountCompiledStory(document, SwitchFieldStory, {initial: props}, "switch-field", componentSource("SwitchField", "switch-field", props, "checked", "onChange"))
+}
+export function createCompiledSelectFieldProductionStory(document: Document, props: SelectFieldProps) {
+  return mountCompiledStory(document, SelectFieldStory, {initial: props}, "select-field", componentSource("SelectField", "select-field", props, "value", "onChange"))
+}
+export function createCompiledCycleFieldProductionStory(document: Document, props: CycleFieldProps) {
+  return mountCompiledStory(
+    document,
+    CycleFieldStory,
+    {initial: props, presented: false},
+    "cycle-field",
+    popupSource("CycleField", "cycle-field", props),
+    root => root.render(CycleFieldStory as any, {initial: props, presented: true}),
+  )
+}
+export function createCompiledOptionGroupFieldProductionStory(document: Document, props: OptionGroupFieldProps) {
+  return mountCompiledStory(document, OptionGroupFieldStory, {initial: props}, "option-group-field", componentSource("OptionGroupField", "option-group-field", props, "value", "onChange"))
+}
+export function createCompiledColorFieldProductionStory(document: Document, props: ColorFieldProps) {
+  return mountCompiledStory(
+    document,
+    ColorFieldStory,
+    {initial: props, presented: false},
+    "color-field",
+    popupSource("ColorField", "color-field", props, "onInput"),
+    root => root.render(ColorFieldStory as any, {initial: props, presented: true}),
+  )
+}
+export function createCompiledColorPickerFieldProductionStory(document: Document, props: ColorPickerFieldProps) {
+  return mountCompiledStory(document, ColorPickerFieldStory, {initial: props}, "color-picker-field", componentSource("ColorPickerField", "color-picker-field", props, "value", "onInput"))
+}
+export function createCompiledVectorFieldProductionStory(document: Document, props: VectorFieldProps) {
+  return mountCompiledStory(document, VectorFieldStory, {initial: props}, "vector-field", componentSource("VectorField", "vector-field", props, "value", "onInput"))
+}
+export function createCompiledMatrixFieldProductionStory(document: Document, props: MatrixFieldProps) {
+  return mountCompiledStory(document, MatrixFieldStory, {initial: props}, "matrix-field", componentSource("MatrixField", "matrix-field", props, "value", "onInput"))
+}
+export function createCompiledReferenceFieldProductionStory(document: Document, props: ReferenceFieldProps) {
+  return mountCompiledStory(document, ReferenceFieldStory, {initial: props}, "reference-field", referenceSource(props))
+}
+export function createCompiledPathFieldProductionStory(document: Document, props: PathFieldProps) {
+  return mountCompiledStory(document, PathFieldStory, {initial: props}, "path-field", componentSource("PathField", "path-field", props, "value", "onInput"))
+}
+export function createCompiledCollectionFieldProductionStory(document: Document, props: CollectionFieldProps) {
+  return mountCompiledStory(document, CollectionFieldStory, {initial: props}, "collection-field", collectionSource(props))
 }
 
-export function createCompiledNumberFieldProductionStory(
-  document: Document,
-  props: NumberFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "number-field", NumberFieldStory, props, source("NumberField", "number-field", props, "value", "onChange"))
+function moveItem(items: readonly CollectionItem[], id: string, direction: MoveDirection): readonly CollectionItem[] {
+  const next = [...items]
+  const source = next.findIndex(item => item.id === id)
+  const target = source + (direction === "up" ? -1 : 1)
+  if (source < 0 || target < 0 || target >= next.length) return items
+  const [item] = next.splice(source, 1)
+  next.splice(target, 0, item!)
+  return next
 }
 
-export function createCompiledIntegerFieldProductionStory(
+function mountCompiledStory(
   document: Document,
-  props: IntegerFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "integer-field", IntegerFieldStory, props, source("IntegerField", "integer-field", props, "value", "onChange"))
-}
-
-export function createCompiledBooleanFieldProductionStory(
-  document: Document,
-  props: BooleanFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "boolean-field", BooleanFieldStory, props, source("BooleanField", "boolean-field", props, "value", "onChange"))
-}
-
-export function createCompiledEnumFieldProductionStory(
-  document: Document,
-  props: EnumFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "enum-field", EnumFieldStory, props, source("EnumField", "enum-field", props, "value", "onChange"))
-}
-
-export function createCompiledColorFieldProductionStory(
-  document: Document,
-  props: ColorFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "color-field", ColorFieldStory, props, source("ColorField", "color-field", props, "value", "onChange"))
-}
-
-export function createCompiledVectorFieldProductionStory(
-  document: Document,
-  props: VectorFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "vector-field", VectorFieldStory, props, source("VectorField", "vector-field", props, "value", "onChange"))
-}
-
-export function createCompiledRotationFieldProductionStory(
-  document: Document,
-  props: RotationFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "rotation-field", RotationFieldStory, props, source("RotationField", "rotation-field", props, "value", "onChange"))
-}
-
-export function createCompiledMatrixFieldProductionStory(
-  document: Document,
-  props: MatrixFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "matrix-field", MatrixFieldStory, props, source("MatrixField", "matrix-field", props, "value", "onChange"))
-}
-
-export function createCompiledReferenceFieldProductionStory(
-  document: Document,
-  props: ReferenceFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "reference-field", ReferenceFieldStory, props, source("ReferenceField", "reference-field", props, "value", "onClear"))
-}
-
-export function createCompiledCollectionFieldProductionStory(
-  document: Document,
-  props: CollectionFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "collection-field", CollectionFieldStory, props, source("CollectionField", "collection-field", props, "selectedId", "onSelect"))
-}
-
-export function createCompiledPathFieldProductionStory(
-  document: Document,
-  props: PathFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "path-field", PathFieldStory, props, source("PathField", "path-field", props, "value", "onChange"))
-}
-
-export function createCompiledReadonlyFieldProductionStory(
-  document: Document,
-  props: ReadonlyFieldProps
-): RoutedProductionComponentStory {
-  return createFieldStory(document, "readonly-field", ReadonlyFieldStory, props, source("ReadonlyField", "readonly-field", props))
-}
-
-type StoryComponent<Props> = (props: Readonly<{initial: Props}>) => unknown
-
-function createFieldStory<Props>(
-  document: Document,
-  component: string,
-  Story: StoryComponent<Props>,
-  initial: Props,
-  typescript: string
+  component: unknown,
+  props: unknown,
+  name: string,
+  typescript: string,
+  afterPresent?: (root: ComponentRoot) => void,
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
   const root = createRoot(staging)
-  root.render(Story as any, {initial})
+  root.render(component as any, props as any)
   const owner = [...staging.childNodes].find(node => node.nodeType === 1) as HTMLElement | undefined
   if (!owner) {
     root.unmount()
-    throw new Error(`Compiled ${component} story mounted no owner`)
+    throw new Error(`Compiled ${name} story mounted no owner`)
   }
   staging.removeChild(owner)
-  owner.setAttribute("data-story-component", component)
-  const story = Object.freeze({
-    element: owner,
-    componentRoot: root,
-    get source() {
-      return Object.freeze({html: serialize(owner), typescript})
-    },
-    dispose() {
-      root.unmount()
-    }
+  owner.setAttribute("data-story-component", name)
+  let presented = false
+  return Object.freeze({
+    story: Object.freeze({
+      element: owner,
+      componentRoot: root,
+      get source() {
+        return Object.freeze({html: serialize(owner), typescript})
+      },
+      afterPresent: afterPresent === undefined ? undefined : () => {
+        if (presented) return
+        presented = true
+        afterPresent(root)
+      },
+      dispose() {
+        root.unmount()
+      },
+    }),
   })
-  return Object.freeze({story})
 }
 
-function source(
+function componentSource(
   component: string,
   subpath: string,
   props: Readonly<Record<string, unknown>>,
-  stateKey?: string,
-  callback?: string
+  stateKey: string,
+  callback: string,
 ): string {
-  const initial = {...props}
-  for (const [key, value] of Object.entries(initial)) {
-    if (typeof value === "function" || key === "style") delete initial[key]
-  }
-  const propLines = Object.keys(initial)
-    .filter(key => key !== stateKey)
-    .map(key => `    ${key}={props.${key}}`)
-  if (stateKey === undefined || callback === undefined) return [
-    `import {${component}} from "@ui/components/fields/${subpath}"`,
-    'import {createRoot} from "@zavx0z/react"',
-    "",
-    `const props = ${literal(initial)} as const`,
-    "",
-    "createRoot(container).render(",
-    `  <${component}`,
-    ...propLines,
-    "  />",
-    ")"
-  ].join("\n")
-  const state = initial[stateKey]
-  delete initial[stateKey]
-  const callbackValue = callback === "onClear"
-    ? "() => setValue(null)"
-    : "setValue"
+  const state = props[stateKey]
+  const lines = Object.entries(props)
+    .filter(([key, value]) => key !== stateKey && key !== "style" && typeof value !== "function")
+    .map(([key, value]) => `    ${key}={${literal(value)}}`)
+  const iconImport = lines.some(line => line.includes("uiIcons."))
+    ? ['import {uiIcons} from "@ui/components/icons"']
+    : []
   return [
     `import {${component}} from "@ui/components/fields/${subpath}"`,
+    ...iconImport,
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
-    `const props = ${literal(initial)} as const`,
-    "",
     "function Story() {",
-    `  const [value, setValue] = useState(${literal(state)})`,
+    `  const [${stateKey}, setState] = useState(${literal(state)})`,
     `  return <${component}`,
-    ...propLines,
-    `    ${stateKey}={value}`,
-    `    ${callback}={${callbackValue}}`,
+    ...lines,
+    `    ${stateKey}={${stateKey}}`,
+    `    ${callback}={setState}`,
     "  />",
     "}",
-    "createRoot(container).render(<Story />)"
+    "createRoot(container).render(<Story />)",
+  ].join("\n")
+}
+
+function popupSource(
+  component: "CycleField" | "ColorField",
+  subpath: "cycle-field" | "color-field",
+  props: Readonly<Record<string, unknown>>,
+  valueCallback = "onChange",
+): string {
+  const lines = Object.entries(props)
+    .filter(([key, value]) => key !== "value" && key !== "open" && key !== "style" && typeof value !== "function")
+    .map(([key, value]) => `    ${key}={${literal(value)}}`)
+  const iconImport = lines.some(line => line.includes("uiIcons."))
+    ? ['import {uiIcons} from "@ui/components/icons"']
+    : []
+  return [
+    `import {${component}} from "@ui/components/fields/${subpath}"`,
+    ...iconImport,
+    'import {createRoot, useState} from "@zavx0z/react"',
+    "",
+    "function Story() {",
+    `  const [value, setValue] = useState(${literal(props.value)})`,
+    `  const [open, setOpen] = useState(${String(props.open === true)})`,
+    `  return <${component}`,
+    ...lines,
+    "    value={value}",
+    "    open={open}",
+    `    ${valueCallback}={setValue}`,
+    "    onOpenChange={setOpen}",
+    "  />",
+    "}",
+    "createRoot(container).render(<Story />)",
+  ].join("\n")
+}
+
+function fieldGroupSource(props: FieldGroupStoryProps): string {
+  return [
+    'import {FieldGroup} from "@ui/components/fields/field-group"',
+    'import {NumberField} from "@ui/components/fields/number-field"',
+    'import {createRoot, useState} from "@zavx0z/react"',
+    "",
+    "function Story() {",
+    `  const [items, setItems] = useState(${literal(props.items)})`,
+    `  return <FieldGroup label={${literal(props.label)}}>`,
+    "    {items.map(item => <NumberField",
+    "      key={item.key}",
+    "      value={item.value}",
+    "      min={item.min}",
+    "      max={item.max}",
+    "      step={item.step}",
+    "      title={item.label}",
+    "      onInput={value => setItems(current => current.map(entry =>",
+    "        entry.key === item.key ? {...entry, value} : entry",
+    "      ))}",
+    "    />)}",
+    "  </FieldGroup>",
+    "}",
+    "createRoot(container).render(<Story />)",
+  ].join("\n")
+}
+
+function referenceSource(props: ReferenceFieldProps): string {
+  return [
+    'import {ReferenceField} from "@ui/components/fields/reference-field"',
+    'import {createRoot, useState} from "@zavx0z/react"',
+    "",
+    "function Story() {",
+    `  const [value, setValue] = useState(${literal(props.value)})`,
+    `  return <ReferenceField label={${literal(props.label)}} value={value}`,
+    '    onPick={() => setValue({id: "viewport", label: "Viewport", kind: "view"})}',
+    "    onClear={() => setValue(null)}",
+    "  />",
+    "}",
+    "createRoot(container).render(<Story />)",
+  ].join("\n")
+}
+
+function collectionSource(props: CollectionFieldProps): string {
+  return [
+    'import {CollectionField} from "@ui/components/fields/collection-field"',
+    'import {uiIcons} from "@ui/components/icons"',
+    'import {createRoot, useState} from "@zavx0z/react"',
+    "",
+    "function Story() {",
+    `  const [selectedId, setSelectedId] = useState(${literal(props.selectedId)})`,
+    `  return <CollectionField label={${literal(props.label)}} items={${literal(props.items)}} selectedId={selectedId} onSelect={setSelectedId} />`,
+    "}",
+    "createRoot(container).render(<Story />)",
   ].join("\n")
 }
 
 function literal(value: unknown): string {
-  return JSON.stringify(value, null, 2)
+  let source = JSON.stringify(value, (_key, entry) => typeof entry === "function" ? undefined : entry, 2) ?? "undefined"
+  for (const [name, icon] of Object.entries(uiIcons)) {
+    source = source.replaceAll(JSON.stringify(icon), `uiIcons.${name}`)
+  }
+  return source
 }
 
 function serialize(element: Element, depth = 0): string {

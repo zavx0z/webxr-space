@@ -1,25 +1,98 @@
-import {useId} from "@zavx0z/react"
-import {CollectionControl, type CollectionControlItem, type CollectionControlMoveDirection} from "../controls/collection-control.tsx"
+import type {Event} from "@zavx0z/dom"
+import {Button, IconButton} from "../button.tsx"
+import {minusIcon, plusIcon} from "../icon-assets.ts"
+import {List} from "../list.tsx"
+import {
+  collectionVisibleRowsHeight,
+  normalizeCollectionItems,
+  normalizeCollectionVisibleRows
+} from "../src/collection/model.ts"
 
-export type CollectionFieldItem = CollectionControlItem
-export type CollectionFieldMoveDirection = CollectionControlMoveDirection
-export type CollectionFieldProps = Readonly<{id: string; label: string; items: readonly CollectionFieldItem[]; selectedId: string | null; visibleRows?: number | undefined; emptyLabel?: string | undefined; description?: string | undefined; disabled?: boolean | undefined; readOnly?: boolean | undefined; style?: CssStyle | undefined; onSelect?: ((id: string) => void) | undefined; onAdd?: (() => void) | undefined; onRemove?: ((id: string) => void) | undefined; onMove?: ((id: string, direction: CollectionFieldMoveDirection) => void) | undefined}>
-const controlStyle: CssStyle = css`& { width: 100%; }`
+export type CollectionFieldItem = Readonly<{
+  id: string
+  label: string
+  iconSrc?: string | undefined
+  description?: string | undefined
+  disabled?: boolean | undefined
+}>
+export type CollectionFieldDensity = "regular" | "compact"
+export type CollectionFieldMoveDirection = "up" | "down"
+export type CollectionFieldProps = Readonly<{
+  label?: string | undefined
+  items: readonly CollectionFieldItem[]
+  selectedId: string | null
+  visibleRows?: number | undefined
+  emptyLabel?: string | undefined
+  density?: CollectionFieldDensity | undefined
+  disabled?: boolean | undefined
+  readOnly?: boolean | undefined
+  title?: string | undefined
+  style?: CssStyle | undefined
+  onSelect?: ((id: string, event: Event) => void) | undefined
+  onAdd?: ((event: Event) => void) | undefined
+  onRemove?: ((id: string, event: Event) => void) | undefined
+  onMove?: ((id: string, direction: CollectionFieldMoveDirection, event: Event) => void) | undefined
+}>
+
+const listStyle: CssStyle = css`& { width: 0; flex-grow: 1; padding: 2px; }`
+const actionStyle: CssStyle = css`& { width: 28px; min-width: 28px; height: 28px; padding: 0; border-radius: 4px; }`
+const hiddenStyle: CssStyle = css`& { display: none; }`
+
 export function CollectionField(props: CollectionFieldProps) {
-  assertIdentity(props.id, props.label)
-  const labelId = useId()
-  return <div data-field-id={props.id} data-field-kind="collection" aria-disabled={String(props.disabled === true)} title={props.description} style={css`
-    & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: 100%; min-width: 0; min-height: 28px; gap: 4px; padding: 0; color: var(--widget-list-content); }
-    &[aria-disabled="true"] { opacity: 0.5; }
-    ${props.style}
-  `}>
-    <span id={labelId} style={css`& { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }`}>{props.label}</span>
-    <div role="group" aria-labelledby={labelId} style={css`& { box-sizing: border-box; display: flex; align-items: flex-start; min-width: 0; min-height: 28px; flex-grow: 1; }`}>
-      <CollectionControl items={props.items} selectedId={props.selectedId} visibleRows={props.visibleRows} emptyLabel={props.emptyLabel} disabled={props.disabled === true} readOnly={props.readOnly === true} title={props.description} style={controlStyle} onSelect={props.onSelect} onAdd={props.onAdd} onRemove={props.onRemove} onMove={props.onMove} />
+  const items = normalizeCollectionItems(props.items, props.selectedId)
+  const visibleRows = normalizeCollectionVisibleRows(props.visibleRows)
+  const visibleHeight = collectionVisibleRowsHeight(visibleRows)
+  const density = props.density ?? "regular"
+  if (density !== "regular" && density !== "compact") throw new Error(`Unknown CollectionField density: ${density}`)
+  const hasLabel = props.label !== undefined
+  const selectedIndex = props.selectedId === null ? -1 : items.findIndex(item => item.id === props.selectedId)
+  const selected = selectedIndex < 0 ? undefined : items[selectedIndex]
+  const onSelect = (key: string, event: Event) => {
+    if (props.disabled !== true) props.onSelect?.(key, event)
+  }
+  const onAdd = (event: Event) => {
+    if (props.disabled !== true && props.readOnly !== true) props.onAdd?.(event)
+  }
+  const onRemove = (event: Event) => {
+    if (props.disabled !== true && props.readOnly !== true && props.selectedId !== null) props.onRemove?.(props.selectedId, event)
+  }
+  const move = (direction: CollectionFieldMoveDirection, event: Event) => {
+    if (props.disabled !== true && props.readOnly !== true && props.selectedId !== null) props.onMove?.(props.selectedId, direction, event)
+  }
+  return <div
+    data-has-label={hasLabel ? "true" : undefined}
+    title={props.title}
+    style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: auto; min-width: 0; padding: 0; color: var(--widget-list-content); }
+      &[data-has-label="true"] { width: 100%; gap: 4px; }
+      ${props.style}
+    `}
+  >
+    <span hidden={!hasLabel} style={css`
+      & { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }
+      &[hidden] { display: none; }
+    `}>{props.label ?? ""}</span>
+    <div data-labelled={hasLabel ? "true" : undefined} data-readonly={props.readOnly === true ? "true" : undefined} style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: row; width: 320px; min-height: 28px; gap: 4px; }
+      &[data-labelled="true"] { width: 0; flex-grow: 1; }
+      &[data-readonly="true"] { color: var(--widget-text-content-readonly); }
+    `}>
+      <List
+        items={items.map(item => ({key: item.id, label: item.label, iconSrc: item.iconSrc, detail: item.description, disabled: item.disabled}))}
+        selectedKey={props.selectedId}
+        disabled={props.disabled === true}
+        dense={density === "compact"}
+        variant="embedded"
+        emptyLabel={props.emptyLabel ?? "No items"}
+        style={css`${listStyle}${css`& { height: ${visibleHeight}px; max-height: ${visibleHeight}px; }`}`}
+        onSelect={onSelect}
+      />
+      <div style={css`& { display: flex; flex-direction: column; width: 28px; gap: 2px; }`}>
+        <IconButton label="Add item" iconSrc={plusIcon} title="Add item" disabled={props.disabled === true || props.readOnly === true || props.onAdd === undefined} style={actionStyle} onClick={onAdd} />
+        <IconButton label="Remove selected item" iconSrc={minusIcon} title="Remove selected item" disabled={props.disabled === true || props.readOnly === true || selected === undefined || selected.disabled === true || props.onRemove === undefined} style={actionStyle} onClick={onRemove} />
+        <Button label="↑" title="Move selected item up" disabled={props.disabled === true || props.readOnly === true || selectedIndex <= 0 || selected?.disabled === true || props.onMove === undefined} style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`} onClick={event => move("up", event)} />
+        <Button label="↓" title="Move selected item down" disabled={props.disabled === true || props.readOnly === true || selectedIndex < 0 || selectedIndex >= items.length - 1 || selected?.disabled === true || props.onMove === undefined} style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`} onClick={event => move("down", event)} />
+      </div>
     </div>
   </div>
-}
-function assertIdentity(id: string, label: string): void {
-  if (!id) throw new TypeError("CollectionField id must not be empty")
-  if (!label) throw new TypeError("CollectionField label must not be empty")
 }

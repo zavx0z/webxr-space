@@ -1,25 +1,55 @@
-import {useId} from "@zavx0z/react"
-import {VectorControl} from "../controls/vector-control.tsx"
+import type {Event} from "@zavx0z/dom"
+import {normalizeVectorValue, updateVectorValue} from "../src/vector/value.ts"
+import {FieldGroup} from "./field-group.tsx"
+import {NumberField} from "./number-field.tsx"
 
-export type VectorFieldNumberKind = "float" | "integer"
-export type VectorFieldProps = Readonly<{id: string; label: string; value: readonly number[]; axes?: readonly string[] | undefined; numberKind?: VectorFieldNumberKind | undefined; min?: number | undefined; max?: number | undefined; step?: number | undefined; description?: string | undefined; disabled?: boolean | undefined; readOnly?: boolean | undefined; style?: CssStyle | undefined; onChange?: ((value: readonly number[]) => void) | undefined}>
-const controlStyle: CssStyle = css`& { width: 100%; }`
+export type VectorFieldProps = Readonly<{
+  label?: string | undefined
+  value: readonly number[]
+  axes?: readonly string[] | undefined
+  min?: number | undefined
+  max?: number | undefined
+  step?: number | undefined
+  disabled?: boolean | undefined
+  readOnly?: boolean | undefined
+  title?: string | undefined
+  style?: CssStyle | undefined
+  onInput?: ((value: readonly number[], event: Event) => void) | undefined
+  onChange?: ((value: readonly number[], event: Event) => void) | undefined
+}>
+
+const cellStyle: CssStyle = css`& { width: 0; min-width: 0; height: 26px; flex-grow: 1; --field-label-width: 18px; --number-field-width: 100%; --number-field-height: 26px; --number-field-border-width: 0px; --number-field-radius: 0px; --number-field-shadow: none; }`
+
 export function VectorField(props: VectorFieldProps) {
-  assertIdentity(props.id, props.label)
-  const labelId = useId()
-  const onInput = (value: readonly number[]): void => props.onChange?.(props.numberKind === "integer" ? Object.freeze(value.map(Math.round)) : value)
-  return <div data-field-id={props.id} data-field-kind="vector" aria-disabled={String(props.disabled === true)} title={props.description} style={css`
-    & { box-sizing: border-box; display: flex; flex-direction: row; align-items: flex-start; width: 100%; min-width: 0; min-height: 28px; gap: 4px; padding: 0; color: var(--widget-list-content); }
-    &[aria-disabled="true"] { opacity: 0.5; }
-    ${props.style}
-  `}>
-    <span id={labelId} style={css`& { box-sizing: border-box; display: flex; align-items: center; width: 40%; min-width: 0; height: 28px; color: var(--widget-list-content); font-size: var(--font-size-sm); }`}>{props.label}</span>
-    <div role="group" aria-labelledby={labelId} style={css`& { box-sizing: border-box; display: flex; align-items: flex-start; min-width: 0; min-height: 28px; flex-grow: 1; }`}>
-      <VectorControl value={props.value} axes={props.axes} min={props.min} max={props.max} step={props.numberKind === "integer" ? props.step ?? 1 : props.step} disabled={props.disabled === true} readOnly={props.readOnly === true} title={props.description} style={controlStyle} onInput={onInput} />
-    </div>
-  </div>
-}
-function assertIdentity(id: string, label: string): void {
-  if (!id) throw new TypeError("VectorField id must not be empty")
-  if (!label) throw new TypeError("VectorField label must not be empty")
+  const normalized = normalizeVectorValue(props.value, props.axes, props.step)
+  const onInput = (index: number, value: number, event: Event) => {
+    props.onInput?.(updateVectorValue(normalized.value, index, value), event)
+  }
+  const onChange = (index: number, value: number, event: Event) => {
+    props.onChange?.(updateVectorValue(normalized.value, index, value), event)
+  }
+  return <FieldGroup
+    label={props.label}
+    title={props.title}
+    style={props.style}
+  >{normalized.value.map((value, index) => <NumberField
+      key={normalized.axes[index]!}
+      label={normalized.axes[index]!}
+      value={value}
+      min={props.min}
+      max={props.max}
+      step={normalized.step}
+      disabled={props.disabled}
+      readOnly={props.readOnly}
+      style={css`
+        ${cellStyle}
+        ${index === 0 && css`& { --field-label-content: rgb(var(--axis-x-500)); }`}
+        ${index === 1 && css`& { --field-label-content: rgb(var(--axis-y-500)); }`}
+        ${index === 2 && css`& { --field-label-content: rgb(var(--axis-z-500)); }`}
+        ${index === 3 && css`& { --field-label-content: var(--widget-list-content); }`}
+        ${index < normalized.value.length - 1 && css`& { border-right: var(--border-width-control) solid var(--widget-regular-outline); }`}
+      `}
+      onInput={(next, event) => onInput(index, next, event)}
+      onChange={(next, event) => onChange(index, next, event)}
+    />)}</FieldGroup>
 }

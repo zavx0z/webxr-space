@@ -1,8 +1,7 @@
+import {useState} from "@zavx0z/react"
 import {TextField} from "./text-field.tsx"
 
-export function DuplicateIdTextFieldsFixture() {
-  return <div>
-    <TextField id="same" label="First" value="A" />
-    <TextField id="same" label="Second" value="B" />
-  </div>
+export function TextFieldFixture() {
+  const [value, setValue] = useState("Alpha")
+  return <TextField label="Name" value={value} onInput={setValue} />
 }

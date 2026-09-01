@@ -9,31 +9,31 @@ import {uiIcons} from "./icons.ts"
 import {createDocument} from "./document.fixture.ts"
 
 describe("compiled production Inspector", () => {
-  test("retains keyed category and section components through controlled interaction", () => {
+  test("retains keyed category and Panel components through controlled interaction", () => {
     expect(isCompiledTemplate(Inspector)).toBe(true)
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
     const categories = [
-      {id: "node", label: "N", iconSrc: uiIcons.settings, sectionIds: ["transform", "data"]},
-      {id: "render", label: "R", iconSrc: uiIcons.visibilityOn, sectionIds: ["data"]}
+      {id: "node", label: "N", iconSrc: uiIcons.settings, panelIds: ["transform", "data"]},
+      {id: "render", label: "R", iconSrc: uiIcons.visibilityOn, panelIds: ["data"]}
     ]
-    const sections = [
+    const panels = [
       {id: "transform", label: "Transform", content: "Location", expanded: true},
       {id: "data", label: "Data", content: "Output", expanded: false}
     ]
-    root.render(InspectorFixture as any, {categories, selectedCategoryId: "node", query: "", sections})
+    root.render(InspectorFixture as any, {categories, selectedCategoryId: "node", query: "", panels})
     const inspector = host.querySelector("aside")!
     const category = inspector.querySelectorAll("nav button")[0] as HTMLButtonElement
-    const transform = inspector.querySelector('[data-section-id="transform"]')!
+    const transform = inspector.querySelector('[data-panel][title="transform"]')!
     const header = transform.querySelector("button") as HTMLButtonElement
     const categoryIcon = category.querySelector("img")!
     const disclosureIcon = header.querySelector("img")!
     expect(categoryIcon.getAttribute("src")).toBe(uiIcons.settings)
     expect(categoryIcon.getAttribute("alt")).toBe("")
     expect(categoryIcon.getAttribute("aria-hidden")).toBe("true")
-    expect(inspector.querySelector('input[type="search"]')!.parentElement!.querySelector("img")?.getAttribute("src"))
+    expect(inspector.querySelector('input[type="search"]')!.parentElement!.parentElement!.querySelector("img")?.getAttribute("src"))
       .toBe(uiIcons.search)
     expect(inspector.querySelector('[title="Scene"] img')?.getAttribute("src")).toBe(uiIcons.resource)
     expect(disclosureIcon.getAttribute("src")).toBe(uiIcons.chevronDown)
@@ -53,23 +53,23 @@ describe("compiled production Inspector", () => {
       categories: [categories[1]!, categories[0]!],
       selectedCategoryId: "node",
       query: "",
-      sections: [sections[1]!, sections[0]!]
+      panels: [panels[1]!, panels[0]!]
     })
     expect(host.querySelector("aside")).toBe(inspector)
     expect(inspector.querySelectorAll("nav button")[1]).toBe(category)
-    expect(inspector.querySelector('[data-section-id="transform"]')).toBe(transform)
+    expect(inspector.querySelector('[data-panel][title="transform"]')).toBe(transform)
     expect(inspector.className).toBe("")
     expect(inspector.querySelector("main")).toBeNull()
     root.unmount()
   })
 
-  test("composes a compiled specialized Field as an authored section child", () => {
+  test("composes a compiled specialized Field as an authored Panel child", () => {
     const document = createDocument()
     const host = document.createElement("main")
     document.appendChild(host)
     const root = createRoot(host)
     root.render(InspectorFieldFixture as any, {})
-    expect(host.querySelector('[data-section-id="value"] [data-field-id="output"]')).not.toBeNull()
+    expect(host.querySelector('[data-panel][title="value"] input')).not.toBeNull()
     expect([...host.querySelectorAll("*")].every(element => element.className === "")).toBe(true)
     root.unmount()
   })
@@ -80,18 +80,18 @@ describe("compiled production Inspector", () => {
     document.appendChild(host)
     const root = createRoot(host)
     root.render(InspectorFixture as any, {
-      categories: [{id: "node", label: "N", iconSrc: uiIcons.settings, sectionIds: ["data"]}],
+      categories: [{id: "node", label: "N", iconSrc: uiIcons.settings, panelIds: ["data"]}],
       selectedCategoryId: "node",
       query: "",
-      sections: [{id: "data", label: "Data", content: "Output", expanded: true}]
+      panels: [{id: "data", label: "Data", content: "Output", expanded: true}]
     })
     const inspector = host.querySelector("aside")!
     const rail = inspector.querySelector("nav")!
     const search = inspector.querySelector("input")!
     const content = inspector.querySelector('[aria-label="Inspector content"]')!
     const context = content.querySelector("div")!
-    const section = inspector.querySelector('[data-section-id="data"]')!
-    const sections = section.parentElement!
+    const panel = inspector.querySelector('[data-panel][title="data"]')!
+    const panels = inspector.querySelector('[data-inspector-panels]')!
     const renderer = createDocumentRenderer({
       document,
       root: host,
@@ -100,8 +100,8 @@ describe("compiled production Inspector", () => {
     const frame = renderer.flush()
     expect(frame.boxByNode.get(rail)?.width).toBe(30)
     expect(frame.boxByNode.get(search)).toMatchObject({width: 115, height: 22})
-    expect(frame.boxByNode.get(sections)?.y).toBe(frame.boxByNode.get(context)!.y + 28)
-    expect(frame.boxByNode.get(section)?.y).toBe(frame.boxByNode.get(sections)!.contentY)
+    expect(frame.boxByNode.get(panels)?.y).toBe(frame.boxByNode.get(context)!.y + 28)
+    expect(frame.boxByNode.get(panel)?.y).toBe(frame.boxByNode.get(panels)!.contentY)
     expect(frame.displayList.some(item => item.kind === "image" && item.src === uiIcons.search)).toBe(true)
     renderer.dispose()
     root.unmount()
