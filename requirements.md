@@ -122,6 +122,32 @@ physical `*.tsx` owner; `icons` и `syntax-theme` являются exact data ow
 `theme.css` — единственным global theme resource. Параллельных `.ts` controller
 implementations, `*-component.tsx` aliases и `createX` re-exports нет.
 
+## Public owners и внутренний `src`
+
+Каждый public Component находится вне `src/` по exact physical path из
+`package.json`. Этот файл является настоящим читаемым TSX owner своих public
+props, semantic DOM и единственного component CSS document. Public файл не
+является facade, barrel или re-export implementation из `src/`.
+
+`src/` принадлежит только внутренней реализации `@ui/components`:
+
+- single-domain algorithms, models и pure mechanics находятся в
+  `src/<domain>/`;
+- `src/shared/` содержит только код, реально используемый минимум двумя
+  независимыми public owners;
+- single-use helper остаётся в owning domain и не получает имя shared;
+- public owners импортируют exact внутренние файлы напрямую, без
+  `src/index.ts` и других barrels;
+- `package.json` не экспортирует `src/**`, Storybook и внешние consumers его не
+  импортируют;
+- package-boundary test отклоняет `@ui/components/src/*` и public re-export
+  скрытого owner.
+
+Visible TSX, DOM composition и governed ``style={css`...`}`` не переносятся в
+`src/`: иначе public файл перестаёт быть owner и появляется скрытый runtime
+слой. Существующие flat internal modules переносятся под `src/` вместе с
+изменением их настоящего owner, а не отдельной механической перестановкой.
+
 Общий minified browser proof всех финальных owners должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
 150 kB / 35 kB gzip при external DOM, highlighter, React-shaped runtime и
