@@ -6,6 +6,7 @@ import {
   InspectorTextSection,
   type InspectorCategory
 } from "@ui/components/inspector"
+import {uiIcons} from "@ui/components/icons"
 import {type FieldDefinition} from "@ui/components/field"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
@@ -14,7 +15,7 @@ import {PROPS_INSPECTOR_COPY} from "./props-inspector-copy.ts"
 import {StoryPropsFields} from "./props-inspector.tsx"
 
 const categories: readonly InspectorCategory[] = Object.freeze([
-  Object.freeze({id: "props", label: "P", title: "Props", sectionIds: Object.freeze(["props"])})
+  Object.freeze({id: "props", label: "P", iconSrc: uiIcons.settings, title: "Props", sectionIds: Object.freeze(["props"])})
 ])
 
 const inspectorSections = Object.freeze([{id: "props"}] as const)
@@ -55,7 +56,9 @@ function InspectorStoryComponent() {
     query={query}
     searchLabel={PROPS_INSPECTOR_COPY.searchLabel}
     searchPlaceholder={PROPS_INSPECTOR_COPY.searchLabel}
-    context={{label: "Button", title: "Inspected element"}}
+    toolbarLeadingActions={[{id: "manual", label: "Справка", iconSrc: uiIcons.manual}]}
+    toolbarActions={[{id: "copy", label: "Копировать", iconSrc: uiIcons.copy}]}
+    context={{label: "Button", iconSrc: uiIcons.resource, title: "Inspected element"}}
     onQueryChange={setQuery}
   >
     <InspectorSections>{inspectorSections.map(section => <InspectorSection
@@ -64,6 +67,7 @@ function InspectorStoryComponent() {
       label={PROPS_INSPECTOR_COPY.sectionLabel}
       title={PROPS_INSPECTOR_COPY.sectionTitle}
       expanded={expanded}
+      actions={[{id: "copy", label: "Копировать секцию", iconSrc: uiIcons.copy}]}
       onToggle={(_id, next) => setExpanded(next)}
     ><StoryPropsFields fields={fields} /></InspectorSection>)}</InspectorSections>
   </Inspector>
@@ -219,16 +223,17 @@ function mountInspectorPart(
 function source(): string {
   return [
     'import {Inspector, InspectorSection, InspectorSections} from "@ui/components/inspector"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {Field} from "@ui/components/field"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
-    `const categories = ${JSON.stringify(categories, null, 2)} as const`,
+    'const categories = [{id: "props", label: "P", iconSrc: uiIcons.settings, title: "Props", sectionIds: ["props"]}] as const',
     `const fields = ${JSON.stringify(propFields, null, 2)} as const`,
     "",
     "function Story() {",
     '  const [query, setQuery] = useState("")',
     "  const [expanded, setExpanded] = useState(true)",
-    '  return <Inspector categories={categories} selectedCategoryId="props" query={query} onQueryChange={setQuery}>',
+    '  return <Inspector categories={categories} selectedCategoryId="props" query={query} context={{label: "Button", iconSrc: uiIcons.resource}} onQueryChange={setQuery}>',
     "    <InspectorSections><InspectorSection id=\"props\" label=\"Свойства\" expanded={expanded}",
     "      onToggle={(_id, next) => setExpanded(next)}>",
     "      <div>{fields.map(field => <Field key={field.id} definition={field} />)}</div>",

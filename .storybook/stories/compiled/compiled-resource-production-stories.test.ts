@@ -5,6 +5,7 @@ import {
   createCompiledPathInputProductionStory,
   createCompiledReferenceInputProductionStory,
 } from "./compiled-resource-production-stories.tsx"
+import {uiIcons} from "@ui/components/icons"
 
 describe("compiled resource production stories", () => {
   test("keeps PathInput hook-controlled through input and browse proposals", () => {
@@ -42,6 +43,9 @@ describe("compiled resource production stories", () => {
     const buttons = [...owner.querySelectorAll("button")] as HTMLButtonElement[]
     const valueButton = buttons[0]!
     const valueText = valueButton.querySelector("span")!.firstChild
+    expect(valueButton.querySelector("img")?.getAttribute("src")).toBe(uiIcons.resource)
+    expect(buttons[1]!.querySelector("img")?.getAttribute("src")).toBe(uiIcons.picker)
+    expect(buttons[2]!.querySelector("img")?.getAttribute("src")).toBe(uiIcons.close)
 
     buttons[1]!.click()
     expect(valueButton.textContent).toBe("Viewport")

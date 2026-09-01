@@ -13,6 +13,7 @@ import {
   createCompiledListProductionStory,
   createCompiledTableProductionStory,
 } from "./compiled-data-production-stories.tsx"
+import {uiIcons} from "@ui/components/icons"
 
 describe("compiled data production stories", () => {
   test("keeps ColorInput presentation in hook state", () => {
@@ -59,9 +60,9 @@ describe("compiled data production stories", () => {
   test("keeps CollectionInput selection and keyed rows", () => {
     const mounted = createCompiledCollectionInputProductionStory(createDocument(), {
       items: [
-        {id: "input", label: "Input"},
-        {id: "output", label: "Output"},
-        {id: "viewport", label: "Viewport"},
+        {id: "input", label: "Input", iconSrc: uiIcons.log},
+        {id: "output", label: "Output", iconSrc: uiIcons.run},
+        {id: "viewport", label: "Viewport", iconSrc: uiIcons.visibilityOn},
       ],
       selectedId: "output",
     })
@@ -71,6 +72,10 @@ describe("compiled data production stories", () => {
     viewport.dispatchEvent(new Event("click", {bubbles: true}))
     expect(viewport.getAttribute("aria-selected")).toBe("true")
     expect(owner.querySelector('[data-item-key="output"]')).toBe(output)
+    expect(output?.querySelector("img")?.getAttribute("src")).toBe(uiIcons.run)
+    expect([...owner.querySelectorAll("button")].find(button => button.title === "Add item")?.querySelector("img")?.getAttribute("src"))
+      .toBe(uiIcons.plus)
+    expect(mounted.story.source.typescript).toContain("uiIcons.run")
     expect(mounted.story.source.typescript).toContain("<CollectionInput")
     expect(mounted.story.source.typescript).toContain("useState")
     expect(mounted.story.source.typescript).not.toContain("Css")
@@ -82,7 +87,7 @@ describe("compiled data production stories", () => {
   test("keeps List and Table selection on retained keyed rows", () => {
     const document = createDocument()
     const list = createCompiledListProductionStory(document, {
-      items: [{key: "a", label: "Alpha"}, {key: "b", label: "Beta"}],
+      items: [{key: "a", label: "Alpha", iconSrc: uiIcons.log}, {key: "b", label: "Beta", iconSrc: uiIcons.run}],
       selectedKey: "a",
     })
     const listA = list.story.element.querySelector('[data-item-key="a"]')
@@ -90,6 +95,8 @@ describe("compiled data production stories", () => {
     listB.dispatchEvent(new Event("click", {bubbles: true}))
     expect(listB.getAttribute("aria-selected")).toBe("true")
     expect(list.story.element.querySelector('[data-item-key="a"]')).toBe(listA)
+    expect(listB.querySelector("img")?.getAttribute("src")).toBe(uiIcons.run)
+    expect(list.story.source.typescript).toContain("uiIcons.run")
     expect(list.story.source.typescript).not.toContain("Css")
     expect(list.story.source.typescript).not.toContain("createList(")
 

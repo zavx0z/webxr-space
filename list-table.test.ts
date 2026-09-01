@@ -4,6 +4,7 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {List} from "./list.tsx"
+import {uiIcons} from "./icons.ts"
 import {
   Table,
   normalizeTableSelection,
@@ -20,13 +21,17 @@ describe("compiled keyed collections", () => {
     const root = createRoot(host)
     const selected: string[] = []
     const items = [
-      {key: "a", label: "Alpha", detail: "A"},
-      {key: "b", label: "Beta", detail: "B"},
-      {key: "c", label: "Gamma", detail: "C"}
+      {key: "a", label: "Alpha", iconSrc: uiIcons.log, detail: "A"},
+      {key: "b", label: "Beta", iconSrc: uiIcons.run, detail: "B"},
+      {key: "c", label: "Gamma", iconSrc: uiIcons.visibilityOn, detail: "C"}
     ]
     root.render(List as any, {items, selectedKey: "a", onSelect: (key: string) => selected.push(key)})
     const alpha = host.querySelector('[data-item-key="a"]')!
     const beta = host.querySelector('[data-item-key="b"]')!
+    const alphaIcon = alpha.querySelector("img")!
+    expect(alphaIcon.getAttribute("src")).toBe(uiIcons.log)
+    expect(alphaIcon.getAttribute("alt")).toBe("")
+    expect(alphaIcon.getAttribute("aria-hidden")).toBe("true")
     beta.dispatchEvent(new Event("click", {bubbles: true}))
     expect(selected).toEqual(["b"])
 
@@ -34,6 +39,7 @@ describe("compiled keyed collections", () => {
     const rows = [...host.querySelectorAll("li")]
     expect(rows.map(row => row.getAttribute("data-item-key"))).toEqual(["c", "a", "b"])
     expect(rows[1]).toBe(alpha)
+    expect(rows[1]!.querySelector("img")).toBe(alphaIcon)
     expect(rows[2]).toBe(beta)
     expect(rows[2]!.getAttribute("aria-selected")).toBe("true")
     expect(host.querySelector("ul")!.className).toBe("")

@@ -2,6 +2,7 @@
 import {describe, expect, test} from "bun:test"
 import {createDocument, type HTMLButtonElement} from "@zavx0z/dom"
 import {hudFrameDefaultProps, hudWindowDefaultProps, timelineDefaultProps} from "@ui/components/hud"
+import {uiIcons} from "@ui/components/icons"
 import {
   createCompiledHudFrameProductionStory,
   createCompiledHudWindowProductionStory,
@@ -12,9 +13,15 @@ describe("compiled HUD production stories", () => {
   test("mounts hook-controlled Window with authored Pane body", () => {
     const mounted = createCompiledHudWindowProductionStory(createDocument(), hudWindowDefaultProps)
     const minimize = [...mounted.story.element.querySelectorAll("button")].find(button => button.getAttribute("title") === "Minimize") as HTMLButtonElement
+    const minimizeIcon = minimize.querySelector("img")!
+    expect(minimizeIcon.getAttribute("src")).toBe(uiIcons.minus)
+    expect([...mounted.story.element.querySelectorAll("button")].find(button => button.title === "Pin")?.querySelector("img")?.getAttribute("src"))
+      .toBe(uiIcons.pin)
     minimize.click()
-    expect(minimize.textContent).toBe("+")
+    expect(minimize.textContent).toBe("Restore")
     expect(minimize.title).toBe("Restore")
+    expect(minimize.querySelector("img")).toBe(minimizeIcon)
+    expect(minimizeIcon.getAttribute("src")).toBe(uiIcons.plus)
     expect(mounted.story.element.textContent).toContain("Window body")
     expect(mounted.story.source.typescript).toContain("<HudWindow")
     expect(mounted.story.source.typescript).not.toContain("Css")

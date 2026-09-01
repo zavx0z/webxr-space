@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {IconButton} from "./button.tsx"
-import {clearIcon} from "./icon-assets.ts"
+import {closeIcon} from "./icon-assets.ts"
 
 export type NotificationTone = "info" | "success" | "warning" | "error"
 
@@ -79,7 +79,7 @@ export function Notification(props: NotificationProps) {
     `}>
       <IconButton
         label="Dismiss"
-        iconSrc={clearIcon}
+        iconSrc={closeIcon}
         title="Dismiss"
         style={dismissStyle}
         onClick={props.onDismiss}

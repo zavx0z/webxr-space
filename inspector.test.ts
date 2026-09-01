@@ -5,6 +5,7 @@ import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Inspector} from "./inspector.tsx"
 import {InspectorFieldFixture, InspectorFixture} from "./inspector-consumer-fixture.tsx"
+import {uiIcons} from "./icons.ts"
 import {createDocument} from "./test-document.ts"
 
 describe("compiled production Inspector", () => {
@@ -15,8 +16,8 @@ describe("compiled production Inspector", () => {
     document.appendChild(host)
     const root = createRoot(host)
     const categories = [
-      {id: "node", label: "N", sectionIds: ["transform", "data"]},
-      {id: "render", label: "R", sectionIds: ["data"]}
+      {id: "node", label: "N", iconSrc: uiIcons.settings, sectionIds: ["transform", "data"]},
+      {id: "render", label: "R", iconSrc: uiIcons.visibilityOn, sectionIds: ["data"]}
     ]
     const sections = [
       {id: "transform", label: "Transform", content: "Location", expanded: true},
@@ -27,8 +28,19 @@ describe("compiled production Inspector", () => {
     const category = inspector.querySelectorAll("nav button")[0] as HTMLButtonElement
     const transform = inspector.querySelector('[data-section-id="transform"]')!
     const header = transform.querySelector("button") as HTMLButtonElement
+    const categoryIcon = category.querySelector("img")!
+    const disclosureIcon = header.querySelector("img")!
+    expect(categoryIcon.getAttribute("src")).toBe(uiIcons.settings)
+    expect(categoryIcon.getAttribute("alt")).toBe("")
+    expect(categoryIcon.getAttribute("aria-hidden")).toBe("true")
+    expect(inspector.querySelector('input[type="search"]')!.parentElement!.querySelector("img")?.getAttribute("src"))
+      .toBe(uiIcons.search)
+    expect(inspector.querySelector('[title="Scene"] img')?.getAttribute("src")).toBe(uiIcons.resource)
+    expect(disclosureIcon.getAttribute("src")).toBe(uiIcons.chevronDown)
     header.click()
     expect(header.getAttribute("aria-expanded")).toBe("false")
+    expect(header.querySelector("img")).toBe(disclosureIcon)
+    expect(disclosureIcon.getAttribute("src")).toBe(uiIcons.chevronRight)
     const content = document.getElementById(header.getAttribute("aria-controls")!)!
     expect(content.hasAttribute("hidden")).toBe(true)
 
@@ -68,7 +80,7 @@ describe("compiled production Inspector", () => {
     document.appendChild(host)
     const root = createRoot(host)
     root.render(InspectorFixture as any, {
-      categories: [{id: "node", label: "N", sectionIds: ["data"]}],
+      categories: [{id: "node", label: "N", iconSrc: uiIcons.settings, sectionIds: ["data"]}],
       selectedCategoryId: "node",
       query: "",
       sections: [{id: "data", label: "Data", content: "Output", expanded: true}]
@@ -90,6 +102,7 @@ describe("compiled production Inspector", () => {
     expect(frame.boxByNode.get(search)).toMatchObject({width: 115, height: 22})
     expect(frame.boxByNode.get(sections)?.y).toBe(frame.boxByNode.get(context)!.y + 28)
     expect(frame.boxByNode.get(section)?.y).toBe(frame.boxByNode.get(sections)!.contentY)
+    expect(frame.displayList.some(item => item.kind === "image" && item.src === uiIcons.search)).toBe(true)
     renderer.dispose()
     root.unmount()
   })

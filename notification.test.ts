@@ -4,6 +4,7 @@ import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {Notification} from "./notification.tsx"
+import {uiIcons} from "./icons.ts"
 import {createDocument} from "./test-document.ts"
 
 describe("compiled production Notification", () => {
@@ -28,6 +29,7 @@ describe("compiled production Notification", () => {
     expect(owner.getAttribute("aria-live")).toBe("polite")
     expect(owner.getAttribute("data-tone")).toBe("success")
     expect(owner.textContent).toContain("ExportFinished3 files")
+    expect(dismiss.querySelector("img")?.getAttribute("src")).toBe(uiIcons.close)
     dismiss.click()
     expect(events).toEqual(["dismiss"])
 

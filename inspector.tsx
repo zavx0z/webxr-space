@@ -1,21 +1,39 @@
 import type {Event} from "@zavx0z/dom"
 import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {Button} from "./button.tsx"
+import {Button, IconButton} from "./button.tsx"
+import {chevronDownIcon, chevronRightIcon, searchIcon} from "./icon-assets.ts"
 import {TextField} from "./text-field.tsx"
 
 export type InspectorCategory = Readonly<{
   id: string
   label: string
+  iconSrc?: string | undefined
   title?: string | undefined
   disabled?: boolean | undefined
   groupStart?: boolean | undefined
   sectionIds?: readonly string[] | undefined
 }>
 
-export type InspectorContext = Readonly<{
+export type InspectorAction = Readonly<{
+  id: string
   label: string
+  iconSrc: string
   title?: string | undefined
+  disabled?: boolean | undefined
+  selected?: boolean | undefined
+  action?: ((event: Event) => void) | undefined
+}>
+
+export type InspectorContextRow = Readonly<{
+  label: string
+  iconSrc?: string | undefined
+  title?: string | undefined
+  actions?: readonly InspectorAction[] | undefined
+}>
+
+export type InspectorContext = InspectorContextRow & Readonly<{
+  secondary?: InspectorContextRow | undefined
 }>
 
 export type InspectorProps = Readonly<{
@@ -26,6 +44,8 @@ export type InspectorProps = Readonly<{
   query: string
   searchLabel?: string | undefined
   searchPlaceholder?: string | undefined
+  toolbarLeadingActions?: readonly InspectorAction[] | undefined
+  toolbarActions?: readonly InspectorAction[] | undefined
   context?: InspectorContext | undefined
   children: JsxSourceElement
   style?: CssStyle | undefined
@@ -45,6 +65,7 @@ export type InspectorSectionProps = Readonly<{
   expanded: boolean
   disabled?: boolean | undefined
   hidden?: boolean | undefined
+  actions?: readonly InspectorAction[] | undefined
   children: JsxSourceElement
   style?: CssStyle | undefined
   onToggle?: ((id: string, expanded: boolean, event: Event) => void) | undefined
@@ -54,7 +75,7 @@ export type InspectorTextSectionProps = Omit<InspectorSectionProps, "children"> 
   content: string
 }>
 
-const searchStyle: CssStyle = css`& { width: 115px; height: 22px; padding: 2px 8px; }`
+const searchStyle: CssStyle = css`& { width: 100%; height: 22px; padding: 2px 8px 2px 23px; }`
 const categoryStyle: CssStyle = css`
   & { width: 26px; min-width: 26px; height: 28px; margin-left: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 `
@@ -63,9 +84,12 @@ const selectedCategoryStyle: CssStyle = css`
   & { border-radius: 4px 0 0 4px; background: var(--widget-number-background-readonly); color: rgb(var(--surface-50)); }
 `
 const sectionHeaderStyle: CssStyle = css`
-  & { width: 100%; height: 26px; padding: 0 5px; border: 0; border-radius: 4px; background: var(--widget-regular-outline); box-shadow: none; justify-content: flex-start; }
+  & { width: 0; min-width: 0; height: 26px; flex-grow: 1; padding: 0 5px; border: 0; border-radius: 4px; background: transparent; box-shadow: none; justify-content: flex-start; }
 `
 const expandedHeaderStyle: CssStyle = css`& { border-radius: 4px 4px 0 0; }`
+const actionStyle: CssStyle = css`
+  & { width: 22px; min-width: 22px; height: 22px; padding: 2px; border: 0; background: transparent; box-shadow: none; }
+`
 
 type CategoryButtonProps = Readonly<{
   category: InspectorCategory
@@ -77,6 +101,9 @@ function CategoryButton(props: CategoryButtonProps) {
   const onClick = (event: Event) => props.onChange?.(props.category.id, event)
   return <Button
     label={props.category.label}
+    iconSrc={props.category.iconSrc}
+    iconOnly={props.category.iconSrc !== undefined}
+    iconSize={16}
     title={props.category.title ?? props.category.label}
     aria-label={props.category.title ?? props.category.label}
     disabled={props.category.disabled === true}
@@ -84,6 +111,47 @@ function CategoryButton(props: CategoryButtonProps) {
     style={css`${categoryStyle}${props.category.groupStart === true && categoryGroupStartStyle}${props.selected && selectedCategoryStyle}`}
     onClick={onClick}
   />
+}
+
+function InspectorContextRowView(props: Readonly<{
+  context: InspectorContextRow
+  secondary: boolean
+}>) {
+  return <div
+    data-secondary={props.secondary ? "true" : undefined}
+    title={props.context.title ?? props.context.label}
+    style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 28px; gap: 4px; padding: 3px 6px; background: var(--widget-number-background-readonly); }
+      &[data-secondary="true"] { height: 24px; }
+    `}
+  >
+    <img
+      src={props.context.iconSrc ?? ""}
+      alt=""
+      aria-hidden="true"
+      width={16}
+      height={16}
+      hidden={props.context.iconSrc === undefined}
+      style={css`
+        & { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+        &[hidden] { display: none; }
+      `}
+    />
+    <span style={css`& { display: inline; min-width: 0; flex-grow: 1; overflow: clip; white-space: nowrap; text-overflow: ellipsis; }`}>{props.context.label}</span>
+    <nav aria-label={`${props.context.label} actions`} style={css`
+      & { display: flex; flex-direction: row; align-items: center; gap: 2px; }
+    `}>{(props.context.actions ?? []).map(action => <IconButton
+      key={action.id}
+      label={action.label}
+      iconSrc={action.iconSrc}
+      title={action.title ?? action.label}
+      disabled={action.disabled === true}
+      selected={action.selected}
+      iconSize={14}
+      style={actionStyle}
+      onClick={action.action}
+    />)}</nav>
+  </div>
 }
 
 export function Inspector(props: InspectorProps) {
@@ -109,16 +177,56 @@ export function Inspector(props: InspectorProps) {
       `}
   >
     <header style={css`
-      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; height: 30px; padding: 4px; background: var(--widget-number-background-readonly); }
+      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 30px; gap: 4px; padding: 4px; background: var(--widget-number-background-readonly); }
     `}>
-      <TextField
-        type="search"
-        value={props.query}
-        placeholder={props.searchPlaceholder}
-        aria-label={props.searchLabel ?? props.searchPlaceholder ?? "Search"}
-        style={searchStyle}
-        onInput={onInput}
-      />
+      <div style={css`
+        & { display: flex; flex-direction: row; align-items: center; width: 0; min-width: 22px; flex-grow: 1; gap: 2px; }
+      `}>{(props.toolbarLeadingActions ?? []).map(action => <IconButton
+        key={action.id}
+        label={action.label}
+        iconSrc={action.iconSrc}
+        title={action.title ?? action.label}
+        disabled={action.disabled === true}
+        selected={action.selected}
+        iconSize={14}
+        style={actionStyle}
+        onClick={action.action}
+      />)}</div>
+      <div style={css`
+        & { position: relative; display: block; width: 115px; min-width: 115px; height: 22px; }
+      `}>
+        <img
+          src={searchIcon}
+          alt=""
+          aria-hidden="true"
+          width={13}
+          height={13}
+          style={css`
+            & { position: absolute; left: 6px; top: 4px; width: 13px; height: 13px; object-fit: contain; pointer-events: none; }
+          `}
+        />
+        <TextField
+          type="search"
+          value={props.query}
+          placeholder={props.searchPlaceholder}
+          aria-label={props.searchLabel ?? props.searchPlaceholder ?? "Search"}
+          style={searchStyle}
+          onInput={onInput}
+        />
+      </div>
+      <div style={css`
+        & { display: flex; flex-direction: row; align-items: center; justify-content: flex-end; width: 0; min-width: 22px; flex-grow: 1; gap: 2px; }
+      `}>{(props.toolbarActions ?? []).map(action => <IconButton
+        key={action.id}
+        label={action.label}
+        iconSrc={action.iconSrc}
+        title={action.title ?? action.label}
+        disabled={action.disabled === true}
+        selected={action.selected}
+        iconSize={14}
+        style={actionStyle}
+        onClick={action.action}
+      />)}</div>
     </header>
     <div style={css`& { display: flex; flex-direction: row; width: 100%; flex-grow: 1; }`}>
       <nav aria-label={props.categoriesLabel ?? "Categories"} style={css`
@@ -134,14 +242,8 @@ export function Inspector(props: InspectorProps) {
       <div role="region" aria-label="Inspector content" style={css`
         & { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; background: var(--widget-number-background-readonly); }
       `}>
-        <div
-          hidden={props.context === undefined}
-          title={props.context?.title ?? props.context?.label}
-          style={css`
-              & { box-sizing: border-box; display: block; width: 100%; height: 28px; padding: 6px; background: var(--widget-number-background-readonly); }
-              &[hidden] { display: none; }
-            `}
-        >{props.context?.label ?? ""}</div>
+        {props.context === undefined ? null : <InspectorContextRowView context={props.context} secondary={false} />}
+        {props.context?.secondary === undefined ? null : <InspectorContextRowView context={props.context.secondary} secondary={true} />}
         {props.children}
       </div>
     </div>
@@ -167,15 +269,34 @@ export function InspectorSection(props: InspectorSectionProps) {
         ${props.style}
       `}
   >
-    <Button
-      label={props.label}
-      title={props.title ?? props.label}
-      aria-expanded={String(props.expanded)}
-      aria-controls={contentId}
-      disabled={props.disabled === true}
-      style={css`${sectionHeaderStyle}${props.expanded && expandedHeaderStyle}`}
-      onClick={onClick}
-    />
+    <header style={css`
+      & { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; width: 100%; height: 26px; gap: 2px; background: var(--widget-regular-outline); }
+    `}>
+      <Button
+        label={props.label}
+        startIcon={props.expanded ? chevronDownIcon : chevronRightIcon}
+        iconSize={14}
+        title={props.title ?? props.label}
+        aria-expanded={String(props.expanded)}
+        aria-controls={contentId}
+        disabled={props.disabled === true}
+        style={css`${sectionHeaderStyle}${props.expanded && expandedHeaderStyle}`}
+        onClick={onClick}
+      />
+      <nav aria-label={`${props.label} actions`} style={css`
+        & { display: flex; flex-direction: row; align-items: center; gap: 2px; padding-right: 2px; }
+      `}>{(props.actions ?? []).map(action => <IconButton
+        key={action.id}
+        label={action.label}
+        iconSrc={action.iconSrc}
+        title={action.title ?? action.label}
+        disabled={action.disabled === true}
+        selected={action.selected}
+        iconSize={14}
+        style={actionStyle}
+        onClick={action.action}
+      />)}</nav>
+    </header>
     <div id={contentId} hidden={!props.expanded} style={css`
         & { box-sizing: border-box; display: block; width: 100%; padding: 6px; background: var(--widget-regular-outline); }
         &[hidden] { display: none; }
@@ -195,6 +316,7 @@ export function InspectorTextSection(props: InspectorTextSectionProps) {
     expanded={props.expanded}
     disabled={props.disabled}
     hidden={props.hidden}
+    actions={props.actions}
     style={props.style}
     onToggle={props.onToggle}
   ><InspectorTextContent content={props.content} /></InspectorSection>

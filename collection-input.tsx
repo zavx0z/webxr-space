@@ -1,10 +1,12 @@
 import type {Event} from "@zavx0z/dom"
-import {Button} from "./button.tsx"
+import {Button, IconButton} from "./button.tsx"
+import {minusIcon, plusIcon} from "./icon-assets.ts"
 import {List} from "./list.tsx"
 
 export type CollectionInputItem = Readonly<{
   id: string
   label: string
+  iconSrc?: string | undefined
   description?: string | undefined
   disabled?: boolean | undefined
 }>
@@ -76,6 +78,7 @@ export function CollectionInput(props: CollectionInputProps) {
       items={normalized.items.map(item => ({
         key: item.id,
         label: item.label,
+        iconSrc: item.iconSrc,
         detail: item.description,
         disabled: item.disabled
       }))}
@@ -88,15 +91,17 @@ export function CollectionInput(props: CollectionInputProps) {
       onSelect={onSelect}
     />
     <div style={css`& { display: flex; flex-direction: column; width: 28px; gap: 2px; }`}>
-      <Button
-        label="+"
+      <IconButton
+        label="Add item"
+        iconSrc={plusIcon}
         title="Add item"
         disabled={locked || props.onAdd === undefined}
         style={actionStyle}
         onClick={onAdd}
       />
-      <Button
-        label="−"
+      <IconButton
+        label="Remove selected item"
+        iconSrc={minusIcon}
         title="Remove selected item"
         disabled={locked || selected === undefined || selected.disabled === true || props.onRemove === undefined}
         style={actionStyle}

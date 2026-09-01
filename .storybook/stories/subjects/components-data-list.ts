@@ -1,3 +1,4 @@
+import {uiIcons} from "@ui/components/icons"
 import {defineOwnerStory, withStoryProps} from "../story-types.ts"
 
 export const story_basic_default = defineOwnerStory("components/data/list/basic/default", async (document) => {
@@ -7,16 +8,19 @@ export const story_basic_default = defineOwnerStory("components/data/list/basic/
       {
         "key": "input",
         "label": "Input",
+        "iconSrc": uiIcons.log,
         "detail": "Source"
       },
       {
         "key": "output",
         "label": "Output",
+        "iconSrc": uiIcons.run,
         "detail": "Result"
       },
       {
         "key": "viewport",
         "label": "Viewport",
+        "iconSrc": uiIcons.visibilityOn,
         "detail": "View"
       }
     ],

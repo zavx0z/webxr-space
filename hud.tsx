@@ -2,10 +2,12 @@ import type {Event} from "@zavx0z/dom"
 import {useId} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {Button} from "./button.tsx"
+import {closeIcon, minusIcon, pinIcon, plusIcon} from "./icon-assets.ts"
 
 export type HudWindowAction = Readonly<{
   key: string
   label: string
+  iconSrc?: string | undefined
   disabled: boolean
 }>
 
@@ -31,6 +33,7 @@ export type HudFrameEdge = "floating" | "left" | "right" | "top" | "bottom"
 export type HudFrameHandle = Readonly<{
   key: string
   label: string
+  iconSrc?: string | undefined
   disabled: boolean
 }>
 
@@ -110,8 +113,8 @@ export const hudWindowDefaultProps: HudWindowDefaultProps = Object.freeze({
   active: true,
   minimized: false,
   actions: Object.freeze([
-    Object.freeze({key: "pin", label: "Pin", disabled: false}),
-    Object.freeze({key: "close", label: "Close", disabled: false})
+    Object.freeze({key: "pin", label: "Pin", iconSrc: pinIcon, disabled: false}),
+    Object.freeze({key: "close", label: "Close", iconSrc: closeIcon, disabled: false})
   ])
 })
 
@@ -166,6 +169,7 @@ const navCss = css`& { display: flex; flex-direction: row; gap: 4px; }`
 const bodyCss = css`& { box-sizing: border-box; display: block; flex-grow: 1; padding: 6px; }`
 const hiddenCss = css`& { display: none; }`
 const buttonStyle: CssStyle = css`& { width: 52px; min-width: 22px; height: 22px; padding: 2px 6px; font-size: 10px; }`
+const iconActionStyle: CssStyle = css`& { width: 22px; padding: 2px; }`
 const minimizeButtonStyle: CssStyle = css`& { width: 22px; }`
 
 type HudWindowActionButtonProps = Readonly<{
@@ -177,9 +181,12 @@ function HudWindowActionButton(props: HudWindowActionButtonProps) {
   const onClick = (event: Event) => props.onAction?.(props.action.key, event)
   return <Button
     label={props.action.label}
+    iconSrc={props.action.iconSrc}
+    iconOnly={props.action.iconSrc !== undefined}
     title={props.action.label}
+    aria-label={props.action.label}
     disabled={props.action.disabled}
-    style={buttonStyle}
+    style={css`${buttonStyle}${props.action.iconSrc !== undefined && iconActionStyle}`}
     onClick={onClick}
   />
 }
@@ -193,9 +200,12 @@ function HudFrameHandleButton(props: HudFrameHandleButtonProps) {
   const onClick = (event: Event) => props.onHandle?.(props.handle.key, event)
   return <Button
     label={props.handle.label}
+    iconSrc={props.handle.iconSrc}
+    iconOnly={props.handle.iconSrc !== undefined}
     title={props.handle.label}
+    aria-label={props.handle.label}
     disabled={props.handle.disabled}
-    style={buttonStyle}
+    style={css`${buttonStyle}${props.handle.iconSrc !== undefined && iconActionStyle}`}
     onClick={onClick}
   />
 }
@@ -217,7 +227,9 @@ export function HudWindow(props: HudWindowProps) {
   >
     <header style={headerCss}>
       <Button
-        label={props.minimized ? "+" : "−"}
+        label={props.minimized ? "Restore" : "Minimize"}
+        iconSrc={props.minimized ? plusIcon : minusIcon}
+        iconOnly={true}
         title={props.minimized ? "Restore" : "Minimize"}
         aria-label={props.minimized ? "Restore" : "Minimize"}
         aria-expanded={String(!props.minimized)}

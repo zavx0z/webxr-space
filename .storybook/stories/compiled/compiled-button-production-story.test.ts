@@ -20,7 +20,7 @@ describe("compiled IconButton production story", () => {
       title: "Настройки",
     })
     expect(mounted.story.element.getAttribute("data-story-component")).toBe("icon-button")
-    expect(mounted.story.element.getAttribute("aria-label")).toBeNull()
+    expect(mounted.story.element.getAttribute("aria-label")).toBe("Настройки")
     expect(mounted.story.element.querySelector("img")?.getAttribute("src")).toBe(uiIcons.settings)
     expect(mounted.story.source.typescript).toContain("<IconButton")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)

@@ -48,11 +48,11 @@ export const story_value_selected_description = defineOwnerStory("components/inp
 )
 
 export const story_value_header_icons = defineOwnerStory("components/inputs/enum-input/value/header-icons", document =>
-  story(document, "components/inputs/enum-input/value/header-icons", {options: iconOptions, presentation: "expanded", popupLabel: "Icon options"})
+  story(document, "components/inputs/enum-input/value/header-icons", {options: iconOptions, presentation: "cycle", popupLabel: "Icon options"})
 )
 
 export const story_value_mixed_icons = defineOwnerStory("components/inputs/enum-input/value/mixed-icons", document =>
-  story(document, "components/inputs/enum-input/value/mixed-icons", {options: mixedIconOptions, presentation: "expanded", popupLabel: "Mixed icon options"})
+  story(document, "components/inputs/enum-input/value/mixed-icons", {options: mixedIconOptions, presentation: "cycle", popupLabel: "Mixed icon options"})
 )
 
 export const story_value_invalid_legacy = defineOwnerStory("components/inputs/enum-input/value/invalid-legacy", document =>

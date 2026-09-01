@@ -7,6 +7,7 @@ import {
   type HudWindowDefaultProps,
   type TimelineProps
 } from "@ui/components/hud"
+import {uiIcons} from "@ui/components/icons"
 import {Pane} from "@ui/components/pane"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState} from "@zavx0z/react"
@@ -104,6 +105,7 @@ function mount(
 function hudFrameSource(props: HudFrameDefaultProps): string {
   return [
     'import {HudFrame} from "@ui/components/hud"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {Pane} from "@ui/components/pane"',
     'import {createRoot} from "@zavx0z/react"',
     "",
@@ -121,6 +123,7 @@ function hudFrameSource(props: HudFrameDefaultProps): string {
 function hudWindowSource(props: HudWindowDefaultProps): string {
   return [
     'import {HudWindow} from "@ui/components/hud"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {Pane} from "@ui/components/pane"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
@@ -169,7 +172,11 @@ function timelineSource(props: TimelineProps): string {
 }
 
 function literal(value: unknown): string {
-  return JSON.stringify(value, null, 2)
+  let source = JSON.stringify(value, null, 2) ?? "undefined"
+  for (const [name, icon] of Object.entries(uiIcons)) {
+    source = source.replaceAll(JSON.stringify(icon), `uiIcons.${name}`)
+  }
+  return source
 }
 
 function serialize(element: Element, depth = 0): string {

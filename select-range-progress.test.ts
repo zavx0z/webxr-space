@@ -1,7 +1,10 @@
 import {describe, expect, test} from "bun:test"
 import {
   Event,
+  KeyboardEvent,
+  getPopoverVisibilityState,
   type HTMLButtonElement,
+  type HTMLElement,
   type HTMLInputElement,
   type HTMLOptionElement,
   type HTMLSelectElement
@@ -75,9 +78,10 @@ describe("compiled select, range and progress controls", () => {
     })
     const expanded = host.querySelector('[data-enum-input]')!
     expect(expanded.getAttribute("role")).toBe("radiogroup")
-    expect(expanded.querySelectorAll("button")).toHaveLength(2)
-    expect(expanded.querySelector("img")!.getAttribute("src")).toBe("icon:alpha")
-    const expandedButtons = [...expanded.querySelectorAll("button")] as HTMLButtonElement[]
+    const expandedOptions = expanded.querySelector('[data-enum-expanded]')!
+    expect(expandedOptions.querySelectorAll("button")).toHaveLength(2)
+    expect(expandedOptions.querySelector("img")!.getAttribute("src")).toBe("icon:alpha")
+    const expandedButtons = [...expandedOptions.querySelectorAll("button")] as HTMLButtonElement[]
     expandedButtons[0]!.click()
     expandedButtons[1]!.click()
     expect(proposals).toEqual(["a"])
@@ -138,6 +142,61 @@ describe("compiled select, range and progress controls", () => {
     expect(select.pickerVisibilityState).toBe("closed")
     interaction.dispose()
     renderer.dispose()
+    root.unmount()
+  })
+
+  test("renders icon cycle options in a same-Document popover", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    const proposals: string[] = []
+    root.render(EnumInput as any, {
+      value: "a",
+      options: [
+        {key: "a", value: "a", label: "Alpha", iconSrc: "icon:alpha"},
+        {key: "b", value: "b", label: "Beta", iconSrc: "icon:beta"}
+      ],
+      popupLabel: "Icon options",
+      onChange: (value: string) => proposals.push(value)
+    })
+    const trigger = host.querySelector('[data-enum-icon-cycle]')!.querySelector("button") as HTMLButtonElement
+    const popover = host.querySelector("[popover]") as HTMLElement
+    expect(trigger.querySelector("img")?.getAttribute("src")).toBe("icon:alpha")
+    expect(trigger.getAttribute("aria-controls")).toBe(popover.id)
+    expect(popover.getAttribute("role")).toBe("listbox")
+    expect(popover[getPopoverVisibilityState]()).toBe("hidden")
+
+    trigger.click()
+    expect(trigger.getAttribute("aria-expanded")).toBe("true")
+    expect(popover[getPopoverVisibilityState]()).toBe("showing")
+    const options = [...popover.querySelectorAll('[role="option"]')] as HTMLButtonElement[]
+    expect(options[0]!.getAttribute("aria-pressed")).toBeNull()
+    expect(options[0]!.getAttribute("aria-selected")).toBe("true")
+    expect(options.map(option => option.querySelector("img")?.getAttribute("src")))
+      .toEqual(["icon:alpha", "icon:beta"])
+    const alphaRow = options[0]!
+    const alphaIcon = alphaRow.querySelector("img")
+    options[1]!.focus()
+    expect(document.activeElement?.textContent).toBe("Beta")
+    alphaRow.focus()
+    alphaRow.dispatchEvent(new KeyboardEvent("keydown", {key: "ArrowDown", bubbles: true}))
+    expect(document.activeElement?.textContent).toBe("Beta")
+    options[1]!.dispatchEvent(new KeyboardEvent("keydown", {key: "Enter", bubbles: true}))
+    expect(proposals).toEqual(["b"])
+    expect(popover[getPopoverVisibilityState]()).toBe("hidden")
+
+    root.render(EnumInput as any, {
+      value: "alpha-next",
+      options: [
+        {key: "a", value: "alpha-next", label: "Alpha next", iconSrc: "icon:alpha-next"},
+        {key: "b", value: "b", label: "Beta", iconSrc: "icon:beta"}
+      ]
+    })
+    const retainedAlpha = host.querySelectorAll('[role="option"]')[0]!
+    expect(retainedAlpha).toBe(alphaRow)
+    expect(retainedAlpha.querySelector("img")).toBe(alphaIcon)
+    expect(alphaIcon?.getAttribute("src")).toBe("icon:alpha-next")
     root.unmount()
   })
 

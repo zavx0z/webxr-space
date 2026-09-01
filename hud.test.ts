@@ -10,6 +10,7 @@ import {
   timelineDefaultProps
 } from "./hud.tsx"
 import {HudFrameFixture, HudWindowFixture} from "./hud-consumer-fixture.tsx"
+import {uiIcons} from "./icons.ts"
 import {createDocument} from "./test-document.ts"
 
 describe("compiled production HUD compositions", () => {
@@ -20,8 +21,8 @@ describe("compiled production HUD compositions", () => {
     document.appendChild(host)
     const root = createRoot(host)
     const actions = [
-      {key: "pin", label: "Pin", disabled: false},
-      {key: "close", label: "Close", disabled: false}
+      {key: "pin", label: "Pin", iconSrc: uiIcons.pin, disabled: false},
+      {key: "close", label: "Close", iconSrc: uiIcons.close, disabled: false}
     ]
     root.render(HudWindowFixture as any, {title: "Output", subtitle: "HUD", active: true, minimized: false, actions})
     const owner = host.querySelector("section")!
@@ -30,17 +31,25 @@ describe("compiled production HUD compositions", () => {
     const bodyPane = owner.querySelector("section section")!
     const pin = [...owner.querySelectorAll("button")].find(button => button.textContent === "Pin")!
     const minimize = [...owner.querySelectorAll("button")].find(button => button.getAttribute("title") === "Minimize") as HTMLButtonElement
+    const minimizeIcon = minimize.querySelector("img")!
+    const pinIcon = pin.querySelector("img")!
+    expect(minimizeIcon.getAttribute("src")).toBe(uiIcons.minus)
+    expect(pinIcon.getAttribute("src")).toBe(uiIcons.pin)
     const renderer = createDocumentRenderer({document, root: host, viewport: {width: 800, height: 400}})
     const frame = renderer.flush()
     const headerBox = frame.boxByNode.get(header)!
+    expect(frame.boxByNode.get(pin)?.width).toBe(22)
+    expect(frame.boxByNode.get(minimize)?.width).toBe(22)
     expect(headerChildren.every(child => {
       const box = frame.boxByNode.get(child)!
       return box.x >= headerBox.contentX && box.x + box.width <= headerBox.contentX + headerBox.contentWidth
     })).toBe(true)
     renderer.dispose()
     minimize.click()
-    expect(minimize.textContent).toBe("+")
+    expect(minimize.textContent).toBe("Restore")
     expect(minimize.title).toBe("Restore")
+    expect(minimize.querySelector("img")).toBe(minimizeIcon)
+    expect(minimizeIcon.getAttribute("src")).toBe(uiIcons.plus)
     const body = [...owner.querySelectorAll("section")].find(section => section.id === minimize.getAttribute("aria-controls"))!
     expect(body.hasAttribute("hidden")).toBe(true)
     expect(owner.querySelector("section section")).toBe(bodyPane)
@@ -54,6 +63,7 @@ describe("compiled production HUD compositions", () => {
     })
     expect(host.querySelector("section")).toBe(owner)
     expect([...owner.querySelectorAll("button")].find(button => button.textContent === "Pin")).toBe(pin)
+    expect(pin.querySelector("img")).toBe(pinIcon)
     expect(owner.className).toBe("")
     root.unmount()
   })

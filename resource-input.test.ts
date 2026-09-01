@@ -15,6 +15,7 @@ import {createRoot, type ComponentRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {PathInput} from "./path-input.tsx"
 import {ReferenceInput} from "./reference-input.tsx"
+import {uiIcons} from "./icons.ts"
 import {createDocument} from "./test-document.ts"
 
 describe("compiled production resource inputs", () => {
@@ -134,13 +135,15 @@ describe("compiled production resource inputs", () => {
     const owner = mounted.host.querySelector("div")!
     const buttons = [...owner.querySelectorAll("button")] as HTMLButtonElement[]
     const valueText = buttons[0]!.querySelector("span")!.firstChild
+    const resourceImage = buttons[0]!.querySelector("img")
     const pickImage = buttons[1]!.querySelector("img")
     const clearImage = buttons[2]!.querySelector("img")
     expect(buttons).toHaveLength(3)
     expect(buttons.every(button => button.className === "")).toBe(true)
     expect(buttons[0]!.textContent).toBe("Material")
-    expect(pickImage?.getAttribute("src")).toContain("svg")
-    expect(clearImage?.getAttribute("src")).toContain("svg")
+    expect(resourceImage?.getAttribute("src")).toBe(uiIcons.resource)
+    expect(pickImage?.getAttribute("src")).toBe(uiIcons.picker)
+    expect(clearImage?.getAttribute("src")).toBe(uiIcons.close)
     for (const button of buttons) button.click()
     expect(actions).toEqual(["activate", "pick", "clear"])
 
@@ -168,6 +171,7 @@ describe("compiled production resource inputs", () => {
     expect(updated[1]).toBe(buttons[1])
     expect(updated[2]).toBe(buttons[2])
     expect(updated[0]!.querySelector("span")!.firstChild).toBe(valueText)
+    expect(updated[0]!.querySelector("img")).toBe(resourceImage)
     expect(updated[1]!.querySelector("img")).toBe(pickImage)
     expect(updated[2]!.querySelector("img")).toBe(clearImage)
     expect(updated[0]!.textContent).toBe("Not assigned")

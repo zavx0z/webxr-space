@@ -1,5 +1,7 @@
-import type {Event, HTMLSelectElement} from "@zavx0z/dom"
+import type {Event, HTMLElement, HTMLSelectElement, KeyboardEvent, ToggleEvent} from "@zavx0z/dom"
+import {useCallback, useId, useState} from "@zavx0z/react"
 import {Button} from "./button.tsx"
+import {chevronDownIcon} from "./icon-assets.ts"
 
 export type EnumInputOption = Readonly<{
   key: string
@@ -23,10 +25,12 @@ export type EnumInputProps = Readonly<{
   density?: EnumInputDensity | undefined
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
+  open?: boolean | undefined
   popupLabel?: string | undefined
   title?: string | undefined
   style?: CssStyle | undefined
   onChange?: ((value: string, event: Event) => void) | undefined
+  onOpenChange?: ((open: boolean, event: Event) => void) | undefined
 }>
 
 const selectCss = css`
@@ -45,14 +49,8 @@ const selectCss = css`
     font-size: var(--font-size-sm);
   }
   &:hover { background: var(--widget-hover-background); }
-  &:active {
-    border-color: var(--widget-focus-outline);
-    background: var(--widget-text-background-focus);
-  }
-  &:focus {
-    border-color: var(--widget-focus-outline);
-    background: var(--widget-text-background-focus);
-  }
+  &:active { border-color: var(--widget-focus-outline); background: var(--widget-text-background-focus); }
+  &:focus { border-color: var(--widget-focus-outline); background: var(--widget-text-background-focus); }
   &:disabled { opacity: 0.5; box-shadow: none; }
   &[data-density="compact"] { height: var(--control-height-medium); padding: 2px 6px; font-size: var(--font-size-xs); }
   &[aria-readonly="true"] { color: var(--widget-text-content-readonly); }
@@ -60,6 +58,14 @@ const selectCss = css`
 
 const expandedOptionStyle: CssStyle = css`
   & { width: 0; min-width: 44px; flex-grow: 1; border-radius: 3px; }
+`
+const cycleTriggerStyle: CssStyle = css`
+  & { width: 100%; height: var(--control-height-large); justify-content: flex-start; padding: 3px 7px; }
+`
+const openCycleTriggerStyle: CssStyle = css`& { background: var(--widget-regular-background-selected); color: var(--widget-regular-content-selected); }`
+const compactCycleTriggerStyle: CssStyle = css`& { height: var(--control-height-medium); padding: 2px 6px; }`
+const cycleOptionStyle: CssStyle = css`
+  & { width: 100%; height: 26px; justify-content: flex-start; border: 0; background: transparent; box-shadow: none; }
 `
 
 function EnumOption(props: Readonly<{option: EnumInputOption; selected: boolean; hidden: boolean}>) {
@@ -69,7 +75,6 @@ function EnumOption(props: Readonly<{option: EnumInputOption; selected: boolean;
     disabled={props.option.disabled === true}
     hidden={props.hidden}
     title={props.option.title ?? props.option.description}
-    data-icon-src={props.option.iconSrc}
   >{props.option.label}</option>
 }
 
@@ -131,14 +136,46 @@ function ExpandedEnumOptions(props: Readonly<{
   />)}</div>
 }
 
+function IconCycleOption(props: Readonly<{
+  option: EnumInputOption
+  selected: boolean
+  focusable: boolean
+  locked: boolean
+  onSelect(key: string, event: Event): void
+  onKeyDown(key: string, event: Event): void
+}>) {
+  const onClick = (event: Event) => props.onSelect(props.option.key, event)
+  const onKeyDown = (event: Event) => props.onKeyDown(props.option.key, event)
+  return <Button
+    role="option"
+    tabIndex={props.focusable ? 0 : -1}
+    aria-selected={String(props.selected)}
+    label={props.option.label}
+    startIcon={props.option.iconSrc}
+    title={props.option.title ?? props.option.description}
+    variant={props.selected ? "contained" : "text"}
+    tone={props.selected ? "primary" : "neutral"}
+    disabled={props.locked || props.option.disabled === true}
+    style={cycleOptionStyle}
+    onClick={onClick}
+    onKeyDown={onKeyDown}
+  />
+}
+
 export function EnumInput(props: EnumInputProps) {
   assertEnumProps(props)
+  const popupId = useId()
+  const [internalOpen, setInternalOpen] = useState(false)
   const presentation = props.presentation ?? "cycle"
   const density = props.density ?? "regular"
   const exceptionalLabel = enumInputExceptionalLabel(props)
   const options = props.options ?? []
   const locked = props.disabled === true || props.readOnly === true
+  const hasOptionIcons = options.some(option => option.iconSrc !== undefined)
+  const iconCycle = presentation === "cycle" && exceptionalLabel === undefined && hasOptionIcons
+  const open = iconCycle && (props.open ?? internalOpen)
   const selected = findEnumInputOption(props.value, options)
+  const focusKey = selected?.key ?? options.find(option => option.disabled !== true)?.key ?? null
   const displayedOptions = selected === undefined
     ? [Object.freeze({key: "__invalid__", value: props.value, label: props.value, disabled: true}), ...options]
     : options
@@ -150,6 +187,48 @@ export function EnumInput(props: EnumInputProps) {
     }
     props.onChange?.(select.value, event)
   }
+  const setOpen = (next: boolean, event: Event) => {
+    if (props.open === undefined) setInternalOpen(next)
+    props.onOpenChange?.(next, event)
+  }
+  const bindPopover = useCallback((element: HTMLElement | null) => {
+    if (!element?.isConnected) return
+    const trigger = element.parentElement?.querySelector("button") as HTMLElement | null
+    if (!trigger?.isConnected) return
+    if (open) element.showPopover({source: trigger})
+    else if (element.popover !== null) element.hidePopover()
+  }, [open])
+  const onCycleToggle = (event: Event) => {
+    if (!locked) setOpen(!open, event)
+  }
+  const onPopoverToggle = (event: Event) => {
+    const showing = (event as ToggleEvent).newState === "open"
+    if (showing !== open) setOpen(showing, event)
+  }
+  const onCycleSelect = (key: string, event: Event) => {
+    const option = options.find(candidate => candidate.key === key)
+    if (option === undefined) return
+    if (locked || option.disabled === true) return
+    props.onChange?.(option.value, event)
+    setOpen(false, event)
+  }
+  const onCycleKeyDown = (key: string, event: Event) => {
+    const keyboard = event as KeyboardEvent
+    if (keyboard.key === "Enter" || keyboard.key === " ") {
+      keyboard.preventDefault()
+      onCycleSelect(key, event)
+      return
+    }
+    if (keyboard.key !== "ArrowDown" && keyboard.key !== "ArrowUp") return
+    const current = event.target as HTMLElement
+    const optionButtons = [...(current.parentElement?.querySelectorAll('[role="option"]') ?? [])]
+      .filter(option => option.getAttribute("aria-disabled") !== "true") as HTMLElement[]
+    const currentIndex = optionButtons.indexOf(current)
+    const target = optionButtons[(currentIndex + (keyboard.key === "ArrowDown" ? 1 : -1) + optionButtons.length) % optionButtons.length]
+    if (target === undefined) return
+    keyboard.preventDefault()
+    target.focus()
+  }
   return <div
     data-enum-input=""
     data-value={props.value}
@@ -158,12 +237,52 @@ export function EnumInput(props: EnumInputProps) {
     data-state={exceptionalLabel === undefined ? "ready" : props.state ?? (props.options === undefined ? "undefined" : "empty")}
     role={exceptionalLabel === undefined && presentation === "expanded" ? "radiogroup" : undefined}
     aria-label={props.popupLabel ?? props.title}
+    aria-readonly={String(props.readOnly === true)}
     style={css`
       & { box-sizing: border-box; display: block; width: 180px; min-width: 0; }
       &[data-presentation="expanded"] { width: 100%; }
       ${props.style}
     `}
   >
+    <div data-enum-icon-cycle="" data-density={density} hidden={!iconCycle} style={css`
+      & { box-sizing: border-box; display: block; width: 100%; min-width: 0; }
+      &[hidden] { display: none; }
+    `}>
+      <Button
+        label={selected?.label ?? props.value}
+        startIcon={selected?.iconSrc}
+        endIcon={chevronDownIcon}
+        title={selected?.description ?? props.title}
+        disabled={locked}
+        aria-expanded={String(open)}
+        aria-haspopup="listbox"
+        aria-controls={popupId}
+        aria-label={props.popupLabel}
+        style={css`${cycleTriggerStyle}${density === "compact" && compactCycleTriggerStyle}${open && openCycleTriggerStyle}`}
+        onClick={onCycleToggle}
+      />
+      <div
+        ref={bindPopover}
+        id={popupId}
+        popover="auto"
+        role="listbox"
+        aria-label={props.popupLabel ?? props.title ?? "Options"}
+        onToggle={onPopoverToggle}
+        style={css`
+          & { box-sizing: border-box; display: block; width: 180px; padding: 3px; border: var(--border-width-control) solid var(--widget-popup-outline); border-radius: 4px; background: var(--widget-popup-background); }
+        `}
+      >
+        {options.map(option => <IconCycleOption
+          key={option.key}
+          option={option}
+          selected={option.value === props.value}
+          focusable={option.key === focusKey}
+          locked={locked}
+          onSelect={onCycleSelect}
+          onKeyDown={onCycleKeyDown}
+        />)}
+      </div>
+    </div>
     <div
       data-enum-expanded=""
       data-density={density}
@@ -189,7 +308,7 @@ export function EnumInput(props: EnumInputProps) {
     <select
       data-enum-cycle=""
       data-density={density}
-      hidden={exceptionalLabel === undefined && presentation !== "cycle"}
+      hidden={iconCycle || (exceptionalLabel === undefined && presentation !== "cycle")}
       disabled={props.disabled === true || exceptionalLabel !== undefined}
       aria-readonly={String(props.readOnly === true)}
       aria-label={props.popupLabel}

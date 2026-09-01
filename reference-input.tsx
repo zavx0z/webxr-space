@@ -1,6 +1,6 @@
 import type {Event} from "@zavx0z/dom"
 import {Button, IconButton} from "./button.tsx"
-import {clearIcon, pickerIcon} from "./icon-assets.ts"
+import {closeIcon, pickerIcon, resourceIcon} from "./icon-assets.ts"
 
 export type ReferenceInputValue = Readonly<{
   id: string
@@ -65,6 +65,7 @@ export function ReferenceInput(props: ReferenceInputProps) {
   >
     <Button
       label={label}
+      startIcon={resourceIcon}
       variant="text"
       title={props.value?.kind ?? props.title}
       disabled={locked || props.onActivate === undefined}
@@ -81,7 +82,7 @@ export function ReferenceInput(props: ReferenceInputProps) {
     />
     <IconButton
       label="Clear reference"
-      iconSrc={clearIcon}
+      iconSrc={closeIcon}
       title="Clear reference"
       disabled={locked || clearUnavailable}
       style={css`${buttonStyle}${actionStyle}${lastActionStyle}${density === "compact" && compactButtonStyle}${clearUnavailable && hiddenStyle}`}

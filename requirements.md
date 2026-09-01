@@ -111,8 +111,12 @@ implementations, `*-component.tsx` aliases и `createX` re-exports нет.
 
 Общий minified browser proof всех финальных owners должен содержать ноль
 `.ui-*`, `data-ui-state` и legacy factory code и оставаться ниже
-120 kB / 30 kB gzip при external DOM, highlighter, React-shaped runtime и
+130 kB / 32 kB gzip при external DOM, highlighter, React-shaped runtime и
 Template ABI.
+Этот ceiling включает `UI-COMPILED-ICONS-001` с keyboard-operable icon cycle;
+предыдущие 120/30 были checkpoint неполной DOM-миграции и не являются
+разрешением снова удалить production behavior. Другие owners не используют
+этот bounded рост как общий запас.
 
 ## DOM ownership
 
@@ -211,6 +215,33 @@ Workbench/VS Code color roles.
 
 Detailed component and catalog laws остаются executable в natural owner tests
 и `packages/components/.storybook` tests без Storybook dependency.
+
+## `UI-COMPILED-ICONS-001` — DOM icon continuity
+
+DOM migration сохраняет существующие icon slots как обычные декоративные
+`<img alt="" aria-hidden="true">` с exact immutable SVG data URL. Renderer
+только проецирует стандартный `img`; Component не передаёт ему имя иконки,
+`data-icon-src` или private draw callback. Fixed production assets импортируются
+named из package-private `icon-assets.ts`, а public `uiIcons` ссылается на те же
+exact значения без второй копии.
+
+`Inspector` сохраняет category/context/action icons, toolbar actions, search
+glyph и disclosure chevrons; отсутствие optional category icon оставляет
+текстовый fallback. `ListItem.iconSrc` владеет стабильным image slot, который
+сохраняет identity при keyed reorder; `CollectionInput` прокидывает item icons
+и использует exact plus/minus `IconButton`. `HudWindow` использует icon-only
+minimize/restore и optional action icons. `ReferenceInput` сохраняет resource,
+picker и close glyphs; dismiss/close никогда не подменяется trash/clear glyph.
+
+Нативный `select > option` не умеет отображать arbitrary image URL. Поэтому
+iconless `EnumInput` cycle остаётся standard `select`, а cycle с `iconSrc`
+композирует same-Document Button + `popover="auto"` List и materializes
+реальные `<img>` для trigger и option rows. Component-specific Renderer parsing
+`data-icon-src` запрещён. Popup options сохраняют `EnumInputOption.key`, roving
+focus по Arrow Up/Down и activation по Enter/Space; `aria-controls` указывает
+на exact `role="listbox"`. Initial controlled open materializes только после
+same-Document connection. Expanded presentation продолжает использовать те же
+Button image slots.
 
 ## `UI-COMPILED-BUTTON-001` — first final component owner
 

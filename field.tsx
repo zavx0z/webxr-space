@@ -40,6 +40,7 @@ export type FieldReference = Readonly<{id: string; label: string; kind?: string}
 export type FieldCollectionItem = Readonly<{
   id: string
   label: string
+  iconSrc?: string
   description?: string
   disabled?: boolean
 }>
@@ -89,7 +90,12 @@ export type BooleanFieldDefinition = FieldBase & Readonly<{
   onChange?(value: boolean): void
 }>
 
-export type FieldOption = Readonly<{value: string; label: string; disabled?: boolean}>
+export type FieldOption = Readonly<{
+  value: string
+  label: string
+  iconSrc?: string
+  disabled?: boolean
+}>
 
 export type EnumFieldDefinition = FieldBase & Readonly<{
   kind: "enum"

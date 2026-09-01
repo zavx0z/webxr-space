@@ -1,5 +1,6 @@
 import {useState} from "@zavx0z/react"
 import {Field} from "./field.tsx"
+import {uiIcons} from "./icons.ts"
 import {
   Inspector,
   InspectorSection,
@@ -34,7 +35,9 @@ export function InspectorFixture(props: InspectorFixtureProps) {
     categories={props.categories}
     selectedCategoryId={selectedCategoryId}
     query={query}
-    context={{label: "Scene"}}
+    toolbarLeadingActions={[{id: "manual", label: "Manual", iconSrc: uiIcons.manual}]}
+    toolbarActions={[{id: "copy", label: "Copy", iconSrc: uiIcons.copy}]}
+    context={{label: "Scene", iconSrc: uiIcons.resource}}
     onCategoryChange={setSelectedCategoryId}
     onQueryChange={setQuery}
   >
@@ -46,6 +49,7 @@ export function InspectorFixture(props: InspectorFixtureProps) {
         content={section.content}
         expanded={section.expanded}
         hidden={!isInspectorSectionVisible(props.categories, selectedCategoryId, query, section)}
+        actions={[{id: "copy", label: "Copy section", iconSrc: uiIcons.copy}]}
         onToggle={onToggle}
       />)}
     </InspectorSections>

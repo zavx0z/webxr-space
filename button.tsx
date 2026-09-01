@@ -12,8 +12,12 @@ export type ButtonProps = Readonly<{
   size?: ButtonSize | undefined
   disabled?: boolean | undefined
   selected?: boolean | undefined
+  role?: string | undefined
+  tabIndex?: number | undefined
   "aria-expanded"?: boolean | string | undefined
+  "aria-haspopup"?: string | undefined
   "aria-label"?: string | undefined
+  "aria-selected"?: boolean | string | undefined
   "aria-controls"?: string | undefined
   title?: string | undefined
   iconSrc?: string | undefined
@@ -24,6 +28,7 @@ export type ButtonProps = Readonly<{
   iconSize?: number | undefined
   style?: CssStyle | undefined
   onClick?: ((event: Event) => void) | undefined
+  onKeyDown?: ((event: Event) => void) | undefined
 }>
 
 export type IconButtonProps = Readonly<{
@@ -57,14 +62,19 @@ export function Button(props: ButtonProps) {
     type="button"
     title={props.title}
     disabled={props.disabled === true}
+    role={props.role}
+    tabIndex={props.tabIndex ?? 0}
     aria-pressed={props.selected === undefined ? undefined : String(props.selected)}
     aria-expanded={props["aria-expanded"]}
+    aria-haspopup={props["aria-haspopup"]}
     aria-label={props["aria-label"]}
+    aria-selected={props["aria-selected"]}
     aria-controls={props["aria-controls"]}
     data-variant={variant}
     data-tone={tone}
     data-size={size}
     onClick={props.onClick}
+    onKeyDown={props.onKeyDown}
     style={css`
         & {
           box-sizing: border-box;
@@ -116,6 +126,7 @@ export function Button(props: ButtonProps) {
     <img
       src={startIcon}
       alt=""
+      aria-hidden="true"
       width={iconSize}
       height={iconSize}
       hidden={startIcon === ""}
@@ -142,6 +153,7 @@ export function Button(props: ButtonProps) {
     <img
       src={endIcon}
       alt=""
+      aria-hidden="true"
       width={iconSize}
       height={iconSize}
       hidden={endIcon === ""}
@@ -171,6 +183,7 @@ export function IconButton(props: IconButtonProps) {
     disabled={props.disabled}
     selected={props.selected}
     title={props.title ?? props.label}
+    aria-label={props.label}
     style={props.style}
     onClick={props.onClick}
   />

@@ -3,6 +3,7 @@ import type {Event} from "@zavx0z/dom"
 export type ListItem = Readonly<{
   key: string
   label: string
+  iconSrc?: string | undefined
   detail?: string | undefined
   disabled?: boolean | undefined
 }>
@@ -53,6 +54,10 @@ const itemCss = css`
 `
 
 const labelCss = css`& { display: inline; min-width: 0; flex-grow: 1; }`
+const iconCss = css`
+  & { display: block; width: 16px; min-width: 16px; height: 16px; margin-right: 6px; object-fit: contain; }
+  &[hidden] { display: none; }
+`
 const detailCss = css`& { display: inline; color: var(--widget-text-content-readonly); font-size: var(--font-size-2xs); }`
 const emptyCss = css`
   & { display: block; min-height: 24px; padding: 4px 8px; color: var(--widget-text-content-readonly); font-size: var(--font-size-xs); }
@@ -88,6 +93,15 @@ function ListRow(props: ListRowProps) {
       &[aria-disabled="true"] { opacity: 0.5; }
     `}
   >
+    <img
+      src={props.item.iconSrc ?? ""}
+      alt=""
+      aria-hidden="true"
+      width={16}
+      height={16}
+      hidden={props.item.iconSrc === undefined}
+      style={iconCss}
+    />
     <span style={labelCss}>{props.item.label}</span>
     <span style={detailCss}>{props.item.detail ?? ""}</span>
   </li>

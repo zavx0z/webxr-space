@@ -3,12 +3,14 @@ import {
   EnumInput,
   type EnumInputProps
 } from "@ui/components/enum-input"
+import {uiIcons} from "@ui/components/icons"
 import {createRoot, useState} from "@zavx0z/react"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import type {RoutedProductionComponentStory} from "../story-types.ts"
 
-function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps}>) {
+function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps; presented: boolean}>) {
   const [value, setValue] = useState(props.initial.value)
+  const [open, setOpen] = useState(props.initial.open ?? false)
   const onChange = (next: string, event: Event) => {
     setValue(next)
     props.initial.onChange?.(next, event)
@@ -21,9 +23,11 @@ function EnumInputStoryComponent(props: Readonly<{initial: EnumInputProps}>) {
     density={props.initial.density}
     disabled={props.initial.disabled}
     readOnly={props.initial.readOnly}
+    open={!props.presented && props.initial.open === true ? false : open}
     popupLabel={props.initial.popupLabel}
     title={props.initial.title}
     onChange={onChange}
+    onOpenChange={setOpen}
   />
 }
 
@@ -33,7 +37,7 @@ export function createCompiledEnumInputProductionStory(
 ): RoutedProductionComponentStory {
   const staging = document.createElement("div")
   const root = createRoot(staging)
-  root.render(<EnumInputStoryComponent initial={props} />)
+  root.render(<EnumInputStoryComponent initial={props} presented={false} />)
   const owner = staging.querySelector("[data-enum-input]") as HTMLElement | null
   if (!owner) {
     root.unmount()
@@ -42,6 +46,7 @@ export function createCompiledEnumInputProductionStory(
   staging.removeChild(owner)
   owner.setAttribute("data-story-component", "enum-input")
 
+  let presented = false
   const story = Object.freeze({
     element: owner,
     componentRoot: root,
@@ -50,6 +55,11 @@ export function createCompiledEnumInputProductionStory(
         html: serialize(owner),
         typescript: source(props, currentValue(owner, props.value))
       })
+    },
+    afterPresent() {
+      if (presented) return
+      presented = true
+      root.render(<EnumInputStoryComponent initial={props} presented={true} />)
     },
     dispose() {
       root.unmount()
@@ -61,25 +71,38 @@ export function createCompiledEnumInputProductionStory(
 function source(props: EnumInputProps, value: string): string {
   return [
     'import {EnumInput} from "@ui/components/enum-input"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
-    `const options = ${JSON.stringify(props.options, null, 2)} as const`,
+    `const options = ${iconSource(props.options)} as const`,
     "",
     "function Story() {",
     `  const [value, setValue] = useState(${JSON.stringify(value)})`,
+    `  const [open, setOpen] = useState(${String(props.open === true)})`,
     "  return <EnumInput",
     "    value={value}",
     "    options={options}",
+    "    open={open}",
     `    presentation=${JSON.stringify(props.presentation ?? "cycle")}`,
     `    state=${JSON.stringify(props.state ?? "ready")}`,
     `    density=${JSON.stringify(props.density ?? "regular")}`,
     `    disabled={${String(props.disabled === true)}}`,
     `    readOnly={${String(props.readOnly === true)}}`,
     "    onChange={setValue}",
+    "    onOpenChange={setOpen}",
     "  />",
     "}",
     "createRoot(container).render(<Story />)"
   ].join("\n")
+}
+
+function iconSource(value: unknown): string {
+  const source = JSON.stringify(value, null, 2)
+  if (source === undefined) return "undefined"
+  return source
+    .replaceAll(JSON.stringify(uiIcons.log), "uiIcons.log")
+    .replaceAll(JSON.stringify(uiIcons.run), "uiIcons.run")
+    .replaceAll(JSON.stringify(uiIcons.visibilityOn), "uiIcons.visibilityOn")
 }
 
 function currentValue(owner: HTMLElement, fallback: string): string {

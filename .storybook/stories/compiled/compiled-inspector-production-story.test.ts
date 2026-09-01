@@ -1,6 +1,7 @@
 /** Package-owned external Storybook story support. */
 import {describe, expect, test} from "bun:test"
 import {Event, createDocument, type HTMLButtonElement, type HTMLInputElement} from "@zavx0z/dom"
+import {uiIcons} from "@ui/components/icons"
 import {
   createCompiledInspectorProductionStory,
   createCompiledInspectorSectionProductionStory,
@@ -21,8 +22,12 @@ describe("compiled Inspector production story", () => {
     expect(owner.textContent).not.toContain("variant")
     const category = [...owner.querySelectorAll("nav button")].find(button => button.textContent === "P") as HTMLButtonElement
     expect(category.getAttribute("aria-pressed")).toBe("true")
+    expect(category.querySelector("img")?.getAttribute("src")).toBe(uiIcons.settings)
+    expect(owner.querySelector('input[type="search"]')?.parentElement?.querySelector("img")?.getAttribute("src")).toBe(uiIcons.search)
+    expect(owner.querySelector('[title="Inspected element"] img')?.getAttribute("src")).toBe(uiIcons.resource)
     expect(mounted.story.source.typescript).toContain("<Inspector")
     expect(mounted.story.source.typescript).toContain("<Field")
+    expect(mounted.story.source.typescript).toContain("uiIcons.settings")
     expect(mounted.story.source.typescript).toContain("useState")
     expect(mounted.story.source.typescript).not.toContain("Css")
     expect(mounted.story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)

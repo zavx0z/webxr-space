@@ -1,3 +1,4 @@
+import {uiIcons} from "@ui/components/icons"
 import {defineOwnerStory, withStoryProps} from "../story-types.ts"
 
 export const story_value_selected = defineOwnerStory("components/inputs/collection-input/value/selected", async (document) => {
@@ -7,16 +8,19 @@ export const story_value_selected = defineOwnerStory("components/inputs/collecti
       {
         "id": "input",
         "label": "Input",
+        "iconSrc": uiIcons.log,
         "description": "Input surface"
       },
       {
         "id": "output",
         "label": "Output",
+        "iconSrc": uiIcons.run,
         "description": "Output surface"
       },
       {
         "id": "viewport",
         "label": "Viewport",
+        "iconSrc": uiIcons.visibilityOn,
         "description": "Viewport surface"
       }
     ],

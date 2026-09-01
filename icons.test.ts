@@ -1,12 +1,26 @@
 import {describe, expect, test} from "bun:test"
 import {
+  applyIcon,
+  chevronDownIcon,
+  closeIcon,
   clearIcon,
+  databaseIcon,
+  executionPointIcon,
+  expandIcon,
   folderIcon,
+  imageIcon,
+  languageIcon,
   minusIcon,
   pickerIcon,
+  pinIcon,
   plusIcon,
+  resourceIcon,
   runIcon,
+  searchIcon,
+  settingsIcon,
   uiIcons,
+  visibilityOnIcon,
+  breakpointIcon,
 } from "./icons.ts"
 
 describe("@ui/components icons", () => {
@@ -16,13 +30,48 @@ describe("@ui/components icons", () => {
     expect(decodeURIComponent(uiIcons.breakpointActive)).toContain("<circle")
     expect(uiIcons.resume).toBe(uiIcons.run)
     expect(uiIcons.recognition).toBe(uiIcons.image)
-    expect([runIcon, clearIcon, plusIcon, minusIcon, folderIcon, pickerIcon]).toEqual([
+    expect([
+      runIcon,
+      clearIcon,
+      plusIcon,
+      minusIcon,
+      closeIcon,
+      applyIcon,
+      searchIcon,
+      chevronDownIcon,
+      folderIcon,
+      pickerIcon,
+      resourceIcon,
+      pinIcon,
+      settingsIcon,
+      languageIcon,
+      executionPointIcon,
+      breakpointIcon,
+      databaseIcon,
+      expandIcon,
+      visibilityOnIcon,
+      imageIcon,
+    ]).toEqual([
       uiIcons.run,
       uiIcons.clear,
       uiIcons.plus,
       uiIcons.minus,
+      uiIcons.close,
+      uiIcons.apply,
+      uiIcons.search,
+      uiIcons.chevronDown,
       uiIcons.folder,
       uiIcons.picker,
+      uiIcons.resource,
+      uiIcons.pin,
+      uiIcons.settings,
+      uiIcons.language,
+      uiIcons.executionPoint,
+      uiIcons.breakpoint,
+      uiIcons.database,
+      uiIcons.expand,
+      uiIcons.visibilityOn,
+      uiIcons.image,
     ])
   })
 
@@ -30,6 +79,11 @@ describe("@ui/components icons", () => {
     const sources = await Promise.all([
       Bun.file(new URL("path-input.tsx", import.meta.url)).text(),
       Bun.file(new URL("reference-input.tsx", import.meta.url)).text(),
+      Bun.file(new URL("notification.tsx", import.meta.url)).text(),
+      Bun.file(new URL("collection-input.tsx", import.meta.url)).text(),
+      Bun.file(new URL("inspector.tsx", import.meta.url)).text(),
+      Bun.file(new URL("hud.tsx", import.meta.url)).text(),
+      Bun.file(new URL("enum-input.tsx", import.meta.url)).text(),
     ])
     expect(sources.every((source) => source.includes('from "./icon-assets.ts"'))).toBeTrue()
     expect(sources.every((source) => !source.includes('from "./icons.ts"'))).toBeTrue()

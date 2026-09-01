@@ -12,6 +12,7 @@ import {
   type ColorInputValue
 } from "@ui/components/color-input"
 import {List, type ListProps} from "@ui/components/list"
+import {uiIcons} from "@ui/components/icons"
 import {Table, type TableProps} from "@ui/components/table"
 import type {Document, Element, Event, HTMLElement, Node} from "@zavx0z/dom"
 import {createRoot, useState, type ComponentRoot} from "@zavx0z/react"
@@ -264,6 +265,7 @@ function colorSource(props: ColorInputProps): string {
 function collectionSource(props: CollectionInputProps): string {
   return [
     'import {CollectionInput, type CollectionInputItem} from "@ui/components/collection-input"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -281,6 +283,7 @@ function collectionSource(props: CollectionInputProps): string {
 function listSource(props: ListProps): string {
   return [
     'import {List} from "@ui/components/list"',
+    'import {uiIcons} from "@ui/components/icons"',
     'import {createRoot, useState} from "@zavx0z/react"',
     "",
     "function Story() {",
@@ -307,7 +310,11 @@ function tableSource(props: TableProps): string {
 }
 
 function literal(value: unknown): string {
-  return JSON.stringify(value, (_key, entry) => typeof entry === "function" ? undefined : entry, 2)
+  let source = JSON.stringify(value, (_key, entry) => typeof entry === "function" ? undefined : entry, 2) ?? "undefined"
+  for (const [name, icon] of Object.entries(uiIcons)) {
+    source = source.replaceAll(JSON.stringify(icon), `uiIcons.${name}`)
+  }
+  return source
 }
 
 function serialize(element: Element, depth = 0): string {
