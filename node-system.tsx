@@ -167,56 +167,51 @@ export function NodeSystem(props: NodeSystemProps) {
     aria-label={label}
     data-node-system=""
     style={css`
-      & {
-        box-sizing: border-box;
-        position: relative;
-        display: block;
-        width: ${viewport?.width === undefined ? "100%" : `${viewport.width}px`};
-        height: ${viewport?.height === undefined ? "auto" : `${viewport.height}px`};
-        min-width: 720px;
-        min-height: 480px;
-        overflow: hidden;
-        border: 1px solid rgb(26 26 26);
-        border-radius: 7px;
-        background: rgb(29 29 29);
-        color: rgb(224 224 224);
-        font-size: 11px;
-      }
+      box-sizing: border-box;
+      position: relative;
+      display: block;
+      width: ${viewport?.width === undefined ? "100%" : `${viewport.width}px`};
+      height: ${viewport?.height === undefined ? "auto" : `${viewport.height}px`};
+      min-width: 720px;
+      min-height: 480px;
+      overflow: hidden;
+      border: 1px solid rgb(26 26 26);
+      border-radius: 7px;
+      background: rgb(29 29 29);
+      color: rgb(224 224 224);
+      font-size: 11px;
+
       ${props.style}
     `}
   >
     <span style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        top: 8px;
-        right: 10px;
-        z-index: 3;
-        display: flex;
-        align-items: center;
-        height: 20px;
-        gap: 6px;
-        padding: 2px 7px;
-        border: 1px solid rgb(57 57 57);
-        border-radius: 10px;
-        background: rgba(24, 24, 24, .86);
-        color: rgb(166 166 166);
-        font-size: 10px;
-        white-space: nowrap;
-      }
+      box-sizing: border-box;
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      height: 20px;
+      gap: 6px;
+      padding: 2px 7px;
+      border: 1px solid rgb(57 57 57);
+      border-radius: 10px;
+      background: rgba(24, 24, 24, .86);
+      color: rgb(166 166 166);
+      font-size: 10px;
+      white-space: nowrap;
     `}>
       {view.entries.length} visible nodes
     </span>
     <div style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        display: block;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-      }
+      box-sizing: border-box;
+      position: absolute;
+      display: block;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
     `}>
       {view.connections.map(connection => <MemoPlannedNodeConnection
         key={connection.link.id}
@@ -249,76 +244,67 @@ export function NodeCard(props: NodeCardProps) {
     aria-label={label}
     data-node-id={props.node.id}
     style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        left: ${placement.x - (props.offsetX ?? 0)}px;
-        top: ${placement.y - (props.offsetY ?? 0)}px;
-        width: ${placement.width}px;
-        min-width: 210px;
-        overflow: visible;
-        border: 1px solid rgb(15 15 15);
-        border-radius: 6px;
-        background: rgb(48 48 48);
-        color: rgb(224 224 224);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, .48);
-      }
+      box-sizing: border-box;
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      left: ${placement.x - (props.offsetX ?? 0)}px;
+      top: ${placement.y - (props.offsetY ?? 0)}px;
+      width: ${placement.width}px;
+      min-width: 210px;
+      overflow: visible;
+      border: 1px solid rgb(15 15 15);
+      border-radius: 6px;
+      background: rgb(48 48 48);
+      color: rgb(224 224 224);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .48);
+
       ${props.style}
     `}
   >
     <header style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        height: 26px;
-        min-height: 26px;
-        gap: 6px;
-        padding: 0 8px;
-        overflow: hidden;
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-        background: ${headerColor};
-        color: rgb(245 245 245);
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      height: 26px;
+      min-height: 26px;
+      gap: 6px;
+      padding: 0 8px;
+      overflow: hidden;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      background: ${headerColor};
+      color: rgb(245 245 245);
     `}>
       <strong style={css`
-        & {
-          display: block;
-          min-width: 0;
-          flex-grow: 1;
-          overflow: hidden;
-          font-size: 11px;
-          font-weight: 600;
-          white-space: nowrap;
-          text-overflow: ellipsis;
-        }
+        display: block;
+        min-width: 0;
+        flex-grow: 1;
+        overflow: hidden;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       `}>{label}</strong>
       <small style={css`
-        & {
-          display: block;
-          flex-shrink: 0;
-          color: rgba(255, 255, 255, .68);
-          font-size: 9px;
-          white-space: nowrap;
-        }
+        display: block;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, .68);
+        font-size: 9px;
+        white-space: nowrap;
       `}>{category}</small>
     </header>
     <section aria-label={`${label} parameters`} style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        min-width: 0;
-        gap: 3px;
-        padding: 6px 8px 8px;
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-width: 0;
+      gap: 3px;
+      padding: 6px 8px 8px;
     `}>
       {props.node.parameters.map(parameter => <MemoParameterRow
         key={parameter.id}
@@ -352,15 +338,13 @@ function LooseSocketRow(props: LooseSocketRowProps) {
   return <div
     data-loose-socket={props.socket.id}
     style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        gap: 6px;
-        padding-top: 3px;
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      gap: 6px;
+      padding-top: 3px;
     `}
   >
     <MemoSocketPort
@@ -369,16 +353,14 @@ function LooseSocketRow(props: LooseSocketRowProps) {
       connected={isSocketConnected(props.links, props.nodeId, props.socket.id, props.connectedSocketKeys)}
     />
     <span style={css`
-      & {
-        display: block;
-        min-width: 0;
-        flex-grow: 1;
-        overflow: hidden;
-        color: rgb(176 176 176);
-        font-size: 9px;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
+      display: block;
+      min-width: 0;
+      flex-grow: 1;
+      overflow: hidden;
+      color: rgb(176 176 176);
+      font-size: 9px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     `}>
       {metadataString(props.socket.metadata, "label", props.socket.id)}
     </span>
@@ -417,27 +399,24 @@ export function ParameterRow(props: ParameterRowProps) {
     aria-label={label}
     data-parameter-id={parameter.id}
     style={css`
-      & {
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        min-width: 0;
-        min-height: 27px;
-        gap: 5px;
-      }
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+      min-height: 27px;
+      gap: 5px;
+
       ${props.style}
     `}
   >
     <span style={css`
-      & {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        min-width: 13px;
-        gap: 2px;
-      }
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      min-width: 13px;
+      gap: 2px;
     `}>
       {left.map(socket => <MemoSocketPort
         key={socket.id}
@@ -542,21 +521,24 @@ export function ParameterRow(props: ParameterRowProps) {
       description={description}
       onChange={onInput}
     /> : null}
-    {typeof parameter.value !== "boolean" && typeof parameter.value !== "number" && typeof parameter.value !== "string" && !concreteComposite ? <ReadonlyField
-      id={parameter.id}
-      label={label}
-      value={JSON.stringify(parameter.value) ?? "null"}
-      disabled={disabled}
-      description={description}
-    /> : null}
+    {typeof parameter.value !== "boolean" &&
+      typeof parameter.value !== "number" &&
+      typeof parameter.value !== "string" &&
+      !concreteComposite
+      ? <ReadonlyField
+        id={parameter.id}
+        label={label}
+        value={JSON.stringify(parameter.value) ?? "null"}
+        disabled={disabled}
+        description={description}
+      />
+      : null}
     <span style={css`
-      & {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        min-width: 13px;
-        gap: 2px;
-      }
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      min-width: 13px;
+      gap: 2px;
     `}>
       {right.map(socket => <MemoSocketPort
         key={socket.id}
@@ -583,27 +565,33 @@ export function SocketPort(props: SocketPortProps) {
     data-socket-side={socketSide(props.socket)}
     title={`${label} · ${kind}`}
     style={css`
-      & {
-        box-sizing: border-box;
-        display: block;
-        width: 13px;
-        min-width: 13px;
-        height: 13px;
-        min-height: 13px;
-        padding: 0;
-        border: 2px solid ${color};
-        border-radius: 50%;
-        background: rgb(31 31 31);
-        color: ${color};
-        font-size: 1px;
-        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-      }
+      box-sizing: border-box;
+      display: block;
+      width: 13px;
+      min-width: 13px;
+      height: 13px;
+      min-height: 13px;
+      padding: 0;
+      border: 2px solid ${color};
+      border-radius: 50%;
+      background: rgb(31 31 31);
+      color: ${color};
+      font-size: 1px;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
       &[aria-pressed="true"] {
         background: currentcolor;
         box-shadow: 0 0 5px currentcolor;
       }
-      &:hover { box-shadow: 0 0 7px currentcolor; }
-      &:focus { box-shadow: 0 0 8px currentcolor; }
+
+      &:hover {
+        box-shadow: 0 0 7px currentcolor;
+      }
+
+      &:focus {
+        box-shadow: 0 0 8px currentcolor;
+      }
+
       ${props.style}
     `}
   >
@@ -636,20 +624,19 @@ function PlannedNodeConnection(props: PlannedNodeConnectionProps) {
     data-path-segments={connection.path.segmentCount}
     d={connection.path.d}
     style={css`
-      & {
-        box-sizing: border-box;
-        position: absolute;
-        z-index: 1;
-        display: block;
-        left: 0;
-        top: 0;
-        width: 0;
-        height: 0;
-        color: ${connection.color};
-        stroke: ${connection.color};
-        stroke-width: 2.2px;
-        pointer-hit-width: 16px;
-      }
+      box-sizing: border-box;
+      position: absolute;
+      z-index: 1;
+      display: block;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      color: ${connection.color};
+      stroke: ${connection.color};
+      stroke-width: 2.2px;
+      pointer-hit-width: 16px;
+
       ${props.style}
     `}
   ></vector-path>

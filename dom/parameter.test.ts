@@ -153,7 +153,7 @@ describe("embedded DOM Parameter", () => {
     const forged = {
       ...controller.definition,
       value: 2,
-      style: "& { color: red; }",
+      style: "color: red;",
     } as unknown as ParameterDefinition
 
     expect(() => controller.update(forged)).toThrow("Parameter value style is not allowed")

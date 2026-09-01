@@ -36,7 +36,10 @@ export function createCompiledNodeSystemStory(document: Document): ProductionNod
   root.render(<NodeSystem
     store={store}
     label="General compiled node system"
-    style={css`& { height: 520px; min-height: 520px; }`}
+    style={css`
+      height: 520px;
+      min-height: 520px;
+    `}
     onParameterInput={onParameterInput}
   />)
 
