@@ -1,4 +1,4 @@
-import type {Document, HTMLElement, Text} from "@zavx0z/dom"
+import type {Document, HTMLElement, HTMLVectorPathElement, Text} from "@zavx0z/dom"
 
 export type LayoutPresentationPoint = Readonly<{x: number; y: number}>
 export type LayoutPresentationBounds = Readonly<{x: number; y: number; width: number; height: number}>
@@ -18,7 +18,8 @@ export type LayoutPresentationPort = Readonly<{
 }>
 export type LayoutPresentationEdge = Readonly<{
   id: string
-  points: readonly LayoutPresentationPoint[]
+  d: string
+  segmentCount: number
 }>
 export type LayoutPresentationDiagnostic = Readonly<{
   id: string
@@ -56,7 +57,7 @@ export type LayoutPresentationCaseRefs = Readonly<{
   diagnostics: HTMLElement
   node(id: string): HTMLElement | null
   port(id: string): HTMLElement | null
-  edge(id: string): Readonly<{group: HTMLElement; points: readonly HTMLElement[]}> | null
+  edge(id: string): HTMLVectorPathElement | null
 }>
 export type LayoutPresentationController = Readonly<{
   element: HTMLElement
@@ -74,7 +75,7 @@ export type LayoutPresentationController = Readonly<{
   dispose(): void
 }>
 
-type EdgeRecord = {group: HTMLElement; points: HTMLElement[]}
+type EdgeRecord = {element: HTMLVectorPathElement}
 type DiagnosticRecord = {row: HTMLElement; term: HTMLElement; value: HTMLElement; termText: Text; valueText: Text}
 type CaseRecord = {
   refs: LayoutPresentationCaseRefs
@@ -101,8 +102,7 @@ export const layoutPresentationCss = String.raw`
 .layout-dom__status { box-sizing: border-box; height: 24px; padding: 4px 8px; color: #9fcbd3; font-size: 10px; }
 .layout-dom__viewport { position: relative; box-sizing: border-box; width: 332px; height: 248px; margin: 0 11px; overflow: hidden; border: 1px solid #151515; background: #202020; }
 .layout-dom__scene, .layout-dom__edge-layer, .layout-dom__node-layer, .layout-dom__port-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.layout-dom__edge { position: absolute; left: 0; top: 0; }
-.layout-dom__edge-point { position: absolute; width: 4px; height: 4px; border-radius: 999px; background: #72b8c4; }
+.layout-dom__edge { position: absolute; left: 0; top: 0; stroke: #72b8c4; stroke-width: 2.2px; pointer-hit-width: 16px; }
 .layout-dom__node { position: absolute; box-sizing: border-box; overflow: hidden; border: 1px solid #111; border-radius: 3px; background: #3b3b3b; color: #f0f0f0; padding: 4px; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
 .layout-dom__port { position: absolute; box-sizing: border-box; width: 8px; height: 8px; border: 1px solid #172b30; border-radius: 999px; background: #65d6e8; }
 .layout-dom__diagnostics { box-sizing: border-box; display: flex; flex-direction: column; flex-grow: 1; gap: 2px; overflow: auto; padding: 8px; }
@@ -218,7 +218,7 @@ function createCaseRecord(document: Document, id: string): CaseRecord {
     port(portId) { return portById.get(String(portId)) ?? null },
     edge(edgeId) {
       const record = edgeById.get(String(edgeId))
-      return record ? Object.freeze({group: record.group, points: Object.freeze([...record.points])}) : null
+      return record?.element ?? null
     },
   })
   return {refs, nodeById, nodeTextById, portById, edgeById, diagnosticById}
@@ -313,33 +313,25 @@ function syncPorts(record: CaseRecord, item: LayoutPresentationCase): void {
 function syncEdges(record: CaseRecord, item: LayoutPresentationCase): void {
   const ids = new Set(item.edges.map(({id}) => id))
   for (const [id, edge] of record.edgeById) if (!ids.has(id)) {
-    edge.group.remove()
+    edge.element.remove()
     record.edgeById.delete(id)
   }
   for (const geometry of item.edges) {
     let edge = record.edgeById.get(geometry.id)
     if (!edge) {
-      const group = record.refs.item.ownerDocument!.createElement("div")
-      group.className = "layout-dom__edge"
-      group.setAttribute("data-edge-id", geometry.id)
-      group.setAttribute("role", "img")
-      edge = {group, points: []}
+      const element = record.refs.item.ownerDocument!.createElement("vector-path")
+      element.className = "layout-dom__edge"
+      element.setAttribute("data-edge-id", geometry.id)
+      element.setAttribute("role", "img")
+      edge = {element}
       record.edgeById.set(geometry.id, edge)
     }
-    edge.group.setAttribute("aria-label", `Маршрут ${geometry.id}`)
-    while (edge.points.length > geometry.points.length) edge.points.pop()!.remove()
-    while (edge.points.length < geometry.points.length) {
-      const point = record.refs.item.ownerDocument!.createElement("span")
-      point.className = "layout-dom__edge-point"
-      edge.group.appendChild(point)
-      edge.points.push(point)
-    }
-    geometry.points.forEach((point, index) => setStyle(edge!.points[index]!, [
-      `left:${decimal(point.x - item.bounds.x - 2)}px`,
-      `top:${decimal(point.y - item.bounds.y - 2)}px`,
-    ]))
+    edge.element.setAttribute("aria-label", `Маршрут ${geometry.id}`)
+    edge.element.setAttribute("data-path-segments", String(geometry.segmentCount))
+    if (edge.element.d !== geometry.d) edge.element.d = geometry.d
+    edge.element.setAttribute("style", `transform: translate(${decimal(-item.bounds.x)}px, ${decimal(-item.bounds.y)}px)`)
   }
-  reorder(record.refs.edges, item.edges.map(({id}) => record.edgeById.get(id)!.group))
+  reorder(record.refs.edges, item.edges.map(({id}) => record.edgeById.get(id)!.element))
 }
 
 function syncDiagnostics(record: CaseRecord, item: LayoutPresentationCase): void {
@@ -398,11 +390,15 @@ function normalize(props: LayoutPresentationProps): LayoutPresentationProps {
       return Object.freeze({...port})
     })
     const edges = normalizeById<LayoutPresentationEdge>(item.edges, `Layout case ${item.id} edge`, (edge) => {
-      if (!Array.isArray(edge.points) || edge.points.length < 2) throw new TypeError(`LayoutPresentation edge ${edge.id} must have at least two points`)
-      return Object.freeze({...edge, points: Object.freeze(edge.points.map((point, pointIndex) => {
-        assertPoint(point, `Layout edge ${edge.id} point ${pointIndex}`)
-        return Object.freeze({...point})
-      }))})
+      if (typeof edge.d !== "string" || edge.d.trim() === "") throw new TypeError(`LayoutPresentation edge ${edge.id} d must be non-empty`)
+      if (!Number.isSafeInteger(edge.segmentCount) || edge.segmentCount < 1 || edge.segmentCount > 256) {
+        throw new TypeError(`LayoutPresentation edge ${edge.id} segmentCount must be within 1..256`)
+      }
+      const commandCount = edge.d.match(/\b[LQC]\b/g)?.length ?? 0
+      if (!/^\s*M\b/.test(edge.d) || commandCount !== edge.segmentCount) {
+        throw new TypeError(`LayoutPresentation edge ${edge.id} d/segmentCount mismatch`)
+      }
+      return Object.freeze({...edge})
     })
     const diagnostics = normalizeById<LayoutPresentationDiagnostic>(item.diagnostics, `Layout case ${item.id} diagnostic`, (diagnostic) => {
       if (typeof diagnostic.label !== "string" || typeof diagnostic.value !== "string") throw new TypeError(`LayoutPresentation diagnostic ${diagnostic.id} is invalid`)

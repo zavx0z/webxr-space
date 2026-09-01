@@ -25,7 +25,7 @@ const props = (): LayoutPresentationProps => ({
       {id: "source/out", x: 132, y: 52, side: "EAST"},
       {id: "target/in", x: 250, y: 162, side: "WEST"},
     ],
-    edges: [{id: "value", points: [{x: 132, y: 52}, {x: 190, y: 52}, {x: 190, y: 162}, {x: 250, y: 162}]}],
+    edges: [{id: "value", d: "M 132 52 L 190 52 L 190 162 L 250 162", segmentCount: 3}],
     diagnostics: [{id: "candidates", label: "Candidates", value: "1/1"}],
   }],
 })
@@ -40,7 +40,8 @@ describe("production DOM Layout presentation", () => {
     expect(refs.node("source")?.getAttribute("style")).toContain("left:12px")
     expect(refs.node("target")?.getAttribute("style")).toContain("top:130px")
     expect(refs.port("source/out")?.getAttribute("data-side")).toBe("EAST")
-    expect(refs.edge("value")?.points).toHaveLength(4)
+    expect(refs.edge("value")?.localName).toBe("vector-path")
+    expect(refs.edge("value")?.getAttribute("data-path-segments")).toBe("3")
     expect(refs.diagnostics.localName).toBe("dl")
   })
 
@@ -52,13 +53,13 @@ describe("production DOM Layout presentation", () => {
     controller.update({...controller.props, showRoutes: false, showPorts: false, cases: [{
       ...controller.props.cases[0]!,
       nodes: [...controller.props.cases[0]!.nodes].reverse(),
-      edges: [{...controller.props.cases[0]!.edges[0]!, points: [...controller.props.cases[0]!.edges[0]!.points, {x: 300, y: 190}]}],
+      edges: [{...controller.props.cases[0]!.edges[0]!, d: "M 132 52 C 150 52 190 130 250 162", segmentCount: 1}],
     }]})
     expect(controller.caseRefs("fixed-right")).toBe(refs)
     expect(refs.node("source")).toBe(source)
-    expect(refs.edge("value")?.group).toBe(edge.group)
-    expect(refs.edge("value")?.points[0]).toBe(edge.points[0])
-    expect(refs.edge("value")?.points).toHaveLength(5)
+    expect(refs.edge("value")).toBe(edge)
+    expect(refs.edge("value")?.getAttribute("d")).toBe("M 132 52 C 150 52 190 130 250 162")
+    expect(refs.edge("value")?.childNodes).toEqual([])
     expect(refs.edges.hasAttribute("hidden")).toBeTrue()
     expect(refs.ports.hasAttribute("hidden")).toBeTrue()
   })
@@ -82,6 +83,14 @@ describe("production DOM Layout presentation", () => {
     const refs = controller.caseRefs("fixed-right")
     expect(() => controller.update({...current, cases: [{...current.cases[0]!, nodes: [{...current.cases[0]!.nodes[0]!, x: Number.NaN}]}]}))
       .toThrow("Layout node source must be finite")
+    expect(() => controller.update({...current, cases: [{
+      ...current.cases[0]!,
+      edges: [{...current.cases[0]!.edges[0]!, segmentCount: 4}],
+    }]})).toThrow("d/segmentCount mismatch")
+    expect(() => controller.update({...current, cases: [{
+      ...current.cases[0]!,
+      edges: [{...current.cases[0]!.edges[0]!, segmentCount: 257}],
+    }]})).toThrow("within 1..256")
     expect(controller.props).toBe(current)
     expect(controller.caseRefs("fixed-right")).toBe(refs)
   })
@@ -93,6 +102,7 @@ describe("production DOM Layout presentation", () => {
     const renderer = createDocumentRenderer({document, root: controller.element, viewport: {width: 900, height: 620}, styleSheets: [layoutPresentationCss]})
     const frame = renderer.flush()
     expect(frame.hits.get(controller.refs.routes)).toMatchObject({interactive: true, role: "button"})
+    expect(frame.displayList.some((item) => item.kind === "path" && item.node === controller.caseRefs("fixed-right")!.edge("value"))).toBeTrue()
     expect(frame.displayList.filter((item) => item.kind === "text").map((item) => item.text))
       .toEqual(expect.arrayContaining(["Computed layout", "Fixed · RIGHT", "Source", "Target", "Candidates", "1/1"]))
     renderer.dispose()

@@ -64,6 +64,25 @@ describe("Layout DOM family story", () => {
     for (const owner of ["fixed", "adaptive", "top-down", "coffman-graham"]) expect(source).toContain(`@nodes/layout/${owner}`)
   })
 
+  test("transports layered cubic chains into one semantic Path per edge without Node sampling", async () => {
+    const dagre = await createLayoutDomStory(createDocument(), "layout/dagre-layered/default/default")
+    const dagreCase = dagre.props.cases[0]!
+    expect(dagreCase.edges).toHaveLength(20)
+    expect(dagreCase.edges.reduce((total, edge) => total + edge.segmentCount, 0)).toBe(44)
+    expect(dagreCase.edges.every(({d}) => d.startsWith("M ") && d.includes(" C "))).toBeTrue()
+    expect(dagreCase.edges.every(({id}) => {
+      const element = dagre.caseRefs(dagreCase.id)!.edge(id)
+      return element?.localName === "vector-path" && element.childNodes.length === 0
+    })).toBeTrue()
+
+    const coffman = await createLayoutDomStory(createDocument(), "layout/coffman-graham/default/default")
+    const coffmanCase = coffman.props.cases[0]!
+    expect(coffmanCase.edges).toHaveLength(85)
+    expect(coffmanCase.edges.reduce((total, edge) => total + edge.segmentCount, 0)).toBe(785)
+    dagre.dispose()
+    coffman.dispose()
+  })
+
   test("controls route/port visibility with stable computed identities", async () => {
     const story = await createLayoutDomStory(createDocument(), "layout/fixed/baseline/right")
     const refs = story.caseRefs("fixed-baseline-right")!

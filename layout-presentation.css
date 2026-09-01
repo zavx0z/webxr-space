@@ -10,8 +10,7 @@
 .layout-dom__status { box-sizing: border-box; height: 24px; padding: 4px 8px; color: #9fcbd3; font-size: 10px; }
 .layout-dom__viewport { position: relative; box-sizing: border-box; width: 332px; height: 248px; margin: 0 11px; overflow: hidden; border: 1px solid #151515; background: #202020; }
 .layout-dom__scene, .layout-dom__edge-layer, .layout-dom__node-layer, .layout-dom__port-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.layout-dom__edge { position: absolute; left: 0; top: 0; }
-.layout-dom__edge-point { position: absolute; width: 4px; height: 4px; border-radius: 999px; background: #72b8c4; }
+.layout-dom__edge { position: absolute; left: 0; top: 0; stroke: #72b8c4; stroke-width: 2.2px; pointer-hit-width: 16px; }
 .layout-dom__node { position: absolute; box-sizing: border-box; overflow: hidden; border: 1px solid #111; border-radius: 3px; background: #3b3b3b; color: #f0f0f0; padding: 4px; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
 .layout-dom__port { position: absolute; box-sizing: border-box; width: 8px; height: 8px; border: 1px solid #172b30; border-radius: 999px; background: #65d6e8; }
 .layout-dom__diagnostics { box-sizing: border-box; display: flex; flex-direction: column; flex-grow: 1; gap: 2px; overflow: auto; padding: 8px; }
