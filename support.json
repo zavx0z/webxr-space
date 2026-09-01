@@ -837,6 +837,73 @@
       "consumers": [],
       "evidence": [
         {
+          "doesNotProve": "DOM, CSS, Node routing or complete vector path semantics.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "Separate fixed-stride style and sampled-segment InstanceLayers share one unit quad and retained draw-range views.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "StrokedPathInstanceLayer/InstancedStrokedPath",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Complete SVG stroking or every GPU adapter.",
+          "path": "packages/core/src/renderer/index.ts",
+          "proves": "One retained WebGPU pipeline binds shared style/segment/order storage and presentation clips.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "InstancedStrokedPath pipeline",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "GPU pixels and consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Record layout, stable storage and draw ranges.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "instanced-stroked-paths",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Renderer Path stacking policy or GPU pixels.",
+          "path": "packages/core/src/core/instance-layer.test.ts",
+          "proves": "Atomic bulk order validation, allocation-free contiguous block moves, exact dirty ranges and O(1) canonical order lookup.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "setOrder/moveRange/orderIndexOf",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Renderer scalar fallback pixels, complete SVG stroking or every device.",
+          "path": "packages/core/src/renderer/shaders/stroked-path-instanced.webgpu.test.ts",
+          "proves": "Actual WebGPU exact-opaque capsule pixels, width, transform and clipping plus fail-closed non-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "instanced-stroked-paths",
+          "type": "unit-test"
+        }
+      ],
+      "id": "engine.features.instanced-stroked-paths",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [
+        "The instanced Engine contract admits exact-opaque independent sampled capsules only; translucent connected-stroke union/scalar fallback belongs to Renderer, and complete SVG fill/stroking, dashes, adaptive tessellation and analytical join self-union are unsupported. Outer AA fringe overlap at sampled joins remains a bounded limitation."
+      ],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
           "doesNotProve": "Complete correctness/lifecycle/conformance contract.",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "Current bounded Engine implementation.",
@@ -2709,6 +2776,44 @@
     {
       "blockedBy": [],
       "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "InstancedStrokedPath",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "InstancedStrokedPath",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.instancedstrokedpath",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
       "conformance": "unknown",
       "consumers": [],
       "evidence": [
@@ -2746,7 +2851,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "51",
+          "lines": "52",
           "path": "packages/core/src/core/instance-layer.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -3873,7 +3978,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "79",
+          "lines": "84",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -3905,7 +4010,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "79",
+          "lines": "84",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -3937,7 +4042,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "178",
+          "lines": "200",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -3969,7 +4074,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "79",
+          "lines": "84",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -4033,7 +4138,7 @@
       "evidence": [
         {
           "doesNotProve": "Observable runtime behavior or semantic conformance.",
-          "lines": "79",
+          "lines": "84",
           "path": "packages/core/src/renderer/index.ts",
           "proves": "The public export exists at the pinned revision.",
           "repository": "engine",
@@ -4511,6 +4616,310 @@
         "stage": "gpu-scene-resource"
       },
       "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_OFFSETS",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_OFFSETS",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_segment_offsets",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_RECORD_BYTE_LENGTH",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_RECORD_BYTE_LENGTH",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_segment_record_byte_length",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_RECORD_WORDS",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_SEGMENT_RECORD_WORDS",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_segment_record_words",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_OFFSETS",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_OFFSETS",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_style_offsets",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_RECORD_BYTE_LENGTH",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_RECORD_BYTE_LENGTH",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_style_record_byte_length",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_RECORD_WORDS",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "STROKED_PATH_STYLE_RECORD_WORDS",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.stroked_path_style_record_words",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "StrokedPathInstanceLayer",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "StrokedPathInstanceLayer",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.strokedpathinstancelayer",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "DOM/CSS semantics, Renderer batching policy or complete SVG stroking.",
+          "path": "packages/core/src/core/instanced-stroked-path.ts",
+          "proves": "The public symbol belongs to the exact fixed-stride retained stroked-Path Engine ABI.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "StrokedPathInstanceLayerOptions",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device or consumer integration.",
+          "path": "packages/core/src/core/instanced-stroked-path.test.ts",
+          "proves": "Exact constants, slots, generation validation, draw ranges and exact-opaque admission.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "StrokedPathInstanceLayerOptions",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-engine-core.export-paths.root.symbols.strokedpathinstancelayeroptions",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@engine/core",
+        "repository": "engine",
+        "stage": "gpu-scene-resource"
+      },
+      "status": "implemented"
     },
     {
       "blockedBy": [],
