@@ -293,26 +293,28 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 `bun run bench:ui-bundle` обязан разделять root/exact/leaf builds и доказывать
 отсутствие legacy/story/dev retention.
 
-После Node-owned Blender parity slice текущий comparable exact full NodeEditor
-build: `277269 raw / 69694 gzip`; root: `277198 / 69989`; NodeTree:
-`269138 / 67175`; complete aggregate Parameter interaction graph:
-`204461 / 50139`; Link: `122387 / 33076`. Root-vs-exact не объясняет дельту,
+После exact Blender 5.2 component slice текущий comparable exact full
+NodeEditor build: `278365 raw / 70095 gzip`; root: `278294 / 70398`; NodeTree:
+`270229 / 67599`; complete aggregate Parameter interaction graph:
+`205339 / 50489`; Link: `122451 / 33074`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+13.495% raw /
-+14.893% gzip`; новый ceiling требует owner decision. Visual parity slice
-добавляет `1131 raw / 278 gzip` к exact `176816b` baseline; private profiler
-code в production graph отсутствует.
+Exact full path больше historical incomplete evidence на `+13.944% raw /
++15.554% gzip`.
 
-Exact metafile ownership: `@zavx0z/dom 73014`, `@ui/components 63748`,
-`@nodes/ui 64105`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+Replacement ceiling `285000 / 72000` принят для exact fully-component
+NodeEditor и исполняется обычным repository test. Он оставляет только
+`6635 raw / 1905 gzip` (`2.38% / 2.72%`) запаса и не является общим резервом
+для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
+imperative/incomplete модели, а не скрытым обязательством удалить component
+runtime или функциональность.
+
+Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64896`,
+`@ui/components 64069`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
-React runtime `34183`, Core NodeTree `17867`, Parameter projection `17577`,
-NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`. Требуемое
-сокращение `32969 raw / 9034 gzip` сопоставимо со всем обязательным component
-runtime; story/dev retention и root/subpath alias его не объясняют. Старый
-ceiling описывает удалённую imperative/incomplete модель и не заменяется
-автоматически, но сохранить его для fully component contract без удаления
-функциональности также нельзя считать доказанным требованием.
+React runtime `34183`, Parameter projection `18080`, Core NodeTree `17867`,
+NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`.
+Story/dev retention и root/subpath alias отсутствуют; private profiler code в
+production graph не попадает.
 
 ## Storybook and visual acceptance
 
@@ -376,13 +378,14 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    compiler profile; Node не добавляет nested root/imperative compatibility
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
-8. Full component bundle превышает historical incomplete ceiling; threshold
-   остаётся owner gate, а не silently raised test.
+8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
+   exact `278365 / 70095` проходит executable repository test. Historical
+   incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance
 
-1. Full typecheck and repository tests green, кроме явно красных performance/
-   bundle owner gates.
+1. Full typecheck and repository tests green, кроме явно незакрытых owner
+   acceptance gates.
 2. Focused Core/Editor/Layout/Worker/UI/Link checks green.
 3. Value update сохраняет Node/Parameter/Field/Socket/Link identities и меняет
    только exact Field state.
