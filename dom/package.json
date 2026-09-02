@@ -1,0 +1,13 @@
+{
+  "name": "@zavx0z/dom",
+  "version": "0.0.0",
+  "description": "Document, элементы, атрибуты, события, focus и состояние полей",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.0",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test tests",
+    "check": "bun run typecheck && bun run test"
+  }
+}

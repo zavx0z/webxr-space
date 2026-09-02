@@ -1,0 +1,36 @@
+{
+  "name": "@zavx0z/visual",
+  "version": "0.0.0",
+  "description": "Единая визуальная платформа MetaFor",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.0",
+  "engines": {
+    "bun": "1.4.x"
+  },
+  "workspaces": [
+    "engine",
+    "dom",
+    "template",
+    "component",
+    "renderer",
+    "webgpu",
+    "browser",
+    "space",
+    "ui",
+    "nodetree",
+    "layout",
+    "nodes"
+  ],
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts engine/tests/contract.test.ts dom/tests/contract.test.ts template/tests/contract.test.ts component/tests/contract.test.ts renderer/tests/contract.test.ts webgpu/tests/contract.test.ts browser/tests/contract.test.ts space/tests/contract.test.ts ui/tests/contract.test.ts nodetree/tests/contract.test.ts layout/tests/contract.test.ts nodes/tests/contract.test.ts",
+    "test:architecture": "bun test tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts",
+    "test:packages": "bun test engine/tests/contract.test.ts dom/tests/contract.test.ts template/tests/contract.test.ts component/tests/contract.test.ts renderer/tests/contract.test.ts webgpu/tests/contract.test.ts browser/tests/contract.test.ts space/tests/contract.test.ts ui/tests/contract.test.ts nodetree/tests/contract.test.ts layout/tests/contract.test.ts nodes/tests/contract.test.ts",
+    "check": "bun run typecheck && bun run test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.0",
+    "typescript": "7.0.2"
+  }
+}
