@@ -1,0 +1,29 @@
+{
+  "asset": "inter-regular.ttf",
+  "license": {
+    "file": "inter-ofl.txt",
+    "gitBlob": "9b2ca37b3ffc77391d8b2ebef4a974ef32bf46ea",
+    "name": "SIL Open Font License 1.1",
+    "source": "https://github.com/rsms/inter/blob/v4.1/LICENSE.txt"
+  },
+  "output": {
+    "bytes": 402208,
+    "sha256": "b9ed74423726fa341f0701cea0ec610deda96da5627e85b361bf3031538dc38f"
+  },
+  "source": {
+    "gitBlob": "0700d24d00b81b79341a9bcee761c64768111813",
+    "path": "release/datafiles/fonts/Inter.woff2",
+    "repository": "https://github.com/blender/blender",
+    "sha256": "fb865a5087637ba194b14aef6f0558214f3c4b3ec939e3c0812c66de41036a47",
+    "version": "v5.2.0"
+  },
+  "transform": {
+    "command": "hb-subset Inter.woff2 --face-loader=ft --keep-everything --variations=wght=400 --output-file=inter-regular.ttf",
+    "sourceCommit": "6696f11808e70d4166d6402e7486e80a4cef961e",
+    "sourceCommitNotes": "Inter 4.1 with Blender tabular numbers, open digits and disambiguation without slashed zero",
+    "testedWith": {
+      "freetype": "2.14.3",
+      "harfbuzz": "14.2.0"
+    }
+  }
+}

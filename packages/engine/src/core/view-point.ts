@@ -1,0 +1,623 @@
+import { Matrix4, Quaternion, Vector3 } from "../math"
+
+const LOOK_AT_EPSILON = 1e-6
+
+/**
+ * Параметры для создания точки обзора.
+ */
+export interface ViewPointParameters {
+  /**
+   * HTML-элемент, в котором будет отображаться сцена.
+   * Служит для расчёта соотношения сторон и привязки событий ввода.
+   */
+  element?: HTMLElement
+
+  /**
+   * Browser listeners owned directly by ViewPoint or listener-free host routing.
+   *
+   * `host` keeps camera math in Engine while the composition owner routes input
+   * and requests presentation. It never mutates or subscribes to `element`.
+   *
+   * @default "browser"
+   */
+  controls?: ViewPointControls
+
+  /**
+   * Client-coordinate viewport used for aspect and anchored zoom mapping.
+   * Required in host mode when no HTML element is supplied.
+   */
+  viewport?: ViewPointClientViewport
+
+  /**
+   * Угол обзора (field of view) в радианах.
+   * @default 1 (≈57°)
+   */
+  fov?: number
+
+  /**
+   * Ближняя плоскость отсечения. Объекты ближе этой distance не отображаются.
+   * Значение должно быть больше нуля.
+   * @default 0.1
+   */
+  near?: number
+
+  /**
+   * Дальняя плоскость отсечения. Объекты дальше этой distance не отображаются.
+   * Значение должно быть больше `near`.
+   * @default 1000
+   */
+  far?: number
+
+  /**
+   * Начальная позиция камеры.
+   * @default { x: 10, y: -10, z: 10 }
+   */
+  position?: { x: number; y: number; z: number }
+
+  /**
+   * Точка, на которую смотрит камера (фокус).
+   * @default { x: 0, y: 0, z: 0 }
+   */
+  target?: { x: number; y: number; z: number }
+}
+
+export type ViewPointControls = "browser" | "host"
+
+export type ViewPointClientViewport = Readonly<{
+  left: number
+  top: number
+  width: number
+  height: number
+}>
+
+/**
+ * # ViewPoint: Единая Точка Обзора
+ *
+ * Представляет точку обзора (камеру и управление) в 3D-пространстве.
+ * Provides pole-free trackball orbit controls.
+ * Объединяет логику перспективной проекции и обработки пользовательского ввода.
+ *
+ * ## Философия и Дизайн
+ * В отличие от традиционных движков (Camera + Controls), `ViewPoint` — это единая сущность.
+ * Конфигурация передается через единый объект-параметр {@link ViewPointParameters}.
+ *
+ * ## Система координат: RH_ZO
+ * Движок использует строгий контракт **RH_ZO**:
+ * * **RH (Right-Handed):** Правая система координат (Z-up).
+ *   * **+X** — вправо
+ *   * **+Y** — вглубь
+ *   * **+Z** — вверх
+ * * **ZO (Zero-to-One):** Пространство отсечения (Clip Space) имеет глубину **[0, 1]** (стандарт WebGPU).
+ *
+ * ## Управление "Из Коробки"
+ *
+ * ### Мышь
+ * | Действие | Ввод пользователя | Реализация |
+ * | :--- | :--- | :--- |
+ * | **Вращение** | ЛКМ + Движение | Trackball-вращение через кватернионы (без Gimbal Lock). |
+ * | **Панорамирование** | ПКМ + Движение | Сдвиг вдоль векторов камеры. |
+ * | **Панорамирование** | Колесо мыши | Сдвиг по X/Y. |
+ * | **Масштаб** | Ctrl + Колесо | Гибридный зум: динамический вдали и с минимальным world-step вблизи цели. |
+ *
+ * ### Тач-устройства (Смартфоны, Планшеты)
+ * | Действие | Ввод пользователя |
+ * | :--- | :--- |
+ * | **Вращение** | Один палец |
+ * | **Панорамирование** | Два пальца (перемещение центра) |
+ * | **Масштаб** | Два пальца (щипок/pinch) |
+ *
+ * ### Тачпад (Ноутбук)
+ * | Действие | Ввод пользователя |
+ * | :--- | :--- |
+ * | **Панорамирование** | Свайп двумя пальцами |
+ * | **Масштаб** | Жест "щипок" (Pinch-to-Zoom) |
+ * | **Вращение** | Движение одним пальцем (с нажатием) |
+ */
+export class ViewPoint {
+  public fov: number
+  public aspect: number
+  public near: number
+  public far: number
+
+  public position: Vector3
+  public viewMatrix: Matrix4 = new Matrix4()
+  public projectionMatrix: Matrix4 = new Matrix4()
+
+  private readonly controls: ViewPointControls
+  private readonly element: HTMLElement | null
+  private readonly eventDocument: Document | null
+  private viewport: ViewPointClientViewport | null
+  private previousTouchAction: string | null = null
+  private controlsDisposed = false
+  private target: Vector3
+  private up: Vector3 = new Vector3(0, 0, 1)
+
+  // Состояние ввода
+  private isRotating = false
+  private isPanning = false
+  private lastX = 0
+  private lastY = 0
+  private lastTouchDistance: number | null = null
+
+  /**
+   * Создает и инициализирует точку обзора.
+   *
+   * @param parameters - Конфигурация начального состояния.
+   * @throws Error Если `fov` или `near` <= 0, или если `far` <= `near`.
+   */
+  constructor(parameters: ViewPointParameters) {
+    this.controls = viewPointControls(parameters.controls)
+    this.element = parameters.element ?? null
+    this.viewport = parameters.viewport === undefined
+      ? null
+      : viewPointClientViewport(parameters.viewport)
+    if (this.controls === "browser" && this.element === null) {
+      throw new TypeError("ViewPoint browser controls require an element")
+    }
+    if (this.controls === "host" && this.element === null && this.viewport === null) {
+      throw new TypeError("ViewPoint host controls require a viewport when no element is supplied")
+    }
+    this.eventDocument = this.controls === "browser"
+      ? this.element?.ownerDocument ?? globalThis.document ?? null
+      : null
+    if (this.controls === "browser" && this.eventDocument === null) {
+      throw new Error("ViewPoint browser controls require an owner Document")
+    }
+    this.fov = parameters.fov ?? 1 // примерно 57 градусов
+    this.near = parameters.near ?? 0.1
+    this.far = parameters.far ?? 1000
+
+    if (this.fov <= 0) throw new Error("Угол обзора (fov) должен быть больше нуля.")
+    if (this.near <= 0) throw new Error("Ближняя плоскость отсечения (near) должна быть больше нуля.")
+    if (this.far <= this.near) throw new Error("Дальняя плоскость отсечения (far) должна быть больше ближней (near).")
+
+    const initialViewport = this.viewport ?? elementClientViewport(this.element!)
+    this.aspect = initialViewport.width / initialViewport.height
+
+    this.target = parameters.target
+      ? new Vector3(parameters.target.x, parameters.target.y, parameters.target.z)
+      : new Vector3(0, 0, 0)
+    this.position = parameters.position
+      ? new Vector3(parameters.position.x, parameters.position.y, parameters.position.z)
+      : new Vector3(10, -10, 10)
+
+    this.updateProjectionMatrix()
+    if (this.controls === "browser") this.attachEventListeners()
+    this.update()
+  }
+
+  /**
+   * Возвращает текущую точку фокуса камеры.
+   *
+   * Нужна внешним слоям, которые хотят привязывать UI-объекты
+   * к экранной окружности вокруг наблюдаемого объекта.
+   */
+  public getTarget(): Vector3 {
+    return this.target
+  }
+
+  /**
+   * Возвращает текущий вектор "вверх" камеры.
+   *
+   * Нужен внешним слоям, которые хотят сохранить горизонт
+   * или корректно оценить экранную проекцию объектов.
+   */
+  public getUp(): Vector3 {
+    return this.up
+  }
+
+  /**
+   * Выравнивает горизонт камеры по мировой оси Z.
+   *
+   * Это полезно для программной навигации по сцене, когда
+   * нужно сохранить ровный горизонт и не переносить roll
+   * из trackball-вращения в автоматический подлёт.
+   */
+  public alignUpToWorldZ(): void {
+    this.up.set(0, 0, 1)
+  }
+
+  public setAspectRatio(aspect: number): void {
+    if (aspect <= 0) return
+    this.aspect = aspect
+    this.updateProjectionMatrix()
+  }
+
+  /** Updates host-routed client bounds and the matching projection aspect. */
+  public setViewport(viewport: ViewPointClientViewport): void {
+    this.viewport = viewPointClientViewport(viewport)
+    this.setAspectRatio(this.viewport.width / this.viewport.height)
+  }
+
+  public updateProjectionMatrix(): void {
+    this.projectionMatrix.makePerspective(this.fov, this.aspect, this.near, this.far)
+  }
+
+  /**
+   * Обновляет матрицу вида на основе текущего положения, цели и вектора 'up'.
+   */
+  public update = () => {
+    this.sanitizePose()
+    this.viewMatrix.makeLookAt(this.position, this.target, this.up)
+  }
+
+  /**
+   * Applies one trackball-orbit delta without claiming a browser event.
+   *
+   * Composition owners use this operation after they have routed pointer
+   * input between semantic content and camera navigation.
+   */
+  public orbit(deltaX: number, deltaY: number): void {
+    finiteControlDelta(deltaX, "orbit deltaX")
+    finiteControlDelta(deltaY, "orbit deltaY")
+    this.handleRotation(deltaX, deltaY)
+    this.update()
+  }
+
+  /** Moves both camera position and target in the current view plane. */
+  public pan(deltaX: number, deltaY: number): void {
+    finiteControlDelta(deltaX, "pan deltaX")
+    finiteControlDelta(deltaY, "pan deltaY")
+    this.handlePan(deltaX, deltaY)
+    this.update()
+  }
+
+  /** Changes target distance while optionally preserving one client anchor. */
+  public zoom(delta: number, anchor?: {clientX: number; clientY: number}): void {
+    finiteControlDelta(delta, "zoom delta")
+    if (anchor !== undefined) {
+      finiteControlDelta(anchor.clientX, "zoom anchor clientX")
+      finiteControlDelta(anchor.clientY, "zoom anchor clientY")
+    }
+    this.handleZoom(delta, anchor)
+    this.update()
+  }
+
+  /**
+   * Освобождает ресурсы.
+   * Удаляет слушатели событий с DOM-элемента и документа.
+   */
+  public dispose() {
+    if (this.controlsDisposed || this.controls !== "browser") return
+    this.controlsDisposed = true
+    const element = this.element!
+    const eventDocument = this.eventDocument!
+    element.removeEventListener("mousedown", this.onMouseDown)
+    eventDocument.removeEventListener("mousemove", this.onMouseMove)
+    eventDocument.removeEventListener("mouseup", this.onMouseUp)
+    element.removeEventListener("wheel", this.onWheel)
+    element.removeEventListener("contextmenu", this.preventContextMenu)
+    element.removeEventListener("touchstart", this.onTouchStart)
+    element.removeEventListener("touchend", this.onTouchEnd)
+    element.removeEventListener("touchcancel", this.onTouchEnd)
+    element.removeEventListener("touchmove", this.onTouchMove)
+    element.removeEventListener("gesturestart", this.onGestureStart)
+    if (this.previousTouchAction !== null) element.style.touchAction = this.previousTouchAction
+  }
+
+  private attachEventListeners() {
+    const element = this.element!
+    const eventDocument = this.eventDocument!
+    this.previousTouchAction = element.style.touchAction
+    element.style.touchAction = "none"
+    element.addEventListener("mousedown", this.onMouseDown)
+    eventDocument.addEventListener("mousemove", this.onMouseMove)
+    eventDocument.addEventListener("mouseup", this.onMouseUp)
+    element.addEventListener("wheel", this.onWheel, { passive: false })
+    element.addEventListener("contextmenu", this.preventContextMenu)
+
+    element.addEventListener("touchstart", this.onTouchStart, { passive: false })
+    element.addEventListener("touchend", this.onTouchEnd)
+    element.addEventListener("touchcancel", this.onTouchEnd)
+    element.addEventListener("touchmove", this.onTouchMove, { passive: false })
+    // Предотвращаем стандартное поведение масштабирования страницы на iOS
+    element.addEventListener("gesturestart", this.onGestureStart, { passive: false })
+  }
+
+  private preventContextMenu = (e: Event) => e.preventDefault()
+
+  // Предотвращаем масштабирование всей страницы на iOS при pinch-to-zoom
+  private onGestureStart = (event: Event) => event.preventDefault()
+
+  private onMouseDown = (event: MouseEvent) => {
+    event.preventDefault()
+    if (event.button === 0) this.isRotating = true
+    else if (event.button === 2) this.isPanning = true
+    this.lastX = event.clientX
+    this.lastY = event.clientY
+  }
+
+  private onMouseMove = (event: MouseEvent) => {
+    if (!this.isRotating && !this.isPanning) return
+
+    const deltaX = event.clientX - this.lastX
+    const deltaY = event.clientY - this.lastY
+
+    if (this.isRotating) this.orbit(deltaX, deltaY)
+    else if (this.isPanning) this.pan(deltaX, deltaY)
+
+    this.lastX = event.clientX
+    this.lastY = event.clientY
+  }
+
+  private onMouseUp = () => {
+    this.isRotating = false
+    this.isPanning = false
+  }
+
+  private onTouchStart = (event: TouchEvent) => {
+    event.preventDefault()
+    const touches = event.touches
+
+    switch (touches.length) {
+      case 1: // Начало вращения
+        this.isPanning = false
+        this.isRotating = true
+        this.lastX = touches[0]!.clientX
+        this.lastY = touches[0]!.clientY
+        break
+      case 2: // Начало панорамирования/зума
+        this.isRotating = false
+        this.isPanning = true
+        const dx = touches[0]!.clientX - touches[1]!.clientX
+        const dy = touches[0]!.clientY - touches[1]!.clientY
+        this.lastTouchDistance = Math.sqrt(dx * dx + dy * dy)
+        this.lastX = (touches[0]!.clientX + touches[1]!.clientX) / 2
+        this.lastY = (touches[0]!.clientY + touches[1]!.clientY) / 2
+        break
+      default:
+        this.isRotating = false
+        this.isPanning = false
+    }
+  }
+
+  private onTouchMove = (event: TouchEvent) => {
+    event.preventDefault()
+    const touches = event.touches
+
+    if (touches.length === 1 && this.isRotating) {
+      const deltaX = touches[0]!.clientX - this.lastX
+      const deltaY = touches[0]!.clientY - this.lastY
+      this.orbit(deltaX, deltaY)
+      this.lastX = touches[0]!.clientX
+      this.lastY = touches[0]!.clientY
+    } else if (touches.length === 2 && this.isPanning) {
+      // Зум
+      const dx = touches[0]!.clientX - touches[1]!.clientX
+      const dy = touches[0]!.clientY - touches[1]!.clientY
+      const currentTouchDistance = Math.sqrt(dx * dx + dy * dy)
+      const currentMidX = (touches[0]!.clientX + touches[1]!.clientX) / 2
+      const currentMidY = (touches[0]!.clientY + touches[1]!.clientY) / 2
+      if (this.lastTouchDistance !== null) {
+        const deltaDistance = currentTouchDistance - this.lastTouchDistance
+        this.zoom(deltaDistance, {clientX: currentMidX, clientY: currentMidY})
+      }
+      this.lastTouchDistance = currentTouchDistance
+
+      // Панорамирование
+      const deltaX = currentMidX - this.lastX
+      const deltaY = currentMidY - this.lastY
+      // Для тачскринов инвертируем панорамирование, чтобы создать эффект "перетаскивания"
+      this.pan(-deltaX, -deltaY)
+      this.lastX = currentMidX
+      this.lastY = currentMidY
+
+    }
+  }
+
+  private onTouchEnd = (event: TouchEvent) => {
+    event.preventDefault()
+    const touches = event.touches
+
+    // Все пальцы убраны, сбрасываем состояние
+    if (touches.length === 0) {
+      this.isRotating = false
+      this.isPanning = false
+      this.lastTouchDistance = null
+      return
+    }
+
+    // Переход от панорамирования/зума к вращению (с 2 на 1 палец)
+    if (touches.length === 1) {
+      this.isPanning = false
+      this.lastTouchDistance = null
+
+      // Переключаемся на вращение и обновляем точку отсчета,
+      // чтобы предотвратить "прыжок" камеры.
+      this.isRotating = true
+      this.lastX = touches[0]!.clientX
+      this.lastY = touches[0]!.clientY
+    } else if (touches.length === 2) {
+      // Обрабатываем случай, когда было 3+ пальца и осталось 2
+      this.isRotating = false
+      this.isPanning = true
+      const dx = touches[0]!.clientX - touches[1]!.clientX
+      const dy = touches[0]!.clientY - touches[1]!.clientY
+      this.lastTouchDistance = Math.sqrt(dx * dx + dy * dy)
+      this.lastX = (touches[0]!.clientX + touches[1]!.clientX) / 2
+      this.lastY = (touches[0]!.clientY + touches[1]!.clientY) / 2
+    }
+  }
+
+  private onWheel = (event: WheelEvent) => {
+    event.preventDefault()
+    if (event.ctrlKey) {
+      this.zoom(-event.deltaY, {clientX: event.clientX, clientY: event.clientY})
+    } else {
+      this.pan(event.deltaX, event.deltaY)
+    }
+  }
+
+  private handleRotation(deltaX: number, deltaY: number) {
+    const rotationSpeed = 0.005
+    const offset = new Vector3().subVectors(this.position, this.target)
+
+    // Вращение по горизонтали (вокруг оси Z мира) с коррекцией инверсии
+    const horizontalAngle = this.up.z < 0 ? deltaX * rotationSpeed : -deltaX * rotationSpeed
+    const quatX = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), horizontalAngle)
+    offset.applyQuaternion(quatX)
+    this.up.applyQuaternion(quatX)
+
+    // Вращение по вертикали (вокруг оси X камеры)
+    const right = new Vector3().crossVectors(this.up, offset).normalize()
+    const quatY = new Quaternion().setFromAxisAngle(right, -deltaY * rotationSpeed)
+    offset.applyQuaternion(quatY)
+    this.up.applyQuaternion(quatY)
+
+    // Обновляем позицию камеры
+    this.position.copy(this.target).add(offset)
+  }
+
+  private handlePan(deltaX: number, deltaY: number) {
+    const offset = new Vector3().subVectors(this.position, this.target)
+    const panSpeed = 0.001 * offset.length()
+
+    const te = this.viewMatrix.elements
+    // Вектор "вправо" камеры находится в первой строке матрицы вида (в column-major это te[0], te[4], te[8])
+    const panRight = new Vector3(te[0], te[4], te[8])
+    // Вектор "вверх" камеры находится во второй строке матрицы вида (te[1], te[5], te[9])
+    const panUp = new Vector3(te[1], te[5], te[9])
+
+    const panDelta = new Vector3()
+      .add(panRight.multiplyScalar(deltaX * panSpeed))
+      .add(panUp.multiplyScalar(-deltaY * panSpeed))
+
+    // При панорамировании сдвигаем и позицию, и цель
+    this.position.add(panDelta)
+    this.target.add(panDelta)
+  }
+
+  private handleZoom(delta: number, anchor?: {clientX: number; clientY: number}) {
+    const anchorBefore = anchor === undefined ? null : this.targetPlanePointForClient(anchor.clientX, anchor.clientY)
+    const offset = new Vector3().subVectors(this.position, this.target)
+    const currentRadius = offset.length()
+    const scale = Math.pow(0.95, delta * 0.05)
+    const scaledRadius = currentRadius * scale
+    const scaledDelta = currentRadius - scaledRadius
+    const minZoomDistance = Math.max(0.001, Math.min(0.1, this.near * 0.02))
+    const minimumRadiusDelta = Math.max(0.01, this.near * 0.2 * Math.abs(delta) * 0.01)
+    const radiusDelta = Math.sign(scaledDelta) * Math.max(Math.abs(scaledDelta), minimumRadiusDelta)
+    const newRadius = Math.max(minZoomDistance, currentRadius - radiusDelta)
+
+    offset.normalize().multiplyScalar(newRadius)
+
+    this.position.copy(this.target).add(offset)
+    this.update()
+    if (anchorBefore !== null && anchor !== undefined) {
+      const anchorAfter = this.targetPlanePointForClient(anchor.clientX, anchor.clientY)
+      if (anchorAfter !== null) {
+        const correction = anchorBefore.sub(anchorAfter)
+        if (isFiniteVector(correction)) {
+          this.position.add(correction)
+          this.target.add(correction)
+          this.update()
+        }
+      }
+    }
+  }
+
+  private targetPlanePointForClient(clientX: number, clientY: number): Vector3 | null {
+    const rect = this.viewport ?? elementClientViewport(this.element!)
+    const width = rect.width
+    const height = rect.height
+    if (width <= 0 || height <= 0) return null
+
+    this.update()
+    const ndcX = ((clientX - rect.left) / width) * 2 - 1
+    const ndcY = 1 - ((clientY - rect.top) / height) * 2
+    const inverseViewProjection = new Matrix4()
+      .multiplyMatrices(this.projectionMatrix, this.viewMatrix)
+      .invert()
+    const nearPoint = new Vector3(ndcX, ndcY, 0).applyMatrix4(inverseViewProjection)
+    const farPoint = new Vector3(ndcX, ndcY, 1).applyMatrix4(inverseViewProjection)
+    if (!isFiniteVector(nearPoint) || !isFiniteVector(farPoint)) return null
+
+    const direction = farPoint.sub(nearPoint).normalize()
+    const normal = new Vector3().subVectors(this.position, this.target).normalize()
+    const denominator = direction.dot(normal)
+    if (Math.abs(denominator) < LOOK_AT_EPSILON) return null
+    const distance = this.target.clone().sub(nearPoint).dot(normal) / denominator
+    if (!Number.isFinite(distance) || distance < 0) return null
+    return nearPoint.add(direction.multiplyScalar(distance))
+  }
+
+  private sanitizePose(): void {
+    const back = new Vector3().subVectors(this.position, this.target)
+    if (!isFiniteVector(back) || back.length() < LOOK_AT_EPSILON) {
+      const distance = Math.max(this.near * 2, LOOK_AT_EPSILON)
+      this.position.copy(this.target).add(fallbackBackDirection(this.up).multiplyScalar(distance))
+      back.subVectors(this.position, this.target)
+    }
+
+    back.normalize()
+
+    if (!isFiniteVector(this.up) || this.up.length() < LOOK_AT_EPSILON) {
+      this.up.set(0, 0, 1)
+    }
+
+    const projectedUp = this.up.clone().sub(back.clone().multiplyScalar(this.up.dot(back)))
+    if (!isFiniteVector(projectedUp) || projectedUp.length() < LOOK_AT_EPSILON) {
+      projectedUp.copy(fallbackUpDirection(back))
+    }
+    this.up.copy(projectedUp.normalize())
+  }
+}
+
+function isFiniteVector(v: Vector3): boolean {
+  return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z)
+}
+
+function finiteControlDelta(value: number, label: string): number {
+  if (!Number.isFinite(value)) throw new RangeError(`ViewPoint ${label} must be finite`)
+  return value
+}
+
+function viewPointControls(value: ViewPointControls | undefined): ViewPointControls {
+  const controls = value ?? "browser"
+  if (controls !== "browser" && controls !== "host") {
+    throw new TypeError("ViewPoint controls must be browser or host")
+  }
+  return controls
+}
+
+function viewPointClientViewport(value: ViewPointClientViewport): ViewPointClientViewport {
+  if (value === null || typeof value !== "object") {
+    throw new TypeError("ViewPoint viewport is required")
+  }
+  const left = finiteViewportValue(value.left, "left")
+  const top = finiteViewportValue(value.top, "top")
+  const width = positiveViewportValue(value.width, "width")
+  const height = positiveViewportValue(value.height, "height")
+  return Object.freeze({left, top, width, height})
+}
+
+function elementClientViewport(element: HTMLElement): ViewPointClientViewport {
+  const rect = element.getBoundingClientRect()
+  const width = rect.width > 0 ? rect.width : Math.max(1, element.clientWidth)
+  const height = rect.height > 0 ? rect.height : Math.max(1, element.clientHeight)
+  return {left: rect.left, top: rect.top, width, height}
+}
+
+function finiteViewportValue(value: number, label: string): number {
+  if (!Number.isFinite(value)) throw new RangeError(`ViewPoint viewport ${label} must be finite`)
+  return value
+}
+
+function positiveViewportValue(value: number, label: string): number {
+  finiteViewportValue(value, label)
+  if (value <= 0) throw new RangeError(`ViewPoint viewport ${label} must be positive`)
+  return value
+}
+
+function fallbackBackDirection(up: Vector3): Vector3 {
+  if (!isFiniteVector(up) || up.length() < LOOK_AT_EPSILON) return new Vector3(0, -1, 0)
+  const normalizedUp = up.clone().normalize()
+  return Math.abs(normalizedUp.z) > 0.9 ? new Vector3(0, -1, 0) : new Vector3(0, 0, 1)
+}
+
+function fallbackUpDirection(back: Vector3): Vector3 {
+  const raw = Math.abs(back.z) > 0.9 ? new Vector3(0, 1, 0) : new Vector3(0, 0, 1)
+  const projected = raw.sub(back.clone().multiplyScalar(raw.dot(back)))
+  if (projected.length() >= LOOK_AT_EPSILON) return projected.normalize()
+  return new Vector3(1, 0, 0)
+}
