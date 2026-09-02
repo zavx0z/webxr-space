@@ -22,6 +22,10 @@ export function CssButton(props: Readonly<{
         border-color: ${focusColor};
       }
 
+      &:hover [data-part="glyph"] {
+        box-shadow: 0 0 6px currentcolor;
+      }
+
       &[data-variant="text"] {
         background: transparent;
       }
@@ -50,7 +54,7 @@ export function CssButton(props: Readonly<{
 
       ${props.style}
     `}>
-    CSS Button
+    <span data-part="glyph">CSS Button</span>
   </button>
 }
 

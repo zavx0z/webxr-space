@@ -189,9 +189,12 @@ participate in the direct DOM update path.
   intrinsic `style` directly or through one canonical same-module immutable
   const. Direct top-level declarations represent the base element. Bounded
   static attribute compounds (`&[attr]`, `&[attr="value"]`, repeated
-  attributes) and an admitted native pseudo suffix lower into the existing
-  `CompiledStyleSheet`/marker IR. Selector interpolation, combinators and general
-  selector grammar remain rejected.
+  attributes), an admitted native pseudo suffix, and one optional descendant
+  static attribute compound (`&:hover [data-part]`) lower into the existing
+  `CompiledStyleSheet`/marker IR. The descendant target may contain only one or
+  more static attribute selectors; additional descendant levels, element/class/id
+  targets, selector interpolation, other combinators and general selector grammar
+  remain rejected.
   Module-stable value slots enter static metadata; instance-dependent slots are
   allowed only in direct base declarations and remain addressed inline values.
   A non-exported module CSS const must be referenced from at least two distinct
@@ -205,12 +208,14 @@ participate in the direct DOM update path.
   exports instead.
 - `TEMPLATE-COMPILED-021` — css interpolation is restricted to declaration
   values. Selector/property/rule interpolation, unscoped/global selectors,
-  at-rules, descendant/combinator selectors, nested rules and instance-dependent
-  pseudo slots fail during compilation. A component `style` prop accepts one
-  base-only css fragment and lowers it to inline CSS; attribute/pseudo rules in
-  caller style fail closed. Admitted reusable non-exported module css consts
-  used only by compiled components are removed from production output; no
-  global theme owner or editor-plugin contract is introduced.
+  at-rules, descendant/combinator selectors outside the single static
+  attribute-target profile admitted by `TEMPLATE-COMPILED-020`, nested rules and
+  instance-dependent pseudo slots fail during compilation. A component `style`
+  prop accepts one base-only css fragment and lowers it to inline CSS;
+  attribute/pseudo/descendant rules in caller style fail closed. Admitted reusable
+  non-exported module css consts used only by compiled components are removed
+  from production output; no global theme owner or editor-plugin contract is
+  introduced.
 - `TEMPLATE-COMPILED-022` — source-oriented builds may opt in with one public
   source id per governed compiler root. Only in that mode each compiled
   Component sheet carries immutable `authored-css` provenance containing

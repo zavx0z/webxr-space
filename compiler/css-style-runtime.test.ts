@@ -62,6 +62,9 @@ describe("compiled scoped css runtime", () => {
     expect(snapshot.styleSheets[0]!.cssText).toContain(
       ":hover{background:var(--hover-color);color:var(--hover-text, rgb(255 255 255))}",
     )
+    expect(snapshot.styleSheets[0]!.cssText).toContain(
+      ':hover [data-part="glyph"]{box-shadow:0 0 6px currentcolor}',
+    )
 
     mounted.root.render(compiled.DynamicCallerStyledButton, {
       color: "rgb(1 2 3)",

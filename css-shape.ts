@@ -49,14 +49,14 @@ export type CssTemplateShape = Readonly<{
 }>
 
 const cssShapeFrontend = Symbol("@zavx0z/template/css-shape")
-const supportedPseudos: ReadonlySet<string> = new Set<CssTemplatePseudo>([
-  ":active",
-  ":checked",
-  ":disabled",
-  ":focus",
+const supportedPseudos: readonly CssTemplatePseudo[] = Object.freeze([
   ":focus-within",
-  ":hover",
   ":indeterminate",
+  ":disabled",
+  ":checked",
+  ":active",
+  ":hover",
+  ":focus",
 ])
 
 export function getCssTemplateShape(strings: TemplateStringsArray): CssTemplateShape {
@@ -206,33 +206,66 @@ function parseScopedSelector(value: string): Readonly<{
     throw new Error(`Component CSS selector must start with &: ${value}`)
   }
   let cursor = 1
-  let suffix = ""
+  let rootSuffix = ""
   const attributeSelectors: CssTemplateAttributeSelector[] = []
   while (value[cursor] === "[") {
-    const match = /^\[([a-zA-Z_][a-zA-Z0-9_.:-]*)(?:=(["'])([^"'\\\]]*)\2)?\]/.exec(
-      value.slice(cursor),
-    )
-    if (match === null) throw new Error(`Unsupported component CSS selector ${value}`)
-    const name = match[1]!.toLowerCase()
-    const attributeValue = match[3]
-    attributeSelectors.push(Object.freeze({
-      name,
-      value: attributeValue ?? null,
-    }))
-    suffix += attributeValue === undefined
-      ? `[${name}]`
-      : `[${name}=${JSON.stringify(attributeValue)}]`
-    cursor += match[0].length
+    const attribute = readScopedAttributeSelector(value, cursor)
+    attributeSelectors.push(attribute.selector)
+    rootSuffix += attribute.source
+    cursor = attribute.end
   }
-  const pseudo = value.slice(cursor)
-  if (pseudo !== "" && !supportedPseudos.has(pseudo)) {
+  const pseudoClass = supportedPseudos.find(pseudo => value.startsWith(pseudo, cursor)) ?? ""
+  cursor += pseudoClass.length
+  let descendantSuffix = ""
+  if (cursor < value.length) {
+    if (!/\s/.test(value[cursor]!)) {
+      throw new Error(`Unsupported component CSS selector ${value}`)
+    }
+    while (cursor < value.length && /\s/.test(value[cursor]!)) cursor += 1
+    while (value[cursor] === "[") {
+      const attribute = readScopedAttributeSelector(value, cursor)
+      attributeSelectors.push(attribute.selector)
+      descendantSuffix += attribute.source
+      cursor = attribute.end
+    }
+    if (descendantSuffix === "" || cursor !== value.length) {
+      throw new Error(`Unsupported component CSS selector ${value}`)
+    }
+  }
+  if (cursor !== value.length) throw new Error(`Unsupported component CSS selector ${value}`)
+  if (rootSuffix === "" && pseudoClass === "" && descendantSuffix === "") {
     throw new Error(`Unsupported component CSS selector ${value}`)
   }
-  if (suffix === "" && pseudo === "") throw new Error(`Unsupported component CSS selector ${value}`)
   return Object.freeze({
     attributeSelectors: Object.freeze(attributeSelectors),
-    pseudoClass: pseudo,
-    suffix: `${suffix}${pseudo}`,
+    pseudoClass,
+    suffix: `${rootSuffix}${pseudoClass}${descendantSuffix === "" ? "" : ` ${descendantSuffix}`}`,
+  })
+}
+
+function readScopedAttributeSelector(
+  value: string,
+  cursor: number,
+): Readonly<{
+  end: number
+  selector: CssTemplateAttributeSelector
+  source: string
+}> {
+  const match = /^\[([a-zA-Z_][a-zA-Z0-9_.:-]*)(?:=(["'])([^"'\\\]]*)\2)?\]/.exec(
+    value.slice(cursor),
+  )
+  if (match === null) throw new Error(`Unsupported component CSS selector ${value}`)
+  const name = match[1]!.toLowerCase()
+  const attributeValue = match[3]
+  return Object.freeze({
+    end: cursor + match[0].length,
+    selector: Object.freeze({
+      name,
+      value: attributeValue ?? null,
+    }),
+    source: attributeValue === undefined
+      ? `[${name}]`
+      : `[${name}=${JSON.stringify(attributeValue)}]`,
   })
 }
 

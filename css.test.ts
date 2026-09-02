@@ -72,8 +72,26 @@ describe("scoped css tagged template", () => {
     expect(() => css`color: red; ${"bad"}`).toThrow("CSS rule fragments require")
     expect(() => css`:root { color: red; }`).toThrow("must start with &")
     expect(() => css`& > span { color: red; }`).toThrow("Unsupported component CSS selector")
+    expect(() => css`&:hover span { color: red; }`).toThrow("Unsupported component CSS selector")
+    expect(() => css`& [data-a] [data-b] { color: red; }`).toThrow("Unsupported component CSS selector")
     expect(() => css`&:hover { color: red; &:focus { color: blue; } }`).toThrow("Nested")
     expect(() => css`@media (width > 1px) { color: red; }`).toThrow("must start with &")
+  })
+
+  test("admits one descendant static attribute compound", () => {
+    const result = css`
+      &:hover [data-socket-glyph][aria-hidden="true"] {
+        box-shadow: 0 0 6px currentcolor;
+      }
+    `
+    const rule = getCssTemplateShape(result.strings).rules[0]
+
+    expect(rule?.pseudo).toBe(':hover [data-socket-glyph][aria-hidden="true"]')
+    expect(rule?.pseudoClass).toBe(":hover")
+    expect(rule?.attributeSelectors).toEqual([
+      {name: "data-socket-glyph", value: null},
+      {name: "aria-hidden", value: "true"},
+    ])
   })
 
   test("preserves direct declarations, selector rules, and fragments in authored order", () => {
