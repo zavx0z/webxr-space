@@ -96,14 +96,40 @@
     {
       "id": "nodes.component-production-path",
       "classification": "implemented-source-fact",
-      "status": "functional-cutover-verified-import-blocked",
+      "status": "r1-r3-verified-r4-r6-blocked",
       "owner": "source:node",
       "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link are now the one public component production path at becff8f34a7152791df8e833a918dfe0142681bb.",
       "evidence": [
         "migration/node-cutover.json",
-        "evidence/node-cutover-snapshot.json"
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r4-r5-checkpoint.json"
       ],
-      "verification": "R1-R4 verified locally; import remains blocked by R5 and R6."
+      "verification": "The one-path component cutover is real, but R4 is downgraded by committed Node-local layout fallback; import remains blocked by R4-R6."
+    },
+    {
+      "id": "renderer.features.input-value-fast-path",
+      "classification": "implemented-owner-capability",
+      "status": "implemented-extension",
+      "owner": "@zavx0z/renderer",
+      "statement": "One text-like input value update replaces only its existing immutable display item while preserving layout and hit records.",
+      "implementationCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+      "acceptedMetrics": {
+        "genericInputs": 10000,
+        "freshProcessP99MsMin": 0.29,
+        "freshProcessP99MsMax": 1.68
+      },
+      "independentAudit": {
+        "focusedTests": "7 pass, 0 fail, 65 assertions",
+        "freshProcessP99Ms": [55.326, 33.109, 36.576, 2.112, 34.666, 25.771],
+        "freshProcessesPassing": "1/6",
+        "identityPreservedEveryRun": true,
+        "result": "accepted range not reproduced under current machine load"
+      },
+      "limitations": [
+        "does not prove general dirty-subtree layout, transform or topology performance",
+        "owner support evidence and lastVerified still cite ancestor 3c91038c3f14ccc44616209fd82b1e59b7369408 rather than implementation commit 1cd3243"
+      ],
+      "evidence": ["evidence/node-r4-r5-checkpoint.json"]
     },
     {
       "id": "renderer.retained-vector-path",
@@ -163,17 +189,39 @@
     },
     {
       "id": "nodes.semantic-value-performance",
-      "classification": "measured-failure",
-      "status": "failed-r5",
-      "owner": "source:node with likely incremental Renderer traversal owner",
-      "statement": "The 10k semantic Node value path preserves identity but misses bounded input-to-present acceptance.",
+      "classification": "implemented-evidence",
+      "status": "verified-r5-subgate",
+      "owner": "source:node using @zavx0z/renderer",
+      "statement": "The accepted 1k Node value-update subgate is closed by Renderer 1cd3243 while other R5 operation families remain open.",
       "metrics": {
-        "valueInputToPresentP95Ms": 1401,
-        "valueInputToPresentP99Ms": 1670,
-        "transformP95Ms": 376,
-        "transformP99Ms": 1923
+        "nodes": 1000,
+        "beforeP95MsApprox": 504,
+        "beforeP99MsApprox": 673,
+        "afterP95Ms": 2.02,
+        "afterP99Ms": 2.5,
+        "historical10kP95Ms": 1401,
+        "historical10kP99Ms": 1670
       },
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "limitations": [
+        "current metadata audit could not rerun the Node benchmark because Template rejected a CSS interpolation before measurement",
+        "does not close transform or topology performance"
+      ],
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r4-r5-checkpoint.json"
+      ]
+    },
+    {
+      "id": "contradiction.consumer.node-local-layout",
+      "classification": "confirmed-committed-contradiction",
+      "status": "open-r4",
+      "owner": "@nodes/ui with @nodes/layout contract boundary",
+      "statement": "Committed @nodes/ui invents Frame/Node rectangles, Socket centers and Link routes whenever exact LayoutResult geometry is absent.",
+      "source": "node/packages/ui/geometry.ts@becff8f34a7152791df8e833a918dfe0142681bb",
+      "expected": "aggregate NodeTree requires/consumes exact @nodes/layout geometry or an explicitly authored component geometry contract",
+      "actual": "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween create consumer-local manual layout",
+      "evidence": ["evidence/node-r4-r5-checkpoint.json"],
+      "effect": "R4 is partial/blocked"
     },
     {
       "id": "nodes.component-disposal",
@@ -219,7 +267,10 @@
       "status": "blocked-r6",
       "owner": "source:node",
       "statement": "The clean component cutover commit is ahead 2, not remote-backed, and the source owner remains writable without freeze authorization.",
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r4-r5-checkpoint.json"
+      ]
     },
     {
       "id": "storybook.external-declarations",

@@ -11,6 +11,15 @@
       "previousHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
       "currentHead": "becff8f34a7152791df8e833a918dfe0142681bb",
       "reason": "canonical Node component cutover committed after the original M0 observation"
+    },
+    {
+      "path": "evidence/node-r4-r5-checkpoint.json",
+      "observedAt": "2026-09-02T05:18:22+03:00",
+      "repositories": ["renderer", "node"],
+      "previousRendererHead": "46aa364d2713fd1bdc18fc84836948d6463f817a",
+      "currentRendererHead": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+      "nodeHead": "becff8f34a7152791df8e833a918dfe0142681bb",
+      "reason": "Renderer input-value fast path and committed Node-local layout contradiction"
     }
   ],
   "pathResolution": {

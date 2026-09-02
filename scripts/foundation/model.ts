@@ -14,6 +14,7 @@ export const dataFiles = Object.freeze({
   sourceSnapshot: "evidence/source-snapshot.json",
   historySnapshot: "evidence/history-snapshot.json",
   nodeCutoverSnapshot: "evidence/node-cutover-snapshot.json",
+  nodeR4R5Checkpoint: "evidence/node-r4-r5-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -125,6 +126,7 @@ export type FoundationData = Readonly<{
   sourceSnapshot: Readonly<Record<string, unknown>>
   historySnapshot: Readonly<Record<string, unknown>>
   nodeCutoverSnapshot: Readonly<Record<string, unknown>>
+  nodeR4R5Checkpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -146,6 +148,7 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     sourceSnapshot: byPath.get(dataFiles.sourceSnapshot) as Readonly<Record<string, unknown>>,
     historySnapshot: byPath.get(dataFiles.historySnapshot) as Readonly<Record<string, unknown>>,
     nodeCutoverSnapshot: byPath.get(dataFiles.nodeCutoverSnapshot) as Readonly<Record<string, unknown>>,
+    nodeR4R5Checkpoint: byPath.get(dataFiles.nodeR4R5Checkpoint) as Readonly<Record<string, unknown>>,
   })
 }
 
@@ -597,7 +600,8 @@ async function validateStorybook(
 function validateMigrationCoverage(data: FoundationData): void {
   if (data.migration.schemaVersion !== 1 || data.historyImport.schemaVersion !== 1 ||
     data.nodeCutover.schemaVersion !== 1 || data.sourceSnapshot.schemaVersion !== 1 ||
-    data.historySnapshot.schemaVersion !== 1 || data.nodeCutoverSnapshot.schemaVersion !== 1) {
+    data.historySnapshot.schemaVersion !== 1 || data.nodeCutoverSnapshot.schemaVersion !== 1 ||
+    data.nodeR4R5Checkpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -642,13 +646,15 @@ function validateMigrationCoverage(data: FoundationData): void {
     }
   }
 
-  const checkpointPath = "evidence/node-cutover-snapshot.json"
+  const previousCheckpointPath = "evidence/node-cutover-snapshot.json"
+  const checkpointPath = "evidence/node-r4-r5-checkpoint.json"
   const checkpointRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
   )
   if (data.nodeCutover.observedHead !== checkpointRepository.head ||
     data.nodeCutover.componentCutoverCommit !== checkpointRepository.head ||
+    data.nodeCutover.previousEvidenceCheckpoint !== previousCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== checkpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -658,6 +664,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
+  validateFollowUpSnapshot(data.sourceSnapshot, previousCheckpointPath, "source snapshot")
+  validateFollowUpSnapshot(data.historySnapshot, previousCheckpointPath, "history snapshot")
   validateFollowUpSnapshot(data.sourceSnapshot, checkpointPath, "source snapshot")
   validateFollowUpSnapshot(data.historySnapshot, checkpointPath, "history snapshot")
 
@@ -677,11 +685,57 @@ function validateMigrationCoverage(data: FoundationData): void {
     }
   }
 
-  const gates = objectRecord(data.nodeCutoverSnapshot.gates, "Node cutover gates")
-  for (const id of ["R1", "R2", "R3", "R4"]) {
+  const latestRepositories = objectRecord(
+    data.nodeR4R5Checkpoint.repositories,
+    "R4/R5 checkpoint repositories",
+  )
+  const latestRenderer = objectRecord(latestRepositories.renderer, "R4/R5 Renderer repository")
+  const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
+  const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
+  if (rendererOwner === undefined || rendererOwner.revision !== latestRenderer.head ||
+    rendererOwner.writable !== true) {
+    throw new Error("Renderer ownership ledger does not match the latest checkpoint")
+  }
+  const rendererHistory = arrayValue(
+    data.nodeR4R5Checkpoint.rendererPackageHistory,
+    "R4/R5 Renderer package history",
+  ).map((value) => objectRecord(value, "R4/R5 Renderer history entry"))
+  const rendererInventory = data.inventory.packages.filter(({sourceRepository}) =>
+    sourceRepository === "renderer"
+  )
+  assertExactStringSet(
+    "R4/R5 Renderer history coverage",
+    rendererHistory.map(({package: packageName}) => packageName),
+    rendererInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of rendererHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
+      throw new Error(`Renderer checkpoint history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+  const rendererCapability = objectRecord(
+    data.nodeR4R5Checkpoint.rendererInputValueFastPath,
+    "Renderer input-value checkpoint",
+  )
+  if (rendererCapability.capabilityId !== "renderer.features.input-value-fast-path" ||
+    rendererCapability.implementationCommit !== latestRenderer.head) {
+    throw new Error("Renderer input-value capability does not match the latest checkpoint")
+  }
+  const contradiction = objectRecord(
+    data.nodeR4R5Checkpoint.nodeLayoutContradiction,
+    "Node layout contradiction",
+  )
+  if (contradiction.id !== "contradiction.consumer.node-local-layout" ||
+    contradiction.sourceRevision !== checkpointRepository.head || contradiction.status !== "open") {
+    throw new Error("Node layout contradiction does not match the committed source checkpoint")
+  }
+
+  const gates = objectRecord(data.nodeR4R5Checkpoint.effectiveGates, "effective Node gates")
+  for (const id of ["R1", "R2", "R3"]) {
     if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
   }
-  for (const id of ["R5", "R6"]) {
+  for (const id of ["R4", "R5", "R6"]) {
     if (gates[id] !== "blocked") throw new Error(`Node ${id} must remain blocked at the checkpoint`)
   }
 }

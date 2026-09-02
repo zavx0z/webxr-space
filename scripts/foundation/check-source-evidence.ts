@@ -26,6 +26,12 @@ expectEqual("Node checkpoint previous HEAD", provenance.previousHead, historical
 
 const repositories = new Map(historicalRepositories)
 repositories.set("node", checkpointRepository)
+const latestRepositories = objectRecord(
+  data.nodeR4R5Checkpoint.repositories,
+  "R4/R5 checkpoint repositories",
+)
+const rendererCheckpoint = objectRecord(latestRepositories.renderer, "R4/R5 Renderer repository")
+repositories.set("renderer", rendererCheckpoint)
 
 for (const [id, record] of repositories) {
   const path = stringValue(record.path, `source repository ${id} path`)
@@ -115,10 +121,29 @@ for (const value of checkpointHistory) {
   expectEqual(`${packageName} checkpoint last history commit`, last, entry.lastCommit)
 }
 
+const rendererCheckpointHistory = data.nodeR4R5Checkpoint.rendererPackageHistory
+if (!Array.isArray(rendererCheckpointHistory)) {
+  throw new Error("R4/R5 Renderer checkpoint history must be an array")
+}
+for (const value of rendererCheckpointHistory) {
+  const entry = objectRecord(value, "R4/R5 Renderer history entry")
+  const packageName = stringValue(entry.package, "R4/R5 Renderer package")
+  const path = stringValue(rendererCheckpoint.path, `${packageName} checkpoint path`)
+  const revision = stringValue(rendererCheckpoint.head, `${packageName} checkpoint revision`)
+  const prefix = stringValue(entry.prefix, `${packageName} checkpoint prefix`)
+  const count = Number(git(path, ["rev-list", "--count", revision, "--", prefix]))
+  expectEqual(`${packageName} R4/R5 history count`, count, entry.commitCount)
+  const first = git(path, ["log", "--reverse", "--format=%H", revision, "--", prefix]).split("\n")[0]
+  const last = git(path, ["log", "-1", "--format=%H", revision, "--", prefix])
+  expectEqual(`${packageName} R4/R5 first history commit`, first, entry.firstCommit)
+  expectEqual(`${packageName} R4/R5 last history commit`, last, entry.lastCommit)
+}
+
 console.log(
   `source evidence: ${repositories.size} live repositories, ` +
   `${historyValues.length} historical package histories, ` +
-  `${checkpointHistory.length} Node checkpoint histories`,
+  `${checkpointHistory.length} Node checkpoint histories, ` +
+  `${rendererCheckpointHistory.length} Renderer checkpoint histories`,
 )
 
 function git(path: string, args: readonly string[]): string {

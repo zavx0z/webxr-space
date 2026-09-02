@@ -5,7 +5,8 @@
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
   "observedHead": "becff8f34a7152791df8e833a918dfe0142681bb",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
-  "evidenceCheckpoint": "evidence/node-cutover-snapshot.json",
+  "previousEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
+  "evidenceCheckpoint": "evidence/node-r4-r5-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -56,7 +57,7 @@
       "name": "Reproducible canonical checkout",
       "status": "verified",
       "evidence": [
-        "canonical main checkout is clean at becff8f34a7152791df8e833a918dfe0142681bb",
+        "canonical main was verified clean at becff8f34a7152791df8e833a918dfe0142681bb before later concurrent WIP",
         "materialized linked dependencies used by the committed local acceptance",
         "exact original 209ba2a parent preserved"
       ]
@@ -84,20 +85,30 @@
     {
       "id": "R4",
       "name": "Functional parity",
-      "status": "verified",
+      "status": "blocked",
       "evidence": [
         "bun run check: 215 pass, 0 fail, 1 explicit bundle owner-gate todo",
         "stable identity, local mutation and transform-only evidence passed",
-        "nested Frames, selection, viewport interactions, Socket inventory and retained Link path covered"
+        "nested Frames, selection, viewport interactions, Socket inventory and retained Link path covered",
+        "committed contradiction evidence/node-r4-r5-checkpoint.json"
+      ],
+      "blockers": [
+        "committed packages/ui/geometry.ts invents index-based Frame/Node rectangles when LayoutResult is absent",
+        "committed packages/ui/geometry.ts invents fallback Socket centers and routeBetween Link routes",
+        "aggregate NodeTree must require/consume exact @nodes/layout geometry or an explicitly authored component geometry contract"
       ]
     },
     {
       "id": "R5",
       "name": "Dense performance and equal-scale visual acceptance",
       "status": "blocked",
+      "verifiedSubgates": [
+        "value update through renderer.features.input-value-fast-path at Renderer 1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+        "accepted Node 1k value input-to-present p95/p99 improved from approximately 504/673ms to 2.02/2.50ms"
+      ],
       "blockers": [
+        "transform and topology performance remain open",
         "10k Link selection p99 40.271-42.786ms exceeds 16.667ms",
-        "10k semantic Node value input-to-present p95/p99 is 1401/1670ms",
         "dense-visible 10k mount/Renderer/backend is 30.16s/41.22s/19.70s with about 4.98GB retained baseline",
         "dense-visible disposal remained unbounded after several minutes of active CPU",
         "exact NodeEditor bundle 270750/68200 exceeds historical incomplete ceiling 245000/61000",
@@ -105,6 +116,7 @@
       ],
       "evidence": [
         "evidence/node-cutover-snapshot.json",
+        "evidence/node-r4-r5-checkpoint.json",
         "equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "console-zero non-black canvas capture 263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd"
       ]
@@ -114,13 +126,13 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "source checkout is clean at becff8f34a7152791df8e833a918dfe0142681bb",
+        "the committed becff8f34a7152791df8e833a918dfe0142681bb checkpoint was clean before later concurrent WIP",
         "main is ahead 2 of origin/main@4b07d76df7365c69c13d811c7b91ede7622db453"
       ],
       "blockers": [
         "becff8f34a7152791df8e833a918dfe0142681bb is not remote-backed",
         "source freeze/read-only authorization has not been given",
-        "R5 remains blocked"
+        "R4 and R5 remain blocked"
       ]
     }
   ],

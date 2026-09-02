@@ -45,27 +45,36 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves the historical M0 snapshot and overlays the verified Node cutover", async () => {
+  test("preserves prior snapshots and overlays the current R4/R5 checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
     const checkpointRepository = data.nodeCutoverSnapshot.repository as {head: string}
-    const gates = data.nodeCutoverSnapshot.gates as Record<string, string>
+    const priorGates = data.nodeCutoverSnapshot.gates as Record<string, string>
+    const gates = data.nodeR4R5Checkpoint.effectiveGates as Record<string, string>
     const nodeGroup = data.ownership.groups.find(({id}) => id === "node")!
+    const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")!
 
     expect(historicalNode.head).toBe("209ba2a5e905edeeb6293bdedf47ea483d011c94")
     expect(checkpointRepository.head).toBe("becff8f34a7152791df8e833a918dfe0142681bb")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
       "becff8f34a7152791df8e833a918dfe0142681bb",
     )
+    expect(priorGates.R4).toBe("verified")
     expect(gates).toEqual({
       R1: "verified",
       R2: "verified",
       R3: "verified",
-      R4: "verified",
+      R4: "blocked",
       R5: "blocked",
       R6: "blocked",
     })
+    expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
+      "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+    )
+    expect((data.nodeR4R5Checkpoint.nodeLayoutContradiction as {id: string}).id).toBe(
+      "contradiction.consumer.node-local-layout",
+    )
   })
 
   test("fails closed on a production package cycle", () => {

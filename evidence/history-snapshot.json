@@ -6,6 +6,11 @@
       "path": "evidence/node-cutover-snapshot.json",
       "repository": "node",
       "reason": "preserve original prefix-history counts while recording the component cutover commit separately"
+    },
+    {
+      "path": "evidence/node-r4-r5-checkpoint.json",
+      "repository": "renderer",
+      "reason": "preserve original Renderer prefix-history counts while recording 1cd3243 separately"
     }
   ],
   "entries": [
