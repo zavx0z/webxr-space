@@ -416,7 +416,7 @@ function ComparisonStory() {
             label="Noise Texture"
             title="Noise Texture · Blender 5.2 comparison scope"
             headerColor="#8b481f"
-            rect={Object.freeze({x: 0, y: 0, width: 192, height: 272})}
+            rect={Object.freeze({x: 16, y: 16, width: 160, height: 294})}
             parameters={data.parameters}
             sockets={data.sockets}
             connectedSocketKeys={data.connectedSocketKeys}
@@ -660,11 +660,11 @@ function comparisonNodeData(): Readonly<{
     ]}),
     comparisonParameter("noise-normalize", "Normalize", true, "boolean"),
     comparisonParameter("noise-vector", "Vector", [0, 0, 0], "vector", {axes: ["X", "Y", "Z"]}, [socket("noise-vector-input", "vector", "input", "left", "Vector")], true),
-    comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, max: 10, step: .1}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
-    comparisonParameter("noise-detail", "Detail", 2, "float", {min: 0, max: 15, step: .1}, [socket("noise-detail-input", "float", "input", "left", "Detail")]),
-    comparisonParameter("noise-roughness", "Roughness", .5, "float", {min: 0, max: 1, step: .01}, [socket("noise-roughness-input", "float", "input", "left", "Roughness")]),
-    comparisonParameter("noise-lacunarity", "Lacunarity", 2, "float", {min: 0, max: 4, step: .1}, [socket("noise-lacunarity-input", "float", "input", "left", "Lacunarity")]),
-    comparisonParameter("noise-distortion", "Distortion", 0, "float", {min: 0, max: 10, step: .1}, [socket("noise-distortion-input", "float", "input", "left", "Distortion")]),
+    comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, step: .1, precision: 3}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
+    comparisonParameter("noise-detail", "Detail", 2, "float", {min: 0, step: .1, precision: 3}, [socket("noise-detail-input", "float", "input", "left", "Detail")]),
+    comparisonParameter("noise-roughness", "Roughness", .5, "float", {min: 0, max: 1, step: .01, precision: 3}, [socket("noise-roughness-input", "float", "input", "left", "Roughness")]),
+    comparisonParameter("noise-lacunarity", "Lacunarity", 2, "float", {min: 0, step: .1, precision: 3}, [socket("noise-lacunarity-input", "float", "input", "left", "Lacunarity")]),
+    comparisonParameter("noise-distortion", "Distortion", 0, "float", {min: 0, step: .1, precision: 3}, [socket("noise-distortion-input", "float", "input", "left", "Distortion")]),
   ]
   const sockets = definitions.flatMap(definition => definition.sockets.map(entry =>
     coreSocket(entry.id, entry.kind, entry.direction, entry.side, definition.parameter.id, entry.label)))

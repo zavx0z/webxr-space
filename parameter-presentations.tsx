@@ -98,6 +98,7 @@ export function NumberParameter(props: NumberParameterProps) {
       softMin={props.softMin}
       softMax={props.softMax}
       step={props.step}
+      precision={props.precision}
       disabled={props.disabled}
       readOnly={props.readOnly}
       title={props.title}

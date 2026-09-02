@@ -183,11 +183,6 @@ export function Socket(props: SocketProps) {
         border-radius: 50%;
         background: currentcolor;
 
-        &[data-active="false"] {
-          border-color: currentcolor;
-          background: #202020;
-        }
-
         &[data-dot="true"] {
           box-shadow: inset 0 0 0 3px currentcolor;
         }

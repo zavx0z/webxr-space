@@ -163,6 +163,7 @@ export function Parameter(props: ParameterProps) {
   const min = metadataNumber(presentation, "min")
   const max = metadataNumber(presentation, "max")
   const step = metadataNumber(presentation, "step") ?? (valueType === "integer" ? 1 : .1)
+  const precision = metadataNumber(presentation, "precision")
   const options = selectionOptions(presentation)
   const placeholder = metadataString(presentation, "placeholder", "") || undefined
   const vector = numericVector(snapshot.value)
@@ -296,6 +297,7 @@ export function Parameter(props: ParameterProps) {
         min={min}
         max={max}
         step={step}
+        precision={precision}
         disabled={disabled}
         readOnly={readOnly}
         title={title}

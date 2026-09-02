@@ -134,8 +134,10 @@ standard `hidden`, сохраняя Parameter, Field label relation и Socket id
 
 Socket inventory содержит exact 19 kinds и 8 shapes. `kind`, capability
 `input|output|bidirectional`, visual `side=left|right` и shape независимы.
-Ordinary endpoint имеет `10px` intrinsic geometry и `1px` outline. Loose row —
-тот же public `Socket` с row presentation, не скрытый `SocketPort` owner.
+Ordinary endpoint имеет `10px` intrinsic geometry, kind-color fill и `1px`
+dark outline. Connected/selected остаются независимым state и не превращают
+обычный unconnected endpoint в hollow circle. Loose row — тот же public
+`Socket` с row presentation, не скрытый `SocketPort` owner.
 
 ### `NODES-UI-LINK-001`
 

@@ -3,6 +3,7 @@ import {
   Event,
   HTMLButtonElement,
   createDocument,
+  type HTMLInputElement,
 } from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import catalog from "../../.storybook/catalog.json"
@@ -98,7 +99,11 @@ describe("public component Storybook projection", () => {
     const scale = node.querySelector('[data-parameter-id="noise-scale"]')!
     expect(scale.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()
     expect(scale.querySelector('[data-number-field]')?.textContent).toContain("Scale")
-    expect(scale.querySelector('[data-number-fill]')).not.toBeNull()
+    expect(scale.querySelector('[data-number-fill]')?.hasAttribute("hidden")).toBeTrue()
+    expect(scale.querySelector("input")?.getAttribute("value")).toBeNull()
+    expect((scale.querySelector("input") as HTMLInputElement).value).toBe("5.000")
+    const roughness = node.querySelector('[data-parameter-id="noise-roughness"]')!
+    expect(roughness.querySelector('[data-number-fill]')?.hasAttribute("hidden")).toBeFalse()
     expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 192, height: 328, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')
