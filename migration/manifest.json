@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "currentStage": "M0",
+  "stages": [
+    {
+      "id": "M0",
+      "name": "Foundation",
+      "status": "implemented-in-worktree",
+      "deliverables": [
+        "workspace package discovery",
+        "package inventory and dependency DAG",
+        "ownership and provenance ledger",
+        "boundary checks",
+        "package-check orchestration",
+        "external Storybook declaration contract",
+        "capability and evidence matrix",
+        "empty destination slots"
+      ],
+      "productionSourceAllowed": false
+    },
+    {
+      "id": "M1",
+      "name": "Stable platform package cutovers",
+      "status": "blocked",
+      "dependsOn": ["M0"],
+      "packages": [
+        "@engine/core",
+        "@zavx0z/dom",
+        "@zavx0z/template",
+        "@zavx0z/react",
+        "@zavx0z/renderer",
+        "@zavx0z/renderer-webgpu",
+        "@zavx0z/renderer-browser",
+        "@zavx0z/dom-devtools",
+        "@ui/components"
+      ],
+      "gates": [
+        "exact accepted source revision",
+        "clean and remote-backed source",
+        "explicit source freeze/read-only decision",
+        "history-preserving package-prefix import",
+        "single writable owner ledger switch",
+        "source checks and affected-consumer checks"
+      ],
+      "blockers": [
+        "Every source repository is still a writable canonical owner.",
+        "Observed Engine, UI, Renderer and Template HEAD revisions are not contained by the recorded local origin/main refs.",
+        "No package cutover or source freeze has been authorized."
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "Component-authored spatial graph",
+      "status": "planned",
+      "dependsOn": ["M1"],
+      "gates": [
+        "owner contract for spatial Components",
+        "typed attachment and ownership",
+        "same-Document component-range reparent without remount",
+        "one Document/Canvas/Space/ViewPoint conformance",
+        "retained resource identity evidence"
+      ]
+    },
+    {
+      "id": "R1-R6",
+      "name": "Canonical Node clean component rewrite and acceptance",
+      "status": "external-node-owner",
+      "dependsOn": ["M0"],
+      "implementationLocation": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "implementationBranchPolicy": "current supplied branch; no separate worktree implied",
+      "details": "migration/node-cutover.json"
+    },
+    {
+      "id": "M3",
+      "name": "Node family history import",
+      "status": "blocked-by-node-r6",
+      "dependsOn": ["R1-R6", "M2"],
+      "packages": [
+        "@nodes/core",
+        "@nodes/editor",
+        "@nodes/layout",
+        "@nodes/worker",
+        "@nodes/ui"
+      ],
+      "gates": [
+        "one accepted component production path",
+        "functional parity",
+        "dense performance acceptance",
+        "equal-scale Blender visual owner verdict",
+        "remote-backed accepted revision",
+        "single writable owner cutover"
+      ]
+    },
+    {
+      "id": "M4",
+      "name": "Consumer cutover and legacy superproject retirement",
+      "status": "planned",
+      "dependsOn": ["M1", "M2", "M3"],
+      "gates": [
+        "all production consumers use monorepo package owners",
+        "no production dependency on @zavx0z/webxr-space",
+        "external Storybook declarations resolve from exact package owners",
+        "legacy gitlinks have no writable package owner role"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "visual.single-document-graph",
+      "classification": "accepted-decision",
+      "status": "required",
+      "owner": "@zavx0z/dom",
+      "statement": "One extended Document is the canonical visual graph; Space is its scene.",
+      "evidence": [
+        "architecture/package-inventory.json",
+        "renderer:ARCHITECTURE.md",
+        "renderer:packages/browser/requirements.md#RENDERER-BROWSER-011"
+      ]
+    },
+    {
+      "id": "visual.derived-engine-projection",
+      "classification": "accepted-decision",
+      "status": "required",
+      "owner": "@zavx0z/renderer-webgpu",
+      "statement": "Engine, Object3D and WebGPU structures are retained derived projections, never a second public graph.",
+      "evidence": [
+        "engine:ARCHITECTURE.md",
+        "renderer:ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "browser.one-experience-topology",
+      "classification": "implemented-source-fact",
+      "status": "implemented-extension",
+      "owner": "@zavx0z/renderer-browser",
+      "statement": "One Experience owns one Document, Canvas, Renderer, Space, ViewPoint and shared input/frame lifecycle.",
+      "evidence": [
+        "renderer:packages/browser/requirements.md#RENDERER-BROWSER-011"
+      ],
+      "verification": "Source contract inspected at renderer 46aa364d; not re-executed from this worktree."
+    },
+    {
+      "id": "browser.display-and-hud-targets",
+      "classification": "implemented-source-fact",
+      "status": "implemented-extension",
+      "owner": "@zavx0z/renderer-browser",
+      "statement": "World planes and screen overlays are peer projection targets of the same Document and Space.",
+      "evidence": [
+        "renderer:packages/browser/requirements.md#RENDERER-BROWSER-008",
+        "renderer:packages/browser/requirements.md#RENDERER-BROWSER-009"
+      ],
+      "verification": "Source contract inspected at renderer 46aa364d; not re-executed from this worktree."
+    },
+    {
+      "id": "browser.same-document-element-reparent",
+      "classification": "implemented-source-fact",
+      "status": "implemented-bounded",
+      "owner": "@zavx0z/renderer-browser",
+      "statement": "Ordinary same-Document Element reparent between projection roots preserves Element identity, listeners, focus and ownerDocument.",
+      "evidence": [
+        "renderer:packages/browser/requirements.md#RENDERER-BROWSER-008"
+      ],
+      "verification": "Component-range state retention is not implied by this Element-level capability."
+    },
+    {
+      "id": "components.projection-range-reparent",
+      "classification": "confirmed-gap",
+      "status": "unsupported",
+      "owner": "@zavx0z/react",
+      "statement": "A mounted component range cannot yet move Display to HUD to Display without remount while preserving component state.",
+      "acceptance": [
+        "same Element identity",
+        "same component state and hook slots",
+        "same listeners and focus",
+        "same retained resources"
+      ]
+    },
+    {
+      "id": "components.spatial-authoring",
+      "classification": "accepted-goal",
+      "status": "not-implemented",
+      "owner": "undecided presentation package",
+      "statement": "Space, Display, HUD, ViewPoint, Mesh, Geometry and Material are component-authorable nodes over the one Document graph.",
+      "acceptance": [
+        "typed ownership and attachment",
+        "lifecycle and events",
+        "frame hooks",
+        "reuse and instancing",
+        "no Fiber, VDOM, reflective catalog or string attach",
+        "no second Three-like canonical graph"
+      ]
+    },
+    {
+      "id": "components.typed-attachment",
+      "classification": "confirmed-gap",
+      "status": "not-designed",
+      "owner": "undecided presentation package",
+      "statement": "Typed Geometry/Material/Mesh/ViewPoint attachment and ownership has no accepted public contract yet."
+    },
+    {
+      "id": "nodes.component-production-path",
+      "classification": "migration-gate",
+      "status": "external-node-r6",
+      "owner": "source:node",
+      "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameters, Socket and Link must become one accepted component production path before import.",
+      "evidence": [
+        "migration/node-cutover.json"
+      ]
+    },
+    {
+      "id": "renderer.retained-vector-path",
+      "classification": "implemented-prior-evidence",
+      "status": "implemented-bounded",
+      "owner": "DOM to Renderer to WebGPU to Engine",
+      "statement": "One semantic vector-path Link uses retained instanced stroked paths with bounded updates.",
+      "evidence": [
+        "engine commit 15c665df6dc0b5266af630f78fa567b01f12a62a",
+        "renderer commit 5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+        "node commit d52e8f5",
+        "related task 01a05a33-8934-7bc0-857d-17c1da4e851e"
+      ],
+      "metrics": {
+        "links": 10000,
+        "draws": 1,
+        "transformP95Ms": 1.824,
+        "selectionP95Ms": 11.3,
+        "routeP95Ms": 9.214,
+        "selectionGeometryUploadBytes": 0,
+        "postGcRetainedHeapDeltaMb": 6.8
+      },
+      "verification": "Prior accepted evidence; not re-benchmarked in this M0 worktree."
+    },
+    {
+      "id": "nodes.dense-visible-performance",
+      "classification": "confirmed-evidence-gap",
+      "status": "missing",
+      "owner": "source:node",
+      "statement": "Current 1k/10k fixtures materialize only a sparse visible subset and do not prove dense 1k/10k visible Node performance.",
+      "acceptance": [
+        "dense visible 1k and 10k Node fixtures",
+        "p50, p95 and p99",
+        "allocations and GC",
+        "upload bytes and draws",
+        "exact mutation counts",
+        "input-to-present latency"
+      ]
+    },
+    {
+      "id": "storybook.external-declarations",
+      "classification": "implemented-foundation",
+      "status": "implemented",
+      "owner": "external-storybook",
+      "statement": "The repository owns only a data-only workspace declaration and no Storybook server, runtime, catalog, stories or dependency.",
+      "evidence": [
+        ".storybook/manifest.json",
+        "architecture/storybook.json"
+      ],
+      "verification": "M0 data contract passes foundation checks. The already attached canonical workspace remained running, but a non-live Storybook MCP graph check timed out; this worktree was not reattached over the existing workspace id."
+    },
+    {
+      "id": "workspace.single-canonical-owner",
+      "classification": "implemented-foundation",
+      "status": "enforced",
+      "owner": "visual monorepo foundation",
+      "statement": "A package cannot be materialized in packages/* while its source ledger owner remains writable.",
+      "evidence": [
+        "architecture/ownership-ledger.json",
+        "scripts/foundation/check.ts",
+        "scripts/foundation.test.ts"
+      ]
+    }
+  ]
+}

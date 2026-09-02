@@ -5,14 +5,25 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "bootstrap": "bun scripts/workspace.ts bootstrap",
     "links:check": "bun scripts/workspace.ts links-check",
     "gitlinks:check": "bun scripts/workspace.ts gitlinks-check",
     "status": "bun scripts/status.ts",
+    "foundation:check": "bun scripts/foundation/check.ts",
+    "evidence:check": "bun scripts/foundation/check-source-evidence.ts",
+    "boundaries:check": "bun scripts/foundation/check.ts --boundaries-only",
+    "packages:check": "bun scripts/foundation/run-package-checks.ts",
+    "packages:check:external": "bun scripts/foundation/run-package-checks.ts --include-external",
+    "packages:check:plan": "bun scripts/foundation/run-package-checks.ts --plan --include-external",
+    "legacy:test": "bun test scripts/workspace.test.ts",
+    "legacy:check": "bun run typecheck && bun scripts/check.ts && bun run legacy:test",
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test scripts/workspace.test.ts",
-    "check": "bun run typecheck && bun scripts/check.ts && bun run test"
+    "test": "bun test scripts/foundation.test.ts",
+    "check": "bun run typecheck && bun run foundation:check && bun run test"
   },
   "repository": {
     "type": "git",

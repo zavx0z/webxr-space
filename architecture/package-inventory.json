@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "workspacePatterns": ["packages/*"],
+  "legacySuperprojectPackage": "@zavx0z/webxr-space",
+  "externalLibraries": [
+    "@zavx0z/highlighter"
+  ],
+  "externalDevelopmentTools": [
+    "@zavx0z/storybook"
+  ],
+  "packages": [
+    {
+      "id": "engine-core",
+      "packageName": "@engine/core",
+      "version": "0.0.1",
+      "category": "platform-runtime",
+      "sourceRepository": "engine",
+      "sourceManifest": "packages/core/package.json",
+      "destination": "packages/engine",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "engine-cutover"
+    },
+    {
+      "id": "dom",
+      "packageName": "@zavx0z/dom",
+      "version": "0.1.0",
+      "category": "platform-runtime",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/dom/package.json",
+      "destination": "packages/dom",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "template",
+      "packageName": "@zavx0z/template",
+      "version": "2.6.2",
+      "category": "authoring-compiler",
+      "sourceRepository": "template",
+      "sourceManifest": "package.json",
+      "destination": "packages/template",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "template-cutover"
+    },
+    {
+      "id": "react",
+      "packageName": "@zavx0z/react",
+      "version": "0.1.0",
+      "category": "component-runtime",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/react/package.json",
+      "destination": "packages/react",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "renderer-core",
+      "packageName": "@zavx0z/renderer",
+      "version": "0.1.0",
+      "category": "document-renderer",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/core/package.json",
+      "destination": "packages/renderer",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "renderer-webgpu",
+      "packageName": "@zavx0z/renderer-webgpu",
+      "version": "0.1.0",
+      "category": "gpu-projection",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/webgpu/package.json",
+      "destination": "packages/renderer-webgpu",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "renderer-browser",
+      "packageName": "@zavx0z/renderer-browser",
+      "version": "0.1.0",
+      "category": "experience-host",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/browser/package.json",
+      "destination": "packages/renderer-browser",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "dom-devtools",
+      "packageName": "@zavx0z/dom-devtools",
+      "version": "0.1.0",
+      "category": "development-tool",
+      "sourceRepository": "renderer",
+      "sourceManifest": "packages/devtools/package.json",
+      "destination": "packages/dom-devtools",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "renderer-cutover"
+    },
+    {
+      "id": "ui-components",
+      "packageName": "@ui/components",
+      "version": "0.0.1",
+      "category": "visual-components",
+      "sourceRepository": "ui",
+      "sourceManifest": "packages/components/package.json",
+      "destination": "packages/ui-components",
+      "state": "external",
+      "namePolicy": "preserve",
+      "importGate": "ui-cutover"
+    },
+    {
+      "id": "nodes-core",
+      "packageName": "@nodes/core",
+      "version": "0.0.1",
+      "category": "node-model",
+      "sourceRepository": "node",
+      "sourceManifest": "packages/core/package.json",
+      "destination": "packages/nodes-core",
+      "state": "external-node-gated",
+      "namePolicy": "preserve",
+      "importGate": "node-r6"
+    },
+    {
+      "id": "nodes-editor",
+      "packageName": "@nodes/editor",
+      "version": "0.0.1",
+      "category": "node-authoring",
+      "sourceRepository": "node",
+      "sourceManifest": "packages/editor/package.json",
+      "destination": "packages/nodes-editor",
+      "state": "external-node-gated",
+      "namePolicy": "preserve",
+      "importGate": "node-r6"
+    },
+    {
+      "id": "nodes-layout",
+      "packageName": "@nodes/layout",
+      "version": "0.0.1",
+      "category": "node-layout",
+      "sourceRepository": "node",
+      "sourceManifest": "packages/layout/package.json",
+      "destination": "packages/nodes-layout",
+      "state": "external-node-gated",
+      "namePolicy": "preserve",
+      "importGate": "node-r6"
+    },
+    {
+      "id": "nodes-worker",
+      "packageName": "@nodes/worker",
+      "version": "0.0.1",
+      "category": "node-worker",
+      "sourceRepository": "node",
+      "sourceManifest": "packages/worker/package.json",
+      "destination": "packages/nodes-worker",
+      "state": "external-node-gated",
+      "namePolicy": "preserve",
+      "importGate": "node-r6"
+    },
+    {
+      "id": "nodes-ui",
+      "packageName": "@nodes/ui",
+      "version": "0.0.1",
+      "category": "node-components",
+      "sourceRepository": "node",
+      "sourceManifest": "packages/ui/package.json",
+      "destination": "packages/nodes-ui",
+      "state": "external-node-gated",
+      "namePolicy": "preserve",
+      "importGate": "node-r6",
+      "plannedPublicOwners": [
+        "NodeTree",
+        "NodeEditor",
+        "Frame",
+        "Node",
+        "concrete Parameters",
+        "Socket",
+        "Link"
+      ]
+    },
+    {
+      "id": "presentation-components",
+      "packageName": null,
+      "version": null,
+      "category": "spatial-components",
+      "sourceRepository": null,
+      "sourceManifest": null,
+      "destination": "packages/presentation",
+      "state": "proposal",
+      "namePolicy": "undecided",
+      "importGate": "owner-contract"
+    },
+    {
+      "id": "presentation-layout",
+      "packageName": null,
+      "version": null,
+      "category": "projection-placement",
+      "sourceRepository": null,
+      "sourceManifest": null,
+      "destination": "packages/presentation-layout",
+      "state": "proposal",
+      "namePolicy": "undecided",
+      "importGate": "owner-contract"
+    }
+  ]
+}

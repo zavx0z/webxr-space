@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "units": [
+    {
+      "id": "foundation",
+      "state": "workspace",
+      "repository": "migration-worktree",
+      "dependsOn": [],
+      "command": ["bun", "run", "foundation:check"]
+    },
+    {
+      "id": "highlighter",
+      "state": "external",
+      "repository": "highlighter",
+      "dependsOn": ["foundation"],
+      "command": ["bun", "run", "check"]
+    },
+    {
+      "id": "engine",
+      "state": "external",
+      "repository": "engine",
+      "dependsOn": ["foundation"],
+      "command": ["bun", "run", "check"]
+    },
+    {
+      "id": "template",
+      "state": "external",
+      "repository": "template",
+      "dependsOn": ["foundation"],
+      "command": ["bun", "run", "check"]
+    },
+    {
+      "id": "renderer",
+      "state": "external",
+      "repository": "renderer",
+      "dependsOn": ["engine", "template"],
+      "command": ["bun", "run", "check"]
+    },
+    {
+      "id": "ui",
+      "state": "external",
+      "repository": "ui",
+      "dependsOn": ["highlighter", "renderer", "template"],
+      "command": ["bun", "run", "check"]
+    },
+    {
+      "id": "node",
+      "state": "external",
+      "repository": "node",
+      "dependsOn": ["engine", "renderer", "template", "ui"],
+      "command": ["bun", "run", "check"]
+    }
+  ]
+}

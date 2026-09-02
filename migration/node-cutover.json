@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "sourceRepository": "node",
+  "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+  "observedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+  "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
+  "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
+  "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
+  "destinationPackages": [
+    {"package": "@nodes/core", "path": "packages/nodes-core"},
+    {"package": "@nodes/editor", "path": "packages/nodes-editor"},
+    {"package": "@nodes/layout", "path": "packages/nodes-layout"},
+    {"package": "@nodes/worker", "path": "packages/nodes-worker"},
+    {"package": "@nodes/ui", "path": "packages/nodes-ui"}
+  ],
+  "requiredComponentOwners": [
+    "NodeTree",
+    "NodeEditor",
+    "Frame",
+    "Node",
+    "concrete Parameters",
+    "Socket",
+    "Link"
+  ],
+  "preserveFromBehavioralBaseline": [
+    "nested Frames",
+    "Node shell, preview and collapse",
+    "Socket kinds, shapes, directions and exact centers",
+    "selection and Frame/Link/Node paint order",
+    "grid, fit, pan, zoom, pinch and culling",
+    "stable retained identity",
+    "Blender-compatible geometry and interaction behavior"
+  ],
+  "preserveFromCurrentPlatform": [
+    "one semantic Document",
+    "compiled Template and component runtime without Fiber or VDOM",
+    "current concrete UI Fields",
+    "current Core, Editor, Layout and Worker contracts",
+    "one vector-path Link and retained instanced Path",
+    "159 historical external Storybook leaves",
+    "reference provenance and dense Path evidence"
+  ],
+  "forbiddenImports": [
+    "current imperative DOM factories/controllers",
+    "current parallel NodeSystem snapshot path",
+    "compatibility aliases",
+    "a second Store, Canvas, Document or semantic tree",
+    "component-local renderer, parser, event system or manual layout"
+  ],
+  "gates": [
+    {
+      "id": "R1",
+      "name": "Reproducible canonical checkout",
+      "status": "pending",
+      "evidence": ["exact linked revisions", "materialized dependencies", "green focused baseline"]
+    },
+    {
+      "id": "R2",
+      "name": "One clean component production path",
+      "status": "pending",
+      "evidence": ["no ui-next", "no factory/controller production path", "one component root"]
+    },
+    {
+      "id": "R3",
+      "name": "Consumer and Storybook cutover",
+      "status": "pending",
+      "evidence": ["exact public TSX owners", "exact historical routes", "no legacy production imports"]
+    },
+    {
+      "id": "R4",
+      "name": "Functional parity",
+      "status": "pending",
+      "evidence": ["stable identities", "nested Frame behavior", "selection", "viewport interactions", "cleanup"]
+    },
+    {
+      "id": "R5",
+      "name": "Dense performance and equal-scale visual acceptance",
+      "status": "pending",
+      "evidence": [
+        "1k and 10k visible Nodes, not a sparse viewport sample",
+        "512, 2048 and 10000 Links",
+        "p50, p95 and p99",
+        "allocations and post-GC retained heap",
+        "GPU upload bytes, draw counts and geometry invalidations",
+        "input-to-present latency",
+        "equal-scale Blender reference and explicit owner verdict"
+      ]
+    },
+    {
+      "id": "R6",
+      "name": "Freeze accepted remote-backed revision",
+      "status": "pending",
+      "evidence": ["clean source", "accepted commit", "remote containment", "source read-only cutover authorization"]
+    }
+  ],
+  "deferredOwnerDecisions": [
+    "NodeType and registry contract",
+    "canonical Property ownership",
+    "progressive LOD versus continuous scaling",
+    "custom topology-driven Node resolution"
+  ]
+}

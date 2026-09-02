@@ -1,6 +1,78 @@
-# webxr-space
+# webxr-space visual monorepo foundation
 
-Development-only superproject for the DOM-driven WebGPU/XR interface stack.
+This worktree implements M0 of the future visual monorepo: a strict workspace
+shell, package/owner evidence, migration gates and automated boundaries. It does
+not yet own production package source.
+
+The architectural target is one extended semantic `Document` as the canonical
+visual graph, one `Space` as its scene and retained Engine/WebGPU structures as
+derived projections. Display and HUD are peer targets of that same
+Document/Space. Component authoring will eventually cover ViewPoint, Mesh,
+Geometry, Material and the accepted Node component family without Fiber, VDOM
+or a second scene graph.
+
+## M0 contents
+
+```text
+architecture/   package inventory, dependency DAG, owner and Storybook records
+capabilities/   accepted decisions, current evidence and explicit gaps
+evidence/       exact observed repository/package snapshot
+migration/      staged manifest, history-import plan and Node R1-R6 gates
+packages/       empty, tracked destination slots with no package manifests
+scripts/        discovery, boundary enforcement and package-check orchestration
+```
+
+The authoritative files are:
+
+- `architecture/package-inventory.json`
+- `architecture/dependency-graph.json`
+- `architecture/ownership-ledger.json`
+- `migration/manifest.json`
+- `migration/node-cutover.json`
+- `capabilities/evidence-matrix.json`
+- `evidence/history-snapshot.json`
+
+Every existing package still has exactly one writable canonical source owner.
+Adding `package.json` or production source to a reserved destination fails the
+foundation check until an explicit history-preserving cutover changes the
+ownership ledger.
+
+## Checks
+
+```bash
+bun install --frozen-lockfile
+bun run check
+bun run evidence:check
+bun run packages:check
+bun run packages:check:plan
+```
+
+`bun run check` is the self-contained M0 acceptance. `packages:check` runs the
+same foundation through the unified package-check orchestrator. The plan command
+prints each external repository's exact existing `bun run check` command without
+executing or rewriting it. External source checks are deliberately not part of
+M0 because those repositories remain independent writable owners.
+
+`evidence:check` compares the live external checkouts with the timestamped
+snapshot and fails on any drift. Such a failure is not repaired by copying the
+new source into M0; it means the snapshot must be reviewed at the next explicit
+cutover checkpoint.
+
+## Why production source is not imported yet
+
+The timestamped source snapshot initially observed clean Engine, UI, Node,
+Renderer and Template checkouts, but they remain independent writable canonical
+owners and may move concurrently. Several observed HEAD revisions are also ahead
+of the recorded local `origin/main`. Importing now would create two writable
+owners, so `migration/history-import.json` records the exact package prefixes
+and blocker instead of copying files.
+
+Node has a stronger gate: it is rewritten and accepted in the canonical Node
+checkout first. Only an R6 revision with functional parity, dense 1k/10k Node
+evidence, 512/2k/10k Link evidence and an equal-scale Blender owner verdict may
+be imported.
+
+## Transition superproject
 
 This repository pins the exact revisions used together for development,
 cross-repository checks, dependency analysis, optional Storybook declaration composition, and live
@@ -40,7 +112,7 @@ checkouts beside `webxr-space`; they are development owners, not submodules.
 git clone --recurse-submodules git@github.com:zavx0z/webxr-space.git
 cd webxr-space
 bun run bootstrap
-bun run check
+bun run legacy:check
 ```
 
 `bun run bootstrap` registers every linked package from a path relative to this

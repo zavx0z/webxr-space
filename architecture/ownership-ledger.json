@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "invariant": "Every existing package has exactly one writable canonical owner at every point in time.",
+  "groups": [
+    {
+      "id": "engine",
+      "packages": ["@engine/core"],
+      "owners": [
+        {
+          "id": "source:engine",
+          "kind": "repository",
+          "path": "/Users/zavx0z/repozitarium/webxr-space/projects/engine",
+          "revision": "a3032d960fc592296e8c5d1408a02551635d1fb3",
+          "writable": true,
+          "state": "canonical"
+        },
+        {
+          "id": "destination:engine",
+          "kind": "workspace-slot",
+          "path": "packages/engine",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-empty"
+        }
+      ]
+    },
+    {
+      "id": "renderer",
+      "packages": [
+        "@zavx0z/dom",
+        "@zavx0z/react",
+        "@zavx0z/renderer",
+        "@zavx0z/renderer-webgpu",
+        "@zavx0z/renderer-browser",
+        "@zavx0z/dom-devtools"
+      ],
+      "owners": [
+        {
+          "id": "source:renderer",
+          "kind": "repository",
+          "path": "/Users/zavx0z/repozitarium/renderer",
+          "revision": "46aa364d2713fd1bdc18fc84836948d6463f817a",
+          "writable": true,
+          "state": "canonical"
+        },
+        {
+          "id": "destination:renderer",
+          "kind": "workspace-slots",
+          "path": "packages/{dom,react,renderer,renderer-webgpu,renderer-browser,dom-devtools}",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-empty"
+        }
+      ]
+    },
+    {
+      "id": "template",
+      "packages": ["@zavx0z/template"],
+      "owners": [
+        {
+          "id": "source:template",
+          "kind": "repository",
+          "path": "/Users/zavx0z/repozitarium/template",
+          "revision": "ef543f55aea710d91ec473fe52f32900fbbb655b",
+          "writable": true,
+          "state": "canonical"
+        },
+        {
+          "id": "destination:template",
+          "kind": "workspace-slot",
+          "path": "packages/template",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-empty"
+        }
+      ]
+    },
+    {
+      "id": "ui",
+      "packages": ["@ui/components"],
+      "owners": [
+        {
+          "id": "source:ui",
+          "kind": "repository",
+          "path": "/Users/zavx0z/repozitarium/webxr-space/projects/ui",
+          "revision": "6af702d2e26c47387563f1157a50d9a657bd5934",
+          "writable": true,
+          "state": "canonical"
+        },
+        {
+          "id": "destination:ui-components",
+          "kind": "workspace-slot",
+          "path": "packages/ui-components",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-empty"
+        }
+      ]
+    },
+    {
+      "id": "node",
+      "packages": [
+        "@nodes/core",
+        "@nodes/editor",
+        "@nodes/layout",
+        "@nodes/worker",
+        "@nodes/ui"
+      ],
+      "owners": [
+        {
+          "id": "source:node",
+          "kind": "repository",
+          "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+          "revision": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+          "writable": true,
+          "state": "canonical"
+        },
+        {
+          "id": "destination:node",
+          "kind": "workspace-slots",
+          "path": "packages/nodes-{core,editor,layout,worker,ui}",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-empty"
+        }
+      ]
+    },
+    {
+      "id": "presentation-proposals",
+      "packages": [],
+      "proposalSlots": ["presentation-components", "presentation-layout"],
+      "owners": [
+        {
+          "id": "destination:presentation",
+          "kind": "workspace-slots",
+          "path": "packages/{presentation,presentation-layout}",
+          "revision": null,
+          "writable": false,
+          "state": "reserved-proposal"
+        }
+      ]
+    }
+  ]
+}

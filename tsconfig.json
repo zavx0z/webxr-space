@@ -1,13 +1,6 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
     "types": ["bun", "@webgpu/types"]
   },
   "include": ["scripts/**/*.ts"],
