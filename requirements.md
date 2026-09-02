@@ -135,6 +135,11 @@ The parent `Node` maps the bounded `4px`/`8px` rhythm onto the exact Parameter
 root; it does not calculate coordinates, create a wrapper owner or move layout
 into the component.
 
+Node-owned row composition keeps full-width menus at a symmetric `12px` inset,
+leading checkbox rows at `8px`, and labelled numeric rows with a left endpoint
+at the contour plus `10px` right inset. These are parent/Parameter CSS flow
+rules, not Field copies or manual coordinates.
+
 Удалённые `IntegerField`, `BooleanField`, `EnumField`, `RotationField`,
 `ReadonlyField` не восстанавливаются. Connected Parameter скрывает editor через
 standard `hidden`, сохраняя Parameter, Field label relation и Socket identity.

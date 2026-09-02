@@ -99,6 +99,7 @@ describe("public component Storybook projection", () => {
     expect(normalize.querySelectorAll('[data-parameter-label]')).toHaveLength(2)
     expect(node.querySelector('[data-parameter-id="noise-basis"]')).toBeNull()
     const scale = node.querySelector('[data-parameter-id="noise-scale"]')!
+    expect(scale.getAttribute("data-inset-number-row")).toBe("true")
     expect(scale.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()
     expect(scale.querySelector('[data-number-field]')?.textContent).toContain("Scale")
     expect(scale.querySelector('[data-number-fill]')?.hasAttribute("hidden")).toBeTrue()

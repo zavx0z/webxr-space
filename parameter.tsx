@@ -182,6 +182,7 @@ export function Parameter(props: ParameterProps) {
   const numberSlider = typeof snapshot.value === "number" && interaction === "slider" && min !== undefined && max !== undefined
   const numberEditor = typeof snapshot.value === "number" && !numberSlider
   const numberOwnsLabel = numberEditor && !connected
+  const insetNumberRow = numberOwnsLabel && left.length > 0 && right.length === 0
   const stringSelection = typeof snapshot.value === "string" &&
     (options !== undefined || valueType === "menu" || valueType === "enum")
   const stringCycle = stringSelection && interaction === "cycle"
@@ -206,6 +207,7 @@ export function Parameter(props: ParameterProps) {
     data-connected={connected ? "true" : undefined}
     data-label-hidden={labelHidden ? "true" : undefined}
     data-leading-checkbox={leadingCheckbox ? "true" : undefined}
+    data-inset-number-row={insetNumberRow ? "true" : undefined}
     data-spacing-before={props.spacingBefore}
     title={title}
     style={css`
@@ -228,14 +230,18 @@ export function Parameter(props: ParameterProps) {
 
       &[data-label-hidden="true"] {
         gap: 0;
-        padding-right: 10px;
-        padding-left: 10px;
+        padding-right: 12px;
+        padding-left: 12px;
       }
 
       &[data-leading-checkbox="true"] {
         gap: 4px;
+        padding-right: 8px;
+        padding-left: 8px;
+      }
+
+      &[data-inset-number-row="true"] {
         padding-right: 10px;
-        padding-left: 10px;
       }
 
       &[hidden] {
