@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the final Node R5 candidate checkpoint", async () => {
+  test("preserves prior snapshots and overlays the corrected Node R5 visual checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -155,7 +155,8 @@ describe("visual monorepo M0 foundation", () => {
     const denseLifecycleGates = data.nodeR5DenseLifecycleCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionGates = data.nodeR5OwnerDecisionsCheckpoint.effectiveGates as Record<string, string>
     const compatibilityGates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5FinalCandidateCheckpoint.effectiveGates as Record<string, string>
+    const finalCandidateGates = data.nodeR5FinalCandidateCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5VisualClosureCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
@@ -164,7 +165,12 @@ describe("visual monorepo M0 foundation", () => {
       node: {head: string}
       renderer: {head: string}
     }
-    const latestRepositories = data.nodeR5FinalCandidateCheckpoint.repositories as {
+    const finalCandidateRepositories = data.nodeR5FinalCandidateCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+    }
+    const latestRepositories = data.nodeR5VisualClosureCheckpoint.repositories as {
       node: {head: string}
       ui: {head: string}
       renderer: {head: string}
@@ -186,11 +192,13 @@ describe("visual monorepo M0 foundation", () => {
     expect(denseLifecycleGates.R5).toBe("partial-blocked")
     expect(ownerDecisionRepositories.node.head).toBe("176816b1ec89a3485309ff16675cc21c798e06db")
     expect(compatibilityRepositories.node.head).toBe("c399bf312dcb214aa0ed31d631a086bc7be0569d")
-    expect(latestRepositories.node.head).toBe("996619791e9abfc32e5a5139f9f3b1e4bc20e716")
-    expect(latestRepositories.ui.head).toBe("5c351459555ec0980893a1da1c1ee8e7f99de2ed")
+    expect(finalCandidateRepositories.node.head).toBe("996619791e9abfc32e5a5139f9f3b1e4bc20e716")
+    expect(finalCandidateRepositories.ui.head).toBe("5c351459555ec0980893a1da1c1ee8e7f99de2ed")
+    expect(latestRepositories.node.head).toBe("9855abd9683affb8759647ebd27c342ab8b4dda4")
+    expect(latestRepositories.ui.head).toBe("1ddae57f1f525ecd2363bec1a5bb79db71591cfd")
     expect(latestRepositories.renderer.head).toBe("99ce7846e6086ba4c3adebad23acbb6faafa277f")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
+      "9855abd9683affb8759647ebd27c342ab8b4dda4",
     )
     expect(ownerDecisionGates).toEqual({
       R1: "verified",
@@ -208,7 +216,7 @@ describe("visual monorepo M0 foundation", () => {
       R5: "owner-decisions-pending",
       R6: "blocked",
     })
-    expect(gates).toEqual({
+    expect(finalCandidateGates).toEqual({
       R1: "verified",
       R2: "verified",
       R3: "verified",
@@ -216,8 +224,16 @@ describe("visual monorepo M0 foundation", () => {
       R5: "platform-gap-and-owner-verdict",
       R6: "blocked",
     })
+    expect(gates).toEqual({
+      R1: "verified",
+      R2: "verified",
+      R3: "verified",
+      R4: "verified",
+      R5: "owner-verdict-pending",
+      R6: "blocked",
+    })
     expect(uiGroup.owners.find(({id}) => id === "source:ui")?.revision).toBe(
-      "5c351459555ec0980893a1da1c1ee8e7f99de2ed",
+      "1ddae57f1f525ecd2363bec1a5bb79db71591cfd",
     )
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
       "99ce7846e6086ba4c3adebad23acbb6faafa277f",
@@ -282,6 +298,15 @@ describe("visual monorepo M0 foundation", () => {
     })).toMatchObject({
       status: "candidate-platform-gap",
       ownerVerdict: "pending-zavx0z",
+    })
+    expect((data.nodeR5VisualClosureCheckpoint.visualAcceptance as {
+      status: string
+      ownerVerdict: string
+      restoredIndicator: {source: string; platformGap: boolean}
+    })).toMatchObject({
+      status: "candidate-owner-verdict",
+      ownerVerdict: "pending-zavx0z",
+      restoredIndicator: {source: "chevronDownIcon", platformGap: false},
     })
   })
 

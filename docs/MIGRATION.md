@@ -42,13 +42,16 @@ Node `f4519ea` closes Link timing and retained runtime memory; dense-visible
 disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Final
 1k/10k retained baselines pass executable `600000000 / 5400000000` byte
 ceilings; final append is `12.498 / 64.902ms` with exact marker-derived mounts.
-At `776a974`, exact full NodeEditor `278365 / 70095` passes the replacement
-`285000 / 72000` bundle ceiling. Official Blender 5.2 Noise Texture evidence is
-stored byte-exact, and Node/UI composition at `9966197` / `5c35145` is captured
-at 1:1 on Storybook revision `1a3ad15e74d2400c585c626a`. R5 technical gates
-are closed. The remaining R5 boundary is a generic Renderer/Engine-font gap:
-the native select indicator emits `▾` but paints as a damaged vertical glyph,
-plus the explicit `zavx0z` visual verdict. No consumer workaround was added.
+At `776a974`, the replacement `285000 / 72000` bundle ceiling was made
+executable. After restoring the historical UI-owned SVG indicator, exact full
+NodeEditor `279243 / 70384` still passes that ceiling. Official Blender 5.2
+Noise Texture evidence is stored byte-exact, and Node/UI composition at
+`9855abd` / `1ddae57` is captured at 1:1 on Storybook revision
+`f48550926ffeec12eef18bc1`. The prior Renderer/Engine-font classification was
+wrong: historical `Select` used `chevronDown` in an image slot. `SelectField`
+now restores `chevronDownIcon` as non-interactive presentation while the native
+`select` remains the picker, value, focus and change owner. R5 technical gates
+are closed; only the explicit `zavx0z` equal-scale visual verdict remains.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.

@@ -129,13 +129,39 @@ const decisionRendererCheckpoint = objectRecord(
   decisionRepositories.renderer,
   "owner decision Renderer repository",
 )
-const latestRepositories = objectRecord(
+const compatibilityRepositories = objectRecord(
   data.nodeR5BlenderCompatibilityCheckpoint.repositories,
-  "latest Blender compatibility checkpoint repositories",
+  "Blender compatibility checkpoint repositories",
+)
+const compatibilityNodeCheckpoint = objectRecord(
+  compatibilityRepositories.node,
+  "Blender compatibility Node repository",
+)
+const compatibilityRendererCheckpoint = objectRecord(
+  compatibilityRepositories.renderer,
+  "Blender compatibility Renderer repository",
+)
+const finalCandidateRepositories = objectRecord(
+  data.nodeR5FinalCandidateCheckpoint.repositories,
+  "final candidate checkpoint repositories",
+)
+const finalCandidateNodeCheckpoint = objectRecord(
+  finalCandidateRepositories.node,
+  "final candidate Node repository",
+)
+const finalCandidateUiCheckpoint = objectRecord(
+  finalCandidateRepositories.ui,
+  "final candidate UI repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5VisualClosureCheckpoint.repositories,
+  "latest visual closure checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
+const uiCheckpoint = objectRecord(latestRepositories.ui, "latest UI repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
 repositories.set("node", nodeCheckpoint)
+repositories.set("ui", uiCheckpoint)
 repositories.set("renderer", rendererCheckpoint)
 
 for (const [id, record] of repositories) {
@@ -406,7 +432,7 @@ if (!Array.isArray(compatibilityNodeHistory)) {
 }
 for (const value of compatibilityNodeHistory) {
   const entry = objectRecord(value, "Blender compatibility Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Blender compatibility Node")
+  validateCheckpointHistoryEntry(entry, compatibilityNodeCheckpoint, "Blender compatibility Node")
 }
 
 const compatibilityRendererHistory = data.nodeR5BlenderCompatibilityCheckpoint.rendererPackageHistory
@@ -415,7 +441,43 @@ if (!Array.isArray(compatibilityRendererHistory)) {
 }
 for (const value of compatibilityRendererHistory) {
   const entry = objectRecord(value, "Blender compatibility Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "Blender compatibility Renderer")
+  validateCheckpointHistoryEntry(entry, compatibilityRendererCheckpoint, "Blender compatibility Renderer")
+}
+
+const finalCandidateNodeHistory = data.nodeR5FinalCandidateCheckpoint.nodePackageHistory
+if (!Array.isArray(finalCandidateNodeHistory)) {
+  throw new Error("Final candidate Node history must be an array")
+}
+for (const value of finalCandidateNodeHistory) {
+  const entry = objectRecord(value, "final candidate Node history entry")
+  validateCheckpointHistoryEntry(entry, finalCandidateNodeCheckpoint, "final candidate Node")
+}
+
+const finalCandidateUiHistory = data.nodeR5FinalCandidateCheckpoint.uiPackageHistory
+if (!Array.isArray(finalCandidateUiHistory)) {
+  throw new Error("Final candidate UI history must be an array")
+}
+for (const value of finalCandidateUiHistory) {
+  const entry = objectRecord(value, "final candidate UI history entry")
+  validateCheckpointHistoryEntry(entry, finalCandidateUiCheckpoint, "final candidate UI")
+}
+
+const visualClosureNodeHistory = data.nodeR5VisualClosureCheckpoint.nodePackageHistory
+if (!Array.isArray(visualClosureNodeHistory)) {
+  throw new Error("Visual closure Node history must be an array")
+}
+for (const value of visualClosureNodeHistory) {
+  const entry = objectRecord(value, "visual closure Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "visual closure Node")
+}
+
+const visualClosureUiHistory = data.nodeR5VisualClosureCheckpoint.uiPackageHistory
+if (!Array.isArray(visualClosureUiHistory)) {
+  throw new Error("Visual closure UI history must be an array")
+}
+for (const value of visualClosureUiHistory) {
+  const entry = objectRecord(value, "visual closure UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "visual closure UI")
 }
 
 console.log(
@@ -432,7 +494,9 @@ console.log(
   `${linkClosureNodeHistory.length + linkClosureRendererHistory.length} Link closure histories, ` +
   `${denseNodeHistory.length + denseRendererHistory.length} dense lifecycle histories, ` +
   `${decisionNodeHistory.length + decisionRendererHistory.length} owner decision histories, ` +
-  `${compatibilityNodeHistory.length + compatibilityRendererHistory.length} Blender compatibility histories`,
+  `${compatibilityNodeHistory.length + compatibilityRendererHistory.length} Blender compatibility histories, ` +
+  `${finalCandidateNodeHistory.length + finalCandidateUiHistory.length} final candidate histories, ` +
+  `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories`,
 )
 
 function validateCheckpointHistoryEntry(

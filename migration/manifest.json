@@ -65,7 +65,7 @@
     {
       "id": "R1-R6",
       "name": "Canonical Node clean component rewrite and acceptance",
-      "status": "r1-r4-verified-r5-platform-gap-r6-blocked",
+      "status": "r1-r4-verified-r5-owner-verdict-r6-blocked",
       "dependsOn": ["M0"],
       "implementationLocation": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
       "implementationBranchPolicy": "current supplied branch; no separate worktree implied",
@@ -82,20 +82,21 @@
       "blenderCompatibilityImplementationCommit": "1bce579a10ee2be4110ee43e10235ee173c2243f",
       "blenderCompatibilityEvidenceCommit": "c399bf312dcb214aa0ed31d631a086bc7be0569d",
       "finalCandidateEvidenceCommit": "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
+      "visualClosureEvidenceCommit": "9855abd9683affb8759647ebd27c342ab8b4dda4",
       "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
       "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "completedGates": ["R1", "R2", "R3", "R4"],
       "ownerDecisionGates": ["R5 visual verdict"],
       "blockedGates": ["R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-final-candidate-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-final-candidate-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-visual-closure-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
       "id": "M3",
       "name": "Node family history import",
-      "status": "blocked-by-node-visual-gap-r6",
+      "status": "blocked-by-node-owner-verdict-r6",
       "dependsOn": ["R1-R6", "M2"],
       "packages": [
         "@nodes/core",
@@ -113,7 +114,7 @@
         "single writable owner cutover"
       ],
       "blockers": [
-        "R5 technical gates and exact Blender 5.2 reference are closed; the select-indicator platform gap and final visual verdict remain pending.",
+        "R5 technical gates, exact Blender 5.2 reference and the restored UI-owned SVG indicator are closed; only the final visual verdict remains pending.",
         "R6 commit is not remote-backed and the canonical Node owner has not been frozen/read-only.",
         "The source:node repository remains the only writable canonical owner."
       ]

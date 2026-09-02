@@ -3,7 +3,7 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
+  "observedHead": "9855abd9683affb8759647ebd27c342ab8b4dda4",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
   "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
@@ -17,6 +17,7 @@
   "blenderCompatibilityImplementationCommit": "1bce579a10ee2be4110ee43e10235ee173c2243f",
   "blenderCompatibilityEvidenceCommit": "c399bf312dcb214aa0ed31d631a086bc7be0569d",
   "finalCandidateEvidenceCommit": "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
+  "visualClosureEvidenceCommit": "9855abd9683affb8759647ebd27c342ab8b4dda4",
   "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
   "bulkBackendCleanupEvidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
   "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
@@ -25,8 +26,8 @@
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
   "blenderCompatibilityEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-final-candidate-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-final-candidate-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-visual-closure-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -108,7 +109,7 @@
       "evidence": [
         "exact public TSX owners and consumers committed",
         "159 historical Storybook leaves and 66 overview routes preserved",
-        "active Storybook revision 1a3ad15e74d2400c585c626a"
+        "active Storybook revision f48550926ffeec12eef18bc1"
       ]
     },
     {
@@ -116,7 +117,7 @@
       "name": "Functional parity",
       "status": "verified",
       "evidence": [
-        "bun run check: 220 pass, 0 fail, 0 todo at 9966197",
+        "bun run check: 220 pass, 0 fail, 0 todo at 9855abd",
         "stable identity, local mutation and transform-only evidence passed",
         "exact @nodes/layout LayoutResult is mandatory and validated before materialization",
         "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween are absent from committed Node geometry",
@@ -126,11 +127,12 @@
     {
       "id": "R5",
       "name": "Dense performance and equal-scale visual acceptance",
-      "status": "platform-gap-and-owner-verdict",
+      "status": "owner-verdict-pending",
       "verifiedSubgates": [
         "dense-visible 10k lifecycle self-completes with disposed == mounted == 350003",
         "1k/10k retained baselines pass executable 600000000/5400000000 byte ceilings",
-        "exact full NodeEditor 278365/70095 passes executable 285000/72000 bundle ceiling",
+        "exact full NodeEditor 279243/70384 passes executable 285000/72000 bundle ceiling",
+        "historical UI-owned chevronDownIcon is restored without changing native select interaction ownership",
         "final 1k/10k topology 12.498/64.902ms with exact 33 marker-derived mounts",
         "official Blender 5.2 Noise Texture asset is stored byte-exact and used at 1:1",
         "WebGPU backend bulk-detach avoids per-entry root.remove and bounds backend cleanup to 178.6-328.6ms",
@@ -155,9 +157,7 @@
         "unchanged context subtree scans skipped at Renderer 5d5a06c14c2f8216cce6f5930695154f57524ea4",
         "Renderer capability evidence refreshed at a84672deb1573b1e16bffacf801877f1a3633628"
       ],
-      "blockers": [
-        "native select disclosure indicator is a confirmed Renderer/Engine-font visual gap"
-      ],
+      "blockers": [],
       "ownerDecisions": [
         "record the explicit equal-scale visual owner verdict by zavx0z"
       ],
@@ -175,9 +175,10 @@
         "evidence/node-r5-owner-decisions-checkpoint.json",
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
+        "evidence/node-r5-visual-closure-checkpoint.json",
         "historical Blender 4.5 equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "legacy 4.5 compatibility capture 923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9",
-        "final Blender 5.2 comparison capture 643cebce34e66814e7ae50d649bf487bbd8705db00ca77d98e37c073d55dda2e",
+        "SVG-restored Blender 5.2 comparison capture b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d",
         "final console-zero non-black NodeEditor capture 4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b"
       ]
     },
@@ -186,14 +187,14 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at 996619791e9abfc32e5a5139f9f3b1e4bc20e716 and ahead 23",
-        "UI main is clean at 5c351459555ec0980893a1da1c1ee8e7f99de2ed and ahead 5",
+        "Node main is clean at 9855abd9683affb8759647ebd27c342ab8b4dda4 and ahead 24",
+        "UI main is clean at 1ddae57f1f525ecd2363bec1a5bb79db71591cfd and ahead 6",
         "Renderer main is clean at 99ce7846e6086ba4c3adebad23acbb6faafa277f and ahead 12"
       ],
       "blockers": [
-        "R5 select-indicator platform gap and explicit visual owner verdict remain pending",
-        "996619791e9abfc32e5a5139f9f3b1e4bc20e716 is not remote-backed",
-        "5c351459555ec0980893a1da1c1ee8e7f99de2ed is not remote-backed",
+        "explicit R5 equal-scale visual owner verdict remains pending",
+        "9855abd9683affb8759647ebd27c342ab8b4dda4 is not remote-backed",
+        "1ddae57f1f525ecd2363bec1a5bb79db71591cfd is not remote-backed",
         "99ce7846e6086ba4c3adebad23acbb6faafa277f is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "push/freeze authorization has not been given"

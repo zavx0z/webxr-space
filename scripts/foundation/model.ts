@@ -26,6 +26,7 @@ export const dataFiles = Object.freeze({
   nodeR5OwnerDecisionsCheckpoint: "evidence/node-r5-owner-decisions-checkpoint.json",
   nodeR5BlenderCompatibilityCheckpoint: "evidence/node-r5-blender-compatibility-checkpoint.json",
   nodeR5FinalCandidateCheckpoint: "evidence/node-r5-final-candidate-checkpoint.json",
+  nodeR5VisualClosureCheckpoint: "evidence/node-r5-visual-closure-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -149,6 +150,7 @@ export type FoundationData = Readonly<{
   nodeR5OwnerDecisionsCheckpoint: Readonly<Record<string, unknown>>
   nodeR5BlenderCompatibilityCheckpoint: Readonly<Record<string, unknown>>
   nodeR5FinalCandidateCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5VisualClosureCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -203,6 +205,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5FinalCandidateCheckpoint: byPath.get(
       dataFiles.nodeR5FinalCandidateCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5VisualClosureCheckpoint: byPath.get(
+      dataFiles.nodeR5VisualClosureCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -667,7 +672,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5DenseLifecycleCheckpoint.schemaVersion !== 1 ||
     data.nodeR5OwnerDecisionsCheckpoint.schemaVersion !== 1 ||
     data.nodeR5BlenderCompatibilityCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1) {
+    data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -725,7 +731,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const denseLifecycleCheckpointPath = "evidence/node-r5-dense-lifecycle-checkpoint.json"
   const ownerDecisionsCheckpointPath = "evidence/node-r5-owner-decisions-checkpoint.json"
   const compatibilityCheckpointPath = "evidence/node-r5-blender-compatibility-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
+  const finalCandidateCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -806,9 +813,19 @@ function validateMigrationCoverage(data: FoundationData): void {
     compatibilityRepositories.renderer,
     "compatibility Renderer repository",
   )
-  const latestRepositories = objectRecord(
+  const finalCandidateRepositories = objectRecord(
     data.nodeR5FinalCandidateCheckpoint.repositories,
-    "latest Node R5 candidate checkpoint repositories",
+    "final Node R5 candidate checkpoint repositories",
+  )
+  const finalCandidateNode = objectRecord(finalCandidateRepositories.node, "final candidate Node repository")
+  const finalCandidateUi = objectRecord(finalCandidateRepositories.ui, "final candidate UI repository")
+  const finalCandidateRenderer = objectRecord(
+    finalCandidateRepositories.renderer,
+    "final candidate Renderer repository",
+  )
+  const latestRepositories = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.repositories,
+    "latest Node R5 visual closure checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestUi = objectRecord(latestRepositories.ui, "latest UI repository")
@@ -826,14 +843,15 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.bundleOwnershipCommit !== decisionNode.head ||
     data.nodeCutover.blenderCompatibilityImplementationCommit !== compatibilityNode.parent ||
     data.nodeCutover.blenderCompatibilityEvidenceCommit !== compatibilityNode.head ||
-    data.nodeCutover.finalCandidateEvidenceCommit !== latestNode.head ||
+    data.nodeCutover.finalCandidateEvidenceCommit !== finalCandidateNode.head ||
+    data.nodeCutover.visualClosureEvidenceCommit !== latestNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== compatibilityCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== finalCandidateCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -1325,6 +1343,36 @@ function validateMigrationCoverage(data: FoundationData): void {
       throw new Error(`Final candidate UI history mismatch: ${String(entry.package)}`)
     }
   }
+  const visualClosureNodeHistory = arrayValue(
+    data.nodeR5VisualClosureCheckpoint.nodePackageHistory,
+    "visual closure Node package history",
+  ).map((value) => objectRecord(value, "visual closure Node history entry"))
+  assertExactStringSet(
+    "visual closure Node history coverage",
+    visualClosureNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of visualClosureNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Visual closure Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const visualClosureUiHistory = arrayValue(
+    data.nodeR5VisualClosureCheckpoint.uiPackageHistory,
+    "visual closure UI package history",
+  ).map((value) => objectRecord(value, "visual closure UI history entry"))
+  assertExactStringSet(
+    "visual closure UI history coverage",
+    visualClosureUiHistory.map(({package: packageName}) => packageName),
+    uiInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of visualClosureUiHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+      throw new Error(`Visual closure UI history mismatch: ${String(entry.package)}`)
+    }
+  }
   const bundleDecision = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.bundleOwnerDecision,
     "bundle owner decision",
@@ -1426,13 +1474,16 @@ function validateMigrationCoverage(data: FoundationData): void {
     finalProvenance.externalSourceProductionChanged !== true) {
     throw new Error("Final candidate checkpoint must append to the Blender compatibility checkpoint")
   }
-  if (latestNode.head !== "996619791e9abfc32e5a5139f9f3b1e4bc20e716" ||
-    latestNode.parent !== "a72e0e685c8d830d591555aecf164a7d2214d22c" ||
-    latestNode.status !== "clean" || latestNode.headContainedByOriginMain !== false ||
-    latestUi.head !== "5c351459555ec0980893a1da1c1ee8e7f99de2ed" ||
-    latestUi.status !== "clean" || latestUi.headContainedByOriginMain !== false ||
-    latestRenderer.head !== "99ce7846e6086ba4c3adebad23acbb6faafa277f" ||
-    latestRenderer.status !== "clean" || latestRenderer.headContainedByOriginMain !== false) {
+  if (finalCandidateNode.head !== "996619791e9abfc32e5a5139f9f3b1e4bc20e716" ||
+    finalCandidateNode.parent !== "a72e0e685c8d830d591555aecf164a7d2214d22c" ||
+    finalCandidateNode.status !== "clean" ||
+    finalCandidateNode.headContainedByOriginMain !== false ||
+    finalCandidateUi.head !== "5c351459555ec0980893a1da1c1ee8e7f99de2ed" ||
+    finalCandidateUi.status !== "clean" ||
+    finalCandidateUi.headContainedByOriginMain !== false ||
+    finalCandidateRenderer.head !== "99ce7846e6086ba4c3adebad23acbb6faafa277f" ||
+    finalCandidateRenderer.status !== "clean" ||
+    finalCandidateRenderer.headContainedByOriginMain !== false) {
     throw new Error("Final candidate repository revisions do not match the observed clean sources")
   }
   const finalTechnical = objectRecord(
@@ -1512,6 +1563,114 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Final visual acceptance must fail closed on the platform gap and owner verdict")
   }
 
+  const visualClosureProvenance = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.provenance,
+    "visual closure provenance",
+  )
+  if (visualClosureProvenance.previousCheckpoint !== finalCandidateCheckpointPath ||
+    visualClosureProvenance.preservesPreviousSnapshots !== true ||
+    visualClosureProvenance.productionRuntimeChanged !== false ||
+    visualClosureProvenance.externalSourceProductionChanged !== true) {
+    throw new Error("Visual closure checkpoint must append to the final candidate checkpoint")
+  }
+  if (latestNode.head !== "9855abd9683affb8759647ebd27c342ab8b4dda4" ||
+    latestNode.parent !== finalCandidateNode.head || latestNode.status !== "clean" ||
+    latestNode.headContainedByOriginMain !== false ||
+    latestUi.head !== "1ddae57f1f525ecd2363bec1a5bb79db71591cfd" ||
+    latestUi.parent !== finalCandidateUi.head || latestUi.status !== "clean" ||
+    latestUi.headContainedByOriginMain !== false ||
+    latestRenderer.head !== finalCandidateRenderer.head || latestRenderer.status !== "clean" ||
+    latestRenderer.headContainedByOriginMain !== false) {
+    throw new Error("Visual closure repository revisions do not match the observed clean sources")
+  }
+  const correctedClassification = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.correctedClassification,
+    "corrected SelectField classification",
+  )
+  if (correctedClassification.previous !== "Renderer/Engine-font platform gap" ||
+    correctedClassification.current !== "UI-owned SVG presentation restored" ||
+    correctedClassification.currentOwner !== "@ui/components SelectField" ||
+    correctedClassification.svgAsset !== "chevronDownIcon" ||
+    correctedClassification.nativeInteractionOwner !== "select" ||
+    correctedClassification.platformCodeChanged !== false ||
+    correctedClassification.appearanceDependencyAdded !== false) {
+    throw new Error("SelectField correction must restore the historical UI-owned SVG contract")
+  }
+  const closureTechnical = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.technicalR5,
+    "visual closure technical R5",
+  )
+  const closureFunctional = objectRecord(closureTechnical.functional, "visual closure functional acceptance")
+  const closureUiFunctional = objectRecord(
+    closureTechnical.uiFunctional,
+    "visual closure UI functional acceptance",
+  )
+  const closureBundle = objectRecord(closureTechnical.bundle, "visual closure bundle acceptance")
+  const closureExactBundle = objectRecord(
+    closureBundle.exactNodeEditor,
+    "visual closure exact NodeEditor bundle",
+  )
+  const closureBundleCeiling = objectRecord(closureBundle.ceiling, "visual closure bundle ceiling")
+  const closureUiBundle = objectRecord(closureTechnical.uiBundle, "visual closure UI bundle acceptance")
+  const closureExactUiBundle = objectRecord(
+    closureUiBundle.exactComponents,
+    "visual closure exact UI bundle",
+  )
+  const closureUiBundleCeiling = objectRecord(closureUiBundle.ceiling, "visual closure UI ceiling")
+  if (closureTechnical.status !== "verified" || closureFunctional.pass !== 220 ||
+    closureFunctional.fail !== 0 || closureFunctional.todo !== 0 ||
+    closureUiFunctional.packagePass !== 78 || closureUiFunctional.storybookPass !== 29 ||
+    closureUiFunctional.fail !== 0 || closureBundle.contract !== "nodes-component-ui-bundle/2" ||
+    closureExactBundle.bytes !== 279243 || closureExactBundle.gzipBytes !== 70384 ||
+    closureExactBundle.sha256 !== "070cc2b374fc4bdc18e788ad4c14d8afd5d9d4fbaf5d81589ae3983f5460936c" ||
+    closureBundleCeiling.bytes !== 285000 || closureBundleCeiling.gzipBytes !== 72000 ||
+    closureBundle.pass !== true || closureExactUiBundle.bytes !== 131447 ||
+    closureExactUiBundle.gzipBytes !== 31697 ||
+    closureExactUiBundle.sha256 !== "7b047839751ed1363202c1a3b1e8b11f986071f65a3f86a06420a3058e01f456" ||
+    closureUiBundleCeiling.bytes !== 131500 || closureUiBundleCeiling.gzipBytes !== 31750 ||
+    closureUiBundle.pass !== true) {
+    throw new Error("Visual closure technical evidence does not match executable acceptance")
+  }
+  const closureReference = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.blender52Reference,
+    "visual closure Blender 5.2 reference",
+  )
+  if (closureReference.sha256 !== finalReference.sha256 ||
+    closureReference.acceptance !== "candidate" || closureReference.historical45Scope !== "changed") {
+    throw new Error("Visual closure must preserve the exact Blender 5.2 reference")
+  }
+  const closureStorybook = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.storybook,
+    "visual closure Storybook evidence",
+  )
+  const closureCaptures = arrayValue(closureStorybook.captures, "visual closure Storybook captures")
+    .map((value) => objectRecord(value, "visual closure Storybook capture"))
+  const closureCanvas = objectRecord(closureStorybook.canvas, "visual closure Storybook canvas")
+  if (closureStorybook.activeRevision !== "f48550926ffeec12eef18bc1" ||
+    closureStorybook.graphDigest !== "88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613" ||
+    closureStorybook.ready !== true || closureStorybook.presented !== true ||
+    arrayValue(closureStorybook.diagnostics, "visual closure diagnostics").length !== 0 ||
+    arrayValue(closureStorybook.consoleErrors, "visual closure console errors").length !== 0 ||
+    closureCanvas.width !== 3840 || closureCanvas.height !== 2176 ||
+    closureCanvas.hidden !== false || closureCanvas.nonBlack !== true || closureCaptures.length !== 2 ||
+    !closureCaptures.some(({sha256}) =>
+      sha256 === "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d") ||
+    !closureCaptures.some(({sha256}) =>
+      sha256 === "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b")) {
+    throw new Error("Visual closure Storybook evidence does not match the SVG-restored captures")
+  }
+  const closureVisual = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.visualAcceptance,
+    "visual closure acceptance",
+  )
+  const restoredIndicator = objectRecord(closureVisual.restoredIndicator, "restored SelectField indicator")
+  if (closureVisual.status !== "candidate-owner-verdict" ||
+    closureVisual.ownerVerdict !== "pending-zavx0z" ||
+    restoredIndicator.owner !== "@ui/components SelectField" ||
+    restoredIndicator.source !== "chevronDownIcon" || restoredIndicator.platformGap !== false) {
+    throw new Error("Visual closure must leave only the explicit owner verdict pending")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -1520,25 +1679,31 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates,
     "Blender compatibility Node gates",
   )
-  const gates = objectRecord(
+  const finalCandidateGates = objectRecord(
     data.nodeR5FinalCandidateCheckpoint.effectiveGates,
-    "final effective Node gates",
+    "final candidate Node gates",
+  )
+  const gates = objectRecord(
+    data.nodeR5VisualClosureCheckpoint.effectiveGates,
+    "visual closure effective Node gates",
   )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
     }
-    if (compatibilityGates[id] !== "verified" || gates[id] !== "verified") {
+    if (compatibilityGates[id] !== "verified" || finalCandidateGates[id] !== "verified" ||
+      gates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
   }
   if (decisionGates.R5 !== "owner-decisions-pending" ||
     compatibilityGates.R5 !== "owner-decisions-pending" ||
-    gates.R5 !== "platform-gap-and-owner-verdict") {
-    throw new Error("Node R5 must advance only to the recorded platform-gap candidate state")
+    finalCandidateGates.R5 !== "platform-gap-and-owner-verdict" ||
+    gates.R5 !== "owner-verdict-pending") {
+    throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
-    gates.R6 !== "blocked") {
+    finalCandidateGates.R6 !== "blocked" || gates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }

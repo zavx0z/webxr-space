@@ -83,7 +83,7 @@
           "id": "source:ui",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/webxr-space/projects/ui",
-          "revision": "5c351459555ec0980893a1da1c1ee8e7f99de2ed",
+          "revision": "1ddae57f1f525ecd2363bec1a5bb79db71591cfd",
           "writable": true,
           "state": "canonical"
         },
@@ -111,7 +111,7 @@
           "id": "source:node",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
-          "revision": "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
+          "revision": "9855abd9683affb8759647ebd27c342ab8b4dda4",
           "writable": true,
           "state": "canonical"
         },
