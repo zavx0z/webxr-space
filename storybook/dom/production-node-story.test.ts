@@ -107,7 +107,8 @@ describe("public component Storybook projection", () => {
     expect(dimensions.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()
     const normalize = node.querySelector('[data-parameter-id="noise-normalize"]')!
     expect(normalize.getAttribute("data-leading-checkbox")).toBe("true")
-    expect(node.querySelector('[data-parameter-id="noise-normalize"] input')?.getAttribute("type")).toBe("checkbox")
+    const normalizeCheckbox = node.querySelector('[data-parameter-id="noise-normalize"] input')!
+    expect(normalizeCheckbox.getAttribute("type")).toBe("checkbox")
     expect(normalize.querySelectorAll('[data-parameter-label]')).toHaveLength(2)
     expect(node.querySelector('[data-parameter-id="noise-basis"]')).toBeNull()
     const scale = node.querySelector('[data-parameter-id="noise-scale"]')!
@@ -144,13 +145,19 @@ describe("public component Storybook projection", () => {
       width: dimensionsSelectBox.width,
       height: dimensionsSelectBox.height,
     }).toEqual({x: 29, y: 102, width: 137, height: 22})
-    const normalizeCheckboxBox = frame.boxByNode.get(normalize.querySelector("input")!)!
+    const normalizeCheckboxBox = frame.boxByNode.get(normalizeCheckbox)!
     expect({
       x: normalizeCheckboxBox.x - liveBox.x,
       y: normalizeCheckboxBox.y - liveBox.y,
       width: normalizeCheckboxBox.width,
       height: normalizeCheckboxBox.height,
     }).toEqual({x: 29, y: 135, width: 16, height: 16})
+    const normalizeIndicator = frame.displayList.find(item =>
+      item.node === normalizeCheckbox && item.key === "indicator"
+    )
+    expect(normalizeIndicator).toMatchObject({kind: "path", strokeWidth: 2})
+    if (normalizeIndicator?.kind !== "path") throw new Error("Expected Normalize Checkbox Path")
+    expect(normalizeIndicator.geometry.bounds).toEqual({x: 3, y: 3.5, width: 7, height: 5.5})
     const vectorGlyphBox = frame.boxByNode.get(vector.querySelector("[data-socket-glyph]")!)!
     expect({
       x: vectorGlyphBox.x + vectorGlyphBox.width / 2 - liveBox.x,

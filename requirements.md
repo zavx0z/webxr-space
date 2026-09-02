@@ -422,6 +422,25 @@ capture `capture_R32gYTk6Zi-eyT22Z46-ts7X`, sha256
 имеют ready/presented и empty diagnostics/console. Это всё ещё только candidate:
 final visual parity требует нового явного verdict `zavx0z`.
 
+На этом candidate `zavx0z` отдельно отклонил корявую Checkbox-галку. Причина
+оказалась generic Renderer projection: native checked input рисовал текстовый
+`✓` через Engine font. Renderer owner
+`5e21783b688339fb892cb288a4bd030605191c68` заменяет его retained
+двухсегментным Path со stable `2px` stroke; capability evidence —
+`b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59`. UI и Node не добавляют icon,
+overlay или local paint workaround. Нормализованный white-mark bbox exact
+reference и live совпадает: `x=6..23`, `y=7..21` внутри синего contour.
+
+Standalone UI route на revision `83b43d78463c9683585e1e17` имеет capture
+`capture_zFwenJ4iUg67B4Y3zKPWBwgs`, sha256
+`43d4a93f3853ab06983f9f3f8161835660e5849a647312aa18ac6946676eb322`.
+Node comparison на revision `d3e020d985008a2e3fa9bce0`, graph
+`828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8`,
+capture `capture__0RkSaSlB4dFPpYPF6V0BIjS`, sha256
+`4eff14782c9b15c717d79340429a9832af491bef8e29c08647da91095d9c24db`
+имеет ready/presented и empty diagnostics/console. Новый checkbox artifact всё
+ещё candidate и не является owner verdict для всей Node parity.
+
 ## Known platform gates
 
 Node-owned tests доказывают exact identity и local mutation, но current generic
