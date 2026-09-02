@@ -103,7 +103,8 @@
         "migration/node-cutover.json",
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
-        "evidence/node-r4-closure-r5-checkpoint.json"
+        "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-append-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -115,6 +116,7 @@
       "statement": "One text-like input value update replaces only its existing immutable display item while preserving layout and hit records.",
       "implementationCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
       "supportingRendererHead": "5d5a06c14c2f8216cce6f5930695154f57524ea4",
+      "capabilityEvidenceHead": "a84672deb1573b1e16bffacf801877f1a3633628",
       "acceptedMetrics": {
         "genericInputs": 10000,
         "freshProcessP99MsMin": 0.29,
@@ -234,17 +236,55 @@
     },
     {
       "id": "nodes.topology-performance",
-      "classification": "measured-failure",
-      "status": "failed-r5",
+      "classification": "partial-performance-evidence",
+      "status": "incremental-append-correctness-verified-performance-failed",
       "owner": "source:node with component/Renderer traversal boundary",
-      "statement": "Additive topology materializes correctly but remains far outside the frame budget at 1k and 10k.",
+      "statement": "Copy-on-write append-node projection preserves old identities and bounded mutation shape, but 10k Node commit and full Renderer projection remain outside acceptance.",
       "metrics": {
-        "accepted1kInputToPresentMs": 638.194,
-        "independent1kInputToPresentMs": 649.378,
-        "accepted10kInputToPresentMs": 5397.431,
-        "frameBudgetMs": 16.667
+        "nodes1000": {
+          "coreEditorMs": 13.594,
+          "projectionMs": 21.933,
+          "nodeCommitMs": 35.527,
+          "rendererMs": 389.023,
+          "backendMs": 6.921,
+          "totalMs": 431.471
+        },
+        "nodes10000": {
+          "coreEditorMs": 63.684,
+          "projectionMs": 70.61,
+          "nodeCommitMs": 134.294,
+          "rendererMs": 7182.263,
+          "backendMs": 10.228,
+          "totalMs": 7326.785
+        },
+        "nodeCommitBudgetMs": 100
       },
-      "evidence": ["evidence/node-r4-closure-r5-checkpoint.json"]
+      "evidence": [
+        "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-append-checkpoint.json"
+      ]
+    },
+    {
+      "id": "nodes.incremental-append-projection",
+      "classification": "implemented-source-fact",
+      "status": "correctness-verified-r5-performance-partial",
+      "owner": "@nodes/core and @nodes/ui",
+      "statement": "Core-owned append-node delta drives copy-on-write retained Node/Port geometry and node-id indexes without mutating previously published snapshots.",
+      "implementationCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "evidenceShape": {
+        "notifications": 1,
+        "mounts": 32,
+        "renders": 35,
+        "moves": 0,
+        "disposes": 0,
+        "mutationRecords": 2,
+        "oldNodeAndLinkIdentitiesRetained": true
+      },
+      "limitations": [
+        "10k Node commit is 134.294ms before Renderer/backend flush",
+        "CPU Renderer full projection dominates at 389.023ms/7182.263ms"
+      ],
+      "evidence": ["evidence/node-r5-append-checkpoint.json"]
     },
     {
       "id": "contradiction.consumer.node-local-layout",
@@ -290,7 +330,7 @@
       "owner": "source:node and external-storybook",
       "statement": "All 159 leaves resolve through the component path; current revision is ready/presented with console zero, non-black canvas and equal-scale capture.",
       "metrics": {
-        "revision": "fa77823706659b5053990d77",
+        "revision": "92a235eb5bc5ba49c2e9c1de",
         "leafRoutes": 159,
         "overviewRoutes": 66,
         "canvasSha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca",
@@ -298,7 +338,8 @@
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r4-closure-r5-checkpoint.json"
+        "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-append-checkpoint.json"
       ],
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
@@ -307,11 +348,12 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 9cccb58 is ahead 3 and Renderer 5d5a06c is ahead 5; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 0b949e7 is ahead 4 and Renderer a84672d is ahead 6; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
-        "evidence/node-r4-closure-r5-checkpoint.json"
+        "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-append-checkpoint.json"
       ]
     },
     {

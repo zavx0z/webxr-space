@@ -33,9 +33,18 @@ const previousRendererCheckpoint = objectRecord(
   previousRepositories.renderer,
   "R4/R5 Renderer repository",
 )
-const latestRepositories = objectRecord(
+const closureRepositories = objectRecord(
   data.nodeR4ClosureR5Checkpoint.repositories,
-  "latest R4/R5 checkpoint repositories",
+  "R4 closure checkpoint repositories",
+)
+const closureNodeCheckpoint = objectRecord(closureRepositories.node, "R4 closure Node repository")
+const closureRendererCheckpoint = objectRecord(
+  closureRepositories.renderer,
+  "R4 closure Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5AppendCheckpoint.repositories,
+  "latest append checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -156,18 +165,34 @@ for (const value of rendererCheckpointHistory) {
   expectEqual(`${packageName} R4/R5 last history commit`, last, entry.lastCommit)
 }
 
-const latestNodeHistory = data.nodeR4ClosureR5Checkpoint.nodePackageHistory
-if (!Array.isArray(latestNodeHistory)) throw new Error("Latest Node history must be an array")
-for (const value of latestNodeHistory) {
-  const entry = objectRecord(value, "latest Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "latest Node")
+const closureNodeHistory = data.nodeR4ClosureR5Checkpoint.nodePackageHistory
+if (!Array.isArray(closureNodeHistory)) throw new Error("R4 closure Node history must be an array")
+for (const value of closureNodeHistory) {
+  const entry = objectRecord(value, "R4 closure Node history entry")
+  validateCheckpointHistoryEntry(entry, closureNodeCheckpoint, "R4 closure Node")
 }
 
-const latestRendererHistory = data.nodeR4ClosureR5Checkpoint.rendererPackageHistory
-if (!Array.isArray(latestRendererHistory)) throw new Error("Latest Renderer history must be an array")
-for (const value of latestRendererHistory) {
-  const entry = objectRecord(value, "latest Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "latest Renderer")
+const closureRendererHistory = data.nodeR4ClosureR5Checkpoint.rendererPackageHistory
+if (!Array.isArray(closureRendererHistory)) {
+  throw new Error("R4 closure Renderer history must be an array")
+}
+for (const value of closureRendererHistory) {
+  const entry = objectRecord(value, "R4 closure Renderer history entry")
+  validateCheckpointHistoryEntry(entry, closureRendererCheckpoint, "R4 closure Renderer")
+}
+
+const appendNodeHistory = data.nodeR5AppendCheckpoint.nodePackageHistory
+if (!Array.isArray(appendNodeHistory)) throw new Error("Append Node history must be an array")
+for (const value of appendNodeHistory) {
+  const entry = objectRecord(value, "append Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "append Node")
+}
+
+const appendRendererHistory = data.nodeR5AppendCheckpoint.rendererPackageHistory
+if (!Array.isArray(appendRendererHistory)) throw new Error("Append Renderer history must be an array")
+for (const value of appendRendererHistory) {
+  const entry = objectRecord(value, "append Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "append Renderer")
 }
 
 console.log(
@@ -175,7 +200,8 @@ console.log(
   `${historyValues.length} historical package histories, ` +
   `${checkpointHistory.length} Node checkpoint histories, ` +
   `${rendererCheckpointHistory.length} Renderer checkpoint histories, ` +
-  `${latestNodeHistory.length + latestRendererHistory.length} latest checkpoint histories`,
+  `${closureNodeHistory.length + closureRendererHistory.length} R4 closure histories, ` +
+  `${appendNodeHistory.length + appendRendererHistory.length} append checkpoint histories`,
 )
 
 function validateCheckpointHistoryEntry(

@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T06:47:22+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r4-closure-r5-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "nodeHandoffRollout": "/Users/zavx0z/.codex/sessions/2026/09/02/rollout-2026-09-02T02-37-55-01a05f56-216c-7fa1-8d62-592a1cd8a47e.jsonl",
+    "classification": "incremental append-node R5 checkpoint",
+    "preservesPreviousSnapshots": true
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "parent": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
+      "subject": "Incrementally project appended Nodes",
+      "committedAt": "2026-09-02T06:41:52+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 4,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node",
+      "manifestSha256": {
+        "package.json": "cc85089a7f2aef111a8fd9ed884ab26ab1678f0bd8822506b275b51ce2e3fef2",
+        "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+        "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+        "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+        "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+        "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+      }
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "a84672deb1573b1e16bffacf801877f1a3633628",
+      "parent": "5d5a06c14c2f8216cce6f5930695154f57524ea4",
+      "subject": "Update Node capability evidence",
+      "committedAt": "2026-09-02T05:52:54+03:00",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 6,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer",
+      "manifestSha256": {
+        "package.json": "94c0038a9ed71174dcbd16a1255e56befab4394e4f3e3af47e8fd2ee9ca609e0",
+        "packages/browser/package.json": "de33f0188244b681366abd9204371292b900da0e88c5dfe2e4ab1cdd3fd74664",
+        "packages/core/package.json": "65e247bebb179eae88fedf2fa8863d99a5a358f5e23cb69699518de5b4347a83",
+        "packages/devtools/package.json": "45d3b7dedc11ce5f293f521d1e509343fa1bc998cf604f920ab1c99116022775",
+        "packages/dom/package.json": "d11d0816dc1eee140a9d69b662a296dcf5d7e680707bc99aaed013350019ed42",
+        "packages/react/package.json": "7dbd2e77a402d8b391eab1a7c49402d61fce35fd8e99084fbe0047dc369f43d9",
+        "packages/webgpu/package.json": "be5bccaad84f88571e66ad46849807e9d4cf5125942cac0fb3b8bbf8c34f7f6e"
+      }
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 10, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 18, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6"}
+  ],
+  "rendererPackageHistory": [
+    {"package": "@zavx0z/renderer-browser", "repository": "renderer", "prefix": "packages/browser", "commitCount": 12, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"},
+    {"package": "@zavx0z/renderer", "repository": "renderer", "prefix": "packages/core", "commitCount": 28, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/dom-devtools", "repository": "renderer", "prefix": "packages/devtools", "commitCount": 4, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "3a0801d4d0fa39f385fca7aceca67fbd0736e591"},
+    {"package": "@zavx0z/dom", "repository": "renderer", "prefix": "packages/dom", "commitCount": 17, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/react", "repository": "renderer", "prefix": "packages/react", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5d5a06c14c2f8216cce6f5930695154f57524ea4"},
+    {"package": "@zavx0z/renderer-webgpu", "repository": "renderer", "prefix": "packages/webgpu", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc"}
+  ],
+  "incrementalAppend": {
+    "status": "accepted-correctness-partial-performance",
+    "commit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+    "contract": "Core-owned append-node delta drives copy-on-write Node/Port geometry and node-id indexes without mutating published snapshots",
+    "operation": "append-node",
+    "notifications": 1,
+    "mounts": 32,
+    "renders": 35,
+    "moves": 0,
+    "disposes": 0,
+    "retainedIdentities": ["all pre-existing Nodes", "all pre-existing Links"],
+    "mutationLedger": [
+      "NodeTree data-node-count attribute update",
+      "Node layer child-list insertion containing hidden article and component-range comments"
+    ],
+    "correctness": "verified"
+  },
+  "performance": {
+    "nodes1000": {
+      "coreEditorMs": 13.594,
+      "projectionMs": 21.933,
+      "nodeCommitMs": 35.527,
+      "rendererMs": 389.023,
+      "backendMs": 6.921,
+      "inputToPresentMs": 431.471,
+      "nodeCommitBudgetMs": 100,
+      "nodeCommitPass": true,
+      "totalPass": false
+    },
+    "nodes10000": {
+      "coreEditorMs": 63.684,
+      "projectionMs": 70.61,
+      "nodeCommitMs": 134.294,
+      "rendererMs": 7182.263,
+      "backendMs": 10.228,
+      "inputToPresentMs": 7326.785,
+      "nodeCommitBudgetMs": 100,
+      "nodeCommitPass": false,
+      "totalPass": false
+    },
+    "dominantStage": "CPU Renderer full projection",
+    "classification": "R5 remains blocked"
+  },
+  "functionalAcceptance": {
+    "command": "bun run check",
+    "commit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+    "pass": 219,
+    "fail": 0,
+    "todo": 1,
+    "todoReason": "existing component bundle owner gate",
+    "leafRoutes": 159,
+    "verification": "post-commit rerun in canonical clean Node checkout",
+    "coordinatorFocusedVerification": {
+      "typecheck": "passed",
+      "focusedTests": 30,
+      "fail": 0
+    }
+  },
+  "storybook": {
+    "package": "@nodes/ui",
+    "activeRevision": "92a235eb5bc5ba49c2e9c1de",
+    "graphDigest": "daa513c0f6b280d4bd3ed1068a6a06ef650a521fb6a77028b9560c495b184517",
+    "leafRoutes": 159,
+    "ready": true,
+    "presented": true,
+    "diagnostics": [],
+    "consoleErrors": [],
+    "canvas": {"width": 3840, "height": 2176, "hidden": false, "nonBlack": true},
+    "capture": {
+      "id": "capture_3YIi6WFtzynyvTIiEh5oOZlQ",
+      "route": "ui/node-editor/scene/default",
+      "revision": "92a235eb5bc5ba49c2e9c1de",
+      "width": 3840,
+      "height": 2176,
+      "bytes": 127263,
+      "sha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca"
+    },
+    "visualOwnerVerdict": "pending-zavx0z"
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "partial-blocked",
+    "R6": "blocked"
+  },
+  "r5": {
+    "verifiedSubgates": [
+      "copy-on-write append-node projection correctness",
+      "1k Node commit below 100ms",
+      "one notification and exact two-record mutation ledger",
+      "retained old Node/Link identities"
+    ],
+    "remainingBlockers": [
+      "10k Node commit 134.294ms exceeds 100ms",
+      "CPU Renderer full projection dominates at 389.023ms/7182.263ms",
+      "10k transform p99",
+      "10k Link selection p99",
+      "dense-visible cold memory and bounded disposal",
+      "component bundle owner gate",
+      "final visual owner verdict"
+    ]
+  },
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "Node 0b949e73a77f42bcb32bee7f9041d0500d9655e6 is ahead 4 and not remote-backed",
+      "Renderer a84672deb1573b1e16bffacf801877f1a3633628 is ahead 6 and not remote-backed",
+      "source freeze/read-only authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; R5 remains blocked and R6 remains blocked"
+}

@@ -3,12 +3,13 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
+  "observedHead": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
+  "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
-  "previousEvidenceCheckpoint": "evidence/node-r4-r5-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r4-closure-r5-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r4-closure-r5-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-append-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -81,7 +82,7 @@
       "evidence": [
         "exact public TSX owners and consumers committed",
         "159 historical Storybook leaves and 66 overview routes preserved",
-        "active Storybook revision ff499f41ebd6f3f89200f013"
+        "active Storybook revision 92a235eb5bc5ba49c2e9c1de"
       ]
     },
     {
@@ -89,7 +90,7 @@
       "name": "Functional parity",
       "status": "verified",
       "evidence": [
-        "bun run check: 216 pass, 0 fail, 1 explicit bundle owner-gate todo at 9cccb58",
+        "bun run check: 219 pass, 0 fail, 1 explicit bundle owner-gate todo at 0b949e7",
         "stable identity, local mutation and transform-only evidence passed",
         "exact @nodes/layout LayoutResult is mandatory and validated before materialization",
         "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween are absent from committed Node geometry",
@@ -99,18 +100,22 @@
     {
       "id": "R5",
       "name": "Dense performance and equal-scale visual acceptance",
-      "status": "blocked",
+      "status": "partial-blocked",
       "verifiedSubgates": [
+        "copy-on-write append-node projection preserves published snapshots and old Node/Link identities",
+        "1k append Node commit 35.527ms is below 100ms",
+        "one notification, 32 mounts, 35 renders, zero moves/disposes and exact two-record mutation ledger",
         "1k value p95/p99 0.861/0.984ms",
         "1k transform p95/p99 6.462/9.985ms",
         "1k stable p95/p99 0.004/0.016ms",
         "10k exact-layout value p95/p99 1.752/1.789ms",
         "renderer.features.input-value-fast-path at Renderer 1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
-        "unchanged context subtree scans skipped at Renderer 5d5a06c14c2f8216cce6f5930695154f57524ea4"
+        "unchanged context subtree scans skipped at Renderer 5d5a06c14c2f8216cce6f5930695154f57524ea4",
+        "Renderer capability evidence refreshed at a84672deb1573b1e16bffacf801877f1a3633628"
       ],
       "blockers": [
-        "1k topology remains 638.194ms",
-        "10k topology remains 5397.431ms",
+        "10k append Node commit 134.294ms exceeds 100ms",
+        "CPU Renderer full projection dominates append at 389.023ms/7182.263ms",
         "10k transform p99 18.687ms exceeds 16.667ms",
         "10k Link selection p99 40.271-42.786ms exceeds 16.667ms",
         "dense-visible 10k mount/Renderer/backend is 30.16s/41.22s/19.70s with about 4.98GB retained baseline",
@@ -122,8 +127,9 @@
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-append-checkpoint.json",
         "equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
-        "console-zero non-black canvas capture 263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd"
+        "console-zero non-black canvas capture 290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca"
       ]
     },
     {
@@ -131,12 +137,12 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at 9cccb58ef91cf3ed386377093dbc8e45e061bfb9 and ahead 3",
-        "Renderer main is clean at 5d5a06c14c2f8216cce6f5930695154f57524ea4 and ahead 5"
+        "Node main is clean at 0b949e73a77f42bcb32bee7f9041d0500d9655e6 and ahead 4",
+        "Renderer main is clean at a84672deb1573b1e16bffacf801877f1a3633628 and ahead 6"
       ],
       "blockers": [
-        "9cccb58ef91cf3ed386377093dbc8e45e061bfb9 is not remote-backed",
-        "5d5a06c14c2f8216cce6f5930695154f57524ea4 is not remote-backed",
+        "0b949e73a77f42bcb32bee7f9041d0500d9655e6 is not remote-backed",
+        "a84672deb1573b1e16bffacf801877f1a3633628 is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "R5 remains partial/blocked"
       ]
