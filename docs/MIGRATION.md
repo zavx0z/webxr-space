@@ -18,6 +18,17 @@ For each package:
 The operation is blocked before step 3 today. Commands are intentionally not
 executed speculatively because an import would create a second writable owner.
 
+`bun run node:cutover:plan` prints the current fail-closed Node cutover plan as
+JSON. The planner only inspects metadata, Git state and reserved destinations;
+it never executes a command or imports production source. `executable: true`
+means that every recorded cutover gate is satisfied, not that the plan has run.
+The future authorized transaction removes and commits the placeholder READMEs
+before `git subtree` so the worktree is clean, derives each package prefix
+without squash and without creating a branch or worktree, then runs unchanged
+package and affected-consumer checks. The ownership switch follows successful
+checks. Push authorization is recorded separately and is never implied by
+history-import or ownership-switch authorization.
+
 Node follows `migration/node-cutover.json`. The clean component rewrite is
 committed in the canonical checkout and R1-R4 are verified. Exact owner
 `LayoutResult` is mandatory at `9cccb58`; consumer-local fallback is gone.

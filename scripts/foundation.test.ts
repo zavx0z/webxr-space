@@ -1,4 +1,9 @@
 import {describe, expect, test} from "bun:test"
+import {
+  createNodeCutoverPlan,
+  type NodeCutoverAuthorization,
+  type NodeCutoverPlanInput,
+} from "./foundation/plan-node-cutover.ts"
 import {join} from "node:path"
 import {
   discoverWorkspacePackages,
@@ -32,6 +37,95 @@ describe("visual monorepo M0 foundation", () => {
       expect(await Bun.file(join(root, item.destination, "README.md")).exists()).toBeTrue()
       expect(await Bun.file(join(root, item.destination, "package.json")).exists()).toBeFalse()
     }
+  })
+
+  test("keeps the Node cutover plan inert while authorization gates are closed", () => {
+    const plan = createNodeCutoverPlan(nodeCutoverInput(blockedNodeAuthorization))
+
+    expect(plan.executable).toBeFalse()
+    expect(plan.blockers).toEqual([
+      "sourceRevisionExact",
+      "remoteRefPresent",
+      "remoteBacked",
+      "r5Accepted",
+      "sourceFrozenReadOnly",
+      "historyImportAuthorized",
+      "ownershipSwitchAuthorized",
+    ])
+    expect(plan.invariants).toEqual({
+      sourceMutationAllowed: false,
+      squash: false,
+      createsBranch: false,
+      createsWorktree: false,
+      executesCommands: false,
+      productionImportPerformed: false,
+      pushAuthorized: false,
+    })
+    expect(plan.packages[0]).toMatchObject({
+      destination: "packages/nodes-core",
+      placeholderFiles: ["README.md"],
+      placeholderOnly: true,
+    })
+    expect(plan.orderedCommands.map(({argv}) => argv)).toContainEqual([
+      "git",
+      "rm",
+      "packages/nodes-core/README.md",
+    ])
+    expect(plan.orderedCommands.map(({argv}) => argv)).toContainEqual([
+      "git",
+      "commit",
+      "-m",
+      "chore: open Node package destinations",
+    ])
+    expect(plan.orderedCommands.flatMap(({argv}) => argv)).not.toContain("--squash")
+    expect(plan.orderedCommands.some(({argv}) => argv[0] === "git" && argv[1] === "push"))
+      .toBeFalse()
+  })
+
+  test("makes the Node cutover plan ready without coupling it to push authorization", () => {
+    const revision = "a".repeat(40)
+    const authorization: NodeCutoverAuthorization = Object.freeze({
+      acceptedRevision: revision,
+      remoteRef: "refs/heads/main",
+      r5Accepted: true,
+      sourceFrozenReadOnly: true,
+      historyImportAuthorized: true,
+      ownershipSwitchAuthorized: true,
+      pushAuthorized: false,
+    })
+    const plan = createNodeCutoverPlan(nodeCutoverInput(authorization, {
+      observedRevision: revision,
+      actualRevision: revision,
+      remoteBacked: true,
+    }))
+
+    expect(plan.executable).toBeTrue()
+    expect(plan.blockers).toEqual([])
+    expect(plan.invariants.pushAuthorized).toBeFalse()
+    expect(plan.orderedCommands[0]?.argv).toEqual([
+      "git",
+      "fetch",
+      "git@example.invalid:visual/node.git",
+      "refs/heads/main:refs/migration/node/source",
+    ])
+    expect(plan.orderedCommands[1]).toMatchObject({
+      argv: ["git", "rev-parse", "refs/migration/node/source^{commit}"],
+      expectedStdout: revision,
+    })
+    expect(plan.packages[0]?.splitCommand).toEqual([
+      "git",
+      "subtree",
+      "split",
+      "--prefix=packages/core",
+      "refs/migration/node/source",
+    ])
+    expect(plan.packages[0]?.addCommand).toEqual([
+      "git",
+      "subtree",
+      "add",
+      "--prefix=packages/nodes-core",
+      "<split:@nodes/core>",
+    ])
   })
 
   test("preserves every existing public package name", async () => {
@@ -260,6 +354,41 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 })
+
+const blockedNodeAuthorization: NodeCutoverAuthorization = Object.freeze({
+  acceptedRevision: null,
+  remoteRef: null,
+  r5Accepted: false,
+  sourceFrozenReadOnly: false,
+  historyImportAuthorized: false,
+  ownershipSwitchAuthorized: false,
+  pushAuthorized: false,
+})
+
+function nodeCutoverInput(
+  authorization: NodeCutoverAuthorization,
+  overrides: Partial<NodeCutoverPlanInput> = {},
+): NodeCutoverPlanInput {
+  return Object.freeze({
+    sourcePath: "/fixture/node",
+    observedRevision: "b".repeat(40),
+    actualRevision: "b".repeat(40),
+    sourceClean: true,
+    origin: "git@example.invalid:visual/node.git",
+    originMain: "b".repeat(40),
+    remoteBacked: false,
+    worktreeClean: true,
+    destinationOwnerReadOnly: true,
+    authorization,
+    imports: Object.freeze([{
+      package: "@nodes/core",
+      sourcePrefix: "packages/core",
+      destination: "packages/nodes-core",
+      placeholderFiles: Object.freeze(["README.md"]),
+    }]),
+    ...overrides,
+  })
+}
 
 function record(
   name: string,

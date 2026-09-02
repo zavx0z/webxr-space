@@ -28,6 +28,15 @@
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
+  "r6Authorization": {
+    "acceptedRevision": null,
+    "remoteRef": null,
+    "r5Accepted": false,
+    "sourceFrozenReadOnly": false,
+    "historyImportAuthorized": false,
+    "ownershipSwitchAuthorized": false,
+    "pushAuthorized": false
+  },
   "destinationPackages": [
     {"package": "@nodes/core", "path": "packages/nodes-core"},
     {"package": "@nodes/editor", "path": "packages/nodes-editor"},

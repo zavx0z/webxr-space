@@ -705,6 +705,7 @@ function validateMigrationCoverage(data: FoundationData): void {
       throw new Error(`Node destination mismatch: ${String(destination.package)}`)
     }
   }
+  validateNodeCutoverAuthorization(data.nodeCutover.r6Authorization)
 
   const componentCheckpointPath = "evidence/node-cutover-snapshot.json"
   const r4R5CheckpointPath = "evidence/node-r4-r5-checkpoint.json"
@@ -1380,6 +1381,48 @@ function validateMigrationCoverage(data: FoundationData): void {
   }
   if (decisionGates.R6 !== "blocked" || gates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
+  }
+}
+
+function validateNodeCutoverAuthorization(value: unknown): void {
+  const authorization = objectRecord(value, "Node R6 authorization")
+  const fields = [
+    "acceptedRevision",
+    "remoteRef",
+    "r5Accepted",
+    "sourceFrozenReadOnly",
+    "historyImportAuthorized",
+    "ownershipSwitchAuthorized",
+    "pushAuthorized",
+  ]
+  assertExactStringSet("Node R6 authorization fields", Object.keys(authorization), fields)
+
+  const acceptedRevision = authorization.acceptedRevision
+  const remoteRef = authorization.remoteRef
+  if (acceptedRevision !== null &&
+    (typeof acceptedRevision !== "string" || !/^[0-9a-f]{40}$/u.test(acceptedRevision))) {
+    throw new Error("Node R6 accepted revision must be null or a full commit hash")
+  }
+  if (remoteRef !== null &&
+    (typeof remoteRef !== "string" || !/^refs\/(heads|tags)\/[A-Za-z0-9._/-]+$/u.test(remoteRef))) {
+    throw new Error("Node R6 remote ref must be null or an explicit heads/tags ref")
+  }
+  if ((acceptedRevision === null) !== (remoteRef === null)) {
+    throw new Error("Node R6 accepted revision and remote ref must be selected together")
+  }
+
+  for (const field of fields.slice(2)) {
+    if (typeof authorization[field] !== "boolean") {
+      throw new Error(`Node R6 ${field} must be boolean`)
+    }
+  }
+  if (authorization.historyImportAuthorized === true &&
+    (authorization.r5Accepted !== true || authorization.sourceFrozenReadOnly !== true)) {
+    throw new Error("Node history import requires accepted R5 and a read-only source freeze")
+  }
+  if (authorization.ownershipSwitchAuthorized === true &&
+    authorization.historyImportAuthorized !== true) {
+    throw new Error("Node ownership switch requires an authorized history import")
   }
 }
 

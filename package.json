@@ -15,6 +15,7 @@
     "status": "bun scripts/status.ts",
     "foundation:check": "bun scripts/foundation/check.ts",
     "evidence:check": "bun scripts/foundation/check-source-evidence.ts",
+    "node:cutover:plan": "bun scripts/foundation/plan-node-cutover.ts",
     "boundaries:check": "bun scripts/foundation/check.ts --boundaries-only",
     "packages:check": "bun scripts/foundation/run-package-checks.ts",
     "packages:check:external": "bun scripts/foundation/run-package-checks.ts --include-external",
