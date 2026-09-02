@@ -143,11 +143,11 @@ function ColorChannelField(props: ColorChannelFieldProps) {
       style={css`
         width: 56px;
         min-width: 56px;
-        --number-field-width: 56px;
-        --number-field-height: 24px;
-        --number-field-padding: 2px 4px;
+        height: 24px;
         --number-field-font-size: 10px;
         --number-field-text-align: right;
+        --number-field-padding-x: 4px;
+        --number-field-padding-y: 2px;
       `}
       onInput={(next, event) => props.onInput?.(nextValue(next), event)}
       onChange={(next, event) => props.onChange?.(nextValue(next), event)}

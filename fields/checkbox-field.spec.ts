@@ -26,7 +26,14 @@ describe("compiled production CheckboxField", () => {
     expect(input.checked).toBe(false)
     expect(proposed).toEqual([true])
     const renderer = createDocumentRenderer({document, root: host, viewport: {width: 240, height: 80}})
-    expect(renderer.flush().boxByNode.get(input)).toMatchObject({width: 18, height: 18})
+    const frame = renderer.flush()
+    expect(frame.boxByNode.get(input)).toMatchObject({width: 16, height: 16})
+    expect(frame.boxByNode.get(input)?.border.radii).toEqual({
+      topLeft: 3,
+      topRight: 3,
+      bottomRight: 3,
+      bottomLeft: 3,
+    })
     renderer.dispose()
     root.render(CheckboxFieldFixture as any, {})
     expect(host.textContent).toContain("Enabled")

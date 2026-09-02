@@ -46,7 +46,7 @@ export function SelectField(props: SelectFieldProps) {
   if (typeof props.value !== "string") throw new TypeError("SelectField value must be a string")
   validateSelectionState(props.state)
   const options = props.options === undefined ? undefined : validateSelectionOptions(props.options)
-  const density = props.density ?? "regular"
+  const density = props.density ?? "compact"
   if (density !== "regular" && density !== "compact") throw new Error(`Unknown SelectField density: ${density}`)
   const exceptionalLabel = selectionExceptionalLabel(props.state, options)
   const selected = options === undefined ? undefined : findSelectionOption(props.value, options)
@@ -117,7 +117,7 @@ export function SelectField(props: SelectFieldProps) {
         --select-field-surface: var(--widget-text-background);
         --select-field-content: var(--widget-regular-content);
         border: var(--border-width-control) solid var(--widget-regular-outline);
-        border-radius: 4px;
+        border-radius: var(--radius-medium);
         background: var(--select-field-surface);
         box-shadow: 0 1px 0 var(--material-widget-emboss);
         color: var(--widget-regular-content);

@@ -45,11 +45,9 @@ export function VectorField(props: VectorFieldProps) {
         height: 26px;
         flex-grow: 1;
         --field-label-width: 18px;
-        --number-field-width: 100%;
-        --number-field-height: 26px;
-        --number-field-border-width: 0px;
-        --number-field-radius: 0px;
-        --number-field-shadow: none;
+        border-width: 0;
+        border-radius: 0;
+        box-shadow: none;
 
         ${index === 0 && css`
           --field-label-content: rgb(var(--axis-x-500));

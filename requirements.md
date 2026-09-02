@@ -53,6 +53,14 @@ custom property допустим только как реальный per-instan
 как alias каждого global token. Замена linked theme меняет все экземпляры через
 обычные inheritance/cascade и не создаёт instance-specific rules.
 
+Shared default Field geometry принадлежит linked theme: border width, radius,
+control-height и typography берутся напрямую из foundation tokens. Exact owner
+хранит свои intrinsic width, label share и content padding как production
+defaults. Consumer не должен собирать стандартный вид Field через `style`,
+`--number-field-*`, `--field-label-width`, density prop или локальные pixel
+constants. Public `style` остаётся для действительно отличающегося consumer
+layout/state, а не для восстановления обязательного Blender contour.
+
 Production Components не импортируют runtime `uiTheme`,
 `resolveWidgetColors`, `rgba8ToColor` или `widgetCssVariables`. TypeScript
 `@ui/components/theme` отсутствует. Переход не схлопывает разные widget roles
@@ -146,11 +154,13 @@ Template ABI.
 всех 32 package exports. Три non-TSX owner доказываются отдельно:
 `icons.spec.ts` проверяет exact public aggregate и named asset identity,
 `syntax-theme.spec.ts` — полный source-backed data artifact и runtime
-projection, `theme.spec.ts` — exact linked CSS resource. Exact runtime
-cutover bundle после восстановления SelectField SVG-indicator измерен как
-`131447 bytes / 31697 bytes gzip`; `131500 / 31750` оставляет малый
-проверяемый запас этого exact runtime surface, а не общий резерв для
-data/resource owners или будущих компонентов.
+projection, `theme.spec.ts` — exact linked CSS resource. Exact runtime cutover
+bundle после восстановления SelectField SVG-indicator и theme-backed Field
+defaults измерен как `131190 bytes / 31700 bytes gzip`, sha256
+`ff843b27f3777d991df3fee5c0f30cc0d57555008c1ce234f6ea756e3b80a01f`;
+`131500 / 31750` оставляет только `310 / 50` bytes проверяемого запаса этого
+exact runtime surface, а не общий резерв для data/resource owners или будущих
+компонентов.
 
 ## DOM ownership
 
@@ -288,6 +298,9 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 - Native `SelectField` сохраняет тёмный menu-well material
   `--widget-text-background`; он не наследует более светлый Button material
   `--widget-regular-background`.
+- Fields с density contract используют compact presentation по умолчанию;
+  `regular` остаётся только явным caller choice. Это позволяет Node и другим
+  dense consumers компоновать точные public owners без visual restyling.
 - `SelectField` сохраняет прежний UI-owned `chevronDownIcon` как стабильный
   decorative `<img>` поверх правой indicator-зоны. Exact native `<select>`
   остаётся единственным interaction/picker/value owner и лежит под
@@ -415,9 +428,15 @@ zones remain invisible step affordances; the center remains the same exact
 input identity for text focus and horizontal scrubbing.
 
 Without `label`, the owner keeps the standalone 120×22 contour. With `label`,
-the label and value share one full-width 28px filled contour: the proportional
+the label and value share one full-width 22px filled contour: the proportional
 fill spans behind both texts, the label is not a separate transparent column,
 and the input identity remains unchanged when the label appears or disappears.
+The default `63%` label share, `18px` label-leading inset and `16px` value inset
+belong to NumberField. They retain the complete longest Blender label while
+reserving both invisible edge affordances. Its `1px` border, `4px` radius,
+`22px` height and `11px` text reference linked theme foundation tokens. A
+consumer does not redeclare any of them to obtain the standard NumberField
+presentation.
 Joined Vector/Matrix cells suppress their nested border, radius and shadow
 through the existing owner properties so `FieldGroup` still owns one outer
 contour.

@@ -85,11 +85,11 @@ export function CheckboxField(props: CheckboxFieldProps) {
         style={css`
           box-sizing: border-box;
           display: block;
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           padding: 0;
           border: var(--border-width-control) solid var(--widget-option-outline);
-          border-radius: 3px;
+          border-radius: var(--radius-small);
           background: var(--widget-option-background);
           box-shadow: 0 1px 0 var(--material-widget-emboss);
           color: var(--widget-option-content);

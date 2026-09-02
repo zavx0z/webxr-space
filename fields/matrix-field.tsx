@@ -46,11 +46,9 @@ function MatrixRow(props: MatrixRowProps) {
         height: 26px;
         flex-grow: 1;
         --field-label-width: 20px;
-        --number-field-width: 100%;
-        --number-field-height: 26px;
-        --number-field-border-width: 0px;
-        --number-field-radius: 0px;
-        --number-field-shadow: none;
+        border-width: 0;
+        border-radius: 0;
+        box-shadow: none;
 
         ${column < props.row.length - 1 && css`
           border-right: var(--border-width-control) solid var(--widget-regular-outline);

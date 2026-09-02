@@ -43,6 +43,14 @@ describe("compiled production SelectField", () => {
       item.kind === "rect" && item.node === presentedSelect.parentElement && item.key === "background")
     expect(background?.color).toBe("rgb(29 29 29)")
     const frame = renderer.flush()
+    expect(presentedSelect.parentElement?.getAttribute("data-density")).toBe("compact")
+    expect(frame.boxByNode.get(presentedSelect.parentElement!)).toMatchObject({height: 22})
+    expect(frame.boxByNode.get(presentedSelect.parentElement!)?.border.radii).toEqual({
+      topLeft: 4,
+      topRight: 4,
+      bottomRight: 4,
+      bottomLeft: 4,
+    })
     expect(frame.hits.has(presentedSelect)).toBeTrue()
     expect(frame.hits.get(presentedIndicator)?.interactive ?? false).toBeFalse()
     const indicatorBox = frame.boxByNode.get(presentedIndicator)!

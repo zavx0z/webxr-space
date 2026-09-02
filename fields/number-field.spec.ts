@@ -41,7 +41,7 @@ describe("compiled production NumberField", () => {
     const values: number[] = []
     root.render(NumberField as any, {value: 0, softMin: -10, softMax: 10, onInput: (value: number) => values.push(value)})
     const input = host.querySelector("input")!
-    const owner = host.querySelector("[data-number-field-value]")!
+    const owner = host.querySelector("[data-number-field]")!
     const renderer = createDocumentRenderer({document, root: host, viewport: {width: 240, height: 80}})
     const frame = renderer.flush()
     expect(frame.boxByNode.get(owner)).toMatchObject({width: 120, height: 22})
@@ -72,10 +72,23 @@ describe("compiled production NumberField", () => {
     const renderer = createDocumentRenderer({document, root: host, viewport: {width: 240, height: 80}})
     const frame = renderer.flush()
 
-    expect(frame.boxByNode.get(owner)).toMatchObject({width: 240, height: 28})
-    expect(frame.boxByNode.get(label)).toMatchObject({width: 96, height: 28})
-    expect(frame.boxByNode.get(value)).toMatchObject({width: 144, height: 28})
-    expect(frame.boxByNode.get(fill)).toMatchObject({width: 120, height: 28})
+    expect(frame.boxByNode.get(owner)).toMatchObject({width: 240, height: 22})
+    expect(frame.boxByNode.get(owner)?.border).toMatchObject({
+      widths: {top: 1, right: 1, bottom: 1, left: 1},
+      radii: {topLeft: 4, topRight: 4, bottomRight: 4, bottomLeft: 4},
+    })
+    const labelBox = frame.boxByNode.get(label)!
+    const valueBox = frame.boxByNode.get(value)!
+    expect(frame.boxByNode.get(label.firstChild!)).toMatchObject({x: 19})
+    const input = owner.querySelector("input")!
+    const inputText = frame.displayList.find(item => item.kind === "text" && item.node === input)
+    expect(inputText?.kind).toBe("text")
+    expect(inputText?.x).toBeCloseTo(216.4)
+    expect(labelBox.width).toBeCloseTo(149.94)
+    expect(labelBox.height).toBe(20)
+    expect(valueBox.width).toBeCloseTo(88.06)
+    expect(valueBox.height).toBe(20)
+    expect(frame.boxByNode.get(fill)).toMatchObject({width: 119, height: 20})
     expect(owner.contains(fill)).toBeTrue()
     expect(value.contains(fill)).toBeFalse()
     renderer.dispose()

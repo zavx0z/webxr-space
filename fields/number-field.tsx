@@ -145,21 +145,19 @@ export function NumberField(props: NumberFieldProps) {
       flex-direction: row;
       align-items: center;
       width: var(--number-field-width, 120px);
-      height: var(--number-field-height, var(--control-height-medium));
+      height: var(--control-height-medium);
       min-width: 0;
       padding: 0;
-      border-width: var(--number-field-border-width, var(--border-width-control));
-      border-style: solid;
-      border-color: var(--number-field-outline, var(--widget-number-outline));
-      border-radius: var(--number-field-radius, 3px);
+      border: var(--border-width-control) solid var(--widget-number-outline);
+      border-radius: var(--radius-medium);
       background: var(--number-field-background, var(--widget-number-background));
       color: var(--widget-list-content);
-      box-shadow: var(--number-field-shadow, 0 1px 0 var(--material-widget-emboss));
+      box-shadow: 0 1px 0 var(--material-widget-emboss);
       overflow: clip;
 
       &[data-has-label="true"] {
         width: 100%;
-        height: var(--number-field-height, var(--control-height-large));
+        height: var(--control-height-medium);
       }
 
       &:hover {
@@ -209,13 +207,13 @@ export function NumberField(props: NumberFieldProps) {
         z-index: 1;
         display: flex;
         align-items: center;
-        width: var(--field-label-width, 40%);
+        width: var(--field-label-width, 63%);
         min-width: 0;
         height: 100%;
-        padding: var(--number-field-label-padding, 2px 7px);
+        padding: 0 0 0 18px;
         overflow: hidden;
         color: var(--field-label-content, var(--widget-list-content));
-        font-size: var(--font-size-sm);
+        font-size: var(--font-size-xs);
         white-space: nowrap;
         text-overflow: ellipsis;
 
@@ -264,7 +262,10 @@ export function NumberField(props: NumberFieldProps) {
           width: 100%;
           height: 100%;
           min-width: 0;
-          padding: var(--number-field-padding, 2px 7px);
+          padding-top: var(--number-field-padding-y, 0px);
+          padding-right: var(--number-field-padding-x, 16px);
+          padding-bottom: var(--number-field-padding-y, 0px);
+          padding-left: var(--number-field-padding-x, 16px);
           border: 0 solid transparent;
           border-radius: 0;
           background: transparent;
