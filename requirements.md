@@ -279,6 +279,17 @@ Exact full path больше historical incomplete evidence на `+13.032% raw /
 точного `0b949e7` baseline добавляет `12 raw / 0 gzip` в exact NodeEditor;
 private profiler code в production graph отсутствует.
 
+Exact metafile ownership: `@zavx0z/dom 72998`, `@ui/components 63748`,
+`@nodes/ui 62990`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+`@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
+React runtime `34183`, Core NodeTree `17867`, Parameter projection `16810`,
+NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`. Требуемое
+сокращение `31838 raw / 8756 gzip` сопоставимо со всем обязательным component
+runtime; story/dev retention и root/subpath alias его не объясняют. Старый
+ceiling описывает удалённую imperative/incomplete модель и не заменяется
+автоматически, но сохранить его для fully component contract без удаления
+функциональности также нельзя считать доказанным требованием.
+
 ## Storybook and visual acceptance
 
 Canonical declaration family сохраняет все `159` leaves, из них `145` —
