@@ -1,4 +1,34 @@
 {
   "schemaVersion": 1,
-  "references": []
+  "references": [
+    {
+      "id": "blender-5.2-noise-number-field",
+      "scope": "Noise Texture labelled numeric rows",
+      "storyRoute": "components/fields/number-field/basic/default",
+      "asset": "blender-5.2-noise-texture.webp",
+      "sha256": "6d9dcb739e10bd4a82a1507deadae451fded7fec2ced50c54520d115b6d766f1",
+      "source": {
+        "product": "Blender",
+        "version": "5.2 LTS",
+        "revision": "fbe6228777e7d9afefcd61a413844e790ae75db7",
+        "documentation": "https://docs.blender.org/manual/en/5.2/render/shader_nodes/textures/noise.html",
+        "assetUrl": "https://docs.blender.org/manual/en/5.2/_images/node-types_ShaderNodeTexNoise.webp"
+      },
+      "pixelSize": {
+        "width": 192,
+        "height": 328
+      },
+      "capture": {
+        "kind": "official-manual-image",
+        "crop": "full-asset",
+        "theme": "dark",
+        "locale": "en",
+        "viewport": null,
+        "dpr": null
+      },
+      "compatibility": "changed-from-4.5.5-window-crop",
+      "acceptance": "candidate",
+      "remainingOwnerDecision": "Equal-scale NumberField and Node consumer visual verdict"
+    }
+  ]
 }

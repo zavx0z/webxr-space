@@ -625,6 +625,14 @@
               "module": {
                 "path": "./stories/subjects/components-fields-number-field.ts",
                 "export": "story_basic_default"
+              },
+              "resources": {
+                "references": [
+                  "./resources/references/catalog.json"
+                ],
+                "assets": [
+                  "./resources/references/blender-5.2-noise-texture.webp"
+                ]
               }
             },
             {

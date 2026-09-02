@@ -131,38 +131,90 @@ export function NumberField(props: NumberFieldProps) {
   const increase = (event: PointerEvent) => stepAtEdge(1, event)
 
   return <div
+    data-number-field=""
     data-has-label={hasLabel ? "true" : undefined}
+    data-readonly={props.readOnly === true ? "true" : undefined}
     title={props.title}
     style={css`
       box-sizing: border-box;
+      position: relative;
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
-      width: auto;
+      align-items: center;
+      width: var(--number-field-width, 120px);
+      height: var(--number-field-height, var(--control-height-medium));
       min-width: 0;
       padding: 0;
+      border-width: var(--number-field-border-width, var(--border-width-control));
+      border-style: solid;
+      border-color: var(--number-field-outline, var(--widget-number-outline));
+      border-radius: var(--number-field-radius, 3px);
+      background: var(--number-field-background, var(--widget-number-background));
       color: var(--widget-list-content);
+      box-shadow: var(--number-field-shadow, 0 1px 0 var(--material-widget-emboss));
+      overflow: clip;
 
       &[data-has-label="true"] {
         width: 100%;
-        min-height: 28px;
-        gap: 4px;
+        height: var(--number-field-height, var(--control-height-large));
       }
+
+      &:hover {
+        background: var(--widget-hover-background);
+      }
+
+      &:focus-within {
+        border-color: var(--widget-focus-outline);
+        background: var(--widget-number-background-focus);
+      }
+
+      &[data-readonly="true"] {
+        color: var(--widget-number-content-readonly);
+      }
+
+      ${props.disabled === true && css`
+        opacity: 0.5;
+        box-shadow: none;
+      `}
 
       ${props.style}
     `}
   >
     <span
+      data-number-fill=""
+      hidden={fillPercentage === null}
+      style={css`
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        width: ${fillPercentage ?? 0}%;
+        height: 100%;
+        background: var(--widget-number-fill);
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+    </span>
+    <span
       hidden={!hasLabel}
       style={css`
         box-sizing: border-box;
+        position: relative;
+        z-index: 1;
         display: flex;
         align-items: center;
         width: var(--field-label-width, 40%);
         min-width: 0;
-        height: 28px;
+        height: 100%;
+        padding: var(--number-field-label-padding, 2px 7px);
+        overflow: hidden;
         color: var(--field-label-content, var(--widget-list-content));
         font-size: var(--font-size-sm);
+        white-space: nowrap;
+        text-overflow: ellipsis;
 
         &[hidden] {
           display: none;
@@ -174,65 +226,17 @@ export function NumberField(props: NumberFieldProps) {
     <div
       data-number-field-value=""
       data-labelled={hasLabel ? "true" : undefined}
-      data-readonly={props.readOnly === true ? "true" : undefined}
       style={css`
         box-sizing: border-box;
         position: relative;
         display: block;
-        width: var(--number-field-width, 120px);
-        height: var(--number-field-height, var(--control-height-medium));
+        width: 0;
+        height: 100%;
         min-width: 0;
         padding: 0;
-        border-width: var(--number-field-border-width, var(--border-width-control));
-        border-style: solid;
-        border-color: var(--number-field-outline, var(--widget-number-outline));
-        border-radius: var(--number-field-radius, 3px);
-        background: var(--number-field-background, var(--widget-number-background));
-        box-shadow: var(--number-field-shadow, 0 1px 0 var(--material-widget-emboss));
-        overflow: clip;
-
-        &[data-labelled="true"] {
-          width: 0;
-          flex-grow: 1;
-        }
-
-        &:hover {
-          background: var(--widget-hover-background);
-        }
-
-        &:focus-within {
-          border-color: var(--widget-focus-outline);
-          background: var(--widget-number-background-focus);
-        }
-
-        &[data-readonly="true"] {
-          color: var(--widget-number-content-readonly);
-        }
-
-        ${props.disabled === true && css`
-          opacity: 0.5;
-          box-shadow: none;
-        `}
+        flex-grow: 1;
       `}
     >
-      <span
-        data-number-fill=""
-        hidden={fillPercentage === null}
-        style={css`
-          position: absolute;
-          left: 0;
-          top: 0;
-          display: block;
-          width: ${fillPercentage ?? 0}%;
-          height: 100%;
-          background: var(--widget-number-fill);
-
-          &[hidden] {
-            display: none;
-          }
-        `}
-      >
-      </span>
       <input
         type="number"
         value={props.value}

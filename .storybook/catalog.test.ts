@@ -250,6 +250,16 @@ describe("@ui/components external catalog", () => {
       expect(createHash("sha256").update(readFileSync(join(resourceRoot, name))).digest("hex"), name)
         .toBe(digest)
     }
+
+    const referenceRoot = join(import.meta.dir, "resources", "references")
+    const catalog = json(join(referenceRoot, "catalog.json")) as Readonly<{
+      references: readonly Readonly<{asset: string; sha256: string}>[]
+    }>
+    expect(catalog.references).toHaveLength(1)
+    expect(createHash("sha256")
+      .update(readFileSync(join(referenceRoot, catalog.references[0]!.asset)))
+      .digest("hex"))
+      .toBe(catalog.references[0]!.sha256)
   })
 
   test("mounts one owner story through the structural runtime and disposes it", async () => {

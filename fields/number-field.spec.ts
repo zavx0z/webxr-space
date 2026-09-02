@@ -53,4 +53,28 @@ describe("compiled production NumberField", () => {
     renderer.dispose()
     root.unmount()
   })
+
+  test("keeps the optional label and value inside one filled contour", () => {
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(NumberField as any, {label: "Scale", value: 5, min: 0, max: 10})
+    const owner = host.querySelector("[data-number-field]")!
+    const label = [...owner.querySelectorAll("span")]
+      .find(element => !element.hasAttribute("data-number-fill"))!
+    const value = owner.querySelector("[data-number-field-value]")!
+    const fill = owner.querySelector("[data-number-fill]")!
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 240, height: 80}})
+    const frame = renderer.flush()
+
+    expect(frame.boxByNode.get(owner)).toMatchObject({width: 240, height: 28})
+    expect(frame.boxByNode.get(label)).toMatchObject({width: 96, height: 28})
+    expect(frame.boxByNode.get(value)).toMatchObject({width: 144, height: 28})
+    expect(frame.boxByNode.get(fill)).toMatchObject({width: 120, height: 28})
+    expect(owner.contains(fill)).toBeTrue()
+    expect(value.contains(fill)).toBeFalse()
+    renderer.dispose()
+    root.unmount()
+  })
 })

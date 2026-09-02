@@ -403,6 +403,14 @@ no visible decrement/increment buttons. Source-compatible left/right edge
 zones remain invisible step affordances; the center remains the same exact
 input identity for text focus and horizontal scrubbing.
 
+Without `label`, the owner keeps the standalone 120×22 contour. With `label`,
+the label and value share one full-width 28px filled contour: the proportional
+fill spans behind both texts, the label is not a separate transparent column,
+and the input identity remains unchanged when the label appears or disappears.
+Joined Vector/Matrix cells suppress their nested border, radius and shadow
+through the existing owner properties so `FieldGroup` still owns one outer
+contour.
+
 When both hard `min` and `max` are finite and ordered, one ordinary semantic
 DOM span behind the input shows `(value - min) / (max - min)` as the
 proportional fill. It is clamped visually to `0–100%`, preserves the single
