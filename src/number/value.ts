@@ -8,6 +8,14 @@ export type NumberValueOptions = Readonly<{
 
 export type NumberRange = Readonly<{min: number; max: number}>
 
+export function formatNumberValue(value: number, precision: number | undefined): number | string {
+  if (precision === undefined) return value
+  if (!Number.isInteger(precision) || precision < 0 || precision > 20) {
+    throw new RangeError("NumberField precision must be an integer from 0 to 20")
+  }
+  return value.toFixed(precision)
+}
+
 export function numberFillPercentage(
   value: number,
   minimum: number | undefined,

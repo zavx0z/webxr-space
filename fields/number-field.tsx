@@ -5,6 +5,7 @@ import {
   snapNumberValue
 } from "../src/number/scrub.ts"
 import {
+  formatNumberValue,
   normalizeNumberValue,
   numberFillPercentage,
   numberPointerStep,
@@ -20,6 +21,7 @@ export type NumberFieldProps = Readonly<{
   softMin?: number | undefined
   softMax?: number | undefined
   step?: number | undefined
+  precision?: number | undefined
   disabled?: boolean | undefined
   readOnly?: boolean | undefined
   title?: string | undefined
@@ -47,6 +49,7 @@ export function NumberField(props: NumberFieldProps) {
   const step = numberPointerStep(props)
   const locked = props.disabled === true || props.readOnly === true
   const fillPercentage = numberFillPercentage(props.value, props.min, props.max)
+  const displayedValue = formatNumberValue(props.value, props.precision)
 
   const propose = (value: number, event: Event) => {
     if (!locked && Number.isFinite(value)) props.onInput?.(normalizeNumberValue(value, props), event)
@@ -239,7 +242,7 @@ export function NumberField(props: NumberFieldProps) {
     >
       <input
         type="number"
-        value={props.value}
+        value={displayedValue}
         min={props.min}
         max={props.max}
         step={step}

@@ -431,6 +431,11 @@ value Store. The Storybook route wraps this exact owner with `useState`.
 Integer/float validation is data-owner semantics: Components exposes no
 `IntegerField`, `numberKind` or rounding branch.
 
+Optional finite `precision` is presentation-only configuration of the same
+native number input. It preserves the numeric controlled value and
+`valueAsNumber`, while formatting the visible value with `0–20` fractional
+digits. It never changes step, normalization, validation or data meaning.
+
 ## `UI-COMPILED-COMPOSITION-001` — nested owners, not copied markup
 
 Final compound Fields reuse final Components as compiled component calls.
