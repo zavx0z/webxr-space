@@ -89,7 +89,13 @@ describe("public component Storybook projection", () => {
     const glyphBox = frame.boxByNode.get(output.querySelector('[data-socket-glyph]')!)!
     const labelBox = frame.boxByNode.get(output.querySelector('[data-socket-label]')!)!
     expect(glyphBox.x).toBeGreaterThan(labelBox.x)
-    expect(Math.abs(nodeBox.x + nodeBox.width - (glyphBox.x + glyphBox.width / 2))).toBeLessThanOrEqual(1)
+    const outputSockets = node.querySelectorAll('[data-socket-side="right"]')
+    expect(outputSockets).toHaveLength(2)
+    for (const outputSocket of outputSockets) {
+      const outputGlyph = frame.boxByNode.get(outputSocket.querySelector('[data-socket-glyph]')!)!
+      expect(Math.abs(nodeBox.x + nodeBox.width -
+        (outputGlyph.x + outputGlyph.width / 2))).toBeLessThanOrEqual(1)
+    }
     const inputSockets = node.querySelectorAll('[data-socket-side="left"]')
     expect(inputSockets).toHaveLength(6)
     for (const input of inputSockets) {

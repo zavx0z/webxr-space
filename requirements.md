@@ -152,6 +152,10 @@ Ordinary endpoint имеет `10px` intrinsic geometry, kind-color fill и `1px`
 dark outline. Connected/selected остаются независимым state и не превращают
 обычный unconnected endpoint в hollow circle. Loose row — тот же public
 `Socket` с row presentation, не скрытый `SocketPort` owner.
+Для endpoint presentation центр glyph обязан совпадать с соответствующим
+левым/правым внешним контуром Node с допуском `1px`. Это проверяется по
+Renderer boxes для всех шести input Sockets и обоих output Sockets exact
+Blender 5.2 comparison, а не по приблизительному CSS offset или screenshot.
 
 ### `NODES-UI-LINK-001`
 
@@ -308,28 +312,28 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 
 После exact Blender 5.2 component slice и восстановления UI-owned SVG
 indicator текущий comparable exact full NodeEditor build:
-`279243 raw / 70384 gzip`; root: `279172 / 70678`; NodeTree:
-`271107 / 67869`; complete aggregate Parameter interaction graph:
-`206217 / 50770`; Link: `122451 / 33074`. Root-vs-exact не объясняет дельту,
+`279242 raw / 70390 gzip`; root: `279171 / 70684`; NodeTree:
+`271106 / 67874`; complete aggregate Parameter interaction graph:
+`206216 / 50773`; Link: `122450 / 33078`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
 Exact full path больше historical incomplete evidence на `+14.303% raw /
-+16.030% gzip`.
++16.040% gzip`.
 
 Replacement ceiling `285000 / 72000` принят для exact fully-component
 NodeEditor и исполняется обычным repository test. Он оставляет только
-`5757 raw / 1616 gzip` (`2.06% / 2.30%`) запаса и не является общим резервом
+`5758 raw / 1610 gzip` (`2.06% / 2.29%`) запаса и не является общим резервом
 для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
 imperative/incomplete модели, а не скрытым обязательством удалить component
 runtime или функциональность.
 
-Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64896`,
+Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64895`,
 `@ui/components 64947`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
 React runtime `34183`, Parameter projection `18080`, Core NodeTree `17867`,
 NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`.
 Story/dev retention и root/subpath alias отсутствуют; private profiler code в
 production graph не попадает. Exact artifact sha256:
-`070cc2b374fc4bdc18e788ad4c14d8afd5d9d4fbaf5d81589ae3983f5460936c`.
+`eaa9e7b57eaecda97c4003649dc9f6eabeb0b77ee0bf04211e2c7ed45ba72bc8`.
 
 ## Storybook and visual acceptance
 
@@ -362,16 +366,18 @@ chevron. Exact comparison capture `capture_1jaGm1KQ5hc8k1WDxD2Ly39T`, sha256
 Final 5.2 candidate slice использует official Manual asset, UI owners
 `f34b52c` / `f224951` / `5c35145` / `1ddae57` и Node production commits
 `d1cb287` / `a85e4c3` / `11ce295` / `5db53d9` / `51f57a9` / `af514b7` /
-`776a974` / `30425d7` / `a72e0e6` / `9966197`.
-На external Storybook revision `f48550926ffeec12eef18bc1`, graph
+`776a974` / `30425d7` / `a72e0e6` / `9966197` / `ed7b6a9`.
+На external Storybook revision `8f9c410f7bb9dc5170a2b353`, graph
 `88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613`:
 
 - exact comparison route ready/presented, empty diagnostics/console; capture
-  `capture_VJMichQvkHMqwfs0GnWDWdGF`, sha256
-  `b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d`;
+  `capture_A4s6y4ka27_yH-Jd0HTa-1oZ`, sha256
+  `5ebac749997bcd3f41804db29d37d88922c69eefba5fc20f1e81b5e6c57094d7`;
+- close 1:1 comparison crop `capture_UhjjG-F0ljt5-XiWbnsGNfgz`, sha256
+  `a89bf335858d6862d79f67fc656d2f3784563e377812afb0e6a1af3889e08e41`;
 - full `ui/node-editor/scene/default` ready/presented, empty
-  diagnostics/console; capture `capture_ejdSxqAEvQ3PmESpBMnnqvXd`, sha256
-  `4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b`.
+  diagnostics/console; capture `capture_dt17SV9wdRzBcGQTPGoYx3RE`, sha256
+  `1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0`.
 
 Node contour, composition, grouping, insets, solid Socket geometry, values and
 material roles now align at equal scale. Historical UI evidence proved that the
@@ -379,8 +385,14 @@ collapsed `select` used an SVG chevron rather than a text glyph. UI owner
 `1ddae57` restores the exact `chevronDownIcon` as a non-interactive image over
 the still-native `select`; picker, value, focus and change ownership remain on
 the native element. No Renderer/Engine-font gap or platform change is required.
-The exact artifact remains `candidate` only until the explicit `zavx0z` visual
-verdict is recorded.
+
+Первый SVG-restored artifact на `f48550926ffeec12eef18bc1` отклонён `zavx0z`:
+все input Socket centers находились на `7px` левее Node contour. Node owner
+`ed7b6a9` исправляет только endpoint-left flow offset с `-13px` на `-6px`;
+существующий right/output attachment не меняется. Exact Renderer-box test
+теперь доказывает совпадение центров всех шести input glyphs с левым contour с
+допуском `1px`, а новый close capture показывает их на границе Node. Исправленный
+artifact остаётся `candidate` до повторного явного visual verdict `zavx0z`.
 
 ## Known platform gates
 
@@ -417,7 +429,7 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
 8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
-   exact `279243 / 70384` проходит executable repository test. Historical
+   exact `279242 / 70390` проходит executable repository test. Historical
    incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance
