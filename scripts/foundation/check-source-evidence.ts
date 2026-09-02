@@ -108,9 +108,18 @@ const linkClosureRendererCheckpoint = objectRecord(
   linkClosureRepositories.renderer,
   "Link closure Renderer repository",
 )
-const latestRepositories = objectRecord(
+const denseRepositories = objectRecord(
   data.nodeR5DenseLifecycleCheckpoint.repositories,
-  "latest dense lifecycle checkpoint repositories",
+  "dense lifecycle checkpoint repositories",
+)
+const denseNodeCheckpoint = objectRecord(denseRepositories.node, "dense lifecycle Node repository")
+const denseRendererCheckpoint = objectRecord(
+  denseRepositories.renderer,
+  "dense lifecycle Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5OwnerDecisionsCheckpoint.repositories,
+  "latest owner decision checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -351,7 +360,7 @@ const denseNodeHistory = data.nodeR5DenseLifecycleCheckpoint.nodePackageHistory
 if (!Array.isArray(denseNodeHistory)) throw new Error("Dense lifecycle Node history must be an array")
 for (const value of denseNodeHistory) {
   const entry = objectRecord(value, "dense lifecycle Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "dense lifecycle Node")
+  validateCheckpointHistoryEntry(entry, denseNodeCheckpoint, "dense lifecycle Node")
 }
 
 const denseRendererHistory = data.nodeR5DenseLifecycleCheckpoint.rendererPackageHistory
@@ -360,7 +369,23 @@ if (!Array.isArray(denseRendererHistory)) {
 }
 for (const value of denseRendererHistory) {
   const entry = objectRecord(value, "dense lifecycle Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "dense lifecycle Renderer")
+  validateCheckpointHistoryEntry(entry, denseRendererCheckpoint, "dense lifecycle Renderer")
+}
+
+const decisionNodeHistory = data.nodeR5OwnerDecisionsCheckpoint.nodePackageHistory
+if (!Array.isArray(decisionNodeHistory)) throw new Error("Owner decision Node history must be an array")
+for (const value of decisionNodeHistory) {
+  const entry = objectRecord(value, "owner decision Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "owner decision Node")
+}
+
+const decisionRendererHistory = data.nodeR5OwnerDecisionsCheckpoint.rendererPackageHistory
+if (!Array.isArray(decisionRendererHistory)) {
+  throw new Error("Owner decision Renderer history must be an array")
+}
+for (const value of decisionRendererHistory) {
+  const entry = objectRecord(value, "owner decision Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "owner decision Renderer")
 }
 
 console.log(
@@ -375,7 +400,8 @@ console.log(
   `${calibrationNodeHistory.length + calibrationRendererHistory.length} transform calibration histories, ` +
   `${transformClosureNodeHistory.length + transformClosureRendererHistory.length} transform closure histories, ` +
   `${linkClosureNodeHistory.length + linkClosureRendererHistory.length} Link closure histories, ` +
-  `${denseNodeHistory.length + denseRendererHistory.length} dense lifecycle histories`,
+  `${denseNodeHistory.length + denseRendererHistory.length} dense lifecycle histories, ` +
+  `${decisionNodeHistory.length + decisionRendererHistory.length} owner decision histories`,
 )
 
 function validateCheckpointHistoryEntry(

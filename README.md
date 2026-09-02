@@ -41,6 +41,7 @@ The authoritative files are:
 - `evidence/node-r5-transform-closure-checkpoint.json`
 - `evidence/node-r5-link-closure-checkpoint.json`
 - `evidence/node-r5-dense-lifecycle-checkpoint.json`
+- `evidence/node-r5-owner-decisions-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -85,11 +86,13 @@ transform to 100 samples, and Renderer `0cb7256`/`65ec24a` closes it across thre
 fresh processes. Node `f4519ea` closes Link selection and retained runtime
 memory. Node `4a68482` plus Renderer `a5c9f3e`/`99ce784` closes unbounded dense
 disposal. Bundle and final visual verdict remain hard R5 blockers; dense memory
-is a pending owner-policy because no ceiling exists. R6 is blocked because Node
-`4a68482` and Renderer `99ce784` are not remote-backed
+is a pending owner-policy because no ceiling exists. Node `176816b` proves the
+historical bundle ceiling describes the removed imperative/incomplete model,
+but does not silently replace it. R6 is blocked because Node `176816b` and
+Renderer `99ce784` are not remote-backed
 and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-current live pointer is `evidence/node-r5-dense-lifecycle-checkpoint.json`.
+current live pointer is `evidence/node-r5-owner-decisions-checkpoint.json`.
 
 ## Transition superproject
 

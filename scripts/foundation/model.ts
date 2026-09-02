@@ -23,6 +23,7 @@ export const dataFiles = Object.freeze({
   nodeR5TransformClosureCheckpoint: "evidence/node-r5-transform-closure-checkpoint.json",
   nodeR5LinkClosureCheckpoint: "evidence/node-r5-link-closure-checkpoint.json",
   nodeR5DenseLifecycleCheckpoint: "evidence/node-r5-dense-lifecycle-checkpoint.json",
+  nodeR5OwnerDecisionsCheckpoint: "evidence/node-r5-owner-decisions-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -143,6 +144,7 @@ export type FoundationData = Readonly<{
   nodeR5TransformClosureCheckpoint: Readonly<Record<string, unknown>>
   nodeR5LinkClosureCheckpoint: Readonly<Record<string, unknown>>
   nodeR5DenseLifecycleCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5OwnerDecisionsCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -188,6 +190,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5DenseLifecycleCheckpoint: byPath.get(
       dataFiles.nodeR5DenseLifecycleCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5OwnerDecisionsCheckpoint: byPath.get(
+      dataFiles.nodeR5OwnerDecisionsCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -649,7 +654,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5TransformCalibrationCheckpoint.schemaVersion !== 1 ||
     data.nodeR5TransformClosureCheckpoint.schemaVersion !== 1 ||
     data.nodeR5LinkClosureCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5DenseLifecycleCheckpoint.schemaVersion !== 1) {
+    data.nodeR5DenseLifecycleCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5OwnerDecisionsCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -703,7 +709,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const transformCalibrationCheckpointPath = "evidence/node-r5-transform-calibration-checkpoint.json"
   const transformClosureCheckpointPath = "evidence/node-r5-transform-closure-checkpoint.json"
   const linkClosureCheckpointPath = "evidence/node-r5-link-closure-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-dense-lifecycle-checkpoint.json"
+  const denseLifecycleCheckpointPath = "evidence/node-r5-dense-lifecycle-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-owner-decisions-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -760,9 +767,15 @@ function validateMigrationCoverage(data: FoundationData): void {
     "Link closure checkpoint repositories",
   )
   const linkClosureNode = objectRecord(linkClosureRepositories.node, "Link closure Node repository")
-  const latestRepositories = objectRecord(
+  const denseRepositories = objectRecord(
     data.nodeR5DenseLifecycleCheckpoint.repositories,
-    "latest dense lifecycle checkpoint repositories",
+    "dense lifecycle checkpoint repositories",
+  )
+  const denseNode = objectRecord(denseRepositories.node, "dense lifecycle Node repository")
+  const denseRenderer = objectRecord(denseRepositories.renderer, "dense lifecycle Renderer repository")
+  const latestRepositories = objectRecord(
+    data.nodeR5OwnerDecisionsCheckpoint.repositories,
+    "latest owner decision checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -775,13 +788,14 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.transformCalibrationCommit !== calibrationNode.head ||
     data.nodeCutover.transformClosureCommit !== transformClosureNode.head ||
     data.nodeCutover.linkClosureCommit !== linkClosureNode.head ||
-    data.nodeCutover.denseLifecycleCommit !== latestNode.head ||
+    data.nodeCutover.denseLifecycleCommit !== denseNode.head ||
+    data.nodeCutover.bundleOwnershipCommit !== latestNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
-    data.nodeCutover.bulkBackendCleanupCommit !== latestRenderer.parent ||
-    data.nodeCutover.bulkBackendCleanupEvidenceCommit !== latestRenderer.head ||
+    data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
+    data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== linkClosureCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== denseLifecycleCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -1163,8 +1177,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5DenseLifecycleCheckpoint.backendCleanup,
     "dense backend cleanup checkpoint",
   )
-  if (backendCleanup.implementationCommit !== latestRenderer.parent ||
-    backendCleanup.capabilityEvidenceCommit !== latestRenderer.head) {
+  if (backendCleanup.implementationCommit !== denseRenderer.parent ||
+    backendCleanup.capabilityEvidenceCommit !== denseRenderer.head) {
     throw new Error("Backend cleanup evidence does not match the latest Renderer checkpoint")
   }
   const denseLifecycle = objectRecord(
@@ -1177,14 +1191,60 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Dense lifecycle evidence does not match the latest checkpoint")
   }
 
+  const decisionNodeHistory = arrayValue(
+    data.nodeR5OwnerDecisionsCheckpoint.nodePackageHistory,
+    "owner decision Node package history",
+  ).map((value) => objectRecord(value, "owner decision Node history entry"))
+  assertExactStringSet(
+    "owner decision Node history coverage",
+    decisionNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of decisionNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Owner decision Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const decisionRendererHistory = arrayValue(
+    data.nodeR5OwnerDecisionsCheckpoint.rendererPackageHistory,
+    "owner decision Renderer package history",
+  ).map((value) => objectRecord(value, "owner decision Renderer history entry"))
+  assertExactStringSet(
+    "owner decision Renderer history coverage",
+    decisionRendererHistory.map(({package: packageName}) => packageName),
+    rendererInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of decisionRendererHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
+      throw new Error(`Owner decision Renderer history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const bundleDecision = objectRecord(
+    data.nodeR5OwnerDecisionsCheckpoint.bundleOwnerDecision,
+    "bundle owner decision",
+  )
+  if (bundleDecision.commit !== latestNode.head ||
+    bundleDecision.contract !== "nodes-component-ui-bundle/2" ||
+    bundleDecision.oldCeilingChanged !== false) {
+    throw new Error("Bundle owner decision does not match the latest checkpoint")
+  }
+  const technicalR5 = objectRecord(data.nodeR5OwnerDecisionsCheckpoint.technicalR5, "technical R5")
+  if (technicalR5.status !== "verified") {
+    throw new Error("Technical R5 must remain verified at the owner decision checkpoint")
+  }
+
   const gates = objectRecord(
-    data.nodeR5DenseLifecycleCheckpoint.effectiveGates,
+    data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "effective Node gates",
   )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
   }
-  if (gates.R5 !== "partial-blocked") throw new Error("Node R5 must remain partial/blocked")
+  if (gates.R5 !== "owner-decisions-pending") {
+    throw new Error("Node R5 must remain owner-decisions-pending")
+  }
   if (gates.R6 !== "blocked") throw new Error("Node R6 must remain blocked")
 }
 

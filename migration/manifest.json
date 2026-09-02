@@ -64,7 +64,7 @@
     {
       "id": "R1-R6",
       "name": "Canonical Node clean component rewrite and acceptance",
-      "status": "r1-r4-verified-r5-partial-r6-blocked",
+      "status": "r1-r4-verified-r5-owner-decisions-r6-blocked",
       "dependsOn": ["M0"],
       "implementationLocation": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
       "implementationBranchPolicy": "current supplied branch; no separate worktree implied",
@@ -77,20 +77,21 @@
       "transformClosureCommit": "be37431b2babe0e2ff18e9296ff45feca30e7ad7",
       "linkClosureCommit": "f4519ea1f2271634ce8cd8afa57d1ac5a62a86d1",
       "denseLifecycleCommit": "4a684825edc731bcc20a439b9eecd58fc5995472",
+      "bundleOwnershipCommit": "176816b1ec89a3485309ff16675cc21c798e06db",
       "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
       "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "completedGates": ["R1", "R2", "R3", "R4"],
-      "partialGates": ["R5"],
-      "blockedGates": ["R5", "R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-link-closure-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-dense-lifecycle-checkpoint.json",
+      "ownerDecisionGates": ["R5"],
+      "blockedGates": ["R6"],
+      "previousEvidenceCheckpoint": "evidence/node-r5-dense-lifecycle-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-owner-decisions-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
       "id": "M3",
       "name": "Node family history import",
-      "status": "blocked-by-node-r5-r6",
+      "status": "blocked-by-node-owner-decisions-r6",
       "dependsOn": ["R1-R6", "M2"],
       "packages": [
         "@nodes/core",
@@ -108,8 +109,7 @@
         "single writable owner cutover"
       ],
       "blockers": [
-        "R5 bundle and final visual owner verdict are not accepted.",
-        "Dense retained memory has no approved owner ceiling and remains a policy decision.",
+        "R5 bundle ceiling, dense-memory policy and final visual verdict owner decisions are pending.",
         "R6 commit is not remote-backed and the canonical Node owner has not been frozen/read-only.",
         "The source:node repository remains the only writable canonical owner."
       ]

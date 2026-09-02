@@ -24,5 +24,5 @@
     {"package": "@nodes/worker", "sourceRepository": "node", "sourcePrefix": "packages/worker", "destination": "packages/nodes-worker", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
     {"package": "@nodes/ui", "sourceRepository": "node", "sourcePrefix": "packages/ui", "destination": "packages/nodes-ui", "status": "blocked-by-node-r5-r6", "gate": "node-r6"}
   ],
-  "blocker": "Executing any import now would create a second writable canonical owner. Node R5 still has bundle/final-visual blockers plus a pending dense-memory policy, 4a684825edc731bcc20a439b9eecd58fc5995472 and Renderer 99ce7846e6086ba4c3adebad23acbb6faafa277f are not remote-backed, and the target worktree has no authorization to freeze or make the source repositories read-only."
+  "blocker": "Executing any import now would create a second writable canonical owner. Node R5 owner decisions are pending, 176816b1ec89a3485309ff16675cc21c798e06db and Renderer 99ce7846e6086ba4c3adebad23acbb6faafa277f are not remote-backed, and push/freeze authorization has not been given."
 }

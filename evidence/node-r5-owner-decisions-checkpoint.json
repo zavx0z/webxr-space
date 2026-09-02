@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T09:14:39+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r5-dense-lifecycle-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "classification": "R5 technical completion and owner-decision checkpoint",
+    "preservesPreviousSnapshots": true,
+    "productionRuntimeChanged": false
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "176816b1ec89a3485309ff16675cc21c798e06db",
+      "parent": "4a684825edc731bcc20a439b9eecd58fc5995472",
+      "subject": "Attribute NodeEditor bundle ownership",
+      "committedAt": "2026-09-02T09:06:49+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 11,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node",
+      "manifestSha256": {
+        "package.json": "e4042d43440a0b4ce5e827fbcbcbcc79abf14905c9b0c7b6461d6a1cbafbfa2b",
+        "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+        "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+        "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+        "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+        "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+      }
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 12,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer",
+      "manifestSha256": {
+        "package.json": "5de51f304f5e5eff9d7164c2185b5f7ea5e77c3559c74349a271b98c249e970f",
+        "packages/browser/package.json": "de33f0188244b681366abd9204371292b900da0e88c5dfe2e4ab1cdd3fd74664",
+        "packages/core/package.json": "65e247bebb179eae88fedf2fa8863d99a5a358f5e23cb69699518de5b4347a83",
+        "packages/devtools/package.json": "45d3b7dedc11ce5f293f521d1e509343fa1bc998cf604f920ab1c99116022775",
+        "packages/dom/package.json": "d11d0816dc1eee140a9d69b662a296dcf5d7e680707bc99aaed013350019ed42",
+        "packages/react/package.json": "7dbd2e77a402d8b391eab1a7c49402d61fce35fd8e99084fbe0047dc369f43d9",
+        "packages/webgpu/package.json": "be5bccaad84f88571e66ad46849807e9d4cf5125942cac0fb3b8bbf8c34f7f6e"
+      }
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 11, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 25, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "176816b1ec89a3485309ff16675cc21c798e06db"}
+  ],
+  "rendererPackageHistory": [
+    {"package": "@zavx0z/renderer-browser", "repository": "renderer", "prefix": "packages/browser", "commitCount": 12, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"},
+    {"package": "@zavx0z/renderer", "repository": "renderer", "prefix": "packages/core", "commitCount": 32, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "65ec24a0f6c4c5e3e29b6b6b37207bf8f64a5fb0"},
+    {"package": "@zavx0z/dom-devtools", "repository": "renderer", "prefix": "packages/devtools", "commitCount": 4, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "3a0801d4d0fa39f385fca7aceca67fbd0736e591"},
+    {"package": "@zavx0z/dom", "repository": "renderer", "prefix": "packages/dom", "commitCount": 17, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/react", "repository": "renderer", "prefix": "packages/react", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5d5a06c14c2f8216cce6f5930695154f57524ea4"},
+    {"package": "@zavx0z/renderer-webgpu", "repository": "renderer", "prefix": "packages/webgpu", "commitCount": 11, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f"}
+  ],
+  "technicalR5": {
+    "status": "verified",
+    "verifiedSubgates": [
+      "value update",
+      "topology end-to-end",
+      "transform end-to-end",
+      "Link selection timing and retained runtime memory",
+      "bounded dense-visible disposal"
+    ],
+    "evidenceChainTail": "evidence/node-r5-dense-lifecycle-checkpoint.json"
+  },
+  "bundleOwnerDecision": {
+    "contract": "nodes-component-ui-bundle/2",
+    "commit": "176816b1ec89a3485309ff16675cc21c798e06db",
+    "exactNodeEditor": {"bytes": 276138, "gzipBytes": 69416},
+    "historicalImperativeIncomplete": {"bytes": 244300, "gzipBytes": 60660},
+    "delta": {"bytes": 31838, "gzipBytes": 8756},
+    "categories": {
+      "@zavx0z/dom": 72998,
+      "@ui/components": 63748,
+      "@nodes/ui": 62990,
+      "@zavx0z/react": 36258,
+      "@nodes/core": 34097,
+      "@zavx0z/template": 5355,
+      "fixture": 626
+    },
+    "topInputs": [
+      {"name": "React runtime", "bytes": 34183},
+      {"name": "Core NodeTree", "bytes": 17867},
+      {"name": "Parameter projection", "bytes": 16810},
+      {"name": "NodeTree UI", "bytes": 13645},
+      {"name": "Foundation", "bytes": 13565},
+      {"name": "semantic Document", "bytes": 13383}
+    ],
+    "rootVsExactExplainsDelta": false,
+    "storyOrDevRetention": false,
+    "decision": "replacement ceiling required for fully component architecture",
+    "oldCeilingChanged": false,
+    "reason": "meeting the historical ceiling would require removing approximately the complete compiled component runtime, contrary to the accepted fully component request"
+  },
+  "denseMemoryOwnerDecision": {
+    "retainedBaselineGbRange": [5.0232, 5.0233],
+    "approvedCeiling": null,
+    "decision": "owner must decide whether a numeric ceiling or optimization gate is required",
+    "technicalFailure": false
+  },
+  "storybook": {
+    "package": "@nodes/ui",
+    "activeRevision": "6ab79bfbad153af0d00cfc75",
+    "graphDigest": "daa513c0f6b280d4bd3ed1068a6a06ef650a521fb6a77028b9560c495b184517",
+    "ready": true,
+    "presented": true,
+    "diagnostics": [],
+    "consoleErrors": [],
+    "canvas": {"width": 3840, "height": 2176, "hidden": false, "nonBlack": true},
+    "routes": [
+      "ui/node-editor/scene/default",
+      "ui/comparison/reference/default"
+    ],
+    "captures": [
+      {
+        "providedId": "capture_AgE-70cYCbOptgu5Ic_4lEq1",
+        "verifiedId": "capture_rJTzNIDG6gtsdtiAEhza-fhu",
+        "route": "ui/node-editor/scene/default",
+        "area": "canvas",
+        "bytes": 127263,
+        "sha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca"
+      },
+      {
+        "providedId": "capture_55b8Ny-Hg5IcElFYXKQ6uy1Q",
+        "verifiedId": "capture_SniD-y4HXsrp1kLKcm1gW_9K",
+        "route": "ui/comparison/reference/default",
+        "area": "canvas",
+        "bytes": 214418,
+        "sha256": "19b185d7fa92f56721c8090d35b6ab02854b7f23c8f1edb577802d332ec1d9c1"
+      }
+    ],
+    "classification": "mechanical-evidence-only",
+    "visualOwnerVerdict": "pending-zavx0z"
+  },
+  "functionalAcceptance": {
+    "command": "bun run check",
+    "commit": "176816b1ec89a3485309ff16675cc21c798e06db",
+    "pass": 220,
+    "fail": 0,
+    "todo": 1,
+    "todoReason": "existing bundle owner decision",
+    "verification": "post-commit rerun in canonical clean Node checkout"
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "owner-decisions-pending",
+    "R6": "blocked"
+  },
+  "ownerDecisions": [
+    "replacement bundle ceiling for the fully component architecture",
+    "whether dense 5.023GB exact 10k capacity requires a numeric ceiling or optimization gate",
+    "explicit equal-scale visual verdict"
+  ],
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "owner decisions are pending",
+      "Node 176816b1ec89a3485309ff16675cc21c798e06db is ahead 11 and not remote-backed",
+      "Renderer 99ce7846e6086ba4c3adebad23acbb6faafa277f is ahead 12 and not remote-backed",
+      "push/freeze authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; owner decisions and R6 remain open"
+}

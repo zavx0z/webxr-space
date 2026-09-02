@@ -96,7 +96,7 @@
     {
       "id": "nodes.component-production-path",
       "classification": "implemented-source-fact",
-      "status": "r1-r4-verified-r5-partial-r6-blocked",
+      "status": "r1-r4-verified-r5-owner-decisions-r6-blocked",
       "owner": "source:node",
       "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link form one public component path; 9cccb58 requires exact owner Layout geometry.",
       "evidence": [
@@ -110,9 +110,10 @@
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
         "evidence/node-r5-link-closure-checkpoint.json",
-        "evidence/node-r5-dense-lifecycle-checkpoint.json"
+        "evidence/node-r5-dense-lifecycle-checkpoint.json",
+        "evidence/node-r5-owner-decisions-checkpoint.json"
       ],
-      "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
+      "verification": "R1-R4 and technical R5 performance gates are verified; import remains blocked by R5 owner decisions and R6."
     },
     {
       "id": "renderer.features.input-value-fast-path",
@@ -343,7 +344,8 @@
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
         "evidence/node-r5-link-closure-checkpoint.json",
-        "evidence/node-r5-dense-lifecycle-checkpoint.json"
+        "evidence/node-r5-dense-lifecycle-checkpoint.json",
+        "evidence/node-r5-owner-decisions-checkpoint.json"
       ]
     },
     {
@@ -451,16 +453,43 @@
       ]
     },
     {
+      "id": "nodes.r5-technical-performance",
+      "classification": "implemented-performance-evidence",
+      "status": "verified-owner-decisions-pending",
+      "owner": "source:node with Renderer/WebGPU owners",
+      "statement": "Value, topology, transform, Link timing/memory and bounded dense lifecycle technical gates are verified.",
+      "evidence": [
+        "evidence/node-r5-dense-lifecycle-checkpoint.json",
+        "evidence/node-r5-owner-decisions-checkpoint.json"
+      ],
+      "remainingOwnerDecisions": [
+        "replacement fully component bundle ceiling",
+        "dense 10k retained-memory ceiling or optimization policy",
+        "explicit equal-scale visual verdict"
+      ]
+    },
+    {
       "id": "nodes.component-bundle",
-      "classification": "owner-gate",
-      "status": "open-r5",
+      "classification": "owner-decision",
+      "status": "replacement-ceiling-required",
       "owner": "source:node",
-      "statement": "The exact NodeEditor component bundle exceeds the historical incomplete ceiling, which has not been raised.",
+      "statement": "The fully component NodeEditor exceeds the historical imperative/incomplete ceiling; metafile attribution shows the required reduction is comparable to the complete compiled component runtime.",
       "metrics": {
         "exactBytes": 276138,
         "exactGzipBytes": 69416,
-        "ceilingBytes": 245000,
-        "ceilingGzipBytes": 61000
+        "historicalBytes": 244300,
+        "historicalGzipBytes": 60660,
+        "deltaBytes": 31838,
+        "deltaGzipBytes": 8756,
+        "categories": {
+          "@zavx0z/dom": 72998,
+          "@ui/components": 63748,
+          "@nodes/ui": 62990,
+          "@zavx0z/react": 36258,
+          "@nodes/core": 34097,
+          "@zavx0z/template": 5355,
+          "fixture": 626
+        }
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
@@ -468,8 +497,11 @@
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
-        "evidence/node-r5-link-closure-checkpoint.json"
-      ]
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json",
+        "evidence/node-r5-owner-decisions-checkpoint.json"
+      ],
+      "decision": "owner must approve a replacement ceiling for the fully component architecture; the historical ceiling is not silently changed"
     },
     {
       "id": "nodes.storybook-component-cutover",
@@ -478,11 +510,11 @@
       "owner": "source:node and external-storybook",
       "statement": "All 159 leaves resolve through the component path; current revision is ready/presented with console zero, non-black canvas and equal-scale capture.",
       "metrics": {
-        "revision": "92a235eb5bc5ba49c2e9c1de",
+        "revision": "6ab79bfbad153af0d00cfc75",
         "leafRoutes": 159,
         "overviewRoutes": 66,
         "canvasSha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca",
-        "equalScaleSha256": "2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650"
+        "equalScaleCanvasSha256": "19b185d7fa92f56721c8090d35b6ab02854b7f23c8f1edb577802d332ec1d9c1"
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
@@ -493,9 +525,10 @@
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
         "evidence/node-r5-link-closure-checkpoint.json",
-        "evidence/node-r5-dense-lifecycle-checkpoint.json"
+        "evidence/node-r5-dense-lifecycle-checkpoint.json",
+        "evidence/node-r5-owner-decisions-checkpoint.json"
       ],
-      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 4a68482/99ce784 because only backend cleanup, benchmark and documentation changed, not observable DOM or visual output",
+      "verification": "fresh MCP inspection at 6ab79bfbad153af0d00cfc75: exact routes ready/presented, diagnostics/console empty, non-black canvas; captures are mechanical evidence only",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -503,7 +536,7 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 4a68482 is ahead 10 and Renderer 99ce784 is ahead 12; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 176816b is ahead 11 and Renderer 99ce784 is ahead 12; owner decisions remain pending, neither commit is remote-backed, and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",

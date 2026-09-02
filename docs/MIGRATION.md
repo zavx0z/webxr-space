@@ -32,6 +32,8 @@ Node `f4519ea` closes Link timing and retained runtime memory; dense-visible
 disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Bundle
 and final visual verdict remain hard blockers. Dense retained memory awaits an
 approved owner ceiling and is not classified pass/fail.
+At `176816b`, all technical performance gates are verified; R5 now waits on
+explicit bundle-ceiling, dense-memory-policy and visual-verdict decisions.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.
