@@ -25,6 +25,7 @@ export const dataFiles = Object.freeze({
   nodeR5DenseLifecycleCheckpoint: "evidence/node-r5-dense-lifecycle-checkpoint.json",
   nodeR5OwnerDecisionsCheckpoint: "evidence/node-r5-owner-decisions-checkpoint.json",
   nodeR5BlenderCompatibilityCheckpoint: "evidence/node-r5-blender-compatibility-checkpoint.json",
+  nodeR5FinalCandidateCheckpoint: "evidence/node-r5-final-candidate-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -147,6 +148,7 @@ export type FoundationData = Readonly<{
   nodeR5DenseLifecycleCheckpoint: Readonly<Record<string, unknown>>
   nodeR5OwnerDecisionsCheckpoint: Readonly<Record<string, unknown>>
   nodeR5BlenderCompatibilityCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5FinalCandidateCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -198,6 +200,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5BlenderCompatibilityCheckpoint: byPath.get(
       dataFiles.nodeR5BlenderCompatibilityCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5FinalCandidateCheckpoint: byPath.get(
+      dataFiles.nodeR5FinalCandidateCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -661,7 +666,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5LinkClosureCheckpoint.schemaVersion !== 1 ||
     data.nodeR5DenseLifecycleCheckpoint.schemaVersion !== 1 ||
     data.nodeR5OwnerDecisionsCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5BlenderCompatibilityCheckpoint.schemaVersion !== 1) {
+    data.nodeR5BlenderCompatibilityCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -718,7 +724,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const linkClosureCheckpointPath = "evidence/node-r5-link-closure-checkpoint.json"
   const denseLifecycleCheckpointPath = "evidence/node-r5-dense-lifecycle-checkpoint.json"
   const ownerDecisionsCheckpointPath = "evidence/node-r5-owner-decisions-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-blender-compatibility-checkpoint.json"
+  const compatibilityCheckpointPath = "evidence/node-r5-blender-compatibility-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -790,11 +797,21 @@ function validateMigrationCoverage(data: FoundationData): void {
     decisionRepositories.renderer,
     "owner decision Renderer repository",
   )
-  const latestRepositories = objectRecord(
+  const compatibilityRepositories = objectRecord(
     data.nodeR5BlenderCompatibilityCheckpoint.repositories,
-    "latest Blender compatibility checkpoint repositories",
+    "Blender compatibility checkpoint repositories",
+  )
+  const compatibilityNode = objectRecord(compatibilityRepositories.node, "compatibility Node repository")
+  const compatibilityRenderer = objectRecord(
+    compatibilityRepositories.renderer,
+    "compatibility Renderer repository",
+  )
+  const latestRepositories = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.repositories,
+    "latest Node R5 candidate checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
+  const latestUi = objectRecord(latestRepositories.ui, "latest UI repository")
   const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
   if (data.nodeCutover.observedHead !== latestNode.head ||
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
@@ -807,14 +824,16 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.linkClosureCommit !== linkClosureNode.head ||
     data.nodeCutover.denseLifecycleCommit !== denseNode.head ||
     data.nodeCutover.bundleOwnershipCommit !== decisionNode.head ||
-    data.nodeCutover.blenderCompatibilityImplementationCommit !== latestNode.parent ||
-    data.nodeCutover.blenderCompatibilityEvidenceCommit !== latestNode.head ||
+    data.nodeCutover.blenderCompatibilityImplementationCommit !== compatibilityNode.parent ||
+    data.nodeCutover.blenderCompatibilityEvidenceCommit !== compatibilityNode.head ||
+    data.nodeCutover.finalCandidateEvidenceCommit !== latestNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== ownerDecisionsCheckpointPath ||
+    data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== compatibilityCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -829,6 +848,11 @@ function validateMigrationCoverage(data: FoundationData): void {
   if (rendererOwner === undefined || rendererOwner.revision !== latestRenderer.head ||
     rendererOwner.writable !== true) {
     throw new Error("Renderer ownership ledger does not match the latest checkpoint")
+  }
+  const uiGroup = data.ownership.groups.find(({id}) => id === "ui")
+  const uiOwner = uiGroup?.owners.find(({id}) => id === "source:ui")
+  if (uiOwner === undefined || uiOwner.revision !== latestUi.head || uiOwner.writable !== true) {
+    throw new Error("UI ownership ledger does not match the latest checkpoint")
   }
   for (const path of [componentCheckpointPath, r4R5CheckpointPath, closureCheckpointPath]) {
     validateFollowUpSnapshot(data.sourceSnapshot, path, "source snapshot")
@@ -1270,6 +1294,37 @@ function validateMigrationCoverage(data: FoundationData): void {
       throw new Error(`Blender compatibility Renderer history mismatch: ${String(entry.package)}`)
     }
   }
+  const finalNodeHistory = arrayValue(
+    data.nodeR5FinalCandidateCheckpoint.nodePackageHistory,
+    "final candidate Node package history",
+  ).map((value) => objectRecord(value, "final candidate Node history entry"))
+  assertExactStringSet(
+    "final candidate Node history coverage",
+    finalNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of finalNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Final candidate Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const uiInventory = data.inventory.packages.filter(({sourceRepository}) => sourceRepository === "ui")
+  const finalUiHistory = arrayValue(
+    data.nodeR5FinalCandidateCheckpoint.uiPackageHistory,
+    "final candidate UI package history",
+  ).map((value) => objectRecord(value, "final candidate UI history entry"))
+  assertExactStringSet(
+    "final candidate UI history coverage",
+    finalUiHistory.map(({package: packageName}) => packageName),
+    uiInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of finalUiHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+      throw new Error(`Final candidate UI history mismatch: ${String(entry.package)}`)
+    }
+  }
   const bundleDecision = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.bundleOwnerDecision,
     "bundle owner decision",
@@ -1298,8 +1353,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5BlenderCompatibilityCheckpoint.blenderCompatibility,
     "Blender compatibility evidence",
   )
-  if (compatibility.implementationCommit !== latestNode.parent ||
-    compatibility.evidenceCommit !== latestNode.head ||
+  if (compatibility.implementationCommit !== compatibilityNode.parent ||
+    compatibility.evidenceCommit !== compatibilityNode.head ||
     compatibility.platformCodeChanged !== false ||
     compatibility.status !== "node-owned-4.5-compatibility-corrected-5.2-reference-pending") {
     throw new Error("Blender compatibility evidence does not match the latest Node checkpoint")
@@ -1311,7 +1366,7 @@ function validateMigrationCoverage(data: FoundationData): void {
   const exactBundle = objectRecord(latestBundle.exactNodeEditor, "latest exact NodeEditor bundle")
   const bundleDelta = objectRecord(latestBundle.visualSliceDelta, "latest visual bundle delta")
   if (latestBundle.contract !== "nodes-component-ui-bundle/2" ||
-    latestBundle.measurementCommit !== latestNode.head ||
+    latestBundle.measurementCommit !== compatibilityNode.head ||
     latestBundle.baselineCommit !== decisionNode.head ||
     exactBundle.bytes !== 277269 || exactBundle.gzipBytes !== 69694 ||
     bundleDelta.bytes !== 1131 || bundleDelta.gzipBytes !== 278 ||
@@ -1349,7 +1404,7 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5BlenderCompatibilityCheckpoint.functionalAcceptance,
     "latest Node functional acceptance",
   )
-  if (functionalAcceptance.commit !== latestNode.head || functionalAcceptance.pass !== 220 ||
+  if (functionalAcceptance.commit !== compatibilityNode.head || functionalAcceptance.pass !== 220 ||
     functionalAcceptance.fail !== 0 || functionalAcceptance.todo !== 1) {
     throw new Error("Latest Node functional acceptance does not match the checkpoint")
   }
@@ -1361,25 +1416,129 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Technical R5 must remain verified at the Blender compatibility checkpoint")
   }
 
+  const finalProvenance = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.provenance,
+    "final candidate provenance",
+  )
+  if (finalProvenance.previousCheckpoint !== compatibilityCheckpointPath ||
+    finalProvenance.preservesPreviousSnapshots !== true ||
+    finalProvenance.productionRuntimeChanged !== false ||
+    finalProvenance.externalSourceProductionChanged !== true) {
+    throw new Error("Final candidate checkpoint must append to the Blender compatibility checkpoint")
+  }
+  if (latestNode.head !== "996619791e9abfc32e5a5139f9f3b1e4bc20e716" ||
+    latestNode.parent !== "a72e0e685c8d830d591555aecf164a7d2214d22c" ||
+    latestNode.status !== "clean" || latestNode.headContainedByOriginMain !== false ||
+    latestUi.head !== "5c351459555ec0980893a1da1c1ee8e7f99de2ed" ||
+    latestUi.status !== "clean" || latestUi.headContainedByOriginMain !== false ||
+    latestRenderer.head !== "99ce7846e6086ba4c3adebad23acbb6faafa277f" ||
+    latestRenderer.status !== "clean" || latestRenderer.headContainedByOriginMain !== false) {
+    throw new Error("Final candidate repository revisions do not match the observed clean sources")
+  }
+  const finalTechnical = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.technicalR5,
+    "final technical R5",
+  )
+  const finalFunctional = objectRecord(finalTechnical.functional, "final functional acceptance")
+  const finalBundle = objectRecord(finalTechnical.bundle, "final bundle acceptance")
+  const finalExactBundle = objectRecord(finalBundle.exactNodeEditor, "final exact NodeEditor bundle")
+  const finalBundleCeiling = objectRecord(finalBundle.ceiling, "final bundle ceiling")
+  const finalDenseMemory = objectRecord(finalTechnical.denseMemory, "final dense-memory acceptance")
+  const finalOneThousandMemory = objectRecord(finalDenseMemory.oneThousand, "final 1k memory")
+  const finalTenThousandMemory = objectRecord(finalDenseMemory.tenThousand, "final 10k memory")
+  const finalTopology = objectRecord(finalTechnical.topology, "final topology acceptance")
+  const finalOneThousandTopology = objectRecord(finalTopology.oneThousand, "final 1k topology")
+  const finalTenThousandTopology = objectRecord(finalTopology.tenThousand, "final 10k topology")
+  if (finalTechnical.status !== "verified" || finalFunctional.pass !== 220 ||
+    finalFunctional.fail !== 0 || finalFunctional.todo !== 0 ||
+    finalBundle.contract !== "nodes-component-ui-bundle/2" ||
+    finalExactBundle.bytes !== 278365 || finalExactBundle.gzipBytes !== 70095 ||
+    finalExactBundle.sha256 !== "c4263691dd03965bf2b5315f98d4aefc38d6cf90f1c56a2b07c41ca87963559b" ||
+    finalBundleCeiling.bytes !== 285000 || finalBundleCeiling.gzipBytes !== 72000 ||
+    finalBundle.pass !== true || finalOneThousandMemory.ceilingBytes !== 600000000 ||
+    finalTenThousandMemory.ceilingBytes !== 5400000000 || finalDenseMemory.pass !== true ||
+    JSON.stringify(finalOneThousandMemory.retainedBytesRange) !== "[566435021,566625377]" ||
+    JSON.stringify(finalTenThousandMemory.retainedBytesRange) !== "[5171008087,5171371966]" ||
+    finalOneThousandTopology.commitMs !== 12.201 ||
+    finalOneThousandTopology.inputToPresentMs !== 12.498 ||
+    finalTenThousandTopology.commitMs !== 64.596 ||
+    finalTenThousandTopology.inputToPresentMs !== 64.902 ||
+    finalTopology.componentMarkers !== 33 || finalTopology.runtimeMounts !== 33 ||
+    finalTopology.moves !== 0 || finalTopology.disposes !== 0 || finalTopology.pass !== true) {
+    throw new Error("Final technical R5 evidence does not match the executable acceptance")
+  }
+  const finalReference = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.blender52Reference,
+    "final Blender 5.2 reference",
+  )
+  const finalReferencePixels = objectRecord(finalReference.pixelSize, "final reference pixel size")
+  if (finalReference.sha256 !== "6d9dcb739e10bd4a82a1507deadae451fded7fec2ced50c54520d115b6d766f1" ||
+    finalReferencePixels.width !== 192 || finalReferencePixels.height !== 328 ||
+    finalReference.acceptance !== "candidate" || finalReference.historical45Scope !== "changed") {
+    throw new Error("Final Blender 5.2 reference evidence is not exact")
+  }
+  const finalStorybook = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.storybook,
+    "final candidate Storybook evidence",
+  )
+  const finalCaptures = arrayValue(finalStorybook.captures, "final Storybook captures")
+    .map((value) => objectRecord(value, "final Storybook capture"))
+  const finalCanvas = objectRecord(finalStorybook.canvas, "final Storybook canvas")
+  if (finalStorybook.activeRevision !== "1a3ad15e74d2400c585c626a" ||
+    finalStorybook.graphDigest !== "88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613" ||
+    finalStorybook.ready !== true || finalStorybook.presented !== true ||
+    arrayValue(finalStorybook.diagnostics, "final Storybook diagnostics").length !== 0 ||
+    arrayValue(finalStorybook.consoleErrors, "final Storybook console errors").length !== 0 ||
+    finalCanvas.width !== 3840 || finalCanvas.height !== 2176 || finalCanvas.hidden !== false ||
+    finalCanvas.nonBlack !== true ||
+    finalCaptures.length !== 2 ||
+    !finalCaptures.some(({sha256}) =>
+      sha256 === "643cebce34e66814e7ae50d649bf487bbd8705db00ca77d98e37c073d55dda2e") ||
+    !finalCaptures.some(({sha256}) =>
+      sha256 === "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b")) {
+    throw new Error("Final Storybook evidence does not match the exact candidate captures")
+  }
+  const finalVisual = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.visualAcceptance,
+    "final visual acceptance",
+  )
+  const finalPlatformGap = objectRecord(finalVisual.platformGap, "final visual platform gap")
+  if (finalVisual.status !== "candidate-platform-gap" ||
+    finalVisual.ownerVerdict !== "pending-zavx0z" ||
+    finalPlatformGap.expected !== "native select disclosure paints a downward chevron" ||
+    finalPlatformGap.actual !== "Renderer emits U+25BE but the Engine font paints a damaged vertical glyph" ||
+    finalPlatformGap.owner !== "@zavx0z/renderer and @engine/core font coverage" ||
+    finalPlatformGap.consumerWorkaroundAdded !== false) {
+    throw new Error("Final visual acceptance must fail closed on the platform gap and owner verdict")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
   )
-  const gates = objectRecord(
+  const compatibilityGates = objectRecord(
     data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates,
-    "latest effective Node gates",
+    "Blender compatibility Node gates",
+  )
+  const gates = objectRecord(
+    data.nodeR5FinalCandidateCheckpoint.effectiveGates,
+    "final effective Node gates",
   )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
     }
-    if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
+    if (compatibilityGates[id] !== "verified" || gates[id] !== "verified") {
+      throw new Error(`Node ${id} must be verified at every current checkpoint`)
+    }
   }
   if (decisionGates.R5 !== "owner-decisions-pending" ||
-    gates.R5 !== "owner-decisions-pending") {
-    throw new Error("Node R5 must remain owner-decisions-pending")
+    compatibilityGates.R5 !== "owner-decisions-pending" ||
+    gates.R5 !== "platform-gap-and-owner-verdict") {
+    throw new Error("Node R5 must advance only to the recorded platform-gap candidate state")
   }
-  if (decisionGates.R6 !== "blocked" || gates.R6 !== "blocked") {
+  if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
+    gates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }

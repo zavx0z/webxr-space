@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the Blender compatibility checkpoint", async () => {
+  test("preserves prior snapshots and overlays the final Node R5 candidate checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -154,16 +154,23 @@ describe("visual monorepo M0 foundation", () => {
     const linkClosureGates = data.nodeR5LinkClosureCheckpoint.effectiveGates as Record<string, string>
     const denseLifecycleGates = data.nodeR5DenseLifecycleCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionGates = data.nodeR5OwnerDecisionsCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
+    const compatibilityGates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5FinalCandidateCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
-    const latestRepositories = data.nodeR5BlenderCompatibilityCheckpoint.repositories as {
+    const compatibilityRepositories = data.nodeR5BlenderCompatibilityCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
+    const latestRepositories = data.nodeR5FinalCandidateCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+    }
     const nodeGroup = data.ownership.groups.find(({id}) => id === "node")!
+    const uiGroup = data.ownership.groups.find(({id}) => id === "ui")!
     const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")!
 
     expect(historicalNode.head).toBe("209ba2a5e905edeeb6293bdedf47ea483d011c94")
@@ -178,12 +185,22 @@ describe("visual monorepo M0 foundation", () => {
     expect(linkClosureGates.R5).toBe("partial-blocked")
     expect(denseLifecycleGates.R5).toBe("partial-blocked")
     expect(ownerDecisionRepositories.node.head).toBe("176816b1ec89a3485309ff16675cc21c798e06db")
-    expect(latestRepositories.node.head).toBe("c399bf312dcb214aa0ed31d631a086bc7be0569d")
+    expect(compatibilityRepositories.node.head).toBe("c399bf312dcb214aa0ed31d631a086bc7be0569d")
+    expect(latestRepositories.node.head).toBe("996619791e9abfc32e5a5139f9f3b1e4bc20e716")
+    expect(latestRepositories.ui.head).toBe("5c351459555ec0980893a1da1c1ee8e7f99de2ed")
     expect(latestRepositories.renderer.head).toBe("99ce7846e6086ba4c3adebad23acbb6faafa277f")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "c399bf312dcb214aa0ed31d631a086bc7be0569d",
+      "996619791e9abfc32e5a5139f9f3b1e4bc20e716",
     )
     expect(ownerDecisionGates).toEqual({
+      R1: "verified",
+      R2: "verified",
+      R3: "verified",
+      R4: "verified",
+      R5: "owner-decisions-pending",
+      R6: "blocked",
+    })
+    expect(compatibilityGates).toEqual({
       R1: "verified",
       R2: "verified",
       R3: "verified",
@@ -196,9 +213,12 @@ describe("visual monorepo M0 foundation", () => {
       R2: "verified",
       R3: "verified",
       R4: "verified",
-      R5: "owner-decisions-pending",
+      R5: "platform-gap-and-owner-verdict",
       R6: "blocked",
     })
+    expect(uiGroup.owners.find(({id}) => id === "source:ui")?.revision).toBe(
+      "5c351459555ec0980893a1da1c1ee8e7f99de2ed",
+    )
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
       "99ce7846e6086ba4c3adebad23acbb6faafa277f",
     )
@@ -244,6 +264,24 @@ describe("visual monorepo M0 foundation", () => {
     })).toMatchObject({
       normativeTarget: "Blender 5.2 LTS",
       currentReferenceSceneHasNodeGraph: false,
+    })
+    expect((data.nodeR5FinalCandidateCheckpoint.technicalR5 as {
+      status: string
+      bundle: {pass: boolean}
+      denseMemory: {pass: boolean}
+      topology: {pass: boolean; componentMarkers: number}
+    })).toMatchObject({
+      status: "verified",
+      bundle: {pass: true},
+      denseMemory: {pass: true},
+      topology: {pass: true, componentMarkers: 33},
+    })
+    expect((data.nodeR5FinalCandidateCheckpoint.visualAcceptance as {
+      status: string
+      ownerVerdict: string
+    })).toMatchObject({
+      status: "candidate-platform-gap",
+      ownerVerdict: "pending-zavx0z",
     })
   })
 
