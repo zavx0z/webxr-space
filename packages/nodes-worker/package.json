@@ -1,0 +1,38 @@
+{
+  "name": "@nodes/worker",
+  "version": "0.0.1",
+  "description": "Worker transport and exact fixed/adaptive/top-down/Coffman–Graham layout executors. Built for MetaFor.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/node.git",
+    "directory": "packages/worker"
+  },
+  "homepage": "https://zavx0z.github.io/node/worker/",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "metafor": "https://github.com/zavx0z/metafor",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/worker.ts",
+    "./transport": "./transport.ts",
+    "./fixed/client": "./fixed/client.ts",
+    "./fixed/executor": "./fixed/executor.ts",
+    "./adaptive/client": "./adaptive/client.ts",
+    "./adaptive/executor": "./adaptive/executor.ts",
+    "./top-down/client": "./top-down/client.ts",
+    "./top-down/executor": "./top-down/executor.ts",
+    "./coffman-graham/client": "./coffman-graham/client.ts",
+    "./coffman-graham/executor": "./coffman-graham/executor.ts",
+    "./worker-protocol.css": "./worker-protocol.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@nodes/layout": "workspace:*",
+    "@zavx0z/dom": "link:@zavx0z/dom"
+  }
+}
