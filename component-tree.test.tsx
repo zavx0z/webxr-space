@@ -133,10 +133,34 @@ describe("one compiled Node component tree", () => {
     expect(next.portCenters.get("future\u0000out")).toEqual({x: 292, y: 344})
     expect(next.frameRects).toBe(geometry.frameRects)
     expect(next.linkRoutes).toBe(geometry.linkRoutes)
+
+    const nextNodeKeys = [...next.nodeRects.keys()]
+    const nextPortEntries = [...next.portCenters]
+    fixture.editor.addNode({
+      expectedRevision: fixture.tree.revision,
+      node: Object.freeze({
+        id: "future-2",
+        frameId: "outer",
+        sockets: Object.freeze([Object.freeze({id: "out", direction: "output" as const})]),
+      }),
+    })
+    const appendedAgain = fixture.tree.getSnapshot().nodes.at(-1)!
+    const repeated = appendNodeGeometryIndex(next, appendedAgain)
+
+    expect(next.nodeRects.size).toBe(nodeRectCount + 1)
+    expect(next.portCenters.size).toBe(portCount + 1)
+    expect([...next.nodeRects.keys()]).toEqual(nextNodeKeys)
+    expect([...next.portCenters]).toEqual(nextPortEntries)
+    expect(next.nodeRects.has("future-2")).toBeFalse()
+    expect(repeated.nodeRects.size).toBe(nodeRectCount + 2)
+    expect(repeated.portCenters.size).toBe(portCount + 2)
+    expect([...repeated.nodeRects.keys()]).toEqual([...nextNodeKeys, "future-2"])
+    expect(repeated.nodeRects.get("future-2")).toEqual({x: 430, y: 310, width: 220, height: 80})
+    expect(repeated.portCenters.get("future-2\u0000out")).toEqual({x: 650, y: 344})
     fixture.dispose()
   })
 
-  test("mounts one keyed appended Node and uses the full path for bulk topology", () => {
+  test("retains keyed Node identities across repeated appends and every full fallback shape", () => {
     const tree = createNodeTree({nodes: [Object.freeze({id: "node-0"})]})
     const store = createNodeTreeExternalStore(tree)
     const document = createDocument()
@@ -147,8 +171,8 @@ describe("one compiled Node component tree", () => {
     const root = createRoot(host)
     const layout: LayoutResult = Object.freeze({
       direction: "RIGHT",
-      bounds: Object.freeze({x: 0, y: 0, width: 760, height: 100}),
-      nodes: Object.freeze(Array.from({length: 4}, (_, index) => Object.freeze({
+      bounds: Object.freeze({x: 0, y: 0, width: 960, height: 100}),
+      nodes: Object.freeze(Array.from({length: 5}, (_, index) => Object.freeze({
         id: `node-${index}`,
         x: index * 200,
         y: 10,
@@ -178,15 +202,63 @@ describe("one compiled Node component tree", () => {
       record.target === retained || retained.contains(record.target))).toEqual([])
 
     const nodeOne = required(host.querySelector('[data-node-id="node-1"]'))
+    const beforeRepeatedAppend = root.stats()
+    mutations.length = 0
     tree.reconcile({
       expectedRevision: tree.revision,
-      definition: {nodes: [...tree.definition().nodes, {id: "node-2"}, {id: "node-3"}]},
+      definition: {nodes: [...tree.definition().nodes, {id: "node-2"}]},
+    })
+    const afterRepeatedAppend = root.stats()
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "append-node"})
+    expect(host.querySelector('[data-node-id="node-0"]')).toBe(retained)
+    expect(host.querySelector('[data-node-id="node-1"]')).toBe(nodeOne)
+    expect(host.querySelector('[data-node-id="node-2"]')).not.toBeNull()
+    expect(afterRepeatedAppend.moves - beforeRepeatedAppend.moves).toBe(0)
+    expect(afterRepeatedAppend.disposes - beforeRepeatedAppend.disposes).toBe(0)
+    expect(mutations.flatMap(batch => batch.records).filter(record =>
+      record.target === retained || retained.contains(record.target) ||
+      record.target === nodeOne || nodeOne.contains(record.target))).toEqual([])
+
+    const nodeTwo = required(host.querySelector('[data-node-id="node-2"]'))
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [...tree.definition().nodes, {id: "node-3"}, {id: "node-4"}]},
     })
     expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
     expect(host.querySelector('[data-node-id="node-0"]')).toBe(retained)
     expect(host.querySelector('[data-node-id="node-1"]')).toBe(nodeOne)
-    expect(host.querySelector('[data-node-id="node-2"]')).not.toBeNull()
-    expect(host.querySelector('[data-node-id="node-3"]')).not.toBeNull()
+    expect(host.querySelector('[data-node-id="node-2"]')).toBe(nodeTwo)
+
+    const identities = new Map([...host.querySelectorAll("article[data-node-id]")].map(node => [
+      required(node.getAttribute("data-node-id")),
+      node,
+    ]))
+    const byId = new Map(tree.definition().nodes.map(node => [node.id, node]))
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [
+        byId.get("node-4")!,
+        byId.get("node-2")!,
+        Object.freeze({...byId.get("node-0")!, metadata: Object.freeze({label: "Updated Node"})}),
+        byId.get("node-3")!,
+        byId.get("node-1")!,
+      ]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+    for (const [id, node] of identities) {
+      expect(host.querySelector(`[data-node-id="${id}"]`)).toBe(node)
+    }
+    expect(retained.getAttribute("aria-label")).toBe("Updated Node")
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: tree.definition().nodes.filter(node => node.id !== "node-3")},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+    expect(host.querySelector('[data-node-id="node-3"]')).toBeNull()
+    for (const [id, node] of identities) {
+      if (id !== "node-3") expect(host.querySelector(`[data-node-id="${id}"]`)).toBe(node)
+    }
 
     root.unmount()
     tree.dispose()
@@ -509,11 +581,13 @@ const fixtureLayout: LayoutResult = Object.freeze({
     Object.freeze({id: "source", x: 72, y: 84, width: 220, height: 100}),
     Object.freeze({id: "target", x: 430, y: 190, width: 220, height: 100}),
     Object.freeze({id: "future", x: 72, y: 310, width: 220, height: 80}),
+    Object.freeze({id: "future-2", x: 430, y: 310, width: 220, height: 80}),
   ]),
   ports: Object.freeze([
     Object.freeze({id: "source/value-output", x: 292, y: 126, side: "EAST"}),
     Object.freeze({id: "target/result-input", x: 430, y: 232, side: "WEST"}),
     Object.freeze({id: "future/out", x: 292, y: 344, side: "EAST"}),
+    Object.freeze({id: "future-2/out", x: 650, y: 344, side: "EAST"}),
   ]),
   edges: Object.freeze([Object.freeze({
     id: "value-link",

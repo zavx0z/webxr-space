@@ -213,11 +213,11 @@ workaround для экспериментального Renderer fast path.
 - 10k semantic/culling на `5d5a06c`: `10000` materialized, `12` visible;
   value p95/p99 `1.752/1.789ms`, transform `12.738/18.687ms`;
   semantic retained heap about `2.613GB` (`251194 B/Node`);
-- focused exact append на clean `a84672d`: 1k commit `35.527ms` =
-  Core/editor `13.594ms` + projection/component `21.933ms`, Renderer
-  `389.023ms`, backend `6.921ms`, input-to-present `431.471ms`; 10k commit
-  `134.294ms` = `63.684ms` + `70.610ms`, Renderer `7182.263ms`, backend
-  `10.228ms`, input-to-present `7326.785ms`;
+- focused exact append на clean `a84672d`: 1k commit `11.233ms` =
+  Core/editor `3.244ms` + projection/component `7.989ms`, Renderer
+  `343.545ms`, backend `7.204ms`, input-to-present `361.981ms`; 10k commit
+  `76.404ms` = `28.641ms` + `47.763ms`, Renderer `3744.422ms`, backend
+  `6.725ms`, input-to-present `3827.550ms`;
 - оба focused run публикуют `append-node`, одну notification, `32` mounts /
   `35` renders / zero moves/disposes, exact two-record mutation batch и
   сохраняют identities всех прежних Node и Link;
@@ -252,12 +252,14 @@ transform p99 наблюдался `9.935–16.858ms`. Post-GC interaction delta
 отсутствие legacy/story/dev retention.
 
 После отделения authored concrete Parameter modules текущий comparable exact
-full NodeEditor build: `270017 raw / 67947 gzip`; root: `269946 / 68261`;
-NodeTree: `261878 / 65480`; complete aggregate Parameter interaction graph:
-`203324 / 49881`; Link: `122028 / 33006`. Root-vs-exact не объясняет дельту,
+full NodeEditor build: `276138 raw / 69416 gzip`; root: `276067 / 69737`;
+NodeTree: `268001 / 66946`; complete aggregate Parameter interaction graph:
+`203324 / 49878`; Link: `122028 / 33006`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+10.5% raw / +12.0%
-gzip`; новый ceiling требует owner decision.
+Exact full path больше historical incomplete evidence на `+13.032% raw / +14.435% gzip`;
+новый ceiling требует owner decision. Текущий R5 slice против
+точного `0b949e7` baseline добавляет `12 raw / 0 gzip` в exact NodeEditor;
+private profiler code в production graph отсутствует.
 
 ## Storybook and visual acceptance
 
@@ -289,10 +291,10 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 2. Transform p95 green, но p99 остаётся `18.843ms` (1k на `1cd3243`) и
    `18.687ms` (10k на `5d5a06c`) против `16.667ms`.
 3. Additive topology остаётся красной на clean `a84672d`: 1k/10k
-   input-to-present `431.471/7326.785ms`. Node-owned commit сокращён до
-   `35.527/134.294ms`, но 10k уже превышает общий `100ms` budget до flush;
-   CPU Renderer full projection занимает `389.023/7182.263ms`. Exact mutation
-   ledger: diagnostic `data-node-count` attribute плюс hidden Node child-list.
+   input-to-present `361.981/3827.550ms`. Node-owned commit теперь green
+   `11.233/76.404ms` против `50/100ms`; CPU Renderer full projection остаётся
+   red `343.545/3744.422ms`. Exact mutation ledger: diagnostic
+   `data-node-count` attribute плюс hidden Node child-list.
 4. Dense Link selection p99 повторяется `40.271–42.786ms` при зелёном p95;
    retained invariants и one draw green. Предполагаемый owner: Renderer
    display-order tail allocation.
