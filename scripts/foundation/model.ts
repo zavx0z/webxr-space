@@ -1652,9 +1652,11 @@ function validateMigrationCoverage(data: FoundationData): void {
     arrayValue(closureStorybook.diagnostics, "visual closure diagnostics").length !== 0 ||
     arrayValue(closureStorybook.consoleErrors, "visual closure console errors").length !== 0 ||
     closureCanvas.width !== 3840 || closureCanvas.height !== 2176 ||
-    closureCanvas.hidden !== false || closureCanvas.nonBlack !== true || closureCaptures.length !== 2 ||
+    closureCanvas.hidden !== false || closureCanvas.nonBlack !== true || closureCaptures.length !== 3 ||
     !closureCaptures.some(({sha256}) =>
       sha256 === "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d") ||
+    !closureCaptures.some(({sha256}) =>
+      sha256 === "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef") ||
     !closureCaptures.some(({sha256}) =>
       sha256 === "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b")) {
     throw new Error("Visual closure Storybook evidence does not match the SVG-restored captures")
@@ -1667,7 +1669,10 @@ function validateMigrationCoverage(data: FoundationData): void {
   if (closureVisual.status !== "candidate-owner-verdict" ||
     closureVisual.ownerVerdict !== "pending-zavx0z" ||
     restoredIndicator.owner !== "@ui/components SelectField" ||
-    restoredIndicator.source !== "chevronDownIcon" || restoredIndicator.platformGap !== false) {
+    restoredIndicator.source !== "chevronDownIcon" ||
+    restoredIndicator.closeComparisonCaptureSha256 !==
+      "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef" ||
+    restoredIndicator.platformGap !== false) {
     throw new Error("Visual closure must leave only the explicit owner verdict pending")
   }
 

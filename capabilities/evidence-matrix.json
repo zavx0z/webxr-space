@@ -524,7 +524,8 @@
         "leafRoutes": 159,
         "overviewRoutes": 66,
         "canvasSha256": "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b",
-        "comparisonCanvasSha256": "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d"
+        "comparisonCanvasSha256": "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d",
+        "closeComparisonCanvasSha256": "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef"
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",

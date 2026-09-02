@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "observedAt": "2026-09-02T12:04:30+03:00",
+  "observedAt": "2026-09-02T12:15:52+03:00",
   "provenance": {
     "previousCheckpoint": "evidence/node-r5-final-candidate-checkpoint.json",
     "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
@@ -151,6 +151,7 @@
     "canvas": {"width": 3840, "height": 2176, "hidden": false, "nonBlack": true},
     "captures": [
       {"id": "capture_VJMichQvkHMqwfs0GnWDWdGF", "route": "ui/comparison/reference/default", "area": "preview", "width": 2268, "height": 2012, "bytes": 133212, "sha256": "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d"},
+      {"id": "capture_IgaiCsdWLZv4hmnss1WqLkXe", "route": "ui/comparison/reference/default", "area": "node", "nodeId": "node:260", "width": 2268, "height": 704, "bytes": 121051, "sha256": "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef"},
       {"id": "capture_ejdSxqAEvQ3PmESpBMnnqvXd", "route": "ui/node-editor/scene/default", "area": "preview", "width": 2268, "height": 2012, "bytes": 60645, "sha256": "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b"}
     ]
   },
@@ -167,6 +168,7 @@
       "source": "chevronDownIcon",
       "presentation": "non-interactive image over the native select disclosure area",
       "nativeSelectRetains": ["picker", "value", "focus", "change", "readOnly"],
+      "closeComparisonCaptureSha256": "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef",
       "platformGap": false
     },
     "ownerVerdict": "pending-zavx0z"
