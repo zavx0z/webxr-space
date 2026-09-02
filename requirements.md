@@ -211,10 +211,11 @@ counts.
 Focused `--topology-only` evidence сохраняет тот же real 1k/10k mount и
 initial Renderer/backend frame, но не выдаёт current heap за retained-memory
 acceptance. Additive result обязан содержать Core-owned `append-node` delta,
-одну topology notification, ровно `32` mounts нового benchmark Node subtree,
-zero moves/disposes, retained identities всех прежних Node/Link и exact
-Document mutation ledger. Update/remove/bulk topology обязаны публиковать
-`full` и проходить общий точный projection path.
+одну topology notification, runtime mount count, равный exact `component:*`
+markers внутри единственного added Node subtree, zero moves/disposes, retained
+identities всех прежних Node/Link и exact Document mutation ledger.
+Update/remove/bulk topology обязаны публиковать `full` и проходить общий точный
+projection path.
 
 Current append ledger состоит из diagnostic `data-node-count` attribute update
 на NodeTree root и одной child-list вставки в Node layer: один hidden semantic
@@ -254,9 +255,15 @@ Current append ledger состоит из diagnostic `data-node-count` attribute
   input-to-present p95 `7.369–9.684ms`, p99 `9.251–11.396ms`, max
   `12.550–17.059ms`; correctness, identity, zero entity mutation/upload и
   один shared transform сохраняются, а общий benchmark проходит;
-- оба focused run публикуют `append-node`, одну notification, `32` mounts /
-  `35` renders / zero moves/disposes, exact two-record mutation batch и
-  сохраняют identities всех прежних Node и Link;
+- historical focused runs публиковали `append-node`, одну notification,
+  `32` mounts / `35` renders / zero moves/disposes. Final 5.2 subtree содержит
+  `33` component mounts; benchmark теперь сверяет runtime mount count с exact
+  `component:*` markers внутри единственного added Node subtree вместо stale
+  magic number. Exact two-record mutation batch и identities всех прежних
+  Node/Link сохраняются;
+- final 5.2 focused 1k/10k append даёт `12.201/64.596ms` commit и
+  `12.498/64.902ms` input-to-present, проходит `50/100ms`, сохраняет одну
+  notification, exact `33` markers/mounts, `36` renders и zero moves/disposes;
 - final 5.2 1k dense-visible cold: `41055` boxes, `13511` display items,
   `5000` Rects, `999` Paths; mount/Renderer/backend
   `2.205–2.473s/3.476–3.974s/.736–.979s`, retained baseline
