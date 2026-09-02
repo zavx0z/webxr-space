@@ -108,6 +108,76 @@ Engine.
 Визуальные `NodeTree`, `NodeEditor`, Frame, Node, Parameter, Socket и Link.
 Пакет использует `nodetree`, `layout` и универсальные компоненты `ui`.
 
+## Внутреннее устройство пакетов
+
+Публичный модуль содержит настоящую реализацию владельца, а не переэкспорт из
+скрытого файла.
+
+`src/` используется только для внутренней механики:
+
+- код группируется по назначению: `src/routing`, `src/measurement`,
+  `src/selection`;
+- `src/shared` содержит только код, который используют минимум два независимых
+  владельца;
+- каталоги `misc`, `common`, `utils` и общий `src/index.ts` не создаются;
+- потребители не импортируют `src/**`.
+
+Тесты, примеры и истории принадлежат тому же владельцу, что и основной модуль.
+
+### `ui`
+
+```text
+ui/
+├── buttons/
+├── fields/
+├── menus/
+├── surfaces/
+├── views/
+├── feedback/
+├── widgets/
+├── themes/
+├── src/
+└── .storybook/
+```
+
+- `buttons` — действия и переключатели;
+- `fields` — редактирование одного значения и необязательная подпись;
+- `menus` — открытие, выбор и закрытие меню;
+- `surfaces` — Pane, Panel, Window и Frame;
+- `views` — List, Table, CodeViewer и Timeline;
+- `feedback` — Notification и StatusBar;
+- `widgets` — самостоятельные сложные механизмы вроде Inspector.
+
+`FieldGroup` остаётся в `fields`. `OptionGroupField` относится к `buttons` и
+становится `ToggleButtonGroup`. `widgets` не используется как склад компонентов
+с неясным назначением.
+
+### `nodes`
+
+```text
+nodes/
+├── node-tree.tsx
+├── node-editor.tsx
+├── frame.tsx
+├── node.tsx
+├── parameter.tsx
+├── socket.tsx
+├── link.tsx
+├── src/
+│   ├── projection/
+│   ├── routing/
+│   ├── measurement/
+│   ├── viewport/
+│   └── presentation/
+└── .storybook/
+```
+
+Каждый публичный TSX является настоящим владельцем. Скрытые `NodeCard`,
+`ParameterRow` и `SocketPort` не подменяют публичные Node, Parameter и Socket.
+
+Для остальных пакетов сначала сохраняется действующая структура исходного
+владельца. Их каталоги меняются только после отдельного разбора обязанностей.
+
 ## Что пока не переносим
 
 `@nodes/editor` пока остаётся в исходном репозитории. Реального
