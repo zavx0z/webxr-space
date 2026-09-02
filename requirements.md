@@ -236,10 +236,15 @@ Current append ledger состоит из diagnostic `data-node-count` attribute
 - 1k dense-visible cold: `41052` boxes, `13511` display items,
   `5000` Rects, `999` Paths; mount/Renderer/backend
   `2.381s/3.445s/.894s` with exact LayoutResult;
-- 10k dense-visible cold: `410052` boxes, `135011` display items,
-  `50000` Rects, `9999` Paths; mount/Renderer/backend
-  `23.311s/45.593s/17.666s`; retained baseline about `4.993GB`, all with
-  exact LayoutResult.
+- 10k dense-visible cold: `410055` boxes, `135011` display items,
+  `50000` Rects, `9999` Paths; two exact LayoutResult lifecycle runs on
+  Renderer `a5c9f3e/99ce784` report mount `22.558–36.553s`, Renderer
+  `39.869–71.399s`, backend `20.964–26.620s` and retained baseline
+  `5.0232–5.0233GB`;
+- 10k disposal is bounded at `3.576–7.209s`: backend `178.6–328.6ms`,
+  component unmount `3.342–6.790s`, tree `54.3–89.1ms`, all `340003`
+  mounted component instances disposed. Backend `a5c9f3e` removes the former
+  quadratic per-entry Engine root scan; capability evidence is `99ce784`.
 
 Topology timings проходят существующий budget и не заменяют остальные красные
 R5 gates. Exact Node-owned reproduction: `bench/node-system.ts`.
@@ -311,9 +316,11 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 4. Dense Link selection и retained interaction memory закрыты: три 10k process
    дали selection p99 `7.111–8.146ms` и `652.7–659.6 B/Link`, сохранив one draw,
    exact uploads, geometry и semantic identities.
-5. 10k dense-visible component unmount не завершился за несколько минут active
-   CPU и был остановлен после evidence. Предполагаемый owner:
-   `@zavx0z/react`/Template component-range disposal complexity.
+5. Dense-visible lifecycle больше не unbounded: два 10k run завершают все
+   `340003` component disposals за `3.576–7.209s`; backend cleanup занимает
+   `178.6–328.6ms`. Retained baseline `~5.023GB` остаётся capacity evidence без
+   утверждённого memory ceiling и требует отдельного owner policy, а не
+   выдуманного pass/fail threshold.
 6. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first
