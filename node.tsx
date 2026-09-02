@@ -54,6 +54,7 @@ export type NodeProps = Readonly<{
   sockets?: readonly CoreSocket[] | undefined
   parameterStore?: ((parameterId: string) => ExternalStore<ParameterSnapshot>) | undefined
   connectedSocketKeys?: ReadonlySet<string> | undefined
+  resolvedSocketSides?: ReadonlyMap<string, "left" | "right"> | undefined
   children?: JsxSourceElement | null | undefined
   style?: CssStyle | undefined
   onActivate?: ((event: Event) => void) | undefined
@@ -73,8 +74,8 @@ export function Node(props: NodeProps) {
   const sockets = props.sockets ?? []
   const parameterIds = new Set(parameters.map(parameter => parameter.id))
   const loose = sockets.filter(socket => socket.parameterId === undefined || !parameterIds.has(socket.parameterId))
-  const right = loose.filter(socket => socketSide(socket) === "right")
-  const left = loose.filter(socket => socketSide(socket) === "left")
+  const right = loose.filter(socket => resolvedSocketSide(props, socket) === "right")
+  const left = loose.filter(socket => resolvedSocketSide(props, socket) === "left")
   const image = props.preview?.image
   const previewVisible = props.preview?.enabled === true && image !== undefined &&
     image.src.length > 0 && image.width > 0 && image.height > 0
@@ -313,6 +314,7 @@ export function Node(props: NodeProps) {
         sockets={sockets.filter(socket => socket.parameterId === parameter.id)}
         store={props.parameterStore?.(parameter.id)}
         connectedSocketKeys={props.connectedSocketKeys}
+        resolvedSocketSides={props.resolvedSocketSides}
         onInput={props.onParameterInput}
         onChange={props.onParameterChange}
         onSocketActivate={props.onSocketActivate}
@@ -355,6 +357,10 @@ function NodePreviewImageView(props: Readonly<{image: NodePreviewImage; nodeLabe
 
 function socketSide(socket: CoreSocket): "left" | "right" {
   return socket.side ?? (socket.direction === "output" ? "right" : "left")
+}
+
+function resolvedSocketSide(props: NodeProps, socket: CoreSocket): "left" | "right" {
+  return props.resolvedSocketSides?.get(`${props.id}\u0000${socket.id}`) ?? socketSide(socket)
 }
 
 function socketKind(value: string): SocketKind {

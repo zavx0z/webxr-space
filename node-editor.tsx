@@ -25,7 +25,7 @@ import type {ParameterInput} from "./parameter.tsx"
 
 export type NodeEditorProps = Readonly<{
   store: NodeTreeStore
-  layout?: LayoutResult | undefined
+  layout: LayoutResult
   label?: string | undefined
   title?: string | undefined
   width?: number | undefined
@@ -339,7 +339,7 @@ function GridPoint(props: Readonly<{point: GridPointValue}>) {
 
 export type NodeEditorComponent = FunctionComponent<NodeEditorProps>
 
-function geometry(store: NodeTreeStore, layout?: LayoutResult) {
+function geometry(store: NodeTreeStore, layout: LayoutResult) {
   const snapshot = store.getTopologySnapshot()
   return createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, layout)
 }

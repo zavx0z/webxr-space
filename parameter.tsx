@@ -99,6 +99,7 @@ export type ParameterProps = Readonly<{
   sockets: readonly CoreSocket[]
   store?: ExternalStore<ParameterSnapshot> | undefined
   connectedSocketKeys?: ReadonlySet<string> | undefined
+  resolvedSocketSides?: ReadonlyMap<string, "left" | "right"> | undefined
   style?: CssStyle | undefined
   onInput?: ((change: ParameterInput, event: Event) => void) | undefined
   onChange?: ((change: ParameterInput, event: Event) => void) | undefined
@@ -136,7 +137,12 @@ export function Parameter(props: ParameterProps) {
   const disabled = metadataBoolean(presentation, "disabled", false)
   const readOnly = metadataBoolean(presentation, "readOnly", false)
   const title = metadataString(presentation, "description", "") || undefined
-  const sockets = props.sockets.map(socket => parameterSocket(socket, props.nodeId, props.connectedSocketKeys))
+  const sockets = props.sockets.map(socket => parameterSocket(
+    socket,
+    props.nodeId,
+    props.connectedSocketKeys,
+    props.resolvedSocketSides,
+  ))
   const connected = sockets.some(socket => socket.connected === true)
   const left = sockets.filter(socket => socket.side === "left")
   const right = sockets.filter(socket => socket.side === "right")
@@ -557,13 +563,14 @@ function parameterSocket(
   socket: CoreSocket,
   nodeId: string,
   connectedSocketKeys?: ReadonlySet<string>,
+  resolvedSocketSides?: ReadonlyMap<string, "left" | "right">,
 ): ParameterEndpoint {
   const kind = socketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))
   return Object.freeze({
     id: socket.id,
     kind,
     direction: socket.direction,
-    side: socketSide(socket),
+    side: resolvedSocketSides?.get(socketKey(nodeId, socket.id)) ?? socketSide(socket),
     label: metadataString(socket.metadata, "label", socket.id),
     title: metadataString(socket.metadata, "description", "") || undefined,
     shape: socketShape(metadataString(socket.metadata, "shape", "")),

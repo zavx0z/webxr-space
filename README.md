@@ -16,6 +16,7 @@ import {createRoot} from "@zavx0z/react"
 const editor = new NodeTreeEditor(tree)
 createRoot(container).render(<NodeEditor
   store={createNodeTreeExternalStore(tree)}
+  layout={layoutResult}
   onParameterInput={({nodeId, parameterId, value}) => editor.setParameterValue({
     expectedRevision: tree.revision,
     nodeId,
@@ -43,6 +44,12 @@ private controls, public CSS strings or one-root-per-Field mounts. Integer uses
 `NumberField` with Core validation, rotation uses `VectorField`, boolean and
 enum presentation follow the selected interaction, and unknown/read-only values
 use Node-owned output composition.
+
+Aggregate `NodeTree`/`NodeEditor` never invent geometry: a completed
+`@nodes/layout` `LayoutResult` is required, including exact Node/Frame/Port/Edge
+coverage; Socket ports use exported `nodeSocketLayoutPortId(nodeId, socketId)`.
+Missing or contradictory geometry fails before rendering. Direct
+authored Frame/Node/Link Components keep explicit `rect`/`route` props.
 
 Runtime connection to CPU/WebGPU remains application-owned through the one
 Document/Renderer/Engine Experience. `@nodes/ui` uses `@zavx0z/react` plus the

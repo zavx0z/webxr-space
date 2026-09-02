@@ -37,6 +37,7 @@ export type {
   NodeTreeTransform,
   NodeTreeViewport,
 } from "./geometry.ts"
+export {nodeSocketLayoutPortId} from "./geometry.ts"
 
 export type NodeTreeStore = NodeTreeExternalStore<NodeTreeSnapshot, ParameterSnapshot>
 
@@ -47,7 +48,7 @@ export type NodeTreeSelection =
 export type NodeTreeProps = Readonly<{
   store: NodeTreeStore
   label?: string | undefined
-  layout?: LayoutResult | undefined
+  layout: LayoutResult
   viewport?: NodeTreeViewport | undefined
   materializeCulled?: boolean | undefined
   transform?: NodeTreeTransform | undefined
@@ -281,6 +282,7 @@ function NodeProjection(projection: NodeProjectionProps) {
     sockets={node.sockets}
     parameterStore={actions.parameterStore(node.id)}
     connectedSocketKeys={view.connectedSocketKeys}
+    resolvedSocketSides={view.geometry.portSides}
     onActivate={actions.selectNode(node.id)}
     onCollapseChange={actions.collapseNode(node.id)}
     onPreviewChange={actions.previewNode(node.id)}
@@ -404,7 +406,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
 
 function createNodeTreeViewStore(
   store: NodeTreeStore,
-  layout: LayoutResult | undefined,
+  layout: LayoutResult,
   viewport: NodeTreeViewport | undefined,
   materializeCulled: boolean,
 ): Readonly<{

@@ -8,6 +8,7 @@ import {
   type Socket as CoreSocket,
 } from "@nodes/core"
 import {NodeTreeEditor} from "@nodes/editor"
+import type {LayoutResult} from "@nodes/layout/types"
 import {Link, type LinkProps} from "@nodes/ui/link"
 import {Node} from "@nodes/ui/node"
 import {NodeEditor} from "@nodes/ui/node-editor"
@@ -54,6 +55,7 @@ type StoryParameter = CoreParameter<NodeJsonValue, NodeJsonValue>
 type EditorStoryState = Readonly<{
   kind: "editor"
   tree: ReturnType<typeof createStoryTree>
+  layout: LayoutResult
   editor: NodeTreeEditor
   store: ReturnType<typeof createNodeTreeExternalStore<StoryParameter, NodeJsonValue, NodeJsonValue, NodeJsonValue, NodeJsonValue>>
 }>
@@ -171,6 +173,7 @@ function EditorStory(props: Readonly<{route: string; state: EditorStoryState}>) 
   })
   return <NodeEditor
     store={props.state.store}
+    layout={props.state.layout}
     title="Редактор нод"
     width={760}
     height={480}
@@ -432,6 +435,7 @@ function createStoryState(route: string): StoryState {
     return Object.freeze({
       kind: "editor",
       tree,
+      layout: createStoryLayout(),
       editor: new NodeTreeEditor(tree),
       store: createNodeTreeExternalStore(tree),
     })
@@ -538,6 +542,41 @@ function createStoryTree(route: string) {
           ]),
         }),
       }),
+    })]),
+  })
+}
+
+function createStoryLayout(): LayoutResult {
+  const point = (x: number, y: number) => Object.freeze({x, y})
+  const port = (id: string, x: number, y: number, side: "WEST" | "EAST") => Object.freeze({id, x, y, side})
+  return Object.freeze({
+    direction: "RIGHT",
+    bounds: Object.freeze({x: 18, y: 34, width: 716, height: 400}),
+    nodes: Object.freeze([
+      Object.freeze({id: "shader-frame", x: 18, y: 34, width: 716, height: 400}),
+      Object.freeze({id: "texture-frame", x: 42, y: 58, width: 330, height: 338}),
+      Object.freeze({id: "noise", x: 70, y: 82, width: 268, height: 314}),
+      Object.freeze({id: "output", x: 452, y: 138, width: 226, height: 188}),
+    ]),
+    ports: Object.freeze([
+      port("noise/noise-color-output", 338, 124, "EAST"),
+      port("noise/noise-factor-output", 338, 147, "EAST"),
+      port("noise/noise-color-input", 70, 170, "WEST"),
+      port("noise/noise-scale-input", 70, 193, "WEST"),
+      port("noise/noise-scale-output", 338, 193, "EAST"),
+      port("noise/noise-detail-input", 70, 216, "WEST"),
+      port("noise/noise-vector-input", 70, 239, "WEST"),
+      port("output/output-surface-input", 452, 180, "WEST"),
+      port("output/output-displacement-input", 452, 203, "WEST"),
+      port("output/output-color-input", 452, 226, "WEST"),
+    ]),
+    edges: Object.freeze([Object.freeze({
+      id: "noise-output",
+      sections: Object.freeze([Object.freeze({
+        startPoint: point(338, 124),
+        bendPoints: Object.freeze([point(395, 124), point(395, 226)]),
+        endPoint: point(452, 226),
+      })] as const),
     })]),
   })
 }

@@ -9,8 +9,6 @@ import type {
 import type {LayoutResult} from "@nodes/layout/types"
 import {
   projectLinkRoute,
-  type LinkPathBounds,
-  type LinkPathPoint,
   type LinkRoute,
 } from "./src/link-path.ts"
 
@@ -37,140 +35,135 @@ export const DEFAULT_NODE_TREE_TRANSFORM: NodeTreeTransform = Object.freeze({
   scale: 1,
 })
 
-export const NODE_HEADER_HEIGHT = 24
-export const NODE_BODY_INSET = 8
-export const NODE_ROW_HEIGHT = 20
-export const NODE_ROW_GAP = 3
-export const NODE_DEFAULT_WIDTH = 140
-export const NODE_DEFAULT_HEIGHT = 52
-
 type UiNodeSnapshot = NodeTreeNodeSnapshot<ParameterReference, NodeJsonValue, NodeJsonValue>
-type UiSocket = CoreSocket<NodeJsonValue>
 type UiLink = CoreLink<NodeJsonValue>
 
 export type NodeGeometryIndex = Readonly<{
   nodeRects: ReadonlyMap<string, NodeRect>
   frameRects: ReadonlyMap<string, NodeRect>
   portCenters: ReadonlyMap<string, NodePoint>
+  portSides: ReadonlyMap<string, "left" | "right">
   linkRoutes: ReadonlyMap<string, LinkRoute>
-  bounds: NodeRect | null
+  bounds: NodeRect
 }>
 
+/** Canonical Layout port id for one Core Socket endpoint. */
+export function nodeSocketLayoutPortId(nodeId: string, socketId: string): string {
+  requireId(nodeId, "Layout port Node")
+  requireId(socketId, "Layout port Socket")
+  return `${nodeId}/${socketId}`
+}
+
+/**
+ * Consumes completed owner geometry without placing, measuring or routing.
+ * Missing, duplicate or contradictory geometry fails before component materialization.
+ */
 export function createNodeGeometryIndex(
   nodes: readonly UiNodeSnapshot[],
   frames: readonly Readonly<{id: string; metadata?: NodeJsonValue}>[],
   links: readonly UiLink[],
-  layout?: LayoutResult | undefined,
+  layout: LayoutResult,
 ): NodeGeometryIndex {
-  const layoutNodes = new Map(layout?.nodes.map(node => [node.id, node]) ?? [])
-  const frameIds = new Set(frames.map(frame => frame.id))
-  const nodeRects = new Map<string, NodeRect>()
+  requireLayoutResult(layout)
+  const bounds = exactRect(layout.bounds, "Layout bounds")
+  const expectedEntityIds = new Set([
+    ...frames.map(frame => frame.id),
+    ...nodes.map(node => node.id),
+  ])
+  const layoutNodeById = uniqueMap(layout.nodes, "Layout Node")
+  requireIds(expectedEntityIds, layoutNodeById, "Layout Node")
+
   const frameRects = new Map<string, NodeRect>()
-  for (let index = 0; index < frames.length; index += 1) {
-    const frame = frames[index]!
-    const geometry = layoutNodes.get(frame.id)
-    frameRects.set(frame.id, geometry === undefined
-      ? metadataRect(frame.metadata, 18 + index * 24, 18 + index * 24, 640, 420)
-      : rect(geometry.x, geometry.y, geometry.width, geometry.height, `Frame ${frame.id}`))
+  for (const frame of frames) {
+    const geometry = layoutNodeById.get(frame.id)!
+    const frameRect = exactRect(geometry, `Frame ${frame.id}`)
+    requireContainedRect(bounds, frameRect, `Frame ${frame.id}`)
+    frameRects.set(frame.id, frameRect)
   }
-  for (let index = 0; index < nodes.length; index += 1) {
-    const node = nodes[index]!
-    const geometry = layoutNodes.get(node.id)
-    nodeRects.set(node.id, geometry === undefined
-      ? nodeMetadataRect(node, index)
-      : rect(geometry.x, geometry.y, geometry.width, geometry.height, `Node ${node.id}`))
-  }
-
-  const layoutPorts = new Map(layout?.ports.map(port => [port.id, Object.freeze({x: port.x, y: port.y})]) ?? [])
-  const portCenters = new Map<string, NodePoint>()
+  const nodeRects = new Map<string, NodeRect>()
   for (const node of nodes) {
-    const nodeRect = nodeRects.get(node.id)!
-    const parameterIndex = new Map(node.parameters.map((parameter, index) => [parameter.id, index]))
-    const looseRight = node.sockets.filter(socket => socket.parameterId === undefined && socketSide(socket) === "right")
-    const looseLeft = node.sockets.filter(socket => socket.parameterId === undefined && socketSide(socket) === "left")
-    for (const socket of node.sockets) {
-      const layoutCenter = layoutPortCenter(layoutPorts, node.id, socket.id)
-      const center = layoutCenter ?? fallbackSocketCenter(
-        nodeRect,
-        socket,
-        parameterIndex,
-        looseRight,
-        looseLeft,
-        node.parameters.length,
-        metadataBoolean(node.metadata, "collapsed", false),
-      )
-      portCenters.set(socketKey(node.id, socket.id), center)
-    }
+    const geometry = layoutNodeById.get(node.id)!
+    const nodeRect = exactRect(geometry, `Node ${node.id}`)
+    requireContainedRect(bounds, nodeRect, `Node ${node.id}`)
+    nodeRects.set(node.id, nodeRect)
   }
 
-  const layoutEdges = new Map(layout?.edges.map(edge => [edge.id, edge]) ?? [])
+  const expectedPortIds = new Set<string>()
+  const socketByPortId = new Map<string, Readonly<{nodeId: string; socket: CoreSocket}>>()
+  for (const node of nodes) for (const socket of node.sockets) {
+    const portId = nodeSocketLayoutPortId(node.id, socket.id)
+    if (expectedPortIds.has(portId)) throw new Error(`Duplicate Core Socket endpoint: ${portId}`)
+    expectedPortIds.add(portId)
+    socketByPortId.set(portId, Object.freeze({nodeId: node.id, socket}))
+  }
+  const layoutPortById = uniqueMap(layout.ports, "Layout Port")
+  requireIds(expectedPortIds, layoutPortById, "Layout Port")
+  const portCenters = new Map<string, NodePoint>()
+  const portSides = new Map<string, "left" | "right">()
+  for (const [portId, owner] of socketByPortId) {
+    const port = layoutPortById.get(portId)!
+    const key = socketKey(owner.nodeId, owner.socket.id)
+    const ownerRect = nodeRects.get(owner.nodeId)!
+    const x = finite(port.x, `Layout Port ${portId} x`)
+    const y = finite(port.y, `Layout Port ${portId} y`)
+    const expectedX = port.side === "WEST" ? ownerRect.x : ownerRect.x + ownerRect.width
+    if (x !== expectedX || y < ownerRect.y || y > ownerRect.y + ownerRect.height) {
+      throw new Error(`Layout Port ${portId} must lie on its resolved Node side`)
+    }
+    portCenters.set(key, Object.freeze({
+      x,
+      y,
+    }))
+    portSides.set(key, port.side === "WEST" ? "left" : "right")
+  }
+
+  const expectedEdgeIds = new Set(links.map(link => link.id))
+  const layoutEdgeById = uniqueMap(layout.edges, "Layout Edge")
+  requireIds(expectedEdgeIds, layoutEdgeById, "Layout Edge")
   const linkRoutes = new Map<string, LinkRoute>()
   for (const link of links) {
-    const edge = layoutEdges.get(link.id)
-    if (edge !== undefined) {
-      const section = edge.sections[0]
-      linkRoutes.set(link.id, Object.freeze({
-        kind: "orthogonal",
-        points: Object.freeze([
-          Object.freeze({...section.startPoint}),
-          ...section.bendPoints.map(point => Object.freeze({...point})),
-          Object.freeze({...section.endPoint}),
-        ]),
-      }))
-      continue
-    }
-    const authored = metadataRoute(link.metadata)
-    linkRoutes.set(link.id, authored ?? routeBetween(
-      requiredPortCenter(portCenters, link.from.nodeId, link.from.socketId),
-      requiredPortCenter(portCenters, link.to.nodeId, link.to.socketId),
-      socketSideById(nodes, link.from.nodeId, link.from.socketId),
-    ))
+    const edge = layoutEdgeById.get(link.id)!
+    const section = edge.sections[0]
+    const from = requiredPortCenter(portCenters, link.from.nodeId, link.from.socketId)
+    const to = requiredPortCenter(portCenters, link.to.nodeId, link.to.socketId)
+    requirePoint(section.startPoint, from, `Layout Edge ${link.id} source`)
+    requirePoint(section.endPoint, to, `Layout Edge ${link.id} target`)
+    const route = Object.freeze({
+      kind: "orthogonal" as const,
+      points: Object.freeze([
+        Object.freeze({...section.startPoint}),
+        ...section.bendPoints.map(point => Object.freeze({...point})),
+        Object.freeze({...section.endPoint}),
+      ]),
+    })
+    const projection = projectLinkRoute(route)
+    requireContainedRect(bounds, projection.bounds, `Layout Edge ${link.id}`)
+    linkRoutes.set(link.id, route)
   }
 
-  const geometryRects = [
-    ...frameRects.values(),
-    ...nodeRects.values(),
-    ...linkRoutes.values().map(route => projectLinkRoute(route).bounds),
-  ]
   return Object.freeze({
     nodeRects,
     frameRects,
     portCenters,
+    portSides,
     linkRoutes,
-    bounds: unionRects(geometryRects),
-  })
-}
-
-export function viewportForTransform(
-  transform: NodeTreeTransform,
-  width: number,
-  height: number,
-  overscan = 0,
-): NodeTreeViewport {
-  const scale = positive(transform.scale, "NodeTree transform scale")
-  return Object.freeze({
-    x: -finite(transform.x, "NodeTree transform x") / scale,
-    y: -finite(transform.y, "NodeTree transform y") / scale,
-    width: positive(width, "NodeTree viewport width") / scale,
-    height: positive(height, "NodeTree viewport height") / scale,
-    overscan: nonNegative(overscan, "NodeTree viewport overscan") / scale,
+    bounds,
   })
 }
 
 export function fitNodeTreeTransform(
-  bounds: NodeRect | null,
+  bounds: NodeRect,
   width: number,
   height: number,
   padding: number,
   minScale: number,
   maxScale: number,
 ): NodeTreeTransform {
-  if (bounds === null) return DEFAULT_NODE_TREE_TRANSFORM
   const safePadding = nonNegative(padding, "NodeEditor fit padding")
   const availableWidth = Math.max(1, positive(width, "NodeEditor width") - safePadding * 2)
   const availableHeight = Math.max(1, positive(height, "NodeEditor height") - safePadding * 2)
   const scale = clamp(
-    Math.min(availableWidth / Math.max(1, bounds.width), availableHeight / Math.max(1, bounds.height)),
+    Math.min(availableWidth / bounds.width, availableHeight / bounds.height),
     positive(minScale, "NodeEditor minScale"),
     positive(maxScale, "NodeEditor maxScale"),
   )
@@ -181,7 +174,7 @@ export function fitNodeTreeTransform(
   })
 }
 
-export function intersectsViewport(viewport: NodeTreeViewport, bounds: NodeRect | LinkPathBounds): boolean {
+export function intersectsViewport(viewport: NodeTreeViewport, bounds: NodeRect): boolean {
   const overscan = viewport.overscan ?? 0
   return viewport.x - overscan <= bounds.x + bounds.width &&
     viewport.x + viewport.width + overscan >= bounds.x &&
@@ -193,7 +186,7 @@ export function socketKey(nodeId: string, socketId: string): string {
   return `${nodeId}\u0000${socketId}`
 }
 
-export function socketSide(socket: Pick<UiSocket, "direction" | "side">): "left" | "right" {
+export function socketSide(socket: Pick<CoreSocket, "direction" | "side">): "left" | "right" {
   return socket.side ?? (socket.direction === "output" ? "right" : "left")
 }
 
@@ -252,150 +245,75 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-function nodeMetadataRect(node: UiNodeSnapshot, index: number): NodeRect {
-  const width = metadataNumber(node.metadata, "width") ?? 216
-  const height = metadataNumber(node.metadata, "height") ?? Math.max(
-    NODE_DEFAULT_HEIGHT,
-    NODE_HEADER_HEIGHT + NODE_BODY_INSET * 2 +
-      (node.parameters.length + node.sockets.filter(socket => socket.parameterId === undefined).length) *
-        (NODE_ROW_HEIGHT + NODE_ROW_GAP),
-  )
-  return metadataRect(node.metadata, 42 + index * 284, 54 + index % 2 * 94, width, height)
+function requireLayoutResult(layout: LayoutResult): void {
+  if (typeof layout !== "object" || layout === null) throw new TypeError("NodeTree layout is required")
+  if (!Array.isArray(layout.nodes) || !Array.isArray(layout.ports) || !Array.isArray(layout.edges)) {
+    throw new TypeError("NodeTree layout must contain Node, Port and Edge geometry arrays")
+  }
+  exactRect(layout.bounds, "Layout bounds")
 }
 
-function metadataRect(
-  value: NodeJsonValue | undefined,
-  fallbackX: number,
-  fallbackY: number,
-  fallbackWidth: number,
-  fallbackHeight: number,
+function uniqueMap<Entry extends Readonly<{id: string}>>(
+  entries: readonly Entry[],
+  label: string,
+): ReadonlyMap<string, Entry> {
+  const result = new Map<string, Entry>()
+  for (const entry of entries) {
+    requireId(entry.id, label)
+    if (result.has(entry.id)) throw new Error(`${label} id must be unique: ${entry.id}`)
+    result.set(entry.id, entry)
+  }
+  return result
+}
+
+function requireIds(
+  expected: ReadonlySet<string>,
+  actual: ReadonlyMap<string, unknown>,
+  label: string,
+): void {
+  for (const id of expected) if (!actual.has(id)) throw new Error(`${label} geometry is missing: ${id}`)
+}
+
+function exactRect(
+  value: Readonly<{x: number; y: number; width: number; height: number}>,
+  label: string,
 ): NodeRect {
-  return rect(
-    metadataNumber(value, "x") ?? fallbackX,
-    metadataNumber(value, "y") ?? fallbackY,
-    metadataNumber(value, "width") ?? fallbackWidth,
-    metadataNumber(value, "height") ?? fallbackHeight,
-    "Node geometry",
-  )
-}
-
-function rect(x: number, y: number, width: number, height: number, label: string): NodeRect {
   return Object.freeze({
-    x: finite(x, `${label} x`),
-    y: finite(y, `${label} y`),
-    width: positive(width, `${label} width`),
-    height: positive(height, `${label} height`),
+    x: finite(value.x, `${label} x`),
+    y: finite(value.y, `${label} y`),
+    width: positive(value.width, `${label} width`),
+    height: positive(value.height, `${label} height`),
   })
-}
-
-function fallbackSocketCenter(
-  node: NodeRect,
-  socket: UiSocket,
-  parameterIndex: ReadonlyMap<string, number>,
-  looseRight: readonly UiSocket[],
-  looseLeft: readonly UiSocket[],
-  parameterCount: number,
-  collapsed: boolean,
-): NodePoint {
-  const side = socketSide(socket)
-  const x = side === "left" ? node.x : node.x + node.width
-  if (collapsed) {
-    const sameSide = [...looseRight, ...looseLeft].filter(candidate => socketSide(candidate) === side)
-    const index = Math.max(0, sameSide.findIndex(candidate => candidate.id === socket.id))
-    return Object.freeze({x, y: node.y + NODE_HEADER_HEIGHT / 2 + (index - (sameSide.length - 1) / 2) * 8})
-  }
-  let row: number
-  if (socket.parameterId !== undefined && parameterIndex.has(socket.parameterId)) {
-    row = looseRight.length + parameterIndex.get(socket.parameterId)!
-  } else if (side === "right") {
-    row = Math.max(0, looseRight.findIndex(candidate => candidate.id === socket.id))
-  } else {
-    row = looseRight.length + parameterCount + Math.max(0, looseLeft.findIndex(candidate => candidate.id === socket.id))
-  }
-  return Object.freeze({
-    x,
-    y: node.y + NODE_HEADER_HEIGHT + NODE_BODY_INSET + row * (NODE_ROW_HEIGHT + NODE_ROW_GAP) + NODE_ROW_HEIGHT / 2,
-  })
-}
-
-function layoutPortCenter(
-  layoutPorts: ReadonlyMap<string, NodePoint>,
-  nodeId: string,
-  socketId: string,
-): NodePoint | undefined {
-  return layoutPorts.get(`${nodeId}/${socketId}`) ??
-    layoutPorts.get(`${nodeId}:${socketId}`) ??
-    layoutPorts.get(socketId)
 }
 
 function requiredPortCenter(
-  ports: ReadonlyMap<string, NodePoint>,
+  centers: ReadonlyMap<string, NodePoint>,
   nodeId: string,
   socketId: string,
 ): NodePoint {
-  return ports.get(socketKey(nodeId, socketId)) ?? Object.freeze({x: 0, y: 0})
+  const center = centers.get(socketKey(nodeId, socketId))
+  if (center === undefined) throw new Error(`Layout Port geometry is missing: ${nodeSocketLayoutPortId(nodeId, socketId)}`)
+  return center
 }
 
-function socketSideById(
-  nodes: readonly UiNodeSnapshot[],
-  nodeId: string,
-  socketId: string,
-): "left" | "right" {
-  const socket = nodes.find(node => node.id === nodeId)?.sockets.find(candidate => candidate.id === socketId)
-  return socket === undefined ? "right" : socketSide(socket)
-}
-
-function routeBetween(from: NodePoint, to: NodePoint, fromSide: "left" | "right"): LinkRoute {
-  if (from.x === to.x && from.y === to.y) {
-    const outerX = from.x + (fromSide === "left" ? -30 : 30)
-    return Object.freeze({
-      kind: "orthogonal",
-      points: Object.freeze([
-        from,
-        Object.freeze({x: outerX, y: from.y}),
-        Object.freeze({x: outerX, y: from.y + 30}),
-        Object.freeze({x: from.x, y: from.y + 30}),
-        to,
-      ]),
-    })
+function requirePoint(
+  actual: NodePoint,
+  expected: NodePoint,
+  label: string,
+): void {
+  if (actual.x !== expected.x || actual.y !== expected.y) {
+    throw new Error(`${label} must equal its exact Layout Port center`)
   }
-  const middleX = Math.round((from.x + to.x) / 2)
-  return Object.freeze({
-    kind: "orthogonal",
-    points: Object.freeze(dedupePoints([
-      from,
-      Object.freeze({x: middleX, y: from.y}),
-      Object.freeze({x: middleX, y: to.y}),
-      to,
-    ])),
-  })
 }
 
-function dedupePoints(points: readonly LinkPathPoint[]): readonly LinkPathPoint[] {
-  return points.filter((point, index) => index === 0 ||
-    point.x !== points[index - 1]!.x || point.y !== points[index - 1]!.y)
-}
-
-function metadataRoute(value: NodeJsonValue | undefined): LinkRoute | undefined {
-  const route = metadata(value, "route")
-  if (route === null || typeof route !== "object" || Array.isArray(route)) return undefined
-  const record = route as NodeJsonObject
-  if (record.kind !== "orthogonal" || !Array.isArray(record.points)) return undefined
-  const points: LinkPathPoint[] = []
-  for (const point of record.points) {
-    if (point === null || typeof point !== "object" || Array.isArray(point)) return undefined
-    const entry = point as NodeJsonObject
-    if (typeof entry.x !== "number" || typeof entry.y !== "number") return undefined
-    points.push(Object.freeze({x: entry.x, y: entry.y}))
+function requireContainedRect(outer: NodeRect, inner: NodeRect, label: string): void {
+  if (inner.x < outer.x || inner.y < outer.y ||
+    inner.x + inner.width > outer.x + outer.width ||
+    inner.y + inner.height > outer.y + outer.height) {
+    throw new Error(`${label} must be contained by Layout bounds`)
   }
-  return Object.freeze({kind: "orthogonal", points: Object.freeze(points)})
 }
 
-function unionRects(rects: readonly (NodeRect | LinkPathBounds)[]): NodeRect | null {
-  if (rects.length === 0) return null
-  const x = Math.min(...rects.map(entry => entry.x))
-  const y = Math.min(...rects.map(entry => entry.y))
-  const right = Math.max(...rects.map(entry => entry.x + entry.width))
-  const bottom = Math.max(...rects.map(entry => entry.y + entry.height))
-  return Object.freeze({x, y, width: right - x, height: bottom - y})
+function requireId(value: string, label: string): void {
+  if (typeof value !== "string" || value.trim().length === 0) throw new TypeError(`${label} id must be non-empty`)
 }

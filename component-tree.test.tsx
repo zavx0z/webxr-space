@@ -6,6 +6,7 @@ import {
   type NodeJsonValue,
 } from "@nodes/core"
 import {NodeTreeEditor} from "@nodes/editor"
+import type {LayoutResult} from "@nodes/layout/types"
 import {
   WheelEvent,
   createDocument,
@@ -15,12 +16,74 @@ import {
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {Frame} from "./frame.tsx"
+import {createNodeGeometryIndex} from "./geometry.ts"
 import {Node} from "./node.tsx"
 import {NodeEditor} from "./node-editor.tsx"
 import {NodeTree} from "./node-tree.tsx"
 import {NumberParameter} from "./parameter-presentations.tsx"
 
 describe("one compiled Node component tree", () => {
+  test("fails closed before rendering when owner Layout geometry is missing or incomplete", () => {
+    const tree = createNodeTree({nodes: [Object.freeze({id: "node"})], links: []})
+    const document = createDocument()
+    const host = document.createElement("main")
+    const root = createRoot(host)
+    const missingNodeLayout: LayoutResult = Object.freeze({
+      direction: "RIGHT",
+      bounds: Object.freeze({x: 0, y: 0, width: 1, height: 1}),
+      nodes: Object.freeze([]),
+      ports: Object.freeze([]),
+      edges: Object.freeze([]),
+    })
+    expect(() => root.render(<NodeTree
+      store={createNodeTreeExternalStore(tree)}
+      layout={missingNodeLayout}
+    />)).toThrow("Layout Node geometry is missing: node")
+    expect(host.querySelector('[data-node-tree]')).toBeNull()
+    tree.dispose()
+
+    const fixture = createFixture()
+    const snapshot = fixture.tree.getSnapshot()
+    expect(() => createNodeGeometryIndex(
+      snapshot.nodes,
+      snapshot.frames,
+      snapshot.links,
+      Object.freeze({
+        ...fixture.layout,
+        nodes: Object.freeze(fixture.layout.nodes.filter(node => node.id !== "outer")),
+      }),
+    )).toThrow("Layout Node geometry is missing: outer")
+    expect(() => createNodeGeometryIndex(
+      snapshot.nodes,
+      snapshot.frames,
+      snapshot.links,
+      Object.freeze({...fixture.layout, ports: Object.freeze([])}),
+    )).toThrow("Layout Port geometry is missing: source/value-output")
+    expect(() => createNodeGeometryIndex(
+      snapshot.nodes,
+      snapshot.frames,
+      snapshot.links,
+      Object.freeze({...fixture.layout, edges: Object.freeze([])}),
+    )).toThrow("Layout Edge geometry is missing: value-link")
+    expect(() => createNodeGeometryIndex(
+      snapshot.nodes,
+      snapshot.frames,
+      snapshot.links,
+      Object.freeze({
+        ...fixture.layout,
+        edges: Object.freeze([Object.freeze({
+          id: "value-link",
+          sections: Object.freeze([Object.freeze({
+            startPoint: Object.freeze({x: 0, y: 0}),
+            bendPoints: Object.freeze([]),
+            endPoint: Object.freeze({x: 430, y: 232}),
+          })] as const),
+        })]),
+      }),
+    )).toThrow("Layout Edge value-link source must equal its exact Layout Port center")
+    fixture.dispose()
+  })
+
   test("allows consumer Components to author Frame -> Node -> concrete Parameter composition", () => {
     const document = createDocument()
     const host = document.createElement("main")
@@ -59,6 +122,7 @@ describe("one compiled Node component tree", () => {
     }
     root.render(<NodeEditor
       store={fixture.store}
+      layout={fixture.layout}
       width={760}
       height={480}
       onParameterInput={input}
@@ -77,6 +141,7 @@ describe("one compiled Node component tree", () => {
     expect(outer.ownerDocument).toBe(inner.ownerDocument)
     expect(link.localName).toBe("vector-path")
     expect(link.childNodes).toEqual([])
+    expect(socket.getAttribute("data-socket-side")).toBe("right")
     expect(host.querySelectorAll('[data-node-tree]')).toHaveLength(1)
 
     mutations.length = 0
@@ -112,7 +177,12 @@ describe("one compiled Node component tree", () => {
     const mutations: MutationBatch[] = []
     document.subscribeMutations(batch => mutations.push(batch))
     const root = createRoot(host)
-    root.render(<NodeEditor store={fixture.store} width={760} height={480} />)
+    root.render(<NodeEditor
+      store={fixture.store}
+      layout={fixture.layout}
+      width={760}
+      height={480}
+    />)
     const viewport = required(host.querySelector('[data-node-editor-viewport]'))
     const scene = required(host.querySelector('[data-node-tree-scene]'))
     const grid = required(host.querySelector('[data-node-editor-grid]'))
@@ -176,8 +246,25 @@ describe("one compiled Node component tree", () => {
     const root = createRoot(host)
     const mutations: MutationBatch[] = []
     document.subscribeMutations(batch => mutations.push(batch))
+    const layout: LayoutResult = Object.freeze({
+      direction: "RIGHT",
+      bounds: Object.freeze({x: 0, y: 0, width: 29_200, height: 5_260}),
+      nodes: Object.freeze([
+        ...Array.from({length: 1_000}, (_, index) => Object.freeze({
+          id: `node-${index}`,
+          x: index % 100 * 292,
+          y: Math.floor(index / 100) * 260,
+          width: 260,
+          height: 160,
+        })),
+        Object.freeze({id: "node-1000", x: 0, y: 5_000, width: 260, height: 160}),
+      ]),
+      ports: Object.freeze([]),
+      edges: Object.freeze([]),
+    })
     root.render(<NodeTree
       store={store}
+      layout={layout}
       viewport={Object.freeze({x: 0, y: 0, width: 850, height: 500, overscan: 0})}
     />)
     expect(host.querySelectorAll("article")).toHaveLength(6)
@@ -282,7 +369,7 @@ function createFixture() {
           id: "value-output",
           parameterId: "value",
           direction: "output" as const,
-          side: "right" as const,
+          side: "left" as const,
           valueType: Object.freeze({id: "float", version: 1}),
           metadata: Object.freeze({label: "Value"}),
         })]),
@@ -315,12 +402,39 @@ function createFixture() {
     tree,
     editor,
     store: createNodeTreeExternalStore(tree),
+    layout: fixtureLayout,
     dispose() {
       editor.dispose()
       tree.dispose()
     },
   })
 }
+
+const fixtureLayout: LayoutResult = Object.freeze({
+  direction: "RIGHT",
+  bounds: Object.freeze({x: 20, y: 20, width: 680, height: 390}),
+  nodes: Object.freeze([
+    Object.freeze({id: "outer", x: 20, y: 20, width: 680, height: 390}),
+    Object.freeze({id: "inner", x: 42, y: 48, width: 300, height: 260}),
+    Object.freeze({id: "source", x: 72, y: 84, width: 220, height: 100}),
+    Object.freeze({id: "target", x: 430, y: 190, width: 220, height: 100}),
+  ]),
+  ports: Object.freeze([
+    Object.freeze({id: "source/value-output", x: 292, y: 126, side: "EAST"}),
+    Object.freeze({id: "target/result-input", x: 430, y: 232, side: "WEST"}),
+  ]),
+  edges: Object.freeze([Object.freeze({
+    id: "value-link",
+    sections: Object.freeze([Object.freeze({
+      startPoint: Object.freeze({x: 292, y: 126}),
+      bendPoints: Object.freeze([
+        Object.freeze({x: 361, y: 126}),
+        Object.freeze({x: 361, y: 232}),
+      ]),
+      endPoint: Object.freeze({x: 430, y: 232}),
+    })] as const),
+  })]),
+})
 
 function required<T>(value: T | null): T {
   if (value === null) throw new Error("Required test element is missing")

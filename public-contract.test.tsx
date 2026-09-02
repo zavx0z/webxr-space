@@ -57,6 +57,7 @@ describe("@nodes/ui final component contract", () => {
       "TextParameter",
       "VectorParameter",
       "createCubicLinkRoute",
+      "nodeSocketLayoutPortId",
       "projectLinkRoute",
       "socketPreset",
     ])
@@ -99,7 +100,16 @@ describe("@nodes/ui final component contract", () => {
     const document = createDocument()
     const host = document.createElement("main")
     const componentRoot = createRoot(host)
-    componentRoot.render(<NodeTree store={createNodeTreeExternalStore(tree)} />)
+    componentRoot.render(<NodeTree
+      store={createNodeTreeExternalStore(tree)}
+      layout={Object.freeze({
+        direction: "RIGHT",
+        bounds: Object.freeze({x: 0, y: 0, width: 1, height: 1}),
+        nodes: Object.freeze([]),
+        ports: Object.freeze([]),
+        edges: Object.freeze([]),
+      })}
+    />)
     expect(host.querySelector('[data-node-tree]')?.ownerDocument).toBe(document)
     expect(host.querySelectorAll('[data-node-tree]')).toHaveLength(1)
     componentRoot.unmount()
@@ -109,11 +119,13 @@ describe("@nodes/ui final component contract", () => {
   test("contains no imperative factories, nested roots or public CSS transports", async () => {
     const files = [
       "frame.tsx",
+      "geometry.ts",
       "link.tsx",
       "node.tsx",
       "node-editor.tsx",
       "node-tree.tsx",
       "parameter.tsx",
+      "parameter-presentations.tsx",
       "socket.tsx",
     ]
     const source = (await Promise.all(files.map(file =>
@@ -127,6 +139,9 @@ describe("@nodes/ui final component contract", () => {
     expect(source).not.toContain("SocketPort")
     expect(source).not.toContain("NodeConnection")
     expect(source).not.toContain("LooseSocket")
+    expect(source).not.toContain("fallbackSocketCenter")
+    expect(source).not.toContain("routeBetween")
+    expect(source).not.toContain("nodeMetadataRect")
     expect(source).not.toContain("defineStyles")
     expect(source).not.toContain("className")
     expect(source).not.toContain("sx=")

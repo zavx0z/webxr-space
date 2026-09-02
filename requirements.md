@@ -67,9 +67,20 @@ caller fragment. `sx`, class/className API, JS style objects/arrays,
 ### `NODES-UI-FRAME-001`
 
 Core `parentFrameId` и Node `frameId` сохраняются как exact same-Document
-relations. Projection не создаёт вторую Frame topology. Geometry может прийти
-из exact `@nodes/layout` `LayoutResult`; metadata geometry разрешена только как
-bounded fixture/default projection.
+relations. Projection не создаёт вторую Frame topology. Aggregate `NodeTree` /
+`NodeEditor` всегда требуют completed `@nodes/layout` `LayoutResult`:
+
+- `nodes` покрывают every Core Frame + Node id;
+- `ports` покрывают every canonical `nodeId/socketId`;
+- `edges` покрывают every Core Link id;
+- edge start/end совпадают с exact source/target Port centers;
+- missing/duplicate/mismatched geometry отклоняется до materialization.
+
+Layout может заранее содержать extra geometry для revision-fenced следующей
+topology; неиспользуемые entries не materialize-ятся. Production aggregate не
+читает x/y/size/route из metadata и не строит index/default placement.
+Direct authored `Frame`, `Node`, `Link` используют explicit `rect`/`route` props
+и не являются aggregate fallback.
 
 Paint law:
 
@@ -171,18 +182,24 @@ counts.
 
 Текущая воспроизводимая evidence на этом checkout:
 
-- 1k semantic/culling: `1000` materialized, `12` visible; value
-  input-to-present p95/p99 `139.349/169.337ms`, transform
-  `33.436/45.688ms`; identity/local mutation/zero Path uploads green;
-- 10k semantic/culling: `10000` materialized, `12` visible; value
-  p95/p99 `1401.059/1670.054ms`, transform `376.186/1922.756ms`;
-  semantic retained heap about `2.592GB` (`250883 B/Node`);
+- linked Renderer `1cd32434ba8e0e5ad6422e50ec56e85cc18b645e` закрывает
+  generic local input-value frame update;
+- linked Renderer `5d5a06c14c2f8216cce6f5930695154f57524ea4` поверх него
+  добавляет unchanged context-frame identity short-circuit;
+- 1k semantic/culling на `1cd3243`: `1000` materialized, `12` visible;
+  value input-to-present p95/p99 `3.974/7.210ms`, transform
+  `14.985/18.843ms`; identity/local mutation/zero Path uploads green;
+- 10k semantic/culling на `5d5a06c`: `10000` materialized, `12` visible;
+  value p95/p99 `1.752/1.789ms`, transform `12.738/18.687ms`;
+  topology input-to-present `5397.431ms`; semantic retained heap about
+  `2.613GB` (`251194 B/Node`);
 - 1k dense-visible cold: `41052` boxes, `13511` display items,
   `5000` Rects, `999` Paths; mount/Renderer/backend
-  `2.631s/3.409s/.860s`;
+  `2.381s/3.445s/.894s` with exact LayoutResult;
 - 10k dense-visible cold: `410052` boxes, `135011` display items,
   `50000` Rects, `9999` Paths; mount/Renderer/backend
-  `30.161s/41.215s/19.700s`; retained baseline about `4.978GB`.
+  `23.311s/45.593s/17.666s`; retained baseline about `4.993GB`, all with
+  exact LayoutResult.
 
 Эти timings являются красным acceptance, не новым budget. Exact Node-owned
 reproduction: `bench/node-system.ts`.
@@ -207,11 +224,11 @@ transform p99 наблюдался `9.935–16.858ms`. Post-GC interaction delta
 отсутствие legacy/story/dev retention.
 
 После отделения authored concrete Parameter modules текущий comparable exact
-full NodeEditor build: `270750 raw / 68200 gzip`; root: `270679 / 68516`;
-NodeTree: `262560 / 65708`; complete aggregate Parameter interaction graph:
-`203065 / 49796`; Link: `121815 / 32945`. Root-vs-exact не объясняет дельту,
+full NodeEditor build: `270017 raw / 67947 gzip`; root: `269946 / 68261`;
+NodeTree: `261878 / 65480`; complete aggregate Parameter interaction graph:
+`203324 / 49881`; Link: `122028 / 33006`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+10.8% raw / +12.4%
+Exact full path больше historical incomplete evidence на `+10.5% raw / +12.0%
 gzip`; новый ceiling требует owner decision.
 
 ## Storybook and visual acceptance
@@ -238,23 +255,26 @@ equal-scale visual verdict остаётся за `zavx0z`.
 Node-owned tests доказывают exact identity и local mutation, но current generic
 pipeline не выполняет полную performance/lifecycle acceptance:
 
-1. Local Parameter state change при 1k/10k materialized hidden owners приводит
-   к full CPU Renderer traversal: expected ≤16.667ms, actual Renderer p95
-   `135.158ms` / `1396.404ms`. Предполагаемый owner: `@zavx0z/renderer` dirty
-   subtree/incremental layout-display projection.
-2. Dense Link selection p99 повторяется `40.271–42.786ms` при зелёном p95;
+1. Local Parameter value path теперь green благодаря Renderer `1cd3243`:
+   1k/10k input-to-present p99 `7.210/1.789ms`. Это закрытая generic gap,
+   не Node-local workaround.
+2. Transform p95 green, но p99 остаётся `18.843ms` (1k на `1cd3243`) и
+   `18.687ms` (10k на `5d5a06c`) против `16.667ms`.
+3. Additive topology остаётся красной: 1k/10k input-to-present около
+   `1400.544/5397.431ms`, несмотря на заранее подготовленный exact LayoutResult.
+4. Dense Link selection p99 повторяется `40.271–42.786ms` при зелёном p95;
    retained invariants и one draw green. Предполагаемый owner: Renderer
    display-order tail allocation.
-3. 10k dense-visible component unmount не завершился за несколько минут active
+5. 10k dense-visible component unmount не завершился за несколько минут active
    CPU и был остановлен после evidence. Предполагаемый owner:
    `@zavx0z/react`/Template component-range disposal complexity.
-4. Compiled author composition через один authored Component child поддержана
+6. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first
    compiler profile; Node не добавляет nested root/imperative compatibility
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
-5. Full component bundle превышает historical incomplete ceiling; threshold
+7. Full component bundle превышает historical incomplete ceiling; threshold
    остаётся owner gate, а не silently raised test.
 
 ## Acceptance
