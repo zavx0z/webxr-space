@@ -6,6 +6,7 @@ import {
   type HTMLInputElement,
 } from "@zavx0z/dom"
 import {createDocumentRenderer} from "@zavx0z/renderer"
+import {chevronDownIcon, chevronRightIcon} from "@ui/components/icons"
 import catalog from "../../.storybook/catalog.json"
 import {
   NODE_COMPARISON_REFERENCE,
@@ -62,8 +63,13 @@ describe("public component Storybook projection", () => {
 
     const collapse = node.querySelector('[data-action="collapse-node"]')
     if (!(collapse instanceof HTMLButtonElement)) throw new Error("Collapse button is missing")
+    const collapseIcon = collapse.querySelector("img")!
+    expect(collapse.textContent).toBe("")
+    expect(collapseIcon.getAttribute("src")).toBe(chevronDownIcon)
     collapse.dispatchEvent(new Event("click", {bubbles: true}))
     expect(story.element.querySelector('[data-node-id="noise"]')?.getAttribute("data-collapsed")).toBe("true")
+    expect(collapse.querySelector("img")).toBe(collapseIcon)
+    expect(collapseIcon.getAttribute("src")).toBe(chevronRightIcon)
 
     node.dispatchEvent(new Event("click", {bubbles: true}))
     expect(story.element.querySelector('[data-node-editor]')?.getAttribute("data-selection-id")).toBe("noise")
@@ -80,6 +86,12 @@ describe("public component Storybook projection", () => {
     expect(story.element.querySelector('[data-live-scale]')?.getAttribute("data-live-scale")).toBe("1")
     const node = story.element.querySelector('[data-node-id="comparison-noise"]')!
     expect(node.getAttribute("data-category")).toBe("")
+    const collapse = node.querySelector('[data-action="collapse-node"]')!
+    expect(collapse.textContent).toBe("")
+    const collapseImage = collapse.querySelector("img")!
+    expect(collapseImage.getAttribute("src")).toBe(chevronDownIcon)
+    expect(collapseImage.getAttribute("width")).toBe("14")
+    expect(collapseImage.getAttribute("height")).toBe("14")
     expect(node.querySelector('[data-socket-id="noise-fac-output"]')?.getAttribute("data-socket-side")).toBe("right")
     expect(node.querySelector('[data-socket-id="noise-color-output"]')?.getAttribute("data-socket-kind")).toBe("color")
     const output = node.querySelector('[data-socket-id="noise-fac-output"]')!

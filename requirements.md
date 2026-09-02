@@ -114,6 +114,9 @@ Paint law:
   attach to the Node contour while Fields own their row inset;
 - `3px` body rhythm, `22px` Socket rows and `22px` standard Field contour for
   the exact 5.2 Node density;
+- collapse interaction остаётся native Node-owned button, а его presentation —
+  stable `14px` `<img>` с UI-owned `chevronDownIcon` / `chevronRightIcon`;
+  Engine-font disclosure glyph и второй interaction owner запрещены;
 - linked UI theme owns shared Node/control border widths and radii; Node does
   not restate those pixels to imitate the reference;
 - one public `Socket` for every endpoint.
@@ -320,28 +323,29 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 
 После exact Blender 5.2 component slice и восстановления UI-owned SVG
 indicator текущий comparable exact full NodeEditor build:
-`278439 raw / 70370 gzip`; root: `278368 / 70678`; NodeTree:
-`270303 / 67835`; complete aggregate Parameter interaction graph:
+`278697 raw / 70398 gzip`; root: `278626 / 70709`; NodeTree:
+`270561 / 67878`; complete aggregate Parameter interaction graph:
 `205247 / 50733`; Link: `122489 / 33111`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+13.974% raw /
-+16.007% gzip`.
+Exact full path больше historical incomplete evidence на `+14.080% raw /
++16.053% gzip`.
 
 Replacement ceiling `285000 / 72000` принят для exact fully-component
 NodeEditor и исполняется обычным repository test. Он оставляет только
-`6561 raw / 1630 gzip` (`2.356% / 2.316%`) запаса и не является общим резервом
+`6303 raw / 1602 gzip` (`2.261% / 2.276%`) запаса и не является общим резервом
 для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
 imperative/incomplete модели, а не скрытым обязательством удалить component
 runtime или функциональность.
 
-Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64349`,
-`@ui/components 64690`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64576`,
+`@ui/components 64721`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
 React runtime `34183`, Parameter projection `17329`, Core NodeTree `17867`,
-NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`.
+NodeTree UI `13645`, Foundation `13565`, semantic Document `13383` и Node
+presentation `8404`.
 Story/dev retention и root/subpath alias отсутствуют; private profiler code в
 production graph не попадает. Exact artifact sha256:
-`cf096e4b4ea7a5e1344024cdfe0d0071ef6f43b96addf405553ed685f7a18df2`.
+`ee14452ebafb4adeb76e4daadc5593bc8e5b4a3f4349645ecdaea810e5497204`.
 
 ## Storybook and visual acceptance
 
@@ -441,6 +445,18 @@ capture `capture__0RkSaSlB4dFPpYPF6V0BIjS`, sha256
 имеет ready/presented и empty diagnostics/console. Новый checkbox artifact всё
 ещё candidate и не является owner verdict для всей Node parity.
 
+Следующий owner finding: header disclosure в reference является icon, а Node
+рисовал Engine-font `⌄/›`. Node теперь сохраняет один native collapse button и
+один retained image, переключая только `src` между public UI assets
+`chevronDownIcon` / `chevronRightIcon`. Icon имеет intrinsic `14px` contour и
+reference/live pixel bbox совпадает полностью: `14×8`, `y=105..112`.
+External Storybook revision `da02f4fc916315be9f229c2a`, graph
+`828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8`,
+capture `capture_CS-ZXxAZA48BcsELO4F4ILJ9`, sha256
+`84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4`
+имеет ready/presented и empty diagnostics/console. Это исправляет icon defect,
+но не подменяет final owner verdict.
+
 ## Known platform gates
 
 Node-owned tests доказывают exact identity и local mutation, но current generic
@@ -476,7 +492,7 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
 8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
-   exact `278439 / 70370` проходит executable repository test. Historical
+   exact `278697 / 70398` проходит executable repository test. Historical
    incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance

@@ -8,6 +8,7 @@ import type {
 } from "@nodes/core"
 import {type FunctionComponent} from "@zavx0z/react"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
+import {chevronDownIcon, chevronRightIcon} from "@ui/components/icons"
 import {
   metadataBoolean,
   metadataString,
@@ -84,7 +85,7 @@ export function Node(props: NodeProps) {
     ? `0 0 12px ${headerColor}`
     : "0 0 12px rgba(0, 0, 0, .5)"
   const collapseLabel = props.collapsed === true ? `Развернуть ${props.label}` : `Свернуть ${props.label}`
-  const collapseGlyph = props.collapsed === true ? "›" : "⌄"
+  const collapseIcon = props.collapsed === true ? chevronRightIcon : chevronDownIcon
   const previewLabel = props.preview?.enabled === true ? "Скрыть preview" : "Показать preview"
   const previewGlyph = props.preview?.enabled === true ? "◉" : "○"
   const toggleCollapse = (event: Event) => {
@@ -212,7 +213,20 @@ export function Node(props: NodeProps) {
           font-size: var(--font-size-sm);
         `}
       >
-        {collapseGlyph}
+        <img
+          src={collapseIcon}
+          alt=""
+          aria-hidden="true"
+          width={14}
+          height={14}
+          style={css`
+            position: relative;
+            top: 2px;
+            display: block;
+            width: 14px;
+            height: 14px;
+          `}
+        />
       </button>
       <strong
         style={css`
