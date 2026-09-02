@@ -1,0 +1,39 @@
+{
+  "name": "@nodes/ui",
+  "version": "0.0.1",
+  "description": "Compiled NodeTree, NodeEditor, Frame, Node, Parameter, Socket and Link components. Built for MetaFor.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zavx0z/node.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://zavx0z.github.io/node/ui/",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "private": true,
+  "metafor": "https://github.com/zavx0z/metafor",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./frame": "./frame.tsx",
+    "./link": "./link.tsx",
+    "./node": "./node.tsx",
+    "./node-editor": "./node-editor.tsx",
+    "./node-tree": "./node-tree.tsx",
+    "./parameter": "./parameter-public.ts",
+    "./socket": "./socket.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@nodes/core": "workspace:*",
+    "@nodes/layout": "workspace:*",
+    "@zavx0z/dom": "link:@zavx0z/dom",
+    "@zavx0z/react": "link:@zavx0z/react",
+    "@zavx0z/template": "link:@zavx0z/template",
+    "@ui/components": "link:@ui/components"
+  }
+}
