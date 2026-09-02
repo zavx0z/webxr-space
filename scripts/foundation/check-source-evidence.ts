@@ -117,9 +117,21 @@ const denseRendererCheckpoint = objectRecord(
   denseRepositories.renderer,
   "dense lifecycle Renderer repository",
 )
-const latestRepositories = objectRecord(
+const decisionRepositories = objectRecord(
   data.nodeR5OwnerDecisionsCheckpoint.repositories,
-  "latest owner decision checkpoint repositories",
+  "owner decision checkpoint repositories",
+)
+const decisionNodeCheckpoint = objectRecord(
+  decisionRepositories.node,
+  "owner decision Node repository",
+)
+const decisionRendererCheckpoint = objectRecord(
+  decisionRepositories.renderer,
+  "owner decision Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5BlenderCompatibilityCheckpoint.repositories,
+  "latest Blender compatibility checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -376,7 +388,7 @@ const decisionNodeHistory = data.nodeR5OwnerDecisionsCheckpoint.nodePackageHisto
 if (!Array.isArray(decisionNodeHistory)) throw new Error("Owner decision Node history must be an array")
 for (const value of decisionNodeHistory) {
   const entry = objectRecord(value, "owner decision Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "owner decision Node")
+  validateCheckpointHistoryEntry(entry, decisionNodeCheckpoint, "owner decision Node")
 }
 
 const decisionRendererHistory = data.nodeR5OwnerDecisionsCheckpoint.rendererPackageHistory
@@ -385,7 +397,25 @@ if (!Array.isArray(decisionRendererHistory)) {
 }
 for (const value of decisionRendererHistory) {
   const entry = objectRecord(value, "owner decision Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "owner decision Renderer")
+  validateCheckpointHistoryEntry(entry, decisionRendererCheckpoint, "owner decision Renderer")
+}
+
+const compatibilityNodeHistory = data.nodeR5BlenderCompatibilityCheckpoint.nodePackageHistory
+if (!Array.isArray(compatibilityNodeHistory)) {
+  throw new Error("Blender compatibility Node history must be an array")
+}
+for (const value of compatibilityNodeHistory) {
+  const entry = objectRecord(value, "Blender compatibility Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Blender compatibility Node")
+}
+
+const compatibilityRendererHistory = data.nodeR5BlenderCompatibilityCheckpoint.rendererPackageHistory
+if (!Array.isArray(compatibilityRendererHistory)) {
+  throw new Error("Blender compatibility Renderer history must be an array")
+}
+for (const value of compatibilityRendererHistory) {
+  const entry = objectRecord(value, "Blender compatibility Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "Blender compatibility Renderer")
 }
 
 console.log(
@@ -401,7 +431,8 @@ console.log(
   `${transformClosureNodeHistory.length + transformClosureRendererHistory.length} transform closure histories, ` +
   `${linkClosureNodeHistory.length + linkClosureRendererHistory.length} Link closure histories, ` +
   `${denseNodeHistory.length + denseRendererHistory.length} dense lifecycle histories, ` +
-  `${decisionNodeHistory.length + decisionRendererHistory.length} owner decision histories`,
+  `${decisionNodeHistory.length + decisionRendererHistory.length} owner decision histories, ` +
+  `${compatibilityNodeHistory.length + compatibilityRendererHistory.length} Blender compatibility histories`,
 )
 
 function validateCheckpointHistoryEntry(

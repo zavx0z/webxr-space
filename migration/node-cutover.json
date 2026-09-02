@@ -3,7 +3,7 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "176816b1ec89a3485309ff16675cc21c798e06db",
+  "observedHead": "c399bf312dcb214aa0ed31d631a086bc7be0569d",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
   "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
@@ -14,6 +14,8 @@
   "linkClosureCommit": "f4519ea1f2271634ce8cd8afa57d1ac5a62a86d1",
   "denseLifecycleCommit": "4a684825edc731bcc20a439b9eecd58fc5995472",
   "bundleOwnershipCommit": "176816b1ec89a3485309ff16675cc21c798e06db",
+  "blenderCompatibilityImplementationCommit": "1bce579a10ee2be4110ee43e10235ee173c2243f",
+  "blenderCompatibilityEvidenceCommit": "c399bf312dcb214aa0ed31d631a086bc7be0569d",
   "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
   "bulkBackendCleanupEvidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
   "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
@@ -21,8 +23,8 @@
   "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-dense-lifecycle-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-owner-decisions-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-owner-decisions-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -95,7 +97,7 @@
       "evidence": [
         "exact public TSX owners and consumers committed",
         "159 historical Storybook leaves and 66 overview routes preserved",
-        "active Storybook revision 92a235eb5bc5ba49c2e9c1de"
+        "active Storybook revision 6f658a4daf7149e42718cfe1"
       ]
     },
     {
@@ -103,7 +105,7 @@
       "name": "Functional parity",
       "status": "verified",
       "evidence": [
-        "bun run check: 219 pass, 0 fail, 1 explicit bundle owner-gate todo at 0b949e7",
+        "bun run check: 220 pass, 0 fail, 1 explicit bundle owner-gate todo at c399bf3",
         "stable identity, local mutation and transform-only evidence passed",
         "exact @nodes/layout LayoutResult is mandatory and validated before materialization",
         "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween are absent from committed Node geometry",
@@ -141,9 +143,9 @@
       "blockers": [
       ],
       "ownerDecisions": [
-        "replacement bundle ceiling for fully component architecture; exact 276138/69416 versus historical incomplete 244300/60660",
+        "replacement bundle ceiling for fully component architecture; exact 277269/69694 versus historical incomplete 244300/60660",
         "whether dense-visible retained baseline 5.0232-5.0233GB requires a numeric ceiling or optimization gate",
-        "explicit equal-scale visual owner verdict by zavx0z"
+        "obtain exact Blender 5.2 node reference, then record the explicit equal-scale visual owner verdict by zavx0z"
       ],
       "evidence": [
         "evidence/node-cutover-snapshot.json",
@@ -157,8 +159,10 @@
         "evidence/node-r5-link-closure-checkpoint.json",
         "evidence/node-r5-dense-lifecycle-checkpoint.json",
         "evidence/node-r5-owner-decisions-checkpoint.json",
-        "equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
-        "console-zero non-black canvas capture 290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca"
+        "evidence/node-r5-blender-compatibility-checkpoint.json",
+        "historical Blender 4.5 equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
+        "legacy 4.5 compatibility capture 923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9",
+        "console-zero non-black canvas capture 484e8ffccdf89bb5167ecfa5cdc197382b9d8a7b97a5fb41c7b6df07429145e1"
       ]
     },
     {
@@ -166,12 +170,12 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at 176816b1ec89a3485309ff16675cc21c798e06db and ahead 11",
+        "Node main is clean at c399bf312dcb214aa0ed31d631a086bc7be0569d and ahead 13",
         "Renderer main is clean at 99ce7846e6086ba4c3adebad23acbb6faafa277f and ahead 12"
       ],
       "blockers": [
-        "R5 owner decisions remain pending",
-        "176816b1ec89a3485309ff16675cc21c798e06db is not remote-backed",
+        "R5 owner decisions and exact Blender 5.2 node reference remain pending",
+        "c399bf312dcb214aa0ed31d631a086bc7be0569d is not remote-backed",
         "99ce7846e6086ba4c3adebad23acbb6faafa277f is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "push/freeze authorization has not been given"

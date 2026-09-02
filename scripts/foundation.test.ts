@@ -45,7 +45,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the owner decision checkpoint", async () => {
+  test("preserves prior snapshots and overlays the Blender compatibility checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -59,8 +59,13 @@ describe("visual monorepo M0 foundation", () => {
     const transformClosureGates = data.nodeR5TransformClosureCheckpoint.effectiveGates as Record<string, string>
     const linkClosureGates = data.nodeR5LinkClosureCheckpoint.effectiveGates as Record<string, string>
     const denseLifecycleGates = data.nodeR5DenseLifecycleCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5OwnerDecisionsCheckpoint.effectiveGates as Record<string, string>
-    const latestRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
+    const ownerDecisionGates = data.nodeR5OwnerDecisionsCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
+    const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
+      node: {head: string}
+      renderer: {head: string}
+    }
+    const latestRepositories = data.nodeR5BlenderCompatibilityCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
@@ -78,11 +83,20 @@ describe("visual monorepo M0 foundation", () => {
     expect(transformClosureGates.R5).toBe("partial-blocked")
     expect(linkClosureGates.R5).toBe("partial-blocked")
     expect(denseLifecycleGates.R5).toBe("partial-blocked")
-    expect(latestRepositories.node.head).toBe("176816b1ec89a3485309ff16675cc21c798e06db")
+    expect(ownerDecisionRepositories.node.head).toBe("176816b1ec89a3485309ff16675cc21c798e06db")
+    expect(latestRepositories.node.head).toBe("c399bf312dcb214aa0ed31d631a086bc7be0569d")
     expect(latestRepositories.renderer.head).toBe("99ce7846e6086ba4c3adebad23acbb6faafa277f")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "176816b1ec89a3485309ff16675cc21c798e06db",
+      "c399bf312dcb214aa0ed31d631a086bc7be0569d",
     )
+    expect(ownerDecisionGates).toEqual({
+      R1: "verified",
+      R2: "verified",
+      R3: "verified",
+      R4: "verified",
+      R5: "owner-decisions-pending",
+      R6: "blocked",
+    })
     expect(gates).toEqual({
       R1: "verified",
       R2: "verified",
@@ -125,6 +139,18 @@ describe("visual monorepo M0 foundation", () => {
     expect((data.nodeR5OwnerDecisionsCheckpoint.technicalR5 as {status: string}).status).toBe(
       "verified",
     )
+    expect((data.nodeR5BlenderCompatibilityCheckpoint.blenderCompatibility as {
+      implementationCommit: string
+    }).implementationCommit).toBe(
+      "1bce579a10ee2be4110ee43e10235ee173c2243f",
+    )
+    expect((data.nodeR5BlenderCompatibilityCheckpoint.blenderReferenceBoundary as {
+      normativeTarget: string
+      currentReferenceSceneHasNodeGraph: boolean
+    })).toMatchObject({
+      normativeTarget: "Blender 5.2 LTS",
+      currentReferenceSceneHasNodeGraph: false,
+    })
   })
 
   test("fails closed on a production package cycle", () => {

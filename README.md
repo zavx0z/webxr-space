@@ -42,6 +42,7 @@ The authoritative files are:
 - `evidence/node-r5-link-closure-checkpoint.json`
 - `evidence/node-r5-dense-lifecycle-checkpoint.json`
 - `evidence/node-r5-owner-decisions-checkpoint.json`
+- `evidence/node-r5-blender-compatibility-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -88,11 +89,14 @@ memory. Node `4a68482` plus Renderer `a5c9f3e`/`99ce784` closes unbounded dense
 disposal. Bundle and final visual verdict remain hard R5 blockers; dense memory
 is a pending owner-policy because no ceiling exists. Node `176816b` proves the
 historical bundle ceiling describes the removed imperative/incomplete model,
-but does not silently replace it. R6 is blocked because Node `176816b` and
-Renderer `99ce784` are not remote-backed
-and the canonical sources have not been frozen/read-only.
+but does not silently replace it. Node `1bce579` then records a Node-owned
+Blender 4.5 compatibility correction at exact bundle `277269 / 69694`, while
+`c399bf3` makes Blender 5.2 LTS the current cross-repository target. The legacy
+4.5 raster cannot close parity because the available 5.2 reference scene has no
+node graph. R6 is blocked because Node `c399bf3` and Renderer `99ce784` are not
+remote-backed and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-current live pointer is `evidence/node-r5-owner-decisions-checkpoint.json`.
+current live pointer is `evidence/node-r5-blender-compatibility-checkpoint.json`.
 
 ## Transition superproject
 

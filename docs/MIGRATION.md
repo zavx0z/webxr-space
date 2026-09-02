@@ -29,11 +29,16 @@ append topology for selector-independent data-plus-hidden insertion. Other R5
 gates remain. Renderer `0cb7256` and evidence `65ec24a` close calibrated 10k
 transform; Link/memory/disposal/bundle/final-visual gates remain.
 Node `f4519ea` closes Link timing and retained runtime memory; dense-visible
-disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Bundle
-and final visual verdict remain hard blockers. Dense retained memory awaits an
-approved owner ceiling and is not classified pass/fail.
-At `176816b`, all technical performance gates are verified; R5 now waits on
-explicit bundle-ceiling, dense-memory-policy and visual-verdict decisions.
+disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Dense
+retained memory awaits an approved owner ceiling and is not classified
+pass/fail. At `176816b`, all technical performance gates are verified. Node
+`1bce579` corrects the exact Blender 4.5 compatibility slice through owner DOM,
+CSS and Components; `c399bf3` records Blender 5.2 LTS as the current normative
+target. Exact full NodeEditor is now `277269 / 69694`, so the replacement bundle
+ceiling remains an owner decision. The available read-only Blender 5.2 scene
+contains no node graph, therefore the 4.5 raster is legacy compatibility
+evidence rather than a final parity verdict. R5 waits on the bundle ceiling,
+dense-memory policy, exact 5.2 node reference and explicit visual verdict.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.
