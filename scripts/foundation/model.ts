@@ -28,6 +28,7 @@ export const dataFiles = Object.freeze({
   nodeR5FinalCandidateCheckpoint: "evidence/node-r5-final-candidate-checkpoint.json",
   nodeR5VisualClosureCheckpoint: "evidence/node-r5-visual-closure-checkpoint.json",
   nodeR5SocketAlignmentCheckpoint: "evidence/node-r5-socket-alignment-checkpoint.json",
+  nodeR5ComponentDefaultsCheckpoint: "evidence/node-r5-component-defaults-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -153,6 +154,7 @@ export type FoundationData = Readonly<{
   nodeR5FinalCandidateCheckpoint: Readonly<Record<string, unknown>>
   nodeR5VisualClosureCheckpoint: Readonly<Record<string, unknown>>
   nodeR5SocketAlignmentCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5ComponentDefaultsCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -213,6 +215,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5SocketAlignmentCheckpoint: byPath.get(
       dataFiles.nodeR5SocketAlignmentCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5ComponentDefaultsCheckpoint: byPath.get(
+      dataFiles.nodeR5ComponentDefaultsCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -679,7 +684,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5BlenderCompatibilityCheckpoint.schemaVersion !== 1 ||
     data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1 ||
     data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5SocketAlignmentCheckpoint.schemaVersion !== 1) {
+    data.nodeR5SocketAlignmentCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5ComponentDefaultsCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -739,7 +745,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const compatibilityCheckpointPath = "evidence/node-r5-blender-compatibility-checkpoint.json"
   const finalCandidateCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
   const visualClosureCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-socket-alignment-checkpoint.json"
+  const socketAlignmentCheckpointPath = "evidence/node-r5-socket-alignment-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-component-defaults-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -847,7 +854,14 @@ function validateMigrationCoverage(data: FoundationData): void {
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestUi = objectRecord(latestRepositories.ui, "latest UI repository")
   const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
-  if (data.nodeCutover.observedHead !== latestNode.head ||
+  const currentRepositories = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.repositories,
+    "current Node R5 component defaults checkpoint repositories",
+  )
+  const currentNode = objectRecord(currentRepositories.node, "current Node repository")
+  const currentUi = objectRecord(currentRepositories.ui, "current UI repository")
+  const currentRenderer = objectRecord(currentRepositories.renderer, "current Renderer repository")
+  if (data.nodeCutover.observedHead !== currentNode.head ||
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
     data.nodeCutover.layoutContractCommit !== closureNode.head ||
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
@@ -864,31 +878,35 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.visualClosureEvidenceCommit !== visualClosureNode.head ||
     data.nodeCutover.socketAlignmentImplementationCommit !== latestNode.parent ||
     data.nodeCutover.socketAlignmentEvidenceCommit !== latestNode.head ||
+    data.nodeCutover.componentDefaultsNodeCommit !== currentNode.head ||
+    data.nodeCutover.componentDefaultsUiCommit !== currentUi.head ||
+    data.nodeCutover.themeRadiusRendererImplementationCommit !== currentRenderer.parent ||
+    data.nodeCutover.themeRadiusRendererEvidenceCommit !== currentRenderer.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== visualClosureCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== socketAlignmentCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
   const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
   const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
-  if (nodeOwner === undefined || nodeOwner.revision !== latestNode.head ||
+  if (nodeOwner === undefined || nodeOwner.revision !== currentNode.head ||
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
   const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
   const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
-  if (rendererOwner === undefined || rendererOwner.revision !== latestRenderer.head ||
+  if (rendererOwner === undefined || rendererOwner.revision !== currentRenderer.head ||
     rendererOwner.writable !== true) {
     throw new Error("Renderer ownership ledger does not match the latest checkpoint")
   }
   const uiGroup = data.ownership.groups.find(({id}) => id === "ui")
   const uiOwner = uiGroup?.owners.find(({id}) => id === "source:ui")
-  if (uiOwner === undefined || uiOwner.revision !== latestUi.head || uiOwner.writable !== true) {
+  if (uiOwner === undefined || uiOwner.revision !== currentUi.head || uiOwner.writable !== true) {
     throw new Error("UI ownership ledger does not match the latest checkpoint")
   }
   for (const path of [componentCheckpointPath, r4R5CheckpointPath, closureCheckpointPath]) {
@@ -1422,6 +1440,36 @@ function validateMigrationCoverage(data: FoundationData): void {
       throw new Error(`Socket alignment UI history mismatch: ${String(entry.package)}`)
     }
   }
+  const componentDefaultsNodeHistory = arrayValue(
+    data.nodeR5ComponentDefaultsCheckpoint.nodePackageHistory,
+    "component defaults Node package history",
+  ).map((value) => objectRecord(value, "component defaults Node history entry"))
+  assertExactStringSet(
+    "component defaults Node history coverage",
+    componentDefaultsNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of componentDefaultsNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Component defaults Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const componentDefaultsUiHistory = arrayValue(
+    data.nodeR5ComponentDefaultsCheckpoint.uiPackageHistory,
+    "component defaults UI package history",
+  ).map((value) => objectRecord(value, "component defaults UI history entry"))
+  assertExactStringSet(
+    "component defaults UI history coverage",
+    componentDefaultsUiHistory.map(({package: packageName}) => packageName),
+    uiInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of componentDefaultsUiHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+      throw new Error(`Component defaults UI history mismatch: ${String(entry.package)}`)
+    }
+  }
   const bundleDecision = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.bundleOwnerDecision,
     "bundle owner decision",
@@ -1830,6 +1878,165 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Corrected Socket visual acceptance must await a new owner verdict")
   }
 
+  const componentDefaultsProvenance = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.provenance,
+    "component defaults provenance",
+  )
+  if (componentDefaultsProvenance.previousCheckpoint !== socketAlignmentCheckpointPath ||
+    componentDefaultsProvenance.preservesPreviousSnapshots !== true ||
+    componentDefaultsProvenance.productionRuntimeChanged !== false ||
+    componentDefaultsProvenance.externalSourceProductionChanged !== true) {
+    throw new Error("Component defaults checkpoint must append to the Socket alignment checkpoint")
+  }
+  if (currentNode.head !== "1e2450aaceb5d5dbf34239eb7e1252595e053efd" ||
+    currentNode.parent !== latestNode.head || currentNode.status !== "clean" ||
+    currentNode.headContainedByOriginMain !== false ||
+    currentUi.head !== "90c77080c27d92fea5ee803e8ff1e49d65885ae1" ||
+    currentUi.parent !== latestUi.head || currentUi.status !== "clean" ||
+    currentUi.headContainedByOriginMain !== false ||
+    currentRenderer.head !== "3803739d0dded9c05c5f9e32acd163b6f81f6e6c" ||
+    currentRenderer.parent !== "8d14e99949ba38196c073bc24bbe83eab6272996" ||
+    currentRenderer.status !== "clean" || currentRenderer.headContainedByOriginMain !== false) {
+    throw new Error("Component defaults repository revisions do not match the observed clean sources")
+  }
+  const rejectedCandidates = arrayValue(
+    data.nodeR5ComponentDefaultsCheckpoint.rejectedCandidates,
+    "rejected visual candidates",
+  ).map((value) => objectRecord(value, "rejected visual candidate"))
+  const firstRejectedCandidate = rejectedCandidates[0]
+  const secondRejectedCandidate = rejectedCandidates[1]
+  if (rejectedCandidates.length !== 2 ||
+    firstRejectedCandidate?.checkpoint !== visualClosureCheckpointPath ||
+    firstRejectedCandidate.ownerVerdict !== "rejected-zavx0z" ||
+    firstRejectedCandidate.finding !==
+      "all six input Socket glyph centers were 7px left of the Node contour" ||
+    secondRejectedCandidate?.checkpoint !== socketAlignmentCheckpointPath ||
+    secondRejectedCandidate.ownerVerdict !== "rejected-zavx0z" ||
+    JSON.stringify(arrayValue(secondRejectedCandidate.findings, "second rejected findings")) !== JSON.stringify([
+      "NumberField, CheckboxField and SelectField did not arrive as their standard UI defaults",
+      "theme-owned border radii were not executed by Renderer var shorthand",
+      "Socket intrinsic contour remained the wrong size",
+    ])) {
+    throw new Error("Component defaults checkpoint must preserve both explicit rejected verdicts")
+  }
+  const componentCorrections = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.corrections,
+    "component defaults corrections",
+  )
+  const rendererCorrection = objectRecord(componentCorrections.renderer, "Renderer radius correction")
+  const uiCorrection = objectRecord(componentCorrections.ui, "UI default correction")
+  const nodeCorrection = objectRecord(componentCorrections.node, "Node composition correction")
+  const correctedGeometry = objectRecord(nodeCorrection.geometry, "corrected Node geometry")
+  const correctedNodeGeometry = objectRecord(correctedGeometry.node, "corrected Node contour")
+  const correctedFieldGeometry = objectRecord(correctedGeometry.field, "corrected Field contour")
+  const correctedCheckboxGeometry = objectRecord(correctedGeometry.checkbox, "corrected Checkbox contour")
+  const correctedSocketGeometry = objectRecord(correctedGeometry.socket, "corrected Socket contour")
+  if (rendererCorrection.owner !== "@zavx0z/renderer" ||
+    rendererCorrection.implementationCommit !== currentRenderer.parent ||
+    rendererCorrection.evidenceCommit !== currentRenderer.head ||
+    uiCorrection.owner !== "@ui/components" || uiCorrection.commit !== currentUi.head ||
+    arrayValue(uiCorrection.defaults, "corrected UI defaults").length !== 4 ||
+    nodeCorrection.owner !== "@nodes/ui" || nodeCorrection.commit !== currentNode.head ||
+    nodeCorrection.removesFieldVisualOverrides !== true ||
+    correctedNodeGeometry.width !== 160 || correctedNodeGeometry.height !== 294 ||
+    correctedGeometry.headerHeight !== 22 || correctedFieldGeometry.x !== 29 ||
+    correctedFieldGeometry.width !== 137 || correctedFieldGeometry.height !== 22 ||
+    correctedCheckboxGeometry.x !== 29 || correctedCheckboxGeometry.y !== 135 ||
+    correctedCheckboxGeometry.width !== 16 || correctedCheckboxGeometry.height !== 16 ||
+    correctedSocketGeometry.width !== 12 || correctedSocketGeometry.height !== 12 ||
+    correctedSocketGeometry.maximumPortCenterDeltaPx !== 1 ||
+    JSON.stringify(arrayValue(correctedGeometry.numberFieldY, "corrected number row positions")) !==
+      "[183,208,233,258,283]") {
+    throw new Error("Component defaults correction does not match exact owner geometry")
+  }
+  const componentTechnical = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.technicalR5,
+    "component defaults technical R5",
+  )
+  const componentFunctional = objectRecord(componentTechnical.functional, "component defaults functional acceptance")
+  const componentUiFunctional = objectRecord(
+    componentTechnical.uiFunctional,
+    "component defaults UI functional acceptance",
+  )
+  const componentBundle = objectRecord(componentTechnical.bundle, "component defaults Node bundle")
+  const componentExactBundle = objectRecord(componentBundle.exactNodeEditor, "component defaults exact Node bundle")
+  const componentBundleCeiling = objectRecord(componentBundle.ceiling, "component defaults Node bundle ceiling")
+  const componentUiBundle = objectRecord(componentTechnical.uiBundle, "component defaults UI bundle")
+  const componentExactUiBundle = objectRecord(
+    componentUiBundle.exactComponents,
+    "component defaults exact UI bundle",
+  )
+  const componentUiBundleCeiling = objectRecord(componentUiBundle.ceiling, "component defaults UI bundle ceiling")
+  const componentRendererFunctional = objectRecord(
+    componentTechnical.rendererFunctional,
+    "component defaults Renderer functional acceptance",
+  )
+  if (componentTechnical.status !== "verified" || componentFunctional.pass !== 221 ||
+    componentFunctional.fail !== 0 || componentFunctional.todo !== 0 ||
+    componentUiFunctional.packagePass !== 78 || componentUiFunctional.storybookPass !== 29 ||
+    componentUiFunctional.fail !== 0 || componentBundle.contract !== "nodes-component-ui-bundle/2" ||
+    componentExactBundle.bytes !== 278439 || componentExactBundle.gzipBytes !== 70370 ||
+    componentExactBundle.sha256 !== "cf096e4b4ea7a5e1344024cdfe0d0071ef6f43b96addf405553ed685f7a18df2" ||
+    componentBundleCeiling.bytes !== 285000 || componentBundleCeiling.gzipBytes !== 72000 ||
+    componentBundle.pass !== true || componentExactUiBundle.bytes !== 131190 ||
+    componentExactUiBundle.gzipBytes !== 31700 ||
+    componentExactUiBundle.sha256 !== "ff843b27f3777d991df3fee5c0f30cc0d57555008c1ce234f6ea756e3b80a01f" ||
+    componentUiBundleCeiling.bytes !== 131500 || componentUiBundleCeiling.gzipBytes !== 31750 ||
+    componentUiBundle.pass !== true || componentRendererFunctional.corePass !== 187 ||
+    componentRendererFunctional.storybookPass !== 23 || componentRendererFunctional.fail !== 0 ||
+    componentTechnical.inheritedPerformanceEvidence !== socketAlignmentCheckpointPath) {
+    throw new Error("Component defaults technical evidence does not match executable acceptance")
+  }
+  const componentStorybook = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.storybook,
+    "component defaults Storybook evidence",
+  )
+  const componentCapture = objectRecord(componentStorybook.capture, "component defaults Storybook capture")
+  if (componentStorybook.activeRevision !== "c1580e4950592557984ecdf4" ||
+    componentStorybook.graphDigest !== "828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8" ||
+    componentStorybook.ready !== true || componentStorybook.presented !== true ||
+    arrayValue(componentStorybook.diagnostics, "component defaults diagnostics").length !== 0 ||
+    arrayValue(componentStorybook.consoleErrors, "component defaults console errors").length !== 0 ||
+    componentCapture.id !== "capture_R32gYTk6Zi-eyT22Z46-ts7X" ||
+    componentCapture.width !== 2268 || componentCapture.height !== 704 ||
+    componentCapture.bytes !== 123590 ||
+    componentCapture.sha256 !== "4145b85515e5542877c8f821e39ba627d199fda12e6f7a5c92d62d8c77675e25") {
+    throw new Error("Component defaults Storybook evidence does not match the exact candidate capture")
+  }
+  const componentVisual = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.visualAcceptance,
+    "component defaults visual acceptance",
+  )
+  if (componentVisual.status !== "candidate-owner-verdict" ||
+    JSON.stringify(arrayValue(componentVisual.previousOwnerVerdicts, "previous owner verdicts")) !==
+      '["rejected-zavx0z","rejected-zavx0z"]' ||
+    componentVisual.mechanicalGeometryVerified !== true ||
+    componentVisual.ownerVerdict !== "pending-zavx0z" || componentVisual.parityClaimed !== false) {
+    throw new Error("Component defaults candidate must remain pending without a parity claim")
+  }
+  const componentM0Validation = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.m0Validation,
+    "component defaults M0 validation",
+  )
+  const componentFoundationValidation = objectRecord(
+    componentM0Validation.foundation,
+    "component defaults foundation validation",
+  )
+  const componentSourceValidation = objectRecord(
+    componentM0Validation.sourceEvidence,
+    "component defaults source evidence validation",
+  )
+  if (componentFoundationValidation.command !== "bun run check" ||
+    componentFoundationValidation.pass !== true || componentFoundationValidation.tests !== 13 ||
+    componentSourceValidation.command !== "bun run evidence:check" ||
+    componentSourceValidation.pass !== false ||
+    componentSourceValidation.blocker !==
+      "/Users/zavx0z/repozitarium/template/support.json has pre-existing M status" ||
+    componentSourceValidation.templateModifiedByThisSlice !== false ||
+    componentSourceValidation.validatorWeakened !== false) {
+    throw new Error("Component defaults M0 validation must preserve the external Template WIP blocker")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -1850,13 +2057,17 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5SocketAlignmentCheckpoint.effectiveGates,
     "Socket alignment effective Node gates",
   )
+  const componentGates = objectRecord(
+    data.nodeR5ComponentDefaultsCheckpoint.effectiveGates,
+    "component defaults effective Node gates",
+  )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
     }
     if (compatibilityGates[id] !== "verified" || finalCandidateGates[id] !== "verified" ||
       visualClosureGates[id] !== "verified" ||
-      gates[id] !== "verified") {
+      gates[id] !== "verified" || componentGates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
   }
@@ -1864,12 +2075,12 @@ function validateMigrationCoverage(data: FoundationData): void {
     compatibilityGates.R5 !== "owner-decisions-pending" ||
     finalCandidateGates.R5 !== "platform-gap-and-owner-verdict" ||
     visualClosureGates.R5 !== "owner-verdict-pending" ||
-    gates.R5 !== "owner-verdict-pending") {
+    gates.R5 !== "owner-verdict-pending" || componentGates.R5 !== "owner-verdict-pending") {
     throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
     finalCandidateGates.R6 !== "blocked" || visualClosureGates.R6 !== "blocked" ||
-    gates.R6 !== "blocked") {
+    gates.R6 !== "blocked" || componentGates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }

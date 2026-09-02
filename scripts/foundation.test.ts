@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves rejected visual evidence and overlays the corrected Socket checkpoint", async () => {
+  test("preserves both rejected visual candidates and overlays the component defaults checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -157,7 +157,8 @@ describe("visual monorepo M0 foundation", () => {
     const compatibilityGates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
     const finalCandidateGates = data.nodeR5FinalCandidateCheckpoint.effectiveGates as Record<string, string>
     const visualClosureGates = data.nodeR5VisualClosureCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5SocketAlignmentCheckpoint.effectiveGates as Record<string, string>
+    const alignmentGates = data.nodeR5SocketAlignmentCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5ComponentDefaultsCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
@@ -176,7 +177,12 @@ describe("visual monorepo M0 foundation", () => {
       ui: {head: string}
       renderer: {head: string}
     }
-    const latestRepositories = data.nodeR5SocketAlignmentCheckpoint.repositories as {
+    const alignmentRepositories = data.nodeR5SocketAlignmentCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+    }
+    const latestRepositories = data.nodeR5ComponentDefaultsCheckpoint.repositories as {
       node: {head: string}
       ui: {head: string}
       renderer: {head: string}
@@ -201,11 +207,12 @@ describe("visual monorepo M0 foundation", () => {
     expect(finalCandidateRepositories.node.head).toBe("996619791e9abfc32e5a5139f9f3b1e4bc20e716")
     expect(finalCandidateRepositories.ui.head).toBe("5c351459555ec0980893a1da1c1ee8e7f99de2ed")
     expect(visualClosureRepositories.node.head).toBe("9855abd9683affb8759647ebd27c342ab8b4dda4")
-    expect(latestRepositories.node.head).toBe("9ddded88425f69e6052687e7dccb4a02fb3016a5")
-    expect(latestRepositories.ui.head).toBe("1ddae57f1f525ecd2363bec1a5bb79db71591cfd")
-    expect(latestRepositories.renderer.head).toBe("99ce7846e6086ba4c3adebad23acbb6faafa277f")
+    expect(alignmentRepositories.node.head).toBe("9ddded88425f69e6052687e7dccb4a02fb3016a5")
+    expect(latestRepositories.node.head).toBe("1e2450aaceb5d5dbf34239eb7e1252595e053efd")
+    expect(latestRepositories.ui.head).toBe("90c77080c27d92fea5ee803e8ff1e49d65885ae1")
+    expect(latestRepositories.renderer.head).toBe("3803739d0dded9c05c5f9e32acd163b6f81f6e6c")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "9ddded88425f69e6052687e7dccb4a02fb3016a5",
+      "1e2450aaceb5d5dbf34239eb7e1252595e053efd",
     )
     expect(ownerDecisionGates).toEqual({
       R1: "verified",
@@ -239,7 +246,7 @@ describe("visual monorepo M0 foundation", () => {
       R5: "owner-verdict-pending",
       R6: "blocked",
     })
-    expect(gates).toEqual({
+    expect(alignmentGates).toEqual({
       R1: "verified",
       R2: "verified",
       R3: "verified",
@@ -247,11 +254,12 @@ describe("visual monorepo M0 foundation", () => {
       R5: "owner-verdict-pending",
       R6: "blocked",
     })
+    expect(gates).toEqual(alignmentGates)
     expect(uiGroup.owners.find(({id}) => id === "source:ui")?.revision).toBe(
-      "1ddae57f1f525ecd2363bec1a5bb79db71591cfd",
+      "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
     )
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
-      "99ce7846e6086ba4c3adebad23acbb6faafa277f",
+      "3803739d0dded9c05c5f9e32acd163b6f81f6e6c",
     )
     expect((data.nodeR4ClosureR5Checkpoint.r4Closure as {closedContradiction: string})
       .closedContradiction).toBe(
@@ -340,6 +348,40 @@ describe("visual monorepo M0 foundation", () => {
       inputSocketsChecked: 6,
       outputSocketsChecked: 2,
       maximumContourDeltaPx: 1,
+    })
+    expect((data.nodeR5ComponentDefaultsCheckpoint.visualAcceptance as {
+      status: string
+      previousOwnerVerdicts: string[]
+      mechanicalGeometryVerified: boolean
+      ownerVerdict: string
+      parityClaimed: boolean
+    })).toEqual({
+      status: "candidate-owner-verdict",
+      previousOwnerVerdicts: ["rejected-zavx0z", "rejected-zavx0z"],
+      mechanicalGeometryVerified: true,
+      ownerVerdict: "pending-zavx0z",
+      parityClaimed: false,
+    })
+    expect((data.nodeR5ComponentDefaultsCheckpoint.corrections as {
+      node: {
+        removesFieldVisualOverrides: boolean
+        geometry: {socket: {width: number; height: number}; numberFieldY: number[]}
+      }
+    }).node).toMatchObject({
+      removesFieldVisualOverrides: true,
+      geometry: {
+        socket: {width: 12, height: 12},
+        numberFieldY: [183, 208, 233, 258, 283],
+      },
+    })
+    expect((data.nodeR5ComponentDefaultsCheckpoint.technicalR5 as {
+      status: string
+      bundle: {exactNodeEditor: {bytes: number; gzipBytes: number}; pass: boolean}
+      uiBundle: {exactComponents: {bytes: number; gzipBytes: number}; pass: boolean}
+    })).toMatchObject({
+      status: "verified",
+      bundle: {exactNodeEditor: {bytes: 278439, gzipBytes: 70370}, pass: true},
+      uiBundle: {exactComponents: {bytes: 131190, gzipBytes: 31700}, pass: true},
     })
   })
 

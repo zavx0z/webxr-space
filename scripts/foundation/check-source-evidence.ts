@@ -165,9 +165,21 @@ const visualClosureUiCheckpoint = objectRecord(
   visualClosureRepositories.ui,
   "visual closure UI repository",
 )
-const latestRepositories = objectRecord(
+const socketAlignmentRepositories = objectRecord(
   data.nodeR5SocketAlignmentCheckpoint.repositories,
-  "latest Socket alignment checkpoint repositories",
+  "Socket alignment checkpoint repositories",
+)
+const socketAlignmentNodeCheckpoint = objectRecord(
+  socketAlignmentRepositories.node,
+  "Socket alignment Node repository",
+)
+const socketAlignmentUiCheckpoint = objectRecord(
+  socketAlignmentRepositories.ui,
+  "Socket alignment UI repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5ComponentDefaultsCheckpoint.repositories,
+  "latest component defaults checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const uiCheckpoint = objectRecord(latestRepositories.ui, "latest UI repository")
@@ -498,7 +510,7 @@ if (!Array.isArray(socketAlignmentNodeHistory)) {
 }
 for (const value of socketAlignmentNodeHistory) {
   const entry = objectRecord(value, "Socket alignment Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Socket alignment Node")
+  validateCheckpointHistoryEntry(entry, socketAlignmentNodeCheckpoint, "Socket alignment Node")
 }
 
 const socketAlignmentUiHistory = data.nodeR5SocketAlignmentCheckpoint.uiPackageHistory
@@ -507,7 +519,25 @@ if (!Array.isArray(socketAlignmentUiHistory)) {
 }
 for (const value of socketAlignmentUiHistory) {
   const entry = objectRecord(value, "Socket alignment UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Socket alignment UI")
+  validateCheckpointHistoryEntry(entry, socketAlignmentUiCheckpoint, "Socket alignment UI")
+}
+
+const componentDefaultsNodeHistory = data.nodeR5ComponentDefaultsCheckpoint.nodePackageHistory
+if (!Array.isArray(componentDefaultsNodeHistory)) {
+  throw new Error("Component defaults Node history must be an array")
+}
+for (const value of componentDefaultsNodeHistory) {
+  const entry = objectRecord(value, "Component defaults Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Component defaults Node")
+}
+
+const componentDefaultsUiHistory = data.nodeR5ComponentDefaultsCheckpoint.uiPackageHistory
+if (!Array.isArray(componentDefaultsUiHistory)) {
+  throw new Error("Component defaults UI history must be an array")
+}
+for (const value of componentDefaultsUiHistory) {
+  const entry = objectRecord(value, "Component defaults UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Component defaults UI")
 }
 
 console.log(
@@ -527,7 +557,8 @@ console.log(
   `${compatibilityNodeHistory.length + compatibilityRendererHistory.length} Blender compatibility histories, ` +
   `${finalCandidateNodeHistory.length + finalCandidateUiHistory.length} final candidate histories, ` +
   `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories, ` +
-  `${socketAlignmentNodeHistory.length + socketAlignmentUiHistory.length} Socket alignment histories`,
+  `${socketAlignmentNodeHistory.length + socketAlignmentUiHistory.length} Socket alignment histories, ` +
+  `${componentDefaultsNodeHistory.length + componentDefaultsUiHistory.length} component defaults histories`,
 )
 
 function validateCheckpointHistoryEntry(

@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T14:18:34+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r5-socket-alignment-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "classification": "R5 rejected-candidate theme defaults and exact component geometry checkpoint",
+    "preservesPreviousSnapshots": true,
+    "productionRuntimeChanged": false,
+    "externalSourceProductionChanged": true
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "1e2450aaceb5d5dbf34239eb7e1252595e053efd",
+      "parent": "9ddded88425f69e6052687e7dccb4a02fb3016a5",
+      "subject": "Align component node controls with Blender 5.2",
+      "committedAt": "2026-09-02T14:16:06+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 27,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node",
+      "manifestSha256": {
+        "package.json": "e4042d43440a0b4ce5e827fbcbcbcc79abf14905c9b0c7b6461d6a1cbafbfa2b",
+        "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+        "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+        "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+        "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+        "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+      }
+    },
+    "ui": {
+      "id": "ui",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/ui",
+      "branch": "main",
+      "head": "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
+      "parent": "1ddae57f1f525ecd2363bec1a5bb79db71591cfd",
+      "subject": "Make Blender field contours the UI defaults",
+      "committedAt": "2026-09-02T14:11:38+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/ui.git",
+      "originMain": "f43edc93dca7ee2fca98c6a228863391438ce7a8",
+      "ahead": 7,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:ui",
+      "manifestSha256": {
+        "package.json": "cf7660c6fda7162ba33e500c78b3e88c0a986ddd642bf4a373983d90879d4fc5",
+        "packages/components/package.json": "da7de461267460df2c6c0e39d26afa3d52768ebe4efb8bb6cbabbb7658c28a76"
+      }
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "3803739d0dded9c05c5f9e32acd163b6f81f6e6c",
+      "parent": "8d14e99949ba38196c073bc24bbe83eab6272996",
+      "subject": "Record border radius variable capability",
+      "committedAt": "2026-09-02T13:34:52+03:00",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 14,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer"
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 11, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 41, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1e2450aaceb5d5dbf34239eb7e1252595e053efd"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"}
+  ],
+  "uiPackageHistory": [
+    {"package": "@ui/components", "repository": "ui", "prefix": "packages/components", "commitCount": 43, "firstCommit": "ed516e16e4c08721bff495a324e8389f56b1217a", "lastCommit": "90c77080c27d92fea5ee803e8ff1e49d65885ae1"}
+  ],
+  "rejectedCandidates": [
+    {
+      "checkpoint": "evidence/node-r5-visual-closure-checkpoint.json",
+      "ownerVerdict": "rejected-zavx0z",
+      "finding": "all six input Socket glyph centers were 7px left of the Node contour"
+    },
+    {
+      "checkpoint": "evidence/node-r5-socket-alignment-checkpoint.json",
+      "ownerVerdict": "rejected-zavx0z",
+      "findings": [
+        "NumberField, CheckboxField and SelectField did not arrive as their standard UI defaults",
+        "theme-owned border radii were not executed by Renderer var shorthand",
+        "Socket intrinsic contour remained the wrong size"
+      ]
+    }
+  ],
+  "corrections": {
+    "renderer": {
+      "owner": "@zavx0z/renderer",
+      "implementationCommit": "8d14e99949ba38196c073bc24bbe83eab6272996",
+      "evidenceCommit": "3803739d0dded9c05c5f9e32acd163b6f81f6e6c",
+      "capability": "border-radius var() shorthand resolves through shared theme tokens"
+    },
+    "ui": {
+      "owner": "@ui/components",
+      "commit": "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
+      "defaults": [
+        "NumberField 120x22 standalone and full-width 22px labelled contour",
+        "CheckboxField 16x16 contour",
+        "SelectField compact by default",
+        "shared theme owns 1px borders and 3/4/6/round radii"
+      ]
+    },
+    "node": {
+      "owner": "@nodes/ui",
+      "commit": "1e2450aaceb5d5dbf34239eb7e1252595e053efd",
+      "removesFieldVisualOverrides": true,
+      "geometry": {
+        "node": {"width": 160, "height": 294},
+        "headerHeight": 22,
+        "field": {"x": 29, "width": 137, "height": 22},
+        "checkbox": {"x": 29, "y": 135, "width": 16, "height": 16},
+        "socket": {"width": 12, "height": 12, "maximumPortCenterDeltaPx": 1},
+        "numberFieldY": [183, 208, 233, 258, 283]
+      }
+    }
+  },
+  "technicalR5": {
+    "status": "verified",
+    "functional": {"command": "bun run check", "pass": 221, "fail": 0, "todo": 0},
+    "uiFunctional": {"command": "bun run check", "packagePass": 78, "storybookPass": 29, "fail": 0},
+    "bundle": {
+      "contract": "nodes-component-ui-bundle/2",
+      "exactNodeEditor": {"bytes": 278439, "gzipBytes": 70370, "sha256": "cf096e4b4ea7a5e1344024cdfe0d0071ef6f43b96addf405553ed685f7a18df2"},
+      "ceiling": {"bytes": 285000, "gzipBytes": 72000},
+      "pass": true
+    },
+    "uiBundle": {
+      "exactComponents": {"bytes": 131190, "gzipBytes": 31700, "sha256": "ff843b27f3777d991df3fee5c0f30cc0d57555008c1ce234f6ea756e3b80a01f"},
+      "ceiling": {"bytes": 131500, "gzipBytes": 31750},
+      "pass": true
+    },
+    "rendererFunctional": {"corePass": 187, "storybookPass": 23, "fail": 0},
+    "inheritedPerformanceEvidence": "evidence/node-r5-socket-alignment-checkpoint.json"
+  },
+  "storybook": {
+    "package": "@nodes/ui",
+    "activeRevision": "c1580e4950592557984ecdf4",
+    "graphDigest": "828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8",
+    "ready": true,
+    "presented": true,
+    "diagnostics": [],
+    "consoleErrors": [],
+    "capture": {
+      "id": "capture_R32gYTk6Zi-eyT22Z46-ts7X",
+      "route": "ui/comparison/reference/default",
+      "area": "node",
+      "nodeId": "node:277",
+      "width": 2268,
+      "height": 704,
+      "bytes": 123590,
+      "sha256": "4145b85515e5542877c8f821e39ba627d199fda12e6f7a5c92d62d8c77675e25"
+    }
+  },
+  "visualAcceptance": {
+    "status": "candidate-owner-verdict",
+    "previousOwnerVerdicts": ["rejected-zavx0z", "rejected-zavx0z"],
+    "mechanicalGeometryVerified": true,
+    "ownerVerdict": "pending-zavx0z",
+    "parityClaimed": false
+  },
+  "m0Validation": {
+    "foundation": {"command": "bun run check", "pass": true, "tests": 13},
+    "sourceEvidence": {
+      "command": "bun run evidence:check",
+      "pass": false,
+      "blocker": "/Users/zavx0z/repozitarium/template/support.json has pre-existing M status",
+      "templateModifiedByThisSlice": false,
+      "validatorWeakened": false
+    }
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "owner-verdict-pending",
+    "R6": "blocked"
+  },
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "explicit equal-scale visual owner verdict remains open after the second rejected candidate",
+      "Node 1e2450aaceb5d5dbf34239eb7e1252595e053efd is ahead 27 and not remote-backed",
+      "UI 90c77080c27d92fea5ee803e8ff1e49d65885ae1 is ahead 7 and not remote-backed",
+      "Renderer 3803739d0dded9c05c5f9e32acd163b6f81f6e6c is ahead 14 and not remote-backed",
+      "push/freeze/import/ownership-switch authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; corrected R5 visual owner verdict and R6 remote-backed freeze/authorization remain open"
+}
