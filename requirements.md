@@ -63,6 +63,9 @@ contracts — [`@nodes/ui`](../ui/requirements.md).
    полный snapshot fallback. Стабильный `getTopologyUpdate()` атомарно связывает
    этот snapshot с exact delta и Core-owned `initial | append-node | full`
    evidence; consumer не восстанавливает тип изменения сравнением копий graph.
+   Exact append не может invalidate уже выданный per-Parameter Store cache и не
+   сканирует его; `full` update/remove/bulk fallback по-прежнему проверяет и
+   удаляет stale entries до topology notification.
 
 ## Универсальная структура, типы и инстансы
 

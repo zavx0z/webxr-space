@@ -260,12 +260,12 @@ export function createNodeTreeExternalStore<
   tree.subscribeDelta(delta => {
     if (delta.kind !== "topology") return
     const appended = appendTopologySnapshot(topologyUpdate.snapshot, tree, delta)
+    if (appended === null) pruneParameterStores()
     topologyUpdate = Object.freeze({
       mode: appended === null ? "full" : "append-node",
       snapshot: appended ?? tree.getSnapshot(),
       delta,
     })
-    pruneParameterStores()
     const errors: unknown[] = []
     for (const listener of [...topologyListeners]) {
       try { listener() } catch (error) { errors.push(error) }

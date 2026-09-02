@@ -346,6 +346,43 @@ describe("general-purpose NodeTree foundation", () => {
     expect(tree.revision).toBe(2)
   })
 
+  test("repeats exact appends without pruning stores or mutating prior topology updates", () => {
+    const base = new Parameter<number>("value", 0)
+    const first = new Parameter<number>("value", 1)
+    const second = new Parameter<number>("value", 2)
+    const tree = createNodeTree({nodes: [{id: "base", parameters: [base]}]})
+    const store = createNodeTreeExternalStore(tree)
+    const baseStore = store.parameter("base", "value")
+    let notifications = 0
+    store.subscribeTopology(() => { notifications += 1 })
+
+    appendNode(tree, {
+      expectedRevision: tree.revision,
+      node: {id: "first", parameters: [first]},
+    })
+    const firstUpdate = store.getTopologyUpdate()
+    const firstSnapshot = firstUpdate.snapshot
+    const firstStore = store.parameter("first", "value")
+    expect(firstUpdate.mode).toBe("append-node")
+    expect(firstSnapshot.nodes.map(node => node.id)).toEqual(["base", "first"])
+
+    appendNode(tree, {
+      expectedRevision: tree.revision,
+      node: {id: "second", parameters: [second]},
+    })
+    const secondUpdate = store.getTopologyUpdate()
+    expect(secondUpdate.mode).toBe("append-node")
+    expect(notifications).toBe(2)
+    expect(firstUpdate.snapshot).toBe(firstSnapshot)
+    expect(firstSnapshot.nodes.map(node => node.id)).toEqual(["base", "first"])
+    expect(secondUpdate.snapshot.nodes.map(node => node.id)).toEqual(["base", "first", "second"])
+    expect(secondUpdate.snapshot.nodes[0]).toBe(firstSnapshot.nodes[0])
+    expect(secondUpdate.snapshot.nodes[1]).toBe(firstSnapshot.nodes[1])
+    expect(store.parameter("base", "value")).toBe(baseStore)
+    expect(store.parameter("first", "value")).toBe(firstStore)
+    expect(store.parameter("second", "value").getSnapshot()).toMatchObject({value: 2})
+  })
+
   test("marks update, removal and bulk topology as full external-store fallbacks", () => {
     const tree = createNodeTree({nodes: [{id: "a"}, {id: "b"}]})
     const store = createNodeTreeExternalStore(tree)
