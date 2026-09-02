@@ -19,6 +19,11 @@ hit semantics и stable identity. Старые `UiSurface`, `@ui/elements`,
 
 Accepted raster `.storybook/references/blender-4.5.5-reference.png` остаётся
 visual law и immutable resource, но не namespace или production dependency.
+Действующий cross-repository UI target — Blender 5.2 LTS. Совместимость exact
+Noise node scope с 4.5 artifact остаётся unverified: read-only 5.2
+`blender_reference` NODE_EDITOR доступен, но текущая reference scene не содержит
+node graph. Поэтому 4.5 comparison направляет correction, но не закрывает
+финальный 5.2 owner verdict автоматически.
 
 ## Public contract
 
@@ -309,7 +314,7 @@ Comparison route `ui/comparison/reference/default` использует:
 Mechanical route/canvas evidence не является visual parity. Окончательный
 equal-scale visual verdict остаётся за `zavx0z`.
 
-Current Node-owned parity slice на Storybook revision
+Current Node-owned 4.5 compatibility slice на Storybook revision
 `6f658a4daf7149e42718cfe1` исправляет exact Noise content и composition:
 right-side `Fac/Color` outputs, отсутствие category, full-width menu rows,
 Checkbox-before-label Normalize, 228px authored width, 2px body rhythm,
@@ -341,13 +346,12 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    `178.6–328.6ms`. Retained baseline `~5.023GB` остаётся capacity evidence без
    утверждённого memory ceiling и требует отдельного owner policy, а не
    выдуманного pass/fail threshold.
-6. Blender numeric row остаётся точным UI Components owner gap. Expected:
-   optional NumberField label и value образуют один full-width compact filled
-   contour, как accepted Scale/Detail/Roughness/Lacunarity/Distortion rows.
-   Actual: `@ui/components/fields/number-field` рисует transparent 40% label
-   рядом с отдельным value contour, поэтому live Node имеет тёмную label column
-   и укороченный fill. Node не добавляет local Field CSS/copy; owner contract —
-   `UI-COMPILED-NUMBER-FIELD-001`.
+6. Blender numeric node row остаётся candidate UI Components owner gap.
+   4.5 artifact показывает один full-width compact filled contour для
+   Scale/Detail/Roughness/Lacunarity/Distortion; current NumberField optional
+   label рисуется отдельной transparent column. Но 5.2 exact node evidence пока
+   отсутствует, поэтому Node не добавляет local Field CSS/copy и не меняет
+   `UI-COMPILED-NUMBER-FIELD-001` по неподтверждённому legacy raster.
 7. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first
