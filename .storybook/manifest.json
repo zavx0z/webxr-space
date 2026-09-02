@@ -7,8 +7,7 @@
   "packageJson": "../package.json",
   "readme": "../README.md",
   "authorStyleSheets": [
-    {"specifier": "@ui/components/theme.css"},
-    {"specifier": "@nodes/ui/dom.css"}
+    {"specifier": "@ui/components/theme.css"}
   ],
   "runtime": {"module": "./runtime.ts", "export": "runtime"},
   "catalog": "./catalog.json"

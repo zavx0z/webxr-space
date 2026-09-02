@@ -1,20 +1,14 @@
 import {describe, expect, test} from "bun:test"
-import {createDocument, InputEvent} from "@zavx0z/dom"
-import {createCoreNodeTreeStory} from "./node-tree-story.ts"
+import {createDocument} from "@zavx0z/dom"
+import {createCoreNodeTreeStory} from "./node-tree-story.tsx"
 
 describe("Core external Storybook owner", () => {
   test("keeps the live NodeTree view owner-local and read-only", () => {
     const story = createCoreNodeTreeStory(createDocument(), "core/node-tree/live")
-    expect(story.props.editable).toBeFalse()
-    const add = story.element.querySelector('[data-action="add-node"]')!
-    expect(add.hasAttribute("hidden")).toBeTrue()
-    expect(add.hasAttribute("disabled")).toBeTrue()
-    const search = story.element.querySelector('input[type="search"]')!
-    if (!("value" in search)) throw new Error("Core search input is missing")
-    search.value = "Output"
-    search.dispatchEvent(new InputEvent("input", {bubbles: true}))
-    expect(story.props.query).toBe("Output")
-    expect(story.source().typescript).toContain("@nodes/ui/node-tree-editor")
+    expect(story.props).toMatchObject({revision: 0, topologyRevision: 0})
+    expect(story.element.querySelectorAll('[data-node-tree]')).toHaveLength(1)
+    expect(story.element.querySelector('[data-node-editor]')).toBeNull()
+    expect(story.source().typescript).toContain("@nodes/ui/node-tree")
     story.dispose()
   })
 })

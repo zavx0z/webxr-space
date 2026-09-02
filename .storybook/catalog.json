@@ -24,7 +24,7 @@
               "label": "Живой",
               "route": "core/node-tree/live",
               "module": {
-                "path": "../storybook/node-tree-story.ts",
+                "path": "../storybook/node-tree-story.tsx",
                 "export": "createCoreNodeTreeStory"
               }
             }
