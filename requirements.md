@@ -147,9 +147,10 @@ Template ABI.
 `icons.spec.ts` проверяет exact public aggregate и named asset identity,
 `syntax-theme.spec.ts` — полный source-backed data artifact и runtime
 projection, `theme.spec.ts` — exact linked CSS resource. Exact runtime
-cutover bundle измерен как 130251 bytes / 31322 bytes gzip; 131500/31750
-оставляет малый проверяемый запас этого exact runtime surface, а не общий
-резерв для data/resource owners или будущих компонентов.
+cutover bundle после восстановления SelectField SVG-indicator измерен как
+`131447 bytes / 31697 bytes gzip`; `131500 / 31750` оставляет малый
+проверяемый запас этого exact runtime surface, а не общий резерв для
+data/resource owners или будущих компонентов.
 
 ## DOM ownership
 
@@ -287,6 +288,13 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 - Native `SelectField` сохраняет тёмный menu-well material
   `--widget-text-background`; он не наследует более светлый Button material
   `--widget-regular-background`.
+- `SelectField` сохраняет прежний UI-owned `chevronDownIcon` как стабильный
+  decorative `<img>` поверх правой indicator-зоны. Exact native `<select>`
+  остаётся единственным interaction/picker/value owner и лежит под
+  non-interactive SVG slot; Components не подменяет его Button/Popover и не
+  требует unsupported CSS `appearance`. Этот состав восстанавливает
+  `metafor-ui-dev/pkg/ui/elements/select.ts`, где default был
+  `props.chevronSrc ?? uiIcons.chevronDown`, и его image-slot evidence.
 - `color-field` владеет trigger/popover lifecycle и композирует
   `color-picker-field`, который владеет in-flow color editing.
 - `field-group`, `vector-field` и `matrix-field` владеют keyed joined cells с

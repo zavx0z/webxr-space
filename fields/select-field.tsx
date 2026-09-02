@@ -5,6 +5,7 @@ import {
   validateSelectionState,
   type SelectionState
 } from "../src/selection/options.ts"
+import {chevronDownIcon} from "../icon-assets.ts"
 
 export type SelectFieldOption = Readonly<{
   key: string
@@ -101,26 +102,27 @@ export function SelectField(props: SelectFieldProps) {
     >
       {props.label ?? ""}
     </span>
-    <select
+    <span
       data-density={density}
       data-labelled={hasLabel ? "true" : undefined}
       data-readonly={props.readOnly === true ? "true" : undefined}
-      disabled={props.disabled === true || exceptionalLabel !== undefined}
-      title={selected?.description ?? props.title}
-      onChange={event => onChange(event.currentTarget, event)}
+      data-disabled={props.disabled === true || exceptionalLabel !== undefined ? "true" : undefined}
       style={css`
         box-sizing: border-box;
+        position: relative;
         display: block;
         min-width: 0;
         width: 180px;
         height: var(--control-height-large);
-        padding: 3px 8px;
+        --select-field-surface: var(--widget-text-background);
+        --select-field-content: var(--widget-regular-content);
         border: var(--border-width-control) solid var(--widget-regular-outline);
         border-radius: 4px;
-        background: var(--widget-text-background);
+        background: var(--select-field-surface);
         box-shadow: 0 1px 0 var(--material-widget-emboss);
         color: var(--widget-regular-content);
         font-size: var(--font-size-sm);
+        overflow: clip;
 
         &[data-labelled="true"] {
           width: 0;
@@ -128,51 +130,83 @@ export function SelectField(props: SelectFieldProps) {
         }
 
         &:hover {
-          background: var(--widget-hover-background);
+          --select-field-surface: var(--widget-hover-background);
         }
 
-        &:active {
+        &:focus-within {
           border-color: var(--widget-focus-outline);
-          background: var(--widget-text-background-focus);
+          --select-field-surface: var(--widget-text-background-focus);
         }
 
-        &:focus {
-          border-color: var(--widget-focus-outline);
-          background: var(--widget-text-background-focus);
-        }
-
-        &:disabled {
+        &[data-disabled="true"] {
           opacity: 0.5;
           box-shadow: none;
         }
 
         &[data-density="compact"] {
           height: var(--control-height-medium);
-          padding: 2px 6px;
           font-size: var(--font-size-xs);
+          --select-field-padding: 2px 6px;
         }
 
         &[data-readonly="true"] {
-          color: var(--widget-text-content-readonly);
+          --select-field-content: var(--widget-text-content-readonly);
         }
       `}
     >
-      <optgroup label="">
-        <option
-          value=""
-          selected={exceptionalLabel !== undefined}
-          disabled={true}
-          hidden={exceptionalLabel === undefined}
-        >
-          {exceptionalLabel ?? ""}
-        </option>
-        {displayedOptions.map(option => <SelectOption
-          key={option.key}
-          option={option}
-          selected={exceptionalLabel === undefined && option.value === props.value}
-          hidden={exceptionalLabel !== undefined}
-        />)}
-      </optgroup>
-    </select>
+      <select
+        disabled={props.disabled === true || exceptionalLabel !== undefined}
+        title={selected?.description ?? props.title}
+        onChange={event => onChange(event.currentTarget, event)}
+        style={css`
+          box-sizing: border-box;
+          display: block;
+          width: 100%;
+          height: 100%;
+          padding: var(--select-field-padding, 3px 8px);
+          border: 0;
+          background: transparent;
+          color: var(--select-field-content);
+        `}
+      >
+        <optgroup label="">
+          <option
+            value=""
+            selected={exceptionalLabel !== undefined}
+            disabled={true}
+            hidden={exceptionalLabel === undefined}
+          >
+            {exceptionalLabel ?? ""}
+          </option>
+          {displayedOptions.map(option => <SelectOption
+            key={option.key}
+            option={option}
+            selected={exceptionalLabel === undefined && option.value === props.value}
+            hidden={exceptionalLabel !== undefined}
+          />)}
+        </optgroup>
+      </select>
+      <img
+        data-select-field-indicator=""
+        data-density={density}
+        src={chevronDownIcon}
+        alt=""
+        aria-hidden="true"
+        width={22}
+        height={22}
+        style={css`
+          box-sizing: border-box;
+          position: absolute;
+          top: 3px;
+          right: 1px;
+          padding: 4px;
+          background: var(--select-field-surface);
+
+          &[data-density="compact"] {
+            top: 0;
+          }
+        `}
+      />
+    </span>
   </label>
 }
