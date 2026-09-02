@@ -5,7 +5,11 @@ import {
   createDocument,
   type HTMLInputElement,
 } from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {
+  createDocumentInteractionController,
+  createDocumentInteractionState,
+  createDocumentRenderer,
+} from "@zavx0z/renderer"
 import {chevronDownIcon, chevronRightIcon} from "@ui/components/icons"
 import catalog from "../../.storybook/catalog.json"
 import {
@@ -95,7 +99,13 @@ describe("public component Storybook projection", () => {
     expect(node.querySelector('[data-socket-id="noise-fac-output"]')?.getAttribute("data-socket-side")).toBe("right")
     expect(node.querySelector('[data-socket-id="noise-color-output"]')?.getAttribute("data-socket-kind")).toBe("color")
     const output = node.querySelector('[data-socket-id="noise-fac-output"]')!
-    const renderer = createDocumentRenderer({document, root: story.element, viewport: {width: 500, height: 500}})
+    const interactionState = createDocumentInteractionState(document)
+    const renderer = createDocumentRenderer({
+      document,
+      interactionState,
+      root: story.element,
+      viewport: {width: 500, height: 500},
+    })
     const frame = renderer.flush()
     const nodeBox = frame.boxByNode.get(node)!
     const glyphBox = frame.boxByNode.get(output.querySelector('[data-socket-glyph]')!)!
@@ -196,6 +206,20 @@ describe("public component Storybook projection", () => {
     }
     expect(normalizeBox.y - (dimensionsBox.y + dimensionsBox.height)).toBe(8)
     expect(scaleBox.y - (vectorBox.y + vectorBox.height)).toBe(4)
+    const outputGlyph = output.querySelector('[data-socket-glyph]')!
+    const interaction = createDocumentInteractionController({document, interactionState})
+    interaction.pointerMove(frame, {
+      clientX: labelBox.x + labelBox.width / 2,
+      clientY: labelBox.y + labelBox.height / 2,
+      pointerId: 17,
+    })
+    const hovered = renderer.flush()
+    expect(hovered.displayList.some(item => item.node === output && item.key === "shadow")).toBeFalse()
+    const glyphShadow = hovered.displayList.find(item => item.node === outputGlyph && item.key === "shadow")
+    expect(glyphShadow?.kind).toBe("rect")
+    if (glyphShadow?.kind !== "rect") throw new Error("Expected Socket glyph shadow")
+    expect(glyphShadow.color).toBe("#9e9e9e")
+    interaction.dispose()
     expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 192, height: 328, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')

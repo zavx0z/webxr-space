@@ -163,6 +163,9 @@ theme `1px` dark outline; loose row сохраняет `22px` flow contour.
 Connected/selected остаются независимым state и не превращают
 обычный unconnected endpoint в hollow circle. Loose row — тот же public
 `Socket` с row presentation, не скрытый `SocketPort` owner.
+Hover/focus всего row остаётся hit affordance одного Socket button, но glow
+принадлежит только `data-socket-glyph`; full-width Parameter row никогда не
+получает цветной box-shadow.
 Для endpoint presentation центр glyph обязан совпадать с соответствующим
 левым/правым внешним контуром Node с допуском `1px`. Это проверяется по
 Renderer boxes для всех шести input Sockets и обоих output Sockets exact
@@ -323,21 +326,21 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 
 После exact Blender 5.2 component slice и восстановления UI-owned SVG
 indicator текущий comparable exact full NodeEditor build:
-`278697 raw / 70398 gzip`; root: `278626 / 70709`; NodeTree:
-`270561 / 67878`; complete aggregate Parameter interaction graph:
-`205247 / 50733`; Link: `122489 / 33111`. Root-vs-exact не объясняет дельту,
+`279084 raw / 70434 gzip`; root: `279013 / 70753`; NodeTree:
+`270948 / 67919`; complete aggregate Parameter interaction graph:
+`205634 / 50775`; Link: `122876 / 33153`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+14.080% raw /
-+16.053% gzip`.
+Exact full path больше historical incomplete evidence на `+14.238% raw /
++16.113% gzip`.
 
 Replacement ceiling `285000 / 72000` принят для exact fully-component
 NodeEditor и исполняется обычным repository test. Он оставляет только
-`6303 raw / 1602 gzip` (`2.261% / 2.276%`) запаса и не является общим резервом
+`5916 raw / 1566 gzip` (`2.120% / 2.223%`) запаса и не является общим резервом
 для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
 imperative/incomplete модели, а не скрытым обязательством удалить component
 runtime или функциональность.
 
-Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64576`,
+Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64963`,
 `@ui/components 64721`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
 React runtime `34183`, Parameter projection `17329`, Core NodeTree `17867`,
@@ -345,7 +348,7 @@ NodeTree UI `13645`, Foundation `13565`, semantic Document `13383` и Node
 presentation `8404`.
 Story/dev retention и root/subpath alias отсутствуют; private profiler code в
 production graph не попадает. Exact artifact sha256:
-`ee14452ebafb4adeb76e4daadc5593bc8e5b4a3f4349645ecdaea810e5497204`.
+`61272bd378c943afee0d273c32c76b26d847674e9658e6bd71b37165ccd02845`.
 
 ## Storybook and visual acceptance
 
@@ -456,6 +459,24 @@ capture `capture_CS-ZXxAZA48BcsELO4F4ILJ9`, sha256
 `84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4`
 имеет ready/presented и empty diagnostics/console. Это исправляет icon defect,
 но не подменяет final owner verdict.
+
+Socket row hover исправлен без JS state и без отдельного hit owner. Generic
+Template owner `6db9e772e37cdc47e6dba58d153016057cc93558` допускает только один bounded
+descendant static attribute target; Node использует его для
+`&:hover [data-socket-glyph]` / `&:focus [data-socket-glyph]`. Production
+integration двигает pointer по label area того же Socket button и доказывает:
+full row не имеет display shadow, а exact `12×12` glyph получает kind-color
+shadow. External Storybook revision `408f5bc96201dd5885b74fdc`, graph
+`828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8`
+на standalone route `ui/socket/float/output` после semantic hover показывает
+`button display=[]`, glyph display `[shadow, background]`; row capture
+`capture_zuU5-qta1H0LYhSZoqpT4ufE`, sha256
+`3edac5eef8c5f389aaaacc57ea14c3c28c4d0d98b2f4ec78e6f9ba12517b85ab`
+имеет empty console. Exact comparison hover capture
+`capture_URe8XKZ-rgkz9yr0oRSGApdE`, sha256
+`0d8ebd3b7a442ae73d34bdbdfed72a5a153751dc1e40cf77e82c2e4c778ba27f`
+также имеет ready/presented и empty diagnostics/console. Это исправляет hover
+ownership, но не подменяет final owner verdict всей Blender parity.
 
 ## Known platform gates
 

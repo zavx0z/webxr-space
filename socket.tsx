@@ -144,17 +144,32 @@ export function Socket(props: SocketProps) {
         margin-right: -6px;
       }
 
-      &:hover {
+      &:hover [data-socket-glyph] {
         box-shadow: 0 0 6px currentcolor;
       }
 
-      &:focus {
+      &:hover [data-socket-glyph][data-dot="true"] {
+        box-shadow: inset 0 0 0 3px currentcolor, 0 0 6px currentcolor;
+      }
+
+      &:focus [data-socket-glyph] {
         box-shadow: 0 0 6px currentcolor;
+      }
+
+      &:focus [data-socket-glyph][data-dot="true"] {
+        box-shadow: inset 0 0 0 3px currentcolor, 0 0 6px currentcolor;
       }
 
       &:disabled {
         opacity: .45;
+      }
+
+      &:disabled [data-socket-glyph] {
         box-shadow: none;
+      }
+
+      &:disabled [data-socket-glyph][data-dot="true"] {
+        box-shadow: inset 0 0 0 3px currentcolor;
       }
 
       ${props.style}
