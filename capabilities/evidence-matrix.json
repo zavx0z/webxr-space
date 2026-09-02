@@ -104,7 +104,8 @@
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
-        "evidence/node-r5-append-checkpoint.json"
+        "evidence/node-r5-append-checkpoint.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -178,7 +179,10 @@
         "retainedBaselineGbApprox": 4.98,
         "disposal": "unbounded"
       },
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
+      ]
     },
     {
       "id": "nodes.link-selection-performance",
@@ -237,40 +241,45 @@
     {
       "id": "nodes.topology-performance",
       "classification": "partial-performance-evidence",
-      "status": "incremental-append-correctness-verified-performance-failed",
+      "status": "topologyCommit-verified-end-to-end-renderer-failed",
       "owner": "source:node with component/Renderer traversal boundary",
-      "statement": "Copy-on-write append-node projection preserves old identities and bounded mutation shape, but 10k Node commit and full Renderer projection remain outside acceptance.",
+      "statement": "Node-owned topologyCommit now passes 1k/10k budgets; end-to-end append remains blocked strictly by CPU Renderer full projection.",
       "metrics": {
         "nodes1000": {
-          "coreEditorMs": 13.594,
-          "projectionMs": 21.933,
-          "nodeCommitMs": 35.527,
-          "rendererMs": 389.023,
-          "backendMs": 6.921,
-          "totalMs": 431.471
+          "coreEditorMs": 3.244,
+          "projectionMs": 7.989,
+          "nodeCommitMs": 11.233,
+          "rendererMs": 343.545,
+          "backendMs": 7.204,
+          "totalMs": 361.981,
+          "nodeCommitBudgetMs": 50,
+          "nodeCommitPass": true
         },
         "nodes10000": {
-          "coreEditorMs": 63.684,
-          "projectionMs": 70.61,
-          "nodeCommitMs": 134.294,
-          "rendererMs": 7182.263,
-          "backendMs": 10.228,
-          "totalMs": 7326.785
-        },
-        "nodeCommitBudgetMs": 100
+          "coreEditorMs": 28.641,
+          "projectionMs": 47.763,
+          "nodeCommitMs": 76.404,
+          "rendererMs": 3744.422,
+          "backendMs": 6.725,
+          "totalMs": 3827.55,
+          "nodeCommitBudgetMs": 100,
+          "nodeCommitPass": true
+        }
       },
       "evidence": [
         "evidence/node-r4-closure-r5-checkpoint.json",
-        "evidence/node-r5-append-checkpoint.json"
+        "evidence/node-r5-append-checkpoint.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
       ]
     },
     {
       "id": "nodes.incremental-append-projection",
       "classification": "implemented-source-fact",
-      "status": "correctness-verified-r5-performance-partial",
+      "status": "correctness-and-topologyCommit-verified-r5-end-to-end-partial",
       "owner": "@nodes/core and @nodes/ui",
       "statement": "Core-owned append-node delta drives copy-on-write retained Node/Port geometry and node-id indexes without mutating previously published snapshots.",
       "implementationCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "storeRetentionCommit": "1f4393e077748ed75a278ec327aa352399f1f65f",
       "evidenceShape": {
         "notifications": 1,
         "mounts": 32,
@@ -281,10 +290,12 @@
         "oldNodeAndLinkIdentitiesRetained": true
       },
       "limitations": [
-        "10k Node commit is 134.294ms before Renderer/backend flush",
-        "CPU Renderer full projection dominates at 389.023ms/7182.263ms"
+        "CPU Renderer full projection dominates at 343.545ms/3744.422ms"
       ],
-      "evidence": ["evidence/node-r5-append-checkpoint.json"]
+      "evidence": [
+        "evidence/node-r5-append-checkpoint.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
+      ]
     },
     {
       "id": "contradiction.consumer.node-local-layout",
@@ -316,12 +327,15 @@
       "owner": "source:node",
       "statement": "The exact NodeEditor component bundle exceeds the historical incomplete ceiling, which has not been raised.",
       "metrics": {
-        "exactBytes": 270750,
-        "exactGzipBytes": 68200,
+        "exactBytes": 276138,
+        "exactGzipBytes": 69416,
         "ceilingBytes": 245000,
         "ceilingGzipBytes": 61000
       },
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
+      ]
     },
     {
       "id": "nodes.storybook-component-cutover",
@@ -339,8 +353,10 @@
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
-        "evidence/node-r5-append-checkpoint.json"
+        "evidence/node-r5-append-checkpoint.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
       ],
+      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 1f4393e because stale-store pruning does not change observable DOM or visual output",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -348,12 +364,13 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 0b949e7 is ahead 4 and Renderer a84672d is ahead 6; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 1f4393e is ahead 5 and Renderer a84672d is ahead 6; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
-        "evidence/node-r5-append-checkpoint.json"
+        "evidence/node-r5-append-checkpoint.json",
+        "evidence/node-r5-topology-commit-checkpoint.json"
       ]
     },
     {

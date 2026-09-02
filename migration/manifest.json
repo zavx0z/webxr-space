@@ -71,11 +71,12 @@
       "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
       "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
       "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "topologyCommitOptimizationCommit": "1f4393e077748ed75a278ec327aa352399f1f65f",
       "completedGates": ["R1", "R2", "R3", "R4"],
       "partialGates": ["R5"],
       "blockedGates": ["R5", "R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r4-closure-r5-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-append-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-append-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-topology-commit-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {

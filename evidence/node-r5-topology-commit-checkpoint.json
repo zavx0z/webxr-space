@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T07:29:12+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r5-append-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "classification": "append-only topologyCommit R5 checkpoint",
+    "preservesPreviousSnapshots": true
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "1f4393e077748ed75a278ec327aa352399f1f65f",
+      "parent": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "subject": "Skip stale-store pruning on Node append",
+      "committedAt": "2026-09-02T07:26:35+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 5,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node",
+      "manifestSha256": {
+        "package.json": "cc85089a7f2aef111a8fd9ed884ab26ab1678f0bd8822506b275b51ce2e3fef2",
+        "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+        "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+        "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+        "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+        "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+      }
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "a84672deb1573b1e16bffacf801877f1a3633628",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 6,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer",
+      "manifestSha256": {
+        "package.json": "94c0038a9ed71174dcbd16a1255e56befab4394e4f3e3af47e8fd2ee9ca609e0",
+        "packages/browser/package.json": "de33f0188244b681366abd9204371292b900da0e88c5dfe2e4ab1cdd3fd74664",
+        "packages/core/package.json": "65e247bebb179eae88fedf2fa8863d99a5a358f5e23cb69699518de5b4347a83",
+        "packages/devtools/package.json": "45d3b7dedc11ce5f293f521d1e509343fa1bc998cf604f920ab1c99116022775",
+        "packages/dom/package.json": "d11d0816dc1eee140a9d69b662a296dcf5d7e680707bc99aaed013350019ed42",
+        "packages/react/package.json": "7dbd2e77a402d8b391eab1a7c49402d61fce35fd8e99084fbe0047dc369f43d9",
+        "packages/webgpu/package.json": "be5bccaad84f88571e66ad46849807e9d4cf5125942cac0fb3b8bbf8c34f7f6e"
+      }
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 11, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 19, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"}
+  ],
+  "rendererPackageHistory": [
+    {"package": "@zavx0z/renderer-browser", "repository": "renderer", "prefix": "packages/browser", "commitCount": 12, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"},
+    {"package": "@zavx0z/renderer", "repository": "renderer", "prefix": "packages/core", "commitCount": 28, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/dom-devtools", "repository": "renderer", "prefix": "packages/devtools", "commitCount": 4, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "3a0801d4d0fa39f385fca7aceca67fbd0736e591"},
+    {"package": "@zavx0z/dom", "repository": "renderer", "prefix": "packages/dom", "commitCount": 17, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/react", "repository": "renderer", "prefix": "packages/react", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5d5a06c14c2f8216cce6f5930695154f57524ea4"},
+    {"package": "@zavx0z/renderer-webgpu", "repository": "renderer", "prefix": "packages/webgpu", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc"}
+  ],
+  "topologyCommit": {
+    "status": "verified-r5-subgate",
+    "commit": "1f4393e077748ed75a278ec327aa352399f1f65f",
+    "contract": "exact append preserves stable Parameter stores without pruning; full update/remove/bulk paths prune stale stores before topology notification",
+    "correctness": [
+      "repeated append preserves prior topology snapshots and Parameter Store identities",
+      "full update, reorder and remove prune stale stores",
+      "stale/duplicate/subscription-failure paths remain fail-closed",
+      "32 mounts, 35 renders, zero moves and zero disposes",
+      "exact two-record mutation ledger and retained old Node/Link identities"
+    ],
+    "nodes1000": {
+      "coreEditorMs": 3.244,
+      "projectionMs": 7.989,
+      "nodeCommitMs": 11.233,
+      "rendererMs": 343.545,
+      "backendMs": 7.204,
+      "inputToPresentMs": 361.981,
+      "nodeCommitBudgetMs": 50,
+      "nodeCommitPass": true,
+      "endToEndPass": false
+    },
+    "nodes10000": {
+      "coreEditorMs": 28.641,
+      "projectionMs": 47.763,
+      "nodeCommitMs": 76.404,
+      "rendererMs": 3744.422,
+      "backendMs": 6.725,
+      "inputToPresentMs": 3827.55,
+      "nodeCommitBudgetMs": 100,
+      "nodeCommitPass": true,
+      "endToEndPass": false
+    },
+    "dominantRemainingStage": "CPU Renderer full projection"
+  },
+  "functionalAcceptance": {
+    "command": "bun run check",
+    "commit": "1f4393e077748ed75a278ec327aa352399f1f65f",
+    "pass": 220,
+    "fail": 0,
+    "todo": 1,
+    "todoReason": "existing component bundle owner gate",
+    "assertions": 9461,
+    "verification": "post-commit rerun in canonical clean Node checkout"
+  },
+  "bundle": {
+    "exactNodeEditor": {"bytes": 276138, "gzipBytes": 69416},
+    "deltaFrom0b949e7": {"bytes": 12, "gzipBytes": 0},
+    "historicalIncompleteCeiling": {"bytes": 245000, "gzipBytes": 61000},
+    "status": "owner-gate-open"
+  },
+  "storybook": {
+    "evidenceCheckpoint": "evidence/node-r5-append-checkpoint.json#storybook",
+    "revision": "92a235eb5bc5ba49c2e9c1de",
+    "captureSha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca",
+    "rerun": false,
+    "reason": "observable DOM and visual output are unchanged by stale-store pruning"
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "partial-blocked",
+    "R6": "blocked"
+  },
+  "r5": {
+    "verifiedSubgates": [
+      "copy-on-write append correctness",
+      "1k and 10k Node topologyCommit",
+      "stable Parameter Store retention on exact append"
+    ],
+    "remainingBlockers": [
+      "CPU Renderer full projection dominates at 343.545ms/3744.422ms",
+      "10k transform p99",
+      "10k Link selection p99",
+      "dense-visible cold memory and bounded disposal",
+      "component bundle owner gate",
+      "final visual owner verdict"
+    ]
+  },
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "Node 1f4393e077748ed75a278ec327aa352399f1f65f is ahead 5 and not remote-backed",
+      "Renderer a84672deb1573b1e16bffacf801877f1a3633628 is ahead 6 and not remote-backed",
+      "source freeze/read-only authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; end-to-end Renderer stage keeps R5 blocked and R6 remains blocked"
+}

@@ -45,15 +45,16 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the append checkpoint", async () => {
+  test("preserves prior snapshots and overlays the topologyCommit checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
     const checkpointRepository = data.nodeCutoverSnapshot.repository as {head: string}
     const contradictionGates = data.nodeR4R5Checkpoint.effectiveGates as Record<string, string>
     const closureGates = data.nodeR4ClosureR5Checkpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5AppendCheckpoint.effectiveGates as Record<string, string>
-    const latestRepositories = data.nodeR5AppendCheckpoint.repositories as {
+    const appendGates = data.nodeR5AppendCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5TopologyCommitCheckpoint.effectiveGates as Record<string, string>
+    const latestRepositories = data.nodeR5TopologyCommitCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
@@ -64,10 +65,11 @@ describe("visual monorepo M0 foundation", () => {
     expect(checkpointRepository.head).toBe("becff8f34a7152791df8e833a918dfe0142681bb")
     expect(contradictionGates.R4).toBe("blocked")
     expect(closureGates.R4).toBe("verified")
-    expect(latestRepositories.node.head).toBe("0b949e73a77f42bcb32bee7f9041d0500d9655e6")
+    expect(appendGates.R5).toBe("partial-blocked")
+    expect(latestRepositories.node.head).toBe("1f4393e077748ed75a278ec327aa352399f1f65f")
     expect(latestRepositories.renderer.head).toBe("a84672deb1573b1e16bffacf801877f1a3633628")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+      "1f4393e077748ed75a278ec327aa352399f1f65f",
     )
     expect(gates).toEqual({
       R1: "verified",
@@ -86,6 +88,9 @@ describe("visual monorepo M0 foundation", () => {
     )
     expect((data.nodeR5AppendCheckpoint.incrementalAppend as {commit: string}).commit).toBe(
       "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
+    )
+    expect((data.nodeR5TopologyCommitCheckpoint.topologyCommit as {commit: string}).commit).toBe(
+      "1f4393e077748ed75a278ec327aa352399f1f65f",
     )
   })
 

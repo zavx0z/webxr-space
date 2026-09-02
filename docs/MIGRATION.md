@@ -22,8 +22,9 @@ Node follows `migration/node-cutover.json`. The clean component rewrite is
 committed in the canonical checkout and R1-R4 are verified. Exact owner
 `LayoutResult` is mandatory at `9cccb58`; consumer-local fallback is gone.
 Renderer `1cd3243`/`5d5a06c` closes only part of R5. Remaining R5 gates and R6
-stay blocked. Node `0b949e7` adds accepted copy-on-write append correctness, but
-10k Node commit and Renderer projection remain outside acceptance. No Node
-package history is imported and `source:node` remains the only writable
+stay blocked. Node `0b949e7` adds accepted copy-on-write append correctness, and
+Node `1f4393e` closes 1k/10k topologyCommit by retaining stable Parameter
+stores on append. End-to-end Renderer projection remains outside acceptance. No
+Node package history is imported and `source:node` remains the only writable
 canonical owner. The former dual production path was never imported as an
 intermediate package.
