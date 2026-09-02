@@ -117,6 +117,7 @@ export function Socket(props: SocketProps) {
     onClick={props.onActivate}
     style={css`
       box-sizing: border-box;
+      position: ${presentation === "row" ? "relative" : "static"};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -124,7 +125,7 @@ export function Socket(props: SocketProps) {
       min-width: ${presentation === "row" ? "0" : "10px"};
       height: ${presentation === "row" ? "20px" : "10px"};
       min-height: ${presentation === "row" ? "20px" : "10px"};
-      flex-direction: ${presentation === "row" && props.side === "right" ? "row-reverse" : "row"};
+      flex-direction: row;
       gap: ${presentation === "row" ? "4px" : "0"};
       padding: 0;
       border: 0;
@@ -169,7 +170,11 @@ export function Socket(props: SocketProps) {
       data-active={String(active)}
       style={css`
         box-sizing: border-box;
+        position: ${presentation === "row" ? "absolute" : "static"};
         display: block;
+        left: ${presentation === "row" && props.side === "left" ? "0" : "auto"};
+        top: ${presentation === "row" ? "5px" : "auto"};
+        right: ${presentation === "row" && props.side === "right" ? "0" : "auto"};
         width: 10px;
         min-width: 10px;
         height: 10px;
@@ -212,11 +217,15 @@ export function Socket(props: SocketProps) {
       `}
     ></span>
     <span
+      data-socket-label=""
       hidden={presentation !== "row"}
       style={css`
+        box-sizing: border-box;
         display: block;
+        width: 100%;
         min-width: 0;
-        flex-grow: 1;
+        padding-left: ${props.side === "left" ? "14px" : "0"};
+        padding-right: ${props.side === "right" ? "14px" : "0"};
         overflow: hidden;
         color: #d8d8d8;
         font-size: 10px;

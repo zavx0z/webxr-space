@@ -415,9 +415,8 @@ function ComparisonStory() {
             id="comparison-noise"
             label="Noise Texture"
             title="Noise Texture · accepted comparison scope"
-            category="texture"
-            headerColor="#79461d"
-            rect={Object.freeze({x: 6, y: 0, width: 216, height: 272})}
+            headerColor="#8b481f"
+            rect={Object.freeze({x: 0, y: 0, width: 228, height: 272})}
             parameters={data.parameters}
             sockets={data.sockets}
             connectedSocketKeys={data.connectedSocketKeys}
@@ -656,13 +655,13 @@ function comparisonNodeData(): Readonly<{
   connectedSocketKeys: ReadonlySet<string>
 }> {
   const definitions = [
-    comparisonParameter("noise-dimensions", "Dimensions", "3d", "menu", {options: [
+    comparisonParameter("noise-dimensions", "Dimensions", "3d", "menu", {labelHidden: true, options: [
       {value: "1d", label: "1D"}, {value: "2d", label: "2D"}, {value: "3d", label: "3D"}, {value: "4d", label: "4D"},
     ]}),
-    comparisonParameter("noise-basis", "Noise", "fbm", "menu", {options: [
+    comparisonParameter("noise-basis", "Noise", "fbm", "menu", {labelHidden: true, options: [
       {value: "fbm", label: "fBM"}, {value: "multifractal", label: "Multifractal"}, {value: "hybrid", label: "Hybrid Multifractal"},
     ]}),
-    comparisonParameter("noise-normalize", "Normalize", true, "boolean", {interaction: "switch"}),
+    comparisonParameter("noise-normalize", "Normalize", true, "boolean"),
     comparisonParameter("noise-vector", "Vector", [0, 0, 0], "vector", {axes: ["X", "Y", "Z"]}, [socket("noise-vector-input", "vector", "input", "left", "Vector")], true),
     comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, max: 10, step: .1}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
     comparisonParameter("noise-detail", "Detail", 2, "float", {min: 0, max: 15, step: .1}, [socket("noise-detail-input", "float", "input", "left", "Detail")]),
@@ -672,6 +671,10 @@ function comparisonNodeData(): Readonly<{
   ]
   const sockets = definitions.flatMap(definition => definition.sockets.map(entry =>
     coreSocket(entry.id, entry.kind, entry.direction, entry.side, definition.parameter.id, entry.label)))
+  sockets.push(
+    coreSocket("noise-fac-output", "float", "output", "right", undefined, "Fac"),
+    coreSocket("noise-color-output", "color", "output", "right", undefined, "Color"),
+  )
   const connectedSocketKeys = new Set<string>()
   for (const definition of definitions) if (definition.connected) {
     for (const entry of definition.sockets) connectedSocketKeys.add(`comparison-noise\u0000${entry.id}`)

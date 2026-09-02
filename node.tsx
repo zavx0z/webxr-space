@@ -84,7 +84,7 @@ export function Node(props: NodeProps) {
     ? `0 0 12px ${headerColor}`
     : "0 0 12px rgba(0, 0, 0, .5)"
   const collapseLabel = props.collapsed === true ? `Развернуть ${props.label}` : `Свернуть ${props.label}`
-  const collapseGlyph = props.collapsed === true ? "▸" : "▾"
+  const collapseGlyph = props.collapsed === true ? "›" : "⌄"
   const previewLabel = props.preview?.enabled === true ? "Скрыть preview" : "Показать preview"
   const previewGlyph = props.preview?.enabled === true ? "◉" : "○"
   const toggleCollapse = (event: Event) => {
@@ -285,7 +285,7 @@ export function Node(props: NodeProps) {
         flex-direction: column;
         width: 100%;
         min-width: 0;
-        gap: 3px;
+        gap: 2px;
         padding: 8px;
 
         &[hidden] {

@@ -136,6 +136,7 @@ export function Parameter(props: ParameterProps) {
   const label = metadataString(presentation, "label", snapshot.id)
   const disabled = metadataBoolean(presentation, "disabled", false)
   const readOnly = metadataBoolean(presentation, "readOnly", false)
+  const labelHidden = metadataBoolean(presentation, "labelHidden", false)
   const title = metadataString(presentation, "description", "") || undefined
   const sockets = props.sockets.map(socket => parameterSocket(
     socket,
@@ -174,6 +175,7 @@ export function Parameter(props: ParameterProps) {
   const stringValue = typeof snapshot.value === "string" ? snapshot.value : ""
   const booleanSwitch = typeof snapshot.value === "boolean" && interaction === "switch"
   const booleanCheckbox = typeof snapshot.value === "boolean" && !booleanSwitch
+  const leadingCheckbox = booleanCheckbox && !connected
   const numberSlider = typeof snapshot.value === "number" && interaction === "slider" && min !== undefined && max !== undefined
   const numberEditor = typeof snapshot.value === "number" && !numberSlider
   const stringSelection = typeof snapshot.value === "string" &&
@@ -198,6 +200,8 @@ export function Parameter(props: ParameterProps) {
     data-field-kind={parameterKind(snapshot.value, valueType, interaction)}
     data-socket-count={sockets.length}
     data-connected={connected ? "true" : undefined}
+    data-label-hidden={labelHidden ? "true" : undefined}
+    data-leading-checkbox={leadingCheckbox ? "true" : undefined}
     title={title}
     style={css`
       box-sizing: border-box;
@@ -208,6 +212,18 @@ export function Parameter(props: ParameterProps) {
       min-width: 0;
       min-height: 20px;
       gap: 3px;
+
+      &[data-label-hidden="true"] {
+        gap: 0;
+        padding-right: 10px;
+        padding-left: 10px;
+      }
+
+      &[data-leading-checkbox="true"] {
+        gap: 4px;
+        padding-right: 10px;
+        padding-left: 10px;
+      }
 
       &[hidden] {
         display: none;
@@ -225,17 +241,19 @@ export function Parameter(props: ParameterProps) {
     <ParameterLabel
       label={label}
       connected={connected}
+      hidden={labelHidden || leadingCheckbox}
     />
     <span
       data-parameter-field=""
+      data-leading={leadingCheckbox ? "true" : undefined}
       hidden={connected}
       style={css`
         box-sizing: border-box;
         display: flex;
-        width: 0;
+        width: ${leadingCheckbox ? "18px" : "0"};
         min-width: 0;
         min-height: 20px;
-        flex-grow: 1;
+        flex-grow: ${leadingCheckbox ? 0 : 1};
 
         &[hidden] {
           display: none;
@@ -384,6 +402,11 @@ export function Parameter(props: ParameterProps) {
       /> : null}
       {outputEditor ? <ParameterOutput value={snapshot.value} /> : null}
     </span>
+    {leadingCheckbox ? <ParameterLabel
+      label={label}
+      connected={false}
+      expanded
+    /> : null}
     <ParameterEndpoints
       nodeId={props.nodeId}
       side="right"
@@ -494,10 +517,17 @@ function ParameterEndpoints(props: Readonly<{
   </span>
 }
 
-function ParameterLabel(props: Readonly<{label: string; connected: boolean}>) {
+function ParameterLabel(props: Readonly<{
+  label: string
+  connected: boolean
+  hidden?: boolean | undefined
+  expanded?: boolean | undefined
+}>) {
   return <span
     data-parameter-label=""
     data-connected={props.connected ? "true" : undefined}
+    data-expanded={props.expanded === true ? "true" : undefined}
+    hidden={props.hidden === true}
     style={css`
       display: block;
       min-width: 0;
@@ -511,6 +541,15 @@ function ParameterLabel(props: Readonly<{label: string; connected: boolean}>) {
       &[data-connected="true"] {
         width: 0;
         flex-grow: 1;
+      }
+
+      &[data-expanded="true"] {
+        width: 0;
+        flex-grow: 1;
+      }
+
+      &[hidden] {
+        display: none;
       }
     `}
   >

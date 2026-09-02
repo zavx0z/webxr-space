@@ -4,6 +4,7 @@ import {
   HTMLButtonElement,
   createDocument,
 } from "@zavx0z/dom"
+import {createDocumentRenderer} from "@zavx0z/renderer"
 import catalog from "../../.storybook/catalog.json"
 import {
   NODE_COMPARISON_REFERENCE,
@@ -70,17 +71,35 @@ describe("public component Storybook projection", () => {
   })
 
   test("keeps exact equal-scale comparison provenance and component source", () => {
-    const story = createProductionNodeStory(createDocument(), "ui/comparison/reference/default")
+    const document = createDocument()
+    const story = createProductionNodeStory(document, "ui/comparison/reference/default")
     const root = story.element.querySelector('[data-production-owner="comparison"]')!
     expect(root.getAttribute("data-production-owner")).toBe("comparison")
     expect(story.element.querySelector('[data-source-rect]')?.getAttribute("data-source-rect")).toBe("498 558 228 385")
     expect(story.element.querySelector('[data-live-scale]')?.getAttribute("data-live-scale")).toBe("1")
-    expect(story.element.querySelector('[data-node-id="comparison-noise"]')).not.toBeNull()
+    const node = story.element.querySelector('[data-node-id="comparison-noise"]')!
+    expect(node.getAttribute("data-category")).toBe("")
+    expect(node.querySelector('[data-socket-id="noise-fac-output"]')?.getAttribute("data-socket-side")).toBe("right")
+    expect(node.querySelector('[data-socket-id="noise-color-output"]')?.getAttribute("data-socket-kind")).toBe("color")
+    const output = node.querySelector('[data-socket-id="noise-fac-output"]')!
+    const renderer = createDocumentRenderer({document, root: story.element, viewport: {width: 500, height: 500}})
+    const frame = renderer.flush()
+    const glyphBox = frame.boxByNode.get(output.querySelector('[data-socket-glyph]')!)!
+    const labelBox = frame.boxByNode.get(output.querySelector('[data-socket-label]')!)!
+    expect(glyphBox.x).toBeGreaterThan(labelBox.x)
+    const dimensions = node.querySelector('[data-parameter-id="noise-dimensions"]')!
+    expect(dimensions.getAttribute("data-label-hidden")).toBe("true")
+    expect(dimensions.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()
+    const normalize = node.querySelector('[data-parameter-id="noise-normalize"]')!
+    expect(normalize.getAttribute("data-leading-checkbox")).toBe("true")
+    expect(node.querySelector('[data-parameter-id="noise-normalize"] input')?.getAttribute("type")).toBe("checkbox")
+    expect(normalize.querySelectorAll('[data-parameter-label]')).toHaveLength(2)
     expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 228, height: 385, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')
     expect(source.typescript).toContain("createRoot(container).render")
     expect(source.html).toContain("data-comparison-scale")
+    renderer.dispose()
     story.dispose()
   })
 })

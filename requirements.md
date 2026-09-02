@@ -269,22 +269,22 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 `bun run bench:ui-bundle` обязан разделять root/exact/leaf builds и доказывать
 отсутствие legacy/story/dev retention.
 
-После отделения authored concrete Parameter modules текущий comparable exact
-full NodeEditor build: `276138 raw / 69416 gzip`; root: `276067 / 69737`;
-NodeTree: `268001 / 66946`; complete aggregate Parameter interaction graph:
-`203324 / 49878`; Link: `122028 / 33006`. Root-vs-exact не объясняет дельту,
+После Node-owned Blender parity slice текущий comparable exact full NodeEditor
+build: `277269 raw / 69694 gzip`; root: `277198 / 69989`; NodeTree:
+`269138 / 67175`; complete aggregate Parameter interaction graph:
+`204461 / 50139`; Link: `122387 / 33076`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+13.032% raw / +14.435% gzip`;
-новый ceiling требует owner decision. Текущий R5 slice против
-точного `0b949e7` baseline добавляет `12 raw / 0 gzip` в exact NodeEditor;
-private profiler code в production graph отсутствует.
+Exact full path больше historical incomplete evidence на `+13.495% raw /
++14.893% gzip`; новый ceiling требует owner decision. Visual parity slice
+добавляет `1131 raw / 278 gzip` к exact `176816b` baseline; private profiler
+code в production graph отсутствует.
 
-Exact metafile ownership: `@zavx0z/dom 72998`, `@ui/components 63748`,
-`@nodes/ui 62990`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+Exact metafile ownership: `@zavx0z/dom 73014`, `@ui/components 63748`,
+`@nodes/ui 64105`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
-React runtime `34183`, Core NodeTree `17867`, Parameter projection `16810`,
+React runtime `34183`, Core NodeTree `17867`, Parameter projection `17577`,
 NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`. Требуемое
-сокращение `31838 raw / 8756 gzip` сопоставимо со всем обязательным component
+сокращение `32969 raw / 9034 gzip` сопоставимо со всем обязательным component
 runtime; story/dev retention и root/subpath alias его не объясняют. Старый
 ceiling описывает удалённую imperative/incomplete модель и не заменяется
 автоматически, но сохранить его для fully component contract без удаления
@@ -309,6 +309,15 @@ Comparison route `ui/comparison/reference/default` использует:
 Mechanical route/canvas evidence не является visual parity. Окончательный
 equal-scale visual verdict остаётся за `zavx0z`.
 
+Current Node-owned parity slice на Storybook revision
+`6f658a4daf7149e42718cfe1` исправляет exact Noise content и composition:
+right-side `Fac/Color` outputs, отсутствие category, full-width menu rows,
+Checkbox-before-label Normalize, 228px authored width, 2px body rhythm,
+right Socket attachment без unsupported `row-reverse` и поддерживаемый header
+chevron. Exact comparison capture `capture_1jaGm1KQ5hc8k1WDxD2Ly39T`, sha256
+`923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9`,
+имеет empty diagnostics/console.
+
 ## Known platform gates
 
 Node-owned tests доказывают exact identity и local mutation, но current generic
@@ -332,13 +341,20 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    `178.6–328.6ms`. Retained baseline `~5.023GB` остаётся capacity evidence без
    утверждённого memory ceiling и требует отдельного owner policy, а не
    выдуманного pass/fail threshold.
-6. Compiled author composition через один authored Component child поддержана
+6. Blender numeric row остаётся точным UI Components owner gap. Expected:
+   optional NumberField label и value образуют один full-width compact filled
+   contour, как accepted Scale/Detail/Roughness/Lacunarity/Distortion rows.
+   Actual: `@ui/components/fields/number-field` рисует transparent 40% label
+   рядом с отдельным value contour, поэтому live Node имеет тёмную label column
+   и укороченный fill. Node не добавляет local Field CSS/copy; owner contract —
+   `UI-COMPILED-NUMBER-FIELD-001`.
+7. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first
    compiler profile; Node не добавляет nested root/imperative compatibility
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
-7. Full component bundle превышает historical incomplete ceiling; threshold
+8. Full component bundle превышает historical incomplete ceiling; threshold
    остаётся owner gate, а не silently raised test.
 
 ## Acceptance
