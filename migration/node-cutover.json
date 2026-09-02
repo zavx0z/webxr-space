@@ -30,6 +30,9 @@
   "collapseIconNodeCommit": "ceef5c66259b2a14ae3006aea08644dba7f79876",
   "socketHoverTemplateCapabilityCommit": "6db9e772e37cdc47e6dba58d153016057cc93558",
   "socketHoverNodeCommit": "68e2425e62b956e3fc187ca7abd811a468db8bad",
+  "templateSupportCommit": "671d19f652b2899b77bd30e50e9fd254080ef93f",
+  "templateCapabilityClassifierCommit": "c87e95bcda354a019bd8e8b165cdf4a532d915ce",
+  "templateCapabilityEvidenceCommit": "e428e64003efdbc3e627d85431532abde0aed350",
   "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
   "bulkBackendCleanupEvidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
   "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
@@ -38,8 +41,8 @@
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
   "blenderCompatibilityEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-collapse-icon-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -152,6 +155,7 @@
         "Node collapse uses the retained UI-owned chevron icon instead of an Engine-font glyph",
         "Socket row hover retains one button hit owner while only the 12px glyph receives glow",
         "Template 6db9e77 compiles one bounded descendant static attribute target without general selector escape",
+        "Template support overlay is clean at 671d19f and Renderer capability regeneration is deterministic with 93/93 passing at e428e64",
         "historical UI-owned chevronDownIcon is restored without changing native select interaction ownership",
         "all six input and both output Socket glyph centers coincide with their Node contours within 1px",
         "final 1k/10k topology 12.498/64.902ms with exact 33 marker-derived mounts",
@@ -202,6 +206,7 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
         "historical Blender 4.5 equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "legacy 4.5 compatibility capture 923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9",
         "two earlier visual candidates explicitly rejected by zavx0z",
@@ -220,15 +225,15 @@
       "evidence": [
         "Node main is clean at 68e2425e62b956e3fc187ca7abd811a468db8bad and ahead 30",
         "UI main is clean at 90c77080c27d92fea5ee803e8ff1e49d65885ae1 and ahead 7",
-        "Renderer main is clean at b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 and ahead 16",
-        "Template main is at 6db9e772e37cdc47e6dba58d153016057cc93558, ahead 4, with pre-existing support.json WIP"
+        "Renderer main is clean at e428e64003efdbc3e627d85431532abde0aed350 and ahead 18",
+        "Template main is clean at 671d19f652b2899b77bd30e50e9fd254080ef93f and ahead 5"
       ],
       "blockers": [
         "explicit R5 equal-scale visual owner verdict remains pending",
         "68e2425e62b956e3fc187ca7abd811a468db8bad is not remote-backed",
         "90c77080c27d92fea5ee803e8ff1e49d65885ae1 is not remote-backed",
-        "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 is not remote-backed",
-        "6db9e772e37cdc47e6dba58d153016057cc93558 is not remote-backed",
+        "e428e64003efdbc3e627d85431532abde0aed350 is not remote-backed",
+        "671d19f652b2899b77bd30e50e9fd254080ef93f is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "push/freeze authorization has not been given"
       ]

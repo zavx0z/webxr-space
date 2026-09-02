@@ -91,14 +91,17 @@
       "collapseIconNodeCommit": "ceef5c66259b2a14ae3006aea08644dba7f79876",
       "socketHoverTemplateCapabilityCommit": "6db9e772e37cdc47e6dba58d153016057cc93558",
       "socketHoverNodeCommit": "68e2425e62b956e3fc187ca7abd811a468db8bad",
+      "templateSupportCommit": "671d19f652b2899b77bd30e50e9fd254080ef93f",
+      "templateCapabilityClassifierCommit": "c87e95bcda354a019bd8e8b165cdf4a532d915ce",
+      "templateCapabilityEvidenceCommit": "e428e64003efdbc3e627d85431532abde0aed350",
       "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
       "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "completedGates": ["R1", "R2", "R3", "R4"],
       "ownerDecisionGates": ["R5 visual verdict"],
       "blockedGates": ["R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-collapse-icon-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
@@ -123,7 +126,7 @@
       ],
       "blockers": [
         "The rejected visual defects now have append-only contour, defaults, Checkbox Path, collapse icon and glyph-owned Socket hover corrections; only the repeated final visual verdict remains pending.",
-        "Node 68e2425 and required Template capability 6db9e77 are not remote-backed, and the canonical source owners have not been frozen/read-only.",
+        "Node 68e2425, Template support 671d19f and Renderer capability evidence e428e64 are not remote-backed, and the canonical source owners have not been frozen/read-only.",
         "The source:node repository remains the only writable canonical owner."
       ]
     },

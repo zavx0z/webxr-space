@@ -203,12 +203,18 @@ const collapseNodeCheckpoint = objectRecord(collapseRepositories.node, "collapse
 const collapseUiCheckpoint = objectRecord(collapseRepositories.ui, "collapse icon UI repository")
 const hoverRepositories = objectRecord(
   data.nodeR5SocketHoverCheckpoint.repositories,
-  "latest Socket hover checkpoint repositories",
+  "Socket hover checkpoint repositories",
 )
-const nodeCheckpoint = objectRecord(hoverRepositories.node, "latest Node repository")
-const uiCheckpoint = objectRecord(hoverRepositories.ui, "latest UI repository")
-const rendererCheckpoint = objectRecord(hoverRepositories.renderer, "latest Renderer repository")
-const templateCheckpoint = objectRecord(hoverRepositories.template, "latest Template repository")
+const hoverNodeCheckpoint = objectRecord(hoverRepositories.node, "Socket hover Node repository")
+const hoverUiCheckpoint = objectRecord(hoverRepositories.ui, "Socket hover UI repository")
+const capabilityClosureRepositories = objectRecord(
+  data.nodeR5CapabilityEvidenceClosureCheckpoint.repositories,
+  "latest capability evidence closure repositories",
+)
+const nodeCheckpoint = objectRecord(capabilityClosureRepositories.node, "latest Node repository")
+const uiCheckpoint = objectRecord(capabilityClosureRepositories.ui, "latest UI repository")
+const rendererCheckpoint = objectRecord(capabilityClosureRepositories.renderer, "latest Renderer repository")
+const templateCheckpoint = objectRecord(capabilityClosureRepositories.template, "latest Template repository")
 repositories.set("node", nodeCheckpoint)
 repositories.set("ui", uiCheckpoint)
 repositories.set("renderer", rendererCheckpoint)
@@ -612,14 +618,32 @@ const hoverNodeHistory = data.nodeR5SocketHoverCheckpoint.nodePackageHistory
 if (!Array.isArray(hoverNodeHistory)) throw new Error("Socket hover Node history must be an array")
 for (const value of hoverNodeHistory) {
   const entry = objectRecord(value, "Socket hover Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Socket hover Node")
+  validateCheckpointHistoryEntry(entry, hoverNodeCheckpoint, "Socket hover Node")
 }
 
 const hoverUiHistory = data.nodeR5SocketHoverCheckpoint.uiPackageHistory
 if (!Array.isArray(hoverUiHistory)) throw new Error("Socket hover UI history must be an array")
 for (const value of hoverUiHistory) {
   const entry = objectRecord(value, "Socket hover UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Socket hover UI")
+  validateCheckpointHistoryEntry(entry, hoverUiCheckpoint, "Socket hover UI")
+}
+
+const capabilityClosureNodeHistory = data.nodeR5CapabilityEvidenceClosureCheckpoint.nodePackageHistory
+if (!Array.isArray(capabilityClosureNodeHistory)) {
+  throw new Error("Capability evidence closure Node history must be an array")
+}
+for (const value of capabilityClosureNodeHistory) {
+  const entry = objectRecord(value, "Capability evidence closure Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Capability evidence closure Node")
+}
+
+const capabilityClosureUiHistory = data.nodeR5CapabilityEvidenceClosureCheckpoint.uiPackageHistory
+if (!Array.isArray(capabilityClosureUiHistory)) {
+  throw new Error("Capability evidence closure UI history must be an array")
+}
+for (const value of capabilityClosureUiHistory) {
+  const entry = objectRecord(value, "Capability evidence closure UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Capability evidence closure UI")
 }
 
 console.log(
@@ -643,7 +667,8 @@ console.log(
   `${componentDefaultsNodeHistory.length + componentDefaultsUiHistory.length} component defaults histories, ` +
   `${checkboxNodeHistory.length + checkboxUiHistory.length} Checkbox Path histories, ` +
   `${collapseNodeHistory.length + collapseUiHistory.length} collapse icon histories, ` +
-  `${hoverNodeHistory.length + hoverUiHistory.length} Socket hover histories`,
+  `${hoverNodeHistory.length + hoverUiHistory.length} Socket hover histories, ` +
+  `${capabilityClosureNodeHistory.length + capabilityClosureUiHistory.length} capability closure histories`,
 )
 
 function validateCheckpointHistoryEntry(

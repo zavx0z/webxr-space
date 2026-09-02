@@ -32,6 +32,7 @@ export const dataFiles = Object.freeze({
   nodeR5CheckboxPathCheckpoint: "evidence/node-r5-checkbox-path-checkpoint.json",
   nodeR5CollapseIconCheckpoint: "evidence/node-r5-collapse-icon-checkpoint.json",
   nodeR5SocketHoverCheckpoint: "evidence/node-r5-socket-hover-checkpoint.json",
+  nodeR5CapabilityEvidenceClosureCheckpoint: "evidence/node-r5-capability-evidence-closure-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -161,6 +162,7 @@ export type FoundationData = Readonly<{
   nodeR5CheckboxPathCheckpoint: Readonly<Record<string, unknown>>
   nodeR5CollapseIconCheckpoint: Readonly<Record<string, unknown>>
   nodeR5SocketHoverCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5CapabilityEvidenceClosureCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -233,6 +235,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5SocketHoverCheckpoint: byPath.get(
       dataFiles.nodeR5SocketHoverCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5CapabilityEvidenceClosureCheckpoint: byPath.get(
+      dataFiles.nodeR5CapabilityEvidenceClosureCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -703,7 +708,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5ComponentDefaultsCheckpoint.schemaVersion !== 1 ||
     data.nodeR5CheckboxPathCheckpoint.schemaVersion !== 1 ||
     data.nodeR5CollapseIconCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5SocketHoverCheckpoint.schemaVersion !== 1) {
+    data.nodeR5SocketHoverCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -767,7 +773,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const componentDefaultsCheckpointPath = "evidence/node-r5-component-defaults-checkpoint.json"
   const checkboxCheckpointPath = "evidence/node-r5-checkbox-path-checkpoint.json"
   const collapseIconCheckpointPath = "evidence/node-r5-collapse-icon-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-socket-hover-checkpoint.json"
+  const socketHoverCheckpointPath = "evidence/node-r5-socket-hover-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-capability-evidence-closure-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -904,7 +911,15 @@ function validateMigrationCoverage(data: FoundationData): void {
   const hoverUi = objectRecord(hoverRepositories.ui, "latest Socket hover UI repository")
   const hoverRenderer = objectRecord(hoverRepositories.renderer, "latest Socket hover Renderer repository")
   const hoverTemplate = objectRecord(hoverRepositories.template, "latest Socket hover Template repository")
-  if (data.nodeCutover.observedHead !== hoverNode.head ||
+  const capabilityClosureRepositories = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.repositories,
+    "latest capability evidence closure repositories",
+  )
+  const closureCurrentNode = objectRecord(capabilityClosureRepositories.node, "capability closure Node")
+  const closureCurrentUi = objectRecord(capabilityClosureRepositories.ui, "capability closure UI")
+  const closureCurrentRenderer = objectRecord(capabilityClosureRepositories.renderer, "capability closure Renderer")
+  const closureCurrentTemplate = objectRecord(capabilityClosureRepositories.template, "capability closure Template")
+  if (data.nodeCutover.observedHead !== closureCurrentNode.head ||
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
     data.nodeCutover.layoutContractCommit !== closureNode.head ||
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
@@ -931,36 +946,39 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.collapseIconNodeCommit !== collapseNode.head ||
     data.nodeCutover.socketHoverTemplateCapabilityCommit !== hoverTemplate.head ||
     data.nodeCutover.socketHoverNodeCommit !== hoverNode.head ||
+    data.nodeCutover.templateSupportCommit !== closureCurrentTemplate.head ||
+    data.nodeCutover.templateCapabilityClassifierCommit !== closureCurrentRenderer.parent ||
+    data.nodeCutover.templateCapabilityEvidenceCommit !== closureCurrentRenderer.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== collapseIconCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== socketHoverCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
   const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
   const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
-  if (nodeOwner === undefined || nodeOwner.revision !== hoverNode.head ||
+  if (nodeOwner === undefined || nodeOwner.revision !== closureCurrentNode.head ||
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
   const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
   const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
-  if (rendererOwner === undefined || rendererOwner.revision !== hoverRenderer.head ||
+  if (rendererOwner === undefined || rendererOwner.revision !== closureCurrentRenderer.head ||
     rendererOwner.writable !== true) {
     throw new Error("Renderer ownership ledger does not match the latest checkpoint")
   }
   const uiGroup = data.ownership.groups.find(({id}) => id === "ui")
   const uiOwner = uiGroup?.owners.find(({id}) => id === "source:ui")
-  if (uiOwner === undefined || uiOwner.revision !== hoverUi.head || uiOwner.writable !== true) {
+  if (uiOwner === undefined || uiOwner.revision !== closureCurrentUi.head || uiOwner.writable !== true) {
     throw new Error("UI ownership ledger does not match the latest checkpoint")
   }
   const templateGroup = data.ownership.groups.find(({id}) => id === "template")
   const templateOwner = templateGroup?.owners.find(({id}) => id === "source:template")
-  if (templateOwner === undefined || templateOwner.revision !== hoverTemplate.head ||
+  if (templateOwner === undefined || templateOwner.revision !== closureCurrentTemplate.head ||
     templateOwner.writable !== true) {
     throw new Error("Template ownership ledger does not match the latest checkpoint")
   }
@@ -1558,6 +1576,7 @@ function validateMigrationCoverage(data: FoundationData): void {
   for (const [label, checkpoint] of [
     ["Collapse icon", data.nodeR5CollapseIconCheckpoint],
     ["Socket hover", data.nodeR5SocketHoverCheckpoint],
+    ["Capability evidence closure", data.nodeR5CapabilityEvidenceClosureCheckpoint],
   ] as const) {
     const nodeHistory = arrayValue(checkpoint.nodePackageHistory, `${label} Node package history`)
       .map((value) => objectRecord(value, `${label} Node history entry`))
@@ -2419,6 +2438,108 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Socket hover correction must remain candidate-only until the owner verdict")
   }
 
+  const capabilityClosureProvenance = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.provenance,
+    "capability evidence closure provenance",
+  )
+  if (capabilityClosureProvenance.previousCheckpoint !== socketHoverCheckpointPath ||
+    capabilityClosureProvenance.preservesPreviousSnapshots !== true ||
+    capabilityClosureProvenance.productionRuntimeChanged !== false ||
+    capabilityClosureProvenance.externalSourceProductionChanged !== false ||
+    capabilityClosureProvenance.externalEvidenceChanged !== true ||
+    closureCurrentNode.head !== hoverNode.head || closureCurrentNode.status !== "clean" ||
+    closureCurrentUi.head !== hoverUi.head || closureCurrentUi.status !== "clean" ||
+    closureCurrentRenderer.head !== "e428e64003efdbc3e627d85431532abde0aed350" ||
+    closureCurrentRenderer.parent !== "c87e95bcda354a019bd8e8b165cdf4a532d915ce" ||
+    closureCurrentRenderer.status !== "clean" ||
+    closureCurrentTemplate.head !== "671d19f652b2899b77bd30e50e9fd254080ef93f" ||
+    closureCurrentTemplate.parent !== hoverTemplate.head || closureCurrentTemplate.status !== "clean") {
+    throw new Error("Capability evidence closure must append exact clean owner revisions")
+  }
+  const resolvedBlocker = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.resolvedBlocker,
+    "resolved Template support blocker",
+  )
+  if (resolvedBlocker.path !== "/Users/zavx0z/repozitarium/template/support.json" ||
+    resolvedBlocker.previousStatus !== "M" ||
+    resolvedBlocker.previousPinnedRevision !== "4b66cdee58840f3e59701f9a8c52b044512a1acb+dirty" ||
+    resolvedBlocker.previousRecordCount !== 192 || resolvedBlocker.previousStatusTransitions !== 0 ||
+    resolvedBlocker.previousSemanticChanges !== 0 ||
+    resolvedBlocker.templateSupportCommit !== closureCurrentTemplate.head ||
+    resolvedBlocker.rendererClassifierCommit !== closureCurrentRenderer.parent ||
+    resolvedBlocker.rendererEvidenceCommit !== closureCurrentRenderer.head) {
+    throw new Error("Template support blocker closure does not match the inspected generated WIP")
+  }
+  const closureCapabilities = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.capabilities,
+    "closed Template capabilities",
+  )
+  const styleExtraction = objectRecord(
+    closureCapabilities["tsx.compiler.static-style-extraction"],
+    "static style extraction capability closure",
+  )
+  const compilerDiagnostics = objectRecord(
+    closureCapabilities["tsx.compiler.compiler-diagnostics"],
+    "compiler diagnostics capability closure",
+  )
+  const styleBindings = objectRecord(
+    closureCapabilities["tsx.compiler.style-bindings"],
+    "style bindings capability use",
+  )
+  if (styleExtraction.before !== "implemented/extension" ||
+    styleExtraction.after !== "implemented/extension" || styleExtraction.evidenceCount !== 7 ||
+    styleExtraction.lastVerifiedRevision !== hoverTemplate.head ||
+    compilerDiagnostics.before !== "implemented/extension" ||
+    compilerDiagnostics.after !== "implemented/extension" || compilerDiagnostics.evidenceCount !== 4 ||
+    compilerDiagnostics.lastVerifiedRevision !== hoverTemplate.head ||
+    styleBindings.classification !== "used-without-matrix-change") {
+    throw new Error("Template capability closure must preserve status while refreshing exact evidence")
+  }
+  const matrixIntegrity = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.matrixIntegrity,
+    "capability matrix integrity",
+  )
+  const matrixValidation = objectRecord(matrixIntegrity.validation, "capability matrix validation")
+  if (matrixIntegrity.recordsBefore !== 8796 || matrixIntegrity.recordsAfter !== 8796 ||
+    matrixIntegrity.added !== 0 || matrixIntegrity.removed !== 0 ||
+    matrixIntegrity.statusOrConformanceTransitions !== 0 ||
+    Object.values(matrixValidation).some(value => value !== 0)) {
+    throw new Error("Capability matrix closure must preserve complete zero-error coverage")
+  }
+  const capabilityClosureTechnical = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.technicalR5,
+    "capability closure technical R5",
+  )
+  const closureTemplateChecks = objectRecord(capabilityClosureTechnical.template, "capability closure Template checks")
+  const closureRendererChecks = objectRecord(capabilityClosureTechnical.renderer, "capability closure Renderer checks")
+  const closureNodeChecks = objectRecord(capabilityClosureTechnical.nodeFunctional, "capability closure Node checks")
+  if (capabilityClosureTechnical.status !== "verified" || closureTemplateChecks.typecheck !== true ||
+    closureTemplateChecks.fullPass !== 749 || closureTemplateChecks.fullFail !== 0 ||
+    closureTemplateChecks.assertions !== 1347 || closureRendererChecks.typecheck !== true ||
+    closureRendererChecks.packagePass !== 516 || closureRendererChecks.storybookPass !== 23 ||
+    closureRendererChecks.capabilityPass !== 93 || closureRendererChecks.fail !== 0 ||
+    closureRendererChecks.assertions !== 5927 || closureRendererChecks.deterministicRegeneration !== true ||
+    closureNodeChecks.pass !== 221 || closureNodeChecks.fail !== 0 || closureNodeChecks.todo !== 0 ||
+    closureNodeChecks.assertions !== 9530 ||
+    capabilityClosureTechnical.inheritedPerformanceAndVisualEvidence !== socketHoverCheckpointPath) {
+    throw new Error("Capability closure technical evidence does not match full owner checks")
+  }
+  const closureM0 = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.m0Validation,
+    "capability closure M0 validation",
+  )
+  const closureFoundation = objectRecord(closureM0.foundation, "capability closure foundation")
+  const closureSource = objectRecord(closureM0.sourceEvidence, "capability closure source evidence")
+  const closurePlan = objectRecord(closureM0.cutoverPlan, "capability closure cutover plan")
+  if (closureFoundation.command !== "bun run check" || closureFoundation.pass !== true ||
+    closureFoundation.tests !== 13 || closureSource.command !== "bun run evidence:check" ||
+    closureSource.pass !== true || closureSource.repositories !== 8 ||
+    closurePlan.command !== "bun run node:cutover:plan" || closurePlan.executable !== false ||
+    closurePlan.productionImportPerformed !== false ||
+    closurePlan.worktreeCleanAfterCheckpointCommit !== true) {
+    throw new Error("Capability closure M0 evidence must keep cutover inert and source evidence green")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -2455,6 +2576,10 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5SocketHoverCheckpoint.effectiveGates,
     "Socket hover effective Node gates",
   )
+  const capabilityClosureGates = objectRecord(
+    data.nodeR5CapabilityEvidenceClosureCheckpoint.effectiveGates,
+    "capability evidence closure effective Node gates",
+  )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
@@ -2463,7 +2588,7 @@ function validateMigrationCoverage(data: FoundationData): void {
       visualClosureGates[id] !== "verified" ||
       gates[id] !== "verified" || componentGates[id] !== "verified" ||
       checkboxGates[id] !== "verified" || collapseGates[id] !== "verified" ||
-      hoverGates[id] !== "verified") {
+      hoverGates[id] !== "verified" || capabilityClosureGates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
   }
@@ -2473,13 +2598,15 @@ function validateMigrationCoverage(data: FoundationData): void {
     visualClosureGates.R5 !== "owner-verdict-pending" ||
     gates.R5 !== "owner-verdict-pending" || componentGates.R5 !== "owner-verdict-pending" ||
     checkboxGates.R5 !== "owner-verdict-pending" || collapseGates.R5 !== "owner-verdict-pending" ||
-    hoverGates.R5 !== "owner-verdict-pending") {
+    hoverGates.R5 !== "owner-verdict-pending" ||
+    capabilityClosureGates.R5 !== "owner-verdict-pending") {
     throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
     finalCandidateGates.R6 !== "blocked" || visualClosureGates.R6 !== "blocked" ||
     gates.R6 !== "blocked" || componentGates.R6 !== "blocked" || checkboxGates.R6 !== "blocked" ||
-    collapseGates.R6 !== "blocked" || hoverGates.R6 !== "blocked") {
+    collapseGates.R6 !== "blocked" || hoverGates.R6 !== "blocked" ||
+    capabilityClosureGates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }

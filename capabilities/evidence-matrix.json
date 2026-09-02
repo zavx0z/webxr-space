@@ -469,7 +469,8 @@
         "evidence/node-r5-component-defaults-checkpoint.json",
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
-        "evidence/node-r5-socket-hover-checkpoint.json"
+        "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
       ],
       "remainingOwnerDecisions": [
         "explicit equal-scale visual verdict"
@@ -519,7 +520,8 @@
         "evidence/node-r5-component-defaults-checkpoint.json",
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
-        "evidence/node-r5-socket-hover-checkpoint.json"
+        "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
       ],
       "decision": "accepted replacement ceiling 285000 / 72000; the historical incomplete evidence remains a comparison rather than the active limit"
     },
@@ -554,7 +556,8 @@
         "evidence/node-r5-component-defaults-checkpoint.json",
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
-        "evidence/node-r5-socket-hover-checkpoint.json"
+        "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
       ],
       "verification": "fresh Storybook MCP inspection at 408f5bc96201dd5885b74fdc: exact routes ready/presented, diagnostics/console empty, Socket button display empty and its 12px glyph display contains shadow plus background after semantic hover",
       "remainingGate": "record the explicit visual owner verdict by zavx0z"
@@ -598,6 +601,7 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
         "node:9ddded88425f69e6052687e7dccb4a02fb3016a5:packages/ui/requirements.md"
       ]
     },
@@ -606,7 +610,7 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 68e2425 is ahead 30, UI 90c7708 is ahead 7, Renderer b6c4845 is ahead 16 and Template 6db9e77 is ahead 4; the corrected visual owner verdict remains pending, the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
+      "statement": "Node 68e2425 is ahead 30, UI 90c7708 is ahead 7, Renderer e428e64 is ahead 18 and Template 671d19f is ahead 5; the corrected visual owner verdict remains pending, the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -626,7 +630,8 @@
         "evidence/node-r5-component-defaults-checkpoint.json",
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
-        "evidence/node-r5-socket-hover-checkpoint.json"
+        "evidence/node-r5-socket-hover-checkpoint.json",
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
       ]
     },
     {

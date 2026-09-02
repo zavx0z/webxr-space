@@ -39,7 +39,7 @@
           "id": "source:renderer",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/renderer",
-          "revision": "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59",
+          "revision": "e428e64003efdbc3e627d85431532abde0aed350",
           "writable": true,
           "state": "canonical"
         },
@@ -61,7 +61,7 @@
           "id": "source:template",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/template",
-          "revision": "6db9e772e37cdc47e6dba58d153016057cc93558",
+          "revision": "671d19f652b2899b77bd30e50e9fd254080ef93f",
           "writable": true,
           "state": "canonical"
         },
