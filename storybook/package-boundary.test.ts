@@ -12,13 +12,10 @@ describe("@nodes/ui Storybook owner boundary", () => {
     expect(await filesBelow(storybookRoot)).toEqual(expect.arrayContaining([
       "parameter-catalog.ts",
       "socket-catalog.ts",
-      "dom/graph-story.ts",
-      "dom/production-node-story.ts",
-      "dom/compiled-node-system-story.tsx",
-      "dom/parameter-socket-story.ts",
-      "dom/remaining-dom-story.ts",
-      "dom/remaining-dom-data.ts",
-      "dom/remaining-route-catalog.ts",
+      "dom/node-tree-story.ts",
+      "dom/node-tree-story.test.ts",
+      "dom/production-node-story.tsx",
+      "dom/production-node-story.test.ts",
     ]))
     for (const removed of [
       "node-ui-story.ts",
@@ -31,6 +28,14 @@ describe("@nodes/ui Storybook owner boundary", () => {
       "fixtures/parameter-fixtures.ts",
       "state/controlled-field-state.ts",
       "surfaces/reference-surfaces.ts",
+      "dom/graph-story.ts",
+      "dom/compiled-node-system-story.tsx",
+      "dom/parameter-socket-story.ts",
+      "dom/remaining-dom-story.ts",
+      "dom/remaining-dom-data.ts",
+      "dom/remaining-route-catalog.ts",
+      "dom/single-node-story.ts",
+      "dom/multi-node-story.ts",
     ]) expect(await Bun.file(join(storybookRoot, removed)).exists(), removed).toBeFalse()
   })
 

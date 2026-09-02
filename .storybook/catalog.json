@@ -41,7 +41,7 @@
               "label": "Обычная",
               "route": "ui/node-editor/scene/default",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -50,8 +50,8 @@
               "label": "Compiled general",
               "route": "ui/node-editor/scene/compiled-general",
               "module": {
-                "path": "../storybook/dom/compiled-node-system-story.tsx",
-                "export": "createCompiledNodeSystemStory"
+                "path": "../storybook/dom/node-tree-story.ts",
+                "export": "createNodeTreeStory"
               }
             },
             {
@@ -59,7 +59,7 @@
               "label": "Выбранная",
               "route": "ui/node-editor/scene/selected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -68,7 +68,7 @@
               "label": "Rotation linked",
               "route": "ui/node-editor/scene/rotation-linked",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -77,7 +77,7 @@
               "label": "Translation unlinked",
               "route": "ui/node-editor/scene/translation-unlinked",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -86,7 +86,7 @@
               "label": "Output-only",
               "route": "ui/node-editor/scene/output-only",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -95,7 +95,7 @@
               "label": "Left + right",
               "route": "ui/node-editor/scene/mixed-sides",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -104,7 +104,7 @@
               "label": "Color unlinked",
               "route": "ui/node-editor/scene/color-unlinked",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -113,7 +113,7 @@
               "label": "Path + Collection",
               "route": "ui/node-editor/scene/inventory",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -160,7 +160,7 @@
               "label": "Preview closed",
               "route": "ui/node-editor/preview/closed",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -169,7 +169,7 @@
               "label": "Preview open",
               "route": "ui/node-editor/preview/open",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -178,7 +178,7 @@
               "label": "Global Previews off",
               "route": "ui/node-editor/preview/global-hidden",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -187,7 +187,7 @@
               "label": "Buffer updated",
               "route": "ui/node-editor/preview/alternate",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -196,7 +196,7 @@
               "label": "Missing buffer",
               "route": "ui/node-editor/preview/missing",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -205,7 +205,7 @@
               "label": "Zero-size buffer",
               "route": "ui/node-editor/preview/zero",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -214,7 +214,7 @@
               "label": "Multiple previews",
               "route": "ui/node-editor/preview/multiple",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -223,7 +223,7 @@
               "label": "Non-previewable",
               "route": "ui/node-editor/preview/non-previewable",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -259,7 +259,7 @@
               "label": "Обычная",
               "route": "ui/node-editor/collapsed/default",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -268,7 +268,7 @@
               "label": "Выбранная",
               "route": "ui/node-editor/collapsed/selected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -304,7 +304,7 @@
               "label": "Select раскрыт",
               "route": "ui/node-editor/popup/select-open",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -350,7 +350,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/text/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -359,7 +359,7 @@
               "label": "Вход",
               "route": "ui/parameter/text/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -368,7 +368,7 @@
               "label": "Выход",
               "route": "ui/parameter/text/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -377,7 +377,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/text/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -386,7 +386,7 @@
               "label": "Подключён",
               "route": "ui/parameter/text/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -425,7 +425,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/number/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -434,7 +434,7 @@
               "label": "Вход",
               "route": "ui/parameter/number/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -443,7 +443,7 @@
               "label": "Выход",
               "route": "ui/parameter/number/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -452,7 +452,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/number/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -461,7 +461,7 @@
               "label": "Подключён",
               "route": "ui/parameter/number/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -501,7 +501,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/integer/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -510,7 +510,7 @@
               "label": "Вход",
               "route": "ui/parameter/integer/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -519,7 +519,7 @@
               "label": "Выход",
               "route": "ui/parameter/integer/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -528,7 +528,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/integer/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -537,7 +537,7 @@
               "label": "Подключён",
               "route": "ui/parameter/integer/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -577,7 +577,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/boolean/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -586,7 +586,7 @@
               "label": "Вход",
               "route": "ui/parameter/boolean/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -595,7 +595,7 @@
               "label": "Выход",
               "route": "ui/parameter/boolean/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -604,7 +604,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/boolean/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -613,7 +613,7 @@
               "label": "Подключён",
               "route": "ui/parameter/boolean/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -652,7 +652,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/enum/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -661,7 +661,7 @@
               "label": "Вход",
               "route": "ui/parameter/enum/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -670,7 +670,7 @@
               "label": "Выход",
               "route": "ui/parameter/enum/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -679,7 +679,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/enum/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -688,7 +688,7 @@
               "label": "Подключён",
               "route": "ui/parameter/enum/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -727,7 +727,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/color/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -736,7 +736,7 @@
               "label": "Вход",
               "route": "ui/parameter/color/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -745,7 +745,7 @@
               "label": "Выход",
               "route": "ui/parameter/color/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -754,7 +754,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/color/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -763,7 +763,7 @@
               "label": "Подключён",
               "route": "ui/parameter/color/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -802,7 +802,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/vector/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -811,7 +811,7 @@
               "label": "Вход",
               "route": "ui/parameter/vector/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -820,7 +820,7 @@
               "label": "Выход",
               "route": "ui/parameter/vector/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -829,7 +829,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/vector/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -838,7 +838,7 @@
               "label": "Подключён",
               "route": "ui/parameter/vector/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -877,7 +877,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/rotation/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -886,7 +886,7 @@
               "label": "Вход",
               "route": "ui/parameter/rotation/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -895,7 +895,7 @@
               "label": "Выход",
               "route": "ui/parameter/rotation/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -904,7 +904,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/rotation/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -913,7 +913,7 @@
               "label": "Подключён",
               "route": "ui/parameter/rotation/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -952,7 +952,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/matrix/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -961,7 +961,7 @@
               "label": "Вход",
               "route": "ui/parameter/matrix/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -970,7 +970,7 @@
               "label": "Выход",
               "route": "ui/parameter/matrix/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -979,7 +979,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/matrix/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -988,7 +988,7 @@
               "label": "Подключён",
               "route": "ui/parameter/matrix/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1027,7 +1027,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/reference/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1036,7 +1036,7 @@
               "label": "Вход",
               "route": "ui/parameter/reference/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1045,7 +1045,7 @@
               "label": "Выход",
               "route": "ui/parameter/reference/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1054,7 +1054,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/reference/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1063,7 +1063,7 @@
               "label": "Подключён",
               "route": "ui/parameter/reference/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1102,7 +1102,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/collection/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1111,7 +1111,7 @@
               "label": "Вход",
               "route": "ui/parameter/collection/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1120,7 +1120,7 @@
               "label": "Выход",
               "route": "ui/parameter/collection/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1129,7 +1129,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/collection/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1138,7 +1138,7 @@
               "label": "Подключён",
               "route": "ui/parameter/collection/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1177,7 +1177,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/path/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1186,7 +1186,7 @@
               "label": "Вход",
               "route": "ui/parameter/path/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1195,7 +1195,7 @@
               "label": "Выход",
               "route": "ui/parameter/path/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1204,7 +1204,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/path/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1213,7 +1213,7 @@
               "label": "Подключён",
               "route": "ui/parameter/path/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1253,7 +1253,7 @@
               "label": "Без сокетов",
               "route": "ui/parameter/readonly/field",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1262,7 +1262,7 @@
               "label": "Вход",
               "route": "ui/parameter/readonly/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1271,7 +1271,7 @@
               "label": "Выход",
               "route": "ui/parameter/readonly/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1280,7 +1280,7 @@
               "label": "Вход и выход",
               "route": "ui/parameter/readonly/both",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1289,7 +1289,7 @@
               "label": "Подключён",
               "route": "ui/parameter/readonly/connected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1329,7 +1329,7 @@
               "label": "Выбран",
               "route": "ui/frame/nested/default",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1369,7 +1369,7 @@
               "label": "Выбран",
               "route": "ui/link/orthogonal/selected",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1410,7 +1410,7 @@
               "label": "Референс",
               "route": "ui/comparison/reference/default",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               },
               "resources": {
@@ -1458,7 +1458,7 @@
               "label": "Вход",
               "route": "ui/socket/boolean/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1467,7 +1467,7 @@
               "label": "Выход",
               "route": "ui/socket/boolean/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1476,7 +1476,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/boolean/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1511,7 +1511,7 @@
               "label": "Вход",
               "route": "ui/socket/float/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1520,7 +1520,7 @@
               "label": "Выход",
               "route": "ui/socket/float/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1529,7 +1529,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/float/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1564,7 +1564,7 @@
               "label": "Вход",
               "route": "ui/socket/integer/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1573,7 +1573,7 @@
               "label": "Выход",
               "route": "ui/socket/integer/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1582,7 +1582,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/integer/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1617,7 +1617,7 @@
               "label": "Вход",
               "route": "ui/socket/vector/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1626,7 +1626,7 @@
               "label": "Выход",
               "route": "ui/socket/vector/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1635,7 +1635,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/vector/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1670,7 +1670,7 @@
               "label": "Вход",
               "route": "ui/socket/rotation/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1679,7 +1679,7 @@
               "label": "Выход",
               "route": "ui/socket/rotation/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1688,7 +1688,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/rotation/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1723,7 +1723,7 @@
               "label": "Вход",
               "route": "ui/socket/color/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1732,7 +1732,7 @@
               "label": "Выход",
               "route": "ui/socket/color/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1741,7 +1741,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/color/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1776,7 +1776,7 @@
               "label": "Вход",
               "route": "ui/socket/string/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1785,7 +1785,7 @@
               "label": "Выход",
               "route": "ui/socket/string/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1794,7 +1794,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/string/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1829,7 +1829,7 @@
               "label": "Вход",
               "route": "ui/socket/menu/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1838,7 +1838,7 @@
               "label": "Выход",
               "route": "ui/socket/menu/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1847,7 +1847,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/menu/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1882,7 +1882,7 @@
               "label": "Вход",
               "route": "ui/socket/object/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1891,7 +1891,7 @@
               "label": "Выход",
               "route": "ui/socket/object/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1900,7 +1900,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/object/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1935,7 +1935,7 @@
               "label": "Вход",
               "route": "ui/socket/collection/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1944,7 +1944,7 @@
               "label": "Выход",
               "route": "ui/socket/collection/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1953,7 +1953,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/collection/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -1988,7 +1988,7 @@
               "label": "Вход",
               "route": "ui/socket/image/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -1997,7 +1997,7 @@
               "label": "Выход",
               "route": "ui/socket/image/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2006,7 +2006,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/image/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2041,7 +2041,7 @@
               "label": "Вход",
               "route": "ui/socket/material/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2050,7 +2050,7 @@
               "label": "Выход",
               "route": "ui/socket/material/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2059,7 +2059,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/material/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2094,7 +2094,7 @@
               "label": "Вход",
               "route": "ui/socket/texture/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2103,7 +2103,7 @@
               "label": "Выход",
               "route": "ui/socket/texture/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2112,7 +2112,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/texture/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2147,7 +2147,7 @@
               "label": "Вход",
               "route": "ui/socket/geometry/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2156,7 +2156,7 @@
               "label": "Выход",
               "route": "ui/socket/geometry/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2165,7 +2165,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/geometry/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2200,7 +2200,7 @@
               "label": "Вход",
               "route": "ui/socket/matrix/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2209,7 +2209,7 @@
               "label": "Выход",
               "route": "ui/socket/matrix/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2218,7 +2218,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/matrix/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2253,7 +2253,7 @@
               "label": "Вход",
               "route": "ui/socket/shader/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2262,7 +2262,7 @@
               "label": "Выход",
               "route": "ui/socket/shader/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2271,7 +2271,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/shader/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2306,7 +2306,7 @@
               "label": "Вход",
               "route": "ui/socket/bundle/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2315,7 +2315,7 @@
               "label": "Выход",
               "route": "ui/socket/bundle/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2324,7 +2324,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/bundle/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2359,7 +2359,7 @@
               "label": "Вход",
               "route": "ui/socket/closure/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2368,7 +2368,7 @@
               "label": "Выход",
               "route": "ui/socket/closure/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2377,7 +2377,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/closure/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }
@@ -2412,7 +2412,7 @@
               "label": "Вход",
               "route": "ui/socket/custom/input",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2421,7 +2421,7 @@
               "label": "Выход",
               "route": "ui/socket/custom/output",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             },
@@ -2430,7 +2430,7 @@
               "label": "Двунаправленный",
               "route": "ui/socket/custom/bidirectional",
               "module": {
-                "path": "../storybook/dom/production-node-story.ts",
+                "path": "../storybook/dom/production-node-story.tsx",
                 "export": "createProductionNodeStory"
               }
             }

@@ -2,56 +2,63 @@
 
 **Built for [MetaFor](https://github.com/zavx0z/metafor).**
 
-`@nodes/ui` is the Blender-like standard-DOM component package for Node graphs.
-DOM is its authoring substrate; it does not replace Node presentation with
-generic boxes. Public factories return exact `@zavx0z/dom` elements plus stable
-typed controllers:
+`@nodes/ui` is the Blender-like compiled component projection for the canonical
+Core `NodeTree`. One caller-owned component root materializes one semantic DOM
+subtree; the package creates no Document, Canvas, Renderer, Space or parallel
+graph/value store.
 
-```ts
-import {createDocument} from "@zavx0z/dom"
-import {createGraphCanvas} from "@nodes/ui/graph-canvas"
+```tsx
+import {createNodeTreeExternalStore} from "@nodes/core"
+import {NodeTreeEditor} from "@nodes/editor"
+import {NodeEditor} from "@nodes/ui/node-editor"
+import {createRoot} from "@zavx0z/react"
 
-const document = createDocument()
-const graph = createGraphCanvas(document, {
-  title: "Graph",
-  width: 640,
-  height: 360,
-  scene: {translateX: 0, translateY: 0, scale: 1},
-  frames: [],
-  links: [],
-  nodes: [],
-})
-document.appendChild(graph.element)
+const editor = new NodeTreeEditor(tree)
+createRoot(container).render(<NodeEditor
+  store={createNodeTreeExternalStore(tree)}
+  onParameterInput={({nodeId, parameterId, value}) => editor.setParameterValue({
+    expectedRevision: tree.revision,
+    nodeId,
+    parameterId,
+    value,
+  })}
+/>)
 ```
 
 Public subpaths:
 
-- `@nodes/ui/node` — compact coloured Node with embedded Parameter Fields and typed Sockets
-- `@nodes/ui/parameter` — Node-owned Parameter discriminant composed with exact `@ui/components/fields/*`
-- `@nodes/ui/link` — typed route segments and hit corridors
-- `@nodes/ui/node-editor` — grid, selection, fit, pan, zoom, pinch and culling
-- `@nodes/ui/node-system` — compiled TSX composition subscribed directly to a
-  cached Core snapshot, with Editor-owned writes and stable keyed identities
-- `@nodes/ui/graph-canvas` — keyed Frame → orthogonal Link → Node scene
-- `@nodes/ui/node-workbench` — composition of Graph, NodeTree and Parameter owners
-- `@nodes/ui/parameter-socket` — standard input/select/checkbox Parameter rows and Sockets
-- `@nodes/ui/node-tree-editor` — nested NodeTree and controlled authoring tree
+- `@nodes/ui/node-tree` — exact Core external-store projection and culling;
+- `@nodes/ui/node-editor` — selection, grid, fit, pan, zoom and pinch;
+- `@nodes/ui/frame` — Frame relation/presentation owner;
+- `@nodes/ui/node` — compact header, collapse, preview and Node composition;
+- `@nodes/ui/parameter` — concrete Text/Number/Slider/Checkbox/Switch/Select/
+  Cycle/OptionGroup/Color/Vector/Matrix/Path/Reference/Collection/Output
+  presentations over current UI Fields;
+- `@nodes/ui/socket` — 19 kinds, 8 shapes and independent side/direction;
+- `@nodes/ui/link` — one semantic retained `vector-path` with historical
+  rounded orthogonal/cubic routing and hit corridor.
 
-The former retained Surface signatures are not aliases of these modules.
-Their observable Blender-like behavior is carried by standard elements, CSS
-and events. Runtime connection to CPU/WebGPU is owned by an application through
-`@zavx0z/renderer` and `@zavx0z/renderer-browser`.
+There are no factory/controller exports, `NodeSystem` snapshot vocabulary,
+private controls, public CSS strings or one-root-per-Field mounts. Integer uses
+`NumberField` with Core validation, rotation uses `VectorField`, boolean and
+enum presentation follow the selected interaction, and unknown/read-only values
+use Node-owned output composition.
 
-`@nodes/ui/node-system` uses `@zavx0z/react` plus the build-time
-`@zavx0z/template` compiler. It has no npm React/Fiber path, no class names and
-no second NodeTree. Owner and caller styles use the global compile-time
-`css\`\`` intrinsic, semantic attributes and compiled root provenance; no
-style object, array, import or manual stylesheet transport exists.
+Runtime connection to CPU/WebGPU remains application-owned through the one
+Document/Renderer/Engine Experience. `@nodes/ui` uses `@zavx0z/react` plus the
+build-time `@zavx0z/template` compiler, never npm React/Fiber.
 
-Performance acceptance is reproducible with `bun run bench:node-system`. It
-runs the same realistic four-Parameter/two-Socket/link-chain fixture at 1k and
-10k Nodes, checks 60/90 Hz budgets, scheduler work, DOM/state mutations,
-retained identities, CPU renderer reuse and automatic backend instancing.
+Performance evidence is split deliberately:
+
+- `bun run bench:node-system` materializes 1k/10k semantic Nodes and reports
+  culling, p50/p95/p99, input-to-present, mutations, heap and Renderer/backend
+  work;
+- `bun run bench:node-visible` proves separate 1k/10k simultaneously visible
+  cold Renderer counts;
+- `bun run bench:node-paths` measures 512/2048/10k retained Links;
+- `bun run bench:ui-bundle` separates root, exact subpath and leaf bundle cost.
+
+Benchmarks fail rather than hiding unmet tail-latency, memory or bundle gates.
 
 Dev-only route data and stories remain under `storybook/` and are not public
 exports or production dependencies.
