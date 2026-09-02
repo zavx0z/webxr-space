@@ -1,5 +1,6 @@
 import {describe, expect, test} from "bun:test"
 import {Event, type HTMLOptionElement, type HTMLSelectElement} from "@zavx0z/dom"
+import {createDocumentRenderer, type RectDisplayItem} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {createDocument} from "../document.fixture.ts"
@@ -31,6 +32,12 @@ describe("compiled production SelectField", () => {
     expect(select.options[0]!.textContent).toBe("No Items")
     root.render(SelectFieldFixture as any, {})
     expect(host.textContent).toContain("Mode")
+    const presentedSelect = host.querySelector("select") as HTMLSelectElement
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 320, height: 80}})
+    const background = renderer.flush().displayList.find((item): item is RectDisplayItem =>
+      item.kind === "rect" && item.node === presentedSelect && item.key === "background")
+    expect(background?.color).toBe("rgb(29 29 29)")
+    renderer.dispose()
     root.unmount()
   })
 })

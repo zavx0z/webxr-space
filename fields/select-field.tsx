@@ -117,7 +117,7 @@ export function SelectField(props: SelectFieldProps) {
         padding: 3px 8px;
         border: var(--border-width-control) solid var(--widget-regular-outline);
         border-radius: 4px;
-        background: var(--widget-regular-background);
+        background: var(--widget-text-background);
         box-shadow: 0 1px 0 var(--material-widget-emboss);
         color: var(--widget-regular-content);
         font-size: var(--font-size-sm);

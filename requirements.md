@@ -284,6 +284,9 @@ Controlled callback сообщает proposed value owner-у, а live editing st
 - `select-field`, `cycle-field` и `option-group-field` являются тремя
   разными choice interaction mechanisms; ни один из них не выбирает
   другой по variant или содержимом options.
+- Native `SelectField` сохраняет тёмный menu-well material
+  `--widget-text-background`; он не наследует более светлый Button material
+  `--widget-regular-background`.
 - `color-field` владеет trigger/popover lifecycle и композирует
   `color-picker-field`, который владеет in-flow color editing.
 - `field-group`, `vector-field` и `matrix-field` владеют keyed joined cells с
