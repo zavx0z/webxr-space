@@ -102,12 +102,6 @@ export function NumberParameter(props: NumberParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       title={props.title}
-      style={css`
-        ${compactFieldStyle}
-
-        --field-label-width: 58%;
-        --number-field-label-padding: 2px 5px;
-      `}
       onInput={props.onInput}
       onChange={props.onChange}
     />
@@ -165,7 +159,6 @@ export function CheckboxParameter(props: CheckboxParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       title={props.title}
-      style={compactFieldStyle}
       onChange={props.onChange}
     />
   </ParameterLayout>
@@ -216,11 +209,9 @@ export function SelectParameter(props: SelectParameterProps) {
       value={props.value}
       options={props.options}
       state={props.state}
-      density="compact"
       disabled={props.disabled}
       readOnly={props.readOnly}
       title={props.title}
-      style={compactFieldStyle}
       onChange={props.onChange}
     />
   </ParameterLayout>

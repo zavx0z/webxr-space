@@ -119,11 +119,11 @@ export function Node(props: NodeProps) {
       min-width: 100px;
       min-height: ${props.collapsed === true ? "24px" : `${props.rect.height}px`};
       overflow: visible;
-      border: 1px solid #111111;
-      border-radius: 6px;
+      border: var(--border-width-control) solid #111111;
+      border-radius: var(--radius-large);
       background: #303030;
       color: #d8d8d8;
-      font-size: 10px;
+      font-size: var(--font-size-xs);
       box-shadow: ${selectedShadow};
 
       &[aria-selected="true"] {
@@ -153,8 +153,8 @@ export function Node(props: NodeProps) {
         margin: 0;
         padding: 3px;
         overflow: hidden;
-        border: 1px solid #111111;
-        border-radius: 6px 6px 0 0;
+        border: var(--border-width-control) solid #111111;
+        border-radius: var(--radius-large) var(--radius-large) 0 0;
         background: #2b2b2b;
 
         &[hidden] {
@@ -175,17 +175,17 @@ export function Node(props: NodeProps) {
         flex-direction: row;
         align-items: center;
         width: 100%;
-        height: 24px;
-        min-height: 24px;
+        height: 22px;
+        min-height: 22px;
         gap: 4px;
         padding: 0 5px;
         overflow: hidden;
-        border-radius: 5px 5px 0 0;
+        border-radius: var(--radius-large) var(--radius-large) 0 0;
         background: ${headerColor};
         color: #dedede;
 
         &[data-collapsed="true"] {
-          border-radius: 5px;
+          border-radius: var(--radius-large);
         }
       `}
     >
@@ -209,7 +209,7 @@ export function Node(props: NodeProps) {
           border: 0;
           background: transparent;
           color: #dedede;
-          font-size: 10px;
+          font-size: var(--font-size-sm);
         `}
       >
         {collapseGlyph}
@@ -221,7 +221,7 @@ export function Node(props: NodeProps) {
           flex-grow: 1;
           overflow: hidden;
           color: #dedede;
-          font-size: 10px;
+          font-size: var(--font-size-sm);
           font-weight: 600;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -266,7 +266,7 @@ export function Node(props: NodeProps) {
           border: 0;
           background: transparent;
           color: #dedede;
-          font-size: 10px;
+          font-size: var(--font-size-sm);
 
           &[hidden] {
             display: none;
@@ -285,8 +285,8 @@ export function Node(props: NodeProps) {
         flex-direction: column;
         width: 100%;
         min-width: 0;
-        gap: 2px;
-        padding: 8px 0;
+        gap: 3px;
+        padding: 8px 0 6px;
 
         &[hidden] {
           display: none;

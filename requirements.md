@@ -105,15 +105,17 @@ Paint law:
 
 `Node` materialize-ит stable semantic `article` с:
 
-- header `24px`, compact title/category and owner color;
+- header `22px`, compact title/category and owner color;
 - controlled selection shadow;
 - controlled disclosure that hides body without replacing descendants;
 - optional preview panel/image above the Node;
 - loose right Sockets → Parameters → loose left Sockets;
-- `8px` vertical and zero horizontal body padding so endpoint centers attach to
-  the Node contour while Fields own their row inset;
-- `4px` body rhythm and `22px` compact Field contour for the exact 5.2 Node
-  density;
+- `8px` top / `6px` bottom and zero horizontal body padding so endpoint centers
+  attach to the Node contour while Fields own their row inset;
+- `3px` body rhythm, `22px` Socket rows and `22px` standard Field contour for
+  the exact 5.2 Node density;
+- linked UI theme owns shared Node/control border widths and radii; Node does
+  not restate those pixels to imitate the reference;
 - one public `Socket` for every endpoint.
 
 Отсутствующий preview image не materialize-ит пустой `<img src="">` и не
@@ -131,14 +133,19 @@ Node presentation policy, а не UI aliases, выбирает interaction:
 - vector/matrix/color/path/reference/collection → exact current UI Field.
 
 Optional `spacingBefore: "small" | "medium"` remains Node presentation data.
-The parent `Node` maps the bounded `4px`/`8px` rhythm onto the exact Parameter
+The parent `Node` maps the bounded `1px`/`5px` rhythm onto the exact Parameter
 root; it does not calculate coordinates, create a wrapper owner or move layout
 into the component.
 
-Node-owned row composition keeps full-width menus at a symmetric `12px` inset,
+Node-owned row composition keeps full-width menus at `12px` left / `11px` right,
 leading checkbox rows at `8px`, and labelled numeric rows with a left endpoint
-at the contour plus `10px` right inset. These are parent/Parameter CSS flow
+at the contour plus `11px` right inset. These are parent/Parameter CSS flow
 rules, not Field copies or manual coordinates.
+
+`NumberField`, `SelectField` and `CheckboxField` arrive with their standard
+theme-backed visual defaults. Parameter passes semantic value/range/state and
+owns only the surrounding row composition; it does not pass `style`, density or
+`--number-field-*` / `--field-label-width` to recreate their normal appearance.
 
 Удалённые `IntegerField`, `BooleanField`, `EnumField`, `RotationField`,
 `ReadonlyField` не восстанавливаются. Connected Parameter скрывает editor через
@@ -148,8 +155,9 @@ standard `hidden`, сохраняя Parameter, Field label relation и Socket id
 
 Socket inventory содержит exact 19 kinds и 8 shapes. `kind`, capability
 `input|output|bidirectional`, visual `side=left|right` и shape независимы.
-Ordinary endpoint имеет `10px` intrinsic geometry, kind-color fill и `1px`
-dark outline. Connected/selected остаются независимым state и не превращают
+Ordinary endpoint имеет `12px` intrinsic geometry, kind-color fill и shared
+theme `1px` dark outline; loose row сохраняет `22px` flow contour.
+Connected/selected остаются независимым state и не превращают
 обычный unconnected endpoint в hollow circle. Loose row — тот же public
 `Socket` с row presentation, не скрытый `SocketPort` owner.
 Для endpoint presentation центр glyph обязан совпадать с соответствующим
@@ -312,28 +320,28 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 
 После exact Blender 5.2 component slice и восстановления UI-owned SVG
 indicator текущий comparable exact full NodeEditor build:
-`279242 raw / 70390 gzip`; root: `279171 / 70684`; NodeTree:
-`271106 / 67874`; complete aggregate Parameter interaction graph:
-`206216 / 50773`; Link: `122450 / 33078`. Root-vs-exact не объясняет дельту,
+`278439 raw / 70370 gzip`; root: `278368 / 70678`; NodeTree:
+`270303 / 67835`; complete aggregate Parameter interaction graph:
+`205247 / 50733`; Link: `122489 / 33111`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+14.303% raw /
-+16.040% gzip`.
+Exact full path больше historical incomplete evidence на `+13.974% raw /
++16.007% gzip`.
 
 Replacement ceiling `285000 / 72000` принят для exact fully-component
 NodeEditor и исполняется обычным repository test. Он оставляет только
-`5758 raw / 1610 gzip` (`2.06% / 2.29%`) запаса и не является общим резервом
+`6561 raw / 1630 gzip` (`2.356% / 2.316%`) запаса и не является общим резервом
 для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
 imperative/incomplete модели, а не скрытым обязательством удалить component
 runtime или функциональность.
 
-Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64895`,
-`@ui/components 64947`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64349`,
+`@ui/components 64690`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
-React runtime `34183`, Parameter projection `18080`, Core NodeTree `17867`,
+React runtime `34183`, Parameter projection `17329`, Core NodeTree `17867`,
 NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`.
 Story/dev retention и root/subpath alias отсутствуют; private profiler code в
 production graph не попадает. Exact artifact sha256:
-`eaa9e7b57eaecda97c4003649dc9f6eabeb0b77ee0bf04211e2c7ed45ba72bc8`.
+`cf096e4b4ea7a5e1344024cdfe0d0071ef6f43b96addf405553ed685f7a18df2`.
 
 ## Storybook and visual acceptance
 
@@ -379,9 +387,10 @@ Final 5.2 candidate slice использует official Manual asset, UI owners
   diagnostics/console; capture `capture_dt17SV9wdRzBcGQTPGoYx3RE`, sha256
   `1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0`.
 
-Node contour, composition, grouping, insets, solid Socket geometry, values and
-material roles now align at equal scale. Historical UI evidence proved that the
-collapsed `select` used an SVG chevron rather than a text glyph. UI owner
+The preceding candidate mechanically aligned contour, composition, grouping,
+values and material roles at equal scale, but it was not accepted as visual
+parity. Historical UI evidence proved that the collapsed `select` used an SVG
+chevron rather than a text glyph. UI owner
 `1ddae57` restores the exact `chevronDownIcon` as a non-interactive image over
 the still-native `select`; picker, value, focus and change ownership remain on
 the native element. No Renderer/Engine-font gap or platform change is required.
@@ -393,6 +402,25 @@ the native element. No Renderer/Engine-font gap or platform change is required.
 теперь доказывает совпадение центров всех шести input glyphs с левым contour с
 допуском `1px`, а новый close capture показывает их на границе Node. Исправленный
 artifact остаётся `candidate` до повторного явного visual verdict `zavx0z`.
+
+Этот исправленный Socket artifact затем также явно отклонён `zavx0z`: standard
+Fields всё ещё были собраны Node-local overrides, theme radii не исполнялись, а
+Socket contour оставался неверного размера. Любая прежняя формулировка `1:1`
+для него отозвана.
+
+Текущий corrected candidate использует generic Renderer owners
+`8d14e99949ba38196c073bc24bbe83eab6272996` /
+`3803739d0dded9c05c5f9e32acd163b6f81f6e6c` и linked UI owner
+`90c77080c27d92fea5ee803e8ff1e49d65885ae1`. Executable comparison фиксирует
+`160×294` Node, `22px` header, `137×22` Select/NumberField contours,
+`16×16` Checkbox, `12×12` Socket glyphs и exact numeric row y positions
+`183/208/233/258/283` внутри live viewport. External Storybook revision
+`c1580e4950592557984ecdf4`, graph
+`828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8`,
+capture `capture_R32gYTk6Zi-eyT22Z46-ts7X`, sha256
+`4145b85515e5542877c8f821e39ba627d199fda12e6f7a5c92d62d8c77675e25`
+имеют ready/presented и empty diagnostics/console. Это всё ещё только candidate:
+final visual parity требует нового явного verdict `zavx0z`.
 
 ## Known platform gates
 
@@ -429,7 +457,7 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
 8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
-   exact `279242 / 70390` проходит executable repository test. Historical
+   exact `278439 / 70370` проходит executable repository test. Historical
    incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance

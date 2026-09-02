@@ -117,14 +117,14 @@ export function Socket(props: SocketProps) {
     onClick={props.onActivate}
     style={css`
       box-sizing: border-box;
-      position: ${presentation === "row" ? "relative" : "static"};
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: ${presentation === "row" ? "100%" : "10px"};
-      min-width: ${presentation === "row" ? "0" : "10px"};
-      height: ${presentation === "row" ? "20px" : "10px"};
-      min-height: ${presentation === "row" ? "20px" : "10px"};
+      width: ${presentation === "row" ? "100%" : "12px"};
+      min-width: ${presentation === "row" ? "0" : "12px"};
+      height: ${presentation === "row" ? "22px" : "12px"};
+      min-height: ${presentation === "row" ? "22px" : "12px"};
       flex-direction: row;
       gap: ${presentation === "row" ? "4px" : "0"};
       padding: 0;
@@ -132,7 +132,7 @@ export function Socket(props: SocketProps) {
       border-radius: 0;
       background: transparent;
       color: ${preset.color};
-      font-size: 10px;
+      font-size: var(--font-size-xs);
       overflow: visible;
 
       &[data-presentation="endpoint"][data-socket-side="left"] {
@@ -140,7 +140,8 @@ export function Socket(props: SocketProps) {
       }
 
       &[data-presentation="endpoint"][data-socket-side="right"] {
-        margin-right: -13px;
+        left: 6px;
+        margin-right: -6px;
       }
 
       &:hover {
@@ -173,16 +174,16 @@ export function Socket(props: SocketProps) {
         position: ${presentation === "row" ? "absolute" : "static"};
         display: block;
         left: ${presentation === "row" && props.side === "left" ? "0" : "auto"};
-        top: ${presentation === "row" ? "5px" : "auto"};
+        top: ${presentation === "row" ? "4px" : "auto"};
         right: ${presentation === "row" && props.side === "right" ? "0" : "auto"};
-        width: 10px;
-        min-width: 10px;
-        height: 10px;
-        min-height: 10px;
-        margin-left: ${presentation === "row" && props.side === "left" ? "-5px" : "0"};
-        margin-right: ${presentation === "row" && props.side === "right" ? "-5px" : "0"};
-        border: 1px solid #202020;
-        border-radius: 50%;
+        width: 12px;
+        min-width: 12px;
+        height: 12px;
+        min-height: 12px;
+        margin-left: ${presentation === "row" && props.side === "left" ? "-6px" : "0"};
+        margin-right: ${presentation === "row" && props.side === "right" ? "-6px" : "0"};
+        border: var(--border-width-control) solid #202020;
+        border-radius: var(--radius-round);
         background: currentcolor;
 
         &[data-dot="true"] {
@@ -207,7 +208,7 @@ export function Socket(props: SocketProps) {
         &[data-volume-grid="true"] {
           width: 6px;
           height: 6px;
-          border: 1px dotted currentcolor;
+          border: var(--border-width-control) dotted currentcolor;
           border-radius: 0;
           background: transparent;
         }
@@ -221,11 +222,11 @@ export function Socket(props: SocketProps) {
         display: block;
         width: 100%;
         min-width: 0;
-        padding-left: ${props.side === "left" ? "14px" : "0"};
-        padding-right: ${props.side === "right" ? "14px" : "0"};
+        padding-left: ${props.side === "left" ? "16px" : "0"};
+        padding-right: ${props.side === "right" ? "16px" : "0"};
         overflow: hidden;
         color: #d8d8d8;
-        font-size: 10px;
+        font-size: var(--font-size-xs);
         text-align: ${props.side};
         white-space: nowrap;
         text-overflow: ellipsis;

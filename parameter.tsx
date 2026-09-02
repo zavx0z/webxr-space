@@ -217,20 +217,20 @@ export function Parameter(props: ParameterProps) {
       align-items: center;
       width: 100%;
       min-width: 0;
-      min-height: 20px;
+      min-height: 22px;
       gap: 3px;
 
       &[data-spacing-before="small"] {
-        margin-top: 4px;
+        margin-top: 1px;
       }
 
       &[data-spacing-before="medium"] {
-        margin-top: 8px;
+        margin-top: 5px;
       }
 
       &[data-label-hidden="true"] {
         gap: 0;
-        padding-right: 12px;
+        padding-right: 11px;
         padding-left: 12px;
       }
 
@@ -241,7 +241,8 @@ export function Parameter(props: ParameterProps) {
       }
 
       &[data-inset-number-row="true"] {
-        padding-right: 10px;
+        gap: 0;
+        padding-right: 11px;
       }
 
       &[hidden] {
@@ -269,9 +270,10 @@ export function Parameter(props: ParameterProps) {
       style={css`
         box-sizing: border-box;
         display: flex;
+        align-items: center;
         width: ${leadingCheckbox ? "18px" : "0"};
         min-width: 0;
-        min-height: 20px;
+        min-height: 22px;
         flex-grow: ${leadingCheckbox ? 0 : 1};
 
         &[hidden] {
@@ -292,7 +294,6 @@ export function Parameter(props: ParameterProps) {
         disabled={disabled}
         readOnly={readOnly}
         title={title}
-        style={compactFieldStyle}
         onChange={change}
       /> : null}
       {numberSlider ? <SliderField
@@ -317,12 +318,6 @@ export function Parameter(props: ParameterProps) {
         disabled={disabled}
         readOnly={readOnly}
         title={title}
-        style={css`
-          ${compactFieldStyle}
-
-          --field-label-width: 58%;
-          --number-field-label-padding: 2px 5px;
-        `}
         onInput={input}
         onChange={change}
       /> : null}
@@ -349,11 +344,9 @@ export function Parameter(props: ParameterProps) {
       {stringSelect ? <SelectField
         value={stringValue}
         options={options}
-        density="compact"
         disabled={disabled}
         readOnly={readOnly}
         title={title}
-        style={compactFieldStyle}
         onChange={change}
       /> : null}
       {stringPath ? <PathField
@@ -463,7 +456,7 @@ export function ParameterLayout(props: ParameterLayoutProps) {
       align-items: center;
       width: 100%;
       min-width: 0;
-      min-height: 20px;
+      min-height: 22px;
       gap: 3px;
 
       &[hidden] {
@@ -490,9 +483,10 @@ export function ParameterLayout(props: ParameterLayoutProps) {
       style={css`
         box-sizing: border-box;
         display: flex;
+        align-items: center;
         width: 0;
         min-width: 0;
-        min-height: 20px;
+        min-height: 22px;
         flex-grow: 1;
 
         &[hidden] {
@@ -522,7 +516,7 @@ function ParameterEndpoints(props: Readonly<{
     style={css`
       display: flex;
       align-items: center;
-      min-width: ${props.sockets.length === 0 ? "0" : "10px"};
+      min-width: ${props.sockets.length === 0 ? "0" : "12px"};
       gap: 2px;
     `}
   >
@@ -561,7 +555,7 @@ function ParameterLabel(props: Readonly<{
       width: 40%;
       overflow: hidden;
       color: var(--widget-list-content);
-      font-size: 10px;
+      font-size: var(--font-size-xs);
       white-space: nowrap;
       text-overflow: ellipsis;
 
@@ -595,11 +589,11 @@ export function ParameterOutput(props: Readonly<{value: NodeJsonValue}>) {
       height: 20px;
       padding: 2px 5px;
       overflow: hidden;
-      border: 1px solid var(--widget-text-outline);
-      border-radius: 3px;
+      border: var(--border-width-control) solid var(--widget-text-outline);
+      border-radius: var(--radius-small);
       background: var(--widget-text-background-readonly);
       color: var(--widget-text-content-readonly);
-      font-size: 10px;
+      font-size: var(--font-size-xs);
       white-space: nowrap;
       text-overflow: ellipsis;
     `}

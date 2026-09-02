@@ -331,6 +331,67 @@ describe("one compiled Node component tree", () => {
     fixture.dispose()
   })
 
+  test("projects aggregate Socket glyphs onto their exact Layout Port centers", () => {
+    const fixture = createFixture()
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const root = createRoot(host)
+    root.render(<NodeTree
+      store={fixture.store}
+      layout={fixture.layout}
+      style={css`
+        width: 760px;
+        height: 480px;
+      `}
+    />)
+    const renderer = createDocumentRenderer({document, root: host, viewport: {width: 760, height: 480}})
+    const frame = renderer.flush()
+    const cases = [
+      {nodeId: "source", socketId: "value-output", portId: "source/value-output"},
+      {nodeId: "target", socketId: "result-input", portId: "target/result-input"},
+    ] as const
+    for (const entry of cases) {
+      const socket = required(host.querySelector(
+        `[data-node-id="${entry.nodeId}"][data-socket-id="${entry.socketId}"]`,
+      ))
+      const glyph = required(socket.querySelector("[data-socket-glyph]"))
+      const glyphBox = required(frame.boxByNode.get(glyph) ?? null)
+      const port = required(fixture.layout.ports.find(candidate => candidate.id === entry.portId) ?? null)
+      const center = Object.freeze({
+        x: glyphBox.x + glyphBox.width / 2,
+        y: glyphBox.y + glyphBox.height / 2,
+      })
+      const delta = Object.freeze({
+        x: Math.abs(center.x - port.x),
+        y: Math.abs(center.y - port.y),
+      })
+      if (delta.x > 1 || delta.y > 1) {
+        const socketBox = required(frame.boxByNode.get(socket) ?? null)
+        const endpointBox = required(frame.boxByNode.get(required(socket.parentElement)) ?? null)
+        const rect = (box: typeof glyphBox) => Object.freeze({
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+        })
+        throw new Error([
+          `${entry.portId}:`,
+          `glyph=${JSON.stringify(rect(glyphBox))},`,
+          `socket=${JSON.stringify(rect(socketBox))},`,
+          `endpoint=${JSON.stringify(rect(endpointBox))},`,
+          `center=${JSON.stringify(center)},`,
+          `port=${JSON.stringify(port)},`,
+          `delta=${JSON.stringify(delta)}`,
+        ].join(" "))
+      }
+    }
+
+    renderer.dispose()
+    root.unmount()
+    fixture.dispose()
+  })
+
   test("pan mutates only shared transforms and retains Node, Parameter, Field, Socket and Link geometry", () => {
     const fixture = createFixture()
     const document = createDocument()

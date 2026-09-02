@@ -124,8 +124,59 @@ describe("public component Storybook projection", () => {
     const normalizeBox = frame.boxByNode.get(normalize)!
     const vectorBox = frame.boxByNode.get(vector)!
     const scaleBox = frame.boxByNode.get(scale)!
-    expect(normalizeBox.y - (dimensionsBox.y + dimensionsBox.height)).toBe(10)
-    expect(scaleBox.y - (vectorBox.y + vectorBox.height)).toBe(6)
+    const liveBox = frame.boxByNode.get(story.element.querySelector("[data-live-owner]")!)!
+    const headerBox = frame.boxByNode.get(node.querySelector("header")!)!
+    const bodyBox = frame.boxByNode.get(node.querySelector("section")!)!
+    expect({
+      x: nodeBox.x - liveBox.x,
+      y: nodeBox.y - liveBox.y,
+      width: nodeBox.width,
+      height: nodeBox.height,
+    }).toEqual({x: 17, y: 17, width: 160, height: 294})
+    expect({height: headerBox.height, bodyHeight: bodyBox.height}).toEqual({
+      height: 22,
+      bodyHeight: 272,
+    })
+    const dimensionsSelectBox = frame.boxByNode.get(dimensions.querySelector("select")!)!
+    expect({
+      x: dimensionsSelectBox.x - liveBox.x,
+      y: dimensionsSelectBox.y - liveBox.y,
+      width: dimensionsSelectBox.width,
+      height: dimensionsSelectBox.height,
+    }).toEqual({x: 29, y: 102, width: 137, height: 22})
+    const normalizeCheckboxBox = frame.boxByNode.get(normalize.querySelector("input")!)!
+    expect({
+      x: normalizeCheckboxBox.x - liveBox.x,
+      y: normalizeCheckboxBox.y - liveBox.y,
+      width: normalizeCheckboxBox.width,
+      height: normalizeCheckboxBox.height,
+    }).toEqual({x: 29, y: 135, width: 16, height: 16})
+    const vectorGlyphBox = frame.boxByNode.get(vector.querySelector("[data-socket-glyph]")!)!
+    expect({
+      x: vectorGlyphBox.x + vectorGlyphBox.width / 2 - liveBox.x,
+      y: vectorGlyphBox.y + vectorGlyphBox.height / 2 - liveBox.y,
+      width: vectorGlyphBox.width,
+      height: vectorGlyphBox.height,
+    }).toEqual({x: 17, y: 168, width: 12, height: 12})
+    const numberRows = [
+      ["scale", 183],
+      ["detail", 208],
+      ["roughness", 233],
+      ["lacunarity", 258],
+      ["distortion", 283],
+    ] as const
+    for (const [id, y] of numberRows) {
+      const field = node.querySelector(`[data-parameter-id="noise-${id}"] [data-number-field]`)!
+      const fieldBox = frame.boxByNode.get(field)!
+      expect({
+        x: fieldBox.x - liveBox.x,
+        y: fieldBox.y - liveBox.y,
+        width: fieldBox.width,
+        height: fieldBox.height,
+      }).toEqual({x: 29, y, width: 137, height: 22})
+    }
+    expect(normalizeBox.y - (dimensionsBox.y + dimensionsBox.height)).toBe(8)
+    expect(scaleBox.y - (vectorBox.y + vectorBox.height)).toBe(4)
     expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 192, height: 328, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')
