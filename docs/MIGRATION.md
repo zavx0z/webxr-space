@@ -43,15 +43,20 @@ disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Final
 1k/10k retained baselines pass executable `600000000 / 5400000000` byte
 ceilings; final append is `12.498 / 64.902ms` with exact marker-derived mounts.
 At `776a974`, the replacement `285000 / 72000` bundle ceiling was made
-executable. After restoring the historical UI-owned SVG indicator, exact full
-NodeEditor `279243 / 70384` still passes that ceiling. Official Blender 5.2
-Noise Texture evidence is stored byte-exact, and Node/UI composition at
-`9855abd` / `1ddae57` is captured at 1:1 on Storybook revision
-`f48550926ffeec12eef18bc1`. The prior Renderer/Engine-font classification was
-wrong: historical `Select` used `chevronDown` in an image slot. `SelectField`
-now restores `chevronDownIcon` as non-interactive presentation while the native
-`select` remains the picker, value, focus and change owner. R5 technical gates
-are closed; only the explicit `zavx0z` equal-scale visual verdict remains.
+executable. After restoring the historical UI-owned SVG indicator and correcting
+input Socket contour attachment, exact full NodeEditor `279242 / 70390` still
+passes that ceiling. Official Blender 5.2 Noise Texture evidence is stored
+byte-exact, and Node/UI composition at `9ddded8` / `1ddae57` is captured at 1:1
+on Storybook revision `8f9c410f7bb9dc5170a2b353`. The prior
+Renderer/Engine-font classification was wrong: historical `Select` used
+`chevronDown` in an image slot. `SelectField` restores `chevronDownIcon` as
+non-interactive presentation while the native `select` remains the picker,
+value, focus and change owner. The first SVG-restored candidate was explicitly
+rejected because its six input Socket centers were `7px` left of the Node
+contour. Node `ed7b6a9` corrects the endpoint-left flow offset and exact
+Renderer-box tests now constrain all six input and both output centers to their
+contours within `1px`. R5 technical gates are closed; the corrected candidate
+requires a new explicit `zavx0z` equal-scale visual verdict.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.

@@ -45,6 +45,7 @@ The authoritative files are:
 - `evidence/node-r5-blender-compatibility-checkpoint.json`
 - `evidence/node-r5-final-candidate-checkpoint.json`
 - `evidence/node-r5-visual-closure-checkpoint.json`
+- `evidence/node-r5-socket-alignment-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -91,13 +92,15 @@ memory. Node `4a68482` plus Renderer `a5c9f3e`/`99ce784` closes unbounded dense
 disposal. Executable dense-memory and fully-component bundle ceilings are now
 accepted. The exact Blender 5.2 Noise Texture reference is stored with its
 provenance, and UI `1ddae57` restores the historical SVG select indicator
-without moving native select interaction ownership. Node evidence `9855abd`
-records the corrected classification and current `279243 / 70384` bundle. R5
-now waits only for the explicit equal-scale visual owner verdict. R6 remains
+without moving native select interaction ownership. The first SVG-restored
+candidate was rejected for a `7px` input-Socket contour error; Node `ed7b6a9`
+corrects it and evidence `9ddded8` records exact Renderer-box checks plus the
+current `279242 / 70390` bundle. R5 now waits for a new explicit equal-scale
+visual owner verdict. R6 remains
 blocked because Node, UI and Renderer are not remote-backed and the canonical
 sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-current live pointer is `evidence/node-r5-visual-closure-checkpoint.json`.
+current live pointer is `evidence/node-r5-socket-alignment-checkpoint.json`.
 
 ## Transition superproject
 

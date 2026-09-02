@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the corrected Node R5 visual checkpoint", async () => {
+  test("preserves rejected visual evidence and overlays the corrected Socket checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -156,7 +156,8 @@ describe("visual monorepo M0 foundation", () => {
     const ownerDecisionGates = data.nodeR5OwnerDecisionsCheckpoint.effectiveGates as Record<string, string>
     const compatibilityGates = data.nodeR5BlenderCompatibilityCheckpoint.effectiveGates as Record<string, string>
     const finalCandidateGates = data.nodeR5FinalCandidateCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5VisualClosureCheckpoint.effectiveGates as Record<string, string>
+    const visualClosureGates = data.nodeR5VisualClosureCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5SocketAlignmentCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
@@ -170,7 +171,12 @@ describe("visual monorepo M0 foundation", () => {
       ui: {head: string}
       renderer: {head: string}
     }
-    const latestRepositories = data.nodeR5VisualClosureCheckpoint.repositories as {
+    const visualClosureRepositories = data.nodeR5VisualClosureCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+    }
+    const latestRepositories = data.nodeR5SocketAlignmentCheckpoint.repositories as {
       node: {head: string}
       ui: {head: string}
       renderer: {head: string}
@@ -194,11 +200,12 @@ describe("visual monorepo M0 foundation", () => {
     expect(compatibilityRepositories.node.head).toBe("c399bf312dcb214aa0ed31d631a086bc7be0569d")
     expect(finalCandidateRepositories.node.head).toBe("996619791e9abfc32e5a5139f9f3b1e4bc20e716")
     expect(finalCandidateRepositories.ui.head).toBe("5c351459555ec0980893a1da1c1ee8e7f99de2ed")
-    expect(latestRepositories.node.head).toBe("9855abd9683affb8759647ebd27c342ab8b4dda4")
+    expect(visualClosureRepositories.node.head).toBe("9855abd9683affb8759647ebd27c342ab8b4dda4")
+    expect(latestRepositories.node.head).toBe("9ddded88425f69e6052687e7dccb4a02fb3016a5")
     expect(latestRepositories.ui.head).toBe("1ddae57f1f525ecd2363bec1a5bb79db71591cfd")
     expect(latestRepositories.renderer.head).toBe("99ce7846e6086ba4c3adebad23acbb6faafa277f")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "9855abd9683affb8759647ebd27c342ab8b4dda4",
+      "9ddded88425f69e6052687e7dccb4a02fb3016a5",
     )
     expect(ownerDecisionGates).toEqual({
       R1: "verified",
@@ -222,6 +229,14 @@ describe("visual monorepo M0 foundation", () => {
       R3: "verified",
       R4: "verified",
       R5: "platform-gap-and-owner-verdict",
+      R6: "blocked",
+    })
+    expect(visualClosureGates).toEqual({
+      R1: "verified",
+      R2: "verified",
+      R3: "verified",
+      R4: "verified",
+      R5: "owner-verdict-pending",
       R6: "blocked",
     })
     expect(gates).toEqual({
@@ -307,6 +322,24 @@ describe("visual monorepo M0 foundation", () => {
       status: "candidate-owner-verdict",
       ownerVerdict: "pending-zavx0z",
       restoredIndicator: {source: "chevronDownIcon", platformGap: false},
+    })
+    expect((data.nodeR5SocketAlignmentCheckpoint.visualAcceptance as {
+      status: string
+      previousOwnerVerdict: string
+      ownerVerdict: string
+    })).toMatchObject({
+      status: "candidate-owner-verdict",
+      previousOwnerVerdict: "rejected-zavx0z",
+      ownerVerdict: "pending-zavx0z",
+    })
+    expect((data.nodeR5SocketAlignmentCheckpoint.socketAlignment as {
+      inputSocketsChecked: number
+      outputSocketsChecked: number
+      maximumContourDeltaPx: number
+    })).toMatchObject({
+      inputSocketsChecked: 6,
+      outputSocketsChecked: 2,
+      maximumContourDeltaPx: 1,
     })
   })
 

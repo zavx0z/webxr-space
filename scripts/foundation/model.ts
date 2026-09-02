@@ -27,6 +27,7 @@ export const dataFiles = Object.freeze({
   nodeR5BlenderCompatibilityCheckpoint: "evidence/node-r5-blender-compatibility-checkpoint.json",
   nodeR5FinalCandidateCheckpoint: "evidence/node-r5-final-candidate-checkpoint.json",
   nodeR5VisualClosureCheckpoint: "evidence/node-r5-visual-closure-checkpoint.json",
+  nodeR5SocketAlignmentCheckpoint: "evidence/node-r5-socket-alignment-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -151,6 +152,7 @@ export type FoundationData = Readonly<{
   nodeR5BlenderCompatibilityCheckpoint: Readonly<Record<string, unknown>>
   nodeR5FinalCandidateCheckpoint: Readonly<Record<string, unknown>>
   nodeR5VisualClosureCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5SocketAlignmentCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -208,6 +210,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5VisualClosureCheckpoint: byPath.get(
       dataFiles.nodeR5VisualClosureCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5SocketAlignmentCheckpoint: byPath.get(
+      dataFiles.nodeR5SocketAlignmentCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -673,7 +678,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5OwnerDecisionsCheckpoint.schemaVersion !== 1 ||
     data.nodeR5BlenderCompatibilityCheckpoint.schemaVersion !== 1 ||
     data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1) {
+    data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5SocketAlignmentCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -732,7 +738,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const ownerDecisionsCheckpointPath = "evidence/node-r5-owner-decisions-checkpoint.json"
   const compatibilityCheckpointPath = "evidence/node-r5-blender-compatibility-checkpoint.json"
   const finalCandidateCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
+  const visualClosureCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-socket-alignment-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -823,9 +830,19 @@ function validateMigrationCoverage(data: FoundationData): void {
     finalCandidateRepositories.renderer,
     "final candidate Renderer repository",
   )
-  const latestRepositories = objectRecord(
+  const visualClosureRepositories = objectRecord(
     data.nodeR5VisualClosureCheckpoint.repositories,
-    "latest Node R5 visual closure checkpoint repositories",
+    "Node R5 visual closure checkpoint repositories",
+  )
+  const visualClosureNode = objectRecord(visualClosureRepositories.node, "visual closure Node repository")
+  const visualClosureUi = objectRecord(visualClosureRepositories.ui, "visual closure UI repository")
+  const visualClosureRenderer = objectRecord(
+    visualClosureRepositories.renderer,
+    "visual closure Renderer repository",
+  )
+  const latestRepositories = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.repositories,
+    "latest Node R5 Socket alignment checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestUi = objectRecord(latestRepositories.ui, "latest UI repository")
@@ -844,14 +861,16 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.blenderCompatibilityImplementationCommit !== compatibilityNode.parent ||
     data.nodeCutover.blenderCompatibilityEvidenceCommit !== compatibilityNode.head ||
     data.nodeCutover.finalCandidateEvidenceCommit !== finalCandidateNode.head ||
-    data.nodeCutover.visualClosureEvidenceCommit !== latestNode.head ||
+    data.nodeCutover.visualClosureEvidenceCommit !== visualClosureNode.head ||
+    data.nodeCutover.socketAlignmentImplementationCommit !== latestNode.parent ||
+    data.nodeCutover.socketAlignmentEvidenceCommit !== latestNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== finalCandidateCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== visualClosureCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -1373,6 +1392,36 @@ function validateMigrationCoverage(data: FoundationData): void {
       throw new Error(`Visual closure UI history mismatch: ${String(entry.package)}`)
     }
   }
+  const socketAlignmentNodeHistory = arrayValue(
+    data.nodeR5SocketAlignmentCheckpoint.nodePackageHistory,
+    "Socket alignment Node package history",
+  ).map((value) => objectRecord(value, "Socket alignment Node history entry"))
+  assertExactStringSet(
+    "Socket alignment Node history coverage",
+    socketAlignmentNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of socketAlignmentNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Socket alignment Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const socketAlignmentUiHistory = arrayValue(
+    data.nodeR5SocketAlignmentCheckpoint.uiPackageHistory,
+    "Socket alignment UI package history",
+  ).map((value) => objectRecord(value, "Socket alignment UI history entry"))
+  assertExactStringSet(
+    "Socket alignment UI history coverage",
+    socketAlignmentUiHistory.map(({package: packageName}) => packageName),
+    uiInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of socketAlignmentUiHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+      throw new Error(`Socket alignment UI history mismatch: ${String(entry.package)}`)
+    }
+  }
   const bundleDecision = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.bundleOwnerDecision,
     "bundle owner decision",
@@ -1573,14 +1622,15 @@ function validateMigrationCoverage(data: FoundationData): void {
     visualClosureProvenance.externalSourceProductionChanged !== true) {
     throw new Error("Visual closure checkpoint must append to the final candidate checkpoint")
   }
-  if (latestNode.head !== "9855abd9683affb8759647ebd27c342ab8b4dda4" ||
-    latestNode.parent !== finalCandidateNode.head || latestNode.status !== "clean" ||
-    latestNode.headContainedByOriginMain !== false ||
-    latestUi.head !== "1ddae57f1f525ecd2363bec1a5bb79db71591cfd" ||
-    latestUi.parent !== finalCandidateUi.head || latestUi.status !== "clean" ||
-    latestUi.headContainedByOriginMain !== false ||
-    latestRenderer.head !== finalCandidateRenderer.head || latestRenderer.status !== "clean" ||
-    latestRenderer.headContainedByOriginMain !== false) {
+  if (visualClosureNode.head !== "9855abd9683affb8759647ebd27c342ab8b4dda4" ||
+    visualClosureNode.parent !== finalCandidateNode.head || visualClosureNode.status !== "clean" ||
+    visualClosureNode.headContainedByOriginMain !== false ||
+    visualClosureUi.head !== "1ddae57f1f525ecd2363bec1a5bb79db71591cfd" ||
+    visualClosureUi.parent !== finalCandidateUi.head || visualClosureUi.status !== "clean" ||
+    visualClosureUi.headContainedByOriginMain !== false ||
+    visualClosureRenderer.head !== finalCandidateRenderer.head ||
+    visualClosureRenderer.status !== "clean" ||
+    visualClosureRenderer.headContainedByOriginMain !== false) {
     throw new Error("Visual closure repository revisions do not match the observed clean sources")
   }
   const correctedClassification = objectRecord(
@@ -1676,6 +1726,110 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Visual closure must leave only the explicit owner verdict pending")
   }
 
+  const socketAlignmentProvenance = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.provenance,
+    "Socket alignment provenance",
+  )
+  if (socketAlignmentProvenance.previousCheckpoint !== visualClosureCheckpointPath ||
+    socketAlignmentProvenance.preservesPreviousSnapshots !== true ||
+    socketAlignmentProvenance.productionRuntimeChanged !== false ||
+    socketAlignmentProvenance.externalSourceProductionChanged !== true) {
+    throw new Error("Socket alignment checkpoint must append to the visual closure checkpoint")
+  }
+  if (latestNode.head !== "9ddded88425f69e6052687e7dccb4a02fb3016a5" ||
+    latestNode.parent !== "ed7b6a99f6b6ae7b35811307eaeb2352f07b14b9" ||
+    latestNode.status !== "clean" || latestNode.headContainedByOriginMain !== false ||
+    latestUi.head !== visualClosureUi.head || latestUi.status !== "clean" ||
+    latestUi.headContainedByOriginMain !== false || latestRenderer.head !== visualClosureRenderer.head ||
+    latestRenderer.status !== "clean" || latestRenderer.headContainedByOriginMain !== false) {
+    throw new Error("Socket alignment repository revisions do not match the observed clean sources")
+  }
+  const previousCandidate = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.previousCandidate,
+    "rejected visual candidate",
+  )
+  if (previousCandidate.checkpoint !== visualClosureCheckpointPath ||
+    previousCandidate.storybookRevision !== "f48550926ffeec12eef18bc1" ||
+    previousCandidate.closeCaptureSha256 !==
+      "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef" ||
+    previousCandidate.ownerVerdict !== "rejected-zavx0z" ||
+    previousCandidate.finding !==
+      "all six input Socket glyph centers were 7px left of the Node contour") {
+    throw new Error("Socket alignment checkpoint must preserve the rejected candidate evidence")
+  }
+  const socketAlignment = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.socketAlignment,
+    "Socket alignment evidence",
+  )
+  if (socketAlignment.owner !== "@nodes/ui Socket endpoint presentation" ||
+    socketAlignment.implementationCommit !== "ed7b6a99f6b6ae7b35811307eaeb2352f07b14b9" ||
+    socketAlignment.evidenceCommit !== latestNode.head || socketAlignment.previousLeftOffsetPx !== -13 ||
+    socketAlignment.currentLeftOffsetPx !== -6 || socketAlignment.inputSocketsChecked !== 6 ||
+    socketAlignment.outputSocketsChecked !== 2 || socketAlignment.maximumContourDeltaPx !== 1 ||
+    socketAlignment.platformCodeChanged !== false || socketAlignment.layoutPolicyChanged !== false ||
+    socketAlignment.status !== "verified-by-renderer-boxes") {
+    throw new Error("Socket alignment evidence does not match the Node-owned correction")
+  }
+  const alignmentTechnical = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.technicalR5,
+    "Socket alignment technical R5",
+  )
+  const alignmentFunctional = objectRecord(
+    alignmentTechnical.functional,
+    "Socket alignment functional acceptance",
+  )
+  const alignmentBundle = objectRecord(alignmentTechnical.bundle, "Socket alignment bundle")
+  const alignmentExactBundle = objectRecord(
+    alignmentBundle.exactNodeEditor,
+    "Socket alignment exact NodeEditor bundle",
+  )
+  const alignmentBundleCeiling = objectRecord(alignmentBundle.ceiling, "Socket alignment bundle ceiling")
+  if (alignmentTechnical.status !== "verified" || alignmentFunctional.pass !== 220 ||
+    alignmentFunctional.fail !== 0 || alignmentFunctional.todo !== 0 ||
+    alignmentBundle.contract !== "nodes-component-ui-bundle/2" ||
+    alignmentExactBundle.bytes !== 279242 || alignmentExactBundle.gzipBytes !== 70390 ||
+    alignmentExactBundle.sha256 !==
+      "eaa9e7b57eaecda97c4003649dc9f6eabeb0b77ee0bf04211e2c7ed45ba72bc8" ||
+    alignmentBundleCeiling.bytes !== 285000 || alignmentBundleCeiling.gzipBytes !== 72000 ||
+    alignmentBundle.pass !== true ||
+    alignmentTechnical.inheritedPerformanceEvidence !== visualClosureCheckpointPath) {
+    throw new Error("Socket alignment technical evidence does not match executable acceptance")
+  }
+  const alignmentStorybook = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.storybook,
+    "Socket alignment Storybook evidence",
+  )
+  const alignmentCaptures = arrayValue(
+    alignmentStorybook.captures,
+    "Socket alignment Storybook captures",
+  ).map((value) => objectRecord(value, "Socket alignment Storybook capture"))
+  const alignmentCanvas = objectRecord(alignmentStorybook.canvas, "Socket alignment Storybook canvas")
+  if (alignmentStorybook.activeRevision !== "8f9c410f7bb9dc5170a2b353" ||
+    alignmentStorybook.graphDigest !== "88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613" ||
+    alignmentStorybook.ready !== true || alignmentStorybook.presented !== true ||
+    arrayValue(alignmentStorybook.diagnostics, "Socket alignment diagnostics").length !== 0 ||
+    arrayValue(alignmentStorybook.consoleErrors, "Socket alignment console errors").length !== 0 ||
+    alignmentCanvas.width !== 3840 || alignmentCanvas.height !== 2176 ||
+    alignmentCanvas.hidden !== false || alignmentCanvas.nonBlack !== true ||
+    alignmentCaptures.length !== 3 ||
+    !alignmentCaptures.some(({sha256}) =>
+      sha256 === "5ebac749997bcd3f41804db29d37d88922c69eefba5fc20f1e81b5e6c57094d7") ||
+    !alignmentCaptures.some(({sha256}) =>
+      sha256 === "a89bf335858d6862d79f67fc656d2f3784563e377812afb0e6a1af3889e08e41") ||
+    !alignmentCaptures.some(({sha256}) =>
+      sha256 === "1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0")) {
+    throw new Error("Socket alignment Storybook evidence does not match the corrected captures")
+  }
+  const alignmentVisual = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.visualAcceptance,
+    "Socket alignment visual acceptance",
+  )
+  if (alignmentVisual.status !== "candidate-owner-verdict" ||
+    alignmentVisual.previousOwnerVerdict !== "rejected-zavx0z" ||
+    alignmentVisual.ownerVerdict !== "pending-zavx0z") {
+    throw new Error("Corrected Socket visual acceptance must await a new owner verdict")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -1688,15 +1842,20 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5FinalCandidateCheckpoint.effectiveGates,
     "final candidate Node gates",
   )
-  const gates = objectRecord(
+  const visualClosureGates = objectRecord(
     data.nodeR5VisualClosureCheckpoint.effectiveGates,
     "visual closure effective Node gates",
+  )
+  const gates = objectRecord(
+    data.nodeR5SocketAlignmentCheckpoint.effectiveGates,
+    "Socket alignment effective Node gates",
   )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
     }
     if (compatibilityGates[id] !== "verified" || finalCandidateGates[id] !== "verified" ||
+      visualClosureGates[id] !== "verified" ||
       gates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
@@ -1704,11 +1863,13 @@ function validateMigrationCoverage(data: FoundationData): void {
   if (decisionGates.R5 !== "owner-decisions-pending" ||
     compatibilityGates.R5 !== "owner-decisions-pending" ||
     finalCandidateGates.R5 !== "platform-gap-and-owner-verdict" ||
+    visualClosureGates.R5 !== "owner-verdict-pending" ||
     gates.R5 !== "owner-verdict-pending") {
     throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
-    finalCandidateGates.R6 !== "blocked" || gates.R6 !== "blocked") {
+    finalCandidateGates.R6 !== "blocked" || visualClosureGates.R6 !== "blocked" ||
+    gates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }

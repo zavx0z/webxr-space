@@ -153,9 +153,21 @@ const finalCandidateUiCheckpoint = objectRecord(
   finalCandidateRepositories.ui,
   "final candidate UI repository",
 )
-const latestRepositories = objectRecord(
+const visualClosureRepositories = objectRecord(
   data.nodeR5VisualClosureCheckpoint.repositories,
-  "latest visual closure checkpoint repositories",
+  "visual closure checkpoint repositories",
+)
+const visualClosureNodeCheckpoint = objectRecord(
+  visualClosureRepositories.node,
+  "visual closure Node repository",
+)
+const visualClosureUiCheckpoint = objectRecord(
+  visualClosureRepositories.ui,
+  "visual closure UI repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5SocketAlignmentCheckpoint.repositories,
+  "latest Socket alignment checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const uiCheckpoint = objectRecord(latestRepositories.ui, "latest UI repository")
@@ -468,7 +480,7 @@ if (!Array.isArray(visualClosureNodeHistory)) {
 }
 for (const value of visualClosureNodeHistory) {
   const entry = objectRecord(value, "visual closure Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "visual closure Node")
+  validateCheckpointHistoryEntry(entry, visualClosureNodeCheckpoint, "visual closure Node")
 }
 
 const visualClosureUiHistory = data.nodeR5VisualClosureCheckpoint.uiPackageHistory
@@ -477,7 +489,25 @@ if (!Array.isArray(visualClosureUiHistory)) {
 }
 for (const value of visualClosureUiHistory) {
   const entry = objectRecord(value, "visual closure UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "visual closure UI")
+  validateCheckpointHistoryEntry(entry, visualClosureUiCheckpoint, "visual closure UI")
+}
+
+const socketAlignmentNodeHistory = data.nodeR5SocketAlignmentCheckpoint.nodePackageHistory
+if (!Array.isArray(socketAlignmentNodeHistory)) {
+  throw new Error("Socket alignment Node history must be an array")
+}
+for (const value of socketAlignmentNodeHistory) {
+  const entry = objectRecord(value, "Socket alignment Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Socket alignment Node")
+}
+
+const socketAlignmentUiHistory = data.nodeR5SocketAlignmentCheckpoint.uiPackageHistory
+if (!Array.isArray(socketAlignmentUiHistory)) {
+  throw new Error("Socket alignment UI history must be an array")
+}
+for (const value of socketAlignmentUiHistory) {
+  const entry = objectRecord(value, "Socket alignment UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Socket alignment UI")
 }
 
 console.log(
@@ -496,7 +526,8 @@ console.log(
   `${decisionNodeHistory.length + decisionRendererHistory.length} owner decision histories, ` +
   `${compatibilityNodeHistory.length + compatibilityRendererHistory.length} Blender compatibility histories, ` +
   `${finalCandidateNodeHistory.length + finalCandidateUiHistory.length} final candidate histories, ` +
-  `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories`,
+  `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories, ` +
+  `${socketAlignmentNodeHistory.length + socketAlignmentUiHistory.length} Socket alignment histories`,
 )
 
 function validateCheckpointHistoryEntry(

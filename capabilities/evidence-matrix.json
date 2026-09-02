@@ -458,13 +458,14 @@
       "classification": "implemented-performance-evidence",
       "status": "verified-owner-verdict-pending",
       "owner": "source:node with Renderer/WebGPU owners",
-      "statement": "Value, topology, transform, Link timing/memory, bounded dense lifecycle, component bundle and the restored SVG indicator technical gates are verified.",
+      "statement": "Value, topology, transform, Link timing/memory, bounded dense lifecycle, component bundle, restored SVG indicator and exact Socket contour attachment technical gates are verified.",
       "evidence": [
         "evidence/node-r5-dense-lifecycle-checkpoint.json",
         "evidence/node-r5-owner-decisions-checkpoint.json",
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
-        "evidence/node-r5-visual-closure-checkpoint.json"
+        "evidence/node-r5-visual-closure-checkpoint.json",
+        "evidence/node-r5-socket-alignment-checkpoint.json"
       ],
       "remainingOwnerDecisions": [
         "explicit equal-scale visual verdict"
@@ -475,23 +476,23 @@
       "classification": "implemented-performance-evidence",
       "status": "verified-r5-subgate",
       "owner": "source:node",
-      "statement": "The exact fully component NodeEditor passes the accepted replacement ceiling after restoring the UI-owned SVG select indicator.",
+      "statement": "The exact fully component NodeEditor passes the accepted replacement ceiling after restoring the UI-owned SVG select indicator and correcting input Socket contour attachment.",
       "metrics": {
-        "exactBytes": 279243,
-        "exactGzipBytes": 70384,
-        "sha256": "070cc2b374fc4bdc18e788ad4c14d8afd5d9d4fbaf5d81589ae3983f5460936c",
+        "exactBytes": 279242,
+        "exactGzipBytes": 70390,
+        "sha256": "eaa9e7b57eaecda97c4003649dc9f6eabeb0b77ee0bf04211e2c7ed45ba72bc8",
         "ceilingBytes": 285000,
         "ceilingGzipBytes": 72000,
-        "remainingBytes": 5757,
-        "remainingGzipBytes": 1616,
+        "remainingBytes": 5758,
+        "remainingGzipBytes": 1610,
         "historicalBytes": 244300,
         "historicalGzipBytes": 60660,
-        "deltaBytes": 34943,
-        "deltaGzipBytes": 9724,
+        "deltaBytes": 34942,
+        "deltaGzipBytes": 9730,
         "categories": {
           "@zavx0z/dom": 72998,
           "@ui/components": 64947,
-          "@nodes/ui": 64896,
+          "@nodes/ui": 64895,
           "@zavx0z/react": 36258,
           "@nodes/core": 34097,
           "@zavx0z/template": 5355,
@@ -509,7 +510,8 @@
         "evidence/node-r5-owner-decisions-checkpoint.json",
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
-        "evidence/node-r5-visual-closure-checkpoint.json"
+        "evidence/node-r5-visual-closure-checkpoint.json",
+        "evidence/node-r5-socket-alignment-checkpoint.json"
       ],
       "decision": "accepted replacement ceiling 285000 / 72000; the historical incomplete evidence remains a comparison rather than the active limit"
     },
@@ -518,14 +520,14 @@
       "classification": "implemented-evidence",
       "status": "mechanically-verified-owner-verdict-pending",
       "owner": "source:node and external-storybook",
-      "statement": "All 159 leaves resolve through the component path; the exact Blender 5.2 comparison with the restored SVG indicator is ready/presented with console zero and reproducible canvas captures.",
+      "statement": "All 159 leaves resolve through the component path; the corrected exact Blender 5.2 comparison has restored SVG and contour-attached Sockets, is ready/presented with console zero and reproducible captures.",
       "metrics": {
-        "revision": "f48550926ffeec12eef18bc1",
+        "revision": "8f9c410f7bb9dc5170a2b353",
         "leafRoutes": 159,
         "overviewRoutes": 66,
-        "canvasSha256": "4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b",
-        "comparisonCanvasSha256": "b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d",
-        "closeComparisonCanvasSha256": "e5a5f8fde336c2624d0e912da32d23c1848ce8bfb481183057b89d5abefe3eef"
+        "canvasSha256": "1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0",
+        "comparisonCanvasSha256": "5ebac749997bcd3f41804db29d37d88922c69eefba5fc20f1e81b5e6c57094d7",
+        "closeComparisonCanvasSha256": "a89bf335858d6862d79f67fc656d2f3784563e377812afb0e6a1af3889e08e41"
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
@@ -540,9 +542,10 @@
         "evidence/node-r5-owner-decisions-checkpoint.json",
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
-        "evidence/node-r5-visual-closure-checkpoint.json"
+        "evidence/node-r5-visual-closure-checkpoint.json",
+        "evidence/node-r5-socket-alignment-checkpoint.json"
       ],
-      "verification": "fresh Storybook MCP inspection at f48550926ffeec12eef18bc1: both exact routes ready/presented, diagnostics/console empty, 3840x2176 canvas and supplied preview captures reproduce the recorded hashes",
+      "verification": "fresh Storybook MCP inspection at 8f9c410f7bb9dc5170a2b353: both exact routes ready/presented, diagnostics/console empty, 3840x2176 canvas and corrected preview captures reproduce the recorded hashes",
       "remainingGate": "record the explicit visual owner verdict by zavx0z"
     },
     {
@@ -552,7 +555,7 @@
       "owner": "source:node with @ui/components SelectField",
       "statement": "Blender 5.2 LTS is the normative cross-repository target; the official Noise Texture asset is stored byte-exact and compared 1:1 with the component output.",
       "nodeImplementationCommit": "1bce579a10ee2be4110ee43e10235ee173c2243f",
-      "nodeEvidenceCommit": "9855abd9683affb8759647ebd27c342ab8b4dda4",
+      "nodeEvidenceCommit": "9ddded88425f69e6052687e7dccb4a02fb3016a5",
       "uiIndicatorCommit": "1ddae57f1f525ecd2363bec1a5bb79db71591cfd",
       "legacyCompatibility": {
         "version": "4.5.5",
@@ -566,11 +569,21 @@
         "nativeInteractionOwner": "select",
         "platformChangeRequired": false
       },
+      "correctedSocketAlignment": {
+        "previousOwnerVerdict": "rejected-zavx0z",
+        "previousDeltaPx": 7,
+        "implementationCommit": "ed7b6a99f6b6ae7b35811307eaeb2352f07b14b9",
+        "inputSocketsChecked": 6,
+        "outputSocketsChecked": 2,
+        "maximumContourDeltaPx": 1,
+        "platformChangeRequired": false
+      },
       "evidence": [
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
         "evidence/node-r5-visual-closure-checkpoint.json",
-        "node:9855abd9683affb8759647ebd27c342ab8b4dda4:packages/ui/requirements.md"
+        "evidence/node-r5-socket-alignment-checkpoint.json",
+        "node:9ddded88425f69e6052687e7dccb4a02fb3016a5:packages/ui/requirements.md"
       ]
     },
     {
@@ -578,7 +591,7 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 9855abd is ahead 24, UI 1ddae57 is ahead 6 and Renderer 99ce784 is ahead 12; the visual owner verdict remains pending, the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
+      "statement": "Node 9ddded8 is ahead 26, UI 1ddae57 is ahead 6 and Renderer 99ce784 is ahead 12; the corrected visual owner verdict remains pending, the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -593,7 +606,8 @@
         "evidence/node-r5-owner-decisions-checkpoint.json",
         "evidence/node-r5-blender-compatibility-checkpoint.json",
         "evidence/node-r5-final-candidate-checkpoint.json",
-        "evidence/node-r5-visual-closure-checkpoint.json"
+        "evidence/node-r5-visual-closure-checkpoint.json",
+        "evidence/node-r5-socket-alignment-checkpoint.json"
       ]
     },
     {
