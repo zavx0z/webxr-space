@@ -108,7 +108,8 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -235,17 +236,38 @@
     },
     {
       "id": "nodes.link-selection-performance",
-      "classification": "measured-failure",
-      "status": "failed-r5",
-      "owner": "source:node with likely Renderer/Engine performance owners",
-      "statement": "The 10k retained Link path keeps one draw and zero transform uploads, but selection misses the frame budget.",
+      "classification": "implemented-performance-evidence",
+      "status": "verified-r5-subgate",
+      "owner": "source:node",
+      "statement": "Three fresh 100-sample 10k Link processes pass selection p99 while retaining one Path draw, exact styles/segments, identities, geometry and zero transform uploads.",
       "metrics": {
         "links": 10000,
-        "selectionP99MsMin": 40.271,
-        "selectionP99MsMax": 42.786,
+        "selectionP50Ms": [4.705, 4.78, 4.851],
+        "selectionP95Ms": [5.851, 6.189, 6.314],
+        "selectionP99Ms": [8.146, 7.111, 8.115],
+        "transformP99MsRange": [2.179, 2.592],
+        "routeP99MsRange": [0.689, 0.89],
         "frameBudgetMs": 16.667
       },
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
+      ]
+    },
+    {
+      "id": "nodes.link-retained-memory",
+      "classification": "implemented-performance-evidence",
+      "status": "verified-r5-subgate",
+      "owner": "source:node benchmark lifetime boundary",
+      "statement": "Post-GC retained runtime excludes temporary evidence Maps and superseded frame locals while retaining the live semantic tree, Renderer, backend and latest frame.",
+      "metrics": {
+        "links": 10000,
+        "retainedBytes": [6527025, 6583552, 6596324],
+        "retainedBytesPerLink": [652.703, 658.355, 659.632],
+        "priorAcceptedBytesPerLink": 680,
+        "improvementPercentRange": [3.0, 4.0]
+      },
+      "evidence": ["evidence/node-r5-link-closure-checkpoint.json"]
     },
     {
       "id": "nodes.semantic-value-performance",
@@ -290,7 +312,8 @@
       "evidence": [
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ]
     },
     {
@@ -331,7 +354,8 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ]
     },
     {
@@ -359,7 +383,8 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ]
     },
     {
@@ -402,7 +427,8 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ]
     },
     {
@@ -426,7 +452,7 @@
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json"
       ],
-      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for be37431/65ec24a because only Renderer traversal and Node evidence documentation changed, not observable DOM or visual output",
+      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for f4519ea because only benchmark lifetime and evidence documentation changed, not observable DOM or visual output",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -434,7 +460,7 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node be37431 is ahead 8 and Renderer 65ec24a is ahead 10; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node f4519ea is ahead 9 and Renderer 65ec24a is ahead 10; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -443,7 +469,8 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
-        "evidence/node-r5-transform-closure-checkpoint.json"
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json"
       ]
     },
     {

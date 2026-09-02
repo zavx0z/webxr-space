@@ -28,6 +28,8 @@ stores on append. Renderer `80ee4f5` and evidence `21f263f` close end-to-end
 append topology for selector-independent data-plus-hidden insertion. Other R5
 gates remain. Renderer `0cb7256` and evidence `65ec24a` close calibrated 10k
 transform; Link/memory/disposal/bundle/final-visual gates remain.
+Node `f4519ea` closes Link timing and retained runtime memory; dense-visible
+memory/disposal, bundle and final visual verdict remain.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.
