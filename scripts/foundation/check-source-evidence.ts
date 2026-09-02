@@ -177,9 +177,21 @@ const socketAlignmentUiCheckpoint = objectRecord(
   socketAlignmentRepositories.ui,
   "Socket alignment UI repository",
 )
-const latestRepositories = objectRecord(
+const componentDefaultsRepositories = objectRecord(
   data.nodeR5ComponentDefaultsCheckpoint.repositories,
-  "latest component defaults checkpoint repositories",
+  "component defaults checkpoint repositories",
+)
+const componentDefaultsNodeCheckpoint = objectRecord(
+  componentDefaultsRepositories.node,
+  "component defaults Node repository",
+)
+const componentDefaultsUiCheckpoint = objectRecord(
+  componentDefaultsRepositories.ui,
+  "component defaults UI repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5CheckboxPathCheckpoint.repositories,
+  "latest Checkbox Path checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const uiCheckpoint = objectRecord(latestRepositories.ui, "latest UI repository")
@@ -528,7 +540,7 @@ if (!Array.isArray(componentDefaultsNodeHistory)) {
 }
 for (const value of componentDefaultsNodeHistory) {
   const entry = objectRecord(value, "Component defaults Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Component defaults Node")
+  validateCheckpointHistoryEntry(entry, componentDefaultsNodeCheckpoint, "Component defaults Node")
 }
 
 const componentDefaultsUiHistory = data.nodeR5ComponentDefaultsCheckpoint.uiPackageHistory
@@ -537,7 +549,21 @@ if (!Array.isArray(componentDefaultsUiHistory)) {
 }
 for (const value of componentDefaultsUiHistory) {
   const entry = objectRecord(value, "Component defaults UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Component defaults UI")
+  validateCheckpointHistoryEntry(entry, componentDefaultsUiCheckpoint, "Component defaults UI")
+}
+
+const checkboxNodeHistory = data.nodeR5CheckboxPathCheckpoint.nodePackageHistory
+if (!Array.isArray(checkboxNodeHistory)) throw new Error("Checkbox Path Node history must be an array")
+for (const value of checkboxNodeHistory) {
+  const entry = objectRecord(value, "Checkbox Path Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Checkbox Path Node")
+}
+
+const checkboxUiHistory = data.nodeR5CheckboxPathCheckpoint.uiPackageHistory
+if (!Array.isArray(checkboxUiHistory)) throw new Error("Checkbox Path UI history must be an array")
+for (const value of checkboxUiHistory) {
+  const entry = objectRecord(value, "Checkbox Path UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Checkbox Path UI")
 }
 
 console.log(
@@ -558,7 +584,8 @@ console.log(
   `${finalCandidateNodeHistory.length + finalCandidateUiHistory.length} final candidate histories, ` +
   `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories, ` +
   `${socketAlignmentNodeHistory.length + socketAlignmentUiHistory.length} Socket alignment histories, ` +
-  `${componentDefaultsNodeHistory.length + componentDefaultsUiHistory.length} component defaults histories`,
+  `${componentDefaultsNodeHistory.length + componentDefaultsUiHistory.length} component defaults histories, ` +
+  `${checkboxNodeHistory.length + checkboxUiHistory.length} Checkbox Path histories`,
 )
 
 function validateCheckpointHistoryEntry(

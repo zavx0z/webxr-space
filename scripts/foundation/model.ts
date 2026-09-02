@@ -29,6 +29,7 @@ export const dataFiles = Object.freeze({
   nodeR5VisualClosureCheckpoint: "evidence/node-r5-visual-closure-checkpoint.json",
   nodeR5SocketAlignmentCheckpoint: "evidence/node-r5-socket-alignment-checkpoint.json",
   nodeR5ComponentDefaultsCheckpoint: "evidence/node-r5-component-defaults-checkpoint.json",
+  nodeR5CheckboxPathCheckpoint: "evidence/node-r5-checkbox-path-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -155,6 +156,7 @@ export type FoundationData = Readonly<{
   nodeR5VisualClosureCheckpoint: Readonly<Record<string, unknown>>
   nodeR5SocketAlignmentCheckpoint: Readonly<Record<string, unknown>>
   nodeR5ComponentDefaultsCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5CheckboxPathCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -218,6 +220,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5ComponentDefaultsCheckpoint: byPath.get(
       dataFiles.nodeR5ComponentDefaultsCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5CheckboxPathCheckpoint: byPath.get(
+      dataFiles.nodeR5CheckboxPathCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -685,7 +690,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5FinalCandidateCheckpoint.schemaVersion !== 1 ||
     data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1 ||
     data.nodeR5SocketAlignmentCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5ComponentDefaultsCheckpoint.schemaVersion !== 1) {
+    data.nodeR5ComponentDefaultsCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5CheckboxPathCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -746,7 +752,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const finalCandidateCheckpointPath = "evidence/node-r5-final-candidate-checkpoint.json"
   const visualClosureCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
   const socketAlignmentCheckpointPath = "evidence/node-r5-socket-alignment-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-component-defaults-checkpoint.json"
+  const componentDefaultsCheckpointPath = "evidence/node-r5-component-defaults-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-checkbox-path-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -861,7 +868,14 @@ function validateMigrationCoverage(data: FoundationData): void {
   const currentNode = objectRecord(currentRepositories.node, "current Node repository")
   const currentUi = objectRecord(currentRepositories.ui, "current UI repository")
   const currentRenderer = objectRecord(currentRepositories.renderer, "current Renderer repository")
-  if (data.nodeCutover.observedHead !== currentNode.head ||
+  const checkboxRepositories = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.repositories,
+    "latest Node R5 Checkbox Path checkpoint repositories",
+  )
+  const checkboxNode = objectRecord(checkboxRepositories.node, "latest Checkbox Node repository")
+  const checkboxUi = objectRecord(checkboxRepositories.ui, "latest Checkbox UI repository")
+  const checkboxRenderer = objectRecord(checkboxRepositories.renderer, "latest Checkbox Renderer repository")
+  if (data.nodeCutover.observedHead !== checkboxNode.head ||
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
     data.nodeCutover.layoutContractCommit !== closureNode.head ||
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
@@ -882,31 +896,34 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.componentDefaultsUiCommit !== currentUi.head ||
     data.nodeCutover.themeRadiusRendererImplementationCommit !== currentRenderer.parent ||
     data.nodeCutover.themeRadiusRendererEvidenceCommit !== currentRenderer.head ||
+    data.nodeCutover.checkboxPathRendererImplementationCommit !== checkboxRenderer.parent ||
+    data.nodeCutover.checkboxPathRendererEvidenceCommit !== checkboxRenderer.head ||
+    data.nodeCutover.checkboxPathNodeEvidenceCommit !== checkboxNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== socketAlignmentCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== componentDefaultsCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
   const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
   const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
-  if (nodeOwner === undefined || nodeOwner.revision !== currentNode.head ||
+  if (nodeOwner === undefined || nodeOwner.revision !== checkboxNode.head ||
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
   const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
   const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
-  if (rendererOwner === undefined || rendererOwner.revision !== currentRenderer.head ||
+  if (rendererOwner === undefined || rendererOwner.revision !== checkboxRenderer.head ||
     rendererOwner.writable !== true) {
     throw new Error("Renderer ownership ledger does not match the latest checkpoint")
   }
   const uiGroup = data.ownership.groups.find(({id}) => id === "ui")
   const uiOwner = uiGroup?.owners.find(({id}) => id === "source:ui")
-  if (uiOwner === undefined || uiOwner.revision !== currentUi.head || uiOwner.writable !== true) {
+  if (uiOwner === undefined || uiOwner.revision !== checkboxUi.head || uiOwner.writable !== true) {
     throw new Error("UI ownership ledger does not match the latest checkpoint")
   }
   for (const path of [componentCheckpointPath, r4R5CheckpointPath, closureCheckpointPath]) {
@@ -1468,6 +1485,36 @@ function validateMigrationCoverage(data: FoundationData): void {
     const plan = importsByPackage.get(entry.package)
     if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
       throw new Error(`Component defaults UI history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const checkboxNodeHistory = arrayValue(
+    data.nodeR5CheckboxPathCheckpoint.nodePackageHistory,
+    "Checkbox Path Node package history",
+  ).map((value) => objectRecord(value, "Checkbox Path Node history entry"))
+  assertExactStringSet(
+    "Checkbox Path Node history coverage",
+    checkboxNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of checkboxNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Checkbox Path Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const checkboxUiHistory = arrayValue(
+    data.nodeR5CheckboxPathCheckpoint.uiPackageHistory,
+    "Checkbox Path UI package history",
+  ).map((value) => objectRecord(value, "Checkbox Path UI history entry"))
+  assertExactStringSet(
+    "Checkbox Path UI history coverage",
+    checkboxUiHistory.map(({package: packageName}) => packageName),
+    uiInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of checkboxUiHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+      throw new Error(`Checkbox Path UI history mismatch: ${String(entry.package)}`)
     }
   }
   const bundleDecision = objectRecord(
@@ -2037,6 +2084,124 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Component defaults M0 validation must preserve the external Template WIP blocker")
   }
 
+  const checkboxProvenance = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.provenance,
+    "Checkbox Path provenance",
+  )
+  if (checkboxProvenance.previousCheckpoint !== componentDefaultsCheckpointPath ||
+    checkboxProvenance.preservesPreviousSnapshots !== true ||
+    checkboxProvenance.productionRuntimeChanged !== false ||
+    checkboxProvenance.externalSourceProductionChanged !== true) {
+    throw new Error("Checkbox Path checkpoint must append to the component defaults checkpoint")
+  }
+  if (checkboxNode.head !== "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0" ||
+    checkboxNode.parent !== currentNode.head || checkboxNode.status !== "clean" ||
+    checkboxNode.headContainedByOriginMain !== false || checkboxUi.head !== currentUi.head ||
+    checkboxUi.status !== "clean" || checkboxUi.headContainedByOriginMain !== false ||
+    checkboxRenderer.head !== "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59" ||
+    checkboxRenderer.parent !== "5e21783b688339fb892cb288a4bd030605191c68" ||
+    checkboxRenderer.status !== "clean" || checkboxRenderer.headContainedByOriginMain !== false) {
+    throw new Error("Checkbox Path repository revisions do not match the observed clean sources")
+  }
+  const checkboxDefect = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.reportedDefect,
+    "reported Checkbox defect",
+  )
+  if (checkboxDefect.ownerVerdict !== "rejected-checkbox-zavx0z" ||
+    checkboxDefect.finding !== "checked Checkbox glyph is visibly crooked and too thin" ||
+    checkboxDefect.affectedCheckpoint !== componentDefaultsCheckpointPath ||
+    checkboxDefect.actualOwner !== "@zavx0z/renderer form-control projection") {
+    throw new Error("Checkbox Path checkpoint must preserve the reported visual defect")
+  }
+  const checkboxCorrection = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.correction,
+    "Checkbox Path correction",
+  )
+  if (checkboxCorrection.implementationCommit !== checkboxRenderer.parent ||
+    checkboxCorrection.capabilityCommit !== checkboxRenderer.head ||
+    checkboxCorrection.nodeEvidenceCommit !== checkboxNode.head ||
+    checkboxCorrection.previousPaint !== "Engine-font text glyph U+2713" ||
+    checkboxCorrection.currentPaint !== "retained two-segment Path with 2px stroke" ||
+    checkboxCorrection.uiWorkaroundAdded !== false || checkboxCorrection.nodeWorkaroundAdded !== false ||
+    checkboxCorrection.capability !== "renderer.features.form-control-projection") {
+    throw new Error("Checkbox correction must remain generic and font-independent")
+  }
+  const checkboxPixels = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.pixelEvidence,
+    "Checkbox pixel evidence",
+  )
+  if (JSON.stringify(arrayValue(checkboxPixels.normalizedReferenceWhiteBox, "reference Checkbox bbox")) !==
+      "[6,7,23,21]" ||
+    JSON.stringify(arrayValue(checkboxPixels.normalizedLiveWhiteBox, "live Checkbox bbox")) !==
+      "[6,7,23,21]" || checkboxPixels.status !== "exact-normalized-bounds") {
+    throw new Error("Checkbox Path pixel evidence must match the exact normalized reference bounds")
+  }
+  const checkboxTechnical = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.technicalR5,
+    "Checkbox Path technical R5",
+  )
+  const checkboxRendererFunctional = objectRecord(
+    checkboxTechnical.rendererFunctional,
+    "Checkbox Renderer functional acceptance",
+  )
+  const checkboxUiFunctional = objectRecord(
+    checkboxTechnical.uiFunctional,
+    "Checkbox UI functional acceptance",
+  )
+  const checkboxNodeFunctional = objectRecord(
+    checkboxTechnical.nodeFunctional,
+    "Checkbox Node functional acceptance",
+  )
+  const checkboxCapabilities = objectRecord(
+    checkboxTechnical.capabilities,
+    "Checkbox capability acceptance",
+  )
+  if (checkboxTechnical.status !== "verified" || checkboxRendererFunctional.corePass !== 187 ||
+    checkboxRendererFunctional.storybookPass !== 23 || checkboxRendererFunctional.fail !== 0 ||
+    checkboxUiFunctional.packagePass !== 78 || checkboxUiFunctional.storybookPass !== 29 ||
+    checkboxUiFunctional.fail !== 0 || checkboxNodeFunctional.pass !== 221 ||
+    checkboxNodeFunctional.fail !== 0 || checkboxNodeFunctional.todo !== 0 ||
+    checkboxCapabilities.typecheck !== true || checkboxCapabilities.pass !== 92 ||
+    checkboxCapabilities.fail !== 1 ||
+    checkboxCapabilities.onlyFailure !==
+      "deterministic regeneration observes pre-existing Template support/inventory WIP" ||
+    checkboxCapabilities.templateModifiedByThisSlice !== false ||
+    checkboxCapabilities.validatorWeakened !== false ||
+    checkboxTechnical.inheritedBundleAndPerformanceEvidence !== componentDefaultsCheckpointPath) {
+    throw new Error("Checkbox Path technical evidence does not match executable acceptance")
+  }
+  const checkboxStorybook = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.storybook,
+    "Checkbox Storybook evidence",
+  )
+  const checkboxUiStory = objectRecord(checkboxStorybook.ui, "Checkbox UI Storybook evidence")
+  const checkboxUiCapture = objectRecord(checkboxUiStory.capture, "Checkbox UI capture")
+  const checkboxNodeStory = objectRecord(checkboxStorybook.node, "Checkbox Node Storybook evidence")
+  const checkboxNodeCapture = objectRecord(checkboxNodeStory.capture, "Checkbox Node capture")
+  if (checkboxUiStory.activeRevision !== "83b43d78463c9683585e1e17" ||
+    checkboxUiStory.ready !== true || checkboxUiStory.presented !== true ||
+    arrayValue(checkboxUiStory.diagnostics, "Checkbox UI diagnostics").length !== 0 ||
+    arrayValue(checkboxUiStory.consoleErrors, "Checkbox UI console errors").length !== 0 ||
+    checkboxUiCapture.id !== "capture_zFwenJ4iUg67B4Y3zKPWBwgs" ||
+    checkboxUiCapture.sha256 !== "43d4a93f3853ab06983f9f3f8161835660e5849a647312aa18ac6946676eb322" ||
+    checkboxNodeStory.activeRevision !== "d3e020d985008a2e3fa9bce0" ||
+    checkboxNodeStory.ready !== true || checkboxNodeStory.presented !== true ||
+    arrayValue(checkboxNodeStory.diagnostics, "Checkbox Node diagnostics").length !== 0 ||
+    arrayValue(checkboxNodeStory.consoleErrors, "Checkbox Node console errors").length !== 0 ||
+    checkboxNodeCapture.id !== "capture__0RkSaSlB4dFPpYPF6V0BIjS" ||
+    checkboxNodeCapture.sha256 !== "4eff14782c9b15c717d79340429a9832af491bef8e29c08647da91095d9c24db") {
+    throw new Error("Checkbox Storybook evidence does not match the corrected captures")
+  }
+  const checkboxVisual = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.visualAcceptance,
+    "Checkbox visual acceptance",
+  )
+  if (checkboxVisual.status !== "candidate-owner-verdict" || checkboxVisual.checkboxDefectClosed !== true ||
+    checkboxVisual.mechanicalGeometryVerified !== true ||
+    checkboxVisual.ownerVerdict !== "pending-zavx0z" || checkboxVisual.parityClaimed !== false) {
+    throw new Error("Checkbox correction must remain candidate-only until the owner verdict")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -2061,13 +2226,18 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5ComponentDefaultsCheckpoint.effectiveGates,
     "component defaults effective Node gates",
   )
+  const checkboxGates = objectRecord(
+    data.nodeR5CheckboxPathCheckpoint.effectiveGates,
+    "Checkbox Path effective Node gates",
+  )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
     }
     if (compatibilityGates[id] !== "verified" || finalCandidateGates[id] !== "verified" ||
       visualClosureGates[id] !== "verified" ||
-      gates[id] !== "verified" || componentGates[id] !== "verified") {
+      gates[id] !== "verified" || componentGates[id] !== "verified" ||
+      checkboxGates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
   }
@@ -2075,12 +2245,13 @@ function validateMigrationCoverage(data: FoundationData): void {
     compatibilityGates.R5 !== "owner-decisions-pending" ||
     finalCandidateGates.R5 !== "platform-gap-and-owner-verdict" ||
     visualClosureGates.R5 !== "owner-verdict-pending" ||
-    gates.R5 !== "owner-verdict-pending" || componentGates.R5 !== "owner-verdict-pending") {
+    gates.R5 !== "owner-verdict-pending" || componentGates.R5 !== "owner-verdict-pending" ||
+    checkboxGates.R5 !== "owner-verdict-pending") {
     throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
     finalCandidateGates.R6 !== "blocked" || visualClosureGates.R6 !== "blocked" ||
-    gates.R6 !== "blocked" || componentGates.R6 !== "blocked") {
+    gates.R6 !== "blocked" || componentGates.R6 !== "blocked" || checkboxGates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }
