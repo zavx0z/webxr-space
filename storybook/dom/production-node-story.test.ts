@@ -106,6 +106,13 @@ describe("public component Storybook projection", () => {
     expect((scale.querySelector("input") as HTMLInputElement).value).toBe("5.000")
     const roughness = node.querySelector('[data-parameter-id="noise-roughness"]')!
     expect(roughness.querySelector('[data-number-fill]')?.hasAttribute("hidden")).toBeFalse()
+    const vector = node.querySelector('[data-parameter-id="noise-vector"]')!
+    const dimensionsBox = frame.boxByNode.get(dimensions)!
+    const normalizeBox = frame.boxByNode.get(normalize)!
+    const vectorBox = frame.boxByNode.get(vector)!
+    const scaleBox = frame.boxByNode.get(scale)!
+    expect(normalizeBox.y - (dimensionsBox.y + dimensionsBox.height)).toBe(10)
+    expect(scaleBox.y - (vectorBox.y + vectorBox.height)).toBe(6)
     expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 192, height: 328, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')

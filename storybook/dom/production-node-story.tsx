@@ -655,12 +655,12 @@ function comparisonNodeData(): Readonly<{
   connectedSocketKeys: ReadonlySet<string>
 }> {
   const definitions = [
-    comparisonParameter("noise-dimensions", "Dimensions", "3d", "menu", {labelHidden: true, options: [
+    comparisonParameter("noise-dimensions", "Dimensions", "3d", "menu", {labelHidden: true, spacingBefore: "medium", options: [
       {value: "1d", label: "1D"}, {value: "2d", label: "2D"}, {value: "3d", label: "3D"}, {value: "4d", label: "4D"},
     ]}),
-    comparisonParameter("noise-normalize", "Normalize", true, "boolean"),
+    comparisonParameter("noise-normalize", "Normalize", true, "boolean", {spacingBefore: "medium"}),
     comparisonParameter("noise-vector", "Vector", [0, 0, 0], "vector", {axes: ["X", "Y", "Z"]}, [socket("noise-vector-input", "vector", "input", "left", "Vector")], true),
-    comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, step: .1, precision: 3}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
+    comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, step: .1, precision: 3, spacingBefore: "small"}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
     comparisonParameter("noise-detail", "Detail", 2, "float", {min: 0, step: .1, precision: 3}, [socket("noise-detail-input", "float", "input", "left", "Detail")]),
     comparisonParameter("noise-roughness", "Roughness", .5, "float", {min: 0, max: 1, step: .01, precision: 3}, [socket("noise-roughness-input", "float", "input", "left", "Roughness")]),
     comparisonParameter("noise-lacunarity", "Lacunarity", 2, "float", {min: 0, step: .1, precision: 3}, [socket("noise-lacunarity-input", "float", "input", "left", "Lacunarity")]),

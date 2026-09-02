@@ -130,6 +130,11 @@ Node presentation policy, а не UI aliases, выбирает interaction:
 - readonly/unknown JSON → semantic `<output>` composition;
 - vector/matrix/color/path/reference/collection → exact current UI Field.
 
+Optional `spacingBefore: "small" | "medium"` remains Node presentation data.
+The parent `Node` maps the bounded `4px`/`8px` rhythm onto the exact Parameter
+root; it does not calculate coordinates, create a wrapper owner or move layout
+into the component.
+
 Удалённые `IntegerField`, `BooleanField`, `EnumField`, `RotationField`,
 `ReadonlyField` не восстанавливаются. Connected Parameter скрывает editor через
 standard `hidden`, сохраняя Parameter, Field label relation и Socket identity.

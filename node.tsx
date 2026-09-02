@@ -315,6 +315,7 @@ export function Node(props: NodeProps) {
         store={props.parameterStore?.(parameter.id)}
         connectedSocketKeys={props.connectedSocketKeys}
         resolvedSocketSides={props.resolvedSocketSides}
+        spacingBefore={parameterSpacingBefore(parameter)}
         onInput={props.onParameterInput}
         onChange={props.onParameterChange}
         onSocketActivate={props.onSocketActivate}
@@ -339,6 +340,17 @@ export function Node(props: NodeProps) {
 }
 
 export type NodeComponent = FunctionComponent<NodeProps>
+
+function parameterSpacingBefore(
+  parameter: UiNodeSnapshot["parameters"][number],
+): "small" | "medium" | undefined {
+  const spacing = metadataString(parameter.presentation, "spacingBefore", "")
+  if (spacing === "") return undefined
+  if (spacing !== "small" && spacing !== "medium") {
+    throw new TypeError(`Parameter ${parameter.id} spacingBefore must be small or medium`)
+  }
+  return spacing
+}
 
 function NodePreviewImageView(props: Readonly<{image: NodePreviewImage; nodeLabel: string}>) {
   return <img

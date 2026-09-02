@@ -100,6 +100,7 @@ export type ParameterProps = Readonly<{
   store?: ExternalStore<ParameterSnapshot> | undefined
   connectedSocketKeys?: ReadonlySet<string> | undefined
   resolvedSocketSides?: ReadonlyMap<string, "left" | "right"> | undefined
+  spacingBefore?: "small" | "medium" | undefined
   style?: CssStyle | undefined
   onInput?: ((change: ParameterInput, event: Event) => void) | undefined
   onChange?: ((change: ParameterInput, event: Event) => void) | undefined
@@ -205,6 +206,7 @@ export function Parameter(props: ParameterProps) {
     data-connected={connected ? "true" : undefined}
     data-label-hidden={labelHidden ? "true" : undefined}
     data-leading-checkbox={leadingCheckbox ? "true" : undefined}
+    data-spacing-before={props.spacingBefore}
     title={title}
     style={css`
       box-sizing: border-box;
@@ -215,6 +217,14 @@ export function Parameter(props: ParameterProps) {
       min-width: 0;
       min-height: 20px;
       gap: 3px;
+
+      &[data-spacing-before="small"] {
+        margin-top: 4px;
+      }
+
+      &[data-spacing-before="medium"] {
+        margin-top: 8px;
+      }
 
       &[data-label-hidden="true"] {
         gap: 0;
