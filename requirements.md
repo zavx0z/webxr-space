@@ -306,28 +306,30 @@ evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates зак�
 `bun run bench:ui-bundle` обязан разделять root/exact/leaf builds и доказывать
 отсутствие legacy/story/dev retention.
 
-После exact Blender 5.2 component slice текущий comparable exact full
-NodeEditor build: `278365 raw / 70095 gzip`; root: `278294 / 70398`; NodeTree:
-`270229 / 67599`; complete aggregate Parameter interaction graph:
-`205339 / 50489`; Link: `122451 / 33074`. Root-vs-exact не объясняет дельту,
+После exact Blender 5.2 component slice и восстановления UI-owned SVG
+indicator текущий comparable exact full NodeEditor build:
+`279243 raw / 70384 gzip`; root: `279172 / 70678`; NodeTree:
+`271107 / 67869`; complete aggregate Parameter interaction graph:
+`206217 / 50770`; Link: `122451 / 33074`. Root-vs-exact не объясняет дельту,
 а unused concrete presentation/story templates отсутствуют в exact build.
-Exact full path больше historical incomplete evidence на `+13.944% raw /
-+15.554% gzip`.
+Exact full path больше historical incomplete evidence на `+14.303% raw /
++16.030% gzip`.
 
 Replacement ceiling `285000 / 72000` принят для exact fully-component
 NodeEditor и исполняется обычным repository test. Он оставляет только
-`6635 raw / 1905 gzip` (`2.38% / 2.72%`) запаса и не является общим резервом
+`5757 raw / 1616 gzip` (`2.06% / 2.30%`) запаса и не является общим резервом
 для новых owners. Historical `244300 / 60660` остаётся сравнением удалённой
 imperative/incomplete модели, а не скрытым обязательством удалить component
 runtime или функциональность.
 
 Exact metafile ownership: `@zavx0z/dom 72998`, `@nodes/ui 64896`,
-`@ui/components 64069`, `@zavx0z/react 36258`, `@nodes/core 34097`,
+`@ui/components 64947`, `@zavx0z/react 36258`, `@nodes/core 34097`,
 `@zavx0z/template 5355`, fixture `626` raw bytes. Крупнейшие inputs — compiled
 React runtime `34183`, Parameter projection `18080`, Core NodeTree `17867`,
 NodeTree UI `13645`, Foundation `13565` и semantic Document `13383`.
 Story/dev retention и root/subpath alias отсутствуют; private profiler code в
-production graph не попадает.
+production graph не попадает. Exact artifact sha256:
+`070cc2b374fc4bdc18e788ad4c14d8afd5d9d4fbaf5d81589ae3983f5460936c`.
 
 ## Storybook and visual acceptance
 
@@ -358,26 +360,27 @@ chevron. Exact comparison capture `capture_1jaGm1KQ5hc8k1WDxD2Ly39T`, sha256
 имеет empty diagnostics/console.
 
 Final 5.2 candidate slice использует official Manual asset, UI owners
-`f34b52c` / `f224951` / `5c35145` и Node production commits
-`d1cb287` / `a85e4c3` / `11ce295` / `5db53d9` / `51f57a9` / `af514b7`.
-На external Storybook revision `1a3ad15e74d2400c585c626a`, graph
+`f34b52c` / `f224951` / `5c35145` / `1ddae57` и Node production commits
+`d1cb287` / `a85e4c3` / `11ce295` / `5db53d9` / `51f57a9` / `af514b7` /
+`776a974` / `30425d7` / `a72e0e6` / `9966197`.
+На external Storybook revision `f48550926ffeec12eef18bc1`, graph
 `88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613`:
 
 - exact comparison route ready/presented, empty diagnostics/console; capture
-  `capture_z3vy06EOn_ArstR0eIkwnkwz`, sha256
-  `643cebce34e66814e7ae50d649bf487bbd8705db00ca77d98e37c073d55dda2e`;
+  `capture_VJMichQvkHMqwfs0GnWDWdGF`, sha256
+  `b7fcd446536141646f2275426b7094120dbd4876a9b9b8f022f64592a423aa2d`;
 - full `ui/node-editor/scene/default` ready/presented, empty
-  diagnostics/console; capture `capture_x2dSxUXvxuLw5krh3GDX9pMa`, sha256
+  diagnostics/console; capture `capture_ejdSxqAEvQ3PmESpBMnnqvXd`, sha256
   `4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b`.
 
 Node contour, composition, grouping, insets, solid Socket geometry, values and
-material roles now align at equal scale. Remaining visible mismatch is the
-collapsed native `select` disclosure indicator: Renderer emits `▾`, while the
-Engine font paints a damaged vertical glyph. Expected is the 5.2 downward
-chevron; actual is the captured fallback glyph. This is a generic
-Renderer/Engine-font gap, not authorization for a Node/UI-local indicator.
-Therefore the exact artifact remains `candidate` until that owner gap and the
-explicit `zavx0z` visual verdict are closed.
+material roles now align at equal scale. Historical UI evidence proved that the
+collapsed `select` used an SVG chevron rather than a text glyph. UI owner
+`1ddae57` restores the exact `chevronDownIcon` as a non-interactive image over
+the still-native `select`; picker, value, focus and change ownership remain on
+the native element. No Renderer/Engine-font gap or platform change is required.
+The exact artifact remains `candidate` only until the explicit `zavx0z` visual
+verdict is recorded.
 
 ## Known platform gates
 
@@ -414,7 +417,7 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
 8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
-   exact `278365 / 70095` проходит executable repository test. Historical
+   exact `279243 / 70384` проходит executable repository test. Historical
    incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance
