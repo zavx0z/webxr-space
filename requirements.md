@@ -257,18 +257,24 @@ Current append ledger состоит из diagnostic `data-node-count` attribute
 - оба focused run публикуют `append-node`, одну notification, `32` mounts /
   `35` renders / zero moves/disposes, exact two-record mutation batch и
   сохраняют identities всех прежних Node и Link;
-- 1k dense-visible cold: `41052` boxes, `13511` display items,
+- final 5.2 1k dense-visible cold: `41055` boxes, `13511` display items,
   `5000` Rects, `999` Paths; mount/Renderer/backend
-  `2.381s/3.445s/.894s` with exact LayoutResult;
-- 10k dense-visible cold: `410055` boxes, `135011` display items,
-  `50000` Rects, `9999` Paths; two exact LayoutResult lifecycle runs on
-  Renderer `a5c9f3e/99ce784` report mount `22.558–36.553s`, Renderer
-  `39.869–71.399s`, backend `20.964–26.620s` and retained baseline
-  `5.0232–5.0233GB`;
-- 10k disposal is bounded at `3.576–7.209s`: backend `178.6–328.6ms`,
-  component unmount `3.342–6.790s`, tree `54.3–89.1ms`, all `340003`
-  mounted component instances disposed. Backend `a5c9f3e` removes the former
-  quadratic per-entry Engine root scan; capability evidence is `99ce784`.
+  `2.205–2.473s/3.476–3.974s/.736–.979s`, retained baseline
+  `566435021–566625377` bytes and all `35003` component instances disposed in
+  `90.694–100.662ms`;
+- final 5.2 10k dense-visible cold: `410055` boxes, `135011` display items,
+  `50000` Rects, `9999` Paths; mount/Renderer/backend
+  `20.992–22.654s/48.152–52.970s/21.348–24.914s`, retained baseline
+  `5171008087–5171371966` bytes;
+- accepted retained regression ceilings are `600000000` bytes at 1k and
+  `5400000000` bytes at 10k. The benchmark publishes `memory.pass` and exits
+  nonzero on a regression; these ceilings are capacity guards, not optimization
+  targets;
+- final 10k disposal is bounded at `3.211–5.969s`: backend
+  `330.116–458.444ms`, component unmount `2.837–5.448s`, tree
+  `41.104–60.747ms`, all `350003` mounted component instances disposed. Backend
+  `a5c9f3e` removes the former quadratic per-entry Engine root scan; capability
+  evidence is `99ce784`.
 
 Topology timings проходят существующий budget и не заменяют остальные красные
 R5 gates. Exact Node-owned reproduction: `bench/node-system.ts`.
@@ -362,11 +368,11 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 4. Dense Link selection и retained interaction memory закрыты: три 10k process
    дали selection p99 `7.111–8.146ms` и `652.7–659.6 B/Link`, сохранив one draw,
    exact uploads, geometry и semantic identities.
-5. Dense-visible lifecycle больше не unbounded: два 10k run завершают все
-   `340003` component disposals за `3.576–7.209s`; backend cleanup занимает
-   `178.6–328.6ms`. Retained baseline `~5.023GB` остаётся capacity evidence без
-   утверждённого memory ceiling и требует отдельного owner policy, а не
-   выдуманного pass/fail threshold.
+5. Dense-visible lifecycle и retained capacity закрыты executable benchmark:
+   final 1k/10k baselines `566435021–566625377 /
+   5171008087–5171371966` bytes проходят ceilings
+   `600000000 / 5400000000`, а final 10k disposal освобождает все `350003`
+   component instances за `3.211s`.
 6. Exact official 5.2 Noise asset подтверждает один full-width compact filled
    contour для Scale/Detail/Roughness/Lacunarity/Distortion и отсутствие legacy
    `fBM` row. UI owner `f34b52c` исправляет optional labelled `NumberField`;
