@@ -16,7 +16,7 @@ import {
 import {createDocumentRenderer} from "@zavx0z/renderer"
 import {createRoot} from "@zavx0z/react"
 import {Frame} from "./frame.tsx"
-import {createNodeGeometryIndex} from "./geometry.ts"
+import {appendNodeGeometryIndex, createNodeGeometryIndex} from "./geometry.ts"
 import {Node} from "./node.tsx"
 import {NodeEditor} from "./node-editor.tsx"
 import {NodeTree} from "./node-tree.tsx"
@@ -100,6 +100,96 @@ describe("one compiled Node component tree", () => {
     expect(host.querySelector('[data-parameter-id="authored-value"]')?.getAttribute("data-field-kind")).toBe("number")
     expect(host.querySelector('[data-socket-id="authored-output"]')).not.toBeNull()
     root.unmount()
+  })
+
+  test("extends exact append geometry without mutating the previously published index", () => {
+    const fixture = createFixture()
+    const before = fixture.tree.getSnapshot()
+    const geometry = createNodeGeometryIndex(before.nodes, before.frames, before.links, fixture.layout)
+    const sourceRect = geometry.nodeRects.get("source")
+    const sourcePort = geometry.portCenters.get("source\u0000value-output")
+    const nodeRectCount = geometry.nodeRects.size
+    const portCount = geometry.portCenters.size
+
+    fixture.editor.addNode({
+      expectedRevision: fixture.tree.revision,
+      node: Object.freeze({
+        id: "future",
+        frameId: "outer",
+        sockets: Object.freeze([Object.freeze({id: "out", direction: "output" as const})]),
+      }),
+    })
+    const appended = fixture.tree.getSnapshot().nodes.at(-1)!
+    const next = appendNodeGeometryIndex(geometry, appended)
+
+    expect(next).not.toBe(geometry)
+    expect(geometry.nodeRects.size).toBe(nodeRectCount)
+    expect(geometry.portCenters.size).toBe(portCount)
+    expect(geometry.nodeRects.has("future")).toBeFalse()
+    expect(geometry.portCenters.has("future\u0000out")).toBeFalse()
+    expect(next.nodeRects.get("source")).toBe(sourceRect)
+    expect(next.portCenters.get("source\u0000value-output")).toBe(sourcePort)
+    expect(next.nodeRects.get("future")).toEqual({x: 72, y: 310, width: 220, height: 80})
+    expect(next.portCenters.get("future\u0000out")).toEqual({x: 292, y: 344})
+    expect(next.frameRects).toBe(geometry.frameRects)
+    expect(next.linkRoutes).toBe(geometry.linkRoutes)
+    fixture.dispose()
+  })
+
+  test("mounts one keyed appended Node and uses the full path for bulk topology", () => {
+    const tree = createNodeTree({nodes: [Object.freeze({id: "node-0"})]})
+    const store = createNodeTreeExternalStore(tree)
+    const document = createDocument()
+    const host = document.createElement("main")
+    document.appendChild(host)
+    const mutations: MutationBatch[] = []
+    document.subscribeMutations(batch => mutations.push(batch))
+    const root = createRoot(host)
+    const layout: LayoutResult = Object.freeze({
+      direction: "RIGHT",
+      bounds: Object.freeze({x: 0, y: 0, width: 760, height: 100}),
+      nodes: Object.freeze(Array.from({length: 4}, (_, index) => Object.freeze({
+        id: `node-${index}`,
+        x: index * 200,
+        y: 10,
+        width: 160,
+        height: 80,
+      }))),
+      ports: Object.freeze([]),
+      edges: Object.freeze([]),
+    })
+    root.render(<NodeTree store={store} layout={layout} />)
+    const retained = required(host.querySelector('[data-node-id="node-0"]'))
+    const beforeAppend = root.stats()
+    mutations.length = 0
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [...tree.definition().nodes, Object.freeze({id: "node-1"})]},
+    })
+    const afterAppend = root.stats()
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "append-node"})
+    expect(host.querySelector('[data-node-id="node-0"]')).toBe(retained)
+    expect(host.querySelector('[data-node-id="node-1"]')).not.toBeNull()
+    expect(afterAppend.mounts - beforeAppend.mounts).toBeGreaterThan(0)
+    expect(afterAppend.moves - beforeAppend.moves).toBe(0)
+    expect(afterAppend.disposes - beforeAppend.disposes).toBe(0)
+    expect(mutations.flatMap(batch => batch.records).filter(record =>
+      record.target === retained || retained.contains(record.target))).toEqual([])
+
+    const nodeOne = required(host.querySelector('[data-node-id="node-1"]'))
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [...tree.definition().nodes, {id: "node-2"}, {id: "node-3"}]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+    expect(host.querySelector('[data-node-id="node-0"]')).toBe(retained)
+    expect(host.querySelector('[data-node-id="node-1"]')).toBe(nodeOne)
+    expect(host.querySelector('[data-node-id="node-2"]')).not.toBeNull()
+    expect(host.querySelector('[data-node-id="node-3"]')).not.toBeNull()
+
+    root.unmount()
+    tree.dispose()
   })
 
   test("projects the exact Core store with nested Frames and retained entity identities", () => {
@@ -418,10 +508,12 @@ const fixtureLayout: LayoutResult = Object.freeze({
     Object.freeze({id: "inner", x: 42, y: 48, width: 300, height: 260}),
     Object.freeze({id: "source", x: 72, y: 84, width: 220, height: 100}),
     Object.freeze({id: "target", x: 430, y: 190, width: 220, height: 100}),
+    Object.freeze({id: "future", x: 72, y: 310, width: 220, height: 80}),
   ]),
   ports: Object.freeze([
     Object.freeze({id: "source/value-output", x: 292, y: 126, side: "EAST"}),
     Object.freeze({id: "target/result-input", x: 430, y: 232, side: "WEST"}),
+    Object.freeze({id: "future/out", x: 292, y: 344, side: "EAST"}),
   ]),
   edges: Object.freeze([Object.freeze({
     id: "value-link",

@@ -14,6 +14,7 @@ import {
 } from "@zavx0z/react"
 import {Frame} from "./frame.tsx"
 import {
+  appendNodeGeometryIndex,
   createNodeGeometryIndex,
   DEFAULT_NODE_TREE_TRANSFORM,
   intersectsViewport,
@@ -77,7 +78,10 @@ type NodeTreeView = Readonly<{
   frames: readonly VisibleFrame[]
   nodes: readonly VisibleNode[]
   links: readonly VisibleLink[]
-  allNodes: readonly UiNode[]
+  nodeById: ReadonlyMap<string, UiNode>
+  frameById: ReadonlyMap<string, UiFrame>
+  visibleNodeIds: ReadonlySet<string>
+  visibleFrameIds: ReadonlySet<string>
   connectedSocketKeys: ReadonlySet<string>
   geometry: NodeGeometryIndex
 }>
@@ -166,28 +170,126 @@ function NodeTreeContent(props: NodeTreeContentProps) {
       overflow: visible;
     `}
   >
-    {view.frames.map(entry => <MemoFrameProjection
-      key={entry.frame.id}
-      entry={entry}
+    <MemoFrameLayer
+      entries={view.frames}
       selection={treeProps.selection}
       actions={actions}
-    />)}
-    {view.links.map(entry => <MemoLinkProjection
-      key={entry.link.id}
-      entry={entry}
-      kind={linkKind(entry.link, view)}
+    />
+    <MemoLinkLayer
+      entries={view.links}
+      nodeById={view.nodeById}
       selection={treeProps.selection}
       actions={actions}
-    />)}
-    {view.nodes.map(entry => <MemoNodeProjection
-      key={entry.node.id}
-      entry={entry}
+    />
+    <MemoNodeLayer
+      entries={view.nodes}
       view={view}
       treeProps={treeProps}
       actions={actions}
+    />
+  </div>
+}
+
+type FrameLayerProps = Readonly<{
+  entries: readonly VisibleFrame[]
+  selection?: NodeTreeSelection | undefined
+  actions: NodeTreeActions
+}>
+
+function FrameLayer(props: FrameLayerProps) {
+  return <div
+    data-node-tree-frame-layer=""
+    style={css`
+      box-sizing: border-box;
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: visible;
+    `}
+  >
+    {props.entries.map(entry => <MemoFrameProjection
+      key={entry.frame.id}
+      entry={entry}
+      selection={props.selection}
+      actions={props.actions}
     />)}
   </div>
 }
+
+const MemoFrameLayer = memo(FrameLayer, (previous, next) =>
+  previous.entries === next.entries && sameSelection(previous.selection, next.selection) &&
+  previous.actions === next.actions)
+
+type LinkLayerProps = Readonly<{
+  entries: readonly VisibleLink[]
+  nodeById: ReadonlyMap<string, UiNode>
+  selection?: NodeTreeSelection | undefined
+  actions: NodeTreeActions
+}>
+
+function LinkLayer(props: LinkLayerProps) {
+  return <div
+    data-node-tree-link-layer=""
+    style={css`
+      box-sizing: border-box;
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: visible;
+    `}
+  >
+    {props.entries.map(entry => <MemoLinkProjection
+      key={entry.link.id}
+      entry={entry}
+      kind={linkKind(entry.link, props.nodeById)}
+      selection={props.selection}
+      actions={props.actions}
+    />)}
+  </div>
+}
+
+const MemoLinkLayer = memo(LinkLayer, (previous, next) =>
+  previous.entries === next.entries &&
+  sameSelection(previous.selection, next.selection) && previous.actions === next.actions)
+
+type NodeLayerProps = Readonly<{
+  entries: readonly VisibleNode[]
+  view: NodeTreeView
+  treeProps: NodeTreeProps
+  actions: NodeTreeActions
+}>
+
+function NodeLayer(props: NodeLayerProps) {
+  return <div
+    data-node-tree-node-layer=""
+    style={css`
+      box-sizing: border-box;
+      display: block;
+      width: 0;
+      height: 0;
+      overflow: visible;
+    `}
+  >
+    {props.entries.map(entry => <MemoNodeProjection
+      key={entry.node.id}
+      entry={entry}
+      view={props.view}
+      treeProps={props.treeProps}
+      actions={props.actions}
+    />)}
+  </div>
+}
+
+const MemoNodeLayer = memo(NodeLayer, (previous, next) => {
+  const left = previous.treeProps
+  const right = next.treeProps
+  return previous.entries === next.entries && previous.actions === next.actions &&
+    sameSelection(left.selection, right.selection) &&
+    left.collapsedNodeIds === right.collapsedNodeIds && left.previewNodeIds === right.previewNodeIds &&
+    left.onParameterInput === right.onParameterInput && left.onParameterChange === right.onParameterChange &&
+    previous.view.connectedSocketKeys === next.view.connectedSocketKeys &&
+    previous.view.geometry === next.view.geometry
+})
 
 function FrameProjection(props: Readonly<{
   entry: VisibleFrame
@@ -416,43 +518,13 @@ function createNodeTreeViewStore(
   let source: UiSnapshot | undefined
   let selected: NodeTreeView | undefined
   const getSnapshot = (): NodeTreeView => {
-    const snapshot = store.getTopologySnapshot()
+    const update = store.getTopologyUpdate()
+    const snapshot = update.snapshot
     if (snapshot === source && selected !== undefined) return selected
-    const geometry = createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, layout)
-    const visibleNodes = snapshot.nodes.flatMap(node => {
-      const nodeRect = geometry.nodeRects.get(node.id)!
-      const visible = viewport === undefined || intersectsViewport(viewport, nodeRect)
-      return visible || materializeCulled
-        ? [Object.freeze({node, rect: nodeRect, culled: !visible})]
-        : []
-    })
-    const visibleNodeIds = new Set(visibleNodes.filter(entry => !entry.culled).map(entry => entry.node.id))
-    const visibleLinks = snapshot.links.flatMap(link => {
-      const route = geometry.linkRoutes.get(link.id)!
-      const bounds = projectBounds(route)
-      const endpointVisible = visibleNodeIds.has(link.from.nodeId) || visibleNodeIds.has(link.to.nodeId)
-      const visible = viewport === undefined || endpointVisible || intersectsViewport(viewport, bounds)
-      return visible || materializeCulled
-        ? [Object.freeze({link, route, bounds, culled: !visible})]
-        : []
-    })
-    const visibleFrameIds = visibleFrameIdsFor(snapshot, geometry, viewport, visibleNodes)
-    const visibleFrames = snapshot.frames.flatMap(frame => visibleFrameIds.has(frame.id) || materializeCulled
-      ? [Object.freeze({frame, rect: geometry.frameRects.get(frame.id)!, culled: !visibleFrameIds.has(frame.id)})]
-      : [])
-    const connected = new Set<string>()
-    for (const link of snapshot.links) {
-      if (visibleNodeIds.has(link.from.nodeId)) connected.add(socketKey(link.from.nodeId, link.from.socketId))
-      if (visibleNodeIds.has(link.to.nodeId)) connected.add(socketKey(link.to.nodeId, link.to.socketId))
-    }
-    const next = Object.freeze({
-      frames: Object.freeze(visibleFrames),
-      nodes: Object.freeze(visibleNodes),
-      links: Object.freeze(visibleLinks),
-      allNodes: snapshot.nodes,
-      connectedSocketKeys: Object.freeze(connected),
-      geometry,
-    })
+    const incremental = source === undefined || selected === undefined
+      ? null
+      : appendNodeTreeView(source, selected, update, viewport, materializeCulled)
+    const next = incremental ?? createFullNodeTreeView(snapshot, layout, viewport, materializeCulled)
     source = snapshot
     if (selected !== undefined && sameView(selected, next)) return selected
     selected = next
@@ -462,6 +534,129 @@ function createNodeTreeViewStore(
     subscribe: store.subscribeTopology,
     getSnapshot,
   })
+}
+
+function createFullNodeTreeView(
+  snapshot: UiSnapshot,
+  layout: LayoutResult,
+  viewport: NodeTreeViewport | undefined,
+  materializeCulled: boolean,
+): NodeTreeView {
+  const geometry = createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, layout)
+  const visibleNodes = snapshot.nodes.flatMap(node => {
+    const nodeRect = geometry.nodeRects.get(node.id)!
+    const visible = viewport === undefined || intersectsViewport(viewport, nodeRect)
+    return visible || materializeCulled
+      ? [Object.freeze({node, rect: nodeRect, culled: !visible})]
+      : []
+  })
+  const visibleNodeIds = new Set(visibleNodes.filter(entry => !entry.culled).map(entry => entry.node.id))
+  const visibleLinks = snapshot.links.flatMap(link => {
+    const route = geometry.linkRoutes.get(link.id)!
+    const bounds = projectBounds(route)
+    const endpointVisible = visibleNodeIds.has(link.from.nodeId) || visibleNodeIds.has(link.to.nodeId)
+    const visible = viewport === undefined || endpointVisible || intersectsViewport(viewport, bounds)
+    return visible || materializeCulled
+      ? [Object.freeze({link, route, bounds, culled: !visible})]
+      : []
+  })
+  const visibleFrameIds = visibleFrameIdsFor(snapshot, geometry, viewport, visibleNodes)
+  const visibleFrames = snapshot.frames.flatMap(frame => visibleFrameIds.has(frame.id) || materializeCulled
+    ? [Object.freeze({frame, rect: geometry.frameRects.get(frame.id)!, culled: !visibleFrameIds.has(frame.id)})]
+    : [])
+  const connected = new Set<string>()
+  for (const link of snapshot.links) {
+    if (visibleNodeIds.has(link.from.nodeId)) connected.add(socketKey(link.from.nodeId, link.from.socketId))
+    if (visibleNodeIds.has(link.to.nodeId)) connected.add(socketKey(link.to.nodeId, link.to.socketId))
+  }
+  return Object.freeze({
+    frames: Object.freeze(visibleFrames),
+    nodes: Object.freeze(visibleNodes),
+    links: Object.freeze(visibleLinks),
+    nodeById: new Map(snapshot.nodes.map(node => [node.id, node])),
+    frameById: new Map(snapshot.frames.map(frame => [frame.id, frame])),
+    visibleNodeIds: Object.freeze(visibleNodeIds),
+    visibleFrameIds: Object.freeze(visibleFrameIds),
+    connectedSocketKeys: Object.freeze(connected),
+    geometry,
+  })
+}
+
+function appendNodeTreeView(
+  source: UiSnapshot,
+  previous: NodeTreeView,
+  update: ReturnType<NodeTreeStore["getTopologyUpdate"]>,
+  viewport: NodeTreeViewport | undefined,
+  materializeCulled: boolean,
+): NodeTreeView | null {
+  const node = appendedNode(source, update)
+  if (node === null) return null
+  const geometry = appendNodeGeometryIndex(previous.geometry, node)
+  const rect = geometry.nodeRects.get(node.id)!
+  const visible = viewport === undefined || intersectsViewport(viewport, rect)
+  if (!visible && !materializeCulled) return previous
+  if (previous.nodeById.has(node.id)) throw new Error(`Appended Node view already exists: ${node.id}`)
+  const nodeById = new Map(previous.nodeById)
+  nodeById.set(node.id, node)
+  const visibleNodeIds = visible
+    ? Object.freeze(new Set([...previous.visibleNodeIds, node.id]))
+    : previous.visibleNodeIds
+  const nodes = visible || materializeCulled
+    ? Object.freeze([...previous.nodes, Object.freeze({node, rect, culled: !visible})])
+    : previous.nodes
+  const nextFrames = visible && node.frameId !== undefined
+    ? appendVisibleFrames(previous, node.frameId, materializeCulled)
+    : null
+  return Object.freeze({
+    frames: nextFrames?.frames ?? previous.frames,
+    nodes,
+    links: previous.links,
+    nodeById,
+    frameById: previous.frameById,
+    visibleNodeIds,
+    visibleFrameIds: nextFrames?.ids ?? previous.visibleFrameIds,
+    connectedSocketKeys: previous.connectedSocketKeys,
+    geometry,
+  })
+}
+
+function appendedNode(
+  source: UiSnapshot,
+  update: ReturnType<NodeTreeStore["getTopologyUpdate"]>,
+): UiNode | null {
+  const snapshot = update.snapshot
+  const delta = update.delta
+  if (update.mode !== "append-node" || delta === null ||
+    delta.removed.length !== 0 || delta.updated.length !== 0 ||
+    delta.revision !== snapshot.revision || delta.topologyRevision !== snapshot.topologyRevision ||
+    delta.topologyRevision !== source.topologyRevision + 1 ||
+    snapshot.frames !== source.frames || snapshot.links !== source.links ||
+    snapshot.nodes.length !== source.nodes.length + 1) return null
+  const addedNodes = delta.added.filter(address => address.kind === "node")
+  if (addedNodes.length !== 1) return null
+  const id = addedNodes[0]!.id
+  if (delta.added.some(address => address.kind !== "node" &&
+    (!("nodeId" in address) || address.nodeId !== id))) return null
+  const node = snapshot.nodes[snapshot.nodes.length - 1]
+  return node?.id === id ? node : null
+}
+
+function appendVisibleFrames(
+  view: NodeTreeView,
+  frameId: string,
+  materializeCulled: boolean,
+): Readonly<{frames: readonly VisibleFrame[]; ids: ReadonlySet<string>}> | null {
+  if (view.visibleFrameIds.has(frameId)) return null
+  const ids = new Set(view.visibleFrameIds)
+  let current: string | undefined = frameId
+  while (current !== undefined && !ids.has(current)) {
+    ids.add(current)
+    current = view.frameById.get(current)?.parentFrameId
+  }
+  const frames = [...view.frameById.values()].flatMap(frame => ids.has(frame.id) || materializeCulled
+    ? [Object.freeze({frame, rect: view.geometry.frameRects.get(frame.id)!, culled: !ids.has(frame.id)})]
+    : [])
+  return Object.freeze({frames: Object.freeze(frames), ids: Object.freeze(ids)})
 }
 
 function visibleFrameIdsFor(
@@ -509,8 +704,8 @@ function nodePreview(node: UiNode, enabledIds?: ReadonlySet<string>): NodePrevie
   })
 }
 
-function linkKind(link: CoreLink, view: NodeTreeView): SocketKind {
-  const source = view.allNodes.find(node => node.id === link.from.nodeId)
+function linkKind(link: CoreLink, nodeById: ReadonlyMap<string, UiNode>): SocketKind {
+  const source = nodeById.get(link.from.nodeId)
   const socket = source?.sockets.find(candidate => candidate.id === link.from.socketId)
   const value = socket?.valueType?.id ?? metadataString(link.metadata, "kind", "custom")
   return SOCKET_KINDS.includes(value as SocketKind) ? value as SocketKind : "custom"
@@ -522,7 +717,8 @@ function projectBounds(route: LinkRoute): NodeRect {
 }
 
 function sameView(previous: NodeTreeView, next: NodeTreeView): boolean {
-  return sameVisible(previous.frames, next.frames, entry => entry.frame.id, entry => entry.rect, entry => entry.culled) &&
+  return previous.nodeById === next.nodeById && previous.geometry === next.geometry &&
+    sameVisible(previous.frames, next.frames, entry => entry.frame.id, entry => entry.rect, entry => entry.culled) &&
     sameVisible(previous.nodes, next.nodes, entry => entry.node.id, entry => entry.rect, entry => entry.culled) &&
     sameLinks(previous.links, next.links) &&
     sameSet(previous.connectedSocketKeys, next.connectedSocketKeys)

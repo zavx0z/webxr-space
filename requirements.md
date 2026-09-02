@@ -54,6 +54,10 @@ parallel semantic tree. Один Core `Parameter` остаётся единст�
 `createNodeTreeExternalStore()`. Каждый materialized `Parameter` подписывается
 на exact `store.parameter(nodeId, parameterId)`. Value commit не remount-ит
 surviving Node/Parameter/Field/Socket/Link и не запускает global layout.
+Published topology/view/geometry snapshots логически immutable. Exact additive
+Node delta создаёт copy-on-write Node/Port geometry и node-id indexes, сохраняя
+старые map identities и значения; internal cache не мутирует уже выданный
+`useSyncExternalStore` snapshot.
 
 ### `NODES-UI-COMPONENT-STYLE-001` — governed CSS
 
@@ -180,19 +184,43 @@ counts.
 `bun run bench:node-visible` запускает отдельный dense-visible cold scope, где
 все Nodes/Links одновременно участвуют в Renderer evidence.
 
+Focused `--topology-only` evidence сохраняет тот же real 1k/10k mount и
+initial Renderer/backend frame, но не выдаёт current heap за retained-memory
+acceptance. Additive result обязан содержать Core-owned `append-node` delta,
+одну topology notification, ровно `32` mounts нового benchmark Node subtree,
+zero moves/disposes, retained identities всех прежних Node/Link и exact
+Document mutation ledger. Update/remove/bulk topology обязаны публиковать
+`full` и проходить общий точный projection path.
+
+Current append ledger состоит из diagnostic `data-node-count` attribute update
+на NodeTree root и одной child-list вставки в Node layer: один hidden semantic
+`article` плюс component-range comments. CSS, tests и consumers не используют
+`data-node-count`, но Node не удаляет diagnostic attribute как compatibility
+workaround для экспериментального Renderer fast path.
+
 Текущая воспроизводимая evidence на этом checkout:
 
 - linked Renderer `1cd32434ba8e0e5ad6422e50ec56e85cc18b645e` закрывает
   generic local input-value frame update;
 - linked Renderer `5d5a06c14c2f8216cce6f5930695154f57524ea4` поверх него
   добавляет unchanged context-frame identity short-circuit;
+- clean Renderer `a84672deb1573b1e16bffacf801877f1a3633628` используется
+  для focused additive topology evidence; rejected invisible-insert experiment
+  в этом checkout отсутствует;
 - 1k semantic/culling на `1cd3243`: `1000` materialized, `12` visible;
   value input-to-present p95/p99 `3.974/7.210ms`, transform
   `14.985/18.843ms`; identity/local mutation/zero Path uploads green;
 - 10k semantic/culling на `5d5a06c`: `10000` materialized, `12` visible;
   value p95/p99 `1.752/1.789ms`, transform `12.738/18.687ms`;
-  topology input-to-present `5397.431ms`; semantic retained heap about
-  `2.613GB` (`251194 B/Node`);
+  semantic retained heap about `2.613GB` (`251194 B/Node`);
+- focused exact append на clean `a84672d`: 1k commit `35.527ms` =
+  Core/editor `13.594ms` + projection/component `21.933ms`, Renderer
+  `389.023ms`, backend `6.921ms`, input-to-present `431.471ms`; 10k commit
+  `134.294ms` = `63.684ms` + `70.610ms`, Renderer `7182.263ms`, backend
+  `10.228ms`, input-to-present `7326.785ms`;
+- оба focused run публикуют `append-node`, одну notification, `32` mounts /
+  `35` renders / zero moves/disposes, exact two-record mutation batch и
+  сохраняют identities всех прежних Node и Link;
 - 1k dense-visible cold: `41052` boxes, `13511` display items,
   `5000` Rects, `999` Paths; mount/Renderer/backend
   `2.381s/3.445s/.894s` with exact LayoutResult;
@@ -260,8 +288,11 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    не Node-local workaround.
 2. Transform p95 green, но p99 остаётся `18.843ms` (1k на `1cd3243`) и
    `18.687ms` (10k на `5d5a06c`) против `16.667ms`.
-3. Additive topology остаётся красной: 1k/10k input-to-present около
-   `1400.544/5397.431ms`, несмотря на заранее подготовленный exact LayoutResult.
+3. Additive topology остаётся красной на clean `a84672d`: 1k/10k
+   input-to-present `431.471/7326.785ms`. Node-owned commit сокращён до
+   `35.527/134.294ms`, но 10k уже превышает общий `100ms` budget до flush;
+   CPU Renderer full projection занимает `389.023/7182.263ms`. Exact mutation
+   ledger: diagnostic `data-node-count` attribute плюс hidden Node child-list.
 4. Dense Link selection p99 повторяется `40.271–42.786ms` при зелёном p95;
    retained invariants и one draw green. Предполагаемый owner: Renderer
    display-order tail allocation.

@@ -47,6 +47,18 @@ export type NodeGeometryIndex = Readonly<{
   bounds: NodeRect
 }>
 
+type RetainedNodeGeometryIndex = Readonly<{
+  nodeRects: Map<string, NodeRect>
+  frameRects: Map<string, NodeRect>
+  portCenters: Map<string, NodePoint>
+  portSides: Map<string, "left" | "right">
+  linkRoutes: Map<string, LinkRoute>
+  layoutNodes: ReadonlyMap<string, LayoutResult["nodes"][number]>
+  layoutPorts: ReadonlyMap<string, LayoutResult["ports"][number]>
+}>
+
+const retainedNodeGeometryIndexes = new WeakMap<NodeGeometryIndex, RetainedNodeGeometryIndex>()
+
 /** Canonical Layout port id for one Core Socket endpoint. */
 export function nodeSocketLayoutPortId(nodeId: string, socketId: string): string {
   requireId(nodeId, "Layout port Node")
@@ -104,17 +116,9 @@ export function createNodeGeometryIndex(
     const port = layoutPortById.get(portId)!
     const key = socketKey(owner.nodeId, owner.socket.id)
     const ownerRect = nodeRects.get(owner.nodeId)!
-    const x = finite(port.x, `Layout Port ${portId} x`)
-    const y = finite(port.y, `Layout Port ${portId} y`)
-    const expectedX = port.side === "WEST" ? ownerRect.x : ownerRect.x + ownerRect.width
-    if (x !== expectedX || y < ownerRect.y || y > ownerRect.y + ownerRect.height) {
-      throw new Error(`Layout Port ${portId} must lie on its resolved Node side`)
-    }
-    portCenters.set(key, Object.freeze({
-      x,
-      y,
-    }))
-    portSides.set(key, port.side === "WEST" ? "left" : "right")
+    const geometry = exactPortGeometry(portId, ownerRect, port)
+    portCenters.set(key, geometry.center)
+    portSides.set(key, geometry.side)
   }
 
   const expectedEdgeIds = new Set(links.map(link => link.id))
@@ -141,7 +145,7 @@ export function createNodeGeometryIndex(
     linkRoutes.set(link.id, route)
   }
 
-  return Object.freeze({
+  const result = Object.freeze({
     nodeRects,
     frameRects,
     portCenters,
@@ -149,6 +153,74 @@ export function createNodeGeometryIndex(
     linkRoutes,
     bounds,
   })
+  retainedNodeGeometryIndexes.set(result, Object.freeze({
+    nodeRects,
+    frameRects,
+    portCenters,
+    portSides,
+    linkRoutes,
+    layoutNodes: layoutNodeById,
+    layoutPorts: layoutPortById,
+  }))
+  return result
+}
+
+/** Adds one Core-confirmed append through copy-on-write retained geometry indexes. */
+export function appendNodeGeometryIndex(
+  geometry: NodeGeometryIndex,
+  node: UiNodeSnapshot,
+): NodeGeometryIndex {
+  const retained = retainedNodeGeometryIndexes.get(geometry)
+  if (retained === undefined) throw new Error("Node geometry index is not retained")
+  if (retained.nodeRects.has(node.id)) throw new Error(`Node geometry already exists: ${node.id}`)
+  const layoutNode = retained.layoutNodes.get(node.id)
+  if (layoutNode === undefined) throw new Error(`Layout Node geometry is missing: ${node.id}`)
+  const nodeRect = exactRect(layoutNode, `Node ${node.id}`)
+  requireContainedRect(geometry.bounds, nodeRect, `Node ${node.id}`)
+
+  const ports: ReadonlyArray<Readonly<{
+    key: string
+    center: NodePoint
+    side: "left" | "right"
+  }>> = node.sockets.map(socket => {
+    const portId = nodeSocketLayoutPortId(node.id, socket.id)
+    const key = socketKey(node.id, socket.id)
+    if (retained.portCenters.has(key)) throw new Error(`Socket geometry already exists: ${portId}`)
+    const port = retained.layoutPorts.get(portId)
+    if (port === undefined) throw new Error(`Layout Port geometry is missing: ${portId}`)
+    const exact = exactPortGeometry(portId, nodeRect, port)
+    return Object.freeze({key, center: exact.center, side: exact.side})
+  })
+  if (new Set(ports.map(port => port.key)).size !== ports.length) {
+    throw new Error(`Duplicate Core Socket endpoint on appended Node: ${node.id}`)
+  }
+
+  const nodeRects = new Map(retained.nodeRects)
+  const portCenters = new Map(retained.portCenters)
+  const portSides = new Map(retained.portSides)
+  nodeRects.set(node.id, nodeRect)
+  for (const port of ports) {
+    portCenters.set(port.key, port.center)
+    portSides.set(port.key, port.side)
+  }
+  const result = Object.freeze({
+    nodeRects,
+    frameRects: retained.frameRects,
+    portCenters,
+    portSides,
+    linkRoutes: retained.linkRoutes,
+    bounds: geometry.bounds,
+  })
+  retainedNodeGeometryIndexes.set(result, Object.freeze({
+    nodeRects,
+    frameRects: retained.frameRects,
+    portCenters,
+    portSides,
+    linkRoutes: retained.linkRoutes,
+    layoutNodes: retained.layoutNodes,
+    layoutPorts: retained.layoutPorts,
+  }))
+  return result
 }
 
 export function fitNodeTreeTransform(
@@ -283,6 +355,26 @@ function exactRect(
     y: finite(value.y, `${label} y`),
     width: positive(value.width, `${label} width`),
     height: positive(value.height, `${label} height`),
+  })
+}
+
+function exactPortGeometry(
+  portId: string,
+  ownerRect: NodeRect,
+  port: LayoutResult["ports"][number],
+): Readonly<{center: NodePoint; side: "left" | "right"}> {
+  if (port.side !== "WEST" && port.side !== "EAST") {
+    throw new TypeError(`Layout Port ${portId} side must be WEST or EAST`)
+  }
+  const x = finite(port.x, `Layout Port ${portId} x`)
+  const y = finite(port.y, `Layout Port ${portId} y`)
+  const expectedX = port.side === "WEST" ? ownerRect.x : ownerRect.x + ownerRect.width
+  if (x !== expectedX || y < ownerRect.y || y > ownerRect.y + ownerRect.height) {
+    throw new Error(`Layout Port ${portId} must lie on its resolved Node side`)
+  }
+  return Object.freeze({
+    center: Object.freeze({x, y}),
+    side: port.side === "WEST" ? "left" : "right",
   })
 }
 
