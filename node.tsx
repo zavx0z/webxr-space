@@ -177,7 +177,7 @@ export function Node(props: NodeProps) {
         width: 100%;
         height: 24px;
         min-height: 24px;
-        gap: 2px;
+        gap: 4px;
         padding: 0 5px;
         overflow: hidden;
         border-radius: 5px 5px 0 0;

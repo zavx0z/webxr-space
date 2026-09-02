@@ -35,13 +35,13 @@ import {
 const compactFieldStyle: CssStyle = css`
   width: 0;
   min-width: 0;
-  min-height: 20px;
+  min-height: 22px;
   flex-grow: 1;
-  --control-height-medium: 20px;
-  --control-height-large: 20px;
-  --text-field-height: 20px;
-  --number-field-height: 20px;
-  --slider-field-height: 20px;
+  --control-height-medium: 22px;
+  --control-height-large: 22px;
+  --text-field-height: 22px;
+  --number-field-height: 22px;
+  --slider-field-height: 22px;
   --field-label-width: 18px;
 `
 
