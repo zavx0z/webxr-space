@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": [
+    "index.ts",
+    "dom.ts",
+    "compiled.ts",
+    "style-codec.ts",
+    "jsx-runtime.ts",
+    "jsx-dev-runtime.ts",
+    "compiler/**/*.ts",
+    "parser.ts",
+    "parser.t.ts",
+    "attribute/**/*.ts",
+    "node/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "compiler/runtime-plugin-proof.ts",
+    "compiler/test-fixture/**",
+    "attribute/test/**",
+    "node/test/**"
+  ]
+}

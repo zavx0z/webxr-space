@@ -1,0 +1,115 @@
+{
+  "name": "@zavx0z/template",
+  "version": "2.6.2",
+  "description": "HTML templates compiled to addressed @zavx0z/dom mutations",
+  "author": "zavx0z",
+  "license": "MIT",
+  "packageManager": "bun@1.4.0",
+  "keywords": [
+    "metafor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zavx0z/template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zavx0z/template/issues"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./compiled": {
+      "types": "./dist/compiled.d.ts",
+      "bun": "./compiled.ts",
+      "import": "./dist/compiled.js",
+      "default": "./dist/compiled.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler/index.d.ts",
+      "bun": "./compiler/index.ts",
+      "import": "./dist/compiler/index.js",
+      "default": "./dist/compiler/index.js"
+    },
+    "./bun": {
+      "types": "./dist/compiler/bun.d.ts",
+      "bun": "./compiler/bun.ts",
+      "import": "./dist/compiler/bun.js",
+      "default": "./dist/compiler/bun.js"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "bun": "./jsx-runtime.ts",
+      "import": "./dist/jsx-runtime.js",
+      "default": "./dist/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-dev-runtime.d.ts",
+      "bun": "./jsx-dev-runtime.ts",
+      "import": "./dist/jsx-dev-runtime.js",
+      "default": "./dist/jsx-dev-runtime.js"
+    }
+  },
+  "type": "module",
+  "private": false,
+  "files": [
+    "dist",
+    "css-shape.ts",
+    "css.ts",
+    "compiled.ts",
+    "style-codec.ts",
+    "jsx-dom.ts",
+    "jsx-events.ts",
+    "jsx-runtime.ts",
+    "tagged-template.ts",
+    "jsx-dev-runtime.ts",
+    "compiler/bun.ts",
+    "compiler/capability-manifest.ts",
+    "compiler/capability-usage.ts",
+    "compiler/errors.ts",
+    "compiler/governed-paths.ts",
+    "compiler/host-profile.ts",
+    "compiler/index.ts",
+    "compiler/session.ts",
+    "compiler/style.ts",
+    "compiler/symbols.ts",
+    "compiler/transform.ts",
+    "README.md",
+    "requirements.md"
+  ],
+  "devDependencies": {
+    "@zavx0z/dom": "file:../renderer/packages/dom",
+    "@types/bun": "^1.4.0",
+    "typescript": "7.0.2"
+  },
+  "peerDependencies": {
+    "@zavx0z/dom": "^0.1.0",
+    "typescript": "7.0.2"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test",
+    "bench:jsx": "bun bench/jsx-compiler.ts",
+    "bench:jsx:children": "bun bench/jsx-compiler.ts compiler/test-fixture/component-children.tsx 100",
+    "verify:package": "bun run build && bun script/package-proof.ts",
+    "build:runtime": "bun build index.ts compiled.ts jsx-runtime.ts jsx-dev-runtime.ts --outdir dist --target browser --format esm --external @zavx0z/dom",
+    "build:compiler-core": "bun build compiler/index.ts --outdir dist/compiler --target node --format esm --external typescript/unstable/async --external typescript/unstable/ast --external typescript/unstable/ast/is",
+    "build:compiler-bun": "bun build compiler/bun.ts --outdir dist/compiler --target bun --format esm --external typescript/unstable/async --external typescript/unstable/ast --external typescript/unstable/ast/is",
+    "build:compiler": "bun run build:compiler-core && bun run build:compiler-bun",
+    "build:js": "bun run build:runtime && bun run build:compiler",
+    "build:types": "tsc --project tsconfig.build.json --pretty false",
+    "build": "bun run typecheck && bun run build:js && bun run build:types",
+    "prepublishOnly": "bun run build",
+    "publish:npm": "bun publish --access public"
+  }
+}
