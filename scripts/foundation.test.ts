@@ -45,7 +45,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the topology closure checkpoint", async () => {
+  test("preserves prior snapshots and overlays the transform calibration checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -54,8 +54,9 @@ describe("visual monorepo M0 foundation", () => {
     const closureGates = data.nodeR4ClosureR5Checkpoint.effectiveGates as Record<string, string>
     const appendGates = data.nodeR5AppendCheckpoint.effectiveGates as Record<string, string>
     const topologyCommitGates = data.nodeR5TopologyCommitCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5TopologyClosureCheckpoint.effectiveGates as Record<string, string>
-    const latestRepositories = data.nodeR5TopologyClosureCheckpoint.repositories as {
+    const topologyClosureGates = data.nodeR5TopologyClosureCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5TransformCalibrationCheckpoint.effectiveGates as Record<string, string>
+    const latestRepositories = data.nodeR5TransformCalibrationCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
@@ -68,10 +69,11 @@ describe("visual monorepo M0 foundation", () => {
     expect(closureGates.R4).toBe("verified")
     expect(appendGates.R5).toBe("partial-blocked")
     expect(topologyCommitGates.R5).toBe("partial-blocked")
-    expect(latestRepositories.node.head).toBe("5d029c2e91b5f807b05459fb6fea94e64e8d4bc7")
+    expect(topologyClosureGates.R5).toBe("partial-blocked")
+    expect(latestRepositories.node.head).toBe("9d7aa6cd35e76cb8eba1b7721c17033edb8610c8")
     expect(latestRepositories.renderer.head).toBe("21f263f36401f79c533917fd9b3fd8aa889fcf3d")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+      "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8",
     )
     expect(gates).toEqual({
       R1: "verified",
@@ -97,6 +99,10 @@ describe("visual monorepo M0 foundation", () => {
     expect((data.nodeR5TopologyClosureCheckpoint.topologyClosure as {nodeCommit: string})
       .nodeCommit).toBe(
       "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+    )
+    expect((data.nodeR5TransformCalibrationCheckpoint.transformCalibration as {commit: string})
+      .commit).toBe(
+      "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8",
     )
   })
 

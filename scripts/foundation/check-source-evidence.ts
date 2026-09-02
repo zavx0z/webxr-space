@@ -60,9 +60,21 @@ const topologyCommitRendererCheckpoint = objectRecord(
   topologyCommitRepositories.renderer,
   "topologyCommit Renderer repository",
 )
-const latestRepositories = objectRecord(
+const topologyClosureRepositories = objectRecord(
   data.nodeR5TopologyClosureCheckpoint.repositories,
-  "latest topology closure checkpoint repositories",
+  "topology closure checkpoint repositories",
+)
+const topologyClosureNodeCheckpoint = objectRecord(
+  topologyClosureRepositories.node,
+  "topology closure Node repository",
+)
+const topologyClosureRendererCheckpoint = objectRecord(
+  topologyClosureRepositories.renderer,
+  "topology closure Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5TransformCalibrationCheckpoint.repositories,
+  "latest transform calibration checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -235,7 +247,7 @@ if (!Array.isArray(topologyClosureNodeHistory)) {
 }
 for (const value of topologyClosureNodeHistory) {
   const entry = objectRecord(value, "topology closure Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "topology closure Node")
+  validateCheckpointHistoryEntry(entry, topologyClosureNodeCheckpoint, "topology closure Node")
 }
 
 const topologyClosureRendererHistory = data.nodeR5TopologyClosureCheckpoint.rendererPackageHistory
@@ -244,7 +256,25 @@ if (!Array.isArray(topologyClosureRendererHistory)) {
 }
 for (const value of topologyClosureRendererHistory) {
   const entry = objectRecord(value, "topology closure Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "topology closure Renderer")
+  validateCheckpointHistoryEntry(entry, topologyClosureRendererCheckpoint, "topology closure Renderer")
+}
+
+const calibrationNodeHistory = data.nodeR5TransformCalibrationCheckpoint.nodePackageHistory
+if (!Array.isArray(calibrationNodeHistory)) {
+  throw new Error("Transform calibration Node history must be an array")
+}
+for (const value of calibrationNodeHistory) {
+  const entry = objectRecord(value, "transform calibration Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "transform calibration Node")
+}
+
+const calibrationRendererHistory = data.nodeR5TransformCalibrationCheckpoint.rendererPackageHistory
+if (!Array.isArray(calibrationRendererHistory)) {
+  throw new Error("Transform calibration Renderer history must be an array")
+}
+for (const value of calibrationRendererHistory) {
+  const entry = objectRecord(value, "transform calibration Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "transform calibration Renderer")
 }
 
 console.log(
@@ -255,7 +285,8 @@ console.log(
   `${closureNodeHistory.length + closureRendererHistory.length} R4 closure histories, ` +
   `${appendNodeHistory.length + appendRendererHistory.length} append checkpoint histories, ` +
   `${topologyNodeHistory.length + topologyRendererHistory.length} topologyCommit histories, ` +
-  `${topologyClosureNodeHistory.length + topologyClosureRendererHistory.length} topology closure histories`,
+  `${topologyClosureNodeHistory.length + topologyClosureRendererHistory.length} topology closure histories, ` +
+  `${calibrationNodeHistory.length + calibrationRendererHistory.length} transform calibration histories`,
 )
 
 function validateCheckpointHistoryEntry(

@@ -106,7 +106,8 @@
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -245,19 +246,23 @@
     {
       "id": "nodes.transform-performance",
       "classification": "partial-performance-evidence",
-      "status": "1k-verified-10k-p99-failed",
+      "status": "p95-verified-p99-partial-red",
       "owner": "source:node using Renderer 5d5a06c",
-      "statement": "Transform input-to-present passes at 1k but narrowly misses the 16.667ms p99 gate at 10k exact Layout.",
+      "statement": "Calibrated 100-sample 10k transform p95 is green, while p99 remains above 16.667ms in two of three fresh processes; max is reported separately.",
       "metrics": {
-        "accepted1kP95Ms": 6.462,
-        "accepted1kP99Ms": 9.985,
-        "independent1kP95Ms": 7.995,
-        "independent1kP99Ms": 11.029,
-        "accepted10kP95Ms": 12.738,
-        "accepted10kP99Ms": 18.687,
+        "nodes": 10000,
+        "sampleCount": 100,
+        "p95Ms": [12.032, 12.11, 13.71],
+        "p99Ms": [14.321, 16.835, 18.201],
+        "maxMs": [21.387, 21.779, 18.574],
+        "p99ProcessesPassing": 1,
+        "p99ProcessesFailing": 2,
         "frameBudgetMs": 16.667
       },
-      "evidence": ["evidence/node-r4-closure-r5-checkpoint.json"]
+      "evidence": [
+        "evidence/node-r4-closure-r5-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
+      ]
     },
     {
       "id": "nodes.topology-performance",
@@ -295,7 +300,8 @@
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ]
     },
     {
@@ -321,7 +327,8 @@
       "evidence": [
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ]
     },
     {
@@ -362,7 +369,8 @@
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ]
     },
     {
@@ -383,9 +391,10 @@
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ],
-      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 5d029c2 because requirements/evidence and projection-neutral Renderer changes do not alter observable DOM or visual output",
+      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 9d7aa6c because benchmark/documentation calibration does not alter runtime DOM or visual output",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -393,14 +402,15 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 5d029c2e91b5 is ahead 6 and Renderer 21f263f is ahead 8; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 9d7aa6c is ahead 7 and Renderer 21f263f is ahead 8; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
-        "evidence/node-r5-topology-closure-checkpoint.json"
+        "evidence/node-r5-topology-closure-checkpoint.json",
+        "evidence/node-r5-transform-calibration-checkpoint.json"
       ]
     },
     {

@@ -73,12 +73,13 @@
       "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
       "topologyCommitOptimizationCommit": "1f4393e077748ed75a278ec327aa352399f1f65f",
       "topologyClosureCommit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+      "transformCalibrationCommit": "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "completedGates": ["R1", "R2", "R3", "R4"],
       "partialGates": ["R5"],
       "blockedGates": ["R5", "R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-topology-commit-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-topology-closure-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-topology-closure-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-transform-calibration-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
