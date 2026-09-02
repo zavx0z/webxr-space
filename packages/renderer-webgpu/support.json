@@ -1,0 +1,1427 @@
+{
+  "generatorVersion": "1.0.0",
+  "package": "@zavx0z/renderer-webgpu",
+  "records": [
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Every symbol and observable behavior behind the path.",
+          "path": "packages/webgpu/package.json",
+          "proves": "The package export path exists.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": ".",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "External-standard compatibility unless separately mapped.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "The bounded project API has behavioral coverage.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": ".",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "1",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuBackend",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "External-standard compatibility unless separately mapped.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "The bounded project API has behavioral coverage.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuBackend",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpubackend",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "2",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuBackendDiagnostics",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpubackenddiagnostics",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "2",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuBackendOptions",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpubackendoptions",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "8",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuDocumentPlane",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "External-standard compatibility unless separately mapped.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "The bounded project API has behavioral coverage.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuDocumentPlane",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpudocumentplane",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "9",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuDocumentPlaneIntersection",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpudocumentplaneintersection",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "9",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuDocumentPlaneOptions",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpudocumentplaneoptions",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "9",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuDocumentPoint",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpudocumentpoint",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "6",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuScreenOverlay",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "External-standard compatibility unless separately mapped.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "The bounded project API has behavioral coverage.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuScreenOverlay",
+          "type": "unit-test"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpuscreenoverlay",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "unknown",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Observable runtime behavior or semantic conformance.",
+          "lines": "7",
+          "path": "packages/webgpu/src/index.ts",
+          "proves": "The public export exists at the pinned revision.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "RendererWebGpuScreenOverlayOptions",
+          "type": "implementation"
+        }
+      ],
+      "id": "platform.at-zavx0z-renderer-webgpu.export-paths.root.symbols.rendererwebgpuscreenoverlayoptions",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Export/type presence is not behavioral evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "unverified"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "automatic-rect-instancing",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "automatic-rect-instancing",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.automatic-rect-instancing",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "borders",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "borders",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.borders",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Different visible border colors, nonuniform rounded borders, and elliptical clips can fail closed."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Whole application shutdown, texture-cache ownership or device-loss recovery.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "Dispose bulk-detaches the root scene once before clearing retained entries, clips, instances, callbacks and owned geometries.",
+          "repository": "renderer",
+          "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
+          "symbol": "bulk retained backend cleanup",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every application lifecycle, device or external Engine owner.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Dense scalar owners detach without quadratic Object3D.remove sibling scans; cleanup remains idempotent and invalidates owned geometry.",
+          "repository": "renderer",
+          "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
+          "symbol": "bulk-detaches dense retained children without per-entry root removal",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.cleanup",
+      "lastVerified": {
+        "date": "2026-09-02",
+        "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "clipping",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "clipping",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.clipping",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Implemented only for display-list values admitted by frame validation and retained materialization."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "colors",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "colors",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.colors",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Transport accepts transparent, hex, and rgb/rgba only; it is not a CSS Color implementation."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Successful GPU submission, readback, every display kind or every device.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The production adapter materializes the exact resolved frame text into retained Engine geometry and transforms used by the live canvas path.",
+          "repository": "renderer",
+          "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89",
+          "symbol": "RendererWebGpuBackend text materialization",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every display kind, font, GPU adapter, viewport, clipping combination or device-loss path.",
+          "path": "storybook://captures/capture_kIyZqHyIxkZgmDu4DCMIa7Er",
+          "proves": "The production retained WebGPU path presents the exact SVG label with complete final-glyph pixels, font-owned advance and baseline on one visible canvas with empty diagnostics and console output.",
+          "repository": "external",
+          "revision": "ead10e484f57705410ce58e9",
+          "symbol": "@ui/components/components/foundation/button/icon/svg",
+          "type": "visual-evidence"
+        }
+      ],
+      "id": "webgpu.features.device-pixel-evidence",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"
+      },
+      "limitations": [
+        "Actual browser canvas pixels are proven for the exact default-font text route; the remaining display kinds, devices, fonts and failure modes do not yet have complete pixel evidence."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "diagnostics",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "diagnostics",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.diagnostics",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "document-plane",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "document-plane",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.document-plane",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "frame-validation",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "frame-validation",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.frame-validation",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "geometry-invalidation",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "geometry-invalidation",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.geometry-invalidation",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "image",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "image",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.image",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Image readiness is signaled by the Engine/host and actual fetch/decode remains outside the backend."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "overlap-law",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "overlap-law",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.overlap-law",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "paint-order",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "paint-order",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.paint-order",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "partial-record-uploads",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "partial-record-uploads",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.partial-record-uploads",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "radii",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "radii",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.radii",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Different visible border colors, nonuniform rounded borders, and elliptical clips can fail closed."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "rect",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "rect",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.rect",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Implemented only for display-list values admitted by frame validation and retained materialization."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint resources, texture-cache teardown, device loss or every Engine resource.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "Retained display entries, instance storage, callbacks and owned geometry have deterministic update/removal/disposal ownership with bulk root detachment.",
+          "repository": "renderer",
+          "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
+          "symbol": "resource-lifetime",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Whole application shutdown or actual GPU/device teardown.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Idempotent dense cleanup clears parent links and resources without per-entry root removal.",
+          "repository": "renderer",
+          "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
+          "symbol": "bulk-detaches dense retained children without per-entry root removal",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.resource-lifetime",
+      "lastVerified": {
+        "date": "2026-09-02",
+        "revision": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65"
+      },
+      "limitations": [
+        "Implemented for frame-admitted retained display resources; texture cache, complete GPU device loss and external Engine resource ownership remain separate."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "run-barriers",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "run-barriers",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.run-barriers",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "scalar-retained-path",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "scalar-retained-path",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.scalar-retained-path",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "screen-overlay",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "screen-overlay",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.screen-overlay",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "shadows",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "shadows",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.shadows",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Implemented only for display-list values admitted by frame validation and retained materialization."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "stable-slots",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "stable-slots",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.stable-slots",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Font-family selection, fallback, shaping, bidi, vertical writing or every device.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "One exact Engine font owns the cached baseline ratio and a bounded per-codepoint advance cache shared with CPU layout; retained text uses the same font and letter spacing.",
+          "repository": "renderer",
+          "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89",
+          "symbol": "readFontMetrics/createFontTextMeasurer/positionText",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every real font, glyph and GPU adapter.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Different line heights preserve retained geometry, spaces receive between-character spacing, and one thousand repeated SVG measures map each code point only once.",
+          "repository": "renderer",
+          "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89",
+          "symbol": "alphabetic baseline and cached font advances",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Font selection/fallback, shaping, every script, size, clip chain, device or native-browser equivalence.",
+          "path": "storybook://captures/capture_kIyZqHyIxkZgmDu4DCMIa7Er",
+          "proves": "Real default-font SVG glyph pixels use the corrected baseline, exact 22.854px advance and a complete final G on the exact one-canvas route with zero console errors.",
+          "repository": "external",
+          "revision": "ead10e484f57705410ce58e9",
+          "symbol": "@ui/components/components/foundation/button/icon/svg",
+          "type": "visual-evidence"
+        }
+      ],
+      "id": "webgpu.features.text",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"
+      },
+      "limitations": [
+        "The backend owns one resolved TrueTypeFont, a bounded per-codepoint advance cache and a metric-derived alphabetic baseline proven in real pixels; font-family selection, fallback, shaping, bidi and complete multi-font CSS text remain unsupported."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "texture-readiness",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "texture-readiness",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.texture-readiness",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Image readiness is signaled by the Engine/host and actual fetch/decode remains outside the backend."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "adapted",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete CSS paint semantics and actual GPU pixels.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded materialization path.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "transforms",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every CSS combination and device output.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Current retained Engine-object behavior.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "transforms",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.transforms",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [
+        "Implemented only for display-list values admitted by frame validation and retained materialization."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "partial"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Actual device pixels and unsupported combinations.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "The bounded retained backend contract.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "unsupported-combinations",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Actual GPU submission/readback.",
+          "path": "packages/webgpu/test/webgpu-backend.test.ts",
+          "proves": "Retained identity, planning, updates, fail-closed validation, and cleanup.",
+          "repository": "renderer",
+          "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408",
+          "symbol": "unsupported-combinations",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.unsupported-combinations",
+      "lastVerified": {
+        "date": "2026-08-29",
+        "revision": "3c91038c3f14ccc44616209fd82b1e59b7369408"
+      },
+      "limitations": [],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    },
+    {
+      "blockedBy": [],
+      "blocks": [],
+      "conformance": "extension",
+      "consumers": [],
+      "evidence": [
+        {
+          "doesNotProve": "Complete SVG stroking, fill, dashes, arbitrary joins/caps or adaptive curve quality.",
+          "path": "packages/webgpu/src/webgpu-backend.ts",
+          "proves": "Exact-opaque Paths use stable semantic style and sampled-segment slots in transform/clip-compatible Engine draw-range runs; non-opaque Paths retain one continuous scalar Mesh fallback.",
+          "repository": "renderer",
+          "revision": "3a0801d4d0fa39f385fca7aceca67fbd0736e591",
+          "symbol": "retained stroked Path planning",
+          "type": "implementation"
+        },
+        {
+          "doesNotProve": "Every GPU/device, complete SVG stroking or live browser pixels.",
+          "path": "packages/webgpu/test/vector-path.test.ts",
+          "proves": "10k opaque one-run batching, zero-upload pan/zoom, one-record style/route updates, barriers, clips, slot-generation safety, scalar fallback identity/updates/cleanup and atomic validation.",
+          "repository": "renderer",
+          "revision": "3a0801d4d0fa39f385fca7aceca67fbd0736e591",
+          "symbol": "vector-path",
+          "type": "unit-test"
+        },
+        {
+          "doesNotProve": "Non-opaque fallback pixels, every adapter/device or complete SVG stroking.",
+          "path": "packages/core/src/renderer/shaders/stroked-path-instanced.webgpu.test.ts",
+          "proves": "Real WebGPU pixels cover exact-opaque sampled segment width, transform and presentation clipping.",
+          "repository": "engine",
+          "revision": "300d00fd5494308382e3efcdf2434cd1ee7cd2d1",
+          "symbol": "InstancedStrokedPath pixels",
+          "type": "unit-test"
+        }
+      ],
+      "id": "webgpu.features.vector-path",
+      "lastVerified": {
+        "date": "2026-09-01",
+        "revision": "3a0801d4d0fa39f385fca7aceca67fbd0736e591"
+      },
+      "limitations": [
+        "Instanced batching admits exact-opaque Paths only; translucent Paths use the retained scalar correctness fallback. Complete SVG fill/stroking, dashes, arbitrary join/cap policy and adaptive curve quality are unsupported."
+      ],
+      "owner": {
+        "package": "@zavx0z/renderer-webgpu",
+        "repository": "renderer",
+        "stage": "webgpu"
+      },
+      "status": "implemented"
+    }
+  ],
+  "repository": "renderer",
+  "revision": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89",
+  "schemaVersion": 1,
+  "verificationDate": "2026-09-01"
+}
