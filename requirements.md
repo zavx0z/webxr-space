@@ -222,7 +222,14 @@ Current append ledger состоит из diagnostic `data-node-count` attribute
   input-to-present `73.212ms`;
 - повторный clean 10k run сохраняет topology input-to-present `88.098ms`
   при commit `87.792ms` и Renderer/backend `0.095/0.211ms`; оба 10k topology
-  run проходят `100ms` budget, а отдельный transform sample остаётся красным;
+  run проходят `100ms` budget;
+- Renderer `0cb7256277d5ff9c013766c371a109ab43a7c100` исключает
+  non-projected `display:none` branches из retained transform traversal;
+  capability evidence зафиксирована в `65ec24a0f6c4c5e3e29b6b6b37207bf8f64a5fb0`;
+- три accepted 100-sample 10k process на clean `65ec24a` дают transform
+  input-to-present p95 `7.369–9.684ms`, p99 `9.251–11.396ms`, max
+  `12.550–17.059ms`; correctness, identity, zero entity mutation/upload и
+  один shared transform сохраняются, а общий benchmark проходит;
 - оба focused run публикуют `append-node`, одну notification, `32` mounts /
   `35` renders / zero moves/disposes, exact two-record mutation batch и
   сохраняют identities всех прежних Node и Link;
@@ -293,9 +300,9 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 1. Local Parameter value path теперь green благодаря Renderer `1cd3243`:
    1k/10k input-to-present p99 `7.210/1.789ms`. Это закрытая generic gap,
    не Node-local workaround.
-2. Transform p95 green. Три fresh 100-sample 10k process на `21f263f`
-   дали p95 `12.032–13.710ms`, p99 `14.321 / 16.835 / 18.201ms` и отдельно
-   max `18.574–21.779ms`; два из трёх p99 остаются выше `16.667ms`.
+2. Transform закрыт на clean Renderer `65ec24a`: три fresh 100-sample 10k
+   process дали p95 `7.369–9.684ms`, p99 `9.251 / 11.396 / 9.357ms` и
+   отдельно max `12.550–17.059ms` против frame budget `16.667ms`.
 3. Additive topology закрыта на clean Renderer `21f263f`: 1k/10k
    input-to-present `11.409/73.212ms`, повторный 10k `88.098ms`, против
    `50/100ms`. Exact mutation ledger остаётся diagnostic `data-node-count`
