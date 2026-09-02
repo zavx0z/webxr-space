@@ -478,6 +478,20 @@ shadow. External Storybook revision `408f5bc96201dd5885b74fdc`, graph
 также имеет ready/presented и empty diagnostics/console. Это исправляет hover
 ownership, но не подменяет final owner verdict всей Blender parity.
 
+Final equal-scale candidate принят owner `zavx0z` явным verdict
+`визуально удовлетворяет` 2026-09-02. Verdict относится к текущей связке
+Node `68e2425e62b956e3fc187ca7abd811a468db8bad`, UI
+`90c77080c27d92fea5ee803e8ff1e49d65885ae1`, Renderer
+`e428e64003efdbc3e627d85431532abde0aed350` и Template
+`671d19f652b2899b77bd30e50e9fd254080ef93f`. Fresh external Storybook revision
+`da19d41cad8cf23c38b3f4a7`, graph
+`828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8`,
+equal-scale capture `capture_rQoLKBgU_0mGgrONuCvhK60C`, sha256
+`84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4`
+имеют ready/presented и empty diagnostics/console. Это закрывает R5 visual owner
+decision; verdict не означает побайтовую pixel identity и не разрешает R6
+push/freeze/import/ownership switch.
+
 ## Known platform gates
 
 Node-owned tests доказывают exact identity и local mutation, но current generic
@@ -505,7 +519,7 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    contour для Scale/Detail/Roughness/Lacunarity/Distortion и отсутствие legacy
    `fBM` row. UI owner `f34b52c` исправляет optional labelled `NumberField`;
    Node использует этот public owner без local Field CSS/copy. Equal-scale
-   visual verdict остаётся отдельным owner gate.
+   visual owner gate закрыт текущим явным verdict `zavx0z`.
 7. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first
@@ -513,13 +527,13 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    workaround. Предполагаемый owner оставшейся generic capability:
    `@zavx0z/template`.
 8. Full component bundle закрыт replacement ceiling `285000 / 72000`: current
-   exact `278697 / 70398` проходит executable repository test. Historical
+   exact `279084 / 70434` проходит executable repository test. Historical
    incomplete evidence остаётся видимой в benchmark report.
 
 ## Acceptance
 
-1. Full typecheck and repository tests green, кроме явно незакрытых owner
-   acceptance gates.
+1. Full typecheck and repository tests green; delivery authorization остаётся
+   отдельным R6 gate.
 2. Focused Core/Editor/Layout/Worker/UI/Link checks green.
 3. Value update сохраняет Node/Parameter/Field/Socket/Link identities и меняет
    только exact Field state.
@@ -529,4 +543,4 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 6. 512/2048/10k Link report содержит p50/p95/p99, heap, uploads and draws.
 7. External Storybook exact route ready, console zero, canvas non-black.
 8. Equal-scale accepted reference показан рядом с live production Node; visual
-   acceptance требует явного owner verdict.
+   acceptance закрыта явным verdict `zavx0z`: `визуально удовлетворяет`.
