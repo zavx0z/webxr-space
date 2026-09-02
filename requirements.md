@@ -293,8 +293,9 @@ pipeline не выполняет полную performance/lifecycle acceptance:
 1. Local Parameter value path теперь green благодаря Renderer `1cd3243`:
    1k/10k input-to-present p99 `7.210/1.789ms`. Это закрытая generic gap,
    не Node-local workaround.
-2. Transform p95 green, но p99 остаётся `18.843ms` (1k на `1cd3243`) и
-   `18.687ms` (10k на `5d5a06c`) против `16.667ms`.
+2. Transform p95 green. Три fresh 100-sample 10k process на `21f263f`
+   дали p95 `12.032–13.710ms`, p99 `14.321 / 16.835 / 18.201ms` и отдельно
+   max `18.574–21.779ms`; два из трёх p99 остаются выше `16.667ms`.
 3. Additive topology закрыта на clean Renderer `21f263f`: 1k/10k
    input-to-present `11.409/73.212ms`, повторный 10k `88.098ms`, против
    `50/100ms`. Exact mutation ledger остаётся diagnostic `data-node-count`
