@@ -1,6 +1,6 @@
 import {describe, expect, test} from "bun:test"
 import {MouseEvent, createDocument} from "@zavx0z/dom"
-import {createEditorNodeTreeStory} from "./node-tree-editor-story.ts"
+import {createEditorNodeTreeStory} from "./node-tree-editor-story.tsx"
 
 describe("Editor external Storybook owner", () => {
   test("keeps authoring controls in the Editor package", () => {
@@ -9,8 +9,8 @@ describe("Editor external Storybook owner", () => {
     story.element.querySelector('[data-action="add-node"]')!
       .dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true}))
     expect(story.props.nodes).toHaveLength(before + 1)
-    expect(story.props.editable).toBeTrue()
-    expect(story.source().typescript).toContain("@nodes/ui/node-tree-editor")
+    expect(story.element.querySelectorAll('[data-node-tree]')).toHaveLength(1)
+    expect(story.source().typescript).toContain("@nodes/ui/node-editor")
     story.dispose()
   })
 })

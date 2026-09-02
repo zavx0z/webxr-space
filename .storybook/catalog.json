@@ -24,7 +24,7 @@
               "label": "Живой",
               "route": "editor/node-tree/live",
               "module": {
-                "path": "../storybook/node-tree-editor-story.ts",
+                "path": "../storybook/node-tree-editor-story.tsx",
                 "export": "createEditorNodeTreeStory"
               }
             }
