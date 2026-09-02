@@ -136,7 +136,7 @@ export function Socket(props: SocketProps) {
       overflow: visible;
 
       &[data-presentation="endpoint"][data-socket-side="left"] {
-        margin-left: -13px;
+        margin-left: -6px;
       }
 
       &[data-presentation="endpoint"][data-socket-side="right"] {
