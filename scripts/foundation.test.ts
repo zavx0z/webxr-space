@@ -45,7 +45,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the topologyCommit checkpoint", async () => {
+  test("preserves prior snapshots and overlays the topology closure checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -53,8 +53,9 @@ describe("visual monorepo M0 foundation", () => {
     const contradictionGates = data.nodeR4R5Checkpoint.effectiveGates as Record<string, string>
     const closureGates = data.nodeR4ClosureR5Checkpoint.effectiveGates as Record<string, string>
     const appendGates = data.nodeR5AppendCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5TopologyCommitCheckpoint.effectiveGates as Record<string, string>
-    const latestRepositories = data.nodeR5TopologyCommitCheckpoint.repositories as {
+    const topologyCommitGates = data.nodeR5TopologyCommitCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5TopologyClosureCheckpoint.effectiveGates as Record<string, string>
+    const latestRepositories = data.nodeR5TopologyClosureCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
     }
@@ -66,10 +67,11 @@ describe("visual monorepo M0 foundation", () => {
     expect(contradictionGates.R4).toBe("blocked")
     expect(closureGates.R4).toBe("verified")
     expect(appendGates.R5).toBe("partial-blocked")
-    expect(latestRepositories.node.head).toBe("1f4393e077748ed75a278ec327aa352399f1f65f")
-    expect(latestRepositories.renderer.head).toBe("a84672deb1573b1e16bffacf801877f1a3633628")
+    expect(topologyCommitGates.R5).toBe("partial-blocked")
+    expect(latestRepositories.node.head).toBe("5d029c2e91b5f807b05459fb6fea94e64e8d4bc7")
+    expect(latestRepositories.renderer.head).toBe("21f263f36401f79c533917fd9b3fd8aa889fcf3d")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "1f4393e077748ed75a278ec327aa352399f1f65f",
+      "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
     )
     expect(gates).toEqual({
       R1: "verified",
@@ -80,7 +82,7 @@ describe("visual monorepo M0 foundation", () => {
       R6: "blocked",
     })
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
-      "a84672deb1573b1e16bffacf801877f1a3633628",
+      "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
     )
     expect((data.nodeR4ClosureR5Checkpoint.r4Closure as {closedContradiction: string})
       .closedContradiction).toBe(
@@ -91,6 +93,10 @@ describe("visual monorepo M0 foundation", () => {
     )
     expect((data.nodeR5TopologyCommitCheckpoint.topologyCommit as {commit: string}).commit).toBe(
       "1f4393e077748ed75a278ec327aa352399f1f65f",
+    )
+    expect((data.nodeR5TopologyClosureCheckpoint.topologyClosure as {nodeCommit: string})
+      .nodeCommit).toBe(
+      "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
     )
   })
 

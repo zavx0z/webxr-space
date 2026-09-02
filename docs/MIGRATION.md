@@ -24,7 +24,8 @@ committed in the canonical checkout and R1-R4 are verified. Exact owner
 Renderer `1cd3243`/`5d5a06c` closes only part of R5. Remaining R5 gates and R6
 stay blocked. Node `0b949e7` adds accepted copy-on-write append correctness, and
 Node `1f4393e` closes 1k/10k topologyCommit by retaining stable Parameter
-stores on append. End-to-end Renderer projection remains outside acceptance. No
-Node package history is imported and `source:node` remains the only writable
-canonical owner. The former dual production path was never imported as an
-intermediate package.
+stores on append. Renderer `80ee4f5` and evidence `21f263f` close end-to-end
+append topology for selector-independent data-plus-hidden insertion. Other R5
+gates remain. No Node package history is imported and `source:node` remains the
+only writable canonical owner. The former dual production path was never
+imported as an intermediate package.

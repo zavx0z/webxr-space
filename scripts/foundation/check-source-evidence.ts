@@ -48,9 +48,21 @@ const appendRepositories = objectRecord(
 )
 const appendNodeCheckpoint = objectRecord(appendRepositories.node, "append Node repository")
 const appendRendererCheckpoint = objectRecord(appendRepositories.renderer, "append Renderer repository")
-const latestRepositories = objectRecord(
+const topologyCommitRepositories = objectRecord(
   data.nodeR5TopologyCommitCheckpoint.repositories,
-  "latest topologyCommit checkpoint repositories",
+  "topologyCommit checkpoint repositories",
+)
+const topologyCommitNodeCheckpoint = objectRecord(
+  topologyCommitRepositories.node,
+  "topologyCommit Node repository",
+)
+const topologyCommitRendererCheckpoint = objectRecord(
+  topologyCommitRepositories.renderer,
+  "topologyCommit Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5TopologyClosureCheckpoint.repositories,
+  "latest topology closure checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -205,7 +217,7 @@ const topologyNodeHistory = data.nodeR5TopologyCommitCheckpoint.nodePackageHisto
 if (!Array.isArray(topologyNodeHistory)) throw new Error("TopologyCommit Node history must be an array")
 for (const value of topologyNodeHistory) {
   const entry = objectRecord(value, "topologyCommit Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "topologyCommit Node")
+  validateCheckpointHistoryEntry(entry, topologyCommitNodeCheckpoint, "topologyCommit Node")
 }
 
 const topologyRendererHistory = data.nodeR5TopologyCommitCheckpoint.rendererPackageHistory
@@ -214,7 +226,25 @@ if (!Array.isArray(topologyRendererHistory)) {
 }
 for (const value of topologyRendererHistory) {
   const entry = objectRecord(value, "topologyCommit Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "topologyCommit Renderer")
+  validateCheckpointHistoryEntry(entry, topologyCommitRendererCheckpoint, "topologyCommit Renderer")
+}
+
+const topologyClosureNodeHistory = data.nodeR5TopologyClosureCheckpoint.nodePackageHistory
+if (!Array.isArray(topologyClosureNodeHistory)) {
+  throw new Error("Topology closure Node history must be an array")
+}
+for (const value of topologyClosureNodeHistory) {
+  const entry = objectRecord(value, "topology closure Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "topology closure Node")
+}
+
+const topologyClosureRendererHistory = data.nodeR5TopologyClosureCheckpoint.rendererPackageHistory
+if (!Array.isArray(topologyClosureRendererHistory)) {
+  throw new Error("Topology closure Renderer history must be an array")
+}
+for (const value of topologyClosureRendererHistory) {
+  const entry = objectRecord(value, "topology closure Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "topology closure Renderer")
 }
 
 console.log(
@@ -224,7 +254,8 @@ console.log(
   `${rendererCheckpointHistory.length} Renderer checkpoint histories, ` +
   `${closureNodeHistory.length + closureRendererHistory.length} R4 closure histories, ` +
   `${appendNodeHistory.length + appendRendererHistory.length} append checkpoint histories, ` +
-  `${topologyNodeHistory.length + topologyRendererHistory.length} topologyCommit histories`,
+  `${topologyNodeHistory.length + topologyRendererHistory.length} topologyCommit histories, ` +
+  `${topologyClosureNodeHistory.length + topologyClosureRendererHistory.length} topology closure histories`,
 )
 
 function validateCheckpointHistoryEntry(

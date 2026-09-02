@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T07:54:32+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r5-topology-commit-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "classification": "end-to-end topology closure R5 checkpoint",
+    "preservesPreviousSnapshots": true,
+    "providedNodeSha": "5d029c2e80a6670eb33a05c3711cb8d99ca4208c",
+    "verifiedNodeSha": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+    "shaDiscrepancy": "verified Git HEAD is authoritative; subject and parent match the supplied checkpoint"
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+      "parent": "1f4393e077748ed75a278ec327aa352399f1f65f",
+      "subject": "Record closed Node topology performance gate",
+      "committedAt": "2026-09-02T07:52:32+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 6,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node",
+      "manifestSha256": {
+        "package.json": "cc85089a7f2aef111a8fd9ed884ab26ab1678f0bd8822506b275b51ce2e3fef2",
+        "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+        "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+        "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+        "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+        "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+      }
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
+      "parent": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
+      "subject": "Update projection-neutral capability evidence",
+      "committedAt": "2026-09-02T07:48:17+03:00",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 8,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer",
+      "manifestSha256": {
+        "package.json": "c0eb83181e9370bad26944d69d4872e8c5d4ee6b09148ad676690cad811aca75",
+        "packages/browser/package.json": "de33f0188244b681366abd9204371292b900da0e88c5dfe2e4ab1cdd3fd74664",
+        "packages/core/package.json": "65e247bebb179eae88fedf2fa8863d99a5a358f5e23cb69699518de5b4347a83",
+        "packages/devtools/package.json": "45d3b7dedc11ce5f293f521d1e509343fa1bc998cf604f920ab1c99116022775",
+        "packages/dom/package.json": "d11d0816dc1eee140a9d69b662a296dcf5d7e680707bc99aaed013350019ed42",
+        "packages/react/package.json": "7dbd2e77a402d8b391eab1a7c49402d61fce35fd8e99084fbe0047dc369f43d9",
+        "packages/webgpu/package.json": "be5bccaad84f88571e66ad46849807e9d4cf5125942cac0fb3b8bbf8c34f7f6e"
+      }
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 11, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 20, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7"}
+  ],
+  "rendererPackageHistory": [
+    {"package": "@zavx0z/renderer-browser", "repository": "renderer", "prefix": "packages/browser", "commitCount": 12, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "9af61ff761a249a22d1ce22d61a7f2c3855f0c89"},
+    {"package": "@zavx0z/renderer", "repository": "renderer", "prefix": "packages/core", "commitCount": 30, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d"},
+    {"package": "@zavx0z/dom-devtools", "repository": "renderer", "prefix": "packages/devtools", "commitCount": 4, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "3a0801d4d0fa39f385fca7aceca67fbd0736e591"},
+    {"package": "@zavx0z/dom", "repository": "renderer", "prefix": "packages/dom", "commitCount": 17, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e"},
+    {"package": "@zavx0z/react", "repository": "renderer", "prefix": "packages/react", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5d5a06c14c2f8216cce6f5930695154f57524ea4"},
+    {"package": "@zavx0z/renderer-webgpu", "repository": "renderer", "prefix": "packages/webgpu", "commitCount": 9, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc"}
+  ],
+  "rendererProjectionNeutralPatch": {
+    "implementationCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
+    "capabilityEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
+    "capabilities": [
+      {"id": "renderer.features.incremental-patches", "status": "partial", "conformance": "adapted"},
+      {"id": "renderer.features.invalidation", "status": "partial", "conformance": "adapted"}
+    ],
+    "admitted": [
+      "selector-independent custom data-* attribute changes",
+      "child-list insertions containing only Comment anchors or hidden Element roots"
+    ],
+    "fallback": [
+      "selector-referenced attributes",
+      "visible insertion",
+      "removal, mixed mutation/state, style-sheet or explicit invalidation work"
+    ],
+    "genericFreshP99Ms": [0.062, 0.155, 0.088],
+    "ownerRequirementsP99MsRange": [0.079, 0.125],
+    "identityPreserved": true,
+    "rows": 10000,
+    "samples": 100,
+    "verification": {
+      "workspaceTypecheck": "passed",
+      "ownerFocusedTests": {"reportedPass": 13, "independentIncrementalSubsetPass": 10, "fail": 0},
+      "fullPackages": "508 pass before pre-existing external Template missing compiler/capability-manifest.ts error"
+    }
+  },
+  "topologyClosure": {
+    "status": "verified-r5-subgate",
+    "nodeCommit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+    "rendererImplementation": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
+    "rendererEvidence": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
+    "nodes1000": {
+      "coreEditorMs": 3.222,
+      "projectionMs": 7.889,
+      "nodeCommitMs": 11.111,
+      "rendererMs": 0.086,
+      "backendMs": 0.212,
+      "inputToPresentMs": 11.409,
+      "budgetMs": 50,
+      "pass": true
+    },
+    "nodes10000": {
+      "runA": {
+        "coreEditorMs": 28.235,
+        "projectionMs": 44.603,
+        "nodeCommitMs": 72.838,
+        "rendererMs": 0.136,
+        "backendMs": 0.238,
+        "inputToPresentMs": 73.212
+      },
+      "repeat": {
+        "nodeCommitMs": 87.792,
+        "rendererMs": 0.095,
+        "backendMs": 0.211,
+        "inputToPresentMs": 88.098
+      },
+      "budgetMs": 100,
+      "pass": true
+    },
+    "correctness": {
+      "operation": "append-node",
+      "notifications": 1,
+      "mounts": 32,
+      "renders": 35,
+      "moves": 0,
+      "disposes": 0,
+      "oldNodeAndLinkIdentitiesRetained": true,
+      "mutationLedgerRecords": 2
+    },
+    "independentProcessNote": "a second topology-only process exited 1 only because an independent transform sample was 50.749ms; topology remained within budget"
+  },
+  "functionalAcceptance": {
+    "command": "bun run check",
+    "commit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+    "pass": 220,
+    "fail": 0,
+    "todo": 1,
+    "todoReason": "existing component bundle owner gate",
+    "verification": "post-commit rerun in canonical clean Node checkout"
+  },
+  "bundle": {
+    "exactNodeEditor": {"bytes": 276138, "gzipBytes": 69416},
+    "historicalIncompleteCeiling": {"bytes": 245000, "gzipBytes": 61000},
+    "status": "owner-gate-open"
+  },
+  "storybook": {
+    "evidenceCheckpoint": "evidence/node-r5-append-checkpoint.json#storybook",
+    "revision": "92a235eb5bc5ba49c2e9c1de",
+    "captureSha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca",
+    "rerun": false,
+    "reason": "runtime DOM and visual output are unchanged by projection-neutral Renderer retention and evidence-only Node requirements commit"
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "partial-blocked",
+    "R6": "blocked"
+  },
+  "r5": {
+    "verifiedSubgates": [
+      "1k/10k Node topologyCommit",
+      "1k/10k end-to-end append topology",
+      "selector-independent data-plus-hidden insertion retained-frame reuse"
+    ],
+    "remainingBlockers": [
+      "10k transform p99",
+      "10k Link selection p99 and memory",
+      "dense-visible disposal and memory",
+      "exact component bundle owner gate",
+      "final equal-scale visual owner verdict"
+    ]
+  },
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "Node 5d029c2e91b5f807b05459fb6fea94e64e8d4bc7 is ahead 6 and not remote-backed",
+      "Renderer 21f263f36401f79c533917fd9b3fd8aa889fcf3d is ahead 8 and not remote-backed",
+      "source freeze/read-only authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; R5 retains non-topology blockers and R6 remains blocked"
+}

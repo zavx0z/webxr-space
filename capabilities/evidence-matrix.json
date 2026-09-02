@@ -105,7 +105,8 @@
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -138,6 +139,26 @@
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json"
       ]
+    },
+    {
+      "id": "renderer.features.projection-neutral-patches",
+      "classification": "implemented-owner-capability",
+      "status": "partial-adapted",
+      "owner": "@zavx0z/renderer",
+      "statement": "Selector-independent data-* plus Comment/hidden-root insertion may retain exact projection collections; selector-referenced, visible or mixed work uses full fallback.",
+      "implementationCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
+      "evidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
+      "capabilities": [
+        "renderer.features.incremental-patches",
+        "renderer.features.invalidation"
+      ],
+      "genericP99Ms": [0.062, 0.155, 0.088],
+      "identityPreserved": true,
+      "limitations": [
+        "general structural incremental layout remains unsupported",
+        "selector-referenced attributes and visible/mixed mutation work intentionally full-fallback"
+      ],
+      "evidence": ["evidence/node-r5-topology-closure-checkpoint.json"]
     },
     {
       "id": "renderer.retained-vector-path",
@@ -240,28 +261,32 @@
     },
     {
       "id": "nodes.topology-performance",
-      "classification": "partial-performance-evidence",
-      "status": "topologyCommit-verified-end-to-end-renderer-failed",
+      "classification": "implemented-performance-evidence",
+      "status": "topology-end-to-end-verified",
       "owner": "source:node with component/Renderer traversal boundary",
-      "statement": "Node-owned topologyCommit now passes 1k/10k budgets; end-to-end append remains blocked strictly by CPU Renderer full projection.",
+      "statement": "Node-owned topologyCommit and end-to-end append topology now pass 1k/10k budgets through projection-neutral Renderer retention.",
       "metrics": {
         "nodes1000": {
-          "coreEditorMs": 3.244,
-          "projectionMs": 7.989,
-          "nodeCommitMs": 11.233,
-          "rendererMs": 343.545,
-          "backendMs": 7.204,
-          "totalMs": 361.981,
+          "coreEditorMs": 3.222,
+          "projectionMs": 7.889,
+          "nodeCommitMs": 11.111,
+          "rendererMs": 0.086,
+          "backendMs": 0.212,
+          "totalMs": 11.409,
           "nodeCommitBudgetMs": 50,
           "nodeCommitPass": true
         },
         "nodes10000": {
-          "coreEditorMs": 28.641,
-          "projectionMs": 47.763,
-          "nodeCommitMs": 76.404,
-          "rendererMs": 3744.422,
-          "backendMs": 6.725,
-          "totalMs": 3827.55,
+          "coreEditorMs": 28.235,
+          "projectionMs": 44.603,
+          "nodeCommitMs": 72.838,
+          "rendererMs": 0.136,
+          "backendMs": 0.238,
+          "totalMs": 73.212,
+          "repeatNodeCommitMs": 87.792,
+          "repeatRendererMs": 0.095,
+          "repeatBackendMs": 0.211,
+          "repeatTotalMs": 88.098,
           "nodeCommitBudgetMs": 100,
           "nodeCommitPass": true
         }
@@ -269,17 +294,20 @@
       "evidence": [
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ]
     },
     {
       "id": "nodes.incremental-append-projection",
       "classification": "implemented-source-fact",
-      "status": "correctness-and-topologyCommit-verified-r5-end-to-end-partial",
+      "status": "correctness-and-topology-end-to-end-verified",
       "owner": "@nodes/core and @nodes/ui",
       "statement": "Core-owned append-node delta drives copy-on-write retained Node/Port geometry and node-id indexes without mutating previously published snapshots.",
       "implementationCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
       "storeRetentionCommit": "1f4393e077748ed75a278ec327aa352399f1f65f",
+      "topologyClosureCommit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
+      "rendererProjectionNeutralCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "evidenceShape": {
         "notifications": 1,
         "mounts": 32,
@@ -289,12 +317,11 @@
         "mutationRecords": 2,
         "oldNodeAndLinkIdentitiesRetained": true
       },
-      "limitations": [
-        "CPU Renderer full projection dominates at 343.545ms/3744.422ms"
-      ],
+      "limitations": [],
       "evidence": [
         "evidence/node-r5-append-checkpoint.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ]
     },
     {
@@ -334,7 +361,8 @@
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ]
     },
     {
@@ -354,9 +382,10 @@
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ],
-      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 1f4393e because stale-store pruning does not change observable DOM or visual output",
+      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 5d029c2 because requirements/evidence and projection-neutral Renderer changes do not alter observable DOM or visual output",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -364,13 +393,14 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 1f4393e is ahead 5 and Renderer a84672d is ahead 6; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 5d029c2e91b5 is ahead 6 and Renderer 21f263f is ahead 8; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-append-checkpoint.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-topology-closure-checkpoint.json"
       ]
     },
     {

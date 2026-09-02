@@ -18,6 +18,7 @@ export const dataFiles = Object.freeze({
   nodeR4ClosureR5Checkpoint: "evidence/node-r4-closure-r5-checkpoint.json",
   nodeR5AppendCheckpoint: "evidence/node-r5-append-checkpoint.json",
   nodeR5TopologyCommitCheckpoint: "evidence/node-r5-topology-commit-checkpoint.json",
+  nodeR5TopologyClosureCheckpoint: "evidence/node-r5-topology-closure-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -133,6 +134,7 @@ export type FoundationData = Readonly<{
   nodeR4ClosureR5Checkpoint: Readonly<Record<string, unknown>>
   nodeR5AppendCheckpoint: Readonly<Record<string, unknown>>
   nodeR5TopologyCommitCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5TopologyClosureCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -163,6 +165,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5TopologyCommitCheckpoint: byPath.get(
       dataFiles.nodeR5TopologyCommitCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5TopologyClosureCheckpoint: byPath.get(
+      dataFiles.nodeR5TopologyClosureCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -619,7 +624,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR4R5Checkpoint.schemaVersion !== 1 ||
     data.nodeR4ClosureR5Checkpoint.schemaVersion !== 1 ||
     data.nodeR5AppendCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5TopologyCommitCheckpoint.schemaVersion !== 1) {
+    data.nodeR5TopologyCommitCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5TopologyClosureCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -668,7 +674,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const r4R5CheckpointPath = "evidence/node-r4-r5-checkpoint.json"
   const closureCheckpointPath = "evidence/node-r4-closure-r5-checkpoint.json"
   const appendCheckpointPath = "evidence/node-r5-append-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-topology-commit-checkpoint.json"
+  const topologyCommitCheckpointPath = "evidence/node-r5-topology-commit-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-topology-closure-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -683,9 +690,17 @@ function validateMigrationCoverage(data: FoundationData): void {
     "append checkpoint repositories",
   )
   const appendNode = objectRecord(appendRepositories.node, "append Node repository")
-  const latestRepositories = objectRecord(
+  const topologyCommitRepositories = objectRecord(
     data.nodeR5TopologyCommitCheckpoint.repositories,
-    "latest topologyCommit checkpoint repositories",
+    "topologyCommit checkpoint repositories",
+  )
+  const topologyCommitNode = objectRecord(
+    topologyCommitRepositories.node,
+    "topologyCommit Node repository",
+  )
+  const latestRepositories = objectRecord(
+    data.nodeR5TopologyClosureCheckpoint.repositories,
+    "latest topology closure checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -693,9 +708,12 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
     data.nodeCutover.layoutContractCommit !== closureNode.head ||
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
-    data.nodeCutover.topologyCommitOptimizationCommit !== latestNode.head ||
+    data.nodeCutover.topologyCommitOptimizationCommit !== topologyCommitNode.head ||
+    data.nodeCutover.topologyClosureCommit !== latestNode.head ||
+    data.nodeCutover.projectionNeutralRendererCommit !== latestRenderer.parent ||
+    data.nodeCutover.projectionNeutralEvidenceCommit !== latestRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== appendCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== topologyCommitCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -881,11 +899,53 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5TopologyCommitCheckpoint.topologyCommit,
     "topologyCommit checkpoint",
   )
-  if (topologyCommit.commit !== latestNode.head || topologyCommit.status !== "verified-r5-subgate") {
+  if (topologyCommit.commit !== topologyCommitNode.head ||
+    topologyCommit.status !== "verified-r5-subgate") {
     throw new Error("TopologyCommit evidence does not match the latest Node checkpoint")
   }
 
-  const gates = objectRecord(data.nodeR5TopologyCommitCheckpoint.effectiveGates, "effective Node gates")
+  const closureNodeHistory = arrayValue(
+    data.nodeR5TopologyClosureCheckpoint.nodePackageHistory,
+    "topology closure Node package history",
+  ).map((value) => objectRecord(value, "topology closure Node history entry"))
+  assertExactStringSet(
+    "topology closure Node history coverage",
+    closureNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of closureNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Topology closure Node history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+  const closureRendererHistory = arrayValue(
+    data.nodeR5TopologyClosureCheckpoint.rendererPackageHistory,
+    "topology closure Renderer package history",
+  ).map((value) => objectRecord(value, "topology closure Renderer history entry"))
+  assertExactStringSet(
+    "topology closure Renderer history coverage",
+    closureRendererHistory.map(({package: packageName}) => packageName),
+    rendererInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of closureRendererHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
+      throw new Error(`Topology closure Renderer history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+  const topologyClosure = objectRecord(
+    data.nodeR5TopologyClosureCheckpoint.topologyClosure,
+    "topology closure checkpoint",
+  )
+  if (topologyClosure.nodeCommit !== latestNode.head ||
+    topologyClosure.rendererImplementation !== latestRenderer.parent ||
+    topologyClosure.rendererEvidence !== latestRenderer.head ||
+    topologyClosure.status !== "verified-r5-subgate") {
+    throw new Error("Topology closure evidence does not match the latest checkpoint")
+  }
+
+  const gates = objectRecord(data.nodeR5TopologyClosureCheckpoint.effectiveGates, "effective Node gates")
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
   }

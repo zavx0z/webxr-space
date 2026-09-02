@@ -24,5 +24,5 @@
     {"package": "@nodes/worker", "sourceRepository": "node", "sourcePrefix": "packages/worker", "destination": "packages/nodes-worker", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
     {"package": "@nodes/ui", "sourceRepository": "node", "sourcePrefix": "packages/ui", "destination": "packages/nodes-ui", "status": "blocked-by-node-r5-r6", "gate": "node-r6"}
   ],
-  "blocker": "Executing any import now would create a second writable canonical owner. Node R5 is still blocked, 1f4393e077748ed75a278ec327aa352399f1f65f and Renderer a84672deb1573b1e16bffacf801877f1a3633628 are not remote-backed, and the target worktree has no authorization to freeze or make the source repositories read-only."
+  "blocker": "Executing any import now would create a second writable canonical owner. Node R5 still has non-topology blockers, 5d029c2e91b5f807b05459fb6fea94e64e8d4bc7 and Renderer 21f263f36401f79c533917fd9b3fd8aa889fcf3d are not remote-backed, and the target worktree has no authorization to freeze or make the source repositories read-only."
 }

@@ -36,6 +36,7 @@ The authoritative files are:
 - `evidence/node-r4-closure-r5-checkpoint.json`
 - `evidence/node-r5-append-checkpoint.json`
 - `evidence/node-r5-topology-commit-checkpoint.json`
+- `evidence/node-r5-topology-closure-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -73,14 +74,14 @@ owners, so `migration/history-import.json` records the exact package prefixes
 and blocker instead of copying files.
 
 Node completed its one-path component cutover and exact Layout contract at
-`9cccb58`: R1-R4 are verified. Node `1f4393e` retains stable Parameter stores on
-exact append and closes the 1k/10k topologyCommit subgate. End-to-end CPU
-Renderer projection remains red. Transform tail, Link selection,
+`9cccb58`: R1-R4 are verified. Node `5d029c2e91b5` plus Renderer
+`80ee4f5`/`21f263f` close 1k/10k end-to-end append topology through conservative
+projection-neutral retained-frame reuse. Transform tail, Link selection,
 dense-memory/disposal, bundle and final visual-owner gates also remain open. R6
-is blocked because Node `1f4393e` and Renderer `a84672d` are not remote-backed
+is blocked because Node `5d029c2e91b5` and Renderer `21f263f` are not remote-backed
 and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-the current live pointer is `evidence/node-r5-topology-commit-checkpoint.json`.
+the current live pointer is `evidence/node-r5-topology-closure-checkpoint.json`.
 
 ## Transition superproject
 
