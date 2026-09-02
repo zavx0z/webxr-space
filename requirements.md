@@ -357,6 +357,28 @@ chevron. Exact comparison capture `capture_1jaGm1KQ5hc8k1WDxD2Ly39T`, sha256
 `923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9`,
 имеет empty diagnostics/console.
 
+Final 5.2 candidate slice использует official Manual asset, UI owners
+`f34b52c` / `f224951` / `5c35145` и Node production commits
+`d1cb287` / `a85e4c3` / `11ce295` / `5db53d9` / `51f57a9` / `af514b7`.
+На external Storybook revision `1a3ad15e74d2400c585c626a`, graph
+`88fc2fa7ad3be10b5f16de28ab4edbaddcf519efc23113ef7e9c8557fd2ae613`:
+
+- exact comparison route ready/presented, empty diagnostics/console; capture
+  `capture_z3vy06EOn_ArstR0eIkwnkwz`, sha256
+  `643cebce34e66814e7ae50d649bf487bbd8705db00ca77d98e37c073d55dda2e`;
+- full `ui/node-editor/scene/default` ready/presented, empty
+  diagnostics/console; capture `capture_x2dSxUXvxuLw5krh3GDX9pMa`, sha256
+  `4b79ba7b8982d7e856f496960140559b72973271d61095506237fa4ab0143e7b`.
+
+Node contour, composition, grouping, insets, solid Socket geometry, values and
+material roles now align at equal scale. Remaining visible mismatch is the
+collapsed native `select` disclosure indicator: Renderer emits `▾`, while the
+Engine font paints a damaged vertical glyph. Expected is the 5.2 downward
+chevron; actual is the captured fallback glyph. This is a generic
+Renderer/Engine-font gap, not authorization for a Node/UI-local indicator.
+Therefore the exact artifact remains `candidate` until that owner gap and the
+explicit `zavx0z` visual verdict are closed.
+
 ## Known platform gates
 
 Node-owned tests доказывают exact identity и local mutation, но current generic
