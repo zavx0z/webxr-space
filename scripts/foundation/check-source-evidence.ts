@@ -96,9 +96,21 @@ const transformClosureRendererCheckpoint = objectRecord(
   transformClosureRepositories.renderer,
   "transform closure Renderer repository",
 )
-const latestRepositories = objectRecord(
+const linkClosureRepositories = objectRecord(
   data.nodeR5LinkClosureCheckpoint.repositories,
-  "latest Link closure checkpoint repositories",
+  "Link closure checkpoint repositories",
+)
+const linkClosureNodeCheckpoint = objectRecord(
+  linkClosureRepositories.node,
+  "Link closure Node repository",
+)
+const linkClosureRendererCheckpoint = objectRecord(
+  linkClosureRepositories.renderer,
+  "Link closure Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR5DenseLifecycleCheckpoint.repositories,
+  "latest dense lifecycle checkpoint repositories",
 )
 const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
 const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -323,7 +335,7 @@ const linkClosureNodeHistory = data.nodeR5LinkClosureCheckpoint.nodePackageHisto
 if (!Array.isArray(linkClosureNodeHistory)) throw new Error("Link closure Node history must be an array")
 for (const value of linkClosureNodeHistory) {
   const entry = objectRecord(value, "Link closure Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Link closure Node")
+  validateCheckpointHistoryEntry(entry, linkClosureNodeCheckpoint, "Link closure Node")
 }
 
 const linkClosureRendererHistory = data.nodeR5LinkClosureCheckpoint.rendererPackageHistory
@@ -332,7 +344,23 @@ if (!Array.isArray(linkClosureRendererHistory)) {
 }
 for (const value of linkClosureRendererHistory) {
   const entry = objectRecord(value, "Link closure Renderer history entry")
-  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "Link closure Renderer")
+  validateCheckpointHistoryEntry(entry, linkClosureRendererCheckpoint, "Link closure Renderer")
+}
+
+const denseNodeHistory = data.nodeR5DenseLifecycleCheckpoint.nodePackageHistory
+if (!Array.isArray(denseNodeHistory)) throw new Error("Dense lifecycle Node history must be an array")
+for (const value of denseNodeHistory) {
+  const entry = objectRecord(value, "dense lifecycle Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "dense lifecycle Node")
+}
+
+const denseRendererHistory = data.nodeR5DenseLifecycleCheckpoint.rendererPackageHistory
+if (!Array.isArray(denseRendererHistory)) {
+  throw new Error("Dense lifecycle Renderer history must be an array")
+}
+for (const value of denseRendererHistory) {
+  const entry = objectRecord(value, "dense lifecycle Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "dense lifecycle Renderer")
 }
 
 console.log(
@@ -346,7 +374,8 @@ console.log(
   `${topologyClosureNodeHistory.length + topologyClosureRendererHistory.length} topology closure histories, ` +
   `${calibrationNodeHistory.length + calibrationRendererHistory.length} transform calibration histories, ` +
   `${transformClosureNodeHistory.length + transformClosureRendererHistory.length} transform closure histories, ` +
-  `${linkClosureNodeHistory.length + linkClosureRendererHistory.length} Link closure histories`,
+  `${linkClosureNodeHistory.length + linkClosureRendererHistory.length} Link closure histories, ` +
+  `${denseNodeHistory.length + denseRendererHistory.length} dense lifecycle histories`,
 )
 
 function validateCheckpointHistoryEntry(

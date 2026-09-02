@@ -29,7 +29,9 @@ append topology for selector-independent data-plus-hidden insertion. Other R5
 gates remain. Renderer `0cb7256` and evidence `65ec24a` close calibrated 10k
 transform; Link/memory/disposal/bundle/final-visual gates remain.
 Node `f4519ea` closes Link timing and retained runtime memory; dense-visible
-memory/disposal, bundle and final visual verdict remain.
+disposal is closed by Node `4a68482` and Renderer `a5c9f3e`/`99ce784`. Bundle
+and final visual verdict remain hard blockers. Dense retained memory awaits an
+approved owner ceiling and is not classified pass/fail.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.

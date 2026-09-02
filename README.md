@@ -40,6 +40,7 @@ The authoritative files are:
 - `evidence/node-r5-transform-calibration-checkpoint.json`
 - `evidence/node-r5-transform-closure-checkpoint.json`
 - `evidence/node-r5-link-closure-checkpoint.json`
+- `evidence/node-r5-dense-lifecycle-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -82,11 +83,13 @@ Node completed its one-path component cutover and exact Layout contract at
 projection-neutral retained-frame reuse. Node `9d7aa6c` calibrates ordinary 10k
 transform to 100 samples, and Renderer `0cb7256`/`65ec24a` closes it across three
 fresh processes. Node `f4519ea` closes Link selection and retained runtime
-memory. Dense-visible memory/disposal, bundle and final visual-owner gates remain.
-R6 is blocked because Node `f4519ea` and Renderer `65ec24a` are not remote-backed
+memory. Node `4a68482` plus Renderer `a5c9f3e`/`99ce784` closes unbounded dense
+disposal. Bundle and final visual verdict remain hard R5 blockers; dense memory
+is a pending owner-policy because no ceiling exists. R6 is blocked because Node
+`4a68482` and Renderer `99ce784` are not remote-backed
 and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-current live pointer is `evidence/node-r5-link-closure-checkpoint.json`.
+current live pointer is `evidence/node-r5-dense-lifecycle-checkpoint.json`.
 
 ## Transition superproject
 

@@ -109,7 +109,8 @@
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
-        "evidence/node-r5-link-closure-checkpoint.json"
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
       ],
       "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
@@ -213,26 +214,54 @@
       "verification": "Prior accepted evidence; not re-benchmarked in this M0 worktree."
     },
     {
+      "id": "webgpu.features.bulk-cleanup",
+      "classification": "implemented-owner-capability",
+      "status": "implemented-extension",
+      "owner": "@zavx0z/renderer-webgpu",
+      "statement": "Backend disposal bulk-detaches root children before per-entry retained resource cleanup and avoids quadratic Object3D.remove sibling scans.",
+      "implementationCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
+      "evidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
+      "capabilities": [
+        {"id": "webgpu.features.cleanup", "status": "implemented", "conformance": "extension"},
+        {"id": "webgpu.features.resource-lifetime", "status": "partial", "conformance": "adapted"}
+      ],
+      "focusedEvidence": {
+        "tests": 61,
+        "fail": 0,
+        "scalarEntries": 512,
+        "perEntryRootRemoveCalls": 0
+      },
+      "limitations": [
+        "texture-cache teardown, GPU device loss and external Engine resource ownership remain separate"
+      ],
+      "evidence": ["evidence/node-r5-dense-lifecycle-checkpoint.json"]
+    },
+    {
       "id": "nodes.dense-visible-performance",
-      "classification": "measured-failure",
-      "status": "failed-r5",
+      "classification": "capacity-evidence-owner-policy-pending",
+      "status": "bounded-lifecycle-memory-policy-pending",
       "owner": "source:node",
-      "statement": "The accepted dense-visible fixture now materializes 10k Nodes and 9999 Links, but cold mount/render/backend, memory and disposal are outside an acceptable bounded profile.",
+      "statement": "Dense 10k lifecycle is bounded and self-completing; retained baseline is recorded as capacity evidence without an approved memory ceiling.",
       "metrics": {
         "nodes": 10000,
         "links": 9999,
-        "boxes": 410052,
+        "components": 340003,
         "displayItems": 135011,
-        "mountSeconds": 30.16,
-        "rendererSeconds": 41.22,
-        "backendSeconds": 19.7,
-        "retainedBaselineGbApprox": 4.98,
-        "disposal": "unbounded"
+        "lifecycleTotalSecondsRange": [3.575617, 7.209438],
+        "backendDisposeMsRange": [178.612, 328.632],
+        "componentDisposeMsRange": [3341.711, 6790.071],
+        "treeDisposeMsRange": [54.269, 89.05],
+        "retainedBaselineGbRange": [5.0232, 5.0233],
+        "semanticGbApprox": 2.652,
+        "approvedMemoryCeiling": null,
+        "disposedEqualsMounted": true
       },
       "evidence": [
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r5-topology-commit-checkpoint.json"
-      ]
+        "evidence/node-r5-topology-commit-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
+      ],
+      "remainingPolicy": "owner must approve a dense retained-memory ceiling before memory can be classified pass/fail"
     },
     {
       "id": "nodes.link-selection-performance",
@@ -313,7 +342,8 @@
         "evidence/node-r4-closure-r5-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
-        "evidence/node-r5-link-closure-checkpoint.json"
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
       ]
     },
     {
@@ -355,7 +385,8 @@
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
-        "evidence/node-r5-link-closure-checkpoint.json"
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
       ]
     },
     {
@@ -404,11 +435,20 @@
     },
     {
       "id": "nodes.component-disposal",
-      "classification": "confirmed-gap",
-      "status": "unbounded-r5",
-      "owner": "@zavx0z/react and @zavx0z/template investigation boundary",
-      "statement": "Dense-visible 10k unmount remained active for several minutes and did not complete within a bounded lifecycle.",
-      "evidence": ["evidence/node-cutover-snapshot.json"]
+      "classification": "implemented-performance-evidence",
+      "status": "verified-r5-subgate",
+      "owner": "source:node plus @zavx0z/renderer-webgpu cleanup",
+      "statement": "Dense-visible 10k lifecycle self-completes and disposes all 340003 mounted component instances with bounded backend/component/tree phases.",
+      "metrics": {
+        "mounted": 340003,
+        "disposed": 340003,
+        "totalMsRange": [3575.617, 7209.438],
+        "backendMsRange": [178.612, 328.632]
+      },
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
+      ]
     },
     {
       "id": "nodes.component-bundle",
@@ -450,9 +490,12 @@
         "evidence/node-r5-append-checkpoint.json",
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
-        "evidence/node-r5-transform-calibration-checkpoint.json"
+        "evidence/node-r5-transform-calibration-checkpoint.json",
+        "evidence/node-r5-transform-closure-checkpoint.json",
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
       ],
-      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for f4519ea because only benchmark lifetime and evidence documentation changed, not observable DOM or visual output",
+      "verification": "retained from revision 92a235eb5bc5ba49c2e9c1de; not rerun for 4a68482/99ce784 because only backend cleanup, benchmark and documentation changed, not observable DOM or visual output",
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -460,7 +503,7 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node f4519ea is ahead 9 and Renderer 65ec24a is ahead 10; neither is remote-backed and both source owners remain writable without freeze authorization.",
+      "statement": "Node 4a68482 is ahead 10 and Renderer 99ce784 is ahead 12; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -470,7 +513,8 @@
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
         "evidence/node-r5-transform-closure-checkpoint.json",
-        "evidence/node-r5-link-closure-checkpoint.json"
+        "evidence/node-r5-link-closure-checkpoint.json",
+        "evidence/node-r5-dense-lifecycle-checkpoint.json"
       ]
     },
     {
