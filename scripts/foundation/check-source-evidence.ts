@@ -189,16 +189,30 @@ const componentDefaultsUiCheckpoint = objectRecord(
   componentDefaultsRepositories.ui,
   "component defaults UI repository",
 )
-const latestRepositories = objectRecord(
+const checkboxRepositories = objectRecord(
   data.nodeR5CheckboxPathCheckpoint.repositories,
-  "latest Checkbox Path checkpoint repositories",
+  "Checkbox Path checkpoint repositories",
 )
-const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
-const uiCheckpoint = objectRecord(latestRepositories.ui, "latest UI repository")
-const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
+const checkboxNodeCheckpoint = objectRecord(checkboxRepositories.node, "Checkbox Path Node repository")
+const checkboxUiCheckpoint = objectRecord(checkboxRepositories.ui, "Checkbox Path UI repository")
+const collapseRepositories = objectRecord(
+  data.nodeR5CollapseIconCheckpoint.repositories,
+  "collapse icon checkpoint repositories",
+)
+const collapseNodeCheckpoint = objectRecord(collapseRepositories.node, "collapse icon Node repository")
+const collapseUiCheckpoint = objectRecord(collapseRepositories.ui, "collapse icon UI repository")
+const hoverRepositories = objectRecord(
+  data.nodeR5SocketHoverCheckpoint.repositories,
+  "latest Socket hover checkpoint repositories",
+)
+const nodeCheckpoint = objectRecord(hoverRepositories.node, "latest Node repository")
+const uiCheckpoint = objectRecord(hoverRepositories.ui, "latest UI repository")
+const rendererCheckpoint = objectRecord(hoverRepositories.renderer, "latest Renderer repository")
+const templateCheckpoint = objectRecord(hoverRepositories.template, "latest Template repository")
 repositories.set("node", nodeCheckpoint)
 repositories.set("ui", uiCheckpoint)
 repositories.set("renderer", rendererCheckpoint)
+repositories.set("template", templateCheckpoint)
 
 for (const [id, record] of repositories) {
   const path = stringValue(record.path, `source repository ${id} path`)
@@ -244,6 +258,20 @@ for (const [id, record] of repositories) {
       stringValue(item, `${id} status path`)
     ).sort()
     expectEqual(`${id} status paths`, JSON.stringify(paths), JSON.stringify(expected))
+  } else if (record.status === "dirty-pre-existing-generated-wip") {
+    const lines = git(path, ["status", "--porcelain=v1"])
+      .split("\n")
+      .filter(Boolean)
+    const paths = lines.map((line) => line.slice(3)).sort()
+    const expected = arrayValue(record.statusPaths, `${id} status paths`).map((item) =>
+      stringValue(item, `${id} status path`)
+    ).sort()
+    expectEqual(`${id} status paths`, JSON.stringify(paths), JSON.stringify(expected))
+    const supportLine = lines.find((line) => line.slice(3) === "support.json")
+    if (supportLine === " M support.json") {
+      throw new Error(`${path}/support.json has pre-existing M status`)
+    }
+    throw new Error(`${path}/support.json has unexpected dirty status ${String(supportLine)}`)
   }
 
   const manifests = record.manifestSha256
@@ -556,14 +584,42 @@ const checkboxNodeHistory = data.nodeR5CheckboxPathCheckpoint.nodePackageHistory
 if (!Array.isArray(checkboxNodeHistory)) throw new Error("Checkbox Path Node history must be an array")
 for (const value of checkboxNodeHistory) {
   const entry = objectRecord(value, "Checkbox Path Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Checkbox Path Node")
+  validateCheckpointHistoryEntry(entry, checkboxNodeCheckpoint, "Checkbox Path Node")
 }
 
 const checkboxUiHistory = data.nodeR5CheckboxPathCheckpoint.uiPackageHistory
 if (!Array.isArray(checkboxUiHistory)) throw new Error("Checkbox Path UI history must be an array")
 for (const value of checkboxUiHistory) {
   const entry = objectRecord(value, "Checkbox Path UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Checkbox Path UI")
+  validateCheckpointHistoryEntry(entry, checkboxUiCheckpoint, "Checkbox Path UI")
+}
+
+const collapseNodeHistory = data.nodeR5CollapseIconCheckpoint.nodePackageHistory
+if (!Array.isArray(collapseNodeHistory)) throw new Error("Collapse icon Node history must be an array")
+for (const value of collapseNodeHistory) {
+  const entry = objectRecord(value, "Collapse icon Node history entry")
+  validateCheckpointHistoryEntry(entry, collapseNodeCheckpoint, "Collapse icon Node")
+}
+
+const collapseUiHistory = data.nodeR5CollapseIconCheckpoint.uiPackageHistory
+if (!Array.isArray(collapseUiHistory)) throw new Error("Collapse icon UI history must be an array")
+for (const value of collapseUiHistory) {
+  const entry = objectRecord(value, "Collapse icon UI history entry")
+  validateCheckpointHistoryEntry(entry, collapseUiCheckpoint, "Collapse icon UI")
+}
+
+const hoverNodeHistory = data.nodeR5SocketHoverCheckpoint.nodePackageHistory
+if (!Array.isArray(hoverNodeHistory)) throw new Error("Socket hover Node history must be an array")
+for (const value of hoverNodeHistory) {
+  const entry = objectRecord(value, "Socket hover Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Socket hover Node")
+}
+
+const hoverUiHistory = data.nodeR5SocketHoverCheckpoint.uiPackageHistory
+if (!Array.isArray(hoverUiHistory)) throw new Error("Socket hover UI history must be an array")
+for (const value of hoverUiHistory) {
+  const entry = objectRecord(value, "Socket hover UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Socket hover UI")
 }
 
 console.log(
@@ -585,7 +641,9 @@ console.log(
   `${visualClosureNodeHistory.length + visualClosureUiHistory.length} visual closure histories, ` +
   `${socketAlignmentNodeHistory.length + socketAlignmentUiHistory.length} Socket alignment histories, ` +
   `${componentDefaultsNodeHistory.length + componentDefaultsUiHistory.length} component defaults histories, ` +
-  `${checkboxNodeHistory.length + checkboxUiHistory.length} Checkbox Path histories`,
+  `${checkboxNodeHistory.length + checkboxUiHistory.length} Checkbox Path histories, ` +
+  `${collapseNodeHistory.length + collapseUiHistory.length} collapse icon histories, ` +
+  `${hoverNodeHistory.length + hoverUiHistory.length} Socket hover histories`,
 )
 
 function validateCheckpointHistoryEntry(

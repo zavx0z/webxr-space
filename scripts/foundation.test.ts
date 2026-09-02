@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves rejected visual evidence and overlays the Checkbox Path checkpoint", async () => {
+  test("preserves rejected visual evidence through the Socket hover checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -159,7 +159,9 @@ describe("visual monorepo M0 foundation", () => {
     const visualClosureGates = data.nodeR5VisualClosureCheckpoint.effectiveGates as Record<string, string>
     const alignmentGates = data.nodeR5SocketAlignmentCheckpoint.effectiveGates as Record<string, string>
     const componentGates = data.nodeR5ComponentDefaultsCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5CheckboxPathCheckpoint.effectiveGates as Record<string, string>
+    const checkboxGates = data.nodeR5CheckboxPathCheckpoint.effectiveGates as Record<string, string>
+    const collapseGates = data.nodeR5CollapseIconCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5SocketHoverCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
@@ -188,14 +190,24 @@ describe("visual monorepo M0 foundation", () => {
       ui: {head: string}
       renderer: {head: string}
     }
-    const latestRepositories = data.nodeR5CheckboxPathCheckpoint.repositories as {
+    const checkboxRepositories = data.nodeR5CheckboxPathCheckpoint.repositories as {
       node: {head: string}
       ui: {head: string}
       renderer: {head: string}
     }
+    const collapseRepositories = data.nodeR5CollapseIconCheckpoint.repositories as {
+      node: {head: string}
+    }
+    const latestRepositories = data.nodeR5SocketHoverCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+      template: {head: string}
+    }
     const nodeGroup = data.ownership.groups.find(({id}) => id === "node")!
     const uiGroup = data.ownership.groups.find(({id}) => id === "ui")!
     const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")!
+    const templateGroup = data.ownership.groups.find(({id}) => id === "template")!
 
     expect(historicalNode.head).toBe("209ba2a5e905edeeb6293bdedf47ea483d011c94")
     expect(checkpointRepository.head).toBe("becff8f34a7152791df8e833a918dfe0142681bb")
@@ -215,11 +227,13 @@ describe("visual monorepo M0 foundation", () => {
     expect(visualClosureRepositories.node.head).toBe("9855abd9683affb8759647ebd27c342ab8b4dda4")
     expect(alignmentRepositories.node.head).toBe("9ddded88425f69e6052687e7dccb4a02fb3016a5")
     expect(componentRepositories.node.head).toBe("1e2450aaceb5d5dbf34239eb7e1252595e053efd")
-    expect(latestRepositories.node.head).toBe("b544860e95aea7d57b3d0f0a29d1a8274a5c51b0")
+    expect(checkboxRepositories.node.head).toBe("b544860e95aea7d57b3d0f0a29d1a8274a5c51b0")
+    expect(collapseRepositories.node.head).toBe("ceef5c66259b2a14ae3006aea08644dba7f79876")
+    expect(latestRepositories.node.head).toBe("68e2425e62b956e3fc187ca7abd811a468db8bad")
     expect(latestRepositories.ui.head).toBe("90c77080c27d92fea5ee803e8ff1e49d65885ae1")
     expect(latestRepositories.renderer.head).toBe("b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+      "68e2425e62b956e3fc187ca7abd811a468db8bad",
     )
     expect(ownerDecisionGates).toEqual({
       R1: "verified",
@@ -262,12 +276,17 @@ describe("visual monorepo M0 foundation", () => {
       R6: "blocked",
     })
     expect(componentGates).toEqual(alignmentGates)
+    expect(checkboxGates).toEqual(alignmentGates)
+    expect(collapseGates).toEqual(alignmentGates)
     expect(gates).toEqual(alignmentGates)
     expect(uiGroup.owners.find(({id}) => id === "source:ui")?.revision).toBe(
       "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
     )
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
       "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59",
+    )
+    expect(templateGroup.owners.find(({id}) => id === "source:template")?.revision).toBe(
+      "6db9e772e37cdc47e6dba58d153016057cc93558",
     )
     expect((data.nodeR4ClosureR5Checkpoint.r4Closure as {closedContradiction: string})
       .closedContradiction).toBe(

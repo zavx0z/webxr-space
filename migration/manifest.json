@@ -85,14 +85,20 @@
       "visualClosureEvidenceCommit": "9855abd9683affb8759647ebd27c342ab8b4dda4",
       "socketAlignmentImplementationCommit": "ed7b6a99f6b6ae7b35811307eaeb2352f07b14b9",
       "socketAlignmentEvidenceCommit": "9ddded88425f69e6052687e7dccb4a02fb3016a5",
+      "componentDefaultsNodeCommit": "1e2450aaceb5d5dbf34239eb7e1252595e053efd",
+      "componentDefaultsUiCommit": "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
+      "checkboxPathNodeEvidenceCommit": "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+      "collapseIconNodeCommit": "ceef5c66259b2a14ae3006aea08644dba7f79876",
+      "socketHoverTemplateCapabilityCommit": "6db9e772e37cdc47e6dba58d153016057cc93558",
+      "socketHoverNodeCommit": "68e2425e62b956e3fc187ca7abd811a468db8bad",
       "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
       "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
       "completedGates": ["R1", "R2", "R3", "R4"],
       "ownerDecisionGates": ["R5 visual verdict"],
       "blockedGates": ["R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-visual-closure-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-socket-alignment-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-collapse-icon-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
@@ -116,8 +122,8 @@
         "single writable owner cutover"
       ],
       "blockers": [
-        "The first SVG-restored visual candidate was rejected for a 7px input-Socket contour error; Node ed7b6a9 corrects it and only the repeated final visual verdict remains pending.",
-        "R6 commit is not remote-backed and the canonical Node owner has not been frozen/read-only.",
+        "The rejected visual defects now have append-only contour, defaults, Checkbox Path, collapse icon and glyph-owned Socket hover corrections; only the repeated final visual verdict remains pending.",
+        "Node 68e2425 and required Template capability 6db9e77 are not remote-backed, and the canonical source owners have not been frozen/read-only.",
         "The source:node repository remains the only writable canonical owner."
       ]
     },

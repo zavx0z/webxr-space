@@ -61,7 +61,7 @@
           "id": "source:template",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/template",
-          "revision": "ef543f55aea710d91ec473fe52f32900fbbb655b",
+          "revision": "6db9e772e37cdc47e6dba58d153016057cc93558",
           "writable": true,
           "state": "canonical"
         },
@@ -111,7 +111,7 @@
           "id": "source:node",
           "kind": "repository",
           "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
-          "revision": "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+          "revision": "68e2425e62b956e3fc187ca7abd811a468db8bad",
           "writable": true,
           "state": "canonical"
         },

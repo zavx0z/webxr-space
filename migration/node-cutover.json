@@ -3,7 +3,7 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+  "observedHead": "68e2425e62b956e3fc187ca7abd811a468db8bad",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
   "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
@@ -27,6 +27,9 @@
   "checkboxPathRendererImplementationCommit": "5e21783b688339fb892cb288a4bd030605191c68",
   "checkboxPathRendererEvidenceCommit": "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59",
   "checkboxPathNodeEvidenceCommit": "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+  "collapseIconNodeCommit": "ceef5c66259b2a14ae3006aea08644dba7f79876",
+  "socketHoverTemplateCapabilityCommit": "6db9e772e37cdc47e6dba58d153016057cc93558",
+  "socketHoverNodeCommit": "68e2425e62b956e3fc187ca7abd811a468db8bad",
   "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
   "bulkBackendCleanupEvidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
   "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
@@ -35,8 +38,8 @@
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
   "blenderCompatibilityEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-component-defaults-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-checkbox-path-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-collapse-icon-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -118,7 +121,7 @@
       "evidence": [
         "exact public TSX owners and consumers committed",
         "159 historical Storybook leaves and 66 overview routes preserved",
-        "active Storybook revision d3e020d985008a2e3fa9bce0"
+        "active Storybook revision 408f5bc96201dd5885b74fdc"
       ]
     },
     {
@@ -126,7 +129,7 @@
       "name": "Functional parity",
       "status": "verified",
       "evidence": [
-        "bun run check: 221 pass, 0 fail, 0 todo at b544860",
+        "bun run check: 221 pass, 0 fail, 0 todo and 9530 assertions at 68e2425",
         "stable identity, local mutation and transform-only evidence passed",
         "exact @nodes/layout LayoutResult is mandatory and validated before materialization",
         "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween are absent from committed Node geometry",
@@ -140,12 +143,15 @@
       "verifiedSubgates": [
         "dense-visible 10k lifecycle self-completes with disposed == mounted == 350003",
         "1k/10k retained baselines pass executable 600000000/5400000000 byte ceilings",
-        "exact full NodeEditor 278439/70370 passes executable 285000/72000 bundle ceiling",
+        "exact full NodeEditor 279084/70434 passes executable 285000/72000 bundle ceiling",
         "exact UI components 131190/31700 passes executable 131500/31750 bundle ceiling",
         "NumberField, CheckboxField and SelectField arrive as their UI-owned defaults without Node visual overrides",
         "Renderer executes theme-owned border-radius var() shorthand at 3803739d0dded9c05c5f9e32acd163b6f81f6e6c",
         "12px Socket glyphs and exact Blender 5.2 component coordinates are protected by executable Renderer-box tests",
         "Checkbox check is a font-independent retained Path with exact normalized reference bbox",
+        "Node collapse uses the retained UI-owned chevron icon instead of an Engine-font glyph",
+        "Socket row hover retains one button hit owner while only the 12px glyph receives glow",
+        "Template 6db9e77 compiles one bounded descendant static attribute target without general selector escape",
         "historical UI-owned chevronDownIcon is restored without changing native select interaction ownership",
         "all six input and both output Socket glyph centers coincide with their Node contours within 1px",
         "final 1k/10k topology 12.498/64.902ms with exact 33 marker-derived mounts",
@@ -194,11 +200,16 @@
         "evidence/node-r5-socket-alignment-checkpoint.json",
         "evidence/node-r5-component-defaults-checkpoint.json",
         "evidence/node-r5-checkbox-path-checkpoint.json",
+        "evidence/node-r5-collapse-icon-checkpoint.json",
+        "evidence/node-r5-socket-hover-checkpoint.json",
         "historical Blender 4.5 equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "legacy 4.5 compatibility capture 923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9",
         "two earlier visual candidates explicitly rejected by zavx0z",
         "current Blender 5.2 comparison capture 4145b85515e5542877c8f821e39ba627d199fda12e6f7a5c92d62d8c77675e25 remains candidate-only",
         "corrected Checkbox comparison capture 4eff14782c9b15c717d79340429a9832af491bef8e29c08647da91095d9c24db remains candidate-only",
+        "corrected collapse-icon comparison capture 84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4 remains candidate-only",
+        "Socket hover row capture 3edac5eef8c5f389aaaacc57ea14c3c28c4d0d98b2f4ec78e6f9ba12517b85ab proves glyph-only display ownership",
+        "Socket hover comparison capture 0d8ebd3b7a442ae73d34bdbdfed72a5a153751dc1e40cf77e82c2e4c778ba27f remains candidate-only",
         "corrected console-zero non-black NodeEditor capture 1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0"
       ]
     },
@@ -207,15 +218,17 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at b544860e95aea7d57b3d0f0a29d1a8274a5c51b0 and ahead 28",
+        "Node main is clean at 68e2425e62b956e3fc187ca7abd811a468db8bad and ahead 30",
         "UI main is clean at 90c77080c27d92fea5ee803e8ff1e49d65885ae1 and ahead 7",
-        "Renderer main is clean at b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 and ahead 16"
+        "Renderer main is clean at b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 and ahead 16",
+        "Template main is at 6db9e772e37cdc47e6dba58d153016057cc93558, ahead 4, with pre-existing support.json WIP"
       ],
       "blockers": [
         "explicit R5 equal-scale visual owner verdict remains pending",
-        "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0 is not remote-backed",
+        "68e2425e62b956e3fc187ca7abd811a468db8bad is not remote-backed",
         "90c77080c27d92fea5ee803e8ff1e49d65885ae1 is not remote-backed",
         "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 is not remote-backed",
+        "6db9e772e37cdc47e6dba58d153016057cc93558 is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "push/freeze authorization has not been given"
       ]

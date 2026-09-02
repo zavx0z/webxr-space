@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T15:33:17+03:00",
+  "provenance": {
+    "previousCheckpoint": "evidence/node-r5-checkbox-path-checkpoint.json",
+    "sourceThread": "01a05e95-a6b2-7c40-a566-6c6991fe958a",
+    "classification": "R5 Node collapse font glyph replaced by UI-owned icon checkpoint",
+    "preservesPreviousSnapshots": true,
+    "productionRuntimeChanged": false,
+    "externalSourceProductionChanged": true
+  },
+  "repositories": {
+    "node": {
+      "id": "node",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+      "branch": "main",
+      "head": "ceef5c66259b2a14ae3006aea08644dba7f79876",
+      "parent": "b544860e95aea7d57b3d0f0a29d1a8274a5c51b0",
+      "subject": "Restore Node collapse icons",
+      "committedAt": "2026-09-02T15:33:01+03:00",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/node.git",
+      "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+      "ahead": 29,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:node"
+    },
+    "ui": {
+      "id": "ui",
+      "path": "/Users/zavx0z/repozitarium/webxr-space/projects/ui",
+      "branch": "main",
+      "head": "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
+      "status": "clean",
+      "remote": "git@github.com:zavx0z/ui.git",
+      "originMain": "f43edc93dca7ee2fca98c6a228863391438ce7a8",
+      "ahead": 7,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:ui"
+    },
+    "renderer": {
+      "id": "renderer",
+      "path": "/Users/zavx0z/repozitarium/renderer",
+      "branch": "main",
+      "head": "b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59",
+      "status": "clean",
+      "remote": "https://github.com/zavx0z/renderer.git",
+      "originMain": "5c2baddeeef34bff60c043c188c194b1f9e4a5cc",
+      "ahead": 16,
+      "behind": 0,
+      "headContainedByOriginMain": false,
+      "canonicalWritableOwner": "source:renderer"
+    }
+  },
+  "nodePackageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 11, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "1f4393e077748ed75a278ec327aa352399f1f65f"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 9, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 43, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "ceef5c66259b2a14ae3006aea08644dba7f79876"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"}
+  ],
+  "uiPackageHistory": [
+    {"package": "@ui/components", "repository": "ui", "prefix": "packages/components", "commitCount": 43, "firstCommit": "ed516e16e4c08721bff495a324e8389f56b1217a", "lastCommit": "90c77080c27d92fea5ee803e8ff1e49d65885ae1"}
+  ],
+  "reportedDefect": {
+    "ownerFinding": "reference Node header disclosure is an icon",
+    "previousPaint": "Engine-font collapse glyph U+2304/U+203A",
+    "affectedCheckpoint": "evidence/node-r5-checkbox-path-checkpoint.json",
+    "actualOwner": "@nodes/ui Node header presentation"
+  },
+  "correction": {
+    "commit": "ceef5c66259b2a14ae3006aea08644dba7f79876",
+    "interactionOwner": "native collapse button",
+    "presentationOwner": "stable img",
+    "expandedSource": "@ui/components/icons chevronDownIcon",
+    "collapsedSource": "@ui/components/icons chevronRightIcon",
+    "imageIdentityRetained": true,
+    "textGlyphRemoved": true,
+    "iconSize": 14
+  },
+  "pixelEvidence": {
+    "referenceBox": [63, 105, 76, 112],
+    "liveBox": [461, 105, 474, 112],
+    "referenceSize": [14, 8],
+    "liveSize": [14, 8],
+    "status": "exact-size-and-vertical-range"
+  },
+  "technicalR5": {
+    "status": "verified",
+    "nodeFunctional": {"pass": 221, "fail": 0, "todo": 0, "assertions": 9527},
+    "bundle": {
+      "contract": "nodes-component-ui-bundle/2",
+      "exactNodeEditor": {"bytes": 278697, "gzipBytes": 70398, "sha256": "ee14452ebafb4adeb76e4daadc5593bc8e5b4a3f4349645ecdaea810e5497204"},
+      "ceiling": {"bytes": 285000, "gzipBytes": 72000},
+      "pass": true
+    },
+    "inheritedCrossOwnerEvidence": "evidence/node-r5-checkbox-path-checkpoint.json"
+  },
+  "storybook": {
+    "package": "@nodes/ui",
+    "activeRevision": "da02f4fc916315be9f229c2a",
+    "graphDigest": "828891004c1a2feaf9f8f5f88bb1a2693f7642efbf62b9241b24f2e0919dafb8",
+    "ready": true,
+    "presented": true,
+    "diagnostics": [],
+    "consoleErrors": [],
+    "capture": {"id": "capture_CS-ZXxAZA48BcsELO4F4ILJ9", "width": 2268, "height": 704, "bytes": 124281, "sha256": "84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4"}
+  },
+  "m0Validation": {
+    "foundation": {"command": "bun run check", "pass": true, "tests": 13},
+    "sourceEvidence": {
+      "command": "bun run evidence:check",
+      "pass": false,
+      "blocker": "/Users/zavx0z/repozitarium/template/support.json has pre-existing M status",
+      "templateModifiedByThisSlice": false,
+      "validatorWeakened": false
+    }
+  },
+  "visualAcceptance": {
+    "status": "candidate-owner-verdict",
+    "collapseIconDefectClosed": true,
+    "ownerVerdict": "pending-zavx0z",
+    "parityClaimed": false
+  },
+  "effectiveGates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "owner-verdict-pending",
+    "R6": "blocked"
+  },
+  "r6": {
+    "status": "blocked",
+    "blockers": [
+      "explicit equal-scale visual owner verdict remains open after collapse icon correction",
+      "Node ceef5c66259b2a14ae3006aea08644dba7f79876 is ahead 29 and not remote-backed",
+      "UI 90c77080c27d92fea5ee803e8ff1e49d65885ae1 is ahead 7 and not remote-backed",
+      "Renderer b6c4845cfacd3c5afc4d6b82d939e95e2bc52a59 is ahead 16 and not remote-backed",
+      "push/freeze/import/ownership-switch authorization has not been given"
+    ]
+  },
+  "migrationReadiness": "not-ready; corrected R5 visual owner verdict and R6 remote-backed freeze/authorization remain open"
+}

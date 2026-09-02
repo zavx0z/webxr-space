@@ -30,6 +30,8 @@ export const dataFiles = Object.freeze({
   nodeR5SocketAlignmentCheckpoint: "evidence/node-r5-socket-alignment-checkpoint.json",
   nodeR5ComponentDefaultsCheckpoint: "evidence/node-r5-component-defaults-checkpoint.json",
   nodeR5CheckboxPathCheckpoint: "evidence/node-r5-checkbox-path-checkpoint.json",
+  nodeR5CollapseIconCheckpoint: "evidence/node-r5-collapse-icon-checkpoint.json",
+  nodeR5SocketHoverCheckpoint: "evidence/node-r5-socket-hover-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -157,6 +159,8 @@ export type FoundationData = Readonly<{
   nodeR5SocketAlignmentCheckpoint: Readonly<Record<string, unknown>>
   nodeR5ComponentDefaultsCheckpoint: Readonly<Record<string, unknown>>
   nodeR5CheckboxPathCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5CollapseIconCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5SocketHoverCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -223,6 +227,12 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5CheckboxPathCheckpoint: byPath.get(
       dataFiles.nodeR5CheckboxPathCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5CollapseIconCheckpoint: byPath.get(
+      dataFiles.nodeR5CollapseIconCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5SocketHoverCheckpoint: byPath.get(
+      dataFiles.nodeR5SocketHoverCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -691,7 +701,9 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5VisualClosureCheckpoint.schemaVersion !== 1 ||
     data.nodeR5SocketAlignmentCheckpoint.schemaVersion !== 1 ||
     data.nodeR5ComponentDefaultsCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5CheckboxPathCheckpoint.schemaVersion !== 1) {
+    data.nodeR5CheckboxPathCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5CollapseIconCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5SocketHoverCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -753,7 +765,9 @@ function validateMigrationCoverage(data: FoundationData): void {
   const visualClosureCheckpointPath = "evidence/node-r5-visual-closure-checkpoint.json"
   const socketAlignmentCheckpointPath = "evidence/node-r5-socket-alignment-checkpoint.json"
   const componentDefaultsCheckpointPath = "evidence/node-r5-component-defaults-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-checkbox-path-checkpoint.json"
+  const checkboxCheckpointPath = "evidence/node-r5-checkbox-path-checkpoint.json"
+  const collapseIconCheckpointPath = "evidence/node-r5-collapse-icon-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-socket-hover-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -875,7 +889,22 @@ function validateMigrationCoverage(data: FoundationData): void {
   const checkboxNode = objectRecord(checkboxRepositories.node, "latest Checkbox Node repository")
   const checkboxUi = objectRecord(checkboxRepositories.ui, "latest Checkbox UI repository")
   const checkboxRenderer = objectRecord(checkboxRepositories.renderer, "latest Checkbox Renderer repository")
-  if (data.nodeCutover.observedHead !== checkboxNode.head ||
+  const collapseRepositories = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.repositories,
+    "Node R5 collapse icon checkpoint repositories",
+  )
+  const collapseNode = objectRecord(collapseRepositories.node, "collapse icon Node repository")
+  const collapseUi = objectRecord(collapseRepositories.ui, "collapse icon UI repository")
+  const collapseRenderer = objectRecord(collapseRepositories.renderer, "collapse icon Renderer repository")
+  const hoverRepositories = objectRecord(
+    data.nodeR5SocketHoverCheckpoint.repositories,
+    "latest Node R5 Socket hover checkpoint repositories",
+  )
+  const hoverNode = objectRecord(hoverRepositories.node, "latest Socket hover Node repository")
+  const hoverUi = objectRecord(hoverRepositories.ui, "latest Socket hover UI repository")
+  const hoverRenderer = objectRecord(hoverRepositories.renderer, "latest Socket hover Renderer repository")
+  const hoverTemplate = objectRecord(hoverRepositories.template, "latest Socket hover Template repository")
+  if (data.nodeCutover.observedHead !== hoverNode.head ||
     data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
     data.nodeCutover.layoutContractCommit !== closureNode.head ||
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
@@ -899,32 +928,41 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.checkboxPathRendererImplementationCommit !== checkboxRenderer.parent ||
     data.nodeCutover.checkboxPathRendererEvidenceCommit !== checkboxRenderer.head ||
     data.nodeCutover.checkboxPathNodeEvidenceCommit !== checkboxNode.head ||
+    data.nodeCutover.collapseIconNodeCommit !== collapseNode.head ||
+    data.nodeCutover.socketHoverTemplateCapabilityCommit !== hoverTemplate.head ||
+    data.nodeCutover.socketHoverNodeCommit !== hoverNode.head ||
     data.nodeCutover.hiddenTransformRendererCommit !== transformClosureRenderer.parent ||
     data.nodeCutover.hiddenTransformEvidenceCommit !== transformClosureRenderer.head ||
     data.nodeCutover.bulkBackendCleanupCommit !== denseRenderer.parent ||
     data.nodeCutover.bulkBackendCleanupEvidenceCommit !== denseRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
     data.nodeCutover.blenderCompatibilityEvidenceCheckpoint !== compatibilityCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== componentDefaultsCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== collapseIconCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
   const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
   const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
-  if (nodeOwner === undefined || nodeOwner.revision !== checkboxNode.head ||
+  if (nodeOwner === undefined || nodeOwner.revision !== hoverNode.head ||
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
   const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
   const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
-  if (rendererOwner === undefined || rendererOwner.revision !== checkboxRenderer.head ||
+  if (rendererOwner === undefined || rendererOwner.revision !== hoverRenderer.head ||
     rendererOwner.writable !== true) {
     throw new Error("Renderer ownership ledger does not match the latest checkpoint")
   }
   const uiGroup = data.ownership.groups.find(({id}) => id === "ui")
   const uiOwner = uiGroup?.owners.find(({id}) => id === "source:ui")
-  if (uiOwner === undefined || uiOwner.revision !== checkboxUi.head || uiOwner.writable !== true) {
+  if (uiOwner === undefined || uiOwner.revision !== hoverUi.head || uiOwner.writable !== true) {
     throw new Error("UI ownership ledger does not match the latest checkpoint")
+  }
+  const templateGroup = data.ownership.groups.find(({id}) => id === "template")
+  const templateOwner = templateGroup?.owners.find(({id}) => id === "source:template")
+  if (templateOwner === undefined || templateOwner.revision !== hoverTemplate.head ||
+    templateOwner.writable !== true) {
+    throw new Error("Template ownership ledger does not match the latest checkpoint")
   }
   for (const path of [componentCheckpointPath, r4R5CheckpointPath, closureCheckpointPath]) {
     validateFollowUpSnapshot(data.sourceSnapshot, path, "source snapshot")
@@ -1515,6 +1553,37 @@ function validateMigrationCoverage(data: FoundationData): void {
     const plan = importsByPackage.get(entry.package)
     if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
       throw new Error(`Checkbox Path UI history mismatch: ${String(entry.package)}`)
+    }
+  }
+  for (const [label, checkpoint] of [
+    ["Collapse icon", data.nodeR5CollapseIconCheckpoint],
+    ["Socket hover", data.nodeR5SocketHoverCheckpoint],
+  ] as const) {
+    const nodeHistory = arrayValue(checkpoint.nodePackageHistory, `${label} Node package history`)
+      .map((value) => objectRecord(value, `${label} Node history entry`))
+    assertExactStringSet(
+      `${label} Node history coverage`,
+      nodeHistory.map(({package: packageName}) => packageName),
+      nodeInventory.map(({packageName}) => packageName),
+    )
+    for (const entry of nodeHistory) {
+      const plan = importsByPackage.get(entry.package)
+      if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+        throw new Error(`${label} Node history mismatch: ${String(entry.package)}`)
+      }
+    }
+    const uiHistory = arrayValue(checkpoint.uiPackageHistory, `${label} UI package history`)
+      .map((value) => objectRecord(value, `${label} UI history entry`))
+    assertExactStringSet(
+      `${label} UI history coverage`,
+      uiHistory.map(({package: packageName}) => packageName),
+      uiInventory.map(({packageName}) => packageName),
+    )
+    for (const entry of uiHistory) {
+      const plan = importsByPackage.get(entry.package)
+      if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "ui") {
+        throw new Error(`${label} UI history mismatch: ${String(entry.package)}`)
+      }
     }
   }
   const bundleDecision = objectRecord(
@@ -2202,6 +2271,154 @@ function validateMigrationCoverage(data: FoundationData): void {
     throw new Error("Checkbox correction must remain candidate-only until the owner verdict")
   }
 
+  const collapseProvenance = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.provenance,
+    "collapse icon provenance",
+  )
+  if (collapseProvenance.previousCheckpoint !== checkboxCheckpointPath ||
+    collapseProvenance.preservesPreviousSnapshots !== true ||
+    collapseProvenance.productionRuntimeChanged !== false ||
+    collapseProvenance.externalSourceProductionChanged !== true ||
+    collapseNode.head !== "ceef5c66259b2a14ae3006aea08644dba7f79876" ||
+    collapseNode.parent !== checkboxNode.head || collapseNode.status !== "clean" ||
+    collapseUi.head !== checkboxUi.head || collapseUi.status !== "clean" ||
+    collapseRenderer.head !== checkboxRenderer.head || collapseRenderer.status !== "clean") {
+    throw new Error("Collapse icon checkpoint must append cleanly to the Checkbox checkpoint")
+  }
+  const collapseCorrection = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.correction,
+    "collapse icon correction",
+  )
+  if (collapseCorrection.commit !== collapseNode.head ||
+    collapseCorrection.interactionOwner !== "native collapse button" ||
+    collapseCorrection.presentationOwner !== "stable img" ||
+    collapseCorrection.expandedSource !== "@ui/components/icons chevronDownIcon" ||
+    collapseCorrection.collapsedSource !== "@ui/components/icons chevronRightIcon" ||
+    collapseCorrection.imageIdentityRetained !== true || collapseCorrection.textGlyphRemoved !== true ||
+    collapseCorrection.iconSize !== 14) {
+    throw new Error("Collapse icon correction must retain one native button and UI-owned image")
+  }
+  const collapsePixels = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.pixelEvidence,
+    "collapse icon pixel evidence",
+  )
+  if (JSON.stringify(arrayValue(collapsePixels.referenceSize, "collapse reference size")) !== "[14,8]" ||
+    JSON.stringify(arrayValue(collapsePixels.liveSize, "collapse live size")) !== "[14,8]" ||
+    collapsePixels.status !== "exact-size-and-vertical-range") {
+    throw new Error("Collapse icon evidence must match the exact reference bounds")
+  }
+  const collapseTechnical = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.technicalR5,
+    "collapse icon technical R5",
+  )
+  const collapseNodeFunctional = objectRecord(collapseTechnical.nodeFunctional, "collapse Node checks")
+  const collapseBundle = objectRecord(collapseTechnical.bundle, "collapse bundle evidence")
+  const collapseExactBundle = objectRecord(collapseBundle.exactNodeEditor, "collapse exact bundle")
+  if (collapseTechnical.status !== "verified" || collapseNodeFunctional.pass !== 221 ||
+    collapseNodeFunctional.fail !== 0 || collapseNodeFunctional.todo !== 0 ||
+    collapseNodeFunctional.assertions !== 9527 || collapseExactBundle.bytes !== 278697 ||
+    collapseExactBundle.gzipBytes !== 70398 || collapseBundle.pass !== true ||
+    collapseTechnical.inheritedCrossOwnerEvidence !== checkboxCheckpointPath) {
+    throw new Error("Collapse icon technical evidence does not match executable acceptance")
+  }
+  const collapseStory = objectRecord(data.nodeR5CollapseIconCheckpoint.storybook, "collapse Storybook")
+  const collapseCapture = objectRecord(collapseStory.capture, "collapse Storybook capture")
+  if (collapseStory.activeRevision !== "da02f4fc916315be9f229c2a" ||
+    collapseStory.ready !== true || collapseStory.presented !== true ||
+    arrayValue(collapseStory.diagnostics, "collapse diagnostics").length !== 0 ||
+    arrayValue(collapseStory.consoleErrors, "collapse console errors").length !== 0 ||
+    collapseCapture.id !== "capture_CS-ZXxAZA48BcsELO4F4ILJ9" ||
+    collapseCapture.sha256 !== "84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4") {
+    throw new Error("Collapse Storybook evidence does not match the exact capture")
+  }
+
+  const hoverProvenance = objectRecord(
+    data.nodeR5SocketHoverCheckpoint.provenance,
+    "Socket hover provenance",
+  )
+  if (hoverProvenance.previousCheckpoint !== collapseIconCheckpointPath ||
+    hoverProvenance.preservesPreviousSnapshots !== true ||
+    hoverProvenance.productionRuntimeChanged !== false ||
+    hoverProvenance.externalSourceProductionChanged !== true ||
+    hoverNode.head !== "68e2425e62b956e3fc187ca7abd811a468db8bad" ||
+    hoverNode.parent !== collapseNode.head || hoverNode.status !== "clean" ||
+    hoverUi.head !== collapseUi.head || hoverUi.status !== "clean" ||
+    hoverRenderer.head !== collapseRenderer.head || hoverRenderer.status !== "clean" ||
+    hoverTemplate.head !== "6db9e772e37cdc47e6dba58d153016057cc93558" ||
+    hoverTemplate.parent !== "ef543f55aea710d91ec473fe52f32900fbbb655b" ||
+    hoverTemplate.status !== "dirty-pre-existing-generated-wip" ||
+    JSON.stringify(arrayValue(hoverTemplate.statusPaths, "Template WIP paths")) !== '["support.json"]') {
+    throw new Error("Socket hover checkpoint must preserve exact Node and Template owners")
+  }
+  const hoverDefect = objectRecord(data.nodeR5SocketHoverCheckpoint.reportedDefect, "Socket hover defect")
+  if (hoverDefect.ownerVerdict !== "rejected-full-row-hover-zavx0z" ||
+    hoverDefect.finding !==
+      "hovering a Parameter Socket lights the full row instead of only the endpoint glyph" ||
+    hoverDefect.affectedCheckpoint !== collapseIconCheckpointPath) {
+    throw new Error("Socket hover checkpoint must preserve the user-reported defect")
+  }
+  const hoverCorrection = objectRecord(data.nodeR5SocketHoverCheckpoint.correction, "Socket hover correction")
+  if (hoverCorrection.templateCapabilityCommit !== hoverTemplate.head ||
+    hoverCorrection.nodeCommit !== hoverNode.head ||
+    hoverCorrection.selectorProfile !== "one optional descendant static attribute compound" ||
+    hoverCorrection.hoverSelector !== "&:hover [data-socket-glyph]" ||
+    hoverCorrection.focusSelector !== "&:focus [data-socket-glyph]" ||
+    hoverCorrection.singleButtonHitOwner !== true || hoverCorrection.fullRowShadowRemoved !== true ||
+    hoverCorrection.dotShapeShadowPreserved !== true ||
+    hoverCorrection.javascriptHoverStateAdded !== false ||
+    hoverCorrection.rendererWorkaroundAdded !== false) {
+    throw new Error("Socket hover correction must remain CSS-owned and glyph-scoped")
+  }
+  const hoverTechnical = objectRecord(data.nodeR5SocketHoverCheckpoint.technicalR5, "Socket hover R5")
+  const hoverTemplateChecks = objectRecord(hoverTechnical.template, "Socket hover Template checks")
+  const hoverNodeChecks = objectRecord(hoverTechnical.nodeFunctional, "Socket hover Node checks")
+  const hoverIntegration = objectRecord(hoverTechnical.hoverIntegration, "Socket hover integration")
+  const hoverBundle = objectRecord(hoverTechnical.bundle, "Socket hover bundle")
+  const hoverExactBundle = objectRecord(hoverBundle.exactNodeEditor, "Socket hover exact bundle")
+  if (hoverTechnical.status !== "verified" || hoverTemplateChecks.typecheck !== true ||
+    hoverTemplateChecks.fullPass !== 749 || hoverTemplateChecks.fullFail !== 0 ||
+    hoverNodeChecks.pass !== 221 || hoverNodeChecks.fail !== 0 || hoverNodeChecks.todo !== 0 ||
+    hoverNodeChecks.assertions !== 9530 || hoverIntegration.rowShadow !== false ||
+    hoverIntegration.glyphShadowKind !== "rect" || hoverIntegration.glyphShadowColor !== "#9e9e9e" ||
+    hoverExactBundle.bytes !== 279084 || hoverExactBundle.gzipBytes !== 70434 ||
+    hoverExactBundle.sha256 !== "61272bd378c943afee0d273c32c76b26d847674e9658e6bd71b37165ccd02845" ||
+    hoverBundle.pass !== true || hoverTechnical.inheritedPerformanceEvidence !== collapseIconCheckpointPath) {
+    throw new Error("Socket hover technical evidence does not match executable acceptance")
+  }
+  const hoverStory = objectRecord(data.nodeR5SocketHoverCheckpoint.storybook, "Socket hover Storybook")
+  const hoverSemantic = objectRecord(hoverStory.semanticHover, "Socket hover semantic evidence")
+  const hoverRowCapture = objectRecord(hoverStory.rowCapture, "Socket hover row capture")
+  const hoverComparisonCapture = objectRecord(hoverStory.comparisonCapture, "Socket hover comparison capture")
+  if (hoverStory.activeRevision !== "408f5bc96201dd5885b74fdc" ||
+    hoverStory.ready !== true || hoverStory.presented !== true ||
+    arrayValue(hoverStory.diagnostics, "Socket hover diagnostics").length !== 0 ||
+    arrayValue(hoverStory.consoleErrors, "Socket hover console errors").length !== 0 ||
+    arrayValue(hoverSemantic.buttonDisplay, "Socket hover button display").length !== 0 ||
+    JSON.stringify(arrayValue(hoverSemantic.glyphDisplay, "Socket hover glyph display")) !==
+      '["shadow","background"]' ||
+    hoverRowCapture.sha256 !== "3edac5eef8c5f389aaaacc57ea14c3c28c4d0d98b2f4ec78e6f9ba12517b85ab" ||
+    hoverComparisonCapture.sha256 !==
+      "0d8ebd3b7a442ae73d34bdbdfed72a5a153751dc1e40cf77e82c2e4c778ba27f") {
+    throw new Error("Socket hover Storybook evidence does not match the semantic captures")
+  }
+  const hoverM0 = objectRecord(data.nodeR5SocketHoverCheckpoint.m0Validation, "Socket hover M0")
+  const hoverFoundation = objectRecord(hoverM0.foundation, "Socket hover foundation checks")
+  const hoverSource = objectRecord(hoverM0.sourceEvidence, "Socket hover source evidence")
+  if (hoverFoundation.command !== "bun run check" || hoverFoundation.pass !== true ||
+    hoverFoundation.tests !== 13 || hoverSource.command !== "bun run evidence:check" ||
+    hoverSource.pass !== false || hoverSource.blocker !==
+      "/Users/zavx0z/repozitarium/template/support.json has pre-existing M status" ||
+    hoverSource.templateModifiedByThisSlice !== true || hoverSource.templateCommitRecorded !== true ||
+    hoverSource.validatorWeakened !== false) {
+    throw new Error("Socket hover M0 validation must record the exact Template WIP blocker")
+  }
+  const hoverVisual = objectRecord(data.nodeR5SocketHoverCheckpoint.visualAcceptance, "Socket hover visual")
+  if (hoverVisual.status !== "candidate-owner-verdict" ||
+    hoverVisual.socketHoverDefectClosed !== true || hoverVisual.mechanicalInteractionVerified !== true ||
+    hoverVisual.ownerVerdict !== "pending-zavx0z" || hoverVisual.parityClaimed !== false) {
+    throw new Error("Socket hover correction must remain candidate-only until the owner verdict")
+  }
+
   const decisionGates = objectRecord(
     data.nodeR5OwnerDecisionsCheckpoint.effectiveGates,
     "owner decision Node gates",
@@ -2230,6 +2447,14 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5CheckboxPathCheckpoint.effectiveGates,
     "Checkbox Path effective Node gates",
   )
+  const collapseGates = objectRecord(
+    data.nodeR5CollapseIconCheckpoint.effectiveGates,
+    "collapse icon effective Node gates",
+  )
+  const hoverGates = objectRecord(
+    data.nodeR5SocketHoverCheckpoint.effectiveGates,
+    "Socket hover effective Node gates",
+  )
   for (const id of ["R1", "R2", "R3", "R4"]) {
     if (decisionGates[id] !== "verified") {
       throw new Error(`Node ${id} must remain verified at the owner decision checkpoint`)
@@ -2237,7 +2462,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     if (compatibilityGates[id] !== "verified" || finalCandidateGates[id] !== "verified" ||
       visualClosureGates[id] !== "verified" ||
       gates[id] !== "verified" || componentGates[id] !== "verified" ||
-      checkboxGates[id] !== "verified") {
+      checkboxGates[id] !== "verified" || collapseGates[id] !== "verified" ||
+      hoverGates[id] !== "verified") {
       throw new Error(`Node ${id} must be verified at every current checkpoint`)
     }
   }
@@ -2246,12 +2472,14 @@ function validateMigrationCoverage(data: FoundationData): void {
     finalCandidateGates.R5 !== "platform-gap-and-owner-verdict" ||
     visualClosureGates.R5 !== "owner-verdict-pending" ||
     gates.R5 !== "owner-verdict-pending" || componentGates.R5 !== "owner-verdict-pending" ||
-    checkboxGates.R5 !== "owner-verdict-pending") {
+    checkboxGates.R5 !== "owner-verdict-pending" || collapseGates.R5 !== "owner-verdict-pending" ||
+    hoverGates.R5 !== "owner-verdict-pending") {
     throw new Error("Node R5 must preserve the correction chain and leave only the owner verdict pending")
   }
   if (decisionGates.R6 !== "blocked" || compatibilityGates.R6 !== "blocked" ||
     finalCandidateGates.R6 !== "blocked" || visualClosureGates.R6 !== "blocked" ||
-    gates.R6 !== "blocked" || componentGates.R6 !== "blocked" || checkboxGates.R6 !== "blocked") {
+    gates.R6 !== "blocked" || componentGates.R6 !== "blocked" || checkboxGates.R6 !== "blocked" ||
+    collapseGates.R6 !== "blocked" || hoverGates.R6 !== "blocked") {
     throw new Error("Node R6 must remain blocked")
   }
 }
