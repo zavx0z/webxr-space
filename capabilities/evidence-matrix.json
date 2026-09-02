@@ -96,15 +96,16 @@
     {
       "id": "nodes.component-production-path",
       "classification": "implemented-source-fact",
-      "status": "r1-r3-verified-r4-r6-blocked",
+      "status": "r1-r4-verified-r5-partial-r6-blocked",
       "owner": "source:node",
-      "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link are now the one public component production path at becff8f34a7152791df8e833a918dfe0142681bb.",
+      "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link form one public component path; 9cccb58 requires exact owner Layout geometry.",
       "evidence": [
         "migration/node-cutover.json",
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r4-r5-checkpoint.json"
+        "evidence/node-r4-r5-checkpoint.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
       ],
-      "verification": "The one-path component cutover is real, but R4 is downgraded by committed Node-local layout fallback; import remains blocked by R4-R6."
+      "verification": "R1-R4 verified; import remains blocked by partial R5 and blocked R6."
     },
     {
       "id": "renderer.features.input-value-fast-path",
@@ -113,6 +114,7 @@
       "owner": "@zavx0z/renderer",
       "statement": "One text-like input value update replaces only its existing immutable display item while preserving layout and hit records.",
       "implementationCommit": "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+      "supportingRendererHead": "5d5a06c14c2f8216cce6f5930695154f57524ea4",
       "acceptedMetrics": {
         "genericInputs": 10000,
         "freshProcessP99MsMin": 0.29,
@@ -129,7 +131,10 @@
         "does not prove general dirty-subtree layout, transform or topology performance",
         "owner support evidence and lastVerified still cite ancestor 3c91038c3f14ccc44616209fd82b1e59b7369408 rather than implementation commit 1cd3243"
       ],
-      "evidence": ["evidence/node-r4-r5-checkpoint.json"]
+      "evidence": [
+        "evidence/node-r4-r5-checkpoint.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
+      ]
     },
     {
       "id": "renderer.retained-vector-path",
@@ -194,34 +199,67 @@
       "owner": "source:node using @zavx0z/renderer",
       "statement": "The accepted 1k Node value-update subgate is closed by Renderer 1cd3243 while other R5 operation families remain open.",
       "metrics": {
-        "nodes": 1000,
-        "beforeP95MsApprox": 504,
-        "beforeP99MsApprox": 673,
-        "afterP95Ms": 2.02,
-        "afterP99Ms": 2.5,
-        "historical10kP95Ms": 1401,
-        "historical10kP99Ms": 1670
+        "accepted1kP95Ms": 0.861,
+        "accepted1kP99Ms": 0.984,
+        "independent1kP95Ms": 1.416,
+        "independent1kP99Ms": 2.269,
+        "accepted10kP95Ms": 1.752,
+        "accepted10kP99Ms": 1.789
       },
       "limitations": [
-        "current metadata audit could not rerun the Node benchmark because Template rejected a CSS interpolation before measurement",
         "does not close transform or topology performance"
       ],
       "evidence": [
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r4-r5-checkpoint.json"
+        "evidence/node-r4-r5-checkpoint.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
       ]
     },
     {
+      "id": "nodes.transform-performance",
+      "classification": "partial-performance-evidence",
+      "status": "1k-verified-10k-p99-failed",
+      "owner": "source:node using Renderer 5d5a06c",
+      "statement": "Transform input-to-present passes at 1k but narrowly misses the 16.667ms p99 gate at 10k exact Layout.",
+      "metrics": {
+        "accepted1kP95Ms": 6.462,
+        "accepted1kP99Ms": 9.985,
+        "independent1kP95Ms": 7.995,
+        "independent1kP99Ms": 11.029,
+        "accepted10kP95Ms": 12.738,
+        "accepted10kP99Ms": 18.687,
+        "frameBudgetMs": 16.667
+      },
+      "evidence": ["evidence/node-r4-closure-r5-checkpoint.json"]
+    },
+    {
+      "id": "nodes.topology-performance",
+      "classification": "measured-failure",
+      "status": "failed-r5",
+      "owner": "source:node with component/Renderer traversal boundary",
+      "statement": "Additive topology materializes correctly but remains far outside the frame budget at 1k and 10k.",
+      "metrics": {
+        "accepted1kInputToPresentMs": 638.194,
+        "independent1kInputToPresentMs": 649.378,
+        "accepted10kInputToPresentMs": 5397.431,
+        "frameBudgetMs": 16.667
+      },
+      "evidence": ["evidence/node-r4-closure-r5-checkpoint.json"]
+    },
+    {
       "id": "contradiction.consumer.node-local-layout",
-      "classification": "confirmed-committed-contradiction",
-      "status": "open-r4",
+      "classification": "closed-committed-contradiction",
+      "status": "closed-r4",
       "owner": "@nodes/ui with @nodes/layout contract boundary",
-      "statement": "Committed @nodes/ui invents Frame/Node rectangles, Socket centers and Link routes whenever exact LayoutResult geometry is absent.",
-      "source": "node/packages/ui/geometry.ts@becff8f34a7152791df8e833a918dfe0142681bb",
+      "statement": "@nodes/ui now requires completed exact LayoutResult and fails before materialization for missing or contradictory owner geometry.",
+      "source": "node/packages/ui/geometry.ts@9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
       "expected": "aggregate NodeTree requires/consumes exact @nodes/layout geometry or an explicitly authored component geometry contract",
-      "actual": "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween create consumer-local manual layout",
-      "evidence": ["evidence/node-r4-r5-checkpoint.json"],
-      "effect": "R4 is partial/blocked"
+      "actual": "exact @nodes/layout Node/Port/Edge geometry is required; fallback placement, Socket centers and routes are removed",
+      "evidence": [
+        "evidence/node-r4-r5-checkpoint.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
+      ],
+      "effect": "R4 verified"
     },
     {
       "id": "nodes.component-disposal",
@@ -252,13 +290,16 @@
       "owner": "source:node and external-storybook",
       "statement": "All 159 leaves resolve through the component path; current revision is ready/presented with console zero, non-black canvas and equal-scale capture.",
       "metrics": {
-        "revision": "ff499f41ebd6f3f89200f013",
+        "revision": "fa77823706659b5053990d77",
         "leafRoutes": 159,
         "overviewRoutes": 66,
-        "canvasSha256": "263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd",
+        "canvasSha256": "290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca",
         "equalScaleSha256": "2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650"
       },
-      "evidence": ["evidence/node-cutover-snapshot.json"],
+      "evidence": [
+        "evidence/node-cutover-snapshot.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
+      ],
       "remainingGate": "explicit visual owner verdict by zavx0z"
     },
     {
@@ -266,10 +307,11 @@
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "The clean component cutover commit is ahead 2, not remote-backed, and the source owner remains writable without freeze authorization.",
+      "statement": "Node 9cccb58 is ahead 3 and Renderer 5d5a06c is ahead 5; neither is remote-backed and both source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
-        "evidence/node-r4-r5-checkpoint.json"
+        "evidence/node-r4-r5-checkpoint.json",
+        "evidence/node-r4-closure-r5-checkpoint.json"
       ]
     },
     {

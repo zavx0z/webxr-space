@@ -25,18 +25,34 @@ const provenance = objectRecord(data.nodeCutoverSnapshot.provenance, "Node cutov
 expectEqual("Node checkpoint previous HEAD", provenance.previousHead, historicalNode.head)
 
 const repositories = new Map(historicalRepositories)
-repositories.set("node", checkpointRepository)
-const latestRepositories = objectRecord(
+const previousRepositories = objectRecord(
   data.nodeR4R5Checkpoint.repositories,
   "R4/R5 checkpoint repositories",
 )
-const rendererCheckpoint = objectRecord(latestRepositories.renderer, "R4/R5 Renderer repository")
+const previousRendererCheckpoint = objectRecord(
+  previousRepositories.renderer,
+  "R4/R5 Renderer repository",
+)
+const latestRepositories = objectRecord(
+  data.nodeR4ClosureR5Checkpoint.repositories,
+  "latest R4/R5 checkpoint repositories",
+)
+const nodeCheckpoint = objectRecord(latestRepositories.node, "latest Node repository")
+const rendererCheckpoint = objectRecord(latestRepositories.renderer, "latest Renderer repository")
+repositories.set("node", nodeCheckpoint)
 repositories.set("renderer", rendererCheckpoint)
 
 for (const [id, record] of repositories) {
   const path = stringValue(record.path, `source repository ${id} path`)
   if (record.status === "clean-before-foundation-edits") {
     git(path, ["cat-file", "-e", `${stringValue(record.head, `${id} historical HEAD`)}^{commit}`])
+  } else if (record.liveHeadPolicy === "checkpoint-must-remain-ancestor") {
+    const checkpoint = stringValue(record.head, `${id} checkpoint HEAD`)
+    if (gitExitCode(path, ["merge-base", "--is-ancestor", checkpoint, "HEAD"]) !== 0) {
+      throw new Error(`${id} checkpoint ${checkpoint} is no longer an ancestor of live HEAD`)
+    }
+    const branch = gitOptional(path, ["symbolic-ref", "--short", "-q", "HEAD"])
+    expectEqual(`${id} branch`, branch.length === 0 ? null : branch, record.branch)
   } else {
     expectEqual(`${id} HEAD`, git(path, ["rev-parse", "HEAD"]), record.head)
     const branch = gitOptional(path, ["symbolic-ref", "--short", "-q", "HEAD"])
@@ -45,7 +61,8 @@ for (const [id, record] of repositories) {
 
   expectEqual(`${id} origin`, git(path, ["remote", "get-url", "origin"]), record.remote)
   expectEqual(`${id} origin/main`, git(path, ["rev-parse", "origin/main"]), record.originMain)
-  if (record.status !== "clean-before-foundation-edits") {
+  if (record.status !== "clean-before-foundation-edits" &&
+    record.liveHeadPolicy !== "checkpoint-must-remain-ancestor") {
     const counts = git(path, ["rev-list", "--left-right", "--count", "origin/main...HEAD"])
       .split(/\s+/u)
       .map(Number)
@@ -128,8 +145,8 @@ if (!Array.isArray(rendererCheckpointHistory)) {
 for (const value of rendererCheckpointHistory) {
   const entry = objectRecord(value, "R4/R5 Renderer history entry")
   const packageName = stringValue(entry.package, "R4/R5 Renderer package")
-  const path = stringValue(rendererCheckpoint.path, `${packageName} checkpoint path`)
-  const revision = stringValue(rendererCheckpoint.head, `${packageName} checkpoint revision`)
+  const path = stringValue(previousRendererCheckpoint.path, `${packageName} checkpoint path`)
+  const revision = stringValue(previousRendererCheckpoint.head, `${packageName} checkpoint revision`)
   const prefix = stringValue(entry.prefix, `${packageName} checkpoint prefix`)
   const count = Number(git(path, ["rev-list", "--count", revision, "--", prefix]))
   expectEqual(`${packageName} R4/R5 history count`, count, entry.commitCount)
@@ -139,12 +156,44 @@ for (const value of rendererCheckpointHistory) {
   expectEqual(`${packageName} R4/R5 last history commit`, last, entry.lastCommit)
 }
 
+const latestNodeHistory = data.nodeR4ClosureR5Checkpoint.nodePackageHistory
+if (!Array.isArray(latestNodeHistory)) throw new Error("Latest Node history must be an array")
+for (const value of latestNodeHistory) {
+  const entry = objectRecord(value, "latest Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "latest Node")
+}
+
+const latestRendererHistory = data.nodeR4ClosureR5Checkpoint.rendererPackageHistory
+if (!Array.isArray(latestRendererHistory)) throw new Error("Latest Renderer history must be an array")
+for (const value of latestRendererHistory) {
+  const entry = objectRecord(value, "latest Renderer history entry")
+  validateCheckpointHistoryEntry(entry, rendererCheckpoint, "latest Renderer")
+}
+
 console.log(
   `source evidence: ${repositories.size} live repositories, ` +
   `${historyValues.length} historical package histories, ` +
   `${checkpointHistory.length} Node checkpoint histories, ` +
-  `${rendererCheckpointHistory.length} Renderer checkpoint histories`,
+  `${rendererCheckpointHistory.length} Renderer checkpoint histories, ` +
+  `${latestNodeHistory.length + latestRendererHistory.length} latest checkpoint histories`,
 )
+
+function validateCheckpointHistoryEntry(
+  entry: Readonly<Record<string, unknown>>,
+  repository: Readonly<Record<string, unknown>>,
+  label: string,
+): void {
+  const packageName = stringValue(entry.package, `${label} package`)
+  const path = stringValue(repository.path, `${packageName} ${label} path`)
+  const revision = stringValue(repository.head, `${packageName} ${label} revision`)
+  const prefix = stringValue(entry.prefix, `${packageName} ${label} prefix`)
+  const count = Number(git(path, ["rev-list", "--count", revision, "--", prefix]))
+  expectEqual(`${packageName} ${label} history count`, count, entry.commitCount)
+  const first = git(path, ["log", "--reverse", "--format=%H", revision, "--", prefix]).split("\n")[0]
+  const last = git(path, ["log", "-1", "--format=%H", revision, "--", prefix])
+  expectEqual(`${packageName} ${label} first history commit`, first, entry.firstCommit)
+  expectEqual(`${packageName} ${label} last history commit`, last, entry.lastCommit)
+}
 
 function git(path: string, args: readonly string[]): string {
   const result = Bun.spawnSync(["git", ...args], {cwd: path, stdout: "pipe", stderr: "pipe"})

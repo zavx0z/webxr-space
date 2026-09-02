@@ -11,6 +11,11 @@
       "path": "evidence/node-r4-r5-checkpoint.json",
       "repository": "renderer",
       "reason": "preserve original Renderer prefix-history counts while recording 1cd3243 separately"
+    },
+    {
+      "path": "evidence/node-r4-closure-r5-checkpoint.json",
+      "repository": "renderer,node",
+      "reason": "preserve prior prefix-history checkpoints while recording 5d5a06c and 9cccb58 separately"
     }
   ],
   "entries": [

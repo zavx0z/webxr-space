@@ -15,6 +15,7 @@ export const dataFiles = Object.freeze({
   historySnapshot: "evidence/history-snapshot.json",
   nodeCutoverSnapshot: "evidence/node-cutover-snapshot.json",
   nodeR4R5Checkpoint: "evidence/node-r4-r5-checkpoint.json",
+  nodeR4ClosureR5Checkpoint: "evidence/node-r4-closure-r5-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -127,6 +128,7 @@ export type FoundationData = Readonly<{
   historySnapshot: Readonly<Record<string, unknown>>
   nodeCutoverSnapshot: Readonly<Record<string, unknown>>
   nodeR4R5Checkpoint: Readonly<Record<string, unknown>>
+  nodeR4ClosureR5Checkpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -149,6 +151,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     historySnapshot: byPath.get(dataFiles.historySnapshot) as Readonly<Record<string, unknown>>,
     nodeCutoverSnapshot: byPath.get(dataFiles.nodeCutoverSnapshot) as Readonly<Record<string, unknown>>,
     nodeR4R5Checkpoint: byPath.get(dataFiles.nodeR4R5Checkpoint) as Readonly<Record<string, unknown>>,
+    nodeR4ClosureR5Checkpoint: byPath.get(
+      dataFiles.nodeR4ClosureR5Checkpoint,
+    ) as Readonly<Record<string, unknown>>,
   })
 }
 
@@ -601,7 +606,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   if (data.migration.schemaVersion !== 1 || data.historyImport.schemaVersion !== 1 ||
     data.nodeCutover.schemaVersion !== 1 || data.sourceSnapshot.schemaVersion !== 1 ||
     data.historySnapshot.schemaVersion !== 1 || data.nodeCutoverSnapshot.schemaVersion !== 1 ||
-    data.nodeR4R5Checkpoint.schemaVersion !== 1) {
+    data.nodeR4R5Checkpoint.schemaVersion !== 1 ||
+    data.nodeR4ClosureR5Checkpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -646,28 +652,43 @@ function validateMigrationCoverage(data: FoundationData): void {
     }
   }
 
-  const previousCheckpointPath = "evidence/node-cutover-snapshot.json"
-  const checkpointPath = "evidence/node-r4-r5-checkpoint.json"
-  const checkpointRepository = objectRecord(
+  const componentCheckpointPath = "evidence/node-cutover-snapshot.json"
+  const r4R5CheckpointPath = "evidence/node-r4-r5-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r4-closure-r5-checkpoint.json"
+  const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
   )
-  if (data.nodeCutover.observedHead !== checkpointRepository.head ||
-    data.nodeCutover.componentCutoverCommit !== checkpointRepository.head ||
-    data.nodeCutover.previousEvidenceCheckpoint !== previousCheckpointPath ||
-    data.nodeCutover.evidenceCheckpoint !== checkpointPath) {
+  const latestRepositories = objectRecord(
+    data.nodeR4ClosureR5Checkpoint.repositories,
+    "latest R4/R5 checkpoint repositories",
+  )
+  const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
+  const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
+  if (data.nodeCutover.observedHead !== latestNode.head ||
+    data.nodeCutover.componentCutoverCommit !== componentRepository.head ||
+    data.nodeCutover.layoutContractCommit !== latestNode.head ||
+    data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== r4R5CheckpointPath ||
+    data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
   const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
   const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
-  if (nodeOwner === undefined || nodeOwner.revision !== checkpointRepository.head ||
+  if (nodeOwner === undefined || nodeOwner.revision !== latestNode.head ||
     nodeOwner.writable !== true) {
     throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
   }
-  validateFollowUpSnapshot(data.sourceSnapshot, previousCheckpointPath, "source snapshot")
-  validateFollowUpSnapshot(data.historySnapshot, previousCheckpointPath, "history snapshot")
-  validateFollowUpSnapshot(data.sourceSnapshot, checkpointPath, "source snapshot")
-  validateFollowUpSnapshot(data.historySnapshot, checkpointPath, "history snapshot")
+  const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
+  const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
+  if (rendererOwner === undefined || rendererOwner.revision !== latestRenderer.head ||
+    rendererOwner.writable !== true) {
+    throw new Error("Renderer ownership ledger does not match the latest checkpoint")
+  }
+  for (const path of [componentCheckpointPath, r4R5CheckpointPath, latestCheckpointPath]) {
+    validateFollowUpSnapshot(data.sourceSnapshot, path, "source snapshot")
+    validateFollowUpSnapshot(data.historySnapshot, path, "history snapshot")
+  }
 
   const checkpointHistory = arrayValue(
     data.nodeCutoverSnapshot.packageHistory,
@@ -685,18 +706,12 @@ function validateMigrationCoverage(data: FoundationData): void {
     }
   }
 
-  const latestRepositories = objectRecord(
+  const previousRepositories = objectRecord(
     data.nodeR4R5Checkpoint.repositories,
     "R4/R5 checkpoint repositories",
   )
-  const latestRenderer = objectRecord(latestRepositories.renderer, "R4/R5 Renderer repository")
-  const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")
-  const rendererOwner = rendererGroup?.owners.find(({id}) => id === "source:renderer")
-  if (rendererOwner === undefined || rendererOwner.revision !== latestRenderer.head ||
-    rendererOwner.writable !== true) {
-    throw new Error("Renderer ownership ledger does not match the latest checkpoint")
-  }
-  const rendererHistory = arrayValue(
+  const previousRenderer = objectRecord(previousRepositories.renderer, "R4/R5 Renderer repository")
+  const previousRendererHistory = arrayValue(
     data.nodeR4R5Checkpoint.rendererPackageHistory,
     "R4/R5 Renderer package history",
   ).map((value) => objectRecord(value, "R4/R5 Renderer history entry"))
@@ -705,10 +720,10 @@ function validateMigrationCoverage(data: FoundationData): void {
   )
   assertExactStringSet(
     "R4/R5 Renderer history coverage",
-    rendererHistory.map(({package: packageName}) => packageName),
+    previousRendererHistory.map(({package: packageName}) => packageName),
     rendererInventory.map(({packageName}) => packageName),
   )
-  for (const entry of rendererHistory) {
+  for (const entry of previousRendererHistory) {
     const plan = importsByPackage.get(entry.package)
     if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
       throw new Error(`Renderer checkpoint history does not match import plan: ${String(entry.package)}`)
@@ -719,7 +734,7 @@ function validateMigrationCoverage(data: FoundationData): void {
     "Renderer input-value checkpoint",
   )
   if (rendererCapability.capabilityId !== "renderer.features.input-value-fast-path" ||
-    rendererCapability.implementationCommit !== latestRenderer.head) {
+    rendererCapability.implementationCommit !== previousRenderer.head) {
     throw new Error("Renderer input-value capability does not match the latest checkpoint")
   }
   const contradiction = objectRecord(
@@ -727,17 +742,52 @@ function validateMigrationCoverage(data: FoundationData): void {
     "Node layout contradiction",
   )
   if (contradiction.id !== "contradiction.consumer.node-local-layout" ||
-    contradiction.sourceRevision !== checkpointRepository.head || contradiction.status !== "open") {
+    contradiction.sourceRevision !== componentRepository.head || contradiction.status !== "open") {
     throw new Error("Node layout contradiction does not match the committed source checkpoint")
   }
 
-  const gates = objectRecord(data.nodeR4R5Checkpoint.effectiveGates, "effective Node gates")
-  for (const id of ["R1", "R2", "R3"]) {
+  const latestNodeHistory = arrayValue(
+    data.nodeR4ClosureR5Checkpoint.nodePackageHistory,
+    "latest Node package history",
+  ).map((value) => objectRecord(value, "latest Node history entry"))
+  assertExactStringSet(
+    "latest Node history coverage",
+    latestNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of latestNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Latest Node history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+  const latestRendererHistory = arrayValue(
+    data.nodeR4ClosureR5Checkpoint.rendererPackageHistory,
+    "latest Renderer package history",
+  ).map((value) => objectRecord(value, "latest Renderer history entry"))
+  assertExactStringSet(
+    "latest Renderer history coverage",
+    latestRendererHistory.map(({package: packageName}) => packageName),
+    rendererInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of latestRendererHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
+      throw new Error(`Latest Renderer history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+  const r4Closure = objectRecord(data.nodeR4ClosureR5Checkpoint.r4Closure, "R4 closure")
+  if (r4Closure.status !== "verified" || r4Closure.commit !== latestNode.head ||
+    r4Closure.closedContradiction !== "contradiction.consumer.node-local-layout") {
+    throw new Error("R4 closure does not match the latest Node checkpoint")
+  }
+
+  const gates = objectRecord(data.nodeR4ClosureR5Checkpoint.effectiveGates, "effective Node gates")
+  for (const id of ["R1", "R2", "R3", "R4"]) {
     if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
   }
-  for (const id of ["R4", "R5", "R6"]) {
-    if (gates[id] !== "blocked") throw new Error(`Node ${id} must remain blocked at the checkpoint`)
-  }
+  if (gates.R5 !== "partial-blocked") throw new Error("Node R5 must remain partial/blocked")
+  if (gates.R6 !== "blocked") throw new Error("Node R6 must remain blocked")
 }
 
 function validateFollowUpSnapshot(

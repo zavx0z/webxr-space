@@ -33,6 +33,7 @@ The authoritative files are:
 - `evidence/history-snapshot.json`
 - `evidence/node-cutover-snapshot.json`
 - `evidence/node-r4-r5-checkpoint.json`
+- `evidence/node-r4-closure-r5-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -69,16 +70,14 @@ of the recorded local `origin/main`. Importing now would create two writable
 owners, so `migration/history-import.json` records the exact package prefixes
 and blocker instead of copying files.
 
-Node completed its one-path component cutover at `becff8f`: R1-R3 are verified.
-R4 is blocked because committed `packages/ui/geometry.ts` still invents layout
-when exact `@nodes/layout` geometry is absent. Renderer `1cd3243` closes the
-accepted value-update R5 subgate, but transform/topology, Link selection,
-dense-memory/disposal, bundle and final visual-owner gates remain open. R6 is
-blocked because the Node commit is not remote-backed and the canonical source
-has not been frozen/read-only.
+Node completed its one-path component cutover and exact Layout contract at
+`9cccb58`: R1-R4 are verified. Renderer `1cd3243`/`5d5a06c` closes the accepted
+value-update and 1k transform/stable R5 subgates; 10k transform p99, topology,
+Link selection, dense-memory/disposal, bundle and final visual-owner gates remain
+open. R6 is blocked because the exact Node/Renderer commits are not remote-backed
+and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-follow-ups are `evidence/node-cutover-snapshot.json` and
-`evidence/node-r4-r5-checkpoint.json`.
+follow-ups end at `evidence/node-r4-closure-r5-checkpoint.json`.
 
 ## Transition superproject
 

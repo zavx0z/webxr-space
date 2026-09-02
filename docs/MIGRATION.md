@@ -19,9 +19,9 @@ The operation is blocked before step 3 today. Commands are intentionally not
 executed speculatively because an import would create a second writable owner.
 
 Node follows `migration/node-cutover.json`. The clean component rewrite is
-committed in the canonical checkout and R1-R3 are verified. R4 is blocked by
-committed consumer-local layout fallback. Renderer `1cd3243` verifies only the
-value-update R5 subgate; the remaining R5 gates and R6 remain blocked. No Node
-package history is imported and `source:node` remains the only writable
-canonical owner. The former dual production path was never imported as an
-intermediate package.
+committed in the canonical checkout and R1-R4 are verified. Exact owner
+`LayoutResult` is mandatory at `9cccb58`; consumer-local fallback is gone.
+Renderer `1cd3243`/`5d5a06c` closes only part of R5. Remaining R5 gates and R6
+stay blocked. No Node package history is imported and `source:node` remains the
+only writable canonical owner. The former dual production path was never
+imported as an intermediate package.

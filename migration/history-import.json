@@ -18,11 +18,11 @@
     {"package": "@zavx0z/dom-devtools", "sourceRepository": "renderer", "sourcePrefix": "packages/devtools", "destination": "packages/dom-devtools", "status": "blocked", "gate": "renderer-cutover"},
     {"package": "@zavx0z/template", "sourceRepository": "template", "sourcePrefix": ".", "destination": "packages/template", "historyMode": "whole-repository", "status": "blocked", "gate": "template-cutover"},
     {"package": "@ui/components", "sourceRepository": "ui", "sourcePrefix": "packages/components", "destination": "packages/ui-components", "status": "blocked", "gate": "ui-cutover"},
-    {"package": "@nodes/core", "sourceRepository": "node", "sourcePrefix": "packages/core", "destination": "packages/nodes-core", "status": "blocked-by-node-r4-r5-r6", "gate": "node-r6"},
-    {"package": "@nodes/editor", "sourceRepository": "node", "sourcePrefix": "packages/editor", "destination": "packages/nodes-editor", "status": "blocked-by-node-r4-r5-r6", "gate": "node-r6"},
-    {"package": "@nodes/layout", "sourceRepository": "node", "sourcePrefix": "packages/layout", "destination": "packages/nodes-layout", "status": "blocked-by-node-r4-r5-r6", "gate": "node-r6"},
-    {"package": "@nodes/worker", "sourceRepository": "node", "sourcePrefix": "packages/worker", "destination": "packages/nodes-worker", "status": "blocked-by-node-r4-r5-r6", "gate": "node-r6"},
-    {"package": "@nodes/ui", "sourceRepository": "node", "sourcePrefix": "packages/ui", "destination": "packages/nodes-ui", "status": "blocked-by-node-r4-r5-r6", "gate": "node-r6"}
+    {"package": "@nodes/core", "sourceRepository": "node", "sourcePrefix": "packages/core", "destination": "packages/nodes-core", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
+    {"package": "@nodes/editor", "sourceRepository": "node", "sourcePrefix": "packages/editor", "destination": "packages/nodes-editor", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
+    {"package": "@nodes/layout", "sourceRepository": "node", "sourcePrefix": "packages/layout", "destination": "packages/nodes-layout", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
+    {"package": "@nodes/worker", "sourceRepository": "node", "sourcePrefix": "packages/worker", "destination": "packages/nodes-worker", "status": "blocked-by-node-r5-r6", "gate": "node-r6"},
+    {"package": "@nodes/ui", "sourceRepository": "node", "sourcePrefix": "packages/ui", "destination": "packages/nodes-ui", "status": "blocked-by-node-r5-r6", "gate": "node-r6"}
   ],
-  "blocker": "Executing any import now would create a second writable canonical owner. Node R4 and R5 are not accepted, becff8f34a7152791df8e833a918dfe0142681bb is not remote-backed, and the target worktree has no authorization to freeze or make the source repository read-only."
+  "blocker": "Executing any import now would create a second writable canonical owner. Node R5 is only partial, 9cccb58ef91cf3ed386377093dbc8e45e061bfb9 and Renderer 5d5a06c14c2f8216cce6f5930695154f57524ea4 are not remote-backed, and the target worktree has no authorization to freeze or make the source repositories read-only."
 }

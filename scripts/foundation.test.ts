@@ -45,34 +45,41 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves prior snapshots and overlays the current R4/R5 checkpoint", async () => {
+  test("preserves prior snapshots and overlays the R4 closure checkpoint", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
     const checkpointRepository = data.nodeCutoverSnapshot.repository as {head: string}
-    const priorGates = data.nodeCutoverSnapshot.gates as Record<string, string>
-    const gates = data.nodeR4R5Checkpoint.effectiveGates as Record<string, string>
+    const contradictionGates = data.nodeR4R5Checkpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR4ClosureR5Checkpoint.effectiveGates as Record<string, string>
+    const latestRepositories = data.nodeR4ClosureR5Checkpoint.repositories as {
+      node: {head: string}
+      renderer: {head: string}
+    }
     const nodeGroup = data.ownership.groups.find(({id}) => id === "node")!
     const rendererGroup = data.ownership.groups.find(({id}) => id === "renderer")!
 
     expect(historicalNode.head).toBe("209ba2a5e905edeeb6293bdedf47ea483d011c94")
     expect(checkpointRepository.head).toBe("becff8f34a7152791df8e833a918dfe0142681bb")
+    expect(contradictionGates.R4).toBe("blocked")
+    expect(latestRepositories.node.head).toBe("9cccb58ef91cf3ed386377093dbc8e45e061bfb9")
+    expect(latestRepositories.renderer.head).toBe("5d5a06c14c2f8216cce6f5930695154f57524ea4")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "becff8f34a7152791df8e833a918dfe0142681bb",
+      "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
     )
-    expect(priorGates.R4).toBe("verified")
     expect(gates).toEqual({
       R1: "verified",
       R2: "verified",
       R3: "verified",
-      R4: "blocked",
-      R5: "blocked",
+      R4: "verified",
+      R5: "partial-blocked",
       R6: "blocked",
     })
     expect(rendererGroup.owners.find(({id}) => id === "source:renderer")?.revision).toBe(
-      "1cd32434ba8e0e5ad6422e50ec56e85cc18b645e",
+      "5d5a06c14c2f8216cce6f5930695154f57524ea4",
     )
-    expect((data.nodeR4R5Checkpoint.nodeLayoutContradiction as {id: string}).id).toBe(
+    expect((data.nodeR4ClosureR5Checkpoint.r4Closure as {closedContradiction: string})
+      .closedContradiction).toBe(
       "contradiction.consumer.node-local-layout",
     )
   })
