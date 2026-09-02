@@ -1,5 +1,6 @@
 import {createNodeTreeExternalStore} from "@nodes/core"
 import {NodeTree} from "@nodes/ui/node-tree"
+import type {LayoutResult} from "@nodes/layout/types"
 import {
   type Document,
   type Element,
@@ -18,6 +19,7 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
   const componentRoot = createRoot(host)
   componentRoot.render(<NodeTree
     store={createNodeTreeExternalStore(scenario.tree)}
+    layout={coreStoryLayout}
     label="NodeTree · read-only Core projection"
   />)
   let disposed = false
@@ -33,7 +35,7 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
           'import {NodeTree} from "@nodes/ui/node-tree"',
           'import {createRoot} from "@zavx0z/react"',
           "",
-          "createRoot(container).render(<NodeTree store={createNodeTreeExternalStore(tree)} />)",
+          "createRoot(container).render(<NodeTree store={createNodeTreeExternalStore(tree)} layout={layoutResult} />)",
         ].join("\n"),
       })
     },
@@ -45,6 +47,14 @@ export function createCoreNodeTreeStory(document: Document, route: string) {
     },
   })
 }
+
+const coreStoryLayout: LayoutResult = Object.freeze({
+  direction: "RIGHT",
+  bounds: Object.freeze({x: 40, y: 40, width: 220, height: 120}),
+  nodes: Object.freeze([Object.freeze({id: "source", x: 40, y: 40, width: 220, height: 120})]),
+  ports: Object.freeze([Object.freeze({id: "source/value-out", x: 260, y: 105, side: "EAST"})]),
+  edges: Object.freeze([]),
+})
 
 function serialize(element: Element, depth = 0): string {
   const indent = "  ".repeat(depth)
