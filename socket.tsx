@@ -179,6 +179,8 @@ export function Socket(props: SocketProps) {
         min-width: 10px;
         height: 10px;
         min-height: 10px;
+        margin-left: ${presentation === "row" && props.side === "left" ? "-5px" : "0"};
+        margin-right: ${presentation === "row" && props.side === "right" ? "-5px" : "0"};
         border: 1px solid #202020;
         border-radius: 50%;
         background: currentcolor;

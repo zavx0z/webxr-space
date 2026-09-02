@@ -110,6 +110,8 @@ Paint law:
 - controlled disclosure that hides body without replacing descendants;
 - optional preview panel/image above the Node;
 - loose right Sockets → Parameters → loose left Sockets;
+- `8px` vertical and zero horizontal body padding so endpoint centers attach to
+  the Node contour while Fields own their row inset;
 - one public `Socket` for every endpoint.
 
 Отсутствующий preview image не materialize-ит пустой `<img src="">` и не

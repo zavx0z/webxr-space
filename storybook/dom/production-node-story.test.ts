@@ -85,9 +85,11 @@ describe("public component Storybook projection", () => {
     const output = node.querySelector('[data-socket-id="noise-fac-output"]')!
     const renderer = createDocumentRenderer({document, root: story.element, viewport: {width: 500, height: 500}})
     const frame = renderer.flush()
+    const nodeBox = frame.boxByNode.get(node)!
     const glyphBox = frame.boxByNode.get(output.querySelector('[data-socket-glyph]')!)!
     const labelBox = frame.boxByNode.get(output.querySelector('[data-socket-label]')!)!
     expect(glyphBox.x).toBeGreaterThan(labelBox.x)
+    expect(Math.abs(nodeBox.x + nodeBox.width - (glyphBox.x + glyphBox.width / 2))).toBeLessThanOrEqual(1)
     const dimensions = node.querySelector('[data-parameter-id="noise-dimensions"]')!
     expect(dimensions.getAttribute("data-label-hidden")).toBe("true")
     expect(dimensions.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()

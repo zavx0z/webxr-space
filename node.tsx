@@ -286,7 +286,7 @@ export function Node(props: NodeProps) {
         width: 100%;
         min-width: 0;
         gap: 2px;
-        padding: 8px;
+        padding: 8px 0;
 
         &[hidden] {
           display: none;
