@@ -251,11 +251,12 @@ R5 gates. Exact Node-owned reproduction: `bench/node-system.ts`.
 uploads, bounded one-Link route/style writes, selected-last order and retained
 identity обязательны.
 
-Два повторных 100-sample 10k run сохраняют все invariants. Selection p99
-повторяется в диапазоне `40.271–42.786ms` и превышает frame `16.667ms`;
-transform p99 наблюдался `9.935–16.858ms`. Post-GC interaction delta
-`9.03–9.22MB` (`~903–922 B/Link`) против предыдущей принятой evidence около
-`6.8MB` (`~680 B/Link`). Поэтому R5 остаётся красным.
+Три fresh 100-sample 10k run на `be37431 + 65ec24a` сохраняют все invariants.
+Selection input-to-present p99 `7.111–8.146ms`, transform p99
+`2.179–2.592ms`, route p99 `.689–.890ms`. После исключения временных benchmark
+geometry/identity Maps из retained lifetime post-GC interaction delta составляет
+`6.527–6.596MB` (`652.7–659.6 B/Link`) — на `3.0–4.0%` ниже предыдущей принятой
+evidence `6.8MB` (`680 B/Link`). Link timing и retained-memory subgates закрыты.
 
 ### `NODES-UI-BUNDLE-001`
 
@@ -307,9 +308,9 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    input-to-present `11.409/73.212ms`, повторный 10k `88.098ms`, против
    `50/100ms`. Exact mutation ledger остаётся diagnostic `data-node-count`
    attribute плюс hidden Node child-list; старые Node/Link identities сохранены.
-4. Dense Link selection p99 повторяется `40.271–42.786ms` при зелёном p95;
-   retained invariants и one draw green. Предполагаемый owner: Renderer
-   display-order tail allocation.
+4. Dense Link selection и retained interaction memory закрыты: три 10k process
+   дали selection p99 `7.111–8.146ms` и `652.7–659.6 B/Link`, сохранив one draw,
+   exact uploads, geometry и semantic identities.
 5. 10k dense-visible component unmount не завершился за несколько минут active
    CPU и был остановлен после evidence. Предполагаемый owner:
    `@zavx0z/react`/Template component-range disposal complexity.
