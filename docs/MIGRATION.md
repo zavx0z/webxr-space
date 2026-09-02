@@ -26,7 +26,8 @@ stay blocked. Node `0b949e7` adds accepted copy-on-write append correctness, and
 Node `1f4393e` closes 1k/10k topologyCommit by retaining stable Parameter
 stores on append. Renderer `80ee4f5` and evidence `21f263f` close end-to-end
 append topology for selector-independent data-plus-hidden insertion. Other R5
-gates remain. Node `9d7aa6c` confirms 10k transform p95 while p99 stays partial.
+gates remain. Renderer `0cb7256` and evidence `65ec24a` close calibrated 10k
+transform; Link/memory/disposal/bundle/final-visual gates remain.
 No Node package history is imported and `source:node` remains the
 only writable canonical owner. The former dual production path was never
 imported as an intermediate package.

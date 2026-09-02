@@ -20,6 +20,7 @@ export const dataFiles = Object.freeze({
   nodeR5TopologyCommitCheckpoint: "evidence/node-r5-topology-commit-checkpoint.json",
   nodeR5TopologyClosureCheckpoint: "evidence/node-r5-topology-closure-checkpoint.json",
   nodeR5TransformCalibrationCheckpoint: "evidence/node-r5-transform-calibration-checkpoint.json",
+  nodeR5TransformClosureCheckpoint: "evidence/node-r5-transform-closure-checkpoint.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -137,6 +138,7 @@ export type FoundationData = Readonly<{
   nodeR5TopologyCommitCheckpoint: Readonly<Record<string, unknown>>
   nodeR5TopologyClosureCheckpoint: Readonly<Record<string, unknown>>
   nodeR5TransformCalibrationCheckpoint: Readonly<Record<string, unknown>>
+  nodeR5TransformClosureCheckpoint: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -173,6 +175,9 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     ) as Readonly<Record<string, unknown>>,
     nodeR5TransformCalibrationCheckpoint: byPath.get(
       dataFiles.nodeR5TransformCalibrationCheckpoint,
+    ) as Readonly<Record<string, unknown>>,
+    nodeR5TransformClosureCheckpoint: byPath.get(
+      dataFiles.nodeR5TransformClosureCheckpoint,
     ) as Readonly<Record<string, unknown>>,
   })
 }
@@ -631,7 +636,8 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5AppendCheckpoint.schemaVersion !== 1 ||
     data.nodeR5TopologyCommitCheckpoint.schemaVersion !== 1 ||
     data.nodeR5TopologyClosureCheckpoint.schemaVersion !== 1 ||
-    data.nodeR5TransformCalibrationCheckpoint.schemaVersion !== 1) {
+    data.nodeR5TransformCalibrationCheckpoint.schemaVersion !== 1 ||
+    data.nodeR5TransformClosureCheckpoint.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -682,7 +688,8 @@ function validateMigrationCoverage(data: FoundationData): void {
   const appendCheckpointPath = "evidence/node-r5-append-checkpoint.json"
   const topologyCommitCheckpointPath = "evidence/node-r5-topology-commit-checkpoint.json"
   const topologyClosureCheckpointPath = "evidence/node-r5-topology-closure-checkpoint.json"
-  const latestCheckpointPath = "evidence/node-r5-transform-calibration-checkpoint.json"
+  const transformCalibrationCheckpointPath = "evidence/node-r5-transform-calibration-checkpoint.json"
+  const latestCheckpointPath = "evidence/node-r5-transform-closure-checkpoint.json"
   const componentRepository = objectRecord(
     data.nodeCutoverSnapshot.repository,
     "Node cutover checkpoint repository",
@@ -717,9 +724,14 @@ function validateMigrationCoverage(data: FoundationData): void {
     topologyClosureRepositories.renderer,
     "topology closure Renderer repository",
   )
-  const latestRepositories = objectRecord(
+  const calibrationRepositories = objectRecord(
     data.nodeR5TransformCalibrationCheckpoint.repositories,
-    "latest transform calibration checkpoint repositories",
+    "transform calibration checkpoint repositories",
+  )
+  const calibrationNode = objectRecord(calibrationRepositories.node, "transform calibration Node")
+  const latestRepositories = objectRecord(
+    data.nodeR5TransformClosureCheckpoint.repositories,
+    "latest transform closure checkpoint repositories",
   )
   const latestNode = objectRecord(latestRepositories.node, "latest Node repository")
   const latestRenderer = objectRecord(latestRepositories.renderer, "latest Renderer repository")
@@ -729,11 +741,12 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeCutover.incrementalAppendCommit !== appendNode.head ||
     data.nodeCutover.topologyCommitOptimizationCommit !== topologyCommitNode.head ||
     data.nodeCutover.topologyClosureCommit !== topologyClosureNode.head ||
-    data.nodeCutover.transformCalibrationCommit !== latestNode.head ||
-    data.nodeCutover.projectionNeutralRendererCommit !== topologyClosureRenderer.parent ||
-    data.nodeCutover.projectionNeutralEvidenceCommit !== topologyClosureRenderer.head ||
+    data.nodeCutover.transformCalibrationCommit !== calibrationNode.head ||
+    data.nodeCutover.transformClosureCommit !== latestNode.head ||
+    data.nodeCutover.hiddenTransformRendererCommit !== latestRenderer.parent ||
+    data.nodeCutover.hiddenTransformEvidenceCommit !== latestRenderer.head ||
     data.nodeCutover.componentCutoverEvidenceCheckpoint !== componentCheckpointPath ||
-    data.nodeCutover.previousEvidenceCheckpoint !== topologyClosureCheckpointPath ||
+    data.nodeCutover.previousEvidenceCheckpoint !== transformCalibrationCheckpointPath ||
     data.nodeCutover.evidenceCheckpoint !== latestCheckpointPath) {
     throw new Error("Node cutover manifest does not match its evidence checkpoint")
   }
@@ -999,13 +1012,55 @@ function validateMigrationCoverage(data: FoundationData): void {
     data.nodeR5TransformCalibrationCheckpoint.transformCalibration,
     "transform calibration checkpoint",
   )
-  if (calibration.commit !== latestNode.head || calibration.status !== "partial-r5" ||
+  if (calibration.commit !== calibrationNode.head || calibration.status !== "partial-r5" ||
     calibration.p99ProcessesFailing !== 2) {
     throw new Error("Transform calibration evidence does not match the latest checkpoint")
   }
 
+  const transformClosureNodeHistory = arrayValue(
+    data.nodeR5TransformClosureCheckpoint.nodePackageHistory,
+    "transform closure Node package history",
+  ).map((value) => objectRecord(value, "transform closure Node history entry"))
+  assertExactStringSet(
+    "transform closure Node history coverage",
+    transformClosureNodeHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of transformClosureNodeHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Transform closure Node history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const transformClosureRendererHistory = arrayValue(
+    data.nodeR5TransformClosureCheckpoint.rendererPackageHistory,
+    "transform closure Renderer package history",
+  ).map((value) => objectRecord(value, "transform closure Renderer history entry"))
+  assertExactStringSet(
+    "transform closure Renderer history coverage",
+    transformClosureRendererHistory.map(({package: packageName}) => packageName),
+    rendererInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of transformClosureRendererHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "renderer") {
+      throw new Error(`Transform closure Renderer history mismatch: ${String(entry.package)}`)
+    }
+  }
+  const transformClosure = objectRecord(
+    data.nodeR5TransformClosureCheckpoint.transformClosure,
+    "transform closure checkpoint",
+  )
+  if (transformClosure.nodeEvidenceCommit !== latestNode.head ||
+    transformClosure.rendererImplementation !== latestRenderer.parent ||
+    transformClosure.rendererEvidence !== latestRenderer.head ||
+    transformClosure.status !== "verified-r5-subgate" ||
+    transformClosure.allProcessesPass !== true) {
+    throw new Error("Transform closure evidence does not match the latest checkpoint")
+  }
+
   const gates = objectRecord(
-    data.nodeR5TransformCalibrationCheckpoint.effectiveGates,
+    data.nodeR5TransformClosureCheckpoint.effectiveGates,
     "effective Node gates",
   )
   for (const id of ["R1", "R2", "R3", "R4"]) {

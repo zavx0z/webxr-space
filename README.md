@@ -38,6 +38,7 @@ The authoritative files are:
 - `evidence/node-r5-topology-commit-checkpoint.json`
 - `evidence/node-r5-topology-closure-checkpoint.json`
 - `evidence/node-r5-transform-calibration-checkpoint.json`
+- `evidence/node-r5-transform-closure-checkpoint.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -78,13 +79,13 @@ Node completed its one-path component cutover and exact Layout contract at
 `9cccb58`: R1-R4 are verified. Node `5d029c2e91b5` plus Renderer
 `80ee4f5`/`21f263f` close 1k/10k end-to-end append topology through conservative
 projection-neutral retained-frame reuse. Node `9d7aa6c` calibrates ordinary 10k
-transform to 100 samples: p95 is green, while p99 remains red in two of three
+transform to 100 samples, and Renderer `0cb7256`/`65ec24a` closes it across three
 fresh processes. Link selection,
 dense-memory/disposal, bundle and final visual-owner gates also remain open. R6
 is blocked because Node `5d029c2e91b5` and Renderer `21f263f` are not remote-backed
 and the canonical sources have not been frozen/read-only.
 The original M0 observation remains in `evidence/source-snapshot.json`; the
-current live pointer is `evidence/node-r5-transform-calibration-checkpoint.json`.
+current live pointer is `evidence/node-r5-transform-closure-checkpoint.json`.
 
 ## Transition superproject
 

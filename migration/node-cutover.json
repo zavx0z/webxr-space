@@ -3,18 +3,21 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8",
+  "observedHead": "be37431b2babe0e2ff18e9296ff45feca30e7ad7",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
   "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
   "topologyCommitOptimizationCommit": "1f4393e077748ed75a278ec327aa352399f1f65f",
   "topologyClosureCommit": "5d029c2e91b5f807b05459fb6fea94e64e8d4bc7",
   "transformCalibrationCommit": "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8",
+  "transformClosureCommit": "be37431b2babe0e2ff18e9296ff45feca30e7ad7",
+  "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
+  "hiddenTransformEvidenceCommit": "65ec24a0f6c4c5e3e29b6b6b37207bf8f64a5fb0",
   "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-topology-closure-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-transform-calibration-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-transform-calibration-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-transform-closure-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -107,6 +110,8 @@
       "name": "Dense performance and equal-scale visual acceptance",
       "status": "partial-blocked",
       "verifiedSubgates": [
+        "10k transform p50/p95/p99/max passes across three fresh 100-sample processes",
+        "generic hidden-branch transform traversal p99 0.731/0.990/1.134ms",
         "10k transform p95 is green across three fresh 100-sample processes",
         "1k/10k end-to-end append topology 11.409ms/73.212-88.098ms",
         "selector-independent data-* plus Comment/hidden-root exact retained-frame reuse",
@@ -125,7 +130,6 @@
         "Renderer capability evidence refreshed at a84672deb1573b1e16bffacf801877f1a3633628"
       ],
       "blockers": [
-        "10k transform p99 14.321/16.835/18.201ms exceeds 16.667ms in two of three fresh 100-sample processes",
         "10k Link selection p99 40.271-42.786ms exceeds 16.667ms",
         "dense-visible 10k mount/Renderer/backend is 30.16s/41.22s/19.70s with about 4.98GB retained baseline",
         "dense-visible disposal remained unbounded after several minutes of active CPU",
@@ -140,6 +144,7 @@
         "evidence/node-r5-topology-commit-checkpoint.json",
         "evidence/node-r5-topology-closure-checkpoint.json",
         "evidence/node-r5-transform-calibration-checkpoint.json",
+        "evidence/node-r5-transform-closure-checkpoint.json",
         "equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "console-zero non-black canvas capture 290cba411b8fd62d7c775275fe8543b14733a73e6c386df55d88dbec3cbabbca"
       ]
@@ -149,12 +154,12 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at 9d7aa6cd35e76cb8eba1b7721c17033edb8610c8 and ahead 7",
-        "Renderer main is clean at 21f263f36401f79c533917fd9b3fd8aa889fcf3d and ahead 8"
+        "Node main is clean at be37431b2babe0e2ff18e9296ff45feca30e7ad7 and ahead 8",
+        "Renderer main is clean at 65ec24a0f6c4c5e3e29b6b6b37207bf8f64a5fb0 and ahead 10"
       ],
       "blockers": [
-        "9d7aa6cd35e76cb8eba1b7721c17033edb8610c8 is not remote-backed",
-        "21f263f36401f79c533917fd9b3fd8aa889fcf3d is not remote-backed",
+        "be37431b2babe0e2ff18e9296ff45feca30e7ad7 is not remote-backed",
+        "65ec24a0f6c4c5e3e29b6b6b37207bf8f64a5fb0 is not remote-backed",
         "source freeze/read-only authorization has not been given",
         "R5 remains partial/blocked"
       ]
