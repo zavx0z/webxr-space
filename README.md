@@ -31,6 +31,7 @@ The authoritative files are:
 - `migration/node-cutover.json`
 - `capabilities/evidence-matrix.json`
 - `evidence/history-snapshot.json`
+- `evidence/node-cutover-snapshot.json`
 
 Every existing package still has exactly one writable canonical source owner.
 Adding `package.json` or production source to a reserved destination fails the
@@ -67,10 +68,12 @@ of the recorded local `origin/main`. Importing now would create two writable
 owners, so `migration/history-import.json` records the exact package prefixes
 and blocker instead of copying files.
 
-Node has a stronger gate: it is rewritten and accepted in the canonical Node
-checkout first. Only an R6 revision with functional parity, dense 1k/10k Node
-evidence, 512/2k/10k Link evidence and an equal-scale Blender owner verdict may
-be imported.
+Node completed its one-path component cutover at `becff8f`: R1-R4 are verified.
+It is still not importable. R5 is blocked by measured dense performance, bundle,
+bounded disposal and final visual-owner gates; R6 is blocked because the commit
+is not remote-backed and the canonical source has not been frozen/read-only.
+The original M0 observation remains in `evidence/source-snapshot.json`; the
+follow-up is `evidence/node-cutover-snapshot.json`.
 
 ## Transition superproject
 

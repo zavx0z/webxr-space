@@ -64,16 +64,20 @@
     {
       "id": "R1-R6",
       "name": "Canonical Node clean component rewrite and acceptance",
-      "status": "external-node-owner",
+      "status": "r1-r4-verified-r5-r6-blocked",
       "dependsOn": ["M0"],
       "implementationLocation": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
       "implementationBranchPolicy": "current supplied branch; no separate worktree implied",
+      "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
+      "completedGates": ["R1", "R2", "R3", "R4"],
+      "blockedGates": ["R5", "R6"],
+      "evidenceCheckpoint": "evidence/node-cutover-snapshot.json",
       "details": "migration/node-cutover.json"
     },
     {
       "id": "M3",
       "name": "Node family history import",
-      "status": "blocked-by-node-r6",
+      "status": "blocked-by-node-r5-r6",
       "dependsOn": ["R1-R6", "M2"],
       "packages": [
         "@nodes/core",
@@ -89,6 +93,11 @@
         "equal-scale Blender visual owner verdict",
         "remote-backed accepted revision",
         "single writable owner cutover"
+      ],
+      "blockers": [
+        "R5 performance, bundle, bounded disposal and final visual owner verdict are not accepted.",
+        "R6 commit is not remote-backed and the canonical Node owner has not been frozen/read-only.",
+        "The source:node repository remains the only writable canonical owner."
       ]
     },
     {

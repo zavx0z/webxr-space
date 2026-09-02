@@ -2,7 +2,10 @@
   "schemaVersion": 1,
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
-  "observedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+  "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+  "observedHead": "becff8f34a7152791df8e833a918dfe0142681bb",
+  "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
+  "evidenceCheckpoint": "evidence/node-cutover-snapshot.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
@@ -51,46 +54,74 @@
     {
       "id": "R1",
       "name": "Reproducible canonical checkout",
-      "status": "pending",
-      "evidence": ["exact linked revisions", "materialized dependencies", "green focused baseline"]
+      "status": "verified",
+      "evidence": [
+        "canonical main checkout is clean at becff8f34a7152791df8e833a918dfe0142681bb",
+        "materialized linked dependencies used by the committed local acceptance",
+        "exact original 209ba2a parent preserved"
+      ]
     },
     {
       "id": "R2",
       "name": "One clean component production path",
-      "status": "pending",
-      "evidence": ["no ui-next", "no factory/controller production path", "one component root"]
+      "status": "verified",
+      "evidence": [
+        "public exports are NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link",
+        "imperative factories/controllers and parallel NodeSystem removed",
+        "one component root; no ui-next"
+      ]
     },
     {
       "id": "R3",
       "name": "Consumer and Storybook cutover",
-      "status": "pending",
-      "evidence": ["exact public TSX owners", "exact historical routes", "no legacy production imports"]
+      "status": "verified",
+      "evidence": [
+        "exact public TSX owners and consumers committed",
+        "159 historical Storybook leaves and 66 overview routes preserved",
+        "active Storybook revision ff499f41ebd6f3f89200f013"
+      ]
     },
     {
       "id": "R4",
       "name": "Functional parity",
-      "status": "pending",
-      "evidence": ["stable identities", "nested Frame behavior", "selection", "viewport interactions", "cleanup"]
+      "status": "verified",
+      "evidence": [
+        "bun run check: 215 pass, 0 fail, 1 explicit bundle owner-gate todo",
+        "stable identity, local mutation and transform-only evidence passed",
+        "nested Frames, selection, viewport interactions, Socket inventory and retained Link path covered"
+      ]
     },
     {
       "id": "R5",
       "name": "Dense performance and equal-scale visual acceptance",
-      "status": "pending",
+      "status": "blocked",
+      "blockers": [
+        "10k Link selection p99 40.271-42.786ms exceeds 16.667ms",
+        "10k semantic Node value input-to-present p95/p99 is 1401/1670ms",
+        "dense-visible 10k mount/Renderer/backend is 30.16s/41.22s/19.70s with about 4.98GB retained baseline",
+        "dense-visible disposal remained unbounded after several minutes of active CPU",
+        "exact NodeEditor bundle 270750/68200 exceeds historical incomplete ceiling 245000/61000",
+        "final equal-scale visual owner verdict remains pending zavx0z"
+      ],
       "evidence": [
-        "1k and 10k visible Nodes, not a sparse viewport sample",
-        "512, 2048 and 10000 Links",
-        "p50, p95 and p99",
-        "allocations and post-GC retained heap",
-        "GPU upload bytes, draw counts and geometry invalidations",
-        "input-to-present latency",
-        "equal-scale Blender reference and explicit owner verdict"
+        "evidence/node-cutover-snapshot.json",
+        "equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
+        "console-zero non-black canvas capture 263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd"
       ]
     },
     {
       "id": "R6",
       "name": "Freeze accepted remote-backed revision",
-      "status": "pending",
-      "evidence": ["clean source", "accepted commit", "remote containment", "source read-only cutover authorization"]
+      "status": "blocked",
+      "evidence": [
+        "source checkout is clean at becff8f34a7152791df8e833a918dfe0142681bb",
+        "main is ahead 2 of origin/main@4b07d76df7365c69c13d811c7b91ede7622db453"
+      ],
+      "blockers": [
+        "becff8f34a7152791df8e833a918dfe0142681bb is not remote-backed",
+        "source freeze/read-only authorization has not been given",
+        "R5 remains blocked"
+      ]
     }
   ],
   "deferredOwnerDecisions": [

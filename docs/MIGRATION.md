@@ -18,6 +18,8 @@ For each package:
 The operation is blocked before step 3 today. Commands are intentionally not
 executed speculatively because an import would create a second writable owner.
 
-Node follows `migration/node-cutover.json`: clean component rewrite and R1-R6
-acceptance happen in the canonical Node checkout/current branch first. The
-current dual production path is never imported as an intermediate package.
+Node follows `migration/node-cutover.json`. The clean component rewrite is
+committed in the canonical checkout and R1-R4 are verified. R5 and R6 remain
+blocked, so no Node package history is imported and `source:node` remains the
+only writable canonical owner. The former dual production path was never
+imported as an intermediate package.

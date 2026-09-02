@@ -95,13 +95,15 @@
     },
     {
       "id": "nodes.component-production-path",
-      "classification": "migration-gate",
-      "status": "external-node-r6",
+      "classification": "implemented-source-fact",
+      "status": "functional-cutover-verified-import-blocked",
       "owner": "source:node",
-      "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameters, Socket and Link must become one accepted component production path before import.",
+      "statement": "NodeTree, NodeEditor, Frame, Node, concrete Parameter presentations, Socket and Link are now the one public component production path at becff8f34a7152791df8e833a918dfe0142681bb.",
       "evidence": [
-        "migration/node-cutover.json"
-      ]
+        "migration/node-cutover.json",
+        "evidence/node-cutover-snapshot.json"
+      ],
+      "verification": "R1-R4 verified locally; import remains blocked by R5 and R6."
     },
     {
       "id": "renderer.retained-vector-path",
@@ -128,18 +130,96 @@
     },
     {
       "id": "nodes.dense-visible-performance",
-      "classification": "confirmed-evidence-gap",
-      "status": "missing",
+      "classification": "measured-failure",
+      "status": "failed-r5",
       "owner": "source:node",
-      "statement": "Current 1k/10k fixtures materialize only a sparse visible subset and do not prove dense 1k/10k visible Node performance.",
-      "acceptance": [
-        "dense visible 1k and 10k Node fixtures",
-        "p50, p95 and p99",
-        "allocations and GC",
-        "upload bytes and draws",
-        "exact mutation counts",
-        "input-to-present latency"
-      ]
+      "statement": "The accepted dense-visible fixture now materializes 10k Nodes and 9999 Links, but cold mount/render/backend, memory and disposal are outside an acceptable bounded profile.",
+      "metrics": {
+        "nodes": 10000,
+        "links": 9999,
+        "boxes": 410052,
+        "displayItems": 135011,
+        "mountSeconds": 30.16,
+        "rendererSeconds": 41.22,
+        "backendSeconds": 19.7,
+        "retainedBaselineGbApprox": 4.98,
+        "disposal": "unbounded"
+      },
+      "evidence": ["evidence/node-cutover-snapshot.json"]
+    },
+    {
+      "id": "nodes.link-selection-performance",
+      "classification": "measured-failure",
+      "status": "failed-r5",
+      "owner": "source:node with likely Renderer/Engine performance owners",
+      "statement": "The 10k retained Link path keeps one draw and zero transform uploads, but selection misses the frame budget.",
+      "metrics": {
+        "links": 10000,
+        "selectionP99MsMin": 40.271,
+        "selectionP99MsMax": 42.786,
+        "frameBudgetMs": 16.667
+      },
+      "evidence": ["evidence/node-cutover-snapshot.json"]
+    },
+    {
+      "id": "nodes.semantic-value-performance",
+      "classification": "measured-failure",
+      "status": "failed-r5",
+      "owner": "source:node with likely incremental Renderer traversal owner",
+      "statement": "The 10k semantic Node value path preserves identity but misses bounded input-to-present acceptance.",
+      "metrics": {
+        "valueInputToPresentP95Ms": 1401,
+        "valueInputToPresentP99Ms": 1670,
+        "transformP95Ms": 376,
+        "transformP99Ms": 1923
+      },
+      "evidence": ["evidence/node-cutover-snapshot.json"]
+    },
+    {
+      "id": "nodes.component-disposal",
+      "classification": "confirmed-gap",
+      "status": "unbounded-r5",
+      "owner": "@zavx0z/react and @zavx0z/template investigation boundary",
+      "statement": "Dense-visible 10k unmount remained active for several minutes and did not complete within a bounded lifecycle.",
+      "evidence": ["evidence/node-cutover-snapshot.json"]
+    },
+    {
+      "id": "nodes.component-bundle",
+      "classification": "owner-gate",
+      "status": "open-r5",
+      "owner": "source:node",
+      "statement": "The exact NodeEditor component bundle exceeds the historical incomplete ceiling, which has not been raised.",
+      "metrics": {
+        "exactBytes": 270750,
+        "exactGzipBytes": 68200,
+        "ceilingBytes": 245000,
+        "ceilingGzipBytes": 61000
+      },
+      "evidence": ["evidence/node-cutover-snapshot.json"]
+    },
+    {
+      "id": "nodes.storybook-component-cutover",
+      "classification": "implemented-evidence",
+      "status": "mechanically-verified-visual-verdict-pending",
+      "owner": "source:node and external-storybook",
+      "statement": "All 159 leaves resolve through the component path; current revision is ready/presented with console zero, non-black canvas and equal-scale capture.",
+      "metrics": {
+        "revision": "ff499f41ebd6f3f89200f013",
+        "leafRoutes": 159,
+        "overviewRoutes": 66,
+        "canvasSha256": "263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd",
+        "equalScaleSha256": "2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650"
+      },
+      "evidence": ["evidence/node-cutover-snapshot.json"],
+      "remainingGate": "explicit visual owner verdict by zavx0z"
+    },
+    {
+      "id": "nodes.remote-freeze",
+      "classification": "migration-gate",
+      "status": "blocked-r6",
+      "owner": "source:node",
+      "statement": "The clean component cutover commit is ahead 2, not remote-backed, and the source owner remains writable without freeze authorization.",
+      "evidence": ["evidence/node-cutover-snapshot.json"]
     },
     {
       "id": "storybook.external-declarations",

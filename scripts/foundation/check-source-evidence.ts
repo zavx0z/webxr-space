@@ -6,20 +6,50 @@ const data = await loadFoundationData(root)
 const values = data.sourceSnapshot.repositories
 
 if (!Array.isArray(values)) throw new Error("Source repositories must be an array")
-const repositories = new Map<string, Readonly<Record<string, unknown>>>()
+const historicalRepositories = new Map<string, Readonly<Record<string, unknown>>>()
 
 for (const value of values) {
   const record = objectRecord(value, "source repository")
   const id = stringValue(record.id, "source repository id")
-  const path = stringValue(record.path, `source repository ${id} path`)
-  if (repositories.has(id)) throw new Error(`Duplicate source repository: ${id}`)
-  repositories.set(id, record)
+  if (historicalRepositories.has(id)) throw new Error(`Duplicate source repository: ${id}`)
+  historicalRepositories.set(id, record)
+}
 
-  expectEqual(`${id} HEAD`, git(path, ["rev-parse", "HEAD"]), record.head)
+const checkpointRepository = objectRecord(
+  data.nodeCutoverSnapshot.repository,
+  "Node cutover checkpoint repository",
+)
+const historicalNode = historicalRepositories.get("node")
+if (historicalNode === undefined) throw new Error("Historical source snapshot has no Node repository")
+const provenance = objectRecord(data.nodeCutoverSnapshot.provenance, "Node cutover provenance")
+expectEqual("Node checkpoint previous HEAD", provenance.previousHead, historicalNode.head)
+
+const repositories = new Map(historicalRepositories)
+repositories.set("node", checkpointRepository)
+
+for (const [id, record] of repositories) {
+  const path = stringValue(record.path, `source repository ${id} path`)
+  if (record.status === "clean-before-foundation-edits") {
+    git(path, ["cat-file", "-e", `${stringValue(record.head, `${id} historical HEAD`)}^{commit}`])
+  } else {
+    expectEqual(`${id} HEAD`, git(path, ["rev-parse", "HEAD"]), record.head)
+    const branch = gitOptional(path, ["symbolic-ref", "--short", "-q", "HEAD"])
+    expectEqual(`${id} branch`, branch.length === 0 ? null : branch, record.branch)
+  }
+
   expectEqual(`${id} origin`, git(path, ["remote", "get-url", "origin"]), record.remote)
   expectEqual(`${id} origin/main`, git(path, ["rev-parse", "origin/main"]), record.originMain)
-  const branch = gitOptional(path, ["symbolic-ref", "--short", "-q", "HEAD"])
-  expectEqual(`${id} branch`, branch.length === 0 ? null : branch, record.branch)
+  if (record.status !== "clean-before-foundation-edits") {
+    const counts = git(path, ["rev-list", "--left-right", "--count", "origin/main...HEAD"])
+      .split(/\s+/u)
+      .map(Number)
+    expectEqual(`${id} behind`, counts[0], record.behind)
+    expectEqual(`${id} ahead`, counts[1], record.ahead)
+    if (typeof record.headContainedByOriginMain === "boolean") {
+      const contained = gitExitCode(path, ["merge-base", "--is-ancestor", "HEAD", "origin/main"]) === 0
+      expectEqual(`${id} remote containment`, contained, record.headContainedByOriginMain)
+    }
+  }
 
   if (record.status === "clean") {
     expectEqual(`${id} status`, git(path, ["status", "--porcelain=v1"]), "")
@@ -56,19 +86,40 @@ if (!Array.isArray(historyValues)) throw new Error("History entries must be an a
 for (const value of historyValues) {
   const entry = objectRecord(value, "history entry")
   const packageName = stringValue(entry.package, "history package")
-  const repository = repositories.get(stringValue(entry.repository, `${packageName} repository`))
+  const repository = historicalRepositories.get(stringValue(entry.repository, `${packageName} repository`))
   if (repository === undefined) throw new Error(`Unknown history repository for ${packageName}`)
   const path = stringValue(repository.path, `${packageName} repository path`)
+  const revision = stringValue(repository.head, `${packageName} historical revision`)
   const prefix = stringValue(entry.prefix, `${packageName} prefix`)
-  const count = Number(git(path, ["rev-list", "--count", "HEAD", "--", prefix]))
+  const count = Number(git(path, ["rev-list", "--count", revision, "--", prefix]))
   expectEqual(`${packageName} history count`, count, entry.commitCount)
-  const first = git(path, ["log", "--reverse", "--format=%H", "--", prefix]).split("\n")[0]
-  const last = git(path, ["log", "-1", "--format=%H", "--", prefix])
+  const first = git(path, ["log", "--reverse", "--format=%H", revision, "--", prefix]).split("\n")[0]
+  const last = git(path, ["log", "-1", "--format=%H", revision, "--", prefix])
   expectEqual(`${packageName} first history commit`, first, entry.firstCommit)
   expectEqual(`${packageName} last history commit`, last, entry.lastCommit)
 }
 
-console.log(`source evidence: ${repositories.size} repositories, ${historyValues.length} package histories`)
+const checkpointHistory = data.nodeCutoverSnapshot.packageHistory
+if (!Array.isArray(checkpointHistory)) throw new Error("Node checkpoint history must be an array")
+for (const value of checkpointHistory) {
+  const entry = objectRecord(value, "Node checkpoint history entry")
+  const packageName = stringValue(entry.package, "Node checkpoint package")
+  const path = stringValue(checkpointRepository.path, `${packageName} checkpoint path`)
+  const revision = stringValue(checkpointRepository.head, `${packageName} checkpoint revision`)
+  const prefix = stringValue(entry.prefix, `${packageName} checkpoint prefix`)
+  const count = Number(git(path, ["rev-list", "--count", revision, "--", prefix]))
+  expectEqual(`${packageName} checkpoint history count`, count, entry.commitCount)
+  const first = git(path, ["log", "--reverse", "--format=%H", revision, "--", prefix]).split("\n")[0]
+  const last = git(path, ["log", "-1", "--format=%H", revision, "--", prefix])
+  expectEqual(`${packageName} checkpoint first history commit`, first, entry.firstCommit)
+  expectEqual(`${packageName} checkpoint last history commit`, last, entry.lastCommit)
+}
+
+console.log(
+  `source evidence: ${repositories.size} live repositories, ` +
+  `${historyValues.length} historical package histories, ` +
+  `${checkpointHistory.length} Node checkpoint histories`,
+)
 
 function git(path: string, args: readonly string[]): string {
   const result = Bun.spawnSync(["git", ...args], {cwd: path, stdout: "pipe", stderr: "pipe"})
@@ -84,6 +135,14 @@ function gitOptional(path: string, args: readonly string[]): string {
     throw new Error(result.stderr.toString().trim() || `git ${args.join(" ")} failed in ${path}`)
   }
   return result.stdout.toString().trimEnd()
+}
+
+function gitExitCode(path: string, args: readonly string[]): number {
+  const result = Bun.spawnSync(["git", ...args], {cwd: path, stdout: "ignore", stderr: "pipe"})
+  if (result.exitCode !== 0 && result.exitCode !== 1) {
+    throw new Error(result.stderr.toString().trim() || `git ${args.join(" ")} failed in ${path}`)
+  }
+  return result.exitCode
 }
 
 function expectEqual(label: string, actual: unknown, expected: unknown): void {

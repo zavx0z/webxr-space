@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-02T04:43:07+03:00",
+  "provenance": {
+    "previousSnapshot": "evidence/source-snapshot.json",
+    "previousHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+    "handoffThread": "01a05f56-216c-7fa1-8d62-592a1cd8a47e",
+    "rollout": "/Users/zavx0z/.codex/sessions/2026/09/02/rollout-2026-09-02T02-37-55-01a05f56-216c-7fa1-8d62-592a1cd8a47e.jsonl",
+    "classification": "post-component-cutover checkpoint; original M0 snapshot remains historical evidence"
+  },
+  "repository": {
+    "id": "node",
+    "path": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
+    "branch": "main",
+    "head": "becff8f34a7152791df8e833a918dfe0142681bb",
+    "parent": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+    "subject": "Replace Node UI dual path with components",
+    "committedAt": "2026-09-02T04:37:21+03:00",
+    "status": "clean",
+    "remote": "git@github.com:zavx0z/node.git",
+    "originMain": "4b07d76df7365c69c13d811c7b91ede7622db453",
+    "ahead": 2,
+    "behind": 0,
+    "headContainedByOriginMain": false,
+    "sourceFreezeAuthorized": false,
+    "canonicalWritableOwner": "source:node",
+    "manifestSha256": {
+      "package.json": "e4042d43440a0b4ce5e827fbcbcbcc79abf14905c9b0c7b6461d6a1cbafbfa2b",
+      "packages/core/package.json": "fbf610e581cc4f70e9f2c6026a667f5bced00258277677a312ed2f8bd383318a",
+      "packages/editor/package.json": "a8e58447aca524a77f6e9e9ae22f5ee7c52d5f048c87cc2fa0790ab6a61a8eb1",
+      "packages/layout/package.json": "8f440f46710dbe1e9af1e6c47452d810ba36c9e4652c029d7b61b2fffc54f4f5",
+      "packages/ui/package.json": "02dd85e08056efadfce9a4deb32664be407926f0fb797e97bbbb763d2486e6f9",
+      "packages/worker/package.json": "9e4bf7ba04b27883229bcc8e7b9783961baf6963c1c473da7e1fa3841fafb0c7"
+    }
+  },
+  "packageHistory": [
+    {"package": "@nodes/core", "repository": "node", "prefix": "packages/core", "commitCount": 8, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "becff8f34a7152791df8e833a918dfe0142681bb"},
+    {"package": "@nodes/editor", "repository": "node", "prefix": "packages/editor", "commitCount": 8, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "becff8f34a7152791df8e833a918dfe0142681bb"},
+    {"package": "@nodes/layout", "repository": "node", "prefix": "packages/layout", "commitCount": 13, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "d52e8f5e3ba4b548d38be0257a2b181b476aa425"},
+    {"package": "@nodes/worker", "repository": "node", "prefix": "packages/worker", "commitCount": 12, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "bd5af9a2cf6fca679a69de5245d107ea42318f54"},
+    {"package": "@nodes/ui", "repository": "node", "prefix": "packages/ui", "commitCount": 16, "firstCommit": "47f15a14d396e8ebead4c3502f3534e1358b2a0d", "lastCommit": "becff8f34a7152791df8e833a918dfe0142681bb"}
+  ],
+  "componentContract": {
+    "package": "@nodes/ui",
+    "exports": [
+      ".",
+      "./frame",
+      "./link",
+      "./node",
+      "./node-editor",
+      "./node-tree",
+      "./parameter",
+      "./socket"
+    ],
+    "publicOwners": [
+      "NodeTree",
+      "NodeEditor",
+      "Frame",
+      "Node",
+      "concrete Parameter presentations",
+      "Socket",
+      "Link"
+    ],
+    "parallelProductionPathRemoved": true,
+    "imperativeFactoriesAndControllersRemoved": true,
+    "singleComponentRoot": true
+  },
+  "functionalAcceptance": {
+    "command": "bun run check",
+    "commit": "becff8f34a7152791df8e833a918dfe0142681bb",
+    "pass": 215,
+    "fail": 0,
+    "todo": 1,
+    "todoReason": "explicit unaccepted bundle owner ceiling",
+    "identityMutationTransformEvidence": "passed",
+    "verification": "executed locally by the Node owner before commit; metadata task independently verified exact committed HEAD, clean status, public exports and route baseline"
+  },
+  "storybook": {
+    "package": "@nodes/ui",
+    "activeRevision": "ff499f41ebd6f3f89200f013",
+    "graphDigest": "daa513c0f6b280d4bd3ed1068a6a06ef650a521fb6a77028b9560c495b184517",
+    "leafRoutes": 159,
+    "overviewRoutes": 66,
+    "ready": true,
+    "presented": true,
+    "diagnostics": [],
+    "consoleErrors": [],
+    "canvas": {"width": 3840, "height": 2176, "hidden": false, "nonBlack": true},
+    "captures": [
+      {
+        "id": "capture_mtLIRiHlUZGMPro39Uv9CV66",
+        "route": "ui/node-editor/scene/default",
+        "area": "canvas",
+        "revision": "8c0f45e524a02fd246ed18c6",
+        "width": 3840,
+        "height": 2176,
+        "bytes": 127659,
+        "sha256": "263c5ba8f5d3e98c47c4dcee3bb061b95c85c94a28092a66e6697637c83918cd"
+      },
+      {
+        "id": "capture_Sd0PtcX9P40GkHuqZ-s-Ai_p",
+        "route": "ui/comparison/reference/default",
+        "area": "preview",
+        "revision": "ff499f41ebd6f3f89200f013",
+        "width": 2268,
+        "height": 2012,
+        "bytes": 166156,
+        "sha256": "2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
+        "comparisonViewport": {"width": 228, "height": 385, "scale": 1}
+      }
+    ],
+    "visualOwnerVerdict": "pending-zavx0z"
+  },
+  "performance": {
+    "links10000": {
+      "draws": 1,
+      "segments": 150000,
+      "transformUploadBytes": 0,
+      "selectionP99MsRange": [40.271, 42.786],
+      "frameBudgetMs": 16.667,
+      "status": "failed"
+    },
+    "semanticNodes10000": {
+      "domNodes": 10000,
+      "links": 9999,
+      "visibleProjection": "12/15",
+      "valueInputToPresentP95Ms": 1401,
+      "valueInputToPresentP99Ms": 1670,
+      "transformP95Ms": 376,
+      "transformP99Ms": 1923,
+      "status": "failed"
+    },
+    "denseVisibleCold10000": {
+      "nodes": 10000,
+      "links": 9999,
+      "boxes": 410052,
+      "displayItems": 135011,
+      "mountSeconds": 30.16,
+      "rendererSeconds": 41.22,
+      "backendSeconds": 19.7,
+      "retainedBaselineGbApprox": 4.98,
+      "disposal": "unbounded; stopped after several minutes of active CPU",
+      "status": "failed"
+    },
+    "bundle": {
+      "exactNodeEditor": {"bytes": 270750, "gzipBytes": 68200},
+      "root": {"bytes": 270679, "gzipBytes": 68516},
+      "nodeTree": {"bytes": 262560, "gzipBytes": 65708},
+      "aggregateParameter": {"bytes": 203065, "gzipBytes": 49796},
+      "link": {"bytes": 121815, "gzipBytes": 32945},
+      "historicalIncompleteCeiling": {"bytes": 245000, "gzipBytes": 61000},
+      "historicalIncompleteMeasured": {"bytes": 244300, "gzipBytes": 60660},
+      "status": "owner-gate-open"
+    }
+  },
+  "gates": {
+    "R1": "verified",
+    "R2": "verified",
+    "R3": "verified",
+    "R4": "verified",
+    "R5": "blocked",
+    "R6": "blocked"
+  },
+  "migrationReadiness": "not-ready; R5 performance/bundle/visual verdict and R6 remote/freeze gates remain open"
+}

@@ -3,6 +3,16 @@
   "observedAt": "2026-09-02T02:33:31+03:00",
   "networkFetchPerformed": false,
   "remoteObservation": "Remote containment is derived from existing local tracking refs and may drift until explicitly fetched.",
+  "followUpSnapshots": [
+    {
+      "path": "evidence/node-cutover-snapshot.json",
+      "observedAt": "2026-09-02T04:43:07+03:00",
+      "repository": "node",
+      "previousHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
+      "currentHead": "becff8f34a7152791df8e833a918dfe0142681bb",
+      "reason": "canonical Node component cutover committed after the original M0 observation"
+    }
+  ],
   "pathResolution": {
     "requestedSiblingPaths": [
       "/Users/zavx0z/repozitarium/engine",

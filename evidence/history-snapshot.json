@@ -1,6 +1,13 @@
 {
   "schemaVersion": 1,
   "observedAt": "2026-09-02T02:33:31+03:00",
+  "followUpSnapshots": [
+    {
+      "path": "evidence/node-cutover-snapshot.json",
+      "repository": "node",
+      "reason": "preserve original prefix-history counts while recording the component cutover commit separately"
+    }
+  ],
   "entries": [
     {"package": "@engine/core", "repository": "engine", "prefix": "packages/core", "commitCount": 24, "firstCommit": "8b67e24f330f9a6991162c3568df5b7e9dade325", "lastCommit": "a3032d960fc592296e8c5d1408a02551635d1fb3"},
     {"package": "@zavx0z/dom", "repository": "renderer", "prefix": "packages/dom", "commitCount": 16, "firstCommit": "d48ab1f561323925fb4a0fa61791f24e5812ea3e", "lastCommit": "46aa364d2713fd1bdc18fc84836948d6463f817a"},

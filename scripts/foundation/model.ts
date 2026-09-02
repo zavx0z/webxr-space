@@ -13,6 +13,7 @@ export const dataFiles = Object.freeze({
   capabilities: "capabilities/evidence-matrix.json",
   sourceSnapshot: "evidence/source-snapshot.json",
   historySnapshot: "evidence/history-snapshot.json",
+  nodeCutoverSnapshot: "evidence/node-cutover-snapshot.json",
 } as const)
 
 const dependencyFields = Object.freeze({
@@ -123,6 +124,7 @@ export type FoundationData = Readonly<{
   capabilities: Readonly<Record<string, unknown>>
   sourceSnapshot: Readonly<Record<string, unknown>>
   historySnapshot: Readonly<Record<string, unknown>>
+  nodeCutoverSnapshot: Readonly<Record<string, unknown>>
 }>
 
 export async function loadFoundationData(root: string): Promise<FoundationData> {
@@ -143,6 +145,7 @@ export async function loadFoundationData(root: string): Promise<FoundationData> 
     capabilities: byPath.get(dataFiles.capabilities) as Readonly<Record<string, unknown>>,
     sourceSnapshot: byPath.get(dataFiles.sourceSnapshot) as Readonly<Record<string, unknown>>,
     historySnapshot: byPath.get(dataFiles.historySnapshot) as Readonly<Record<string, unknown>>,
+    nodeCutoverSnapshot: byPath.get(dataFiles.nodeCutoverSnapshot) as Readonly<Record<string, unknown>>,
   })
 }
 
@@ -594,7 +597,7 @@ async function validateStorybook(
 function validateMigrationCoverage(data: FoundationData): void {
   if (data.migration.schemaVersion !== 1 || data.historyImport.schemaVersion !== 1 ||
     data.nodeCutover.schemaVersion !== 1 || data.sourceSnapshot.schemaVersion !== 1 ||
-    data.historySnapshot.schemaVersion !== 1) {
+    data.historySnapshot.schemaVersion !== 1 || data.nodeCutoverSnapshot.schemaVersion !== 1) {
     throw new Error("Unsupported migration or evidence schema")
   }
   const imported = arrayValue(data.historyImport.imports, "history imports")
@@ -637,6 +640,61 @@ function validateMigrationCoverage(data: FoundationData): void {
     if (inventory?.destination !== destination.path) {
       throw new Error(`Node destination mismatch: ${String(destination.package)}`)
     }
+  }
+
+  const checkpointPath = "evidence/node-cutover-snapshot.json"
+  const checkpointRepository = objectRecord(
+    data.nodeCutoverSnapshot.repository,
+    "Node cutover checkpoint repository",
+  )
+  if (data.nodeCutover.observedHead !== checkpointRepository.head ||
+    data.nodeCutover.componentCutoverCommit !== checkpointRepository.head ||
+    data.nodeCutover.evidenceCheckpoint !== checkpointPath) {
+    throw new Error("Node cutover manifest does not match its evidence checkpoint")
+  }
+  const nodeGroup = data.ownership.groups.find(({id}) => id === "node")
+  const nodeOwner = nodeGroup?.owners.find(({id}) => id === "source:node")
+  if (nodeOwner === undefined || nodeOwner.revision !== checkpointRepository.head ||
+    nodeOwner.writable !== true) {
+    throw new Error("Node ownership ledger does not match the current canonical source checkpoint")
+  }
+  validateFollowUpSnapshot(data.sourceSnapshot, checkpointPath, "source snapshot")
+  validateFollowUpSnapshot(data.historySnapshot, checkpointPath, "history snapshot")
+
+  const checkpointHistory = arrayValue(
+    data.nodeCutoverSnapshot.packageHistory,
+    "Node cutover package history",
+  ).map((value) => objectRecord(value, "Node cutover history entry"))
+  assertExactStringSet(
+    "Node cutover history coverage",
+    checkpointHistory.map(({package: packageName}) => packageName),
+    nodeInventory.map(({packageName}) => packageName),
+  )
+  for (const entry of checkpointHistory) {
+    const plan = importsByPackage.get(entry.package)
+    if (plan?.sourcePrefix !== entry.prefix || entry.repository !== "node") {
+      throw new Error(`Node checkpoint history does not match import plan: ${String(entry.package)}`)
+    }
+  }
+
+  const gates = objectRecord(data.nodeCutoverSnapshot.gates, "Node cutover gates")
+  for (const id of ["R1", "R2", "R3", "R4"]) {
+    if (gates[id] !== "verified") throw new Error(`Node ${id} must be verified at the checkpoint`)
+  }
+  for (const id of ["R5", "R6"]) {
+    if (gates[id] !== "blocked") throw new Error(`Node ${id} must remain blocked at the checkpoint`)
+  }
+}
+
+function validateFollowUpSnapshot(
+  snapshot: Readonly<Record<string, unknown>>,
+  expectedPath: string,
+  label: string,
+): void {
+  const followUps = arrayValue(snapshot.followUpSnapshots, `${label} follow-up snapshots`)
+    .map((value) => objectRecord(value, `${label} follow-up snapshot`))
+  if (!followUps.some(({path}) => path === expectedPath)) {
+    throw new Error(`${label} does not preserve the Node cutover provenance link`)
   }
 }
 

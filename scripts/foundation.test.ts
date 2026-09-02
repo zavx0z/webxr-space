@@ -45,6 +45,29 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
+  test("preserves the historical M0 snapshot and overlays the verified Node cutover", async () => {
+    const data = await loadFoundationData(root)
+    const historicalNode = (data.sourceSnapshot.repositories as unknown[])
+      .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
+    const checkpointRepository = data.nodeCutoverSnapshot.repository as {head: string}
+    const gates = data.nodeCutoverSnapshot.gates as Record<string, string>
+    const nodeGroup = data.ownership.groups.find(({id}) => id === "node")!
+
+    expect(historicalNode.head).toBe("209ba2a5e905edeeb6293bdedf47ea483d011c94")
+    expect(checkpointRepository.head).toBe("becff8f34a7152791df8e833a918dfe0142681bb")
+    expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
+      "becff8f34a7152791df8e833a918dfe0142681bb",
+    )
+    expect(gates).toEqual({
+      R1: "verified",
+      R2: "verified",
+      R3: "verified",
+      R4: "verified",
+      R5: "blocked",
+      R6: "blocked",
+    })
+  })
+
   test("fails closed on a production package cycle", () => {
     const edges: DependencyEdge[] = [
       {from: "@fixture/a", to: "@fixture/b", kind: "dependency"},
