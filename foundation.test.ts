@@ -247,6 +247,13 @@ describe("general-purpose NodeTree foundation", () => {
 
     const initial = store.getSnapshot()
     const initialTopology = store.getTopologySnapshot()
+    const initialTopologyUpdate = store.getTopologyUpdate()
+    expect(initialTopologyUpdate).toEqual({
+      mode: "initial",
+      snapshot: initialTopology,
+      delta: null,
+    })
+    expect(store.getTopologyUpdate()).toBe(initialTopologyUpdate)
     const parameterStore = store.parameter("source", "value")
     parameterStore.subscribe(() => { parameterNotifications += 1 })
     const initialParameter = parameterStore.getSnapshot()
@@ -257,6 +264,7 @@ describe("general-purpose NodeTree foundation", () => {
     expect(valueSnapshot).not.toBe(initial)
     expect(store.getSnapshot()).toBe(valueSnapshot)
     expect(store.getTopologySnapshot()).toBe(initialTopology)
+    expect(store.getTopologyUpdate()).toBe(initialTopologyUpdate)
     expect(parameterStore.getSnapshot()).not.toBe(initialParameter)
     expect(parameterStore.getSnapshot()).toMatchObject({value: 2, revision: 1})
     expect(parameterNotifications).toBe(1)
@@ -283,6 +291,11 @@ describe("general-purpose NodeTree foundation", () => {
     expect(storeNotifications).toBe(2)
     expect(topologyNotifications).toBe(1)
     expect(store.getTopologySnapshot()).not.toBe(initialTopology)
+    expect(store.getTopologyUpdate()).toMatchObject({
+      mode: "full",
+      snapshot: store.getTopologySnapshot(),
+      delta: deltas[1],
+    })
   })
 
   test("appends one validated Node with exact nested delta and canonical Parameter identity", () => {
@@ -291,6 +304,7 @@ describe("general-purpose NodeTree foundation", () => {
     const deltas: NodeTreeDelta[] = []
     const store = createNodeTreeExternalStore(tree)
     const topology = store.getTopologySnapshot()
+    const initialTopologyUpdate = store.getTopologyUpdate()
     tree.subscribeDelta(delta => deltas.push(delta))
 
     expect(appendNode(tree, {
@@ -310,6 +324,12 @@ describe("general-purpose NodeTree foundation", () => {
     expect(tree.parameter("observer", "value")).toBe(parameter)
     expect(store.getTopologySnapshot().nodes[0]).toBe(topology.nodes[0])
     expect(store.getTopologySnapshot().nodes[2]?.parameters[0]).toMatchObject({value: 3})
+    expect(store.getTopologyUpdate()).not.toBe(initialTopologyUpdate)
+    expect(store.getTopologyUpdate()).toMatchObject({
+      mode: "append-node",
+      snapshot: store.getTopologySnapshot(),
+      delta: deltas[0],
+    })
     expect(deltas).toEqual([{
       kind: "topology",
       revision: 1,
@@ -324,6 +344,39 @@ describe("general-purpose NodeTree foundation", () => {
     }])
     parameter.set(4)
     expect(tree.revision).toBe(2)
+  })
+
+  test("marks update, removal and bulk topology as full external-store fallbacks", () => {
+    const tree = createNodeTree({nodes: [{id: "a"}, {id: "b"}]})
+    const store = createNodeTreeExternalStore(tree)
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [{id: "a", metadata: {label: "updated"}}, {id: "b"}]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [{id: "a", metadata: {label: "updated"}}]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [
+        {id: "a", metadata: {label: "updated"}},
+        {id: "c"},
+        {id: "d"},
+      ]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "full"})
+
+    tree.reconcile({
+      expectedRevision: tree.revision,
+      definition: {nodes: [...tree.definition().nodes, {id: "e"}]},
+    })
+    expect(store.getTopologyUpdate()).toMatchObject({mode: "append-node"})
   })
 
   test("rejects invalid append candidates and rolls back prepared observation", () => {

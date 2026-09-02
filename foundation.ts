@@ -90,9 +90,18 @@ export type ExternalStore<TSnapshot> = Readonly<{
   getSnapshot(): TSnapshot
 }>
 
+export type NodeTreeTopologyUpdate<TSnapshot> =
+  | Readonly<{mode: "initial"; snapshot: TSnapshot; delta: null}>
+  | Readonly<{
+      mode: "append-node" | "full"
+      snapshot: TSnapshot
+      delta: NodeTreeTopologyDelta
+    }>
+
 export type NodeTreeExternalStore<TSnapshot, TParameterSnapshot> = ExternalStore<TSnapshot> & Readonly<{
   subscribeTopology(listener: () => void): () => void
   getTopologySnapshot(): TSnapshot
+  getTopologyUpdate(): NodeTreeTopologyUpdate<TSnapshot>
   parameter(nodeId: string, parameterId: string): ExternalStore<TParameterSnapshot>
 }>
 
@@ -208,7 +217,17 @@ export function createNodeTreeExternalStore<
     parameter: TParameter
     store: ParameterStore
   }>
-  let topologySnapshot = tree.getSnapshot()
+  let topologyUpdate: NodeTreeTopologyUpdate<NodeTreeSnapshot<
+    TParameter,
+    TFrameMetadata,
+    TNodeMetadata,
+    TSocketMetadata,
+    TLinkMetadata
+  >> = Object.freeze({
+    mode: "initial",
+    snapshot: tree.getSnapshot(),
+    delta: null,
+  })
   const parameterStores = new Map<string, ParameterStoreRecord>()
   const topologyListeners = new Set<() => void>()
   const parameter = (nodeId: string, parameterId: string): ParameterStore => {
@@ -240,7 +259,12 @@ export function createNodeTreeExternalStore<
   }
   tree.subscribeDelta(delta => {
     if (delta.kind !== "topology") return
-    topologySnapshot = appendTopologySnapshot(topologySnapshot, tree, delta) ?? tree.getSnapshot()
+    const appended = appendTopologySnapshot(topologyUpdate.snapshot, tree, delta)
+    topologyUpdate = Object.freeze({
+      mode: appended === null ? "full" : "append-node",
+      snapshot: appended ?? tree.getSnapshot(),
+      delta,
+    })
     pruneParameterStores()
     const errors: unknown[] = []
     for (const listener of [...topologyListeners]) {
@@ -260,7 +284,8 @@ export function createNodeTreeExternalStore<
         topologyListeners.delete(listener)
       }
     },
-    getTopologySnapshot: () => topologySnapshot,
+    getTopologySnapshot: () => topologyUpdate.snapshot,
+    getTopologyUpdate: () => topologyUpdate,
     parameter,
   })
 }
@@ -283,7 +308,7 @@ function appendTopologySnapshot<
   delta: NodeTreeTopologyDelta,
 ): NodeTreeSnapshot<TParameter, TFrameMetadata, TNodeMetadata, TSocketMetadata, TLinkMetadata> | null {
   if (delta.removed.length !== 0 || delta.updated.length !== 0 ||
-    tree.nodes.length !== previous.nodes.length + 1 || tree.links !== previous.links) return null
+    tree.nodes.length !== previous.nodes.length + 1) return null
   const addedNodes = delta.added.filter(address => address.kind === "node")
   if (addedNodes.length !== 1) return null
   const addedId = addedNodes[0]!.id

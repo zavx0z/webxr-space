@@ -60,7 +60,9 @@ contracts — [`@nodes/ui`](../ui/requirements.md).
    только exact Parameter consumer; topology snapshot не становится вторым
    Store. Exact append delta структурно переиспользует прежние immutable Node
    snapshots и добавляет один новый; любой другой topology delta идёт через
-   полный snapshot fallback.
+   полный snapshot fallback. Стабильный `getTopologyUpdate()` атомарно связывает
+   этот snapshot с exact delta и Core-owned `initial | append-node | full`
+   evidence; consumer не восстанавливает тип изменения сравнением копий graph.
 
 ## Универсальная структура, типы и инстансы
 
