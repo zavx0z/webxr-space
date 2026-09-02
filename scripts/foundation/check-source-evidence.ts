@@ -209,12 +209,18 @@ const hoverNodeCheckpoint = objectRecord(hoverRepositories.node, "Socket hover N
 const hoverUiCheckpoint = objectRecord(hoverRepositories.ui, "Socket hover UI repository")
 const capabilityClosureRepositories = objectRecord(
   data.nodeR5CapabilityEvidenceClosureCheckpoint.repositories,
-  "latest capability evidence closure repositories",
+  "capability evidence closure repositories",
 )
-const nodeCheckpoint = objectRecord(capabilityClosureRepositories.node, "latest Node repository")
-const uiCheckpoint = objectRecord(capabilityClosureRepositories.ui, "latest UI repository")
-const rendererCheckpoint = objectRecord(capabilityClosureRepositories.renderer, "latest Renderer repository")
-const templateCheckpoint = objectRecord(capabilityClosureRepositories.template, "latest Template repository")
+const capabilityClosureNodeCheckpoint = objectRecord(capabilityClosureRepositories.node, "capability closure Node")
+const capabilityClosureUiCheckpoint = objectRecord(capabilityClosureRepositories.ui, "capability closure UI")
+const acceptanceRepositories = objectRecord(
+  data.nodeR5VisualAcceptanceCheckpoint.repositories,
+  "latest visual acceptance repositories",
+)
+const nodeCheckpoint = objectRecord(acceptanceRepositories.node, "latest Node repository")
+const uiCheckpoint = objectRecord(acceptanceRepositories.ui, "latest UI repository")
+const rendererCheckpoint = objectRecord(acceptanceRepositories.renderer, "latest Renderer repository")
+const templateCheckpoint = objectRecord(acceptanceRepositories.template, "latest Template repository")
 repositories.set("node", nodeCheckpoint)
 repositories.set("ui", uiCheckpoint)
 repositories.set("renderer", rendererCheckpoint)
@@ -634,7 +640,7 @@ if (!Array.isArray(capabilityClosureNodeHistory)) {
 }
 for (const value of capabilityClosureNodeHistory) {
   const entry = objectRecord(value, "Capability evidence closure Node history entry")
-  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Capability evidence closure Node")
+  validateCheckpointHistoryEntry(entry, capabilityClosureNodeCheckpoint, "Capability evidence closure Node")
 }
 
 const capabilityClosureUiHistory = data.nodeR5CapabilityEvidenceClosureCheckpoint.uiPackageHistory
@@ -643,7 +649,21 @@ if (!Array.isArray(capabilityClosureUiHistory)) {
 }
 for (const value of capabilityClosureUiHistory) {
   const entry = objectRecord(value, "Capability evidence closure UI history entry")
-  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Capability evidence closure UI")
+  validateCheckpointHistoryEntry(entry, capabilityClosureUiCheckpoint, "Capability evidence closure UI")
+}
+
+const acceptanceNodeHistory = data.nodeR5VisualAcceptanceCheckpoint.nodePackageHistory
+if (!Array.isArray(acceptanceNodeHistory)) throw new Error("Visual acceptance Node history must be an array")
+for (const value of acceptanceNodeHistory) {
+  const entry = objectRecord(value, "Visual acceptance Node history entry")
+  validateCheckpointHistoryEntry(entry, nodeCheckpoint, "Visual acceptance Node")
+}
+
+const acceptanceUiHistory = data.nodeR5VisualAcceptanceCheckpoint.uiPackageHistory
+if (!Array.isArray(acceptanceUiHistory)) throw new Error("Visual acceptance UI history must be an array")
+for (const value of acceptanceUiHistory) {
+  const entry = objectRecord(value, "Visual acceptance UI history entry")
+  validateCheckpointHistoryEntry(entry, uiCheckpoint, "Visual acceptance UI")
 }
 
 console.log(
@@ -668,7 +688,8 @@ console.log(
   `${checkboxNodeHistory.length + checkboxUiHistory.length} Checkbox Path histories, ` +
   `${collapseNodeHistory.length + collapseUiHistory.length} collapse icon histories, ` +
   `${hoverNodeHistory.length + hoverUiHistory.length} Socket hover histories, ` +
-  `${capabilityClosureNodeHistory.length + capabilityClosureUiHistory.length} capability closure histories`,
+  `${capabilityClosureNodeHistory.length + capabilityClosureUiHistory.length} capability closure histories, ` +
+  `${acceptanceNodeHistory.length + acceptanceUiHistory.length} visual acceptance histories`,
 )
 
 function validateCheckpointHistoryEntry(

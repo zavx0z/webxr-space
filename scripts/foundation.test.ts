@@ -139,7 +139,7 @@ describe("visual monorepo M0 foundation", () => {
     ])
   })
 
-  test("preserves rejected visual evidence through capability closure", async () => {
+  test("preserves rejected visual evidence through explicit acceptance", async () => {
     const data = await loadFoundationData(root)
     const historicalNode = (data.sourceSnapshot.repositories as unknown[])
       .find((value) => (value as {id?: unknown}).id === "node") as {head: string}
@@ -162,7 +162,8 @@ describe("visual monorepo M0 foundation", () => {
     const checkboxGates = data.nodeR5CheckboxPathCheckpoint.effectiveGates as Record<string, string>
     const collapseGates = data.nodeR5CollapseIconCheckpoint.effectiveGates as Record<string, string>
     const hoverGates = data.nodeR5SocketHoverCheckpoint.effectiveGates as Record<string, string>
-    const gates = data.nodeR5CapabilityEvidenceClosureCheckpoint.effectiveGates as Record<string, string>
+    const capabilityClosureGates = data.nodeR5CapabilityEvidenceClosureCheckpoint.effectiveGates as Record<string, string>
+    const gates = data.nodeR5VisualAcceptanceCheckpoint.effectiveGates as Record<string, string>
     const ownerDecisionRepositories = data.nodeR5OwnerDecisionsCheckpoint.repositories as {
       node: {head: string}
       renderer: {head: string}
@@ -205,7 +206,13 @@ describe("visual monorepo M0 foundation", () => {
       renderer: {head: string}
       template: {head: string}
     }
-    const latestRepositories = data.nodeR5CapabilityEvidenceClosureCheckpoint.repositories as {
+    const capabilityClosureRepositories = data.nodeR5CapabilityEvidenceClosureCheckpoint.repositories as {
+      node: {head: string}
+      ui: {head: string}
+      renderer: {head: string}
+      template: {head: string}
+    }
+    const latestRepositories = data.nodeR5VisualAcceptanceCheckpoint.repositories as {
       node: {head: string}
       ui: {head: string}
       renderer: {head: string}
@@ -237,12 +244,13 @@ describe("visual monorepo M0 foundation", () => {
     expect(checkboxRepositories.node.head).toBe("b544860e95aea7d57b3d0f0a29d1a8274a5c51b0")
     expect(collapseRepositories.node.head).toBe("ceef5c66259b2a14ae3006aea08644dba7f79876")
     expect(hoverRepositories.node.head).toBe("68e2425e62b956e3fc187ca7abd811a468db8bad")
-    expect(latestRepositories.node.head).toBe("68e2425e62b956e3fc187ca7abd811a468db8bad")
+    expect(capabilityClosureRepositories.node.head).toBe("68e2425e62b956e3fc187ca7abd811a468db8bad")
+    expect(latestRepositories.node.head).toBe("6aef6ab1fc038f2fbbf752746d3f328d93ad63e8")
     expect(latestRepositories.ui.head).toBe("90c77080c27d92fea5ee803e8ff1e49d65885ae1")
     expect(latestRepositories.renderer.head).toBe("e428e64003efdbc3e627d85431532abde0aed350")
     expect(latestRepositories.template.head).toBe("671d19f652b2899b77bd30e50e9fd254080ef93f")
     expect(nodeGroup.owners.find(({id}) => id === "source:node")?.revision).toBe(
-      "68e2425e62b956e3fc187ca7abd811a468db8bad",
+      "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8",
     )
     expect(ownerDecisionGates).toEqual({
       R1: "verified",
@@ -288,7 +296,8 @@ describe("visual monorepo M0 foundation", () => {
     expect(checkboxGates).toEqual(alignmentGates)
     expect(collapseGates).toEqual(alignmentGates)
     expect(hoverGates).toEqual(alignmentGates)
-    expect(gates).toEqual(alignmentGates)
+    expect(capabilityClosureGates).toEqual(alignmentGates)
+    expect(gates).toEqual({...alignmentGates, R5: "verified"})
     expect(uiGroup.owners.find(({id}) => id === "source:ui")?.revision).toBe(
       "90c77080c27d92fea5ee803e8ff1e49d65885ae1",
     )

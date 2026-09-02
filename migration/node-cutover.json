@@ -3,7 +3,7 @@
   "sourceRepository": "node",
   "sourcePath": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
   "initialObservedHead": "209ba2a5e905edeeb6293bdedf47ea483d011c94",
-  "observedHead": "68e2425e62b956e3fc187ca7abd811a468db8bad",
+  "observedHead": "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8",
   "componentCutoverCommit": "becff8f34a7152791df8e833a918dfe0142681bb",
   "layoutContractCommit": "9cccb58ef91cf3ed386377093dbc8e45e061bfb9",
   "incrementalAppendCommit": "0b949e73a77f42bcb32bee7f9041d0500d9655e6",
@@ -33,6 +33,7 @@
   "templateSupportCommit": "671d19f652b2899b77bd30e50e9fd254080ef93f",
   "templateCapabilityClassifierCommit": "c87e95bcda354a019bd8e8b165cdf4a532d915ce",
   "templateCapabilityEvidenceCommit": "e428e64003efdbc3e627d85431532abde0aed350",
+  "visualAcceptanceNodeCommit": "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8",
   "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
   "bulkBackendCleanupEvidenceCommit": "99ce7846e6086ba4c3adebad23acbb6faafa277f",
   "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
@@ -41,15 +42,15 @@
   "projectionNeutralEvidenceCommit": "21f263f36401f79c533917fd9b3fd8aa889fcf3d",
   "componentCutoverEvidenceCheckpoint": "evidence/node-cutover-snapshot.json",
   "blenderCompatibilityEvidenceCheckpoint": "evidence/node-r5-blender-compatibility-checkpoint.json",
-  "previousEvidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
-  "evidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+  "previousEvidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+  "evidenceCheckpoint": "evidence/node-r5-visual-acceptance-checkpoint.json",
   "indexedGitlink": "4b07d76df7365c69c13d811c7b91ede7622db453",
   "behavioralBaseline": "8130b370e287a3abb71fecb9d0bbe6fdc68d0fb7",
   "implementationPolicy": "The clean rewrite is implemented only in the canonical Node checkout and its current supplied branch. This monorepo worktree contains destinations and gates only.",
   "r6Authorization": {
     "acceptedRevision": null,
     "remoteRef": null,
-    "r5Accepted": false,
+    "r5Accepted": true,
     "sourceFrozenReadOnly": false,
     "historyImportAuthorized": false,
     "ownershipSwitchAuthorized": false,
@@ -132,7 +133,7 @@
       "name": "Functional parity",
       "status": "verified",
       "evidence": [
-        "bun run check: 221 pass, 0 fail, 0 todo and 9530 assertions at 68e2425",
+        "bun run check: 221 pass, 0 fail, 0 todo and 9530 assertions at 6aef6ab",
         "stable identity, local mutation and transform-only evidence passed",
         "exact @nodes/layout LayoutResult is mandatory and validated before materialization",
         "metadataRect/nodeMetadataRect, fallbackSocketCenter and routeBetween are absent from committed Node geometry",
@@ -142,7 +143,7 @@
     {
       "id": "R5",
       "name": "Dense performance and equal-scale visual acceptance",
-      "status": "owner-verdict-pending",
+      "status": "verified",
       "verifiedSubgates": [
         "dense-visible 10k lifecycle self-completes with disposed == mounted == 350003",
         "1k/10k retained baselines pass executable 600000000/5400000000 byte ceilings",
@@ -183,9 +184,7 @@
         "Renderer capability evidence refreshed at a84672deb1573b1e16bffacf801877f1a3633628"
       ],
       "blockers": [],
-      "ownerDecisions": [
-        "record the explicit equal-scale visual owner verdict by zavx0z"
-      ],
+      "ownerDecisions": [],
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -207,6 +206,7 @@
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
         "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json",
         "historical Blender 4.5 equal-scale capture 2251c2f92bbc9c4c4c206d961d925f4b160a51dbebb01e99ad40231ef2bd4650",
         "legacy 4.5 compatibility capture 923ed85e2b079c40e6c4cd79a71c5fd6f383e7fe5863285667f71bf86b4f1bf9",
         "two earlier visual candidates explicitly rejected by zavx0z",
@@ -215,6 +215,7 @@
         "corrected collapse-icon comparison capture 84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4 remains candidate-only",
         "Socket hover row capture 3edac5eef8c5f389aaaacc57ea14c3c28c4d0d98b2f4ec78e6f9ba12517b85ab proves glyph-only display ownership",
         "Socket hover comparison capture 0d8ebd3b7a442ae73d34bdbdfed72a5a153751dc1e40cf77e82c2e4c778ba27f remains candidate-only",
+        "final accepted equal-scale capture 84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4 received explicit owner verdict: визуально удовлетворяет",
         "corrected console-zero non-black NodeEditor capture 1ea0ac7147abd2c8c839e61f067535c125840e78c07678ee0920770d71fd15f0"
       ]
     },
@@ -223,14 +224,14 @@
       "name": "Freeze accepted remote-backed revision",
       "status": "blocked",
       "evidence": [
-        "Node main is clean at 68e2425e62b956e3fc187ca7abd811a468db8bad and ahead 30",
+        "Node main is clean at 6aef6ab1fc038f2fbbf752746d3f328d93ad63e8 and ahead 31",
         "UI main is clean at 90c77080c27d92fea5ee803e8ff1e49d65885ae1 and ahead 7",
         "Renderer main is clean at e428e64003efdbc3e627d85431532abde0aed350 and ahead 18",
         "Template main is clean at 671d19f652b2899b77bd30e50e9fd254080ef93f and ahead 5"
       ],
       "blockers": [
-        "explicit R5 equal-scale visual owner verdict remains pending",
-        "68e2425e62b956e3fc187ca7abd811a468db8bad is not remote-backed",
+        "accepted revision and remote ref are not authorized",
+        "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8 is not remote-backed",
         "90c77080c27d92fea5ee803e8ff1e49d65885ae1 is not remote-backed",
         "e428e64003efdbc3e627d85431532abde0aed350 is not remote-backed",
         "671d19f652b2899b77bd30e50e9fd254080ef93f is not remote-backed",

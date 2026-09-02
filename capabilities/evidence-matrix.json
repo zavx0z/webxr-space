@@ -456,7 +456,7 @@
     {
       "id": "nodes.r5-technical-performance",
       "classification": "implemented-performance-evidence",
-      "status": "verified-owner-verdict-pending",
+      "status": "verified",
       "owner": "source:node with Renderer/WebGPU owners",
       "statement": "Value, topology, transform, Link timing/memory, bounded dense lifecycle, component bundle, UI-owned defaults, font-independent Checkbox/collapse icons, exact Socket contour attachment and glyph-owned Socket hover technical gates are verified.",
       "evidence": [
@@ -470,11 +470,10 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
-        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json"
       ],
-      "remainingOwnerDecisions": [
-        "explicit equal-scale visual verdict"
-      ]
+      "remainingOwnerDecisions": []
     },
     {
       "id": "nodes.component-bundle",
@@ -521,21 +520,22 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
-        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json"
       ],
       "decision": "accepted replacement ceiling 285000 / 72000; the historical incomplete evidence remains a comparison rather than the active limit"
     },
     {
       "id": "nodes.storybook-component-cutover",
       "classification": "implemented-evidence",
-      "status": "mechanically-verified-owner-verdict-pending",
+      "status": "owner-accepted",
       "owner": "source:node and external-storybook",
-      "statement": "All 159 leaves resolve through the component path; the corrected Blender 5.2 comparison and semantic Socket hover are ready/presented with console zero and reproducible captures.",
+      "statement": "All 159 leaves resolve through the component path; the corrected equal-scale Blender 5.2 comparison is ready/presented with console zero and has explicit owner verdict: визуально удовлетворяет.",
       "metrics": {
-        "revision": "408f5bc96201dd5885b74fdc",
+        "revision": "da19d41cad8cf23c38b3f4a7",
         "leafRoutes": 159,
         "overviewRoutes": 66,
-        "comparisonCanvasSha256": "0d8ebd3b7a442ae73d34bdbdfed72a5a153751dc1e40cf77e82c2e4c778ba27f",
+        "comparisonCanvasSha256": "84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4",
         "socketHoverRowSha256": "3edac5eef8c5f389aaaacc57ea14c3c28c4d0d98b2f4ec78e6f9ba12517b85ab"
       },
       "evidence": [
@@ -557,15 +557,16 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
-        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json"
       ],
-      "verification": "fresh Storybook MCP inspection at 408f5bc96201dd5885b74fdc: exact routes ready/presented, diagnostics/console empty, Socket button display empty and its 12px glyph display contains shadow plus background after semantic hover",
-      "remainingGate": "record the explicit visual owner verdict by zavx0z"
+      "verification": "fresh Storybook MCP capture at da19d41cad8cf23c38b3f4a7: exact equal-scale route ready/presented, diagnostics/console empty, capture sha256 84e176e4a449365475ffd10616c346f957f3b281f6f483aab1216c1e53e513c4; owner verdict визуально удовлетворяет",
+      "remainingGate": "R6 remote-backed freeze/import authorization"
     },
     {
       "id": "nodes.blender-compatibility-reference",
       "classification": "external-reference-evidence",
-      "status": "exact-candidate-owner-verdict-pending",
+      "status": "owner-accepted",
       "owner": "source:node with @ui/components SelectField",
       "statement": "Blender 5.2 LTS is the normative cross-repository target; the official Noise Texture asset is stored byte-exact and compared 1:1 with the component output.",
       "nodeImplementationCommit": "1bce579a10ee2be4110ee43e10235ee173c2243f",
@@ -602,15 +603,17 @@
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
         "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json",
         "node:9ddded88425f69e6052687e7dccb4a02fb3016a5:packages/ui/requirements.md"
-      ]
+      ],
+      "ownerVerdict": "визуально удовлетворяет"
     },
     {
       "id": "nodes.remote-freeze",
       "classification": "migration-gate",
       "status": "blocked-r6",
       "owner": "source:node",
-      "statement": "Node 68e2425 is ahead 30, UI 90c7708 is ahead 7, Renderer e428e64 is ahead 18 and Template 671d19f is ahead 5; the corrected visual owner verdict remains pending, the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
+      "statement": "R5 has explicit owner acceptance. Node 6aef6ab is ahead 31, UI 90c7708 is ahead 7, Renderer e428e64 is ahead 18 and Template 671d19f is ahead 5; the commits are not remote-backed, and all source owners remain writable without freeze authorization.",
       "evidence": [
         "evidence/node-cutover-snapshot.json",
         "evidence/node-r4-r5-checkpoint.json",
@@ -631,7 +634,8 @@
         "evidence/node-r5-checkbox-path-checkpoint.json",
         "evidence/node-r5-collapse-icon-checkpoint.json",
         "evidence/node-r5-socket-hover-checkpoint.json",
-        "evidence/node-r5-capability-evidence-closure-checkpoint.json"
+        "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+        "evidence/node-r5-visual-acceptance-checkpoint.json"
       ]
     },
     {

@@ -65,7 +65,7 @@
     {
       "id": "R1-R6",
       "name": "Canonical Node clean component rewrite and acceptance",
-      "status": "r1-r4-verified-r5-owner-verdict-r6-blocked",
+      "status": "r1-r5-verified-r6-blocked",
       "dependsOn": ["M0"],
       "implementationLocation": "/Users/zavx0z/repozitarium/webxr-space/projects/node",
       "implementationBranchPolicy": "current supplied branch; no separate worktree implied",
@@ -94,20 +94,21 @@
       "templateSupportCommit": "671d19f652b2899b77bd30e50e9fd254080ef93f",
       "templateCapabilityClassifierCommit": "c87e95bcda354a019bd8e8b165cdf4a532d915ce",
       "templateCapabilityEvidenceCommit": "e428e64003efdbc3e627d85431532abde0aed350",
+      "visualAcceptanceNodeCommit": "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8",
       "bulkBackendCleanupCommit": "a5c9f3e7e9767ff1b6f292ded67697692c8c6d65",
       "hiddenTransformRendererCommit": "0cb7256277d5ff9c013766c371a109ab43a7c100",
       "projectionNeutralRendererCommit": "80ee4f56c45ce1e260e8f61e564c73bf26edaaa9",
-      "completedGates": ["R1", "R2", "R3", "R4"],
-      "ownerDecisionGates": ["R5 visual verdict"],
+      "completedGates": ["R1", "R2", "R3", "R4", "R5"],
+      "ownerDecisionGates": [],
       "blockedGates": ["R6"],
-      "previousEvidenceCheckpoint": "evidence/node-r5-socket-hover-checkpoint.json",
-      "evidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+      "previousEvidenceCheckpoint": "evidence/node-r5-capability-evidence-closure-checkpoint.json",
+      "evidenceCheckpoint": "evidence/node-r5-visual-acceptance-checkpoint.json",
       "details": "migration/node-cutover.json"
     },
     {
       "id": "M3",
       "name": "Node family history import",
-      "status": "blocked-by-node-owner-verdict-r6",
+      "status": "blocked-by-node-r6",
       "dependsOn": ["R1-R6", "M2"],
       "packages": [
         "@nodes/core",
@@ -125,7 +126,7 @@
         "single writable owner cutover"
       ],
       "blockers": [
-        "The rejected visual defects now have append-only contour, defaults, Checkbox Path, collapse icon and glyph-owned Socket hover corrections; only the repeated final visual verdict remains pending.",
+        "The append-only visual correction chain has explicit owner acceptance: визуально удовлетворяет.",
         "Node 68e2425, Template support 671d19f and Renderer capability evidence e428e64 are not remote-backed, and the canonical source owners have not been frozen/read-only.",
         "The source:node repository remains the only writable canonical owner."
       ]
