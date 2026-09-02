@@ -18,12 +18,15 @@ hit semantics и stable identity. Старые `UiSurface`, `@ui/elements`,
 `@layout/core` и ручной paint runtime не возвращаются.
 
 Accepted raster `.storybook/references/blender-4.5.5-reference.png` остаётся
-visual law и immutable resource, но не namespace или production dependency.
-Действующий cross-repository UI target — Blender 5.2 LTS. Совместимость exact
-Noise node scope с 4.5 artifact остаётся unverified: read-only 5.2
-`blender_reference` NODE_EDITOR доступен, но текущая reference scene не содержит
-node graph. Поэтому 4.5 comparison направляет correction, но не закрывает
-финальный 5.2 owner verdict автоматически.
+immutable historical resource, но не namespace или production dependency.
+Действующий cross-repository UI target — Blender 5.2 LTS. Exact official 5.2
+Manual Noise Texture asset сохранён как
+`.storybook/references/blender-5.2-noise-texture.webp` с SHA-256
+`6d9dcb739e10bd4a82a1507deadae451fded7fec2ced50c54520d115b6d766f1`.
+Он подтверждает отсутствие legacy `fBM` row и один filled contour для label +
+numeric value. Asset остаётся candidate до equal-scale owner verdict; старый
+4.5 full-window crop больше не классифицируется compatible для exact Noise
+scope.
 
 ## Public contract
 
@@ -306,9 +309,9 @@ revision, ready/presented, empty diagnostics/console and non-black shared canvas
 
 Comparison route `ui/comparison/reference/default` использует:
 
-- source viewport `1920×1200`, DPR `2`;
-- exact source rect `x=498, y=558, width=228, height=385`;
-- live viewport `228×385`, scale `1`;
+- official 5.2 source asset `192×328`, DPR `1`;
+- exact source rect `x=0, y=0, width=192, height=328`;
+- live viewport `192×328`, scale `1`;
 - production `Node`/concrete Parameters, не derived raster/private Canvas.
 
 Mechanical route/canvas evidence не является visual parity. Окончательный
@@ -346,12 +349,11 @@ pipeline не выполняет полную performance/lifecycle acceptance:
    `178.6–328.6ms`. Retained baseline `~5.023GB` остаётся capacity evidence без
    утверждённого memory ceiling и требует отдельного owner policy, а не
    выдуманного pass/fail threshold.
-6. Blender numeric node row остаётся candidate UI Components owner gap.
-   4.5 artifact показывает один full-width compact filled contour для
-   Scale/Detail/Roughness/Lacunarity/Distortion; current NumberField optional
-   label рисуется отдельной transparent column. Но 5.2 exact node evidence пока
-   отсутствует, поэтому Node не добавляет local Field CSS/copy и не меняет
-   `UI-COMPILED-NUMBER-FIELD-001` по неподтверждённому legacy raster.
+6. Exact official 5.2 Noise asset подтверждает один full-width compact filled
+   contour для Scale/Detail/Roughness/Lacunarity/Distortion и отсутствие legacy
+   `fBM` row. UI owner `f34b52c` исправляет optional labelled `NumberField`;
+   Node использует этот public owner без local Field CSS/copy. Equal-scale
+   visual verdict остаётся отдельным owner gate.
 7. Compiled author composition через один authored Component child поддержана
    и проверена для `Frame → Node → concrete Parameter`. Прямая передача
    нескольких intrinsic children через component boundary отсутствует в first

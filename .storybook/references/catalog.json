@@ -24,12 +24,41 @@
         "width": 3840,
         "height": 2400
       },
-      "compatibility": "compatible",
+      "compatibility": "changed-for-5.2-noise-scope",
       "acceptance": "accepted",
       "acceptedFrom": {
         "repository": "https://github.com/zavx0z/metafor",
         "revision": "23057c8447e718d441e68e4cd4c86134915b08b8"
       }
+    },
+    {
+      "id": "candidate-noise-texture-5-2",
+      "scope": "Noise Texture node",
+      "storyRoute": "/ui/comparison/reference/default",
+      "asset": "blender-5.2-noise-texture.webp",
+      "sha256": "6d9dcb739e10bd4a82a1507deadae451fded7fec2ced50c54520d115b6d766f1",
+      "source": {
+        "product": "Blender",
+        "version": "5.2 LTS",
+        "revision": "fbe6228777e7d9afefcd61a413844e790ae75db7",
+        "documentation": "https://docs.blender.org/manual/en/5.2/render/shader_nodes/textures/noise.html",
+        "assetUrl": "https://docs.blender.org/manual/en/5.2/_images/node-types_ShaderNodeTexNoise.webp"
+      },
+      "pixelSize": {
+        "width": 192,
+        "height": 328
+      },
+      "capture": {
+        "kind": "official-manual-image",
+        "crop": "full-asset",
+        "theme": "dark",
+        "locale": "en",
+        "viewport": null,
+        "dpr": null
+      },
+      "compatibility": "current",
+      "acceptance": "candidate",
+      "remainingOwnerDecision": "Equal-scale Node visual verdict"
     }
   ]
 }

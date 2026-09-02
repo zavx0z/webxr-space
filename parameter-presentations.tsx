@@ -80,6 +80,7 @@ export function NumberParameter(props: NumberParameterProps) {
     nodeId={props.nodeId}
     label={props.label}
     kind="number"
+    fieldOwnsLabel
     sockets={props.sockets}
     connected={props.connected}
     hidden={props.hidden}
@@ -90,6 +91,7 @@ export function NumberParameter(props: NumberParameterProps) {
     onSocketActivate={props.onSocketActivate}
   >
     <NumberField
+      label={props.label}
       value={props.value}
       min={props.min}
       max={props.max}
@@ -99,7 +101,12 @@ export function NumberParameter(props: NumberParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       title={props.title}
-      style={compactFieldStyle}
+      style={css`
+        ${compactFieldStyle}
+
+        --field-label-width: 58%;
+        --number-field-label-padding: 2px 5px;
+      `}
       onInput={props.onInput}
       onChange={props.onChange}
     />

@@ -108,6 +108,7 @@ export type ParameterProps = Readonly<{
 
 type ParameterLayoutProps = ParameterBaseProps & Readonly<{
   kind: string
+  fieldOwnsLabel?: boolean | undefined
   children: JsxSourceElement
 }>
 
@@ -178,6 +179,7 @@ export function Parameter(props: ParameterProps) {
   const leadingCheckbox = booleanCheckbox && !connected
   const numberSlider = typeof snapshot.value === "number" && interaction === "slider" && min !== undefined && max !== undefined
   const numberEditor = typeof snapshot.value === "number" && !numberSlider
+  const numberOwnsLabel = numberEditor && !connected
   const stringSelection = typeof snapshot.value === "string" &&
     (options !== undefined || valueType === "menu" || valueType === "enum")
   const stringCycle = stringSelection && interaction === "cycle"
@@ -241,7 +243,7 @@ export function Parameter(props: ParameterProps) {
     <ParameterLabel
       label={label}
       connected={connected}
-      hidden={labelHidden || leadingCheckbox}
+      hidden={labelHidden || leadingCheckbox || numberOwnsLabel}
     />
     <span
       data-parameter-field=""
@@ -289,6 +291,7 @@ export function Parameter(props: ParameterProps) {
         onChange={change}
       /> : null}
       {numberEditor ? <NumberField
+        label={numberOwnsLabel ? label : undefined}
         value={numberValue}
         min={min}
         max={max}
@@ -296,7 +299,12 @@ export function Parameter(props: ParameterProps) {
         disabled={disabled}
         readOnly={readOnly}
         title={title}
-        style={compactFieldStyle}
+        style={css`
+          ${compactFieldStyle}
+
+          --field-label-width: 58%;
+          --number-field-label-padding: 2px 5px;
+        `}
         onInput={input}
         onChange={change}
       /> : null}
@@ -456,6 +464,7 @@ export function ParameterLayout(props: ParameterLayoutProps) {
     <ParameterLabel
       label={props.label}
       connected={props.connected === true}
+      hidden={props.fieldOwnsLabel === true && props.connected !== true}
     />
     <span
       data-parameter-field=""

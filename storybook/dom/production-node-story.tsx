@@ -96,11 +96,11 @@ const previewImage = Object.freeze({
 })
 
 export const NODE_COMPARISON_REFERENCE = Object.freeze({
-  id: "accepted-node-editor-4-5-5",
+  id: "candidate-noise-texture-5-2",
   scope: "noise-texture-node",
-  sourceViewport: Object.freeze({width: 1920, height: 1200, dpr: 2}),
-  sourceRect: Object.freeze({x: 498, y: 558, width: 228, height: 385}),
-  liveViewport: Object.freeze({width: 228, height: 385, scale: 1}),
+  sourceViewport: Object.freeze({width: 192, height: 328, dpr: 1}),
+  sourceRect: Object.freeze({x: 0, y: 0, width: 192, height: 328}),
+  liveViewport: Object.freeze({width: 192, height: 328, scale: 1}),
 })
 
 export function createProductionNodeStory(document: Document, route: string): ProductionNodeStory {
@@ -120,7 +120,7 @@ export function createProductionNodeStory(document: Document, route: string): Pr
         typescript: storySource(route),
       })
     },
-    ready: route.startsWith("ui/comparison") ? acceptedReferenceReady : async () => {},
+    ready: route.startsWith("ui/comparison") ? comparisonReferenceReady : async () => {},
     dispose() {
       if (disposed) return
       disposed = true
@@ -337,7 +337,7 @@ function ComparisonStory() {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        width: 228px;
+        width: 192px;
         margin: 0;
         gap: 4px;
       `}>
@@ -349,7 +349,7 @@ function ComparisonStory() {
           color: #a8a8a8;
           font-size: 10px;
           font-weight: 400;
-        `}>Эталон · Noise Texture · 1:1</figcaption>
+        `}>Эталон · Blender 5.2 · Noise Texture · 1:1</figcaption>
         <div
           data-source-rect={`${source.x} ${source.y} ${source.width} ${source.height}`}
           data-source-dpr={NODE_COMPARISON_REFERENCE.sourceViewport.dpr}
@@ -357,24 +357,24 @@ function ComparisonStory() {
             box-sizing: border-box;
             position: relative;
             display: block;
-            width: 228px;
-            height: 385px;
+            width: 192px;
+            height: 328px;
             overflow: hidden;
             border: 1px solid #111111;
             background: #1d1d1d;
           `}
         >
           <img
-            src={acceptedReferenceSrc()}
-            alt="Exact accepted crop of the Blender Noise Texture node"
+            src={comparisonReferenceSrc()}
+            alt="Exact Blender 5.2 Noise Texture node reference"
             width={NODE_COMPARISON_REFERENCE.sourceViewport.width}
             height={NODE_COMPARISON_REFERENCE.sourceViewport.height}
             style={css`
               display: block;
-              width: 1920px;
-              height: 1200px;
-              margin-left: -498px;
-              margin-top: -558px;
+              width: 192px;
+              height: 328px;
+              margin-left: 0;
+              margin-top: 0;
               max-width: none;
             `}
           />
@@ -384,7 +384,7 @@ function ComparisonStory() {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        width: 228px;
+        width: 192px;
         margin: 0;
         gap: 4px;
       `}>
@@ -404,8 +404,8 @@ function ComparisonStory() {
             box-sizing: border-box;
             position: relative;
             display: block;
-            width: 228px;
-            height: 385px;
+            width: 192px;
+            height: 328px;
             overflow: hidden;
             border: 1px solid #111111;
             background: #1d1d1d;
@@ -414,9 +414,9 @@ function ComparisonStory() {
           <Node
             id="comparison-noise"
             label="Noise Texture"
-            title="Noise Texture · accepted comparison scope"
+            title="Noise Texture · Blender 5.2 comparison scope"
             headerColor="#8b481f"
-            rect={Object.freeze({x: 0, y: 0, width: 228, height: 272})}
+            rect={Object.freeze({x: 0, y: 0, width: 192, height: 272})}
             parameters={data.parameters}
             sockets={data.sockets}
             connectedSocketKeys={data.connectedSocketKeys}
@@ -658,9 +658,6 @@ function comparisonNodeData(): Readonly<{
     comparisonParameter("noise-dimensions", "Dimensions", "3d", "menu", {labelHidden: true, options: [
       {value: "1d", label: "1D"}, {value: "2d", label: "2D"}, {value: "3d", label: "3D"}, {value: "4d", label: "4D"},
     ]}),
-    comparisonParameter("noise-basis", "Noise", "fbm", "menu", {labelHidden: true, options: [
-      {value: "fbm", label: "fBM"}, {value: "multifractal", label: "Multifractal"}, {value: "hybrid", label: "Hybrid Multifractal"},
-    ]}),
     comparisonParameter("noise-normalize", "Normalize", true, "boolean"),
     comparisonParameter("noise-vector", "Vector", [0, 0, 0], "vector", {axes: ["X", "Y", "Z"]}, [socket("noise-vector-input", "vector", "input", "left", "Vector")], true),
     comparisonParameter("noise-scale", "Scale", 5, "float", {min: 0, max: 10, step: .1}, [socket("noise-scale-input", "float", "input", "left", "Scale")]),
@@ -848,14 +845,14 @@ function storySource(route: string): string {
   ].join("\n")
 }
 
-function acceptedReferenceSrc(): string {
+function comparisonReferenceSrc(): string {
   const nodeId = "variant:@nodes/ui/comparison/reference/default"
   return `/__storybook/resources/nodes/${encodeURIComponent(nodeId)}/?kind=reference&index=0`
 }
 
-async function acceptedReferenceReady(): Promise<void> {
-  const response = await fetch(acceptedReferenceSrc())
-  if (!response.ok) throw new Error(`Accepted Node reference failed to load: ${acceptedReferenceSrc()}`)
+async function comparisonReferenceReady(): Promise<void> {
+  const response = await fetch(comparisonReferenceSrc())
+  if (!response.ok) throw new Error(`Node comparison reference failed to load: ${comparisonReferenceSrc()}`)
   await response.arrayBuffer()
 }
 

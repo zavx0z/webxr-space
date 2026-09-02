@@ -1394,7 +1394,7 @@
         {
           "id": "reference",
           "kind": "component",
-          "label": "Принятый эталон",
+          "label": "Эталон 5.2",
           "apiName": "NodeEditor",
           "route": "ui/comparison/reference",
           "tags": [
@@ -1415,6 +1415,7 @@
               },
               "resources": {
                 "references": [
+                  "./references/blender-5.2-noise-texture.webp",
                   "./references/blender-4.5.5-reference.png",
                   "./references/catalog.json"
                 ]

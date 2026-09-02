@@ -75,7 +75,7 @@ describe("public component Storybook projection", () => {
     const story = createProductionNodeStory(document, "ui/comparison/reference/default")
     const root = story.element.querySelector('[data-production-owner="comparison"]')!
     expect(root.getAttribute("data-production-owner")).toBe("comparison")
-    expect(story.element.querySelector('[data-source-rect]')?.getAttribute("data-source-rect")).toBe("498 558 228 385")
+    expect(story.element.querySelector('[data-source-rect]')?.getAttribute("data-source-rect")).toBe("0 0 192 328")
     expect(story.element.querySelector('[data-live-scale]')?.getAttribute("data-live-scale")).toBe("1")
     const node = story.element.querySelector('[data-node-id="comparison-noise"]')!
     expect(node.getAttribute("data-category")).toBe("")
@@ -94,7 +94,12 @@ describe("public component Storybook projection", () => {
     expect(normalize.getAttribute("data-leading-checkbox")).toBe("true")
     expect(node.querySelector('[data-parameter-id="noise-normalize"] input')?.getAttribute("type")).toBe("checkbox")
     expect(normalize.querySelectorAll('[data-parameter-label]')).toHaveLength(2)
-    expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 228, height: 385, scale: 1})
+    expect(node.querySelector('[data-parameter-id="noise-basis"]')).toBeNull()
+    const scale = node.querySelector('[data-parameter-id="noise-scale"]')!
+    expect(scale.querySelector('[data-parameter-label]')?.hasAttribute("hidden")).toBeTrue()
+    expect(scale.querySelector('[data-number-field]')?.textContent).toContain("Scale")
+    expect(scale.querySelector('[data-number-fill]')).not.toBeNull()
+    expect(NODE_COMPARISON_REFERENCE.liveViewport).toEqual({width: 192, height: 328, scale: 1})
     const source = story.source()
     expect(source.typescript).toContain('from "@nodes/ui"')
     expect(source.typescript).toContain("createRoot(container).render")
