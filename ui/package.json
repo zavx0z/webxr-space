@@ -4,10 +4,62 @@
   "description": "Универсальные UI-компоненты, тема и иконки",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./themes/theme.css"
+  ],
   "packageManager": "bun@1.4.0",
+  "exports": {
+    "./badge": "./badge.tsx",
+    "./divider": "./divider.tsx",
+    "./typography": "./typography.tsx",
+    "./buttons/button": "./buttons/button.tsx",
+    "./buttons/toggle-button-group": "./buttons/toggle-button-group.tsx",
+    "./fields/checkbox-field": "./fields/checkbox-field.tsx",
+    "./fields/collection-field": "./fields/collection-field.tsx",
+    "./fields/color-field": "./fields/color-field.tsx",
+    "./fields/color-picker-field": "./fields/color-picker-field.tsx",
+    "./fields/cycle-field": "./fields/cycle-field.tsx",
+    "./fields/field-group": "./fields/field-group.tsx",
+    "./fields/matrix-field": "./fields/matrix-field.tsx",
+    "./fields/number-field": "./fields/number-field.tsx",
+    "./fields/path-field": "./fields/path-field.tsx",
+    "./fields/reference-field": "./fields/reference-field.tsx",
+    "./fields/select-field": "./fields/select-field.tsx",
+    "./fields/slider-field": "./fields/slider-field.tsx",
+    "./fields/switch-field": "./fields/switch-field.tsx",
+    "./fields/text-field": "./fields/text-field.tsx",
+    "./fields/vector-field": "./fields/vector-field.tsx",
+    "./surfaces/pane": "./surfaces/pane.tsx",
+    "./surfaces/panel": "./surfaces/panel.tsx",
+    "./surfaces/window": "./surfaces/window.tsx",
+    "./surfaces/frame": "./surfaces/frame.tsx",
+    "./views/list": "./views/list.tsx",
+    "./views/table": "./views/table.tsx",
+    "./views/code-editor": "./views/code-editor.tsx",
+    "./views/timeline": "./views/timeline.tsx",
+    "./feedback/notification": "./feedback/notification.tsx",
+    "./feedback/status-bar": "./feedback/status-bar.tsx",
+    "./widgets/inspector": "./widgets/inspector.tsx",
+    "./themes/icons": "./themes/icons.ts",
+    "./themes/syntax-theme": "./themes/syntax-theme.ts",
+    "./themes/theme.css": "./themes/theme.css"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter"
+  },
+  "peerDependencies": {
+    "@zavx0z/component": "*",
+    "@zavx0z/dom": "*",
+    "@zavx0z/template": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/dom": {"optional": true},
+    "@zavx0z/template": {"optional": true}
   }
 }

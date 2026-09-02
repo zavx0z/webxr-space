@@ -1,0 +1,212 @@
+:root {
+  /*
+   * Foundation scales.
+   *
+   * This first production slice intentionally contains only stops already
+   * used by the current UI contour. Missing stops are not synthesized.
+   * Colors are stored as channels so a concrete theme can compose them with
+   * rgb(var(--token) / alpha) without a TypeScript color runtime.
+   */
+  --primary-300: 113 168 255;
+  --primary-500: 71 114 179;
+
+  --info-500: 40 72 125;
+  --success-500: 24 134 37;
+  --warning-500: 172 135 55;
+  --error-500: 119 17 17;
+
+  --surface-0: 255 255 255;
+  --surface-50: 240 240 240;
+  --surface-100: 230 230 230;
+  --surface-150: 224 224 224;
+  --surface-200: 221 221 221;
+  --surface-250: 216 216 216;
+  --surface-300: 204 204 204;
+  --surface-400: 153 153 153;
+  --surface-450: 135 135 135;
+  --surface-475: 119 119 119;
+  --surface-500: 101 101 101;
+  --surface-550: 89 89 89;
+  --surface-600: 84 84 84;
+  --surface-650: 77 77 77;
+  --surface-700: 61 61 61;
+  --surface-725: 51 51 51;
+  --surface-750: 48 48 48;
+  --surface-800: 40 40 40;
+  --surface-810: 38 38 38;
+  --surface-815: 36 36 36;
+  --surface-825: 35 35 35;
+  --surface-850: 34 34 34;
+  --surface-900: 29 29 29;
+  --surface-925: 25 25 25;
+  --surface-950: 24 24 24;
+  --surface-975: 22 22 22;
+  --surface-black: 0 0 0;
+
+  --axis-x-500: 255 51 82;
+  --axis-y-500: 83 179 67;
+  --axis-z-500: 62 127 255;
+
+  --editor-surface-100: 188 190 196;
+  --editor-surface-500: 75 80 89;
+  --editor-surface-700: 50 52 56;
+  --editor-surface-900: 25 26 28;
+
+  --spacing-0: 0px;
+  --spacing-1: 1px;
+  --spacing-2: 2px;
+  --spacing-3: 3px;
+  --spacing-4: 4px;
+  --spacing-5: 5px;
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+
+  --radius-small: 3px;
+  --radius-medium: 4px;
+  --radius-large: 6px;
+  --radius-round: 9999px;
+
+  --font-family: "JetBrains Mono", monospace;
+  --font-size-2xs: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 15px;
+  --line-height-control: 1;
+
+  --border-width-control: 1px;
+  --field-height-compact: 22px;
+  --field-height-regular: 28px;
+  --field-label-height: 28px;
+  --field-label-gap: 4px;
+  --field-checkbox-height: 16px;
+  --field-switch-height: 18px;
+  --field-toggle-button-height: 22px;
+  --field-labelled-choice-padding-top: 5px;
+  --field-group-content-height-regular: 26px;
+  --field-group-content-height-compact: 20px;
+  --field-matrix-row-gap: 2px;
+  --field-path-height-compact: 24px;
+  --field-reference-height-compact: 24px;
+  --field-frame-content-height-regular: 26px;
+  --field-frame-content-height-compact: 22px;
+  --field-collection-action-height: 28px;
+  --field-collection-action-gap: 2px;
+  --field-collection-rows-1-height: 30px;
+  --field-collection-rows-2-height: 56px;
+  --field-collection-rows-3-height: 84px;
+  --field-collection-rows-4-height: 110px;
+  --field-collection-rows-5-height: 136px;
+  --field-collection-rows-6-height: 162px;
+  --field-collection-rows-7-height: 188px;
+  --field-collection-rows-8-height: 214px;
+  --field-color-picker-swatch-height: 48px;
+  --field-color-picker-channel-height: 24px;
+  --field-color-picker-channel-count: 4;
+  --field-color-picker-gap: 5px;
+  --field-color-picker-padding: 6px;
+  --field-color-picker-border-width: 1px;
+  --field-color-picker-height: 178px;
+
+  --control-height-small: 18px;
+  --control-height-medium: var(--field-height-compact);
+  --control-height-large: var(--field-height-regular);
+  --control-content-gap: var(--spacing-3);
+  --control-icon-size: 14px;
+
+  /* Concrete theme: semantic roles composed from the foundation above. */
+  --state-info: rgb(var(--info-500));
+  --state-success: rgb(var(--success-500));
+  --state-warning: rgb(var(--warning-500));
+  --state-error: rgb(var(--error-500));
+
+  --widget-focus-outline: rgb(var(--primary-300));
+  --widget-hover-outline: rgb(var(--surface-500));
+  --widget-hover-background: rgb(var(--surface-500));
+  --widget-active-background: rgb(var(--primary-500));
+
+  --widget-regular-outline: rgb(var(--surface-700));
+  --widget-regular-background: rgb(var(--surface-600));
+  --widget-regular-background-glass: rgb(var(--surface-600) / 0.72);
+  --widget-regular-background-selected: rgb(var(--primary-500));
+  --widget-regular-content: rgb(var(--surface-100));
+  --widget-regular-content-selected: rgb(var(--surface-0));
+
+  --widget-text-outline: rgb(var(--surface-700));
+  --widget-text-outline-hover: rgb(var(--surface-550));
+  --widget-text-background: rgb(var(--surface-900));
+  --widget-text-background-focus: rgb(var(--surface-850));
+  --widget-text-background-readonly: rgb(var(--surface-800));
+  --widget-text-content: rgb(var(--surface-100));
+  --widget-text-content-readonly: rgb(var(--surface-400));
+
+  --widget-number-outline: rgb(var(--surface-700));
+  --widget-number-background: rgb(var(--surface-600));
+  --widget-number-fill: rgb(var(--primary-500));
+  --widget-number-background-focus: rgb(var(--surface-850));
+  --widget-number-background-readonly: rgb(var(--surface-750));
+  --widget-number-content: rgb(var(--surface-100));
+  --widget-number-content-readonly: rgb(var(--surface-400));
+
+  --widget-option-outline: rgb(var(--surface-700));
+  --widget-option-background: rgb(var(--surface-600));
+  --widget-option-background-selected: rgb(var(--primary-500));
+  --widget-option-content: rgb(var(--surface-0));
+  --widget-option-content-selected: rgb(var(--surface-0));
+
+  --widget-box-outline: rgb(var(--surface-700));
+  --widget-box-background: rgb(var(--surface-900) / 0.5);
+  --widget-box-content: rgb(var(--surface-100));
+
+  --widget-toolbar-outline: rgb(var(--surface-700));
+  --widget-toolbar-background: rgb(var(--surface-800));
+  --widget-toolbar-background-selected: rgb(var(--primary-500));
+  --widget-toolbar-item: rgb(var(--surface-0) / 0.7);
+  --widget-toolbar-content: rgb(var(--surface-100));
+  --widget-toolbar-content-selected: rgb(var(--surface-0));
+
+  --widget-tab-content: rgb(var(--surface-400));
+  --widget-tab-content-selected: rgb(var(--surface-0));
+  --widget-list-background-selected: rgb(var(--primary-500));
+  --widget-list-content: rgb(var(--surface-300));
+  --widget-list-content-selected: rgb(var(--surface-0));
+  --widget-popup-outline: rgb(var(--surface-815));
+  --widget-popup-background: rgb(var(--surface-950));
+
+  --material-widget-emboss: rgb(var(--surface-black) / 0.149);
+  --material-editor-border: rgb(var(--surface-975));
+  --material-editor-outline: rgb(var(--surface-0) / 0.082);
+  --material-editor-outline-active: rgb(var(--surface-0) / 0.165);
+  --material-checker-primary: rgb(var(--surface-725));
+  --material-checker-secondary: rgb(var(--surface-810));
+  --material-checker-size: 8px;
+  --material-widget-text-cursor: rgb(var(--primary-300));
+
+  --editor-background: rgb(var(--editor-surface-900));
+  --editor-content: rgb(var(--editor-surface-100));
+  --editor-gutter-background: rgb(var(--editor-surface-900));
+  --editor-line-number-content: rgb(var(--editor-surface-500));
+  --editor-border: rgb(var(--editor-surface-700));
+
+  --space-node-background: rgb(var(--surface-900) / 0);
+  --space-node-header-background: rgb(var(--surface-900) / 0.702);
+  --space-node-navigation-background: rgb(var(--surface-900));
+  --space-node-execution-background: rgb(var(--surface-750));
+  --space-node-panel-header-background: rgb(var(--surface-700));
+  --space-node-panel-background: rgb(var(--surface-700));
+  --space-node-panel-sub-background: rgb(var(--surface-black) / 0.122);
+
+  --space-text-background: rgb(var(--surface-825) / 0);
+  --space-text-gutter-background: rgb(var(--surface-900));
+  --space-text-line-number-content: rgb(var(--surface-475));
+  --space-text-content: rgb(var(--surface-100));
+  --space-text-selection-background: rgb(var(--surface-650) / 0.902);
+  --space-text-cursor: rgb(var(--primary-300));
+
+  --status-bar-background: rgb(var(--surface-950));
+  --status-bar-top: rgb(var(--surface-975));
+  --status-bar-content: rgb(var(--surface-450));
+  --status-bar-content-highlight: rgb(var(--surface-0));
+  --status-bar-content-shadow: rgb(var(--surface-black) / 0.749);
+  --notification-shadow: rgb(var(--surface-black) / 0.35);
+}

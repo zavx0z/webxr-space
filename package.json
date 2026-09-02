@@ -1,7 +1,7 @@
 {
-  "name": "@zavx0z/visual",
+  "name": "@zavx0z/webxr",
   "version": "0.0.0",
-  "description": "Единая визуальная платформа MetaFor",
+  "description": "Единая WebXR-платформа MetaFor",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
@@ -23,14 +23,17 @@
     "nodes"
   ],
   "scripts": {
-    "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts engine/tests/contract.test.ts dom/tests/contract.test.ts template/tests/contract.test.ts component/tests/contract.test.ts renderer/tests/contract.test.ts webgpu/tests/contract.test.ts browser/tests/contract.test.ts space/tests/contract.test.ts ui/tests/contract.test.ts nodetree/tests/contract.test.ts layout/tests/contract.test.ts nodes/tests/contract.test.ts",
-    "test:architecture": "bun test tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts",
-    "test:packages": "bun test engine/tests/contract.test.ts dom/tests/contract.test.ts template/tests/contract.test.ts component/tests/contract.test.ts renderer/tests/contract.test.ts webgpu/tests/contract.test.ts browser/tests/contract.test.ts space/tests/contract.test.ts ui/tests/contract.test.ts nodetree/tests/contract.test.ts layout/tests/contract.test.ts nodes/tests/contract.test.ts",
-    "check": "bun run typecheck && bun run test"
+    "typecheck": "bun run --parallel typecheck:root typecheck:packages",
+    "typecheck:root": "tsc --project tsconfig.json --pretty false",
+    "typecheck:packages": "bun run --workspaces --parallel typecheck",
+    "test": "bun run --parallel test:architecture test:packages",
+    "test:architecture": "bun test --parallel tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts",
+    "test:packages": "bun run --workspaces --parallel test",
+    "check": "bun run --parallel typecheck test"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
+    "@webgpu/types": "0.1.68",
     "typescript": "7.0.2"
   }
 }

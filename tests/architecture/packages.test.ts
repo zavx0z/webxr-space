@@ -1,5 +1,4 @@
 import {describe, test} from "bun:test"
-import {readdir} from "node:fs/promises"
 import {join} from "node:path"
 import {assertRequirement} from "../assert.ts"
 
@@ -13,7 +12,7 @@ const packages = Object.freeze([
   ["renderer", "@zavx0z/renderer", "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU"],
   ["webgpu", "@zavx0z/webgpu", "Shaders, buffers, textures, uploads и рисование"],
   ["browser", "@zavx0z/browser", "Canvas, resize, input, RAF и общий цикл кадров"],
-  ["space", "@zavx0z/space", "Space, ViewPoint, Mesh, Geometry, Material, Display и HUD"],
+  ["space", "@zavx0z/space", "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material, Display и HUD"],
   ["ui", "@zavx0z/ui", "Универсальные UI-компоненты, тема и иконки"],
   ["nodetree", "@zavx0z/nodetree", "Живая модель NodeTree, Parameter stores, снимки и сохранение"],
   ["layout", "@zavx0z/layout", "Алгоритмы расположения нод и Worker"],
@@ -21,6 +20,15 @@ const packages = Object.freeze([
 ] as const)
 
 describe("Конечный состав пакетов", () => {
+  test("[PKG-000] корневое рабочее пространство называется @zavx0z/webxr", async () => {
+    const manifest = await Bun.file(join(root, "package.json")).json() as Record<string, unknown>
+    assertRequirement(
+      manifest.name === "@zavx0z/webxr",
+      "PKG-000",
+      "корневой package.json должен объявлять имя @zavx0z/webxr",
+    )
+  })
+
   for (const [directory, name, description] of packages) {
     test(`[PKG-001] ${name} находится в корневом каталоге ${directory}`, async () => {
       const manifestPath = join(root, directory, "package.json")
@@ -60,11 +68,10 @@ describe("Конечный состав пакетов", () => {
   }
 
   test("[PKG-002] в корне нет других пакетов", async () => {
-    const entries = await readdir(root, {withFileTypes: true})
     const actual: string[] = []
-    for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === "projects" || entry.name === "tests") continue
-      if (await Bun.file(join(root, entry.name, "package.json")).exists()) actual.push(entry.name)
+    for await (const entry of new Bun.Glob("*").scan({cwd: root, onlyFiles: false})) {
+      if (entry === "projects" || entry === "tests") continue
+      if (await Bun.file(join(root, entry, "package.json")).exists()) actual.push(entry)
     }
 
     const expected = packages.map(([directory]) => directory).sort()
@@ -74,5 +81,26 @@ describe("Конечный состав пакетов", () => {
       "PKG-002",
       `ожидались только пакеты ${expected.join(", ")}, получены ${actual.join(", ")}`,
     )
+  })
+
+  test("[PKG-010] пакеты подключаются извне без протокола workspace", async () => {
+    for (const [directory, name] of packages) {
+      const manifest = await Bun.file(join(root, directory, "package.json")).json() as {
+        dependencies?: Readonly<Record<string, string>>
+        devDependencies?: Readonly<Record<string, string>>
+        peerDependencies?: Readonly<Record<string, string>>
+      }
+      for (const [dependency, version] of Object.entries({
+        ...manifest.dependencies,
+        ...manifest.devDependencies,
+        ...manifest.peerDependencies,
+      })) {
+        assertRequirement(
+          !version.startsWith("workspace:"),
+          "PKG-010",
+          `${name} должен объявлять переносимую версию ${dependency}, получено ${version}`,
+        )
+      }
+    }
   })
 })

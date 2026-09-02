@@ -1,4 +1,8 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["**/*.ts", "**/*.tsx"]
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "@zavx0z/template"
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

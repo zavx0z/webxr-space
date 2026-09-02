@@ -1,0 +1,103 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "layout",
+      "label": "Раскладка",
+      "route": "layout",
+      "subjects": [
+        {
+          "id": "fixed",
+          "kind": "policy",
+          "label": "Фиксированная",
+          "apiName": "layoutFixed",
+          "route": "layout/fixed",
+          "tags": ["раскладка", "ноды", "фиксированная", "RIGHT", "DOWN", "layoutFixed"],
+          "variants": [
+            {
+              "id": "baseline-right",
+              "label": "Базовая · RIGHT",
+              "group": {"id": "baseline", "label": "Базовая топология"},
+              "route": "layout/fixed/baseline/right",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_fixed_baseline_right"
+              }
+            },
+            {
+              "id": "baseline-down",
+              "label": "Базовая · DOWN",
+              "group": {"id": "baseline", "label": "Базовая топология"},
+              "route": "layout/fixed/baseline/down",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_fixed_baseline_down"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
+          "id": "adaptive",
+          "kind": "policy",
+          "label": "Адаптивная",
+          "apiName": "layoutAdaptiveWithDiagnostics",
+          "route": "layout/adaptive",
+          "tags": ["раскладка", "ноды", "адаптивная", "общий сокет", "контейнеры", "RIGHT", "DOWN"],
+          "variants": [
+            {
+              "id": "shared-right",
+              "label": "Общий сокет · RIGHT",
+              "group": {"id": "shared", "label": "Общий сокет"},
+              "route": "layout/adaptive/shared/right",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_adaptive_shared_right"
+              }
+            },
+            {
+              "id": "shared-down",
+              "label": "Общий сокет · DOWN",
+              "group": {"id": "shared", "label": "Общий сокет"},
+              "route": "layout/adaptive/shared/down",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_adaptive_shared_down"
+              }
+            },
+            {
+              "id": "compound-right",
+              "label": "Контейнеры · RIGHT",
+              "group": {"id": "compound", "label": "Контейнеры"},
+              "route": "layout/adaptive/compound/right",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_adaptive_compound_right"
+              }
+            },
+            {
+              "id": "compound-down",
+              "label": "Контейнеры · DOWN",
+              "group": {"id": "compound", "label": "Контейнеры"},
+              "route": "layout/adaptive/compound/down",
+              "module": {
+                "path": "./stories/subjects/layout.ts",
+                "export": "story_adaptive_compound_down"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        }
+      ]
+    }
+  ]
+}

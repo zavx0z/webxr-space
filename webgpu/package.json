@@ -4,10 +4,29 @@
   "private": true,
   "description": "Shaders, buffers, textures, uploads и рисование",
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
-  }
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/engine": "*",
+    "@zavx0z/renderer": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/engine": {"optional": true},
+    "@zavx0z/renderer": {"optional": true}
+  },
+  "devDependencies": {
+    "@webgpu/types": "0.1.72"
+  },
+  "license": "MIT"
 }

@@ -1,0 +1,24 @@
+{
+  "source": "Blender 4.5.5 legacy icon reference",
+  "origin": {
+    "repository": "https://github.com/zavx0z/metafor",
+    "revision": "df8f05e4c440386e10a6224fc15a2e66e7c961fe",
+    "path": "pkg/ui/elements/assets/blender-icons"
+  },
+  "compatibility": "unverified",
+  "acceptance": "candidate",
+  "assets": {
+    "cancel.svg": "5cfe0b83d4ac5c7e23b2d6e1ca823bd2b65ce48b0eb20b66e39d693cf9edab9a",
+    "checkmark.svg": "a9192f3d01de6e583476a3ce72668dd0b67e946a0b641b03c9499ce7f52b1dfa",
+    "console.svg": "657e84784b354b5e87b97ef390c0e3648bdc53844c8541a6d8e7370422d277fe",
+    "file_refresh.svg": "5d5250ecab6c77dd3c3b4e732ec95d357ed686f268c5a771fb1200da4d705ac8",
+    "forward.svg": "3b043cd19674cd4170557d018691f489edc2c83a4fce31ea65ae6343645b8473",
+    "loop_forwards.svg": "e68758e7ae73abc7be363aba01e85f15df1488063134d452caf36de25f725a6f",
+    "menu_panel.svg": "b49f020316f1afa80aad667f488b3cce4316a39ba97b615438a94c996a11d35a",
+    "pause.svg": "74e79096516749a8e486e47d102a7ed5097ed35d3b7891ef57d4c47f2b1c0db4",
+    "play.svg": "354497080cdfdcc06206cf9dad004abc04530926e94da8f4c5ed77eae23fa5f4",
+    "sort_asc.svg": "c08c1b8fe893d45bbcfd5790faf264ab7facf07b210b0bf5e807b3f999cc01d6",
+    "sort_desc.svg": "b286e4cf2933549e13839d4ca5e1126e0df9611323431b6ca2149a325ce50926",
+    "trash.svg": "9a5afe73d1d1b3175c207e2c5444df284636539a4c03e0214d1b9a87ff3bdcac"
+  }
+}

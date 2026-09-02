@@ -4,10 +4,18 @@
   "description": "Живая модель NodeTree, Parameter stores, снимки и сохранение",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./index.ts",
+    "./json-patch": "./json-patch.ts",
+    "./parameter": "./parameter.ts",
+    "./node-tree": "./node-tree.ts",
+    "./projection-types": "./projection-types.ts"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
   }
 }

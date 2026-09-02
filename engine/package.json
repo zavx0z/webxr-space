@@ -4,10 +4,21 @@
   "private": true,
   "description": "Объекты сцены, геометрия, материалы, математика и анимация без WebGPU",
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./default-font": "./src/text/default-font.ts",
+    "./fonts/inter-regular.ttf": "./static/fonts/inter-regular.ttf",
+    "./fonts/jetbrains-mono-bold.ttf": "./static/fonts/jetbrains-mono-bold.ttf"
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
-  }
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "license": "MIT"
 }

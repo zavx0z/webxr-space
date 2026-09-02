@@ -4,10 +4,25 @@
   "private": true,
   "description": "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU",
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./frame-changes": "./src/frame-changes.ts"
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
-  }
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/dom": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/dom": {"optional": true}
+  },
+  "license": "MIT"
 }

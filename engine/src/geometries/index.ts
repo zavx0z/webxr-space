@@ -1,0 +1,5 @@
+export * from "./plane-geometry"
+export * from "./textured-plane-geometry"
+export * from "./sphere-geometry"
+export * from "./torus-geometry"
+export * from "./box-geometry"

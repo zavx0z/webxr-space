@@ -4,10 +4,32 @@
   "private": true,
   "description": "Canvas, resize, input, RAF и общий цикл кадров",
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
-  }
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/dom": "*",
+    "@zavx0z/engine": "*",
+    "@zavx0z/renderer": "*",
+    "@zavx0z/space": "*",
+    "@zavx0z/webgpu": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/dom": {"optional": true},
+    "@zavx0z/engine": {"optional": true},
+    "@zavx0z/renderer": {"optional": true},
+    "@zavx0z/space": {"optional": true},
+    "@zavx0z/webgpu": {"optional": true}
+  },
+  "license": "MIT"
 }

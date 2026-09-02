@@ -4,10 +4,34 @@
   "description": "Алгоритмы расположения нод и Worker",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixed": "./src/fixed.ts",
+    "./adaptive": "./src/adaptive.ts",
+    "./top-down": "./src/top-down.ts",
+    "./coffman-graham": "./src/coffman-graham.ts",
+    "./types": "./types/index.ts",
+    "./worker": "./worker/index.ts",
+    "./worker/types": "./worker/types/worker.ts",
+    "./worker/transport": "./worker/transport.ts",
+    "./worker/fixed/client": "./worker/fixed/client.ts",
+    "./worker/fixed/executor": "./worker/fixed/executor.ts",
+    "./worker/adaptive/client": "./worker/adaptive/client.ts",
+    "./worker/adaptive/executor": "./worker/adaptive/executor.ts",
+    "./worker/top-down/client": "./worker/top-down/client.ts",
+    "./worker/top-down/executor": "./worker/top-down/executor.ts",
+    "./worker/coffman-graham/client": "./worker/coffman-graham/client.ts",
+    "./worker/coffman-graham/executor": "./worker/coffman-graham/executor.ts"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "d3-dag": "0.9.1"
   }
 }

@@ -4,10 +4,37 @@
   "description": "Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./index.ts",
+    "./node-tree": "./node-tree.tsx",
+    "./node-editor": "./node-editor.tsx",
+    "./frame": "./frame.tsx",
+    "./node": "./node.tsx",
+    "./parameter": "./parameter.tsx",
+    "./socket": "./socket.tsx",
+    "./link": "./link.tsx"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/component": "*",
+    "@zavx0z/dom": "*",
+    "@zavx0z/layout": "*",
+    "@zavx0z/nodetree": "*",
+    "@zavx0z/template": "*",
+    "@zavx0z/ui": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/dom": {"optional": true},
+    "@zavx0z/layout": {"optional": true},
+    "@zavx0z/nodetree": {"optional": true},
+    "@zavx0z/template": {"optional": true},
+    "@zavx0z/ui": {"optional": true}
   }
 }

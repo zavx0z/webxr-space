@@ -1,0 +1,93 @@
+import {normalizeVectorValue, updateVectorValue} from "../src/vector/value.ts"
+import {fieldDensityHeight, labelledFieldHeight} from "../src/fields/layout.ts"
+import {FieldGroup, type FieldGroupDensity} from "./field-group.tsx"
+import {NumberField} from "./number-field.tsx"
+
+export type VectorFieldDensity = FieldGroupDensity
+
+export type VectorFieldProps = Readonly<{
+  label?: string | undefined
+  value: readonly number[]
+  axes?: readonly string[] | undefined
+  min?: number | undefined
+  max?: number | undefined
+  step?: number | undefined
+  density?: VectorFieldDensity | undefined
+  disabled?: boolean | undefined
+  readOnly?: boolean | undefined
+  title?: string | undefined
+  style?: CssStyle | undefined
+  onInput?: ((value: readonly number[], event: Event) => void) | undefined
+  onChange?: ((value: readonly number[], event: Event) => void) | undefined
+}>
+
+export const vectorFieldLayout = Object.freeze({
+  height(options: Readonly<{
+    density?: VectorFieldDensity | undefined
+    label?: boolean | undefined
+  }> = {}): number {
+    return labelledFieldHeight(
+      fieldDensityHeight(options.density ?? "regular"),
+      options.label === true
+    )
+  }
+})
+
+export function VectorField(props: VectorFieldProps) {
+  const normalized = normalizeVectorValue(props.value, props.axes, props.step)
+  const onInput = (index: number, value: number, event: Event) => {
+    props.onInput?.(updateVectorValue(normalized.value, index, value), event)
+  }
+  const onChange = (index: number, value: number, event: Event) => {
+    props.onChange?.(updateVectorValue(normalized.value, index, value), event)
+  }
+  return <FieldGroup
+    label={props.label}
+    density={props.density}
+    title={props.title}
+    style={props.style}
+  >
+    {normalized.value.map((value, index) => <NumberField
+      key={normalized.axes[index]!}
+      label={normalized.axes[index]!}
+      value={value}
+      min={props.min}
+      max={props.max}
+      step={normalized.step}
+      disabled={props.disabled}
+      readOnly={props.readOnly}
+      style={css`
+        width: 0;
+        min-width: 0;
+        height: var(--field-group-content-height);
+        flex-grow: 1;
+        --field-label-width: 18px;
+        border-width: 0;
+        border-radius: 0;
+        box-shadow: none;
+
+        ${index === 0 && css`
+          --field-label-content: rgb(var(--axis-x-500));
+        `}
+
+        ${index === 1 && css`
+          --field-label-content: rgb(var(--axis-y-500));
+        `}
+
+        ${index === 2 && css`
+          --field-label-content: rgb(var(--axis-z-500));
+        `}
+
+        ${index === 3 && css`
+          --field-label-content: var(--widget-list-content);
+        `}
+
+        ${index < normalized.value.length - 1 && css`
+          border-right: var(--border-width-control) solid var(--widget-regular-outline);
+        `}
+      `}
+      onInput={(next, event) => onInput(index, next, event)}
+      onChange={(next, event) => onChange(index, next, event)}
+    />)}
+  </FieldGroup>
+}

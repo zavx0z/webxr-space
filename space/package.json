@@ -1,13 +1,42 @@
 {
   "name": "@zavx0z/space",
   "version": "0.0.0",
-  "description": "Space, ViewPoint, Mesh, Geometry, Material, Display и HUD",
+  "description": "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material, Display и HUD",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./space": "./space.tsx",
+    "./view-point": "./view-point.tsx",
+    "./asset": "./asset.tsx",
+    "./group": "./group.tsx",
+    "./mesh": "./mesh.tsx",
+    "./line": "./line.tsx",
+    "./line-segments": "./line-segments.tsx",
+    "./text": "./text.tsx",
+    "./light": "./light.tsx",
+    "./animation": "./animation.tsx",
+    "./geometry": "./geometry.tsx",
+    "./material": "./material.tsx",
+    "./display": "./display.tsx",
+    "./hud": "./hud.tsx"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/component": "*",
+    "@zavx0z/dom": "*",
+    "@zavx0z/engine": "*",
+    "@zavx0z/template": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/dom": {"optional": true},
+    "@zavx0z/engine": {"optional": true},
+    "@zavx0z/template": {"optional": true}
   }
 }

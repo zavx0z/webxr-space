@@ -1,4 +1,17 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["**/*.ts", "**/*.tsx"]
+  "compilerOptions": {
+    "allowJs": true,
+    "exactOptionalPropertyTypes": false,
+    "jsx": "preserve",
+    "jsxImportSource": "@zavx0z/template"
+  },
+  "include": [
+    "*.ts",
+    "attribute/**/*.ts",
+    "compiler/**/*.ts",
+    "node/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ]
 }

@@ -6,6 +6,8 @@
     "module": "Preserve",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "@zavx0z/template",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,

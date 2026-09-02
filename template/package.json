@@ -5,9 +5,30 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
+  "sideEffects": false,
+  "exports": {
+    ".": "./index.ts",
+    "./compiled": "./compiled.ts",
+    "./compiler": "./compiler/index.ts",
+    "./bun": "./compiler/bun.ts",
+    "./jsx-runtime": "./jsx-runtime.ts",
+    "./jsx-dev-runtime": "./jsx-dev-runtime.ts"
+  },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test tests",
-    "check": "bun run typecheck && bun run test"
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/dom": "*",
+    "typescript": "7.0.2"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/dom": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
   }
 }
