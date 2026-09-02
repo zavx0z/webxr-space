@@ -5,6 +5,7 @@ import {
   type NodeJsonValue,
 } from "@nodes/core"
 import {NodeTreeEditor} from "@nodes/editor"
+import type {LayoutResult} from "@nodes/layout/types"
 import {NodeEditor} from "@nodes/ui/node-editor"
 import {
   type Document,
@@ -44,7 +45,7 @@ export function createEditorNodeTreeStory(document: Document, route: string) {
           'import {createRoot} from "@zavx0z/react"',
           "",
           "const editor = new NodeTreeEditor(tree)",
-          "createRoot(container).render(<NodeEditor store={store} />)",
+          "createRoot(container).render(<NodeEditor store={store} layout={layoutResult} />)",
         ].join("\n"),
       })
     },
@@ -133,6 +134,7 @@ function EditorStoryView(props: Readonly<{
     </nav>
     <NodeEditor
       store={props.store}
+      layout={editorStoryLayout}
       width={760}
       height={486}
       onParameterInput={input}
@@ -140,6 +142,26 @@ function EditorStoryView(props: Readonly<{
     />
   </section>
 }
+
+const editorStoryLayout: LayoutResult = Object.freeze({
+  direction: "RIGHT",
+  bounds: Object.freeze({x: 54, y: 58, width: 4_000, height: 2_800}),
+  nodes: Object.freeze([
+    Object.freeze({id: "source", x: 54, y: 58, width: 220, height: 120}),
+    ...Array.from({length: 100}, (_, offset) => {
+      const index = offset + 1
+      return Object.freeze({
+        id: `added-${index}`,
+        x: 330 + index * 32,
+        y: 84 + index * 24,
+        width: 220,
+        height: 100,
+      })
+    }),
+  ]),
+  ports: Object.freeze([]),
+  edges: Object.freeze([]),
+})
 
 function createStoryTree() {
   return createNodeTree<StoryParameter, NodeJsonValue, NodeJsonValue, NodeJsonValue, NodeJsonValue>({
