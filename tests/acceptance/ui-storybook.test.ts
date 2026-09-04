@@ -133,6 +133,7 @@ test("[UI-ACCEPT-LOCAL-001] один semantic Document содержит exact Sp
   )
 })
 
+// Тест включает сборку TSX одновременно с проверками остальных пакетов.
 test("[UI-ACCEPT-LOCAL-002] actual UI owner работает в Display и HUD, а reparent сохраняет identity и state", async () => {
   const {display, document, hud} = createSemanticExperience()
   const stories = await loadAcceptanceStories()
@@ -199,7 +200,7 @@ test("[UI-ACCEPT-LOCAL-002] actual UI owner работает в Display и HUD, 
     mountedHud.session.dispose()
     mountedHud.abort.abort()
   }
-})
+}, 20_000)
 
 test("[UI-ACCEPT-LOCAL-003] 3D semantic owner монтируется непосредственно в exact Space", () => {
   const {document, display, hud, space} = createSemanticExperience()
