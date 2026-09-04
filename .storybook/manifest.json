@@ -16,6 +16,7 @@
     {"declaration": "../ui/.storybook/manifest.json"},
     {"declaration": "../nodetree/.storybook/manifest.json"},
     {"declaration": "../layout/.storybook/manifest.json"},
-    {"declaration": "../nodes/.storybook/manifest.json"}
+    {"declaration": "../nodes/.storybook/manifest.json"},
+    {"declaration": "../devtools/.storybook/manifest.json"}
   ]
 }

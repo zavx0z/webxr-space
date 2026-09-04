@@ -24,6 +24,7 @@ import {
   publicSymbolComparisons,
   publicSymbolDispositions,
   requirementEvidenceFiles,
+  sourceWorkingFiles,
 } from "./source-fidelity.ts"
 import type {RequirementId} from "./source-fidelity.ts"
 
@@ -49,7 +50,6 @@ const forbiddenPackageNames = Object.freeze([
 const forbiddenRootDirectories = Object.freeze([
   "components",
   "core",
-  "devtools",
   "editor",
   "packages",
   "react",
@@ -124,6 +124,30 @@ function assertSameStrings(
     requirementCode,
     `${message}; expected ${normalizedExpected.join(", ")}; actual ${normalizedActual.join(", ")}`,
   )
+}
+
+async function assertSourceWorkingTree(
+  relativeCheckout: string,
+  status: string,
+  requirementCode: string,
+): Promise<void> {
+  const expected = sourceWorkingFiles[relativeCheckout] ?? {}
+  assertSameStrings(
+    status.split("\n").map(line => line.trim()).filter(Boolean),
+    Object.keys(expected).map(path => `M ${path}`),
+    requirementCode,
+    `${relativeCheckout}: исходное рабочее дерево должно совпадать с зафиксированной версией`,
+  )
+  for (const [path, digest] of Object.entries(expected)) {
+    const actual = new Bun.CryptoHasher("sha256")
+      .update(await Bun.file(resolve(root, relativeCheckout, path)).arrayBuffer())
+      .digest("hex")
+    assertRequirement(
+      actual === digest,
+      requirementCode,
+      `${relativeCheckout}/${path}: изменились байты сохранённого исходника`,
+    )
+  }
 }
 
 async function executableRequirementFiles(
@@ -246,8 +270,7 @@ describe("Граница конечного переноса", () => {
         await executableRequirementFiles(disposition.requirementIds ?? [], "MIG-001")
       } else {
         assertRequirement(
-          disposition.sourcePackage === "@nodes/editor" ||
-            disposition.sourcePackage === "@zavx0z/dom-devtools",
+          disposition.sourcePackage === "@nodes/editor",
           "MIG-001",
           `${key} не является разрешённым deferred исключением`,
         )
@@ -298,11 +321,7 @@ describe("Граница конечного переноса", () => {
         "--porcelain=v1",
         "--untracked-files=all",
       )
-      assertRequirement(
-        status === "",
-        "MIG-002",
-        `${relativeCheckout} содержит изменения:\n${status}`,
-      )
+      await assertSourceWorkingTree(relativeCheckout, status, "MIG-002")
     }
   })
 
@@ -409,7 +428,7 @@ describe("Граница конечного переноса", () => {
       rootManifest.workspaces ?? [],
       packageDirectories,
       "MIG-004",
-      "root workspaces должны перечислять ровно 12 final owners",
+      "root workspaces должны перечислять согласованных владельцев без фиксированного числа пакетов",
     )
 
     const seenNames = new Set<string>()
@@ -486,11 +505,29 @@ describe("Граница конечного переноса", () => {
         "--porcelain=v1",
         "--untracked-files=all",
       )
-      assertRequirement(
-        status === "",
-        "MIG-004",
-        `${relativeCheckout} не read-only во время migration:\n${status}`,
-      )
+      await assertSourceWorkingTree(relativeCheckout, status, "MIG-004")
+    }
+  })
+
+  test("[MIG-006] Devtools сохраняет исходную реализацию, типы и весь набор проверок", async () => {
+    const sourceRoot = resolve(root, "../renderer/packages/devtools")
+    const oldInspector = await Bun.file(join(sourceRoot, "src/inspector.ts")).text()
+    const oldExports = await Bun.file(join(sourceRoot, "src/index.ts")).text()
+    const typeExports = oldExports.slice(oldExports.indexOf("export type {"))
+    const actualInspector = await Bun.file(join(root, "devtools/inspector.ts")).text()
+    assertRequirement(
+      actualInspector === `${oldInspector}\n${typeExports}`,
+      "MIG-006",
+      "Devtools переносится без переписывания логики, с прежними публичными типами",
+    )
+    for (const [sourcePath, targetPath] of [
+      ["src/types.ts", "types.ts"],
+      ["test/dom-inspector.test.ts", "tests/inspector.test.ts"],
+    ] as const) {
+      const expected = (await Bun.file(join(sourceRoot, sourcePath)).text())
+        .replace('from "../src/index.ts"', 'from "@zavx0z/devtools"')
+      const actual = await Bun.file(join(root, "devtools", targetPath)).text()
+      assertRequirement(actual === expected, "MIG-006", `${targetPath}: исходная логика должна сохраниться`)
     }
   })
 

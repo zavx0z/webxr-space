@@ -30,6 +30,7 @@ export const finalPackageDirectories = Object.freeze({
   "@zavx0z/nodetree": "nodetree",
   "@zavx0z/layout": "layout",
   "@zavx0z/nodes": "nodes",
+  "@zavx0z/devtools": "devtools",
 } as const)
 
 export type FinalPackageName = keyof typeof finalPackageDirectories
@@ -305,10 +306,5 @@ export const exportDispositions: readonly ExportDisposition[] = Object.freeze([
     "Node editor остаётся в исходном репозитории до подтверждённого production consumer",
     "@nodes/editor",
   ),
-  deferred(
-    "@zavx0z/dom-devtools",
-    ".",
-    "DOM inspector остаётся в исходном репозитории до подтверждённого production consumer",
-    "DOM inspector",
-  ),
+  moved("@zavx0z/dom-devtools", ".", "@zavx0z/devtools", "."),
 ])

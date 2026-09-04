@@ -17,6 +17,7 @@ const packages = Object.freeze([
   ["nodetree", "@zavx0z/nodetree", "Живая модель NodeTree, Parameter stores, снимки и сохранение"],
   ["layout", "@zavx0z/layout", "Алгоритмы расположения нод и Worker"],
   ["nodes", "@zavx0z/nodes", "Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link"],
+  ["devtools", "@zavx0z/devtools", "Диагностика Document, состояния элементов и результатов Renderer"],
 ] as const)
 
 describe("Конечный состав пакетов", () => {
@@ -67,7 +68,7 @@ describe("Конечный состав пакетов", () => {
     })
   }
 
-  test("[PKG-002] в корне нет других пакетов", async () => {
+  test("[PKG-002] состав пакетов совпадает с принятыми владельцами без ограничения их числа", async () => {
     const actual: string[] = []
     for await (const entry of new Bun.Glob("*").scan({cwd: root, onlyFiles: false})) {
       if (entry === "projects" || entry === "tests") continue

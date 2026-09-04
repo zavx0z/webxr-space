@@ -17,6 +17,7 @@ const packageDirectories = Object.freeze({
   "@zavx0z/nodetree": "nodetree",
   "@zavx0z/layout": "layout",
   "@zavx0z/nodes": "nodes",
+  "@zavx0z/devtools": "devtools",
 } as const)
 
 type PackageName = keyof typeof packageDirectories
@@ -30,6 +31,7 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
     "@zavx0z/template": ["@zavx0z/dom"],
     "@zavx0z/component": ["@zavx0z/dom", "@zavx0z/template"],
     "@zavx0z/renderer": ["@zavx0z/dom"],
+    "@zavx0z/devtools": ["@zavx0z/dom", "@zavx0z/renderer"],
     "@zavx0z/webgpu": ["@zavx0z/engine", "@zavx0z/renderer"],
     "@zavx0z/browser": [
       "@zavx0z/dom",

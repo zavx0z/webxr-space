@@ -40,6 +40,18 @@
         "@zavx0z/template",
       ],
     },
+    "devtools": {
+      "name": "@zavx0z/devtools",
+      "version": "0.0.0",
+      "peerDependencies": {
+        "@zavx0z/dom": "*",
+        "@zavx0z/renderer": "*",
+      },
+      "optionalPeers": [
+        "@zavx0z/dom",
+        "@zavx0z/renderer",
+      ],
+    },
     "dom": {
       "name": "@zavx0z/dom",
       "version": "0.0.0",
@@ -208,6 +220,8 @@
     "@zavx0z/browser": ["@zavx0z/browser@workspace:browser"],
 
     "@zavx0z/component": ["@zavx0z/component@workspace:component"],
+
+    "@zavx0z/devtools": ["@zavx0z/devtools@workspace:devtools"],
 
     "@zavx0z/dom": ["@zavx0z/dom@workspace:dom"],
 

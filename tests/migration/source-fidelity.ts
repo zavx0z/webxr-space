@@ -38,6 +38,8 @@ export const publicModuleEntrypoints = Object.freeze({
   "new-layout-worker": "layout/worker/index.ts",
   "old-nodes-ui": "projects/node/packages/ui/index.ts",
   "new-nodes": "nodes/index.ts",
+  "old-devtools": "../renderer/packages/devtools/src/index.ts",
+  "new-devtools": "devtools/inspector.ts",
 } as const)
 
 export const publicSymbolComparisons: readonly PublicSymbolComparison[] = Object.freeze([
@@ -56,6 +58,7 @@ export const publicSymbolComparisons: readonly PublicSymbolComparison[] = Object
   {expectedSourceCount: 45, sourceId: "old-nodes-layout", targetIds: ["new-layout"]},
   {expectedSourceCount: 2, sourceId: "old-nodes-worker", targetIds: ["new-layout-worker"]},
   {expectedSourceCount: 95, sourceId: "old-nodes-ui", targetIds: ["new-nodes"]},
+  {expectedSourceCount: 14, sourceId: "old-devtools", targetIds: ["new-devtools"]},
 ])
 
 const oldBrowserInternalizedSymbols = Object.freeze([
@@ -152,3 +155,15 @@ export const requirementEvidenceFiles = Object.freeze({
 } as const)
 
 export type RequirementId = keyof typeof requirementEvidenceFiles
+
+// Существовавшие до переноса изменения Devtools. Это неизменяемый источник,
+// а не разрешение продолжать разработку в исходном репозитории.
+export const sourceWorkingFiles: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
+  "../renderer": Object.freeze({
+    "packages/devtools/package.json": "ce0f0b115331160bf6a90033ed2c5b372279eaa4a0a34ba4c52a4ed6e0340ea8",
+    "packages/devtools/requirements.md": "efa40b165b3b8f483020618220abfdf85d39f3a0c5e0ec4fd3d67cb6d66fcea7",
+    "packages/devtools/src/inspector.ts": "3ea5ef749fcf6d7847db9a9a696ee2ad18ce65ff918ce55d744e70bb6a960fbe",
+    "packages/devtools/src/types.ts": "395e2f7aa90685a695726ffdf28bee0b50adc43f01cf1d78f1d1c337822c1a79",
+    "packages/devtools/test/dom-inspector.test.ts": "7b1ea05bc53b6aaadf66acdf0fc7c60edeb98db6ee75bb856e701fb2a3940cea",
+  }),
+})

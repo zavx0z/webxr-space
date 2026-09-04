@@ -20,7 +20,8 @@
     "ui",
     "nodetree",
     "layout",
-    "nodes"
+    "nodes",
+    "devtools"
   ],
   "scripts": {
     "typecheck": "bun run --parallel typecheck:root typecheck:packages",

@@ -1,0 +1,33 @@
+{
+  "name": "@zavx0z/devtools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Диагностика Document, состояния элементов и результатов Renderer",
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./inspector.ts"
+  },
+  "main": "./inspector.ts",
+  "module": "./inspector.ts",
+  "types": "./inspector.ts",
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@zavx0z/dom": "*",
+    "@zavx0z/renderer": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/dom": {
+      "optional": true
+    },
+    "@zavx0z/renderer": {
+      "optional": true
+    }
+  },
+  "license": "MIT"
+}
