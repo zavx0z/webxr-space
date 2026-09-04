@@ -5,7 +5,17 @@
   "id": "webxr",
   "label": "WebXR",
   "packages": [
+    {"declaration": "../engine/.storybook/manifest.json"},
+    {"declaration": "../dom/.storybook/manifest.json"},
+    {"declaration": "../template/.storybook/manifest.json"},
+    {"declaration": "../component/.storybook/manifest.json"},
+    {"declaration": "../renderer/.storybook/manifest.json"},
+    {"declaration": "../webgpu/.storybook/manifest.json"},
+    {"declaration": "../browser/.storybook/manifest.json"},
+    {"declaration": "../space/.storybook/manifest.json"},
     {"declaration": "../ui/.storybook/manifest.json"},
+    {"declaration": "../nodetree/.storybook/manifest.json"},
+    {"declaration": "../layout/.storybook/manifest.json"},
     {"declaration": "../nodes/.storybook/manifest.json"}
   ]
 }

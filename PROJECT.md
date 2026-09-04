@@ -75,6 +75,11 @@ Nodes.
 | `layout` | `@zavx0z/layout` | Алгоритмы расположения нод и Worker |
 | `nodes` | `@zavx0z/nodes` | Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link |
 
+Корневой Storybook объявляет все двенадцать пакетов в том же порядке. Каждый
+пакет владеет собственной `.storybook/manifest.json`; `catalog` и `runtime`
+появляются только вместе с настоящими примерами пакета. Пустой каталог и
+вымышленная история не используются вместо ещё не перенесённого поведения.
+
 ## Модули пакета
 
 Публичный модуль содержит настоящую реализацию владельца, а не переэкспорт
@@ -92,6 +97,7 @@ ui/
 ├── buttons/
 ├── fields/
 ├── menus/
+├── navigation/
 ├── surfaces/
 ├── views/
 ├── feedback/
@@ -104,6 +110,8 @@ ui/
 
 `FieldGroup` остаётся в `fields`. `OptionGroupField` относится к `buttons` и
 становится `ToggleButtonGroup`. `Inspector` относится к `widgets`.
+`Breadcrumbs` относится к `navigation`: он показывает иерархический путь и не
+становится внутренней строкой `StatusBar` или `Inspector`.
 
 Высота каждого публичного Field является числовым договором `ui`, а не
 результатом измерения после отрисовки. Канонические значения находятся в

@@ -83,6 +83,56 @@ describe("Конечный состав пакетов", () => {
     )
   })
 
+  test("[PKG-003] Storybook объявляет каждый пакет в порядке рабочего пространства", async () => {
+    const rootManifest = await Bun.file(join(root, "package.json")).json() as {
+      workspaces?: readonly string[]
+    }
+    const acceptedDirectories = packages.map(([directory]) => directory)
+
+    assertRequirement(
+      JSON.stringify(rootManifest.workspaces) === JSON.stringify(acceptedDirectories),
+      "PKG-003",
+      `корневой package.json должен объявлять рабочие пространства в принятом порядке: ${acceptedDirectories.join(", ")}`,
+    )
+
+    const storybookManifest = await Bun.file(join(root, ".storybook/manifest.json")).json() as {
+      packages?: readonly Readonly<{declaration?: string}>[]
+    }
+    const expectedDeclarations = acceptedDirectories.map(directory => ({
+      declaration: `../${directory}/.storybook/manifest.json`,
+    }))
+
+    assertRequirement(
+      JSON.stringify(storybookManifest.packages) === JSON.stringify(expectedDeclarations),
+      "PKG-003",
+      `корневой Storybook должен объявлять все ${packages.length} пакетов в порядке рабочего пространства: ${expectedDeclarations.map(({declaration}) => declaration).join(", ")}`,
+    )
+
+    for (const [directory, packageName] of packages) {
+      const packageManifestPath = join(root, directory, "package.json")
+      const storybookPackageManifestPath = join(root, directory, ".storybook/manifest.json")
+      const packageManifest = await Bun.file(packageManifestPath).json() as {
+        name?: string
+      }
+      const storybookPackageManifest = await Bun.file(storybookPackageManifestPath).json() as {
+        schemaVersion?: number
+        kind?: string
+        id?: string
+        packageJson?: string
+      }
+
+      assertRequirement(
+        storybookPackageManifest.schemaVersion === 1 &&
+          storybookPackageManifest.kind === "package" &&
+          storybookPackageManifest.id === packageManifest.name &&
+          storybookPackageManifest.id === packageName &&
+          storybookPackageManifest.packageJson === "../package.json",
+        "PKG-003",
+        `${directory}/.storybook/manifest.json должен быть декларацией пакета ${packageName} и ссылаться на ${directory}/package.json`,
+      )
+    }
+  })
+
   test("[PKG-010] пакеты подключаются извне без протокола workspace", async () => {
     for (const [directory, name] of packages) {
       const manifest = await Bun.file(join(root, directory, "package.json")).json() as {

@@ -38,10 +38,8 @@ test("[NODES-STORYBOOK-001] WebXR объявляет один package-owned Node
   }
   const catalog = await Bun.file(resolve(nodesRoot, ".storybook/catalog.json")).json() as Catalog
 
-  expect(project.packages).toEqual([
-    {declaration: "../ui/.storybook/manifest.json"},
-    {declaration: "../nodes/.storybook/manifest.json"},
-  ])
+  expect(project.packages).toContainEqual({declaration: "../ui/.storybook/manifest.json"})
+  expect(project.packages).toContainEqual({declaration: "../nodes/.storybook/manifest.json"})
   expect(manifest).toMatchObject({
     id: "@zavx0z/nodes",
     runtime: {module: "./runtime.ts", export: "runtime"},
