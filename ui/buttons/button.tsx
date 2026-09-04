@@ -78,6 +78,7 @@ export function Button(props: ButtonProps) {
     data-variant={variant}
     data-tone={tone}
     data-size={size}
+    data-icon-only={String(props.iconOnly === true)}
     onClick={props.onClick}
     onKeyDown={props.onKeyDown}
     style={css`
@@ -85,7 +86,6 @@ export function Button(props: ButtonProps) {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 92px;
       min-width: 22px;
       height: var(--control-height-medium);
       gap: var(--control-content-gap);
@@ -133,7 +133,6 @@ export function Button(props: ButtonProps) {
       }
 
       &[data-size="small"] {
-        width: 76px;
         height: var(--control-height-small);
         min-width: 18px;
         padding: 1px 5px;
@@ -141,11 +140,27 @@ export function Button(props: ButtonProps) {
       }
 
       &[data-size="large"] {
-        width: 112px;
         height: var(--control-height-large);
         min-width: 28px;
         padding: 3px 8px;
         font-size: var(--font-size-sm);
+      }
+
+      &[data-icon-only="true"] {
+        width: var(--control-height-medium);
+        min-width: var(--control-height-medium);
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      &[data-icon-only="true"][data-size="small"] {
+        width: var(--control-height-small);
+        min-width: var(--control-height-small);
+      }
+
+      &[data-icon-only="true"][data-size="large"] {
+        width: var(--control-height-large);
+        min-width: var(--control-height-large);
       }
 
       &[data-variant="contained"][data-tone="primary"] {
