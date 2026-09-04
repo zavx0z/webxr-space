@@ -1,4 +1,5 @@
 export { createDocumentRenderer } from "./renderer.ts"
+export {hitTestProjection} from "./projection-hit.ts"
 export {createDocumentInteractionState} from "./pseudo-state.ts"
 export {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
 export {VECTOR_PATH_COORDINATE_LIMIT} from "@zavx0z/dom"

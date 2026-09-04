@@ -11,6 +11,7 @@ import {
 } from "@zavx0z/dom"
 import {
   createDocumentInteractionController,
+  hitTestProjection,
   createDocumentInteractionState,
   createDocumentRenderer,
   type CreateDocumentRendererOptions,
@@ -80,6 +81,7 @@ export type DocumentPlaneRuntimeSeams = Readonly<{
     document: Document
     interactionState: DocumentInteractionState
     tooltipDelayMs: number
+    hitTest: typeof hitTestProjection
   }>): DocumentInteractionController
   now(): number
 }>
@@ -180,6 +182,7 @@ export function createDocumentPlaneRuntimeWithSeams(
       textMeasurer,
     })
     interaction = seams.createInteraction({
+      hitTest: hitTestProjection,
       document: options.document,
       interactionState,
       tooltipDelayMs,

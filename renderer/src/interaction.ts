@@ -68,6 +68,8 @@ export type CreateDocumentInteractionControllerOptions = Readonly<{
   tooltipBackground?: string
   tooltipColor?: string
   interactionState?: DocumentInteractionState
+  /** Projection adapters use the same hit policy for routing and dispatch. */
+  hitTest?: (frame: RenderFrame, x: number, y: number) => HitMetadata | null
 }>
 
 export interface DocumentInteractionController {
@@ -113,6 +115,7 @@ const UA_TITLE_BORDER: RenderBorder = Object.freeze({
 export const createDocumentInteractionController = (
   options: CreateDocumentInteractionControllerOptions,
 ): DocumentInteractionController => {
+  const pickHit = options.hitTest ?? hitTest
   if (
     options.interactionState !== undefined &&
     options.interactionState.document !== options.document
@@ -171,7 +174,7 @@ export const createDocumentInteractionController = (
       const target = rangeDrag?.pointerId === id ? rangeDrag.input :
         textSelectionDrag?.pointerId === id ? textSelectionDrag.textArea :
         options.document.readPointerCaptureTarget(id) ??
-        hitTest(frame, pointerX, pointerY)?.node ?? null
+        pickHit(frame, pointerX, pointerY)?.node ?? null
       transitionHover(target, input, now)
       const accepted = target?.dispatchEvent(pointerEvent("pointermove", input, null, true, true)) ?? true
       if (accepted && rangeDrag?.pointerId === id) updateRangeDrag(frame, input)
@@ -190,7 +193,7 @@ export const createDocumentInteractionController = (
       const id = pointerIdOf(input)
       options.document.beginPointer(id)
       activePointers.add(id)
-      const hit = hitTest(frame, pointerX, pointerY)
+      const hit = pickHit(frame, pointerX, pointerY)
       options.document.lightDismissPopovers(hit?.node ?? null)
       options.document.closeSelectPickerOutside(hit?.node ?? null)
       const ownerHit = resolvePointerOwnerHit(frame, hit)
@@ -230,7 +233,7 @@ export const createDocumentInteractionController = (
       pointerY = input.clientY
       hasPointerPosition = true
       const now = input.timeStamp ?? Date.now()
-      const hit = hitTest(frame, pointerX, pointerY)
+      const hit = pickHit(frame, pointerX, pointerY)
       const id = pointerIdOf(input)
       const captured = options.document.readPointerCaptureTarget(id)
       const released = rangeDrag?.pointerId === id
@@ -299,7 +302,7 @@ export const createDocumentInteractionController = (
       assertActive()
       validateFrame(frame)
       validateWheel(input)
-      const target = hitTest(frame, input.clientX, input.clientY)?.node ?? null
+      const target = pickHit(frame, input.clientX, input.clientY)?.node ?? null
       if (target === null) return null
       const accepted = target.dispatchEvent(wheelEvent(input))
       if (accepted) applyWheel(frame, target, input, options.document)
@@ -418,7 +421,7 @@ export const createDocumentInteractionController = (
 
   function synchronizeHover(frame: RenderFrame, now: number): void {
     if (!hasPointerPosition) return
-    const target = hitTest(frame, pointerX, pointerY)?.node ?? null
+    const target = pickHit(frame, pointerX, pointerY)?.node ?? null
     if (target === hovered) return
     transitionHover(target, {
       clientX: pointerX,
@@ -549,6 +552,7 @@ export const hitTest = (
   frame: RenderFrame,
   x: number,
   y: number,
+  accept: (hit: HitMetadata) => boolean = () => true,
 ): HitMetadata | null => {
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null
   const hits = frame.hitOrder ?? [...frame.hits.values()]
@@ -566,7 +570,8 @@ export const hitTest = (
           local.x < hit.x + hit.width &&
           local.y < hit.y + hit.height
         : pointInStrokedPath(hit, transform, x, y)) &&
-      hit.clips.every((clip) => pointInClip(frame, clip, x, y))
+      hit.clips.every((clip) => pointInClip(frame, clip, x, y)) &&
+      accept(hit)
     ) {
       return hit
     }
@@ -709,7 +714,7 @@ const resolvePointerOwnerHitForTarget = (
   return null
 }
 
-const pointInClip = (frame: RenderFrame, clip: RenderClip, x: number, y: number): boolean => {
+export const pointInClip = (frame: RenderFrame, clip: RenderClip, x: number, y: number): boolean => {
   const transform = clip.presentationOwner === null || clip.presentationOwner === undefined
     ? clip.transform
     : frame.presentationTransforms?.get(clip.presentationOwner) ?? clip.transform

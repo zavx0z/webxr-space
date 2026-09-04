@@ -4,15 +4,15 @@ import {
   ViewPoint,
   type TrueTypeFont,
 } from "@zavx0z/engine"
-import type {
-  Document,
-  Element as DomElement,
-  Node,
+import {
+  MouseEvent as SemanticMouseEvent,
+  type Document,
+  type Element as DomElement,
+  type Node,
 } from "@zavx0z/dom"
 import {
   createDocumentInteractionState,
-  hitTest,
-  resolvePointerOwnerHit,
+  hitTestProjection,
   type DocumentInteractionState,
   type HitMetadata,
   type PointerInput,
@@ -302,13 +302,13 @@ type CapturedPointer =
 type PlaneHit = Readonly<{
   record: PlaneRecord
   intersection: RendererWebGpuDocumentPlaneIntersection
+  hit: HitMetadata
 }>
 
 type OverlayHit = Readonly<{
   record: OverlayRecord
   point: Readonly<{x: number; y: number}>
   hit: HitMetadata
-  owner: HitMetadata | null
 }>
 
 const DEFAULT_VIEW_POINT = Object.freeze({
@@ -1099,9 +1099,9 @@ const createClaimedDocumentSpaceRuntime = async (
     for (const record of ordered) {
       if (!record.runtime.overlay.visible || !record.runtime.overlay.content.visible) continue
       const frame = record.runtime.renderer.flush()
-      const hit = hitTest(frame, point.x, point.y)
+      const hit = hitTestProjection(frame, point.x, point.y)
       if (hit !== null) {
-        return Object.freeze({record, point, hit, owner: resolvePointerOwnerHit(frame, hit)})
+        return Object.freeze({record, point, hit})
       }
     }
     return null
@@ -1145,13 +1145,51 @@ const createClaimedDocumentSpaceRuntime = async (
       if (!record.runtime.plane.visible || !record.runtime.plane.content.visible) continue
       const intersection = record.runtime.plane.intersectRay(raycaster.ray)
       if (intersection === null || !intersection.inside) continue
+      const frame = record.runtime.renderer.flush()
+      const hit = hitTestProjection(frame, intersection.documentPoint.x, intersection.documentPoint.y)
+      if (hit === null) continue
       if (
         best === null ||
         intersection.distance < best.intersection.distance ||
         (intersection.distance === best.intersection.distance && record.order < best.record.order)
-      ) best = Object.freeze({record, intersection})
+      ) best = Object.freeze({record, intersection, hit})
     }
     return best
+  }
+
+  // Every uncaptured input uses one occlusion decision. Projection rectangles
+  // alone never hide content. A capture keeps its owner until up/cancel.
+  const pickInput = (clientX: number, clientY: number) => {
+    const overlay = pickOverlay(clientX, clientY)
+    const plane = overlay === null ? pickPlane(clientX, clientY) : null
+    const world = overlay === null && plane === null ? pickWorld(clientX, clientY) : null
+    return {overlay, plane, world}
+  }
+
+  const dispatchProjectedMouse = (
+    type: "contextmenu" | "dblclick",
+    event: MouseEvent,
+    input: ReturnType<typeof pickInput>,
+  ): boolean => {
+    const target = input.overlay?.hit.node ?? input.plane?.hit.node ?? null
+    const point = input.overlay?.point ?? input.plane?.intersection.documentPoint
+    if (target === null || point === undefined) return false
+    const accepted = target.dispatchEvent(new SemanticMouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      clientX: point.x,
+      clientY: point.y,
+      button: event.button,
+      buttons: event.buttons,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      detail: event.detail,
+    }))
+    if (!accepted && event.cancelable) event.preventDefault()
+    requestRender()
+    return true
   }
 
   const intersectRecord = (
@@ -1378,9 +1416,9 @@ const createClaimedDocumentSpaceRuntime = async (
       scheduleTooltipFrame({kind: "plane", id: record.id}, record.tooltipDelayMs)
       return
     }
-    const overlayHit = pickOverlay(event.clientX, event.clientY)
+    const {overlay: overlayHit, plane: hit, world} = pickInput(event.clientX, event.clientY)
     if (overlayHit?.record.id !== hoveredOverlayId) clearHoveredOverlay(event)
-    if (overlayHit !== null && overlayHit.owner !== null) {
+    if (overlayHit !== null) {
       clearHoveredWorld()
       clearHoveredPlane(event)
       hoveredOverlayId = overlayHit.record.id
@@ -1391,7 +1429,6 @@ const createClaimedDocumentSpaceRuntime = async (
       )
       return
     }
-    const world = pickWorld(event.clientX, event.clientY)
     if (world !== null) {
       clearHoveredOverlay(event)
       clearHoveredPlane(event)
@@ -1399,17 +1436,6 @@ const createClaimedDocumentSpaceRuntime = async (
       return
     }
     clearHoveredWorld()
-    if (overlayHit !== null) {
-      clearHoveredPlane(event)
-      hoveredOverlayId = overlayHit.record.id
-      overlayHit.record.runtime.pointerMove(localPointerInput(event, overlayHit.point))
-      scheduleTooltipFrame(
-        {kind: "overlay", id: overlayHit.record.id},
-        overlayHit.record.tooltipDelayMs,
-      )
-      return
-    }
-    const hit = pickPlane(event.clientX, event.clientY)
     if (hit?.record.id !== hoveredPlaneId) clearHoveredPlane(event)
     if (hit === null) return
     hoveredPlaneId = hit.record.id
@@ -1421,9 +1447,9 @@ const createClaimedDocumentSpaceRuntime = async (
     if (disposed) return
     cancelTooltipFrame()
     cancelCapturedPointer(event.pointerId)
-    const overlayHit = pickOverlay(event.clientX, event.clientY)
+    const {overlay: overlayHit, plane: hit, world} = pickInput(event.clientX, event.clientY)
     if (overlayHit?.record.id !== hoveredOverlayId) clearHoveredOverlay(event)
-    if (overlayHit !== null && overlayHit.owner !== null) {
+    if (overlayHit !== null) {
       clearHoveredWorld()
       clearHoveredPlane(event)
       hoveredOverlayId = overlayHit.record.id
@@ -1447,7 +1473,6 @@ const createClaimedDocumentSpaceRuntime = async (
       activeWorldId = null
       return
     }
-    const world = pickWorld(event.clientX, event.clientY)
     if (world !== null) {
       clearHoveredOverlay(event)
       clearHoveredPlane(event)
@@ -1476,22 +1501,8 @@ const createClaimedDocumentSpaceRuntime = async (
       return
     }
     clearHoveredWorld()
-    const hit = pickPlane(event.clientX, event.clientY)
     if (hit?.record.id !== hoveredPlaneId) clearHoveredPlane(event)
-    const logicalFrame = !cameraGesturesEnabled || hit === null
-      ? null
-      : hit.record.runtime.renderer.flush()
-    const logicalHit = logicalFrame === null || hit === null
-      ? null
-      : hitTest(
-        logicalFrame,
-        hit.intersection.documentPoint.x,
-        hit.intersection.documentPoint.y,
-      )
-    const logicalOwner = logicalFrame === null
-      ? null
-      : resolvePointerOwnerHit(logicalFrame, logicalHit)
-    const cameraMode = cameraGesturesEnabled && logicalOwner === null
+    const cameraMode = cameraGesturesEnabled && hit === null
       ? event.button === 2
         ? "pan"
         : event.button === 0
@@ -1585,93 +1596,43 @@ const createClaimedDocumentSpaceRuntime = async (
 
   const onWheel = (event: WheelEvent): void => {
     if (disposed) return
-    const overlayHit = pickOverlay(event.clientX, event.clientY)
-    const overlayFrame = overlayHit?.record.runtime.renderer.flush() ?? null
-    const overlayOwnsWheel = overlayHit !== null && (
-      overlayHit.owner !== null ||
-      overlayFrame !== null && hasRemainingScroll(overlayFrame, overlayHit.hit.node, event)
-    )
-    if (overlayHit !== null && overlayOwnsWheel) {
-      const target = overlayHit.record.runtime.wheel(localWheelInput(event, overlayHit.point))
+    const {overlay, plane, world} = pickInput(event.clientX, event.clientY)
+    if (overlay !== null) {
+      const target = overlay.record.runtime.wheel(localWheelInput(event, overlay.point))
       if (target !== null && event.cancelable) event.preventDefault()
       return
     }
-    const world = pickWorld(event.clientX, event.clientY)
+    if (plane !== null) {
+      const target = plane.record.runtime.wheel(localWheelInput(event, plane.intersection.documentPoint))
+      if (target !== null && event.cancelable) event.preventDefault()
+      return
+    }
     if (world !== null) {
       if (!world.cameraGestures) return
-      routeCameraWheel(
-        world.runtime.viewPoint,
-        event,
-        world.logicalViewport?.height ?? canvasViewport.height,
-      )
-      if (event.cancelable) event.preventDefault()
-      requestRender()
-      return
-    }
-    if (overlayHit !== null) {
-      const target = overlayHit.record.runtime.wheel(localWheelInput(event, overlayHit.point))
-      if (target !== null && event.cancelable) event.preventDefault()
-      return
-    }
-    const hit = pickPlane(event.clientX, event.clientY)
-    if (hit === null) {
-      if (cameraGesturesEnabled) routeCameraWheel(viewPoint, event, canvasViewport.height)
-      if (cameraGesturesEnabled && event.cancelable) event.preventDefault()
-      if (cameraGesturesEnabled) requestRender()
-      return
-    }
-    if (!cameraGesturesEnabled) {
-      const target = hit.record.runtime.wheel(localWheelInput(event, hit.intersection.documentPoint))
-      if (target !== null && event.cancelable) event.preventDefault()
-      return
-    }
-    const frame = hit.record.runtime.renderer.flush()
-    const logicalHit = hitTest(
-      frame,
-      hit.intersection.documentPoint.x,
-      hit.intersection.documentPoint.y,
-    )
-    const logicalOwner = resolvePointerOwnerHit(frame, logicalHit)
-    if (
-      cameraGesturesEnabled &&
-      logicalOwner === null &&
-      !hasRemainingScroll(frame, logicalHit?.node ?? null, event)
-    ) {
+      routeCameraWheel(world.runtime.viewPoint, event, world.logicalViewport?.height ?? canvasViewport.height)
+    } else {
+      if (!cameraGesturesEnabled) return
       routeCameraWheel(viewPoint, event, canvasViewport.height)
-      if (event.cancelable) event.preventDefault()
-      requestRender()
-      return
     }
-    const target = hit.record.runtime.wheel(localWheelInput(event, hit.intersection.documentPoint))
-    if (target !== null && event.cancelable) event.preventDefault()
+    if (event.cancelable) event.preventDefault()
+    requestRender()
   }
 
   const onContextMenu = (event: MouseEvent): void => {
-    const overlayHit = pickOverlay(event.clientX, event.clientY)
-    if (overlayHit !== null && overlayHit.owner !== null) return
-    const world = pickWorld(event.clientX, event.clientY)
-    if (world === null) {
-      const planeHit = pickPlane(event.clientX, event.clientY)
-      if (planeHit !== null) {
-        const frame = planeHit.record.runtime.renderer.flush()
-        const hit = hitTest(
-          frame,
-          planeHit.intersection.documentPoint.x,
-          planeHit.intersection.documentPoint.y,
-        )
-        if (resolvePointerOwnerHit(frame, hit) !== null) return
-      }
-    }
-    if ((world?.cameraGestures === true || cameraGesturesEnabled) && event.cancelable) {
+    if (disposed) return
+    const input = pickInput(event.clientX, event.clientY)
+    if (dispatchProjectedMouse("contextmenu", event, input)) return
+    const {world} = input
+    if ((world?.cameraGestures === true || world === null && cameraGesturesEnabled) && event.cancelable) {
       event.preventDefault()
     }
   }
 
   const onDoubleClick = (event: MouseEvent): void => {
     if (disposed) return
-    const overlayHit = pickOverlay(event.clientX, event.clientY)
-    if (overlayHit !== null && overlayHit.owner !== null) return
-    const world = pickWorld(event.clientX, event.clientY)
+    const input = pickInput(event.clientX, event.clientY)
+    if (dispatchProjectedMouse("dblclick", event, input)) return
+    const {world} = input
     if (world === null || world.onDoubleClick === null) return
     world.onDoubleClick()
     requestRender()
@@ -2056,23 +2017,6 @@ const finitePositive = (value: number, label: string): number => {
 const finiteNonNegative = (value: number, label: string): number => {
   if (!Number.isFinite(value) || value < 0) throw new RangeError(`${label} must be finite and non-negative`)
   return value
-}
-
-const hasRemainingScroll = (
-  frame: RenderFrame,
-  target: DomElement | null,
-  event: WheelEvent,
-): boolean => {
-  for (let element = target; element !== null; element = element.parentElement) {
-    const metrics = frame.scrolls.get(element)
-    if (metrics === undefined) continue
-    const scrollElement = element as DomElement & {scrollLeft: number; scrollTop: number}
-    const left = Math.min(metrics.maxScrollLeft, scrollElement.scrollLeft)
-    const top = Math.min(metrics.maxScrollTop, scrollElement.scrollTop)
-    if (event.deltaX < 0 ? left > 0 : event.deltaX > 0 && left < metrics.maxScrollLeft) return true
-    if (event.deltaY < 0 ? top > 0 : event.deltaY > 0 && top < metrics.maxScrollTop) return true
-  }
-  return false
 }
 
 const routeCameraWheel = (
