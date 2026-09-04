@@ -196,6 +196,7 @@ const SCROLLBAR_AUTO_THICKNESS = 10
 const SCROLLBAR_THIN_THICKNESS = 4
 const SCROLLBAR_TRACK_COLOR = "#1f2937"
 const SCROLLBAR_THUMB_COLOR = "#9ca3af"
+const SCROLL_EXTENT_TOLERANCE_ULPS = 8
 const GAUGE_TRACK_COLOR = "#d1d5db"
 const PROGRESS_VALUE_COLOR = "#2563eb"
 const PROGRESS_INDETERMINATE_COLOR = "#60a5fa"
@@ -3957,8 +3958,8 @@ const projectElementScroll = (
     clientY + clientHeight,
     descendantBottom + layoutNode.style.padding.bottom,
   )
-  const scrollWidth = Math.max(clientWidth, contentRight - clientX)
-  const scrollHeight = Math.max(clientHeight, contentBottom - clientY)
+  const scrollWidth = normalizedScrollExtent(clientX, clientWidth, contentRight)
+  const scrollHeight = normalizedScrollExtent(clientY, clientHeight, contentBottom)
   const maxScrollLeft = scrollableX
     ? Math.max(0, scrollWidth - clientWidth)
     : 0
@@ -4073,6 +4074,23 @@ const transformRelativeTo = (
 
 const scrollableOverflow = (value: ComputedStyle["overflowX"]): boolean =>
   value === "hidden" || value === "auto" || value === "scroll"
+
+const normalizedScrollExtent = (
+  clientStart: number,
+  clientLength: number,
+  contentEnd: number,
+): number => {
+  const contentLength = Math.max(0, contentEnd - clientStart)
+  const tolerance = Number.EPSILON * Math.max(
+    1,
+    Math.abs(clientStart),
+    Math.abs(clientLength),
+    Math.abs(contentEnd),
+  ) * SCROLL_EXTENT_TOLERANCE_ULPS
+  return contentLength - clientLength <= tolerance
+    ? clientLength
+    : Math.max(clientLength, contentLength)
+}
 
 const visibleScrollbarOverflow = (value: ComputedStyle["overflowX"]): boolean =>
   value === "auto" || value === "scroll"
