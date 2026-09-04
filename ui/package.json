@@ -29,6 +29,7 @@
     "./fields/switch-field": "./fields/switch-field.tsx",
     "./fields/text-field": "./fields/text-field.tsx",
     "./fields/vector-field": "./fields/vector-field.tsx",
+    "./navigation/breadcrumbs": "./navigation/breadcrumbs.tsx",
     "./surfaces/pane": "./surfaces/pane.tsx",
     "./surfaces/panel": "./surfaces/panel.tsx",
     "./surfaces/window": "./surfaces/window.tsx",

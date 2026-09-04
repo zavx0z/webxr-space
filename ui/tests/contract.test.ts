@@ -24,6 +24,7 @@ const expectedExports = Object.freeze([
   "./fields/switch-field",
   "./fields/text-field",
   "./fields/vector-field",
+  "./navigation/breadcrumbs",
   "./surfaces/pane",
   "./surfaces/panel",
   "./surfaces/window",
@@ -49,6 +50,7 @@ test("[UI-001] публичные UI-компоненты распределен
     expect(await Bun.file(resolve(packageRoot, target)).exists()).toBe(true)
     if (subpath.startsWith("./buttons/")) expect(target).toStartWith("./buttons/")
     if (subpath.startsWith("./fields/")) expect(target).toStartWith("./fields/")
+    if (subpath.startsWith("./navigation/")) expect(target).toStartWith("./navigation/")
     if (subpath.startsWith("./surfaces/")) expect(target).toStartWith("./surfaces/")
     if (subpath.startsWith("./views/")) expect(target).toStartWith("./views/")
     if (subpath.startsWith("./feedback/")) expect(target).toStartWith("./feedback/")

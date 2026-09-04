@@ -1,3 +1,5 @@
+import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
+
 export type StatusBarItem = Readonly<{
   id: string
   text: string
@@ -9,6 +11,7 @@ export type StatusBarProps = Readonly<{
   end?: readonly StatusBarItem[] | undefined
   separator?: string | undefined
   title?: string | undefined
+  children?: JsxSourceElement | null | undefined
   style?: CssStyle | undefined
 }>
 
@@ -57,9 +60,11 @@ function StatusBarItems(props: Readonly<{
   items: readonly StatusBarItem[]
   separator: string
   alignment: "start" | "end"
+  hidden?: boolean | undefined
 }>) {
   return <span
     data-alignment={props.alignment}
+    hidden={props.hidden === true}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -74,6 +79,10 @@ function StatusBarItems(props: Readonly<{
 
       &[data-alignment="end"] {
         justify-content: flex-end;
+      }
+
+      &[hidden] {
+        display: none;
       }
     `}
   >
@@ -118,7 +127,30 @@ export function StatusBar(props: StatusBarProps) {
       ${props.style}
     `}
   >
-    <StatusBarItems items={start} separator={separator} alignment="start" />
+    <StatusBarItems
+      items={start}
+      separator={separator}
+      alignment="start"
+      hidden={props.children != null}
+    />
+    <span
+      data-status-content=""
+      hidden={props.children == null}
+      style={css`
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        height: 100%;
+        flex-grow: 1;
+        overflow: clip;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      {props.children}
+    </span>
     <StatusBarItems items={end} separator={separator} alignment="end" />
   </footer>
 }

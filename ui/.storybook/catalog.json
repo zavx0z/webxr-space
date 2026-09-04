@@ -3,6 +3,45 @@
   "schemaVersion": 1,
   "categories": [
     {
+      "id": "components-navigation",
+      "label": "Навигация",
+      "route": "components/navigation",
+      "group": {
+        "id": "components",
+        "label": "Компоненты"
+      },
+      "subjects": [
+        {
+          "id": "breadcrumbs",
+          "label": "Хлебные крошки",
+          "route": "components/navigation/breadcrumbs",
+          "apiName": "Breadcrumbs",
+          "kind": "component",
+          "tags": ["навигация", "путь", "иерархия", "breadcrumbs", "mui"],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Основные",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/navigation/breadcrumbs/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-navigation-breadcrumbs.ts",
+                "export": "story_basic_default"
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        }
+      ]
+    },
+    {
       "id": "components-button",
       "label": "Кнопка",
       "kind": "component",
