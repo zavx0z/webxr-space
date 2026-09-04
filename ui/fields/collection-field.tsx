@@ -1,6 +1,11 @@
-import {Button, IconButton} from "../buttons/button.tsx"
+import {IconButton} from "../buttons/button.tsx"
 import {collectionFieldHeight as resolveCollectionFieldHeight} from "../src/fields/layout.ts"
-import {minusIcon, plusIcon} from "../src/shared/icon-assets.ts"
+import {
+  arrowDownIcon,
+  arrowUpIcon,
+  minusIcon,
+  plusIcon,
+} from "../src/shared/icon-assets.ts"
 import {List} from "../views/list.tsx"
 import {
   collectionVisibleRowsHeight,
@@ -180,14 +185,17 @@ export function CollectionField(props: CollectionFieldProps) {
           disabled={props.disabled === true || props.readOnly === true || selected === undefined || selected.disabled === true || props.onRemove === undefined}
           style={actionStyle} onClick={onRemove}
         />
-        <Button
-          label="↑"
+        <IconButton
+          label="Move selected item up"
+          iconSrc={arrowUpIcon}
           title="Move selected item up"
           disabled={props.disabled === true || props.readOnly === true || selectedIndex <= 0 || selected?.disabled === true || props.onMove === undefined}
           style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}
-          onClick={event => move("up", event)}/>
-        <Button
-          label="↓"
+          onClick={event => move("up", event)}
+        />
+        <IconButton
+          label="Move selected item down"
+          iconSrc={arrowDownIcon}
           title="Move selected item down"
           disabled={props.disabled === true || props.readOnly === true || selectedIndex < 0 || selectedIndex >= items.length - 1 || selected?.disabled === true || props.onMove === undefined}
           style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}

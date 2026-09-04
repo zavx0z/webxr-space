@@ -6,7 +6,6 @@ import {
   type SelectionState
 } from "../src/selection/options.ts"
 import {fieldDensityHeight, labelledFieldHeight} from "../src/fields/layout.ts"
-import {chevronDownIcon} from "../src/shared/icon-assets.ts"
 
 export type SelectFieldOption = Readonly<{
   key: string
@@ -199,27 +198,6 @@ export function SelectField(props: SelectFieldProps) {
           />)}
         </optgroup>
       </select>
-      <img
-        data-select-field-indicator=""
-        data-density={density}
-        src={chevronDownIcon}
-        alt=""
-        aria-hidden="true"
-        width={22}
-        height={22}
-        style={css`
-          box-sizing: border-box;
-          position: absolute;
-          top: 3px;
-          right: 1px;
-          padding: 4px;
-          background: var(--select-field-surface);
-
-          &[data-density="compact"] {
-            top: 0;
-          }
-        `}
-      />
     </span>
   </label>
 }

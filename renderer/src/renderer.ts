@@ -225,6 +225,12 @@ const checkboxIndicatorGeometry = (() => {
   return geometry
 })()
 
+const selectIndicatorGeometry = (() => {
+  const geometry = parseRenderPath("M 2 4 L 6 8 L 10 4")
+  if (geometry === null) throw new Error("Select indicator geometry is invalid")
+  return geometry
+})()
+
 const readVectorPathGeometry = (path: HTMLVectorPathElement): RenderPathGeometry | null => {
   const source = path.d
   let cached = vectorPathGeometryCache.get(path)
@@ -4602,20 +4608,23 @@ const emitSelectPresentation = (
       transform: presentationFor(select, state),
     }))
   }
-  emitControlGlyph(
-    select,
-    "disclosure-indicator",
-    "▾",
-    box.contentX + box.contentWidth - disclosureWidth,
-    box.contentY,
-    disclosureWidth,
-    box.contentHeight,
-    layoutNode.style.color,
-    layoutNode.effectiveOpacity,
+  const indicatorSize = Math.min(12, disclosureWidth, box.contentHeight)
+  if (indicatorSize <= 0) return
+  state.displayList.push(Object.freeze({
+    kind: "path",
+    key: "disclosure-indicator",
+    node: select,
+    x: box.contentX + box.contentWidth - disclosureWidth +
+      (disclosureWidth - indicatorSize) / 2,
+    y: box.contentY + (box.contentHeight - indicatorSize) / 2,
+    geometry: selectIndicatorGeometry,
+    stroke: layoutNode.style.color,
+    strokeWidth: 1.5,
+    opacity: layoutNode.effectiveOpacity,
     clips,
-    presentationFor(select, state),
-    state,
-  )
+    presentationOwner: null,
+    transform: presentationFor(select, state),
+  }))
 }
 
 const emitSelectPicker = (
@@ -5299,40 +5308,6 @@ const emitInputIndicator = (
       transform: presentationFor(input, state),
     }),
   )
-}
-
-const emitControlGlyph = (
-  node: Element,
-  key: string,
-  glyph: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  color: string,
-  opacity: number,
-  clips: readonly RenderClip[],
-  transform: RenderTransform,
-  state: BuildState,
-): void => {
-  if (width <= 0 || height <= 0) return
-  const fontSize = Math.max(0, Math.min(12, height, width / 0.6))
-  if (fontSize <= 0) return
-  state.displayList.push(Object.freeze({
-    kind: "text",
-    key,
-    node,
-    text: glyph,
-    x: x + Math.max(0, (width - fontSize * 0.6) / 2),
-    y: y + Math.max(0, (height - fontSize) / 2),
-    color,
-    fontSize,
-    lineHeight: fontSize,
-    letterSpacing: 0,
-    opacity,
-    clips,
-    transform,
-  }))
 }
 
 const graphemeCount = (value: string): number => {

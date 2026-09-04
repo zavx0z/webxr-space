@@ -56,3 +56,30 @@ test("[REN-004] Renderer не владеет GPU-ресурсами и не вы
   expect(source).not.toContain("navigator.gpu")
   expect(files.some(file => file.endsWith(".wgsl"))).toBe(false)
 })
+
+test("[REN-005] указатель Select является векторным Path, а не текстовым глифом", () => {
+  const document = createDocument()
+  const select = document.createElement("select")
+  const option = document.createElement("option")
+  option.value = "output"
+  option.textContent = "Output"
+  option.selected = true
+  select.setAttribute("style", "width: 180px; height: 22px")
+  select.append(option)
+  document.append(select)
+  const renderer = createDocumentRenderer({
+    document,
+    root: select,
+    viewport: {width: 300, height: 100},
+  })
+
+  const frame = renderer.flush()
+  const indicator = frame.displayList.find(item =>
+    item.node === select && item.key === "disclosure-indicator")
+  expect(indicator?.kind).toBe("path")
+  expect(frame.displayList.some(item =>
+    item.node === select && item.key === "disclosure-indicator" && item.kind === "text"))
+    .toBe(false)
+
+  renderer.dispose()
+})

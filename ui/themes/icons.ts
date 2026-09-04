@@ -3,6 +3,8 @@
  */
 import {
   applyIcon,
+  arrowDownIcon,
+  arrowUpIcon,
   chevronDownIcon,
   chevronRightIcon,
   clearIcon,
@@ -29,6 +31,8 @@ import {
 
 export {
   applyIcon,
+  arrowDownIcon,
+  arrowUpIcon,
   chevronDownIcon,
   chevronRightIcon,
   clearIcon,
@@ -117,6 +121,8 @@ export const uiIcons = {
   manual: manualSvg,
   settings: settingsIcon,
   apply: applyIcon,
+  arrowDown: arrowDownIcon,
+  arrowUp: arrowUpIcon,
   language: languageIcon,
   search: searchIcon,
   copy: copySvg,

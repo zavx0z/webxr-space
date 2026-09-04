@@ -1,3 +1,5 @@
+import {chevronRightIcon} from "../src/shared/icon-assets.ts"
+
 export type BreadcrumbsItem = Readonly<{
   id: string
   label: string
@@ -8,18 +10,13 @@ export type BreadcrumbsItem = Readonly<{
 export type BreadcrumbsProps = Readonly<{
   items: readonly BreadcrumbsItem[]
   label?: string | undefined
-  separator?: string | undefined
   style?: CssStyle | undefined
   onNavigate?: ((item: BreadcrumbsItem, event: PointerEvent) => void) | undefined
 }>
 
 /** Hierarchical navigation whose final item denotes the current location. */
 export function Breadcrumbs(props: BreadcrumbsProps) {
-  const separator = props.separator ?? "›"
-  if (typeof separator !== "string" || separator.length === 0) {
-    throw new TypeError("Breadcrumbs separator must be a non-empty string")
-  }
-  const items = normalizeItems(props.items, separator)
+  const items = normalizeItems(props.items)
   return <nav
     aria-label={props.label ?? "Путь"}
     style={css`
@@ -87,16 +84,28 @@ function BreadcrumbItemView(props: Readonly<{
       }
     `}
   >
-    <span
+    <img
+      src={chevronRightIcon}
+      alt=""
       aria-hidden="true"
+      width={12}
+      height={20}
+      hidden={!props.item.separated}
       style={css`
-        display: inline;
+        box-sizing: border-box;
+        display: block;
+        width: 12px;
+        height: 20px;
+        padding: 5px 2px;
         flex-shrink: 0;
-        color: var(--status-bar-content);
+        object-fit: contain;
+        opacity: 0.55;
+
+        &[hidden] {
+          display: none;
+        }
       `}
-    >
-      {props.item.prefix}
-    </span>
+    />
     <button
       type="button"
       aria-current={props.current ? "page" : undefined}
@@ -138,12 +147,11 @@ function BreadcrumbItemView(props: Readonly<{
 
 type NormalizedBreadcrumbsItem = BreadcrumbsItem & Readonly<{
   current: boolean
-  prefix: string
+  separated: boolean
 }>
 
 function normalizeItems(
   items: readonly BreadcrumbsItem[],
-  separator: string,
 ): readonly NormalizedBreadcrumbsItem[] {
   if (!Array.isArray(items) || items.length === 0) {
     throw new TypeError("Breadcrumbs items must be a non-empty array")
@@ -162,7 +170,7 @@ function normalizeItems(
     return Object.freeze({
       ...item,
       current: index === items.length - 1,
-      prefix: index === 0 ? "" : ` ${separator} `,
+      separated: index > 0,
     })
   })
   return Object.freeze(normalized)

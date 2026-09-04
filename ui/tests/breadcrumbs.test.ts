@@ -33,6 +33,11 @@ test("[UI-BREADCRUMBS-001] путь является ordered navigation с те�
   expect(navigation?.querySelectorAll("ol")).toHaveLength(1)
   expect(navigation?.querySelectorAll("li")).toHaveLength(3)
   expect(navigation?.querySelectorAll("button")).toHaveLength(3)
+  const separators = [...navigation?.querySelectorAll("img") ?? []]
+  expect(separators).toHaveLength(3)
+  expect(separators[0]?.hasAttribute("hidden")).toBe(true)
+  expect(separators.slice(1).every(separator => !separator.hasAttribute("hidden"))).toBe(true)
+  expect(navigation?.textContent).not.toContain("›")
   expect(navigation?.querySelector('[aria-current="page"]')?.textContent).toBe("Адаптивная")
 
   component.unmount()

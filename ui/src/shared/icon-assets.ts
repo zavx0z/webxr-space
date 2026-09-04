@@ -10,6 +10,8 @@ export const runIcon = /* @__PURE__ */ iconSvg("<path d=\"M8 5v14l11-7-11-7Z\"/>
 export const clearIcon = /* @__PURE__ */ iconSvg("<path d=\"M4 7h16\"/><path d=\"M10 11v6\"/><path d=\"M14 11v6\"/><path d=\"M6 7l1 14h10l1-14\"/><path d=\"M9 7V4h6v3\"/>")
 export const plusIcon = /* @__PURE__ */ iconSvg("<path d=\"M12 5v14\"/><path d=\"M5 12h14\"/>")
 export const minusIcon = /* @__PURE__ */ iconSvg("<path d=\"M5 12h14\"/>")
+export const arrowUpIcon = /* @__PURE__ */ iconSvg("<path d=\"M12 19V5\"/><path d=\"m7 10 5-5 5 5\"/>")
+export const arrowDownIcon = /* @__PURE__ */ iconSvg("<path d=\"M12 5v14\"/><path d=\"m7 14 5 5 5-5\"/>")
 export const closeIcon = /* @__PURE__ */ iconSvg("<path d=\"M6 6l12 12\"/><path d=\"M18 6 6 18\"/>")
 export const applyIcon = /* @__PURE__ */ iconSvg("<path d=\"m5 13 4 4L19 7\"/>")
 export const searchIcon = /* @__PURE__ */ iconSvg("<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m15.5 15.5 5 5\"/>")
