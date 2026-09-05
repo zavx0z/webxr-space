@@ -10,7 +10,6 @@ import {
 
 export type SpaceDisplayProjection = Readonly<{
   element: XRDisplayElement
-  id: string
   viewport: Readonly<{width: number; height: number}>
   worldUnitsPerPixel: number
   transform: Readonly<{
@@ -22,7 +21,6 @@ export type SpaceDisplayProjection = Readonly<{
 
 export type SpaceHUDProjection = Readonly<{
   element: XRHUDElement
-  id: string
   distance: number
 }>
 
@@ -35,6 +33,7 @@ export type SpaceTree = Readonly<{
   hud: SpaceHUDProjection | null
 }>
 
+/** Читает семантических владельцев по identity Element; DOM id не является ключом сцены. */
 export const readSpaceTree = (document: Document): SpaceTree => {
   const space = document.documentElement
   if (!(space instanceof XRSpaceElement)) {
@@ -48,26 +47,14 @@ export const readSpaceTree = (document: Document): SpaceTree => {
     throw new TypeError("Space must contain exactly one ViewPoint")
   }
 
-  const displayIds = new Set<string>()
   const displays = space.children
     .filter((child): child is XRDisplayElement => child instanceof XRDisplayElement)
-    .map(element => {
-      if (element.id === "") throw new TypeError("Display id cannot be empty")
-      if (displayIds.has(element.id)) {
-        throw new TypeError(`Duplicate Display id: ${element.id}`)
-      }
-      displayIds.add(element.id)
-      return readDisplayProjection(element)
-    })
+    .map(readDisplayProjection)
 
   const hudElements = space.children.filter(
     (child): child is XRHUDElement => child instanceof XRHUDElement,
   )
   const hudElement = hudElements[0] ?? null
-  if (hudElement && hudElement.id === "") throw new TypeError("HUD id cannot be empty")
-  if (hudElement && displayIds.has(hudElement.id)) {
-    throw new TypeError(`Duplicate projection id: ${hudElement.id}`)
-  }
 
   const objects = collectObjects(space)
 
@@ -80,7 +67,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
     )),
     displays: Object.freeze(displays),
     hud: hudElement
-      ? Object.freeze({element: hudElement, id: hudElement.id, distance: hudElement.distance})
+      ? Object.freeze({element: hudElement, distance: hudElement.distance})
       : null,
   })
 }
@@ -110,7 +97,6 @@ export function readDisplayProjection(element: XRDisplayElement): SpaceDisplayPr
   }
   return Object.freeze({
     element,
-    id: element.id,
     viewport: Object.freeze({
       width: element.viewportWidth,
       height: element.viewportHeight,

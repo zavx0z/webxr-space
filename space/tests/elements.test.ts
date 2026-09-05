@@ -160,14 +160,14 @@ describe("Пространственные элементы одного Documen
     expect(tree.space).toBe(space)
     expect(tree.viewPoint).toBe(viewPoint)
     expect(tree.displays[0]).toMatchObject({
-      id: "main",
+      element: display,
       viewport: {width: 960, height: 680},
       worldUnitsPerPixel: 0.5,
     })
-    expect(tree.hud).toMatchObject({id: "hud"})
+    expect(tree.hud).toMatchObject({element: hud})
   })
 
-  test("[SPC-007] duplicate Display id отклоняется до runtime projection", () => {
+  test("[SPC-007] Display identity не зависит от совпадающих DOM id", () => {
     const document = createSpaceDocument()
     const space = document.createElement("xr-space") as XRSpaceElement
     const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
@@ -178,7 +178,7 @@ describe("Пространственные элементы одного Documen
     space.append(viewPoint, first, second)
     document.append(space)
 
-    expect(() => readSpaceTree(document)).toThrow("Duplicate Display id: duplicate")
+    expect(readSpaceTree(document).displays.map(projection => projection.element)).toEqual([first, second])
   })
 
   test("[SPC-002] отклоняет не пространственного ребёнка Space", () => {

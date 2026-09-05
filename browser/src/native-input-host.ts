@@ -7,7 +7,8 @@ import {
   HTMLTextAreaElement as SemanticHTMLTextAreaElement,
   InputEvent as SemanticInputEvent,
   KeyboardEvent as SemanticKeyboardEvent,
-  type Document as SemanticDocument,
+  Document as SemanticDocument,
+  Node as SemanticNode,
 } from "@zavx0z/dom"
 
 export type DocumentNativeInputTarget = SemanticHTMLElement
@@ -37,10 +38,11 @@ export type DocumentNativeInputHost = Readonly<{
   nativeInput: HTMLInputElement
   nativeTextArea: HTMLTextAreaElement
   document: SemanticDocument | null
-  ownerId: string | null
+  owner: SemanticNode | null
   inputTarget: DocumentNativeInputTarget | null
   activeProxy: ActiveProxy
-  setActiveDocument(document: SemanticDocument | null, ownerId?: string | null): void
+  /** Берёт Document из владельца; смена root в том же Document сохраняет сфокусированный Element. */
+  setActiveRoot(root: SemanticNode | null): void
   synchronize(): void
   dispatchKey(target: DocumentNativeInputTarget, input: DocumentNativeKeyInput): boolean
   blur(): void
@@ -102,7 +104,7 @@ export function createDocumentNativeInputHostWithSeams(
   const proxies = seams.createProxies()
   validateProxies(proxies)
   let document: SemanticDocument | null = null
-  let ownerId: string | null = null
+  let owner: SemanticNode | null = null
   let target: DocumentNativeInputTarget | null = null
   let activeProxy: ActiveProxy = null
   let synchronizing = false
@@ -119,6 +121,7 @@ export function createDocumentNativeInputHostWithSeams(
 
   const targetForActiveDocument = (): DocumentNativeInputTarget | null => {
     const active = document?.activeElement
+    if (active && owner && !owner.contains(active)) return null
     if (active instanceof SemanticHTMLTextAreaElement) return active.disabled ? null : active
     if (active instanceof SemanticHTMLSelectElement) {
       return active.disabled || active.multiple || active.size > 1 ? null : active
@@ -193,19 +196,14 @@ export function createDocumentNativeInputHostWithSeams(
     options.requestFrame()
   }
 
-  const setActiveDocument = (
-    nextDocument: SemanticDocument | null,
-    nextOwnerId: string | null = null,
-  ): void => {
+  const setActiveRoot = (nextOwner: SemanticNode | null): void => {
     if (disposed) throw new Error("Document native input host is disposed")
-    if (nextDocument !== null && (typeof nextDocument !== "object" || nextDocument.nodeType !== 9)) {
-      throw new TypeError("Active input document must be an @zavx0z/dom Document")
+    if (nextOwner !== null && !(nextOwner instanceof SemanticNode)) {
+      throw new TypeError("Active input owner must be a semantic Node")
     }
-    if (nextOwnerId !== null && (typeof nextOwnerId !== "string" || nextOwnerId.length === 0)) {
-      throw new TypeError("Active input owner id must be null or a non-empty string")
-    }
+    const nextDocument = nextOwner instanceof SemanticDocument ? nextOwner : nextOwner?.ownerDocument ?? null
     if (document === nextDocument) {
-      ownerId = nextDocument === null ? null : nextOwnerId
+      owner = nextDocument === null ? null : nextOwner
       synchronize()
       return
     }
@@ -220,7 +218,7 @@ export function createDocumentNativeInputHostWithSeams(
       previousTarget?.blur()
       blurProxies()
       document = nextDocument
-      ownerId = nextDocument === null ? null : nextOwnerId
+      owner = nextDocument === null ? null : nextOwner
       document?.addEventListener("focusin", onSemanticFocus)
       document?.addEventListener("focusout", onSemanticFocus)
     } finally {
@@ -521,10 +519,10 @@ export function createDocumentNativeInputHostWithSeams(
     nativeInput: proxies.input,
     nativeTextArea: proxies.textarea,
     get document() { return document },
-    get ownerId() { return ownerId },
+    get owner() { return owner },
     get inputTarget() { return target },
     get activeProxy() { return activeProxy },
-    setActiveDocument,
+    setActiveRoot,
     synchronize,
     dispatchKey,
     blur,
@@ -544,7 +542,7 @@ export function createDocumentNativeInputHostWithSeams(
       target = null
       activeProxy = null
       document = null
-      ownerId = null
+      owner = null
       synchronizing = true
       previous?.blur()
       blurProxies()

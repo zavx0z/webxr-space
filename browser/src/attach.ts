@@ -31,6 +31,7 @@ import {
   HTMLElement as SemanticHTMLElement,
   type Document,
   type Element,
+  type Node,
 } from "@zavx0z/dom"
 import {createRoot, provideContext, type ComponentRoot, type ComponentValue} from "@zavx0z/component"
 import {createRootEnvironment, rootContext, type RootEnvironment, type RootSize, type FrameLoop} from "./root-context.ts"
@@ -370,11 +371,11 @@ const createAttachedRoot = async (
   const objects = new Map<XRObjectElement, ObjectProjection>()
   const animations = new Map<XRAnimationElement, AnimationProjection>()
   const projectionBindings = new Map<XRDisplayElement | XRHUDElement, ProjectionBinding>()
-  const projectionListeners = new Map<
+  let projectionListeners = new WeakMap<
     XRDisplayElement | XRHUDElement,
     Set<(frame: RenderFrame) => void>
   >()
-  const projectionHandles = new Map<
+  let projectionHandles = new WeakMap<
     XRDisplayElement | XRHUDElement,
     RootDocumentProjection
   >()
@@ -440,7 +441,7 @@ const createAttachedRoot = async (
         synchronizeHud(tree, runtime)
         hudDirty = false
       }
-      if (projectionsDirty) synchronizeProjectionBindings(tree, runtime, projectionBindings, projectionListeners)
+      if (projectionsDirty && structural) synchronizeProjectionBindings(tree, runtime, projectionBindings, projectionListeners)
       if (structural || dirtyObjects.size > 0) {
         synchronizeObjects(tree, runtime, objects, options.font, guardedObjects, structural ? undefined : dirtyObjects)
         dirtyObjects.clear()
@@ -475,8 +476,19 @@ const createAttachedRoot = async (
     }
   })
 
+  const synchronizeInputOwner = (): void => {
+    let owner: Element | null = document.activeElement
+    while (owner !== null) {
+      if ((owner instanceof XRDisplayElement || owner instanceof XRHUDElement) && owner.parentElement === space) break
+      owner = owner.parentElement
+    }
+    if (runtime.nativeInputHost.owner !== owner) runtime.nativeInputHost.setActiveRoot(owner)
+  }
+  document.addEventListener("focusin", synchronizeInputOwner)
+
   const unsubscribeMutations = document.subscribeMutations(batch => {
     if (disposed || writingPresentedViewPoint) return
+    synchronizeInputOwner()
     for (const record of batch.records) {
       const target = record.target
       if (target !== document && !space.contains(target)) continue
@@ -485,14 +497,13 @@ const createAttachedRoot = async (
         continue
       }
       if (record.type !== "attributes") continue
+      if (record.attributeName === "id") continue
       if (target instanceof XRSpaceElement) backgroundDirty = true
       else if (target instanceof XRViewPointElement) cameraDirty = true
       else if (target instanceof XRDisplayElement) {
         displayDirty = true
-        if (record.attributeName === "id") structureDirty = true
       } else if (target instanceof XRHUDElement) {
         hudDirty = true
-        if (record.attributeName === "id") structureDirty = true
       } else if (target instanceof XRObjectElement) {
         dirtyObjects.add(target)
         if (record.attributeName === "factory-revision") animationDirty = true
@@ -555,7 +566,7 @@ const createAttachedRoot = async (
       projectPoint(point: Readonly<{x: number; y: number}>) {
         requireDocumentProjectionRuntime(owner)
         validatePoint(point)
-        return runtime.projectPoint(owner.id, point)
+        return runtime.projectPoint(owner, point)
       },
     })
   }
@@ -635,7 +646,7 @@ const createAttachedRoot = async (
         throw new Error("Semantic key target does not belong to the exact projection owner")
       }
       if (
-        runtime.nativeInputHost.ownerId !== owner.id ||
+        runtime.nativeInputHost.owner !== owner ||
         runtime.nativeInputHost.inputTarget !== target
       ) {
         throw new Error("Semantic key target does not own the Root native proxy")
@@ -661,6 +672,7 @@ const createAttachedRoot = async (
     unmount() {
       if (disposed) return
       disposed = true
+      document.removeEventListener("focusin", synchronizeInputOwner)
       unsubscribeMutations()
       unsubscribeBeforeRender()
       unsubscribePresented()
@@ -676,8 +688,8 @@ const createAttachedRoot = async (
             guardedObjects.clear()
             dirtyObjects.clear()
             for (const link of ownedLinks) link.remove()
-            projectionListeners.clear()
-            projectionHandles.clear()
+            projectionListeners = new WeakMap()
+            projectionHandles = new WeakMap()
             presentedListeners.clear()
             claim.release()
           }
@@ -688,6 +700,7 @@ const createAttachedRoot = async (
 
   try {
     synchronize()
+    synchronizeInputOwner()
     const before = presentedFrame
     runtime.render()
     if (presentedFrame <= before) throw new Error("attach did not present the application's first frame")
@@ -780,9 +793,9 @@ const synchronizeDisplays = (
   tree: SpaceTree,
   runtime: DocumentSpaceRuntime,
 ): void => {
-  const desired = new Set(tree.displays.map(display => display.id))
-  for (const id of runtime.planeIds) {
-    if (!desired.has(id)) runtime.removePlane(id)
+  const desired = new Set<Node>(tree.displays.map(display => display.element))
+  for (const owner of runtime.planeRoots) {
+    if (!desired.has(owner)) runtime.removePlane(owner)
   }
 
   for (const display of tree.displays) {
@@ -795,14 +808,9 @@ const synchronizeDisplays = (
     const orientation = new Quaternion(
       transform.quaternion.x, transform.quaternion.y, transform.quaternion.z, transform.quaternion.w,
     ).normalize()
-    const held = runtime.getPlane(display.id)
-    if (held !== undefined && held.root !== display.element) {
-      runtime.removePlane(display.id)
-    }
-    const current = runtime.getPlane(display.id)
+    const current = runtime.getPlane(display.element)
     if (current === undefined) {
       runtime.addPlane({
-        id: display.id,
         root: display.element,
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
@@ -823,7 +831,7 @@ const synchronizeDisplays = (
       current.plane.quaternion.w !== orientation.w ||
       current.plane.visible !== transform.visible
     ) {
-      runtime.updatePlane(display.id, {
+      runtime.updatePlane(display.element, {
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
         transform,
@@ -837,19 +845,14 @@ const synchronizeHud = (
   runtime: DocumentSpaceRuntime,
 ): void => {
   const hud = tree.hud
-  for (const id of runtime.overlayIds) {
-    if (hud === null || id !== hud.id) runtime.removeOverlay(id)
+  for (const owner of runtime.overlayRoots) {
+    if (hud === null || owner !== hud.element) runtime.removeOverlay(owner)
   }
   if (hud === null) return
 
-  const held = runtime.getOverlay(hud.id)
-  if (held !== undefined && held.root !== hud.element) {
-    runtime.removeOverlay(hud.id)
-  }
-  const current = runtime.getOverlay(hud.id)
+  const current = runtime.getOverlay(hud.element)
   if (current === undefined) {
     runtime.addOverlay({
-      id: hud.id,
       root: hud.element,
       distance: hud.distance,
     })
@@ -865,18 +868,18 @@ const synchronizeProjectionBindings = (
   tree: SpaceTree,
   runtime: DocumentSpaceRuntime,
   bindings: Map<XRDisplayElement | XRHUDElement, ProjectionBinding>,
-  listeners: ReadonlyMap<
+  listeners: WeakMap<
     XRDisplayElement | XRHUDElement,
     ReadonlySet<(frame: RenderFrame) => void>
   >,
 ): void => {
   const desired = new Map<XRDisplayElement | XRHUDElement, ProjectionRuntime>()
   for (const display of tree.displays) {
-    const plane = runtime.getPlane(display.id)
+    const plane = runtime.getPlane(display.element)
     if (plane !== undefined && plane.root === display.element) desired.set(display.element, plane)
   }
   if (tree.hud !== null) {
-    const overlay = runtime.getOverlay(tree.hud.id)
+    const overlay = runtime.getOverlay(tree.hud.element)
     if (overlay !== undefined && overlay.root === tree.hud.element) {
       desired.set(tree.hud.element, overlay)
     }

@@ -1,14 +1,13 @@
+import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
-  JsxSourceElement,
-} from "@zavx0z/template/jsx-runtime"
-import type {
-  XRMeshElement,
+  XRAssetElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-export type MeshProps = Readonly<{
+export type AssetProps = Readonly<{
+  factory: XRObjectProjectionFactory
   x?: number
   y?: number
   z?: number
@@ -21,14 +20,14 @@ export type MeshProps = Readonly<{
   scaleZ?: number
   visible?: boolean
   name?: string
-  factory?: XRObjectProjectionFactory | null
   children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
-  ref?: SpaceRef<XRMeshElement> | null
+  ref?: SpaceRef<XRAssetElement> | null
 }>
 
-export function Mesh(props: MeshProps): JsxSourceElement {
+export function Asset(props: AssetProps): JsxSourceElement {
   return (
-    <xr-mesh
+    <xr-asset
+      factory={props.factory}
       x={props.x}
       y={props.y}
       z={props.z}
@@ -41,10 +40,9 @@ export function Mesh(props: MeshProps): JsxSourceElement {
       scaleZ={props.scaleZ}
       visible={props.visible}
       name={props.name}
-      factory={props.factory}
       ref={props.ref}
     >
       {props.children}
-    </xr-mesh>
+    </xr-asset>
   )
 }

@@ -28,7 +28,6 @@ import {
   isKeyedComponentsValue,
   memoPropsEqual,
   contextDefaultValue,
-  type CallbackRef,
   type ComponentValue,
   type ComponentKey,
   type Context,
@@ -58,6 +57,7 @@ export type Reducer<State, Action> = (state: State, action: Action) => State
 export type DependencyList = readonly unknown[]
 export type MutableRefObject<Value> = {current: Value}
 export type RefCallback<Value> = (instance: Value | null) => void | (() => void)
+/** В JSX получает тот же Element после commit; при unmount ссылка очищается. */
 export type RefObject<Value> = {current: Value | null}
 export type Ref<Value> = RefCallback<Value> | RefObject<Value> | null
 export type EffectCallback = () => void | (() => void)
@@ -246,7 +246,7 @@ type RuntimePropertyBinding = {
   definition: Extract<HostBinding, {kind: "property"}>
   kind: "property"
   value: unknown
-  reflected?: {initialValue: unknown}
+  reflected: {initialValue: unknown} | null
 }
 
 type RuntimeStyleBinding = {
@@ -268,7 +268,7 @@ type RuntimeRefBinding = {
   cleanup: (() => void) | null
   definition: Extract<HostBinding, {kind: "ref"}>
   kind: "ref"
-  value: CallbackRef | null | typeof unset
+  value: Ref<unknown> | typeof unset
 }
 
 type RuntimeChildBinding = {
@@ -320,7 +320,7 @@ type PreparedPatch = {
 
 type PreparedRefChange = {
   binding: RuntimeRefBinding
-  next: CallbackRef | null
+  next: Ref<unknown>
 }
 
 type PreparedSingleRange = {
@@ -882,6 +882,17 @@ class ComponentInstance<Props> {
   }
 
   private createRuntimeBinding(definition: HostBinding): RuntimeBinding {
+    if (definition.kind === "property") {
+      const {target, name} = definition
+      return {
+        definition,
+        kind: "property",
+        value: unset,
+        reflected: !(target instanceof HTMLElement) && hasPropertySetter(target, name)
+          ? {initialValue: Reflect.get(target, name)}
+          : null
+      }
+    }
     if (definition.kind === "event") {
       const state: RuntimeEventBinding = {
         definition,
@@ -2501,6 +2512,7 @@ function attachImperativeRef(ref: Ref<unknown>, handle: unknown): (() => void) |
   if (typeof ref === "function") {
     const cleanup = ref(handle)
     if (cleanup !== undefined && typeof cleanup !== "function") {
+      try { ref(null) } catch {}
       throw new TypeError("A callback ref must return a cleanup function or undefined")
     }
     return cleanup ?? (() => { ref(null) })
@@ -2637,18 +2649,20 @@ function preparePropertyPatch(
   sourceValue: unknown
 ): PreparedPatch | null {
   const {target, name} = binding.definition
-  // Non-HTML elements supplied through Document factories own their reflected
-  // properties. Invoke that setter without stringifying factories or inventing
-  // content-attribute spellings in Component.
-  const reflected = !(target instanceof HTMLElement) && hasPropertySetter(target, name)
-  if (reflected && binding.reflected === undefined) binding.reflected = {initialValue: Reflect.get(target, name)}
-  const operation: PropertyOperation = reflected
-    ? {
-        current: () => Reflect.get(target, name),
-        next: sourceValue == null ? binding.reflected!.initialValue : sourceValue,
-        write: value => { Reflect.set(target, name, value) },
-      }
-    : propertyOperation(target, name, sourceValue)
+  if (binding.reflected) {
+    // Жесты и useFrame меняют сам Element. Неизменённый авторский prop не
+    // читает и не переписывает его; новое значение вступает в силу при commit.
+    if (Object.is(binding.value, sourceValue)) return null
+    const next = sourceValue == null ? binding.reflected.initialValue : sourceValue
+    const previous = Reflect.get(target, name)
+    const changed = !Object.is(previous, next)
+    return {
+      apply: () => { if (changed) Reflect.set(target, name, next) },
+      rollback: () => { if (changed) Reflect.set(target, name, previous) },
+      commit: () => { binding.value = sourceValue }
+    }
+  }
+  const operation = propertyOperation(target, name, sourceValue)
   const previous = operation.current()
   if (Object.is(previous, operation.next)) {
     binding.value = operation.next
@@ -2708,12 +2722,12 @@ function prepareRefChange(
   binding: RuntimeRefBinding,
   sourceValue: unknown
 ): PreparedRefChange | null {
-  const next = callbackRef(sourceValue)
+  const next = hostRef(sourceValue)
   if (binding.value !== unset && Object.is(binding.value, next)) return null
   return {binding, next}
 }
 
-function transitionRef(binding: RuntimeRefBinding, next: CallbackRef | null): void {
+function transitionRef(binding: RuntimeRefBinding, next: Ref<unknown>): void {
   const previous = binding.value === unset ? null : binding.value
   detachRef(binding)
   binding.value = next
@@ -2742,31 +2756,25 @@ function eventHandler(value: unknown): EventHandler {
   return value as EventHandler
 }
 
-function callbackRef(value: unknown): CallbackRef | null {
+function hostRef(value: unknown): Ref<unknown> {
   if (value === null || value === undefined) return null
-  if (typeof value !== "function") throw new TypeError("A ref binding requires a callback or null")
-  return value as CallbackRef
+  assertRef(value, "A ref binding")
+  return value as Ref<unknown>
 }
 
-function attachRef(binding: RuntimeRefBinding, callback: CallbackRef): void {
-  const cleanup = callback(binding.definition.target)
-  if (cleanup !== undefined && typeof cleanup !== "function") {
-    try { callback(null) } catch {}
-    throw new TypeError("A callback ref cleanup must be a function or undefined")
-  }
-  binding.value = callback
-  binding.cleanup = cleanup ?? null
+function attachRef(binding: RuntimeRefBinding, ref: Ref<unknown>): void {
+  const cleanup = attachImperativeRef(ref, binding.definition.target)
+  binding.value = ref
+  binding.cleanup = cleanup
   binding.attached = true
 }
 
 function detachRef(binding: RuntimeRefBinding): void {
   if (!binding.attached) return
-  const callback = binding.value === unset ? null : binding.value
   const cleanup = binding.cleanup
   binding.attached = false
   binding.cleanup = null
   if (cleanup) cleanup()
-  else callback?.(null)
 }
 
 function propertyOperation(target: Element, name: string, value: unknown): PropertyOperation {

@@ -1,13 +1,17 @@
 import type {
   JsxSourceElement,
 } from "@zavx0z/template/jsx-runtime"
-import type {XRDisplayElement} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+import type {XRDisplayElement} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-/** Положение задаётся в мм; viewportWidth/viewportHeight — размер содержимого в CSS px. */
+/**
+Положение задаётся в мм; viewportWidth/viewportHeight — размер содержимого в CSS px.
+Проекцией владеет сам Element. `id` необязателен и используется только авторскими
+селекторами и поиском; его изменение не заменяет проекцию или её Renderer.
+*/
 export type DisplayProps = Readonly<{
-  id: string
+  id?: string | undefined
   style?: CssStyle | undefined
   viewportWidth?: number
   viewportHeight?: number

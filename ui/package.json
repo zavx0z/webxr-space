@@ -57,6 +57,9 @@
     "markdown-it": "15.0.1",
     "parse5": "8.0.1"
   },
+  "devDependencies": {
+    "@zavx0z/renderer": "*"
+  },
   "peerDependencies": {
     "@zavx0z/component": "*",
     "@zavx0z/dom": "*",

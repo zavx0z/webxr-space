@@ -626,9 +626,9 @@
       "status": "partial"
     },
     "react.semantics.object-refs": {
-      "conformance": "none",
-      "limitation": "This React 19.2 reference behavior is not part of the current compiled runtime.",
-      "status": "unsupported"
+      "conformance": "adapted",
+      "limitation": "Object refs receive the committed host Element and are cleared on replacement or unmount; execution remains synchronous and compiled without Fiber.",
+      "status": "partial"
     },
     "react.semantics.passive-paint-scheduling": {
       "conformance": "none",
@@ -799,9 +799,9 @@
     "mappedEntries": 211,
     "missing": 0,
     "not-applicable": 35,
-    "partial": 49,
+    "partial": 50,
     "specEntries": 211,
-    "unsupported": 70,
+    "unsupported": 69,
     "unverified": 29
   },
   "virtualDom": false

@@ -143,7 +143,16 @@ export class XRSpaceElement extends XRElement {
   }
 }
 
+const viewPointPoseProperties = ["x", "y", "z", "targetX", "targetY", "targetZ", "fov", "near", "far"] as const
+
+/**
+Единственная камера semantic Space. Координаты и расстояния заданы в мм, ось вверх — Z.
+Команды меняют этот же Element одной transaction; подключённый Browser сам запрашивает кадр.
+Сохранённый обзор принадлежит элементу и не создаёт подписок или отдельного цикла кадров.
+*/
 export class XRViewPointElement extends XRElement {
+  #savedState: Float64Array | null = null
+
   constructor(ownerDocument: Document) {
     super(ownerDocument, "xr-view-point")
   }
@@ -168,6 +177,80 @@ export class XRViewPointElement extends XRElement {
   set near(value: number) { setNumberAttribute(this, "near", value) }
   get far(): number { return numberAttribute(this, "far", 1000) }
   set far(value: number) { setNumberAttribute(this, "far", value) }
+
+  /**
+  Запоминает положение, цель, fov и near/far для {@link XRViewPointElement.reset}.
+  Повторный вызов заменяет прежний обзор без нового выделения памяти.
+  Разрешение жестов `controls` остаётся состоянием приложения.
+  */
+  saveState(): void {
+    const state = this.#savedState ??= new Float64Array(viewPointPoseProperties.length)
+    for (let index = 0; index < viewPointPoseProperties.length; index++) {
+      state[index] = this[viewPointPoseProperties[index]!]
+    }
+  }
+
+  /**
+  Возвращает последний сохранённый обзор без замены камеры и без изменения `controls`.
+
+  @returns `true`, если обзор был сохранён; иначе ничего не меняет и возвращает `false`.
+  */
+  reset(): boolean {
+    const state = this.#savedState
+    if (state === null) return false
+    this.ownerDocument!.transaction(() => {
+      for (let index = 0; index < viewPointPoseProperties.length; index++) {
+        this[viewPointPoseProperties[index]!] = state[index]!
+      }
+    })
+    return true
+  }
+
+  /**
+  Мгновенно устанавливает расстояние до цели, сохраняя направление от цели к камере.
+  При новой цели камера поворачивается к ней; fov и near/far сохраняются.
+
+  @param distance - Конечное расстояние в мм, строго больше нуля.
+  @param target - Точка в мировых координатах Z-up, мм. Без аргумента сохраняется текущая цель.
+  @throws RangeError При недопустимом расстоянии, нечисловых координатах или совпадении камеры с целью.
+    Проверка выполняется до изменения Element.
+  @example
+  ```ts
+  camera.saveState()
+  camera.dollyTo(600, {x: 0, y: 0, z: 900})
+  camera.reset()
+  ```
+  */
+  dollyTo(distance: number, target?: Readonly<{x: number; y: number; z: number}>): void {
+    const targetX = target?.x ?? this.targetX
+    const targetY = target?.y ?? this.targetY
+    const targetZ = target?.z ?? this.targetZ
+    if (!Number.isFinite(distance) || distance <= 0 ||
+      !Number.isFinite(targetX) || !Number.isFinite(targetY) || !Number.isFinite(targetZ)) {
+      throw new RangeError("ViewPoint.dollyTo requires a positive finite distance and finite target coordinates")
+    }
+    const offsetX = this.x - targetX
+    const offsetY = this.y - targetY
+    const offsetZ = this.z - targetZ
+    const length = Math.hypot(offsetX, offsetY, offsetZ)
+    if (!Number.isFinite(length) || length === 0) {
+      throw new RangeError("ViewPoint.dollyTo requires a finite direction from target to camera")
+    }
+    const x = targetX + offsetX / length * distance
+    const y = targetY + offsetY / length * distance
+    const z = targetZ + offsetZ / length * distance
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+      throw new RangeError("ViewPoint.dollyTo position exceeds finite coordinates")
+    }
+    this.ownerDocument!.transaction(() => {
+      this.x = x
+      this.y = y
+      this.z = z
+      this.targetX = targetX
+      this.targetY = targetY
+      this.targetZ = targetZ
+    })
+  }
 
   protected override validateChildInsertion(): void {
     throw new TypeError("ViewPoint cannot contain children")

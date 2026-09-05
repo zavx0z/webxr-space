@@ -1,18 +1,14 @@
-import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
-  XRLightElement,
+  JsxSourceElement,
+} from "@zavx0z/template/jsx-runtime"
+import type {
+  XRMeshElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-export type LightProps = Readonly<{
-  kind?: string
-  color?: string
-  intensity?: number
-  targetX?: number
-  targetY?: number
-  targetZ?: number
+export type MeshProps = Readonly<{
   x?: number
   y?: number
   z?: number
@@ -26,19 +22,13 @@ export type LightProps = Readonly<{
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
-  children?: JsxSourceElement | null | undefined
-  ref?: SpaceRef<XRLightElement> | null
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
+  ref?: SpaceRef<XRMeshElement> | null
 }>
 
-export function Light(props: LightProps): JsxSourceElement {
+export function Mesh(props: MeshProps): JsxSourceElement {
   return (
-    <xr-light
-      kind={props.kind}
-      color={props.color}
-      intensity={props.intensity}
-      targetX={props.targetX}
-      targetY={props.targetY}
-      targetZ={props.targetZ}
+    <xr-mesh
       x={props.x}
       y={props.y}
       z={props.z}
@@ -55,6 +45,6 @@ export function Light(props: LightProps): JsxSourceElement {
       ref={props.ref}
     >
       {props.children}
-    </xr-light>
+    </xr-mesh>
   )
 }

@@ -67,8 +67,8 @@ export type DocumentSpacePlaneTransform = Readonly<{
   visible?: boolean
 }>
 
+/** Один root — одна проекция. Имя или DOM id не участвуют в регистрации и вводе. */
 export type DocumentSpacePlaneRegistration = Readonly<{
-  id: string
   root: Node
   viewport: RenderViewport
   worldUnitsPerPixel: number
@@ -82,8 +82,8 @@ export type DocumentSpacePlaneUpdate = Readonly<{
   transform?: DocumentSpacePlaneTransform
 }>
 
+/** Экранная проекция удерживается по той же ссылке root до удаления. */
 export type DocumentSpaceOverlayRegistration = Readonly<{
-  id: string
   root: Node
   distance?: number
   tooltipDelayMs?: number
@@ -105,7 +105,6 @@ export type DocumentSpaceWorldResize = Readonly<{
 }>
 
 export type DocumentSpaceWorldRegistration = Readonly<{
-  id: string
   space: Space
   viewport: DocumentSpaceWorldViewport | null
   viewPoint: DocumentSpaceViewPointSnapshot
@@ -123,7 +122,6 @@ export type DocumentSpaceWorldUpdate = Readonly<{
 }>
 
 export type DocumentSpaceWorldRuntime = Readonly<{
-  id: string
   space: Space
   viewPoint: ViewPoint
   viewport: DocumentSpaceWorldViewport | null
@@ -164,30 +162,30 @@ export type DocumentSpaceRuntime = Readonly<{
   nativeInput: HTMLInputElement
   nativeTextArea: HTMLTextAreaElement
   inputTarget: DocumentNativeInputTarget | null
-  activeInputPlaneId: string | null
-  planeIds: readonly string[]
-  overlayIds: readonly string[]
-  worldIds: readonly string[]
-  activePlaneId: string | null
-  hoveredPlaneId: string | null
-  activeOverlayId: string | null
-  hoveredOverlayId: string | null
-  activeWorldId: string | null
-  hoveredWorldId: string | null
+  activeInputRoot: Node | null
+  planeRoots: Iterable<Node>
+  overlayRoots: Iterable<Node>
+  worldSpaces: Iterable<Space>
+  activePlaneRoot: Node | null
+  hoveredPlaneRoot: Node | null
+  activeOverlayRoot: Node | null
+  hoveredOverlayRoot: Node | null
+  activeWorldSpace: Space | null
+  hoveredWorldSpace: Space | null
   cameraGesturesEnabled: boolean
   presentedFrames: number
   disposed: boolean
   addPlane(registration: DocumentSpacePlaneRegistration): DocumentPlaneRuntime
-  getPlane(id: string): DocumentPlaneRuntime | undefined
-  updatePlane(id: string, update: DocumentSpacePlaneUpdate): DocumentPlaneRuntime
-  removePlane(id: string): boolean
+  getPlane(owner: Node): DocumentPlaneRuntime | undefined
+  updatePlane(owner: Node, update: DocumentSpacePlaneUpdate): DocumentPlaneRuntime
+  removePlane(owner: Node): boolean
   addOverlay(registration: DocumentSpaceOverlayRegistration): DocumentOverlayRuntime
-  getOverlay(id: string): DocumentOverlayRuntime | undefined
-  removeOverlay(id: string): boolean
+  getOverlay(owner: Node): DocumentOverlayRuntime | undefined
+  removeOverlay(owner: Node): boolean
   addWorld(registration: DocumentSpaceWorldRegistration): DocumentSpaceWorldRuntime
-  getWorld(id: string): DocumentSpaceWorldRuntime | undefined
-  updateWorld(id: string, update: DocumentSpaceWorldUpdate): DocumentSpaceWorldRuntime
-  removeWorld(id: string): boolean
+  getWorld(owner: Space): DocumentSpaceWorldRuntime | undefined
+  updateWorld(owner: Space, update: DocumentSpaceWorldUpdate): DocumentSpaceWorldRuntime
+  removeWorld(owner: Space): boolean
   render(): void
   requestRender(): void
   resize(): void
@@ -197,7 +195,7 @@ export type DocumentSpaceRuntime = Readonly<{
   setCameraGesturesEnabled(enabled: boolean): void
   dispatchPointer(type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel", input: PointerInput): void
   dispatchWheel(input: WheelInput): void
-  projectPoint(id: string, point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
+  projectPoint(owner: Node, point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
   subscribeBeforeRender(listener: () => void): () => void
   subscribePresented(listener: (frame: number) => void): () => void
   dispose(): void
@@ -240,7 +238,7 @@ export type DocumentSpaceRuntimeSeams = Readonly<{
 }>
 
 type PlaneRecord = {
-  id: string
+  owner: Node
   runtime: DocumentPlaneRuntime
   order: number
   dirty: boolean
@@ -248,7 +246,7 @@ type PlaneRecord = {
 }
 
 type OverlayRecord = {
-  id: string
+  owner: Node
   runtime: DocumentOverlayRuntime
   order: number
   dirty: boolean
@@ -256,7 +254,7 @@ type OverlayRecord = {
 }
 
 type WorldRecord = {
-  id: string
+  owner: Space
   runtime: DocumentSpaceWorldRuntime
   order: number
   requestedViewport: DocumentSpaceWorldViewport | null
@@ -272,13 +270,13 @@ type WorldRecord = {
 
 type CapturedPlanePointer = {
   kind: "plane"
-  planeId: string
+  planeRoot: Node
   input: PointerInput
 }
 
 type CapturedOverlayPointer = {
   kind: "overlay"
-  overlayId: string
+  overlayRoot: Node
   input: PointerInput
 }
 
@@ -292,7 +290,7 @@ type CapturedCameraPointer = {
 
 type CapturedWorldPointer = {
   kind: "world"
-  worldId: string
+  worldSpace: Space
   mode: "orbit" | "pan" | null
   pointerType: string
   clientX: number
@@ -434,30 +432,29 @@ const createClaimedDocumentSpaceRuntime = async (
   const space = seams.createSpace()
   const viewPoint = seams.createViewPoint(options.canvas, initialViewPoint)
   const raycaster = seams.createRaycaster()
-  const records = new Map<string, PlaneRecord>()
-  const overlays = new Map<string, OverlayRecord>()
-  const worlds = new Map<string, WorldRecord>()
-  const worldOwners = new Map<Space, string>()
-  const projectionRoots = new Map<Node, string>()
+  const records = new Map<Node, PlaneRecord>()
+  const overlays = new Map<Node, OverlayRecord>()
+  const worlds = new Map<Space, WorldRecord>()
+  const projectionRoots = new Set<Node>()
   const captures = new Map<number, CapturedPointer>()
   const beforeRenderListeners = new Set<() => void>()
   const presentedListeners = new Set<(frame: number) => void>()
   let nextPlaneOrder = 0
   let nextOverlayOrder = 0
   let nextWorldOrder = 0
-  let hoveredPlaneId: string | null = null
-  let activePlaneId: string | null = null
-  let hoveredOverlayId: string | null = null
-  let activeOverlayId: string | null = null
-  let hoveredWorldId: string | null = null
-  let activeWorldId: string | null = null
+  let hoveredPlaneRoot: Node | null = null
+  let activePlaneRoot: Node | null = null
+  let hoveredOverlayRoot: Node | null = null
+  let activeOverlayRoot: Node | null = null
+  let hoveredWorldSpace: Space | null = null
+  let activeWorldSpace: Space | null = null
   let canvasViewport: RenderViewport = Object.freeze({width: 1, height: 1})
   let currentPixelRatio = fixedPixelRatio ?? 1
   let cameraGesturesEnabled = options.cameraGestures === true
   let presentedFrames = 0
   let requestedFrame: unknown | null = null
   let tooltipTimer: unknown | null = null
-  let tooltipOwner: Readonly<{kind: "plane" | "overlay"; id: string}> | null = null
+  let tooltipOwner: Readonly<{kind: "plane" | "overlay"; owner: Node}> | null = null
   let resizeObserver: ResizeObserverOwner | null = null
   let rendering = false
   let preparing = false
@@ -479,11 +476,11 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const cancelTooltipFrame = (
-    owner?: Readonly<{kind: "plane" | "overlay"; id: string}>,
+    owner?: Readonly<{kind: "plane" | "overlay"; owner: Node}>,
   ): void => {
     if (
       owner !== undefined &&
-      (tooltipOwner?.kind !== owner.kind || tooltipOwner.id !== owner.id)
+      (tooltipOwner?.kind !== owner.kind || tooltipOwner.owner !== owner.owner)
     ) return
     if (tooltipTimer !== null) seams.clearTimer(tooltipTimer)
     tooltipTimer = null
@@ -491,7 +488,7 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const scheduleTooltipFrame = (
-    owner: Readonly<{kind: "plane" | "overlay"; id: string}>,
+    owner: Readonly<{kind: "plane" | "overlay"; owner: Node}>,
     delayMs: number,
   ): void => {
     cancelTooltipFrame()
@@ -502,12 +499,12 @@ const createClaimedDocumentSpaceRuntime = async (
       tooltipOwner = null
       if (disposed || current === null) return
       const stillHovered = current.kind === "plane"
-        ? hoveredPlaneId === current.id
-        : hoveredOverlayId === current.id
+        ? hoveredPlaneRoot === current.owner
+        : hoveredOverlayRoot === current.owner
       if (!stillHovered) return
       const record = current.kind === "plane"
-        ? records.get(current.id)
-        : overlays.get(current.id)
+        ? records.get(current.owner)
+        : overlays.get(current.owner)
       if (record === undefined) return
       record.dirty = true
       requestRender()
@@ -585,23 +582,19 @@ const createClaimedDocumentSpaceRuntime = async (
     }
   }
 
-  const planeIds = (): readonly string[] => Object.freeze([...records.keys()])
-  const overlayIds = (): readonly string[] => Object.freeze([...overlays.keys()])
+  const planeRoots = (): Iterable<Node> => records.keys()
+  const overlayRoots = (): Iterable<Node> => overlays.keys()
 
-  const getPlane = (id: string): DocumentPlaneRuntime | undefined =>
-    records.get(validatePlaneId(id))?.runtime
+  const getPlane = (owner: Node): DocumentPlaneRuntime | undefined =>
+    records.get(owner)?.runtime
 
   const addPlane = (registration: DocumentSpacePlaneRegistration): DocumentPlaneRuntime => {
     assertActive(disposed)
-    const id = validatePlaneId(registration?.id)
-    if (records.has(id) || overlays.has(id) || worlds.has(id)) {
-      throw new Error(`Document space owner id is already registered: ${id}`)
+    const owner = registration.root
+    if (projectionRoots.has(owner)) {
+      throw new Error(`Document space projection owner is already registered: ${owner}`)
     }
     validateProjectionRoot(options.document, registration.root)
-    const rootOwner = projectionRoots.get(registration.root)
-    if (rootOwner !== undefined) {
-      throw new Error(`Document space root is already registered by owner: ${rootOwner}`)
-    }
     validateProjectionRootSeparation(projectionRoots, registration.root)
     const transform = validateTransform(registration.transform)
     const tooltipDelayMs = finiteNonNegative(registration.tooltipDelayMs ?? 500, "tooltipDelayMs")
@@ -639,27 +632,26 @@ const createClaimedDocumentSpaceRuntime = async (
       throw error
     }
     record = {
-      id,
+      owner,
       runtime,
       order: nextPlaneOrder++,
       dirty: requestedBeforeRegistration,
       tooltipDelayMs,
     }
-    records.set(id, record)
-    projectionRoots.set(registration.root, id)
+    records.set(owner, record)
+    projectionRoots.add(registration.root)
     space.add(runtime.plane)
     requestRender()
     return runtime
   }
 
   const updatePlane = (
-    idValue: string,
+    owner: Node,
     update: DocumentSpacePlaneUpdate,
   ): DocumentPlaneRuntime => {
     assertActive(disposed)
-    const id = validatePlaneId(idValue)
-    const record = records.get(id)
-    if (record === undefined) throw new Error(`Unknown document space plane id: ${id}`)
+    const record = records.get(owner)
+    if (record === undefined) throw new Error(`Unknown document space plane owner: ${owner}`)
     if (update === null || typeof update !== "object") throw new TypeError("Plane update is required")
     const transform = update.transform === undefined ? null : validateTransform(update.transform)
     const viewport = update.viewport ?? record.runtime.viewport
@@ -669,47 +661,42 @@ const createClaimedDocumentSpaceRuntime = async (
     }
     if (transform !== null) applyTransform(record.runtime, transform)
     if (record.runtime.plane.visible === false) {
-      if (hoveredPlaneId === id) clearHoveredPlane(null)
-      cancelCapturedPlane(id)
-      if (nativeInputHost.ownerId === id) nativeInputHost.setActiveDocument(null)
+      if (hoveredPlaneRoot === owner) clearHoveredPlane(null)
+      cancelCapturedPlane(owner)
+      if (nativeInputHost.owner === owner) nativeInputHost.setActiveRoot(null)
     }
     requestRender()
     return record.runtime
   }
 
-  const removePlane = (idValue: string): boolean => {
+  const removePlane = (owner: Node): boolean => {
     assertActive(disposed)
-    const id = validatePlaneId(idValue)
-    const record = records.get(id)
+    const record = records.get(owner)
     if (record === undefined) return false
-    cancelTooltipFrame({kind: "plane", id})
-    cancelCapturedPlane(id)
-    if (hoveredPlaneId === id) hoveredPlaneId = null
-    if (nativeInputHost.ownerId === id) nativeInputHost.setActiveDocument(null)
+    cancelTooltipFrame({kind: "plane", owner})
+    cancelCapturedPlane(owner)
+    if (hoveredPlaneRoot === owner) hoveredPlaneRoot = null
+    if (nativeInputHost.owner === owner) nativeInputHost.setActiveRoot(null)
     space.remove(record.runtime.plane)
-    records.delete(id)
+    records.delete(owner)
     projectionRoots.delete(record.runtime.root)
     record.runtime.dispose()
     requestRender()
     return true
   }
 
-  const getOverlay = (id: string): DocumentOverlayRuntime | undefined =>
-    overlays.get(validatePlaneId(id))?.runtime
+  const getOverlay = (owner: Node): DocumentOverlayRuntime | undefined =>
+    overlays.get(owner)?.runtime
 
   const addOverlay = (
     registration: DocumentSpaceOverlayRegistration,
   ): DocumentOverlayRuntime => {
     assertActive(disposed)
-    const id = validatePlaneId(registration?.id)
-    if (records.has(id) || overlays.has(id) || worlds.has(id)) {
-      throw new Error(`Document space owner id is already registered: ${id}`)
+    const owner = registration.root
+    if (projectionRoots.has(owner)) {
+      throw new Error(`Document space projection owner is already registered: ${owner}`)
     }
     validateProjectionRoot(options.document, registration.root)
-    const rootOwner = projectionRoots.get(registration.root)
-    if (rootOwner !== undefined) {
-      throw new Error(`Document space root is already registered by owner: ${rootOwner}`)
-    }
     validateProjectionRootSeparation(projectionRoots, registration.root)
     const tooltipDelayMs = finiteNonNegative(registration.tooltipDelayMs ?? 500, "tooltipDelayMs")
     let record: OverlayRecord | null = null
@@ -740,40 +727,39 @@ const createClaimedDocumentSpaceRuntime = async (
       },
     })
     record = {
-      id,
+      owner,
       runtime,
       order: nextOverlayOrder++,
       dirty: requestedBeforeRegistration,
       tooltipDelayMs,
     }
-    overlays.set(id, record)
-    projectionRoots.set(registration.root, id)
+    overlays.set(owner, record)
+    projectionRoots.add(registration.root)
     space.add(runtime.overlay)
     requestRender()
     return runtime
   }
 
-  const removeOverlay = (idValue: string): boolean => {
+  const removeOverlay = (owner: Node): boolean => {
     assertActive(disposed)
-    const id = validatePlaneId(idValue)
-    const record = overlays.get(id)
+    const record = overlays.get(owner)
     if (record === undefined) return false
-    cancelTooltipFrame({kind: "overlay", id})
-    cancelCapturedOverlay(id)
-    if (hoveredOverlayId === id) hoveredOverlayId = null
-    if (nativeInputHost.ownerId === id) nativeInputHost.setActiveDocument(null)
+    cancelTooltipFrame({kind: "overlay", owner})
+    cancelCapturedOverlay(owner)
+    if (hoveredOverlayRoot === owner) hoveredOverlayRoot = null
+    if (nativeInputHost.owner === owner) nativeInputHost.setActiveRoot(null)
     space.remove(record.runtime.overlay)
-    overlays.delete(id)
+    overlays.delete(owner)
     projectionRoots.delete(record.runtime.root)
     record.runtime.dispose()
     requestRender()
     return true
   }
 
-  const worldIds = (): readonly string[] => Object.freeze([...worlds.keys()])
+  const worldSpaces = (): Iterable<Space> => worlds.keys()
 
-  const getWorld = (id: string): DocumentSpaceWorldRuntime | undefined =>
-    worlds.get(validatePlaneId(id))?.runtime
+  const getWorld = (owner: Space): DocumentSpaceWorldRuntime | undefined =>
+    worlds.get(owner)?.runtime
 
   const resolveWorldGeometry = (
     requested: DocumentSpaceWorldViewport | null,
@@ -888,9 +874,9 @@ const createClaimedDocumentSpaceRuntime = async (
     if (registration === null || typeof registration !== "object") {
       throw new TypeError("Document space world registration is required")
     }
-    const id = validatePlaneId(registration.id)
-    if (records.has(id) || overlays.has(id) || worlds.has(id)) {
-      throw new Error(`Document space owner id is already registered: ${id}`)
+    const owner = registration.space
+    if (worlds.has(owner)) {
+      throw new Error(`Document space projection owner is already registered: ${owner}`)
     }
     if (!(registration.space instanceof Space)) {
       throw new TypeError("Document space world must be an exact Engine Space")
@@ -898,10 +884,6 @@ const createClaimedDocumentSpaceRuntime = async (
     if (registration.space === space) throw new Error("Document space world cannot be the host Space")
     if (registration.space.parent !== null) {
       throw new Error("Document space world must be an unattached Engine Space")
-    }
-    const existingOwner = worldOwners.get(registration.space)
-    if (existingOwner !== undefined) {
-      throw new Error(`Document space world is already registered by owner: ${existingOwner}`)
     }
     const requestedViewport = validateWorldViewport(registration.viewport)
     const snapshot = validateViewPointSnapshot(registration.viewPoint)
@@ -919,7 +901,6 @@ const createClaimedDocumentSpaceRuntime = async (
     const worldViewPoint = seams.createWorldViewPoint(snapshot, initialGeometry.clientViewport)
     let record!: WorldRecord
     const runtime: DocumentSpaceWorldRuntime = Object.freeze({
-      id,
       space: registration.space,
       viewPoint: worldViewPoint,
       get viewport() { return record.requestedViewport },
@@ -944,11 +925,11 @@ const createClaimedDocumentSpaceRuntime = async (
       },
       dispose() {
         if (record.disposed || disposed) return
-        removeWorld(id)
+        removeWorld(owner)
       },
     })
     record = {
-      id,
+      owner,
       runtime,
       order: nextWorldOrder++,
       requestedViewport,
@@ -962,15 +943,15 @@ const createClaimedDocumentSpaceRuntime = async (
       disposed: false,
     }
     try {
-      worlds.set(id, record)
-      worldOwners.set(registration.space, id)
+      worlds.set(owner, record)
+
       space.add(registration.space)
       synchronizeWorldGeometry(record)
       requestRender()
       return runtime
     } catch (error) {
-      worlds.delete(id)
-      worldOwners.delete(registration.space)
+      worlds.delete(owner)
+
       space.remove(registration.space)
       record.disposed = true
       throw error
@@ -978,13 +959,13 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const updateWorld = (
-    idValue: string,
+    owner: Space,
     update: DocumentSpaceWorldUpdate,
   ): DocumentSpaceWorldRuntime => {
     assertActive(disposed)
-    const id = validatePlaneId(idValue)
-    const record = worlds.get(id)
-    if (record === undefined) throw new Error(`Unknown document space world id: ${id}`)
+
+    const record = worlds.get(owner)
+    if (record === undefined) throw new Error(`Unknown document space world owner: ${owner}`)
     if (update === null || typeof update !== "object") throw new TypeError("World update is required")
     if (update.viewport !== undefined) record.requestedViewport = validateWorldViewport(update.viewport)
     if (update.visible !== undefined) {
@@ -994,30 +975,30 @@ const createClaimedDocumentSpaceRuntime = async (
     if (update.cameraGestures !== undefined) {
       if (typeof update.cameraGestures !== "boolean") throw new TypeError("World cameraGestures must be boolean")
       record.cameraGestures = update.cameraGestures
-      if (!record.cameraGestures) cancelCapturedWorld(id)
+      if (!record.cameraGestures) cancelCapturedWorld(owner)
     }
     if (update.viewPoint !== undefined) {
       applyViewPointSnapshot(record.runtime.viewPoint, validateViewPointSnapshot(update.viewPoint))
     }
     synchronizeWorldGeometry(record)
     if (!record.visible || record.logicalViewport === null) {
-      if (hoveredWorldId === id) hoveredWorldId = null
-      cancelCapturedWorld(id)
+      if (hoveredWorldSpace === owner) hoveredWorldSpace = null
+      cancelCapturedWorld(owner)
     }
     requestRender()
     return record.runtime
   }
 
-  function removeWorld(idValue: string): boolean {
+  function removeWorld(owner: Space): boolean {
     assertActive(disposed)
-    const id = validatePlaneId(idValue)
-    const record = worlds.get(id)
+
+    const record = worlds.get(owner)
     if (record === undefined) return false
-    cancelCapturedWorld(id)
-    if (hoveredWorldId === id) hoveredWorldId = null
-    if (activeWorldId === id) activeWorldId = null
-    worlds.delete(id)
-    worldOwners.delete(record.runtime.space)
+    cancelCapturedWorld(owner)
+    if (hoveredWorldSpace === owner) hoveredWorldSpace = null
+    if (activeWorldSpace === owner) activeWorldSpace = null
+    worlds.delete(owner)
+
     if (record.runtime.space.parent === space) space.remove(record.runtime.space)
     record.disposed = true
     requestRender()
@@ -1221,10 +1202,10 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const clearHoveredPlane = (event: PointerEvent | null): void => {
-    if (hoveredPlaneId === null) return
-    const previous = records.get(hoveredPlaneId)
-    cancelTooltipFrame({kind: "plane", id: hoveredPlaneId})
-    hoveredPlaneId = null
+    if (hoveredPlaneRoot === null) return
+    const previous = records.get(hoveredPlaneRoot)
+    cancelTooltipFrame({kind: "plane", owner: hoveredPlaneRoot})
+    hoveredPlaneRoot = null
     if (previous === undefined) return
     previous.runtime.pointerMove(Object.freeze({
       clientX: -1,
@@ -1240,10 +1221,10 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const clearHoveredOverlay = (event: PointerEvent | null): void => {
-    if (hoveredOverlayId === null) return
-    const previous = overlays.get(hoveredOverlayId)
-    cancelTooltipFrame({kind: "overlay", id: hoveredOverlayId})
-    hoveredOverlayId = null
+    if (hoveredOverlayRoot === null) return
+    const previous = overlays.get(hoveredOverlayRoot)
+    cancelTooltipFrame({kind: "overlay", owner: hoveredOverlayRoot})
+    hoveredOverlayRoot = null
     if (previous === undefined) return
     previous.runtime.pointerMove(Object.freeze({
       clientX: -1,
@@ -1259,14 +1240,14 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const clearHoveredWorld = (): void => {
-    hoveredWorldId = null
+    hoveredWorldSpace = null
   }
 
   const refreshActiveOwners = (): void => {
     const last = [...captures.values()].at(-1)
-    activePlaneId = last?.kind === "plane" ? last.planeId : null
-    activeOverlayId = last?.kind === "overlay" ? last.overlayId : null
-    activeWorldId = last?.kind === "world" ? last.worldId : null
+    activePlaneRoot = last?.kind === "plane" ? last.planeRoot : null
+    activeOverlayRoot = last?.kind === "overlay" ? last.overlayRoot : null
+    activeWorldSpace = last?.kind === "world" ? last.worldSpace : null
   }
 
   const releasePointer = (pointerId: number): void => {
@@ -1279,28 +1260,28 @@ const createClaimedDocumentSpaceRuntime = async (
     const capture = captures.get(pointerId)
     if (capture === undefined) return
     if (capture.kind === "plane") {
-      records.get(capture.planeId)?.runtime.pointerCancel(capture.input)
+      records.get(capture.planeRoot)?.runtime.pointerCancel(capture.input)
     } else if (capture.kind === "overlay") {
-      overlays.get(capture.overlayId)?.runtime.pointerCancel(capture.input)
+      overlays.get(capture.overlayRoot)?.runtime.pointerCancel(capture.input)
     }
     releasePointer(pointerId)
   }
 
-  function cancelCapturedPlane(id: string): void {
+  function cancelCapturedPlane(owner: Node): void {
     for (const [pointerId, capture] of [...captures]) {
-      if (capture.kind === "plane" && capture.planeId === id) cancelCapturedPointer(pointerId)
+      if (capture.kind === "plane" && capture.planeRoot === owner) cancelCapturedPointer(pointerId)
     }
   }
 
-  function cancelCapturedOverlay(id: string): void {
+  function cancelCapturedOverlay(owner: Node): void {
     for (const [pointerId, capture] of [...captures]) {
-      if (capture.kind === "overlay" && capture.overlayId === id) cancelCapturedPointer(pointerId)
+      if (capture.kind === "overlay" && capture.overlayRoot === owner) cancelCapturedPointer(pointerId)
     }
   }
 
-  function cancelCapturedWorld(id: string): void {
+  function cancelCapturedWorld(owner: Space): void {
     for (const [pointerId, capture] of [...captures]) {
-      if (capture.kind === "world" && capture.worldId === id) releasePointer(pointerId)
+      if (capture.kind === "world" && capture.worldSpace === owner) releasePointer(pointerId)
     }
   }
 
@@ -1340,7 +1321,7 @@ const createClaimedDocumentSpaceRuntime = async (
         if (other.kind !== "camera" && other.kind !== "world") return false
         if (other.pointerType !== "touch") return false
         if (capture.kind === "camera") return other.kind === "camera"
-        return other.kind === "world" && other.worldId === capture.worldId && other.mode !== null
+        return other.kind === "world" && other.worldSpace === capture.worldSpace && other.mode !== null
       })
       .sort(([left], [right]) => left - right)
     const points = (): TouchCameraPoint[] => members.map(([pointerId, member]) => ({
@@ -1354,7 +1335,7 @@ const createClaimedDocumentSpaceRuntime = async (
     const after = points()
     const target = capture.kind === "camera"
       ? viewPoint
-      : worlds.get(capture.worldId)?.runtime.viewPoint ?? null
+      : worlds.get(capture.worldSpace)?.runtime.viewPoint ?? null
     const applied = target !== null && applyTouchCameraGesture(target, before, after)
     if (event.cancelable) event.preventDefault()
     if (applied) requestRender()
@@ -1378,7 +1359,7 @@ const createClaimedDocumentSpaceRuntime = async (
         return
       }
       if (capture.kind === "world") {
-        const record = worlds.get(capture.worldId)
+        const record = worlds.get(capture.worldSpace)
         if (record === undefined || !record.visible || record.logicalViewport === null) {
           releasePointer(event.pointerId)
           return
@@ -1390,8 +1371,8 @@ const createClaimedDocumentSpaceRuntime = async (
         capture.clientY = event.clientY
         if (capture.mode === "orbit") record.runtime.viewPoint.orbit(deltaX, deltaY)
         else if (capture.mode === "pan") record.runtime.viewPoint.pan(deltaX, deltaY)
-        hoveredWorldId = record.id
-        activeWorldId = record.id
+        hoveredWorldSpace = record.owner
+        activeWorldSpace = record.owner
         if (capture.mode !== null) {
           if (event.cancelable) event.preventDefault()
           requestRender()
@@ -1399,7 +1380,7 @@ const createClaimedDocumentSpaceRuntime = async (
         return
       }
       if (capture.kind === "overlay") {
-        const record = overlays.get(capture.overlayId)
+        const record = overlays.get(capture.overlayRoot)
         const point = overlayPoint(event.clientX, event.clientY)
         if (record === undefined || point === null) {
           cancelCapturedPointer(event.pointerId)
@@ -1408,13 +1389,13 @@ const createClaimedDocumentSpaceRuntime = async (
         const input = localPointerInput(event, point)
         capture.input = input
         record.runtime.pointerMove(input)
-        hoveredOverlayId = record.id
-        activeOverlayId = record.id
-        activeWorldId = null
-        scheduleTooltipFrame({kind: "overlay", id: record.id}, record.tooltipDelayMs)
+        hoveredOverlayRoot = record.owner
+        activeOverlayRoot = record.owner
+        activeWorldSpace = null
+        scheduleTooltipFrame({kind: "overlay", owner: record.owner}, record.tooltipDelayMs)
         return
       }
-      const record = records.get(capture.planeId)
+      const record = records.get(capture.planeRoot)
       if (record === undefined) {
         releasePointer(event.pointerId)
         return
@@ -1423,27 +1404,27 @@ const createClaimedDocumentSpaceRuntime = async (
       if (intersection === null) {
         record.runtime.pointerCancel(capture.input)
         releasePointer(event.pointerId)
-        if (hoveredPlaneId === record.id) hoveredPlaneId = null
+        if (hoveredPlaneRoot === record.owner) hoveredPlaneRoot = null
         return
       }
       const input = localPointerInput(event, intersection.documentPoint)
       capture.input = input
       record.runtime.pointerMove(input)
-      hoveredPlaneId = record.id
-      activePlaneId = record.id
-      activeWorldId = null
-      scheduleTooltipFrame({kind: "plane", id: record.id}, record.tooltipDelayMs)
+      hoveredPlaneRoot = record.owner
+      activePlaneRoot = record.owner
+      activeWorldSpace = null
+      scheduleTooltipFrame({kind: "plane", owner: record.owner}, record.tooltipDelayMs)
       return
     }
     const {overlay: overlayHit, plane: hit, world} = pickInput(event.clientX, event.clientY)
-    if (overlayHit?.record.id !== hoveredOverlayId) clearHoveredOverlay(event)
+    if (overlayHit?.record.owner !== hoveredOverlayRoot) clearHoveredOverlay(event)
     if (overlayHit !== null) {
       clearHoveredWorld()
       clearHoveredPlane(event)
-      hoveredOverlayId = overlayHit.record.id
+      hoveredOverlayRoot = overlayHit.record.owner
       overlayHit.record.runtime.pointerMove(localPointerInput(event, overlayHit.point))
       scheduleTooltipFrame(
-        {kind: "overlay", id: overlayHit.record.id},
+        {kind: "overlay", owner: overlayHit.record.owner},
         overlayHit.record.tooltipDelayMs,
       )
       return
@@ -1451,15 +1432,15 @@ const createClaimedDocumentSpaceRuntime = async (
     if (world !== null) {
       clearHoveredOverlay(event)
       clearHoveredPlane(event)
-      hoveredWorldId = world.id
+      hoveredWorldSpace = world.owner
       return
     }
     clearHoveredWorld()
-    if (hit?.record.id !== hoveredPlaneId) clearHoveredPlane(event)
+    if (hit?.record.owner !== hoveredPlaneRoot) clearHoveredPlane(event)
     if (hit === null) return
-    hoveredPlaneId = hit.record.id
+    hoveredPlaneRoot = hit.record.owner
     hit.record.runtime.pointerMove(localPointerInput(event, hit.intersection.documentPoint))
-    scheduleTooltipFrame({kind: "plane", id: hit.record.id}, hit.record.tooltipDelayMs)
+    scheduleTooltipFrame({kind: "plane", owner: hit.record.owner}, hit.record.tooltipDelayMs)
   }
 
   const onPointerDown = (event: PointerEvent): void => {
@@ -1467,36 +1448,36 @@ const createClaimedDocumentSpaceRuntime = async (
     cancelTooltipFrame()
     cancelCapturedPointer(event.pointerId)
     const {overlay: overlayHit, plane: hit, world} = pickInput(event.clientX, event.clientY)
-    if (overlayHit?.record.id !== hoveredOverlayId) clearHoveredOverlay(event)
+    if (overlayHit?.record.owner !== hoveredOverlayRoot) clearHoveredOverlay(event)
     if (overlayHit !== null) {
       clearHoveredWorld()
       clearHoveredPlane(event)
-      hoveredOverlayId = overlayHit.record.id
+      hoveredOverlayRoot = overlayHit.record.owner
       const input = localPointerInput(event, overlayHit.point)
       const target = overlayHit.record.runtime.pointerDown(input)
       if (target === null) {
-        nativeInputHost.setActiveDocument(null)
+        nativeInputHost.setActiveRoot(null)
         return
       }
-      nativeInputHost.setActiveDocument(overlayHit.record.runtime.document, overlayHit.record.id)
+      nativeInputHost.setActiveRoot(overlayHit.record.owner)
       nativeInputHost.synchronize()
       if (event.cancelable) event.preventDefault()
       options.canvas.setPointerCapture?.(event.pointerId)
       captures.set(event.pointerId, {
         kind: "overlay",
-        overlayId: overlayHit.record.id,
+        overlayRoot: overlayHit.record.owner,
         input,
       })
-      activeOverlayId = overlayHit.record.id
-      activePlaneId = null
-      activeWorldId = null
+      activeOverlayRoot = overlayHit.record.owner
+      activePlaneRoot = null
+      activeWorldSpace = null
       return
     }
     if (world !== null) {
       clearHoveredOverlay(event)
       clearHoveredPlane(event)
-      hoveredWorldId = world.id
-      nativeInputHost.setActiveDocument(null)
+      hoveredWorldSpace = world.owner
+      nativeInputHost.setActiveRoot(null)
       const mode = world.cameraGestures
         ? event.button === 2
           ? "pan"
@@ -1508,19 +1489,19 @@ const createClaimedDocumentSpaceRuntime = async (
       options.canvas.setPointerCapture?.(event.pointerId)
       captures.set(event.pointerId, {
         kind: "world",
-        worldId: world.id,
+        worldSpace: world.owner,
         mode,
         pointerType: event.pointerType,
         clientX: event.clientX,
         clientY: event.clientY,
       })
-      activeWorldId = world.id
-      activePlaneId = null
-      activeOverlayId = null
+      activeWorldSpace = world.owner
+      activePlaneRoot = null
+      activeOverlayRoot = null
       return
     }
     clearHoveredWorld()
-    if (hit?.record.id !== hoveredPlaneId) clearHoveredPlane(event)
+    if (hit?.record.owner !== hoveredPlaneRoot) clearHoveredPlane(event)
     const cameraMode = cameraGesturesEnabled && hit === null
       ? event.button === 2
         ? "pan"
@@ -1531,7 +1512,7 @@ const createClaimedDocumentSpaceRuntime = async (
     if (cameraMode !== null) {
       clearHoveredOverlay(event)
       clearHoveredPlane(event)
-      nativeInputHost.setActiveDocument(null)
+      nativeInputHost.setActiveRoot(null)
       if (event.cancelable) event.preventDefault()
       options.canvas.setPointerCapture?.(event.pointerId)
       captures.set(event.pointerId, {
@@ -1541,30 +1522,30 @@ const createClaimedDocumentSpaceRuntime = async (
         clientX: event.clientX,
         clientY: event.clientY,
       })
-      activePlaneId = null
-      activeOverlayId = null
-      activeWorldId = null
+      activePlaneRoot = null
+      activeOverlayRoot = null
+      activeWorldSpace = null
       return
     }
     if (hit === null) {
-      nativeInputHost.setActiveDocument(null)
+      nativeInputHost.setActiveRoot(null)
       return
     }
-    hoveredPlaneId = hit.record.id
+    hoveredPlaneRoot = hit.record.owner
     const input = localPointerInput(event, hit.intersection.documentPoint)
     const target = hit.record.runtime.pointerDown(input)
     if (target === null) {
-      nativeInputHost.setActiveDocument(null)
+      nativeInputHost.setActiveRoot(null)
       return
     }
-    nativeInputHost.setActiveDocument(hit.record.runtime.document, hit.record.id)
+    nativeInputHost.setActiveRoot(hit.record.owner)
     nativeInputHost.synchronize()
     if (event.cancelable) event.preventDefault()
     options.canvas.setPointerCapture?.(event.pointerId)
-    captures.set(event.pointerId, {kind: "plane", planeId: hit.record.id, input})
-    activePlaneId = hit.record.id
-    activeOverlayId = null
-    activeWorldId = null
+    captures.set(event.pointerId, {kind: "plane", planeRoot: hit.record.owner, input})
+    activePlaneRoot = hit.record.owner
+    activeOverlayRoot = null
+    activeWorldSpace = null
   }
 
   const onPointerUp = (event: PointerEvent): void => {
@@ -1580,7 +1561,7 @@ const createClaimedDocumentSpaceRuntime = async (
       return
     }
     if (capture.kind === "overlay") {
-      const record = overlays.get(capture.overlayId)
+      const record = overlays.get(capture.overlayRoot)
       const point = overlayPoint(event.clientX, event.clientY)
       if (record === undefined || point === null) {
         cancelCapturedPointer(event.pointerId)
@@ -1590,7 +1571,7 @@ const createClaimedDocumentSpaceRuntime = async (
       releasePointer(event.pointerId)
       return
     }
-    const record = records.get(capture.planeId)
+    const record = records.get(capture.planeRoot)
     if (record === undefined) {
       releasePointer(event.pointerId)
       return
@@ -1683,18 +1664,18 @@ const createClaimedDocumentSpaceRuntime = async (
     nativeInput: nativeInputHost.nativeInput,
     nativeTextArea: nativeInputHost.nativeTextArea,
     get inputTarget() { return nativeInputHost.inputTarget },
-    get activeInputPlaneId() {
-      return nativeInputHost.inputTarget === null ? null : nativeInputHost.ownerId
+    get activeInputRoot() {
+      return nativeInputHost.inputTarget === null ? null : nativeInputHost.owner
     },
-    get planeIds() { return planeIds() },
-    get overlayIds() { return overlayIds() },
-    get worldIds() { return worldIds() },
-    get activePlaneId() { return activePlaneId },
-    get hoveredPlaneId() { return hoveredPlaneId },
-    get activeOverlayId() { return activeOverlayId },
-    get hoveredOverlayId() { return hoveredOverlayId },
-    get activeWorldId() { return activeWorldId },
-    get hoveredWorldId() { return hoveredWorldId },
+    get planeRoots() { return planeRoots() },
+    get overlayRoots() { return overlayRoots() },
+    get worldSpaces() { return worldSpaces() },
+    get activePlaneRoot() { return activePlaneRoot },
+    get hoveredPlaneRoot() { return hoveredPlaneRoot },
+    get activeOverlayRoot() { return activeOverlayRoot },
+    get hoveredOverlayRoot() { return hoveredOverlayRoot },
+    get activeWorldSpace() { return activeWorldSpace },
+    get hoveredWorldSpace() { return hoveredWorldSpace },
     get cameraGesturesEnabled() { return cameraGesturesEnabled },
     get presentedFrames() { return presentedFrames },
     get disposed() { return disposed },
@@ -1750,10 +1731,10 @@ const createClaimedDocumentSpaceRuntime = async (
         preventDefault() {},
       } as WheelEvent)
     },
-    projectPoint(id, point) {
+    projectPoint(owner, point) {
       assertActive(disposed)
       const rect = seams.readCanvasRect(options.canvas)
-      const overlay = overlays.get(id)?.runtime
+      const overlay = overlays.get(owner)?.runtime
       if (overlay !== undefined) {
         if (!overlay.overlay.visible || !overlay.overlay.content.visible) return null
         return {
@@ -1761,7 +1742,7 @@ const createClaimedDocumentSpaceRuntime = async (
           y: rect.top + point.y * rect.height / canvasViewport.height,
         }
       }
-      const plane = records.get(id)?.runtime.plane
+      const plane = records.get(owner)?.runtime.plane
       if (plane === undefined || !plane.visible || !plane.content.visible) return null
       viewPoint.update()
       const view = plane.documentPointToWorld(point).applyMatrix4(viewPoint.viewMatrix)
@@ -1792,13 +1773,13 @@ const createClaimedDocumentSpaceRuntime = async (
       options.canvas.removeEventListener("dblclick", onDoubleClick)
       releaseTouchCameraSurface()
       for (const pointerId of [...captures.keys()]) cancelCapturedPointer(pointerId)
-      hoveredPlaneId = null
-      activePlaneId = null
-      hoveredOverlayId = null
-      activeOverlayId = null
-      hoveredWorldId = null
-      activeWorldId = null
-      nativeInputHost.setActiveDocument(null)
+      hoveredPlaneRoot = null
+      activePlaneRoot = null
+      hoveredOverlayRoot = null
+      activeOverlayRoot = null
+      hoveredWorldSpace = null
+      activeWorldSpace = null
+      nativeInputHost.setActiveRoot(null)
       nativeInputHost.dispose()
       for (const record of records.values()) {
         space.remove(record.runtime.plane)
@@ -1815,7 +1796,7 @@ const createClaimedDocumentSpaceRuntime = async (
         record.disposed = true
       }
       worlds.clear()
-      worldOwners.clear()
+
       projectionRoots.clear()
       beforeRenderListeners.clear()
       presentedListeners.clear()
@@ -1879,12 +1860,13 @@ const validateProjectionRoot = (document: Document, root: Node): void => {
 }
 
 const validateProjectionRootSeparation = (
-  roots: ReadonlyMap<Node, string>,
+  roots: ReadonlySet<Node>,
   root: Node,
 ): void => {
-  for (const [registered, owner] of roots) {
+  for (const registered of roots) {
+    if (registered.parentNode !== null && registered.parentNode === root.parentNode) continue
     if (registered.contains(root) || root.contains(registered)) {
-      throw new Error(`Document space projection root overlaps owner: ${owner}`)
+      throw new Error("Document space projection roots overlap")
     }
   }
 }
@@ -1912,13 +1894,6 @@ const validateSeams = (seams: DocumentSpaceRuntimeSeams): void => {
   ] as const) {
     if (typeof seams[name] !== "function") throw new TypeError(`Runtime seam ${name} must be a function`)
   }
-}
-
-const validatePlaneId = (value: unknown): string => {
-  if (typeof value !== "string" || value.length === 0 || value.trim() !== value || /[\u0000-\u001f\u007f]/u.test(value)) {
-    throw new TypeError("Document space plane id must be a non-empty trimmed string")
-  }
-  return value
 }
 
 const validateWorldViewport = (

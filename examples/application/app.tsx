@@ -1,11 +1,11 @@
 import {useRef, useState} from "@zavx0z/component"
-import {Space} from "@zavx0z/space/space"
-import {ViewPoint} from "@zavx0z/space/view-point"
-import {Display} from "@zavx0z/space/display"
-import {HUD} from "@zavx0z/space/hud"
-import {Mesh} from "@zavx0z/space/mesh"
-import {Geometry} from "@zavx0z/space/geometry"
-import {Material} from "@zavx0z/space/material"
+import {Space} from "@zavx0z/space/staging/space"
+import {ViewPoint} from "@zavx0z/space/cameras/view-point"
+import {Display} from "@zavx0z/space/portals/display"
+import {HUD} from "@zavx0z/space/portals/hud"
+import {Mesh} from "@zavx0z/space/shapes/mesh"
+import {Geometry} from "@zavx0z/space/shapes/geometry"
+import {Material} from "@zavx0z/space/shaders/material"
 
 export function Counter() {
   const [count, setCount] = useState(0)
@@ -89,7 +89,6 @@ export function App() {
       <Material kind="basic" color="#4166af" />
     </Mesh>
     <Display
-      id="main"
       viewportWidth={360}
       viewportHeight={300}
       quaternionX={Math.SQRT1_2}
@@ -97,7 +96,7 @@ export function App() {
     >
       <DisplayContent />
     </Display>
-    <HUD id="hud">
+    <HUD>
       <HUDContent />
     </HUD>
   </Space>

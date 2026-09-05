@@ -1,5 +1,5 @@
 import {attach, useFrame, useSpace} from "@zavx0z/browser"
-import {useDocument, useState} from "@zavx0z/component"
+import {useDocument, useLayoutEffect, useRef, useState} from "@zavx0z/component"
 import type {JsxSourceElement} from "../jsx-runtime.ts"
 
 function Container(props: {children?: JsxSourceElement | readonly JsxSourceElement[] | null}) {
@@ -9,7 +9,12 @@ function Container(props: {children?: JsxSourceElement | readonly JsxSourceEleme
 function Counter(props: {label: string}) {
   const document = useDocument()
   const [count, setCount] = useState(0)
+  const button = useRef<HTMLButtonElement | null>(null)
+  useLayoutEffect(() => {
+    button.current?.setAttribute("data-ref-connected", String(button.current.isConnected))
+  }, [])
   return <button
+    ref={button}
     data-document-type={document.nodeType}
     onClick={() => setCount(count + 1)}
   >

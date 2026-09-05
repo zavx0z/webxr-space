@@ -1,12 +1,15 @@
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
-  XRLineSegmentsElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+  XRTextElement,
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-export type LineSegmentsProps = Readonly<{
+export type TextProps = Readonly<{
+  text?: string
+  fontSize?: number
+  letterSpacing?: number
   x?: number
   y?: number
   z?: number
@@ -20,13 +23,16 @@ export type LineSegmentsProps = Readonly<{
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
-  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
-  ref?: SpaceRef<XRLineSegmentsElement> | null
+  children?: JsxSourceElement | null | undefined
+  ref?: SpaceRef<XRTextElement> | null
 }>
 
-export function LineSegments(props: LineSegmentsProps): JsxSourceElement {
+export function Text(props: TextProps): JsxSourceElement {
   return (
-    <xr-line-segments
+    <xr-text
+      text={props.text}
+      fontSize={props.fontSize}
+      letterSpacing={props.letterSpacing}
       x={props.x}
       y={props.y}
       z={props.z}
@@ -43,6 +49,6 @@ export function LineSegments(props: LineSegmentsProps): JsxSourceElement {
       ref={props.ref}
     >
       {props.children}
-    </xr-line-segments>
+    </xr-text>
   )
 }

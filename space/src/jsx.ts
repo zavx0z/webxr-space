@@ -1,4 +1,5 @@
 import type {JsxChild} from "@zavx0z/template/jsx-runtime"
+import type {Ref} from "@zavx0z/component"
 import type {
   XRAnimationElement,
   XRAnimationProjectionFactory,
@@ -21,9 +22,7 @@ import type {
   XRViewPointElement,
 } from "./elements.ts"
 
-export type SpaceRef<Target> = (
-  target: Target | null,
-) => void | (() => void)
+export type SpaceRef<Target> = Ref<Target>
 
 type SpatialChildren<Target> = Readonly<{
   children?: JsxChild | undefined
@@ -121,7 +120,7 @@ export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & R
   quaternionY?: number | undefined
   quaternionZ?: number | undefined
   quaternionW?: number | undefined
-  id: string
+  id?: string | undefined
   style?: CssStyle | undefined
   viewportWidth?: number | undefined
   viewportHeight?: number | undefined
@@ -133,7 +132,7 @@ export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & R
 }>
 
 export type XRHUDIntrinsicProperties = SpatialChildren<XRHUDElement> & Readonly<{
-  id: string
+  id?: string | undefined
   distance?: number | undefined
 }>
 

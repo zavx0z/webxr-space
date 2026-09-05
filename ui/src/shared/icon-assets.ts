@@ -27,5 +27,6 @@ export const visibilityOnIcon = /* @__PURE__ */ iconSvg("<path d=\"M2.5 12s3.5-5
 export const chevronDownIcon = /* @__PURE__ */ iconSvg("<path d=\"m7 9 5 5 5-5\"/>")
 export const chevronRightIcon = /* @__PURE__ */ iconSvg("<path d=\"m10 7 5 5-5 5\"/>")
 export const folderIcon = /* @__PURE__ */ iconSvg("<path d=\"M3 7h7l2 2h9v10H3z\"/><path d=\"M3 7V5h7l2 2\"/>")
+export const homeIcon = /* @__PURE__ */ iconSvg("<path d=\"m3 10 9-7 9 7v10H3Z\"/><path d=\"M9 20v-7h6v7\"/>")
 export const pickerIcon = /* @__PURE__ */ iconSvg("<path d=\"m19 3 2 2-10.5 10.5-3.5 1 1-3.5Z\"/><path d=\"m15.5 6.5 2 2\"/><path d=\"M5 19h5\"/>")
 export const resourceIcon = /* @__PURE__ */ iconSvg("<path d=\"M7 4H4v3\"/><path d=\"M17 4h3v3\"/><path d=\"M20 17v3h-3\"/><path d=\"M7 20H4v-3\"/><rect x=\"7\" y=\"7\" width=\"10\" height=\"10\" rx=\"1\"/>")

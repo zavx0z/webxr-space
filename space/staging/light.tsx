@@ -1,12 +1,18 @@
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
-  XRLineElement,
+  XRLightElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-export type LineProps = Readonly<{
+export type LightProps = Readonly<{
+  kind?: string
+  color?: string
+  intensity?: number
+  targetX?: number
+  targetY?: number
+  targetZ?: number
   x?: number
   y?: number
   z?: number
@@ -20,13 +26,19 @@ export type LineProps = Readonly<{
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
-  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
-  ref?: SpaceRef<XRLineElement> | null
+  children?: JsxSourceElement | null | undefined
+  ref?: SpaceRef<XRLightElement> | null
 }>
 
-export function Line(props: LineProps): JsxSourceElement {
+export function Light(props: LightProps): JsxSourceElement {
   return (
-    <xr-line
+    <xr-light
+      kind={props.kind}
+      color={props.color}
+      intensity={props.intensity}
+      targetX={props.targetX}
+      targetY={props.targetY}
+      targetZ={props.targetZ}
       x={props.x}
       y={props.y}
       z={props.z}
@@ -43,6 +55,6 @@ export function Line(props: LineProps): JsxSourceElement {
       ref={props.ref}
     >
       {props.children}
-    </xr-line>
+    </xr-light>
   )
 }

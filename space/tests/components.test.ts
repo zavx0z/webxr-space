@@ -6,23 +6,33 @@ const root = resolve(import.meta.dir, "../..")
 const spaceRoot = resolve(root, "space")
 
 const owners = Object.freeze([
-  ["space.tsx", "xr-space"],
-  ["view-point.tsx", "xr-view-point"],
-  ["asset.tsx", "xr-asset"],
-  ["group.tsx", "xr-group"],
-  ["mesh.tsx", "xr-mesh"],
-  ["line.tsx", "xr-line"],
-  ["line-segments.tsx", "xr-line-segments"],
-  ["text.tsx", "xr-text"],
-  ["light.tsx", "xr-light"],
-  ["animation.tsx", "xr-animation"],
-  ["geometry.tsx", "xr-geometry"],
-  ["material.tsx", "xr-material"],
-  ["display.tsx", "xr-display"],
-  ["hud.tsx", "xr-hud"],
+  ["staging/space.tsx", "xr-space"],
+  ["cameras/view-point.tsx", "xr-view-point"],
+  ["gizmos/grid.tsx", "xr-line-segments"],
+  ["abstractions/asset.tsx", "xr-asset"],
+  ["abstractions/group.tsx", "xr-group"],
+  ["shapes/mesh.tsx", "xr-mesh"],
+  ["shapes/line.tsx", "xr-line"],
+  ["shapes/line-segments.tsx", "xr-line-segments"],
+  ["abstractions/text.tsx", "xr-text"],
+  ["staging/light.tsx", "xr-light"],
+  ["abstractions/animation.tsx", "xr-animation"],
+  ["shapes/geometry.tsx", "xr-geometry"],
+  ["shaders/material.tsx", "xr-material"],
+  ["portals/display.tsx", "xr-display"],
+  ["portals/hud.tsx", "xr-hud"],
 ] as const)
 
 describe("Публичные пространственные компоненты", () => {
+  test("компоненты экспортируются из разделов без плоских дублей", async () => {
+    const manifest = await Bun.file(resolve(spaceRoot, "package.json")).json()
+    const components = Object.entries(manifest.exports as Record<string, string>).filter(([, path]) => path.endsWith(".tsx"))
+    expect(manifest.exports["./gizmos/grid"]).toBe("./gizmos/grid.tsx")
+    expect(components.every(([path]) => path.split("/").length === 3)).toBe(true)
+    expect(new Set(components.map(([, path]) => path)).size).toBe(components.length)
+    expect([...new Bun.Glob("*.tsx").scanSync({cwd: spaceRoot})]).toEqual([])
+  })
+
   test("[SPC-001] каждый Component создаёт точный semantic Element", async () => {
     const compiler = new JsxCompilerSession({cwd: root, sourceRoots: [spaceRoot]})
     try {

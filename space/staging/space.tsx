@@ -1,9 +1,9 @@
 import type {
   JsxSourceElement,
 } from "@zavx0z/template/jsx-runtime"
-import type {XRSpaceElement} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+import type {XRSpaceElement} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
 export type SpaceProps = Readonly<{
   background?: string

@@ -7,20 +7,21 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./src/index.ts",
-    "./space": "./space.tsx",
-    "./view-point": "./view-point.tsx",
-    "./asset": "./asset.tsx",
-    "./group": "./group.tsx",
-    "./mesh": "./mesh.tsx",
-    "./line": "./line.tsx",
-    "./line-segments": "./line-segments.tsx",
-    "./text": "./text.tsx",
-    "./light": "./light.tsx",
-    "./animation": "./animation.tsx",
-    "./geometry": "./geometry.tsx",
-    "./material": "./material.tsx",
-    "./display": "./display.tsx",
-    "./hud": "./hud.tsx"
+    "./abstractions/animation": "./abstractions/animation.tsx",
+    "./abstractions/asset": "./abstractions/asset.tsx",
+    "./abstractions/group": "./abstractions/group.tsx",
+    "./abstractions/text": "./abstractions/text.tsx",
+    "./cameras/view-point": "./cameras/view-point.tsx",
+    "./gizmos/grid": "./gizmos/grid.tsx",
+    "./portals/display": "./portals/display.tsx",
+    "./portals/hud": "./portals/hud.tsx",
+    "./shaders/material": "./shaders/material.tsx",
+    "./shapes/geometry": "./shapes/geometry.tsx",
+    "./shapes/line": "./shapes/line.tsx",
+    "./shapes/line-segments": "./shapes/line-segments.tsx",
+    "./shapes/mesh": "./shapes/mesh.tsx",
+    "./staging/light": "./staging/light.tsx",
+    "./staging/space": "./staging/space.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
@@ -34,9 +35,17 @@
     "@zavx0z/template": "*"
   },
   "peerDependenciesMeta": {
-    "@zavx0z/component": {"optional": true},
-    "@zavx0z/dom": {"optional": true},
-    "@zavx0z/engine": {"optional": true},
-    "@zavx0z/template": {"optional": true}
+    "@zavx0z/component": {
+      "optional": true
+    },
+    "@zavx0z/dom": {
+      "optional": true
+    },
+    "@zavx0z/engine": {
+      "optional": true
+    },
+    "@zavx0z/template": {
+      "optional": true
+    }
   }
 }

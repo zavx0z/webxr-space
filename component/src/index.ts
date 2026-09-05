@@ -1,3 +1,13 @@
+/**
+Состояние и жизненный цикл скомпилированных компонентов одного semantic Document.
+
+Refs получают существующие Elements после commit и очищаются при unmount.
+Для свойств пространственных и других не-HTML Elements с setter новое авторское
+значение применяется только при изменении prop. Прямое движение через ref или
+жесты сохраняется между render; controlled HTML-поля восстанавливаются из props.
+
+@packageDocumentation
+*/
 export {
   CompiledTemplateError,
   HookContractError,

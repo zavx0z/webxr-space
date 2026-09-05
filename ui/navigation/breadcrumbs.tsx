@@ -3,6 +3,8 @@ import {chevronRightIcon} from "../src/shared/icon-assets.ts"
 export type BreadcrumbsItem = Readonly<{
   id: string
   label: string
+  /** Заменяет видимую подпись иконкой; label сохраняется как доступное имя и подсказка. */
+  iconSrc?: string | undefined
   title?: string | undefined
   disabled?: boolean | undefined
 }>
@@ -14,7 +16,7 @@ export type BreadcrumbsProps = Readonly<{
   onNavigate?: ((item: BreadcrumbsItem, event: PointerEvent) => void) | undefined
 }>
 
-/** Hierarchical navigation whose final item denotes the current location. */
+/** Последний сегмент обозначает текущую страницу; iconSrc заменяет только видимую подпись. */
 export function Breadcrumbs(props: BreadcrumbsProps) {
   const items = normalizeItems(props.items)
   return <nav
@@ -61,6 +63,7 @@ function BreadcrumbItemView(props: Readonly<{
   onNavigate?: BreadcrumbsProps["onNavigate"]
 }>) {
   const disabled = props.current || props.item.disabled === true || props.onNavigate === undefined
+  const label = props.item.iconSrc === undefined ? props.item.label : ""
   const activate = (event: PointerEvent) => {
     if (!disabled) props.onNavigate?.(props.item, event)
   }
@@ -108,13 +111,15 @@ function BreadcrumbItemView(props: Readonly<{
     />
     <button
       type="button"
+      aria-label={props.item.label}
       aria-current={props.current ? "page" : undefined}
       title={props.item.title ?? props.item.label}
       disabled={disabled}
       onClick={activate}
       style={css`
         box-sizing: border-box;
-        display: block;
+        display: flex;
+        align-items: center;
         min-width: 0;
         height: 20px;
         padding: 0;
@@ -126,13 +131,20 @@ function BreadcrumbItemView(props: Readonly<{
         line-height: 20px;
         white-space: nowrap;
         text-overflow: ellipsis;
+        --breadcrumb-icon-opacity: 0.5;
 
         &:hover {
           color: var(--status-bar-content-highlight);
+          --breadcrumb-icon-opacity: 1;
+        }
+
+        &[aria-current="page"] {
+          --breadcrumb-icon-opacity: 1;
         }
 
         &:focus {
           color: var(--status-bar-content-highlight);
+          --breadcrumb-icon-opacity: 1;
         }
 
         &:disabled {
@@ -140,7 +152,43 @@ function BreadcrumbItemView(props: Readonly<{
         }
       `}
     >
-      {props.item.label}
+      <img
+        src={props.item.iconSrc ?? ""}
+        alt=""
+        aria-hidden="true"
+        width={16}
+        height={16}
+        hidden={props.item.iconSrc === undefined}
+        style={css`
+          display: block;
+          width: 16px;
+          height: 16px;
+          flex-shrink: 0;
+          object-fit: contain;
+          opacity: var(--breadcrumb-icon-opacity);
+
+          &[hidden] {
+            display: none;
+          }
+        `}
+      />
+      <span
+        hidden={props.item.iconSrc !== undefined}
+        style={css`
+          display: block;
+          min-width: 0;
+          line-height: 20px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+
+          &[hidden] {
+            display: none;
+          }
+        `}
+      >
+        {label}
+      </span>
     </button>
   </li>
 }
@@ -166,6 +214,9 @@ function normalizeItems(
     ids.add(item.id)
     if (typeof item.label !== "string" || item.label.trim().length === 0) {
       throw new TypeError(`Breadcrumbs item label must be non-empty: ${item.id}`)
+    }
+    if (item.iconSrc !== undefined && (typeof item.iconSrc !== "string" || item.iconSrc.trim().length === 0)) {
+      throw new TypeError(`Breadcrumbs item iconSrc must be non-empty: ${item.id}`)
     }
     return Object.freeze({
       ...item,

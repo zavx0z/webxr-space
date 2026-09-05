@@ -1,9 +1,13 @@
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import type {XRViewPointElement} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+import type {XRViewPointElement} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-/** Положение, цель и near/far заданы в мм, fov — в радианах; мировая ось вверх всегда Z. */
+/**
+Положение, цель и near/far заданы в мм, fov — в радианах; мировая ось вверх всегда Z.
+Props применяются при изменении их авторских значений. Жесты и команды через `ref`
+сохраняют положение камеры при повторном render с прежними координатами.
+*/
 export type ViewPointProps = Readonly<{
   x?: number
   y?: number

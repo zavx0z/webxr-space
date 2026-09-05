@@ -2,9 +2,9 @@ import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
   XRGroupElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
 export type GroupProps = Readonly<{
   x?: number

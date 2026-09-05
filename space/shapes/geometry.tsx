@@ -2,9 +2,9 @@ import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
   XRGeometryElement,
   XRGeometryProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
 export type GeometryProps = Readonly<{
   kind?: string

@@ -113,18 +113,18 @@ type FakeRuntimeState = {
   presented: ((sequence: number) => void) | null
   requestedFrame: (() => void) | null
   beforeRender: Set<() => void>
-  projectionSubscribers: Map<string, Set<(frame: RenderFrame) => void>>
-  projectionInputs: Array<Readonly<{ownerId: string; type: string; input: PointerInput | WheelInput}>>
+  projectionSubscribers: Map<SemanticNode, Set<(frame: RenderFrame) => void>>
+  projectionInputs: Array<Readonly<{owner: SemanticNode | "input"; type: string; input: PointerInput | WheelInput}>>
   pointerTarget: SemanticElement | null
-  nativeOwnerId: string | null
+  nativeOwner: SemanticNode | null
   nativeTarget: SemanticHTMLElement | null
   keyInputs: unknown[]
   lifecycle: string[]
   space: Space | null
   viewPoint: ViewPoint | null
   invalidated: BufferGeometry[]
-  planes: Map<string, DocumentPlaneRuntime>
-  overlays: Map<string, DocumentOverlayRuntime>
+  planes: Map<SemanticNode, DocumentPlaneRuntime>
+  overlays: Map<SemanticNode, DocumentOverlayRuntime>
 }
 
 const createFakeRuntimeState = (): FakeRuntimeState => ({
@@ -148,7 +148,7 @@ const createFakeRuntimeState = (): FakeRuntimeState => ({
   projectionSubscribers: new Map(),
   projectionInputs: [],
   pointerTarget: null,
-  nativeOwnerId: null,
+  nativeOwner: null,
   nativeTarget: null,
   keyInputs: [],
   lifecycle: [],
@@ -202,10 +202,10 @@ const createFakeRuntime = (
     nativeInput: {} as HTMLInputElement,
     nativeTextArea: {} as HTMLTextAreaElement,
     get document() {
-      return state.nativeOwnerId === null ? null : options.document
+      return state.nativeOwner === null ? null : options.document
     },
-    get ownerId() {
-      return state.nativeOwnerId
+    get owner() {
+      return state.nativeOwner
     },
     get inputTarget() {
       return state.nativeTarget
@@ -213,9 +213,10 @@ const createFakeRuntime = (
     get activeProxy() {
       return state.nativeTarget === null ? null : "input"
     },
-    setActiveDocument(document: CreateDocumentSpaceRuntimeOptions["document"] | null, ownerId?: string | null) {
-      state.nativeOwnerId = document === null ? null : ownerId ?? null
-      if (document === null) state.nativeTarget = null
+    setActiveRoot(owner: SemanticNode | null) {
+      state.nativeOwner = owner
+      const active = options.document.activeElement
+      state.nativeTarget = owner !== null && active instanceof SemanticHTMLElement ? active : null
     },
     synchronize() {
       const active = options.document.activeElement
@@ -230,7 +231,7 @@ const createFakeRuntime = (
       state.nativeTarget = null
     },
     dispose() {
-      state.nativeOwnerId = null
+      state.nativeOwner = null
       state.nativeTarget = null
     },
   }
@@ -245,13 +246,13 @@ const createFakeRuntime = (
     space,
     viewPoint,
     nativeInputHost,
-    get planeIds() {
+    get planeRoots() {
       return Object.freeze([...state.planes.keys()])
     },
-    get overlayIds() {
+    get overlayRoots() {
       return Object.freeze([...state.overlays.keys()])
     },
-    get worldIds() {
+    get worldSpaces() {
       return Object.freeze([])
     },
     get disposed() {
@@ -273,9 +274,9 @@ const createFakeRuntime = (
         viewport: registration.viewport,
       })
       const subscribers = new Set<(frame: RenderFrame) => void>()
-      state.projectionSubscribers.set(registration.id, subscribers)
+      state.projectionSubscribers.set(registration.root, subscribers)
       const route = (type: string, input: PointerInput | WheelInput): SemanticElement | null => {
-        state.projectionInputs.push({ownerId: registration.id, type, input})
+        state.projectionInputs.push({owner: registration.root, type, input})
         if (type === "pointerdown" && state.pointerTarget instanceof SemanticHTMLElement) {
           state.pointerTarget.focus()
         }
@@ -299,13 +300,13 @@ const createFakeRuntime = (
           return () => subscribers.delete(listener)
         },
       } as unknown as DocumentPlaneRuntime
-      state.planes.set(registration.id, runtime)
+      state.planes.set(registration.root, runtime)
       return runtime
     },
-    getPlane(id: string) {
+    getPlane(id: SemanticNode) {
       return state.planes.get(id)
     },
-    updatePlane(id: string, update: DocumentSpacePlaneUpdate) {
+    updatePlane(id: SemanticNode, update: DocumentSpacePlaneUpdate) {
       const held = state.planes.get(id)
       if (held === undefined) throw new Error(`Unknown fake plane: ${id}`)
       const mutable = held as unknown as {
@@ -329,7 +330,7 @@ const createFakeRuntime = (
       if (transform?.visible !== undefined) mutable.plane.visible = transform.visible
       return held
     },
-    removePlane(id: string) {
+    removePlane(id: SemanticNode) {
       state.projectionSubscribers.delete(id)
       return state.planes.delete(id)
     },
@@ -341,9 +342,9 @@ const createFakeRuntime = (
         viewport,
       })
       const subscribers = new Set<(frame: RenderFrame) => void>()
-      state.projectionSubscribers.set(registration.id, subscribers)
+      state.projectionSubscribers.set(registration.root, subscribers)
       const route = (type: string, input: PointerInput | WheelInput): SemanticElement | null => {
-        state.projectionInputs.push({ownerId: registration.id, type, input})
+        state.projectionInputs.push({owner: registration.root, type, input})
         if (type === "pointerdown" && state.pointerTarget instanceof SemanticHTMLElement) {
           state.pointerTarget.focus()
         }
@@ -366,13 +367,13 @@ const createFakeRuntime = (
           return () => subscribers.delete(listener)
         },
       } as unknown as DocumentOverlayRuntime
-      state.overlays.set(registration.id, runtime)
+      state.overlays.set(registration.root, runtime)
       return runtime
     },
-    getOverlay(id: string) {
+    getOverlay(id: SemanticNode) {
       return state.overlays.get(id)
     },
-    removeOverlay(id: string) {
+    removeOverlay(id: SemanticNode) {
       state.projectionSubscribers.delete(id)
       return state.overlays.delete(id)
     },
@@ -390,17 +391,18 @@ const createFakeRuntime = (
     },
     dispatchPointer(type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel", input: PointerInput) {
       if (state.disposed) throw new Error("Root is disposed")
-      state.projectionInputs.push({ownerId: "input", type, input})
+      state.projectionInputs.push({owner: "input", type, input})
       if (type === "pointerdown" && state.pointerTarget !== null) {
-        state.nativeOwnerId = state.pointerTarget.parentElement?.id ?? null
+        if (state.pointerTarget instanceof SemanticHTMLElement) state.pointerTarget.focus()
+        state.nativeOwner = state.pointerTarget.parentElement
         state.nativeTarget = state.pointerTarget as SemanticHTMLElement
       }
     },
     dispatchWheel(input: WheelInput) {
       if (state.disposed) throw new Error("Root is disposed")
-      state.projectionInputs.push({ownerId: "input", type: "wheel", input})
+      state.projectionInputs.push({owner: "input", type: "wheel", input})
     },
-    projectPoint(_id: string, point: {x: number; y: number}) { return point },
+    projectPoint(_id: SemanticNode, point: {x: number; y: number}) { return point },
     render() {
       for (const listener of [...state.beforeRender]) listener()
       state.renderedFrames += 1
@@ -445,6 +447,58 @@ const createFakeRuntime = (
   return runtime
 }
 
+test("проекции без id сохраняют runtime, подписки и фокус при смене атрибутов и переносе UI", async () => {
+  const state = createFakeRuntimeState()
+  let planeCreations = 0
+  let overlayCreations = 0
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  const root = await attachFixture({canvas, font: {} as TrueTypeFont}, async options => {
+    const runtime = createFakeRuntime(options, state)
+    const addPlane = runtime.addPlane
+    const addOverlay = runtime.addOverlay
+    return Object.assign(runtime, {
+      addPlane(registration: DocumentSpacePlaneRegistration) { planeCreations++; return addPlane(registration) },
+      addOverlay(registration: DocumentSpaceOverlayRegistration) { overlayCreations++; return addOverlay(registration) },
+    })
+  })
+  const first = root.document.createElement("xr-display") as XRDisplayElement
+  const second = root.document.createElement("xr-display") as XRDisplayElement
+  const hud = root.document.createElement("xr-hud") as XRHUDElement
+  const button = root.document.createElement("button")
+  first.append(button)
+  root.document.transaction(() => root.space.append(first, second, hud))
+  expect([first.id, second.id, hud.id]).toEqual(["", "", ""])
+  expect(state.planes.size).toBe(2)
+  const projection = root.getProjection(first)
+  const held = state.planes.get(first)
+  let frames = 0
+  const stop = projection.subscribeFrames(() => { frames++ })
+  button.focus()
+  expect(state.nativeOwner).toBe(first)
+  for (let index = 0; index < 50; index++) {
+    root.document.transaction(() => {
+      first.id = second.id = hud.id = `same-${index}`
+    })
+  }
+  expect(planeCreations).toBe(2)
+  expect(overlayCreations).toBe(1)
+  expect(state.planes.get(first)).toBe(held)
+  expect(root.getProjection(first)).toBe(projection)
+  expect(root.document.activeElement).toBe(button)
+  for (const listener of state.projectionSubscribers.get(first) ?? []) listener(projection.readFrame()!)
+  expect(frames).toBe(1)
+  hud.append(button)
+  expect(root.document.activeElement).toBe(button)
+  expect(state.nativeOwner).toBe(hud)
+  expect(() => root.dispatchKey(hud, button, {type: "keydown", key: "Enter"})).not.toThrow()
+  first.remove()
+  expect(state.nativeOwner).toBe(hud)
+  expect(state.planes.has(second)).toBe(true)
+  expect(projection.readFrame()).toBeNull()
+  stop()
+  root.unmount()
+})
+
 test("[BRW-004] attach монтирует один Document и синхронизирует один Space/ViewPoint", async () => {
   const state = createFakeRuntimeState()
   const canvas = {
@@ -483,8 +537,8 @@ test("[BRW-004] attach монтирует один Document и синхрони�
   expect(tree.space).toBe(space)
   expect(tree.viewPoint).toBe(viewPoint)
   expect(state.restoreCalls).toBe(1)
-  expect(state.planes.get("display")?.root).toBe(display)
-  expect(state.overlays.get("hud")?.root).toBe(hud)
+  expect(state.planes.get(display)?.root).toBe(display)
+  expect(state.overlays.get(hud)?.root).toBe(hud)
   expect(state.requestedFrames).toBeGreaterThan(0)
 
   experience.render()
@@ -804,7 +858,7 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
   const frames: RenderFrame[] = []
   const unsubscribe = projection.subscribeFrames(frame => frames.push(frame))
   const frame = projection.readFrame()!
-  for (const listener of state.projectionSubscribers.get(display.id) ?? []) listener(frame)
+  for (const listener of state.projectionSubscribers.get(display) ?? []) listener(frame)
   expect(frames).toEqual([frame])
 
   state.pointerTarget = button
@@ -834,7 +888,7 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
 
   unsubscribe()
   experience.unmount()
-  expect(state.projectionSubscribers.get(display.id)?.size).toBe(0)
+  expect(state.projectionSubscribers.get(display)?.size).toBe(0)
   expect(() => experience.input.pointerDown({x: 1, y: 1})).toThrow("Root is disposed")
   expect(() => spaceProjection.orbit(1, 1)).toThrow("Root is disposed")
 })
@@ -1062,7 +1116,7 @@ test("[BRW-ATTACH-005] нормализация ориентации Display н�
     const update = runtime.updatePlane
     return Object.assign(runtime, {
       addPlane: (registration: DocumentSpacePlaneRegistration) => normalize(add(registration)),
-      updatePlane(id: string, value: DocumentSpacePlaneUpdate) {
+      updatePlane(id: SemanticNode, value: DocumentSpacePlaneUpdate) {
         updates++
         return normalize(update(id, value))
       },

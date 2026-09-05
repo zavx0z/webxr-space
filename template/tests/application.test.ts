@@ -34,6 +34,7 @@ test("Browser attach компилирует App, фиксированные со
     expect(buttons[0]!.textContent).toBe("Обновлённый: 1")
     expect(buttons[1]!.textContent).toBe("Второй: 0")
     expect(buttons[0]!.getAttribute("data-document-type")).toBe("9")
+    expect(buttons[0]!.getAttribute("data-ref-connected")).toBe("true")
     root.unmount()
   } finally {
     try { await compiler.close() } finally {

@@ -291,7 +291,7 @@ const createClaimedDocumentCanvasRuntime = async (
 
   try {
     inputHost = seams.createNativeInputHost({requestFrame: requestRender})
-    inputHost.setActiveDocument(options.document)
+    inputHost.setActiveRoot(options.root)
     unsubscribeMutations = options.document.subscribeMutations(() => {
       inputHost?.synchronize()
       requestRender()

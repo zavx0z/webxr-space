@@ -14,7 +14,7 @@ afterEach(() => {
 
 // Only GPU submission, native text proxies and scheduling are substituted.
 // CPU layout, hit testing, projection geometry, dispatch and scrolling are real.
-const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
+const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: readonly string[] = []) => {
   const document = createDocument()
   const root = document.createElement("div")
   document.append(root)
@@ -48,7 +48,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
   const nativeHost = {
     nativeInput: {},
     nativeTextArea: {},
-    setActiveDocument() {},
+    setActiveRoot() {},
     synchronize() {},
     dispose() {},
   } as unknown as DocumentNativeInputHost
@@ -60,7 +60,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
     renderComposition() {},
   } as unknown as Renderer
   const runtime = await createDocumentSpaceRuntimeWithSeams({
-    canvas, document, font, styleSheets: [], cameraGestures: true,
+    canvas, document, font, styleSheets, cameraGestures: true,
   }, {
     createEngineRenderer: () => engineRenderer,
     initializeEngineRenderer: async () => {},
@@ -87,11 +87,13 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
     parent.append(node)
     return node
   }
+  const projections = new Map<string, HTMLElement>()
   const projection = (kind: "overlay" | "plane", id: string, z = 0) => {
     const node = element("position: relative; width: 200px; height: 200px")
-    if (kind === "overlay") runtime.addOverlay({id, root: node})
+    projections.set(id, node)
+    if (kind === "overlay") runtime.addOverlay({root: node})
     else runtime.addPlane({
-      id, root: node, viewport: {width: 200, height: 200}, worldUnitsPerPixel: 1,
+      root: node, viewport: {width: 200, height: 200}, worldUnitsPerPixel: 1,
       transform: {position: {x: 0, y: -z, z: 0}, quaternion: {x: Math.SQRT1_2, y: 0, z: 0, w: Math.SQRT1_2}},
     })
     return node
@@ -117,8 +119,22 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
     }
     return events
   }
-  return {runtime, document, captured, cameraInputs, camera, element, projection, emit, observe}
+  return {runtime, document, captured, cameraInputs, camera, element, projection, projections, emit, observe}
 }
+
+test("DOM id остаётся CSS-селектором без замены проекции", async () => {
+  const f = await fixture(undefined, ["#before { background: #112233; } #after { background: #445566; }"])
+  const owner = f.projection("plane", "style-owner")
+  const projection = f.runtime.getPlane(owner)!
+  const color = () => projection.frame.displayList.find(item => item.kind === "rect" && item.node === owner)
+  owner.id = "before"
+  f.runtime.render()
+  expect(color()).toMatchObject({color: "#112233"})
+  owner.id = "after"
+  f.runtime.render()
+  expect(color()).toMatchObject({color: "#445566"})
+  expect(f.runtime.getPlane(owner)).toBe(projection)
+})
 
 test("resizing Display and HUD preserves the Renderer and advances already presented revisions", async () => {
   const f = await fixture()
@@ -129,7 +145,7 @@ test("resizing Display and HUD preserves the Renderer and advances already prese
     f.runtime.render()
     button.textContent = "second frame"
     f.runtime.render()
-    const projection = kind === "plane" ? f.runtime.getPlane(kind)! : f.runtime.getOverlay(kind)!
+    const projection = kind === "plane" ? f.runtime.getPlane(f.projections.get(kind)!)! : f.runtime.getOverlay(f.projections.get(kind)!)!
     const renderer = projection.renderer
     let revision = projection.frame.revision
     expect(revision).toBeGreaterThan(1)
@@ -158,7 +174,7 @@ test("wheel plus stationary-pointer hover does not leave an unstyled projection 
   f.runtime.render()
   f.emit("pointermove", 40, 15)
   f.runtime.render()
-  const projection = f.runtime.getPlane("scroll-hover")!
+  const projection = f.runtime.getPlane(f.projections.get("scroll-hover")!)!
   for (let step = 0; step < 8; step++) {
     f.emit("wheel", 40, 15, {deltaY:40})
     f.runtime.render()
@@ -187,7 +203,7 @@ test("decoded image dimensions invalidate both HUD and Display layout", async ()
   ready = true
   for (const changed of waiting) changed()
   f.runtime.render()
-  for (const projection of [f.runtime.getOverlay("overlay"), f.runtime.getPlane("plane")]) {
+  for (const projection of [f.runtime.getOverlay(f.projections.get("overlay")!), f.runtime.getPlane(f.projections.get("plane")!)]) {
     const image = projection!.root.firstChild!
     expect(projection!.frame!.boxByNode.get(image)).toMatchObject({width: 100, height: 56.25})
   }
@@ -203,8 +219,8 @@ test("[BRW-002] пустой HUD пропускает hover, click и wheel к D
   const events = f.observe(scroll)
   f.runtime.render()
   f.emit("pointermove", 40, 40)
-  expect(f.runtime.hoveredPlaneId).toBe("display")
-  expect(f.runtime.hoveredOverlayId).toBeNull()
+  expect(f.runtime.hoveredPlaneRoot).toBe(f.projections.get("display")!)
+  expect(f.runtime.hoveredOverlayRoot).toBeNull()
   f.emit("pointerdown", 40, 40)
   f.emit("pointerup", 40, 40)
   expect(f.emit("wheel", 40, 40)).toBe(true)
@@ -226,8 +242,8 @@ test("[BRW-002] панель HUD перекрывает Display даже без 
   expect(hudEvents).toEqual(["pointermove", "pointerdown", "pointerup", "click", "wheel"])
   expect(lowerEvents).toEqual([])
   f.emit("pointermove", 70, 70)
-  expect(f.runtime.hoveredPlaneId).toBe("display")
-  expect(f.runtime.hoveredOverlayId).toBeNull()
+  expect(f.runtime.hoveredPlaneRoot).toBe(f.projections.get("display")!)
+  expect(f.runtime.hoveredOverlayRoot).toBeNull()
   expect(lowerEvents).toEqual(["pointermove"])
 })
 
@@ -242,10 +258,10 @@ test("[BRW-002] пустой ближний Display пропускает вво�
   f.emit("pointermove", 70, 70)
   f.emit("pointerdown", 70, 70)
   f.emit("pointerup", 70, 70)
-  expect(f.runtime.hoveredPlaneId).toBe("back")
+  expect(f.runtime.hoveredPlaneRoot).toBe(f.projections.get("back")!)
   expect(events).toContain("click")
   f.emit("pointermove", 10, 10)
-  expect(f.runtime.hoveredPlaneId).toBe("front")
+  expect(f.runtime.hoveredPlaneRoot).toBe(f.projections.get("front")!)
 })
 
 test("[BRW-002] захват HUD сохраняется при выходе за элемент и отменяется при удалении проекции", async () => {
@@ -256,11 +272,15 @@ test("[BRW-002] захват HUD сохраняется при выходе за
   const events = f.observe(panel)
   f.runtime.render()
   f.emit("pointerdown", 20, 20)
+  const held = f.runtime.getOverlay(hud)
+  hud.id = "renamed-during-capture"
+  f.runtime.render()
+  expect(f.runtime.getOverlay(hud)).toBe(held)
   f.emit("pointermove", 180, 180, {buttons: 1})
-  expect(f.runtime.activeOverlayId).toBe("hud")
+  expect(f.runtime.activeOverlayRoot).toBe(f.projections.get("hud")!)
   expect(events).toEqual(["pointerdown", "pointermove"])
   expect(f.cameraInputs).toEqual([])
-  f.runtime.removeOverlay("hud")
+  f.runtime.removeOverlay(f.projections.get("hud")!)
   expect(events).toContain("pointercancel")
   expect(f.captured.size).toBe(0)
 })
@@ -287,13 +307,14 @@ test("[BRW-002] свободное место HUD и Display пропускае�
   f.projection("overlay", "hud")
   f.projection("plane", "display")
   let doubleClicks = 0
+  const world = new Space()
   f.runtime.addWorld({
-    id: "world", space: new Space(), viewport: {x: 100, y: 100, width: 100, height: 100},
+    space: world, viewport: {x: 100, y: 100, width: 100, height: 100},
     viewPoint: f.runtime.snapshotViewPoint(), onDoubleClick() { doubleClicks++ },
   })
   f.runtime.render()
   f.emit("pointermove", 150, 150)
-  expect(f.runtime.hoveredWorldId).toBe("world")
+  expect(f.runtime.hoveredWorldSpace).toBe(world)
   f.emit("pointerdown", 150, 150)
   f.emit("pointermove", 155, 155, {buttons: 1})
   f.emit("pointerup", 155, 155)
@@ -332,14 +353,14 @@ test("[BRW-ATTACH-COORDINATES] Z-up Display преобразует CSS px в м�
   const display = f.projection("plane", "display")
   const button = f.element("width: 200px; height: 200px", display, "button")
   const events = f.observe(button)
-  f.runtime.updatePlane("display", {worldUnitsPerPixel: 0.5})
+  f.runtime.updatePlane(f.projections.get("display")!, {worldUnitsPerPixel: 0.5})
   f.runtime.render()
-  const plane = f.runtime.getPlane("display")!.plane
+  const plane = f.runtime.getPlane(f.projections.get("display")!)!.plane
   const top = plane.documentPointToWorld({x: 100, y: 0})
   expect(top.x).toBeCloseTo(0)
   expect(top.y).toBeCloseTo(0)
   expect(top.z).toBeCloseTo(50)
-  const client = f.runtime.projectPoint("display", {x: 100, y: 100})!
+  const client = f.runtime.projectPoint(f.projections.get("display")!, {x: 100, y: 100})!
   expect(client.x).toBeCloseTo(100)
   expect(client.y).toBeCloseTo(100)
   f.runtime.dispatchPointer("pointerdown", {clientX: client.x, clientY: client.y})

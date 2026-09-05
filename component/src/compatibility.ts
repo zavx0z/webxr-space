@@ -17,8 +17,8 @@ const compatibilityData = {
     "specEntries": 211,
     "mappedEntries": 211,
     "implemented": 28,
-    "partial": 49,
-    "unsupported": 70,
+    "partial": 50,
+    "unsupported": 69,
     "not-applicable": 35,
     "unverified": 29,
     "missing": 0
@@ -699,9 +699,9 @@ const compatibilityData = {
       "limitation": "The public authoring shape is familiar, but execution is synchronous, fixed-slot, non-Fiber, and compiled without React elements/VDOM."
     },
     "react.semantics.object-refs": {
-      "status": "unsupported",
-      "conformance": "none",
-      "limitation": "This React 19.2 reference behavior is not part of the current compiled runtime."
+      "status": "partial",
+      "conformance": "adapted",
+      "limitation": "Object refs receive the committed host Element and are cleared on replacement or unmount; execution remains synchronous and compiled without Fiber."
     },
     "react.semantics.passive-paint-scheduling": {
       "status": "unsupported",

@@ -86,7 +86,7 @@ export type IntrinsicElementProperties<Target extends ElementTarget> =
   DataAndAriaProperties &
   Readonly<{
     children?: JsxChild
-    ref?: CallbackRef<Target> | null | undefined
+    ref?: CallbackRef<Target> | {current: Target | null} | null | undefined
     style?: CssStyle | undefined
   }>
 

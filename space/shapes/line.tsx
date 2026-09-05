@@ -1,13 +1,12 @@
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
-  XRAssetElement,
+  XRLineElement,
   XRObjectProjectionFactory,
-} from "./src/elements.ts"
-import type {SpaceRef} from "./src/jsx.ts"
-import "./src/jsx.ts"
+} from "../src/elements.ts"
+import type {SpaceRef} from "../src/jsx.ts"
+import "../src/jsx.ts"
 
-export type AssetProps = Readonly<{
-  factory: XRObjectProjectionFactory
+export type LineProps = Readonly<{
   x?: number
   y?: number
   z?: number
@@ -20,14 +19,14 @@ export type AssetProps = Readonly<{
   scaleZ?: number
   visible?: boolean
   name?: string
+  factory?: XRObjectProjectionFactory | null
   children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
-  ref?: SpaceRef<XRAssetElement> | null
+  ref?: SpaceRef<XRLineElement> | null
 }>
 
-export function Asset(props: AssetProps): JsxSourceElement {
+export function Line(props: LineProps): JsxSourceElement {
   return (
-    <xr-asset
-      factory={props.factory}
+    <xr-line
       x={props.x}
       y={props.y}
       z={props.z}
@@ -40,9 +39,10 @@ export function Asset(props: AssetProps): JsxSourceElement {
       scaleZ={props.scaleZ}
       visible={props.visible}
       name={props.name}
+      factory={props.factory}
       ref={props.ref}
     >
       {props.children}
-    </xr-asset>
+    </xr-line>
   )
 }

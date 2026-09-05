@@ -44,8 +44,12 @@ test("[BRW-020] native host dispatches a key only to its exact active semantic p
   root.append(button, other)
   document.append(root)
   button.focus()
-  host.setActiveDocument(document, "display")
+  host.setActiveRoot(root)
   host.synchronize()
+  root.id = "changed-after-focus"
+  host.synchronize()
+  expect(host.owner).toBe(root)
+  expect(host.inputTarget).toBe(button)
 
   let keys = 0
   button.addEventListener("keydown", event => {
