@@ -1,48 +1,47 @@
-import { Matrix4, Quaternion, Vector3 } from "../math"
+import { Matrix4, Vector3 } from "../math"
 
 const LOOK_AT_EPSILON = 1e-6
 
 /**
- * Параметры для создания точки обзора.
- */
+Параметры для создания точки обзора.
+*/
 export interface ViewPointParameters {
   /**
-   * Client-coordinate viewport used for aspect and anchored zoom mapping.
-   * Browser ownership stays outside Engine; callers update this value when the
-   * native presentation viewport changes.
-   */
+  Область Canvas в CSS px для aspect и zoom с неподвижной точкой под указателем.
+  Browser обновляет эти данные при изменении размера; Engine не читает native DOM.
+  */
   viewport?: ViewPointClientViewport
 
   /**
-   * Угол обзора (field of view) в радианах.
-   * @default 1 (≈57°)
-   */
+  Угол обзора (field of view) в радианах.
+  @default 1 (≈57°)
+  */
   fov?: number
 
   /**
-   * Ближняя плоскость отсечения. Объекты ближе этой distance не отображаются.
-   * Значение должно быть больше нуля.
-   * @default 0.1
-   */
+  Ближняя плоскость отсечения. Объекты ближе этой distance не отображаются.
+  Значение должно быть больше нуля.
+  @default 0.1
+  */
   near?: number
 
   /**
-   * Дальняя плоскость отсечения. Объекты дальше этой distance не отображаются.
-   * Значение должно быть больше `near`.
-   * @default 1000
-   */
+  Дальняя плоскость отсечения. Объекты дальше этой distance не отображаются.
+  Значение должно быть больше `near`.
+  @default 1000
+  */
   far?: number
 
   /**
-   * Начальная позиция камеры.
-   * @default { x: 10, y: -10, z: 10 }
-   */
+  Начальная позиция камеры в мм.
+  @default { x: 10, y: -10, z: 10 }
+  */
   position?: { x: number; y: number; z: number }
 
   /**
-   * Точка, на которую смотрит камера (фокус).
-   * @default { x: 0, y: 0, z: 0 }
-   */
+  Точка фокуса в мм.
+  @default { x: 0, y: 0, z: 0 }
+  */
   target?: { x: number; y: number; z: number }
 }
 
@@ -54,21 +53,13 @@ export type ViewPointClientViewport = Readonly<{
 }>
 
 /**
- * # ViewPoint: Единая Точка Обзора
- *
- * Представляет retained-состояние камеры и платформонезависимые операции
- * orbit, pan и zoom. Browser-пакет владеет событиями и передаёт сюда уже
- * маршрутизированные числовые дельты.
- *
- * ## Система координат: RH_ZO
- * Движок использует строгий контракт **RH_ZO**:
- * * **RH (Right-Handed):** Правая система координат (Z-up).
- *   * **+X** — вправо
- *   * **+Y** — вглубь
- *   * **+Z** — вверх
- * * **ZO (Zero-to-One):** Пространство отсечения (Clip Space) имеет глубину **[0, 1]** (стандарт WebGPU).
- *
- */
+Камера в правой системе Z-up с расстояниями в миллиметрах.
+
+Orbit меняет азимут вокруг Z и наклон с ограничением у полюсов. Мировой up
+не хранится как изменяемое состояние, горизонт не переворачивается.
+Browser владеет событиями и передаёт сюда уже выбранные команды камеры.
+Матрицы используют правую систему с глубиной clip space [0, 1].
+*/
 export class ViewPoint {
   public fov: number
   public aspect: number
@@ -81,14 +72,17 @@ export class ViewPoint {
 
   private viewport: ViewPointClientViewport | null
   private target: Vector3
-  private up: Vector3 = new Vector3(0, 0, 1)
 
   /**
-   * Создает и инициализирует точку обзора.
-   *
-   * @param parameters - Конфигурация начального состояния.
-  * @throws Error Если `fov` или `near` <= 0, или если `far` <= `near`.
-   */
+  Создаёт камеру в фиксированной правой системе Z-up.
+
+  @param parameters - Position и target в мм, fov в радианах, viewport в CSS px.
+  @throws Error Если fov или near не положительны либо far не превышает near.
+  @example
+  ```ts
+  const camera = new ViewPoint({position: {x: 0, y: -1000, z: 500}})
+  ```
+  */
   constructor(parameters: ViewPointParameters) {
     this.viewport = parameters.viewport === undefined
       ? null
@@ -117,34 +111,13 @@ export class ViewPoint {
   }
 
   /**
-   * Возвращает текущую точку фокуса камеры.
-   *
-   * Нужна внешним слоям, которые хотят привязывать UI-объекты
-   * к экранной окружности вокруг наблюдаемого объекта.
-   */
+  Возвращает текущую точку фокуса камеры.
+
+  Нужна внешним слоям, которые хотят привязывать UI-объекты
+  к экранной окружности вокруг наблюдаемого объекта.
+  */
   public getTarget(): Vector3 {
     return this.target
-  }
-
-  /**
-   * Возвращает текущий вектор "вверх" камеры.
-   *
-   * Нужен внешним слоям, которые хотят сохранить горизонт
-   * или корректно оценить экранную проекцию объектов.
-   */
-  public getUp(): Vector3 {
-    return this.up
-  }
-
-  /**
-   * Выравнивает горизонт камеры по мировой оси Z.
-   *
-   * Это полезно для программной навигации по сцене, когда
-   * нужно сохранить ровный горизонт и не переносить roll
-   * из trackball-вращения в автоматический подлёт.
-   */
-  public alignUpToWorldZ(): void {
-    this.up.set(0, 0, 1)
   }
 
   public setAspectRatio(aspect: number): void {
@@ -153,7 +126,7 @@ export class ViewPoint {
     this.updateProjectionMatrix()
   }
 
-  /** Updates host-routed client bounds and the matching projection aspect. */
+  /** Обновляет границы Canvas в CSS px и соотношение сторон проекции. */
   public setViewport(viewport: ViewPointClientViewport): void {
     this.viewport = viewPointClientViewport(viewport)
     this.setAspectRatio(this.viewport.width / this.viewport.height)
@@ -164,19 +137,21 @@ export class ViewPoint {
   }
 
   /**
-   * Обновляет матрицу вида на основе текущего положения, цели и вектора 'up'.
-   */
+  Обновляет матрицу вида на основе положения, цели и неизменной мировой оси Z.
+  */
   public update = () => {
     this.sanitizePose()
-    this.viewMatrix.makeLookAt(this.position, this.target, this.up)
+    this.viewMatrix.makeLookAt(this.position, this.target)
   }
 
   /**
-   * Applies one trackball-orbit delta without claiming a browser event.
-   *
-   * Composition owners use this operation after they have routed pointer
-   * input between semantic content and camera navigation.
-   */
+  Вращает положение камеры вокруг цели: азимут вокруг Z и наклон до полюсов.
+
+  Горизонт сохраняется. Команда не регистрирует события и не меняет мировые оси.
+  @param deltaX - Конечное горизонтальное смещение указателя в CSS px.
+  @param deltaY - Конечное вертикальное смещение в CSS px; наклон ограничен у полюсов.
+  @throws RangeError При нечисловой или бесконечной дельте.
+  */
   public orbit(deltaX: number, deltaY: number): void {
     finiteControlDelta(deltaX, "orbit deltaX")
     finiteControlDelta(deltaY, "orbit deltaY")
@@ -184,7 +159,7 @@ export class ViewPoint {
     this.update()
   }
 
-  /** Moves both camera position and target in the current view plane. */
+  /** Сдвигает камеру и цель в плоскости экрана; дельты заданы в CSS px. */
   public pan(deltaX: number, deltaY: number): void {
     finiteControlDelta(deltaX, "pan deltaX")
     finiteControlDelta(deltaY, "pan deltaY")
@@ -192,7 +167,7 @@ export class ViewPoint {
     this.update()
   }
 
-  /** Changes target distance while optionally preserving one client anchor. */
+  /** Меняет расстояние до цели; anchor в CSS px сохраняет точку под указателем. */
   public zoom(delta: number, anchor?: {clientX: number; clientY: number}): void {
     finiteControlDelta(delta, "zoom delta")
     if (anchor !== undefined) {
@@ -204,23 +179,18 @@ export class ViewPoint {
   }
 
   private handleRotation(deltaX: number, deltaY: number) {
-    const rotationSpeed = 0.005
     const offset = new Vector3().subVectors(this.position, this.target)
-
-    // Вращение по горизонтали (вокруг оси Z мира) с коррекцией инверсии
-    const horizontalAngle = this.up.z < 0 ? deltaX * rotationSpeed : -deltaX * rotationSpeed
-    const quatX = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), horizontalAngle)
-    offset.applyQuaternion(quatX)
-    this.up.applyQuaternion(quatX)
-
-    // Вращение по вертикали (вокруг оси X камеры)
-    const right = new Vector3().crossVectors(this.up, offset).normalize()
-    const quatY = new Quaternion().setFromAxisAngle(right, -deltaY * rotationSpeed)
-    offset.applyQuaternion(quatY)
-    this.up.applyQuaternion(quatY)
-
-    // Обновляем позицию камеры
-    this.position.copy(this.target).add(offset)
+    const radius = Math.max(offset.length(), LOOK_AT_EPSILON)
+    const azimuth = Math.atan2(offset.y, offset.x) - deltaX * 0.005
+    const polar = Math.max(1e-4, Math.min(Math.PI - 1e-4,
+      Math.acos(Math.max(-1, Math.min(1, offset.z / radius))) - deltaY * 0.005,
+    ))
+    const horizontalRadius = radius * Math.sin(polar)
+    this.position.set(
+      this.target.x + horizontalRadius * Math.cos(azimuth),
+      this.target.y + horizontalRadius * Math.sin(azimuth),
+      this.target.z + radius * Math.cos(polar),
+    )
   }
 
   private handlePan(deltaX: number, deltaY: number) {
@@ -301,21 +271,8 @@ export class ViewPoint {
     const back = new Vector3().subVectors(this.position, this.target)
     if (!isFiniteVector(back) || back.length() < LOOK_AT_EPSILON) {
       const distance = Math.max(this.near * 2, LOOK_AT_EPSILON)
-      this.position.copy(this.target).add(fallbackBackDirection(this.up).multiplyScalar(distance))
-      back.subVectors(this.position, this.target)
+      this.position.copy(this.target).add(new Vector3(0, -distance, 0))
     }
-
-    back.normalize()
-
-    if (!isFiniteVector(this.up) || this.up.length() < LOOK_AT_EPSILON) {
-      this.up.set(0, 0, 1)
-    }
-
-    const projectedUp = this.up.clone().sub(back.clone().multiplyScalar(this.up.dot(back)))
-    if (!isFiniteVector(projectedUp) || projectedUp.length() < LOOK_AT_EPSILON) {
-      projectedUp.copy(fallbackUpDirection(back))
-    }
-    this.up.copy(projectedUp.normalize())
   }
 }
 
@@ -348,17 +305,4 @@ function positiveViewportValue(value: number, label: string): number {
   finiteViewportValue(value, label)
   if (value <= 0) throw new RangeError(`ViewPoint viewport ${label} must be positive`)
   return value
-}
-
-function fallbackBackDirection(up: Vector3): Vector3 {
-  if (!isFiniteVector(up) || up.length() < LOOK_AT_EPSILON) return new Vector3(0, -1, 0)
-  const normalizedUp = up.clone().normalize()
-  return Math.abs(normalizedUp.z) > 0.9 ? new Vector3(0, -1, 0) : new Vector3(0, 0, 1)
-}
-
-function fallbackUpDirection(back: Vector3): Vector3 {
-  const raw = Math.abs(back.z) > 0.9 ? new Vector3(0, 1, 0) : new Vector3(0, 0, 1)
-  const projected = raw.sub(back.clone().multiplyScalar(raw.dot(back)))
-  if (projected.length() >= LOOK_AT_EPSILON) return projected.normalize()
-  return new Vector3(1, 0, 0)
 }

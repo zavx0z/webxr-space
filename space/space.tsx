@@ -7,7 +7,7 @@ import "./src/jsx.ts"
 
 export type SpaceProps = Readonly<{
   background?: string
-  children?: JsxSourceElement | null | undefined
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
   ref?: SpaceRef<XRSpaceElement> | null
 }>
 

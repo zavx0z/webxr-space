@@ -1,3 +1,14 @@
+import sourceContracts from "./source-contracts.json"
+
+/**
+Историческая база переноса. Эти списки не перечитываются из текущих исходных
+checkout: изменения после переноса проверяются тестами действующих владельцев.
+База меняется только при явно выбранном новом переносе, после проверки истории.
+*/
+export const sourceRevisions: Readonly<Record<string, string>> = Object.freeze(sourceContracts.sources)
+export const importedDevtoolsRevision = sourceContracts.importedDevtoolsRevision
+export const sourcePublicSymbols: Readonly<Record<string, readonly string[]>> = Object.freeze(sourceContracts.publicSymbols)
+
 export type PublicSymbolDisposition = Readonly<{
   decisionMarker: string
   kind: "internalized" | "retired"
@@ -102,6 +113,14 @@ const oldBrowserInternalizedSymbols = Object.freeze([
 
 export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Object.freeze([
   Object.freeze({
+    decisionMarker: "GLTFLoaderOptions",
+    kind: "retired" as const,
+    ownerPackages: Object.freeze(["@zavx0z/engine"]),
+    requirementIds: Object.freeze(["ENG-005"]),
+    sourceId: "old-engine",
+    symbols: Object.freeze(["GLTFLoaderOptions"]),
+  }),
+  Object.freeze({
     decisionMarker: "LayoutProps",
     kind: "retired" as const,
     ownerPackages: Object.freeze(["@zavx0z/dom", "@zavx0z/renderer"]),
@@ -145,6 +164,7 @@ export const requirementEvidenceFiles = Object.freeze({
   "BRW-011": "browser/tests/touch-camera-gesture.test.ts",
   "DOM-004": "dom/tests/contract.test.ts",
   "ENG-004": "engine/tests/contract.test.ts",
+  "ENG-005": "engine/tests/z-up.test.ts",
   "EXP-001": "tests/experience/contract.test.ts",
   "EXP-002": "tests/experience/contract.test.ts",
   "EXP-003": "tests/experience/contract.test.ts",
@@ -156,9 +176,9 @@ export const requirementEvidenceFiles = Object.freeze({
 
 export type RequirementId = keyof typeof requirementEvidenceFiles
 
-// Существовавшие до переноса изменения Devtools. Это неизменяемый источник,
-// а не разрешение продолжать разработку в исходном репозитории.
-export const sourceWorkingFiles: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
+// Изменения Devtools, существовавшие до переноса, теперь сохранены коммитом
+// b957903. Все пять прежних SHA-256 проверены и сохранены без изменения.
+export const sourceFileDigests: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.freeze({
   "../renderer": Object.freeze({
     "packages/devtools/package.json": "ce0f0b115331160bf6a90033ed2c5b372279eaa4a0a34ba4c52a4ed6e0340ea8",
     "packages/devtools/requirements.md": "efa40b165b3b8f483020618220abfdf85d39f3a0c5e0ec4fd3d67cb6d66fcea7",

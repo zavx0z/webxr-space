@@ -10,7 +10,7 @@ import {
   HTMLTextAreaElement,
   Node,
   Text,
-  type Document,
+  Document,
   type DocumentCompiledStyleSheetLease,
   type EventListener
 } from "@zavx0z/dom"
@@ -50,7 +50,7 @@ const pendingHookUpdates = new WeakSet<ComponentInstance<unknown>>()
 
 const MAX_RENDER_PHASE_UPDATES = 25
 
-export type RootContainer = Element | DocumentFragment
+export type RootContainer = Element | DocumentFragment | Document
 export type SetStateAction<Value> = Value | ((previous: Value) => Value)
 export type Dispatch<Action> = (action: Action) => void
 export type StateDispatch<Value> = Dispatch<SetStateAction<Value>>
@@ -74,7 +74,7 @@ export type RenderOptions = Readonly<{
 export interface ComponentRoot {
   batch<Result>(callback: () => Result): Result
   flush(): number
-  render(element: JsxSourceElement): void
+  render(element: JsxSourceElement | ComponentValue): void
   render<Props>(
     template: CompiledTemplate<Props>,
     props: Readonly<Props>,
@@ -246,6 +246,7 @@ type RuntimePropertyBinding = {
   definition: Extract<HostBinding, {kind: "property"}>
   kind: "property"
   value: unknown
+  reflected?: {initialValue: unknown}
 }
 
 type RuntimeStyleBinding = {
@@ -1849,10 +1850,10 @@ let renderPhaseUpdate = false
 let currentEffectPhase: EffectPhase | null = null
 
 export function createRoot(container: RootContainer, options: RootOptions = {}): ComponentRoot {
-  if (!(container instanceof Element) && !(container instanceof DocumentFragment)) {
-    throw new TypeError("createRoot expects an @zavx0z/dom Element or DocumentFragment")
+  if (!(container instanceof Element) && !(container instanceof DocumentFragment) && !(container instanceof Document)) {
+    throw new TypeError("createRoot expects an @zavx0z/dom Document, Element or DocumentFragment")
   }
-  const document = container.ownerDocument
+  const document = container instanceof Document ? container : container.ownerDocument
   if (!document) throw new TypeError("The component root container has no ownerDocument")
   if (roots.has(container)) throw new Error("This container already has a live component root")
   const scheduler = schedulerFor(document)
@@ -1874,11 +1875,17 @@ export function createRoot(container: RootContainer, options: RootOptions = {}):
     },
 
     render<Props>(
-      template: CompiledTemplate<Props> | JsxSourceElement,
+      template: CompiledTemplate<Props> | JsxSourceElement | ComponentValue<Props>,
       props?: Readonly<Props>,
       renderOptions: RenderOptions = {}
     ): void {
       assertRootActive(active)
+      const application = isComponentValue(template) ? template : null
+      if (application !== null) {
+        template = application.template
+        props = application.props
+        renderOptions = {key: application.key}
+      }
       if (!isCompiledTemplate(template)) {
         throw new TypeError(
           "JSX reached @zavx0z/component at runtime; enable @zavx0z/template/compiler",
@@ -1900,7 +1907,7 @@ export function createRoot(container: RootContainer, options: RootOptions = {}):
         props as Readonly<Props>,
         key,
         null,
-        noContextProvisions
+        application?.contexts ?? noContextProvisions
       )
       const previous = instance
       try {
@@ -2000,6 +2007,21 @@ export function useState<Value>(initialState: Value | (() => Value)): [Value, St
   }
   applyPendingState(slot)
   return [slot.value as Value, slot.dispatch as StateDispatch<Value>]
+}
+
+/** Returns the one semantic Document of the currently rendering component. */
+/**
+Возвращает Document выполняемого компонента без создания подписки или состояния.
+
+Template использует этот вызов для привязки глобального имени document при сборке.
+Callbacks захватывают результат во время render, поэтому поздний вызов, включая
+продолжение после await, не зависит от того, какой root выполнялся последним.
+
+@throws HookContractError При вызове вне выполнения компонента.
+*/
+export function useDocument(): Document {
+  if (currentInstance === null) throw new HookContractError("useDocument called outside component render")
+  return currentInstance.document
 }
 
 export function useReducer<State, Action, Initial = State>(
@@ -2614,7 +2636,19 @@ function preparePropertyPatch(
   binding: RuntimePropertyBinding,
   sourceValue: unknown
 ): PreparedPatch | null {
-  const operation = propertyOperation(binding.definition.target, binding.definition.name, sourceValue)
+  const {target, name} = binding.definition
+  // Non-HTML elements supplied through Document factories own their reflected
+  // properties. Invoke that setter without stringifying factories or inventing
+  // content-attribute spellings in Component.
+  const reflected = !(target instanceof HTMLElement) && hasPropertySetter(target, name)
+  if (reflected && binding.reflected === undefined) binding.reflected = {initialValue: Reflect.get(target, name)}
+  const operation: PropertyOperation = reflected
+    ? {
+        current: () => Reflect.get(target, name),
+        next: sourceValue == null ? binding.reflected!.initialValue : sourceValue,
+        write: value => { Reflect.set(target, name, value) },
+      }
+    : propertyOperation(target, name, sourceValue)
   const previous = operation.current()
   if (Object.is(previous, operation.next)) {
     binding.value = operation.next
@@ -2625,6 +2659,14 @@ function preparePropertyPatch(
     rollback: () => operation.write(previous),
     commit: () => { binding.value = operation.next }
   }
+}
+
+function hasPropertySetter(target: Element, name: string): boolean {
+  for (let prototype: object | null = target; prototype !== null; prototype = Object.getPrototypeOf(prototype)) {
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
+    if (descriptor !== undefined) return typeof descriptor.set === "function"
+  }
+  return false
 }
 
 function prepareStylePatch(binding: RuntimeStyleBinding, sourceValue: unknown): PreparedPatch | null {

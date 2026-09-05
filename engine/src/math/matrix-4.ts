@@ -166,14 +166,15 @@ export class Matrix4 {
 	}
 
 	/**
-	 * Создает матрицу вида (view matrix) для правосторонней системы координат.
+	 * Создает матрицу вида для правой системы с неизменной осью Z вверх.
 	 * @param eye Позиция камеры.
 	 * @param target Точка, на которую смотрит камера.
-	 * @param up Вектор, указывающий "вверх".
 	 */
-	public makeLookAt(eye: Vector3, target: Vector3, up: Vector3): this {
+	public makeLookAt(eye: Vector3, target: Vector3): this {
 		const z = new Vector3().subVectors(eye, target).normalize()
-		const x = new Vector3().crossVectors(up, z).normalize()
+		const x = new Vector3(-z.y, z.x, 0)
+		if (x.length() === 0) x.set(1, 0, 0)
+		else x.normalize()
 		const y = new Vector3().crossVectors(z, x)
 
 		return this.set(

@@ -3,6 +3,7 @@ import type {XRViewPointElement} from "./src/elements.ts"
 import type {SpaceRef} from "./src/jsx.ts"
 import "./src/jsx.ts"
 
+/** Положение, цель и near/far заданы в мм, fov — в радианах; мировая ось вверх всегда Z. */
 export type ViewPointProps = Readonly<{
   x?: number
   y?: number
@@ -10,9 +11,8 @@ export type ViewPointProps = Readonly<{
   targetX?: number
   targetY?: number
   targetZ?: number
-  upX?: number
-  upY?: number
-  upZ?: number
+  /** Разрешает orbit/pan/zoom в свободной области общего ввода; по умолчанию выключено. */
+  controls?: boolean
   fov?: number
   near?: number
   far?: number
@@ -28,9 +28,7 @@ export function ViewPoint(props: ViewPointProps): JsxSourceElement {
       targetX={props.targetX}
       targetY={props.targetY}
       targetZ={props.targetZ}
-      upX={props.upX}
-      upY={props.upY}
-      upZ={props.upZ}
+      controls={props.controls}
       fov={props.fov}
       near={props.near}
       far={props.far}

@@ -5,6 +5,7 @@ export {
   batch,
   createRoot,
   use,
+  useDocument,
   useActionState,
   useCallback,
   useContext,
@@ -45,6 +46,8 @@ export type {
 } from "./runtime.ts"
 export {
   component,
+  fixedChildren,
+  normalizeChildren,
   createContext,
   keyedComponents,
   memo,

@@ -1,9 +1,13 @@
 /**
- * Type-only value produced by authored JSX before `@zavx0z/template/compiler`
- * lowers it into a `CompiledTemplate`. It must never reach application runtime.
- * The literal property keeps independently resolved package copies structurally
- * compatible; runtime identity is enforced only after compilation.
- */
+Тип авторского JSX до компиляции в CompiledTemplate.
+
+В этом профиле свободный document внутри компонента или custom hook имеет
+стандартный DOM-тип. Компилятор захватывает Document конкретного ComponentRoot,
+не меняя native browser globals. Скомпилированные callbacks сохраняют эту ссылку.
+Сами JSX-объекты не должны доходить до runtime без компиляции.
+
+@packageDocumentation
+*/
 export type JsxSourceElement = Readonly<{
   readonly "@zavx0z/template/jsx-source-element": true
 }>

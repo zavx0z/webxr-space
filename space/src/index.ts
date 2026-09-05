@@ -24,7 +24,7 @@ export type {
   XRObjectProjectionFactory,
 } from "./elements.ts"
 export {createSpaceElementFactories} from "./factories.ts"
-export {readSpaceTree} from "./tree.ts"
+export {readSpaceTree, readDisplayProjection} from "./tree.ts"
 export type {
   SpaceDisplayProjection,
   SpaceHUDProjection,

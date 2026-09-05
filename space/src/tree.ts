@@ -14,6 +14,7 @@ export type SpaceDisplayProjection = Readonly<{
   viewport: Readonly<{width: number; height: number}>
   worldUnitsPerPixel: number
   transform: Readonly<{
+    quaternion: Readonly<{x: number; y: number; z: number; w: number}>
     position: Readonly<{x: number; y: number; z: number}>
     visible: boolean
   }>
@@ -56,25 +57,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
         throw new TypeError(`Duplicate Display id: ${element.id}`)
       }
       displayIds.add(element.id)
-      if (element.viewportWidth <= 0 || element.viewportHeight <= 0) {
-        throw new TypeError(`Display ${element.id} viewport must be positive`)
-      }
-      if (element.worldUnitsPerPixel <= 0) {
-        throw new TypeError(`Display ${element.id} worldUnitsPerPixel must be positive`)
-      }
-      return Object.freeze({
-        element,
-        id: element.id,
-        viewport: Object.freeze({
-          width: element.viewportWidth,
-          height: element.viewportHeight,
-        }),
-        worldUnitsPerPixel: element.worldUnitsPerPixel,
-        transform: Object.freeze({
-          position: Object.freeze({x: element.x, y: element.y, z: element.z}),
-          visible: element.visible,
-        }),
-      })
+      return readDisplayProjection(element)
     })
 
   const hudElements = space.children.filter(
@@ -114,4 +97,29 @@ const collectObjects = (root: XRSpaceElement): XRObjectElement[] => {
     if (child instanceof XRObjectElement) visit(child)
   }
   return objects
+}
+
+
+/** Читает только параметры одного Display, не обходя объекты Space. */
+export function readDisplayProjection(element: XRDisplayElement): SpaceDisplayProjection {
+  if (element.viewportWidth <= 0 || element.viewportHeight <= 0) {
+    throw new TypeError(`Display ${element.id} viewport must be positive`)
+  }
+  if (element.worldUnitsPerPixel <= 0) {
+    throw new TypeError(`Display ${element.id} worldUnitsPerPixel must be positive`)
+  }
+  return Object.freeze({
+    element,
+    id: element.id,
+    viewport: Object.freeze({
+      width: element.viewportWidth,
+      height: element.viewportHeight,
+    }),
+    worldUnitsPerPixel: element.worldUnitsPerPixel,
+    transform: Object.freeze({
+      quaternion: Object.freeze({x: element.quaternionX, y: element.quaternionY, z: element.quaternionZ, w: element.quaternionW}),
+      position: Object.freeze({x: element.x, y: element.y, z: element.z}),
+      visible: element.visible,
+    }),
+  })
 }

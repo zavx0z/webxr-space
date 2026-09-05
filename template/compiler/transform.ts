@@ -21,6 +21,8 @@ import {
   isArrowFunction,
   isBlock,
   isCallExpression,
+  isObjectLiteralExpression,
+  isPropertyAssignment,
   isClassDeclaration,
   isBinaryExpression,
   isConditionalExpression,
@@ -134,6 +136,7 @@ type ComponentExpressionContext = Readonly<{
 }>
 
 type RuntimeImportBindings = Readonly<{
+  attach: ReadonlySet<number>
   css: ReadonlySet<number>
   createRoot: ReadonlySet<number>
   hooks: ReadonlyMap<number, Readonly<{name: string; supported: boolean}>>
@@ -141,6 +144,7 @@ type RuntimeImportBindings = Readonly<{
 }>
 
 const supportedHooks = Object.freeze([
+  "useDocument",
   "useCallback",
   "useContext",
   "useDebugValue",
@@ -205,6 +209,7 @@ export type JsxTransformSymbols = Readonly<{
   childrenExpressionKinds: ReadonlyMap<Node, JsxChildrenExpressionKind>
   cssIntrinsicSymbols: ReadonlySet<number>
   dependencyPaths: ReadonlySet<string>
+  documentSymbols: ReadonlySet<number>
   importedComponents: ReadonlySet<number>
   importedCustomHooks: ReadonlySet<number>
   sourceIdentity: string
@@ -212,6 +217,7 @@ export type JsxTransformSymbols = Readonly<{
 }>
 
 export type JsxChildrenExpressionKind =
+  | "component-children"
   | "component"
   | "keyed-components"
   | "nullable-component"
@@ -259,6 +265,40 @@ export function transformJsxSourceFile(
       isFunctionDeclaration(statement) && statement.name !== undefined &&
       /^use[A-Z0-9]/.test(statement.name.text),
   )
+  const documentOwners = new Set([...componentDeclarations, ...customHookDeclarations].filter(declaration => {
+    let usesDocument = false
+    if (!declaration.body) return false
+    visit(declaration.body, node => {
+      if (isIdentifier(node) && symbols.documentSymbols.has(symbolId(symbols.byNode, node) ?? -1)) usesDocument = true
+      if (isBinaryExpression(node) && isAssignmentOperator(node.operatorToken.kind)) {
+        const assigned = skipParentheses(node.left)
+        if (isIdentifier(assigned) && symbols.documentSymbols.has(symbolId(symbols.byNode, assigned) ?? -1)) {
+          throw compileError(sourcePath, "application document cannot be reassigned")
+        }
+      }
+    })
+    for (const parameter of declaration.parameters) visit(parameter, node => {
+      if (isIdentifier(node) && symbols.documentSymbols.has(symbolId(symbols.byNode, node) ?? -1)) {
+        throw compileError(sourcePath, "application document must be read inside the component or hook body")
+      }
+    })
+    return usesDocument
+  }))
+  if (documentOwners.size > 0) {
+    edits.push({
+      start: importInsertionOffset(source),
+      end: importInsertionOffset(source),
+      text: `import {useDocument as ${helper}Document} from "@zavx0z/component"\n`,
+    })
+    for (const declaration of customHookDeclarations) {
+      if (!documentOwners.has(declaration)) continue
+      edits.push({
+        start: declaration.body!.getStart(sourceFile) + 1,
+        end: declaration.body!.getStart(sourceFile) + 1,
+        text: `\n  const document = ${helper}Document()\n`,
+      })
+    }
+  }
   const consumedCss = new Set<Node>()
   const consumedJsx = new Set<Node>()
   let needsCompiledRuntime = false
@@ -342,6 +382,7 @@ export function transformJsxSourceFile(
         cssTemplateSites,
         consumedCss,
         consumedJsx,
+        documentOwners.has(declaration),
       ),
     })
   }
@@ -364,7 +405,38 @@ export function transformJsxSourceFile(
     symbols.byNode,
   )
   visit(sourceFile, (node) => {
-    if (!isCallExpression(node) || !isPropertyAccessExpression(node.expression)) return
+    if (!isCallExpression(node)) return
+    if (isIdentifier(node.expression) && runtimeBindings.attach.has(symbolId(symbols.byNode, node.expression) ?? -1)) {
+      if (node.arguments.length !== 1) throw compileError(sourcePath, "attach expects one options object")
+      const options = skipParentheses(node.arguments[0]!)
+      if (!isObjectLiteralExpression(options)) return
+      for (const property of options.properties) {
+        if (!isPropertyAssignment(property) || property.name.getText(sourceFile).replaceAll('"', '').replaceAll("'", '') !== "app") continue
+        const argument = skipParentheses(property.initializer)
+        if (!isJsxElement(argument) && !isJsxSelfClosingElement(argument)) continue
+        const compiled = componentExpression(argument, {
+          arrayExpressions: symbols.arrayExpressions,
+          childrenExpressionKinds: symbols.childrenExpressionKinds,
+          components: componentSymbols,
+          consumedJsx,
+          consumedCss,
+          cssTagSymbols: runtimeBindings.css,
+          cssTemplates,
+          cssTemplateReferences,
+          cssTemplateSites,
+          helper,
+          propsSymbol: null,
+          sourceFile,
+          sourcePath,
+          stylePrimitiveKinds: symbols.stylePrimitiveKinds,
+          symbols: symbols.byNode,
+        })
+        needsCompiledRuntime = true
+        edits.push({start: argument.getStart(sourceFile), end: argument.getEnd(), text: compiled.expression})
+      }
+      return
+    }
+    if (!isPropertyAccessExpression(node.expression)) return
     if (node.expression.name.text !== "render" || node.arguments.length !== 1) return
     if (!isComponentRootExpression(
       node.expression.expression,
@@ -406,7 +478,7 @@ export function transformJsxSourceFile(
     if (consumedJsx.has(node)) return
     throw compileError(
       sourcePath,
-      "JSX is outside a supported final-return function component or exact createRoot render",
+      "JSX is outside a supported final-return function component, exact createRoot render or Browser attach app",
     )
   })
 
@@ -451,6 +523,8 @@ export function transformJsxSourceFile(
         `} from "@zavx0z/template/compiled"`,
         `import {`,
         `  component as ${helper}Component,`,
+        `  fixedChildren as ${helper}FixedChildren,`,
+        `  normalizeChildren as ${helper}Children,`,
         `  keyedComponents as ${helper}Keyed`,
         `} from "@zavx0z/component"`,
         "",
@@ -478,6 +552,7 @@ function compileComponent(
   cssTemplateSites: Map<number, Set<Node>>,
   consumedCss: Set<Node>,
   consumedJsx: Set<Node>,
+  ownsDocument: boolean,
 ): string {
   const name = declaration.name!.text
   const body = declaration.body
@@ -550,7 +625,7 @@ function compileComponent(
     `      bindings: [${context.bindings.join(", ")}]`,
     `    }`,
     `  },`,
-    `  render(${parameter}, ${helper}Values) {${prelude}`,
+    `  render(${parameter}, ${helper}Values) {${ownsDocument ? `\n    const document = ${helper}Document()\n` : ""}${prelude}`,
     ...context.writes.map((line) => `    ${line}`),
     `  }`,
     `})`,
@@ -989,6 +1064,9 @@ function compileChild(child: JsxChild, context: CompileContext): string[] {
   const expression = skipParentheses(child.expression)
   const childrenKind = context.childrenExpressionKinds.get(expression)
   if (isDirectPropsChildrenExpression(expression, context)) {
+    if (childrenKind === "component-children") {
+      return compileValueRange(expression, "conditional", context, false, true)
+    }
     if (childrenKind === "component") {
       return compileValueRange(expression, "child", context)
     }
@@ -1033,6 +1111,7 @@ function compileValueRange(
   kind: "child" | "conditional" | "keyed",
   context: CompileContext,
   normalizeNullish = false,
+  normalizeChildren = false,
 ): string[] {
   const start = nextNode(context)
   const end = nextNode(context)
@@ -1043,7 +1122,9 @@ function compileValueRange(
   else if (kind === "conditional") {
     context.bindings.push(`${context.helper}BindConditional(${start}, ${end})`)
   } else context.bindings.push(`${context.helper}BindKeyed(${start}, ${end})`)
-  const value = expression.getText(context.sourceFile)
+  const value = normalizeChildren
+    ? `${context.helper}Children(${expression.getText(context.sourceFile)})`
+    : expression.getText(context.sourceFile)
   context.writes.push(
     `${context.helper}Write(${context.helper}Values, ${slot}, ${normalizeNullish ? `(${value} ?? null)` : value})`,
   )
@@ -1250,15 +1331,9 @@ function componentChildrenValue(
       )
     }
     const compiled = componentExpression(child, context)
-    if (compiled.key === "null") {
-      throw compileError(
-        context.sourcePath,
-        "multiple component children require a non-null key on every component",
-      )
-    }
     values.push(compiled.expression)
   }
-  return `${context.helper}Keyed([${values.join(", ")}])`
+  return `${context.helper}FixedChildren([${values.join(", ")}])`
 }
 
 function componentChildValue(child: JsxChild, context: ComponentExpressionContext): string {
@@ -1283,6 +1358,7 @@ function componentChildValue(child: JsxChild, context: ComponentExpressionContex
   const keyed = keyedMapValueExpression(value, context)
   if (keyed !== null) return keyed
   const kind = context.childrenExpressionKinds.get(value)
+  if (kind === "component-children") return value.getText(context.sourceFile)
   if (isConditionalExpression(value)) {
     if (kind === "text") return value.getText(context.sourceFile)
     return conditionalComponentValueExpression(asConditional(value), context)
@@ -1387,11 +1463,30 @@ function runtimeImportBindings(
   sourcePath: string,
 ): RuntimeImportBindings {
   const css = new Set<number>(cssIntrinsicSymbols)
+  const attach = new Set<number>()
   const createRoot = new Set<number>()
   const hooks = new Map<number, Readonly<{name: string; supported: boolean}>>()
   const memo = new Set<number>()
   for (const statement of sourceFile.statements) {
     if (!isImportDeclaration(statement) || !isStringLiteral(statement.moduleSpecifier)) continue
+    if (statement.moduleSpecifier.text === "@zavx0z/browser") {
+      const named = statement.importClause?.namedBindings
+      if (named && isNamedImports(named)) {
+        for (const specifier of named.elements) {
+          const imported = specifier.propertyName?.text ?? specifier.name.text
+          if (imported !== "attach" && imported !== "useSpace" && imported !== "useFrame") continue
+          if (statement.importClause?.phaseModifier === SyntaxKind.TypeKeyword || specifier.isTypeOnly) {
+            throw compileError(sourcePath, `${imported} must be imported as a runtime value`)
+          }
+          const id = symbolId(symbols, specifier.name)
+          if (id !== null) {
+            if (imported === "attach") attach.add(id)
+            else hooks.set(id, Object.freeze({name: imported, supported: true}))
+          }
+        }
+      }
+      continue
+    }
     if (statement.moduleSpecifier.text === "@zavx0z/template") {
       const named = statement.importClause?.namedBindings
       if (named && !isNamedImports(named)) {
@@ -1433,7 +1528,7 @@ function runtimeImportBindings(
       }
     }
   }
-  return Object.freeze({css, createRoot, hooks, memo})
+  return Object.freeze({attach, css, createRoot, hooks, memo})
 }
 
 function validateHookCalls(

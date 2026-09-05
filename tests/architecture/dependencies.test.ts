@@ -34,6 +34,8 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
     "@zavx0z/devtools": ["@zavx0z/dom", "@zavx0z/renderer"],
     "@zavx0z/webgpu": ["@zavx0z/engine", "@zavx0z/renderer"],
     "@zavx0z/browser": [
+      "@zavx0z/component",
+      "@zavx0z/template",
       "@zavx0z/dom",
       "@zavx0z/engine",
       "@zavx0z/renderer",

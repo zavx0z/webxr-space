@@ -31,6 +31,7 @@ import {
   isNamedImports,
   isParenthesizedExpression,
   isReturnStatement,
+  isShorthandPropertyAssignment,
   isStringLiteral,
   isTaggedTemplateExpression,
   isTemplateExpression,
@@ -49,6 +50,14 @@ import type {JsxStylePrimitiveKind} from "./style.ts"
 const jsxSourceElementMarker = "@zavx0z/template/jsx-source-element"
 const cssCompilerIntrinsicMarker = "@zavx0z/template/css-compiler-intrinsic"
 
+/**
+Разрешает идентификаторы компонентов, hooks и выражений JSX.
+
+Бренд CSS проверяется только у тегов шаблонных строк. Обычные поля данных,
+включая результаты generic selectors, не требуют раскрытия их типов ради CSS.
+Для document выбирается только глобальное объявление из lib.dom; локальные
+переменные, параметры и одноимённые свойства не становятся Document приложения.
+*/
 export async function buildJsxTransformSymbols(
   sourceFile: SourceFile,
   project: Project,
@@ -62,7 +71,10 @@ export async function buildJsxTransformSymbols(
   const byNode = new Map<Node, number>()
   const objects = new Map<Node, TypeScriptSymbol>()
   for (let index = 0; index < identifiers.length; index += 1) {
-    const symbol = resolvedSymbols[index]
+    const identifier = identifiers[index]!
+    const symbol = identifier.text === "document" && isShorthandPropertyAssignment(identifier.parent)
+      ? await project.checker.getShorthandAssignmentValueSymbol(identifier.parent)
+      : resolvedSymbols[index]
     if (!symbol) continue
     byNode.set(identifiers[index]!, symbol.id)
     objects.set(identifiers[index]!, symbol)
@@ -70,6 +82,21 @@ export async function buildJsxTransformSymbols(
 
   const importedComponents = new Set<number>()
   const importedCustomHooks = new Set<number>()
+  const documentSymbols = new Set<number>()
+  for (const symbol of new Set(identifiers
+    .filter(identifier => identifier.text === "document")
+    .map(identifier => objects.get(identifier))
+    .filter((symbol): symbol is TypeScriptSymbol => symbol !== undefined))) {
+    for (const handle of symbol.declarations) {
+      if (basename(handle.path) !== "lib.dom.d.ts") continue
+      if ((await project.program.getSourceFileMetadata(handle.path))?.isDefaultLibrary !== true) continue
+      const declaration = await handle.resolve(project)
+      if (declaration && isVariableDeclaration(declaration) &&
+        isIdentifier(declaration.name) && declaration.name.text === "document") {
+        documentSymbols.add(symbol.id)
+      }
+    }
+  }
   const dependencyPaths = new Set<string>()
   for (const path of await governedSemanticDependencyPaths(
     sourceFile,
@@ -77,7 +104,13 @@ export async function buildJsxTransformSymbols(
     governedFiles,
   )) dependencyPaths.add(path)
   const cssIntrinsicSymbols = new Set<number>()
-  for (const symbol of new Set(objects.values())) {
+  const cssCandidates = new Set<TypeScriptSymbol>()
+  visit(sourceFile, node => {
+    if (!isTaggedTemplateExpression(node) || !isIdentifier(node.tag)) return
+    const symbol = objects.get(node.tag)
+    if (symbol) cssCandidates.add(symbol)
+  })
+  for (const symbol of cssCandidates) {
     if (await isBrandedCssCompilerIntrinsic(symbol, project)) {
       cssIntrinsicSymbols.add(symbol.id)
     }
@@ -156,6 +189,8 @@ export async function buildJsxTransformSymbols(
     }
     if (!clause?.namedBindings || !isNamedImports(clause.namedBindings)) continue
     for (const specifier of clause.namedBindings.elements) {
+      if (moduleName === "@zavx0z/browser" &&
+        ["useSpace", "useFrame"].includes(specifier.propertyName?.text ?? specifier.name.text)) continue
       const componentCandidate = /^[A-Z]/.test(specifier.name.text)
       const hookCandidate = /^use[A-Z0-9]/.test(specifier.name.text)
       if (!componentCandidate && !hookCandidate) continue
@@ -222,6 +257,7 @@ export async function buildJsxTransformSymbols(
     childrenExpressionKinds,
     cssIntrinsicSymbols,
     dependencyPaths,
+    documentSymbols,
     importedComponents,
     importedCustomHooks,
     sourceIdentity: jsxSourceIdentity(sourceFile.fileName, governedFiles),
@@ -317,6 +353,7 @@ async function classifyChildrenExpressionType(
     return "unsupported"
   }
   const activeKinds = Number(component) + Number(keyed) + Number(text)
+  if (!text && keyed) return "component-children"
   if (activeKinds !== 1) return "unsupported"
   if (keyed) return nullable ? "unsupported" : "keyed-components"
   if (component) return nullable ? "nullable-component" : "component"

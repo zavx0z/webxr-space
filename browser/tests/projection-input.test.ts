@@ -31,8 +31,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
     releasePointerCapture(id: number) { captured.delete(id) },
     hasPointerCapture(id: number) { return captured.has(id) },
   } as unknown as HTMLCanvasElement
-  const camera = new ViewPoint({position: {x: 0, y: 0, z: 100}, fov: Math.PI / 2, far: 2000})
-  camera.getUp().set(0, 1, 0)
+  const camera = new ViewPoint({position: {x: 0, y: -100, z: 0}, fov: Math.PI / 2, far: 2000})
   camera.update()
   const cameraInputs: string[] = []
   camera.pan = () => { cameraInputs.push("pan") }
@@ -93,7 +92,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
     if (kind === "overlay") runtime.addOverlay({id, root: node})
     else runtime.addPlane({
       id, root: node, viewport: {width: 200, height: 200}, worldUnitsPerPixel: 1,
-      transform: {position: {x: 0, y: 0, z}},
+      transform: {position: {x: 0, y: -z, z: 0}, quaternion: {x: Math.SQRT1_2, y: 0, z: 0, w: Math.SQRT1_2}},
     })
     return node
   }
@@ -326,4 +325,24 @@ test("[BRW-002] contextmenu и dblclick выбирают тот же элеме�
   expect(events).toEqual([
     ["contextmenu", lower], ["dblclick", lower], ["contextmenu", upper], ["dblclick", upper],
   ])
+})
+
+test("[BRW-ATTACH-COORDINATES] Z-up Display преобразует CSS px в мм и обратно в общий client input", async () => {
+  const f = await fixture()
+  const display = f.projection("plane", "display")
+  const button = f.element("width: 200px; height: 200px", display, "button")
+  const events = f.observe(button)
+  f.runtime.updatePlane("display", {worldUnitsPerPixel: 0.5})
+  f.runtime.render()
+  const plane = f.runtime.getPlane("display")!.plane
+  const top = plane.documentPointToWorld({x: 100, y: 0})
+  expect(top.x).toBeCloseTo(0)
+  expect(top.y).toBeCloseTo(0)
+  expect(top.z).toBeCloseTo(50)
+  const client = f.runtime.projectPoint("display", {x: 100, y: 100})!
+  expect(client.x).toBeCloseTo(100)
+  expect(client.y).toBeCloseTo(100)
+  f.runtime.dispatchPointer("pointerdown", {clientX: client.x, clientY: client.y})
+  f.runtime.dispatchPointer("pointerup", {clientX: client.x, clientY: client.y})
+  expect(events).toContain("click")
 })

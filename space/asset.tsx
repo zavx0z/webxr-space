@@ -20,7 +20,7 @@ export type AssetProps = Readonly<{
   scaleZ?: number
   visible?: boolean
   name?: string
-  children?: JsxSourceElement | null | undefined
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
   ref?: SpaceRef<XRAssetElement> | null
 }>
 

@@ -16,6 +16,7 @@ import {
   MeshLambertMaterial,
   Material,
   Object3D,
+  Quaternion,
   PlaneGeometry,
   SphereGeometry,
   Text as EngineText,
@@ -31,6 +32,11 @@ import {
   type Document,
   type Element,
 } from "@zavx0z/dom"
+import {createRoot, provideContext, type ComponentRoot, type ComponentValue} from "@zavx0z/component"
+import {createRootEnvironment, rootContext, type RootEnvironment, type RootSize, type FrameLoop} from "./root-context.ts"
+import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
+import {loadDocumentDefaultFont} from "@zavx0z/engine/default-font"
+import {claimBrowserPresentationHost, type PresentationHostClaim} from "./presentation-host.ts"
 import type {
   PointerInput,
   RenderFrame,
@@ -39,6 +45,7 @@ import type {
 import {
   createSpaceElementFactories,
   readSpaceTree,
+  readDisplayProjection,
   XRAnimationElement,
   XRAssetElement,
   XRDisplayElement,
@@ -68,31 +75,32 @@ import type {
   DocumentSpaceViewPointSnapshot,
 } from "./space-runtime.ts"
 
-export type CreateExperienceOptions = Readonly<{
+export type AttachOptions = Readonly<{
   canvas: HTMLCanvasElement
-  font: TrueTypeFont
+  app: JsxSourceElement | ComponentValue
+  font?: TrueTypeFont
   fontFaces?: readonly RendererFontFace[] | undefined
   fontSources?: readonly BrowserFontFaceSource[] | undefined
-  styleSheets?: readonly string[]
-  linkedAuthorStyleSheets?: readonly ExperienceLinkedAuthorStyleSheet[]
-  onLinkedAuthorStyleSheetError?: ExperienceLinkedAuthorStyleSheetErrorHandler
+  stylesheets?: readonly (string | RootLinkedAuthorStyleSheet)[]
+  onStyleSheetError?: RootLinkedAuthorStyleSheetErrorHandler
+  frameloop?: FrameLoop
   pixelRatio?: number
-  cameraGestures?: boolean
 }>
 
-export type ExperienceLinkedAuthorStyleSheet = Readonly<{
+export type RootLinkedAuthorStyleSheet = Readonly<{
   id: string
   link: HTMLLinkElement
 }>
 
-export type ExperienceLinkedAuthorStyleSheetErrorHandler = (
+export type RootLinkedAuthorStyleSheetErrorHandler = (
   error: Error,
-  source: ExperienceLinkedAuthorStyleSheet | null,
+  source: RootLinkedAuthorStyleSheet | null,
 ) => void
 
-export type ExperienceProjectionKind = "display" | "hud" | "space"
+export type RootProjectionKind = "display" | "hud" | "space"
 
-export type ExperienceProjectionPointerInput = Readonly<{
+/** x/y заданы в CSS px относительно browser window; это не локальные координаты Display. */
+export type RootPointerInput = Readonly<{
   x: number
   y: number
   pointerId?: number
@@ -104,7 +112,7 @@ export type ExperienceProjectionPointerInput = Readonly<{
   timeStamp?: number
 }>
 
-export type ExperienceProjectionWheelInput = Readonly<{
+export type RootWheelInput = Readonly<{
   x: number
   y: number
   deltaX: number
@@ -118,7 +126,7 @@ export type ExperienceProjectionWheelInput = Readonly<{
   timeStamp?: number
 }>
 
-export type ExperienceKeyInput = Readonly<{
+export type RootKeyInput = Readonly<{
   type: "keydown" | "keyup"
   key: string
   code?: string
@@ -131,18 +139,16 @@ export type ExperienceKeyInput = Readonly<{
   metaKey?: boolean
 }>
 
-export type ExperienceDocumentProjection = Readonly<{
+/** Читает существующую проекцию того же Document, не создавая Renderer или отдельный ввод. */
+export type RootDocumentProjection = Readonly<{
   kind: "display" | "hud"
   owner: XRDisplayElement | XRHUDElement
   readFrame(): RenderFrame | null
   subscribeFrames(listener: (frame: RenderFrame) => void): () => void
-  pointerDown(input: ExperienceProjectionPointerInput): Element | null
-  pointerMove(input: ExperienceProjectionPointerInput): Element | null
-  pointerUp(input: ExperienceProjectionPointerInput): Element | null
-  wheel(input: ExperienceProjectionWheelInput): Element | null
+  projectPoint(point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
 }>
 
-export type ExperienceSpaceProjection = Readonly<{
+export type RootSpaceProjection = Readonly<{
   kind: "space"
   owner: XRSpaceElement
   orbit(deltaX: number, deltaY: number): void
@@ -150,45 +156,62 @@ export type ExperienceSpaceProjection = Readonly<{
   zoom(delta: number, anchor?: Readonly<{clientX: number; clientY: number}>): void
 }>
 
-export type ExperienceProjection = ExperienceDocumentProjection | ExperienceSpaceProjection
+export type RootProjection = RootDocumentProjection | RootSpaceProjection
 
-export type Experience = Readonly<{
+export type RootInput = Readonly<{
+  pointerDown(input: RootPointerInput): void
+  pointerMove(input: RootPointerInput): void
+  pointerUp(input: RootPointerInput): void
+  pointerCancel(input: RootPointerInput): void
+  wheel(input: RootWheelInput): void
+}>
+
+/**
+Управление готовым подключением после attach.
+
+Document, Space и ViewPoint — ссылки на уже смонтированное авторское дерево.
+invalidate запрашивает кадр, render/resize нужны для явного управления и диагностики.
+unmount освобождает ресурсы и подписки; повторный вызов безопасен.
+*/
+export type Root = Readonly<{
+  input: RootInput
   canvas: HTMLCanvasElement
   document: Document
   space: XRSpaceElement
   viewPoint: XRViewPointElement
   presentedFrame: number
   disposed: boolean
-  getProjection(owner: XRSpaceElement): ExperienceSpaceProjection
-  getProjection(owner: XRDisplayElement | XRHUDElement): ExperienceDocumentProjection
+  getProjection(owner: XRSpaceElement): RootSpaceProjection
+  getProjection(owner: XRDisplayElement | XRHUDElement): RootDocumentProjection
   subscribePresented(listener: (sequence: number) => void): () => void
   dispatchKey(
     owner: XRDisplayElement | XRHUDElement,
     target: SemanticHTMLElement,
-    input: ExperienceKeyInput,
+    input: RootKeyInput,
   ): boolean
   resetViewPoint(): void
   render(): void
-  requestFrame(): void
+  invalidate(): void
   resize(): void
   captureLastPresentedFramePng(): Promise<Blob | null>
-  dispose(): void
+  unmount(): void
 }>
 
-type ExperienceRuntimeFactory = (
+type RootRuntimeFactory = (
   options: CreateDocumentSpaceRuntimeOptions,
+  claim: PresentationHostClaim,
 ) => Promise<DocumentSpaceRuntime>
 
-type ExperienceSeams = Readonly<{
+type RootSeams = Readonly<{
   createLinkedAuthorStyleSheetHost(options: Readonly<{
     canvas: HTMLCanvasElement
     document: Document
-    sources: readonly ExperienceLinkedAuthorStyleSheet[]
-    onError?: ExperienceLinkedAuthorStyleSheetErrorHandler
+    sources: readonly RootLinkedAuthorStyleSheet[]
+    onError?: RootLinkedAuthorStyleSheetErrorHandler
   }>): BrowserLinkedAuthorStyleSheetHost
 }>
 
-const defaultExperienceSeams: ExperienceSeams = Object.freeze({
+const defaultRootSeams: RootSeams = Object.freeze({
   createLinkedAuthorStyleSheetHost: createBrowserLinkedAuthorStyleSheetHost,
 })
 
@@ -226,48 +249,101 @@ type AnimationProjection = {
   playing: boolean
 }
 
-/** Creates the only browser presentation host for one application Experience. */
-export async function createExperience(
-  options: CreateExperienceOptions,
-): Promise<Experience> {
-  return createExperienceWithRuntimeFactory(options, async runtimeOptions => {
+/**
+Подключает авторский App к Canvas и возвращает управление готовым приложением.
+
+До монтирования создаёт контекст размера и общих кадров. Затем проверяет единственные
+Space и ViewPoint, загружает объявленные стили и шрифты и представляет первый кадр.
+Строки `stylesheets` — URL: Browser создаёт настоящие native links и удаляет их
+при `unmount`. Переданные готовые links заимствуются и не удаляются.
+Мировая система всегда правая Z-up, пространственные расстояния заданы в мм.
+
+@returns Root после первого представленного кадра. `unmount()` идемпотентен и
+освобождает компоненты, подписки, GPU runtime и право повторно подключить Canvas.
+@throws Error При занятом Canvas, неверном App, ошибке ресурсов или первого кадра.
+Созданные подключением ресурсы освобождаются и при ошибке.
+@example
+```tsx
+const root = await attach({canvas, app: <App />, stylesheets: [themeUrl]})
+// Когда приложение больше не нужно:
+root.unmount()
+```
+*/
+export async function attach(
+  options: AttachOptions,
+): Promise<Root> {
+  return attachWithRuntimeFactory(options, async (runtimeOptions, claim) => {
     const {createDocumentSpaceRuntime} = await import("./space-runtime.ts")
-    return createDocumentSpaceRuntime(runtimeOptions)
+    return createDocumentSpaceRuntime(runtimeOptions, claim)
   })
 }
 
-/** Internal deterministic seam used by package-owned lifecycle tests. */
-export async function createExperienceWithRuntimeFactory(
-  options: CreateExperienceOptions,
-  createRuntime: ExperienceRuntimeFactory,
-  seams: ExperienceSeams = defaultExperienceSeams,
-): Promise<Experience> {
+/** Подмена GPU runtime для тестов владельца; из публичного Browser API не экспортируется. */
+export async function attachWithRuntimeFactory(
+  options: AttachOptions,
+  createRuntime: RootRuntimeFactory,
+  seams: RootSeams = defaultRootSeams,
+): Promise<Root> {
   validateOptions(options, createRuntime, seams)
+  const size = readRootSize(options)
+  const claim = claimBrowserPresentationHost(options.canvas)
   const document = createDocument({
     elementFactories: createSpaceElementFactories(),
   })
-  const space = document.createElement("xr-space") as XRSpaceElement
-  const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
-  space.append(viewPoint)
-  document.append(space)
+  const environment = createRootEnvironment(document, size, options.frameloop ?? "demand")
+  const appRoot = createRoot(document)
+  try {
+    appRoot.render(provideContext(rootContext, environment, options.app as ComponentValue))
+    appRoot.flush()
+    readSpaceTree(document)
+    const font = options.font ?? await loadDocumentDefaultFont(options.canvas.ownerDocument)
+    return await createAttachedRoot({...options, font}, document, appRoot, environment, claim, createRuntime, seams)
+  } catch (error) {
+    try { appRoot.unmount() } finally { environment.dispose()
+      claim.release() }
+    throw error
+  }
+}
+
+const createAttachedRoot = async (
+  options: AttachOptions & {font: TrueTypeFont},
+  document: Document,
+  appRoot: ComponentRoot,
+  environment: RootEnvironment,
+  claim: PresentationHostClaim,
+  createRuntime: RootRuntimeFactory,
+  seams: RootSeams,
+): Promise<Root> => {
+  const {space, viewPoint} = readSpaceTree(document)
   const initialViewPoint = semanticViewPointSnapshot(viewPoint)
-  const linkedSources = Object.freeze([...(options.linkedAuthorStyleSheets ?? [])])
+  const ownedLinks: HTMLLinkElement[] = []
+  let linkedSources: readonly RootLinkedAuthorStyleSheet[] = []
   let linkedAuthorStyleSheetHost: BrowserLinkedAuthorStyleSheetHost | null = null
   let runtime: DocumentSpaceRuntime
+  let synchronizeCamera = () => {}
   try {
+    linkedSources = (options.stylesheets ?? []).map(source => {
+      if (typeof source !== "string") return source
+      const link = options.canvas.ownerDocument.createElement("link")
+      link.rel = "stylesheet"
+      link.href = source
+      ownedLinks.push(link)
+      options.canvas.ownerDocument.head.append(link)
+      return Object.freeze({id: link.href, link})
+    })
     if (linkedSources.length > 0) {
       linkedAuthorStyleSheetHost = seams.createLinkedAuthorStyleSheetHost({
         canvas: options.canvas,
         document,
         sources: linkedSources,
-        ...(options.onLinkedAuthorStyleSheetError === undefined
+        ...(options.onStyleSheetError === undefined
           ? {}
-          : {onError: options.onLinkedAuthorStyleSheetError}),
+          : {onError: options.onStyleSheetError}),
       })
       await linkedAuthorStyleSheetHost.ready
     }
     if (options.fontFaces !== undefined && options.fontSources !== undefined) {
-      throw new TypeError("Experience accepts either fontFaces or fontSources")
+      throw new TypeError("Root accepts either fontFaces or fontSources")
     }
     const fontFaces = options.fontFaces ?? (options.fontSources === undefined
       ? undefined
@@ -275,14 +351,19 @@ export async function createExperienceWithRuntimeFactory(
     runtime = await createRuntime({
       canvas: options.canvas,
       document,
-      styleSheets: Object.freeze([...(options.styleSheets ?? [])]),
+      styleSheets: Object.freeze([]),
+      onViewportChange(size) {
+        synchronizeCamera()
+        environment.resize(size)
+      },
       font: options.font,
       ...(fontFaces === undefined ? {} : {fontFaces}),
       ...(options.pixelRatio === undefined ? {} : {pixelRatio: options.pixelRatio}),
-      ...(options.cameraGestures === undefined ? {} : {cameraGestures: options.cameraGestures}),
-    })
+
+    }, claim)
   } catch (error) {
     linkedAuthorStyleSheetHost?.dispose()
+    for (const link of ownedLinks) link.remove()
     throw error
   }
 
@@ -295,74 +376,146 @@ export async function createExperienceWithRuntimeFactory(
   >()
   const projectionHandles = new Map<
     XRDisplayElement | XRHUDElement,
-    ExperienceDocumentProjection
+    RootDocumentProjection
   >()
   const presentedListeners = new Set<(sequence: number) => void>()
   let presentedFrame = runtime.presentedFrames
   let viewPointSignature: string | null = null
-  let lastAnimationTime: number | null = null
   let writingPresentedViewPoint = false
   let disposed = false
+  let inFrame = false
+  let synchronizing = false
+  let tree = readSpaceTree(document)
+  let structureDirty = true
+  let cameraDirty = true
+  let displayDirty = true
+  let hudDirty = true
+  let backgroundDirty = true
+  let animationDirty = true
+  const dirtyObjects = new Set<XRObjectElement>()
+  const guardedObjects = new Map<Object3D, Readonly<{children: readonly Object3D[]; tag: string}>>()
+
+  synchronizeCamera = () => {
+    if (cameraDirty || disposed) return
+    const snapshot = runtime.snapshotViewPoint()
+    const signature = viewPointSnapshotSignature(snapshot)
+    if (signature === viewPointSignature) return
+    viewPointSignature = signature
+    writingPresentedViewPoint = true
+    try {
+      document.transaction(() => writeViewPointSnapshot(tree, snapshot))
+    } finally {
+      writingPresentedViewPoint = false
+    }
+  }
 
   const synchronize = (): void => {
     assertActive(disposed)
-    if (document.documentElement === null) return
-    const tree = readSpaceTree(document)
-    runtime.space.background = new Color(tree.space.background)
-    synchronizeViewPoint(tree, runtime, value => {
-      viewPointSignature = value
-    }, viewPointSignature)
-    synchronizeDisplays(tree, runtime)
-    synchronizeHud(tree, runtime)
-    synchronizeProjectionBindings(
-      tree,
-      runtime,
-      projectionBindings,
-      projectionListeners,
-    )
-    synchronizeObjects(tree, runtime, objects, options.font)
-    synchronizeAnimations(tree, runtime, objects, animations)
+    if (synchronizing || document.documentElement === null) return
+    synchronizing = true
+    try {
+      const structural = structureDirty
+      if (structural) {
+        tree = readSpaceTree(document)
+        structureDirty = false
+        cameraDirty = displayDirty = hudDirty = backgroundDirty = animationDirty = true
+      }
+      if (backgroundDirty) {
+        runtime.space.background = new Color(tree.space.background)
+        backgroundDirty = false
+      }
+      if (cameraDirty) {
+        synchronizeViewPoint(tree, runtime, value => { viewPointSignature = value }, viewPointSignature)
+        runtime.setCameraGesturesEnabled(tree.viewPoint.controls)
+        cameraDirty = false
+      }
+      const projectionsDirty = displayDirty || hudDirty
+      if (displayDirty) {
+        if (!structural) tree = {...tree, displays: tree.displays.map(({element}) => readDisplayProjection(element))}
+        synchronizeDisplays(tree, runtime)
+        displayDirty = false
+      }
+      if (hudDirty) {
+        if (tree.hud !== null) tree = {...tree, hud: {...tree.hud, distance: tree.hud.element.distance}}
+        synchronizeHud(tree, runtime)
+        hudDirty = false
+      }
+      if (projectionsDirty) synchronizeProjectionBindings(tree, runtime, projectionBindings, projectionListeners)
+      if (structural || dirtyObjects.size > 0) {
+        synchronizeObjects(tree, runtime, objects, options.font, guardedObjects, structural ? undefined : dirtyObjects)
+        dirtyObjects.clear()
+      }
+      if (animationDirty) {
+        synchronizeAnimations(tree, runtime, objects, animations)
+        animationDirty = false
+      }
+    } finally {
+      synchronizing = false
+    }
   }
 
-  const unsubscribeBeforeRender = runtime.subscribeBeforeRender(synchronize)
+  const unsubscribeBeforeRender = runtime.subscribeBeforeRender(() => {
+    inFrame = true
+    try {
+      synchronize()
+      synchronizeCamera()
+      const delta = environment.frame(space, viewPoint, typeof performance === "undefined" ? Date.now() : performance.now())
+      synchronize()
+      for (const animation of animations.values()) {
+        if (animation.playing) animation.mixer.update(delta)
+      }
+      for (const [object, {children, tag}] of guardedObjects) {
+        if (object.children.length !== children.length || object.children.some((child, index) => child !== children[index])) {
+          object.parent?.remove(object)
+          throw new Error(`${tag} projection acquired an opaque Engine child after validation`)
+        }
+      }
+    } finally {
+      inFrame = false
+    }
+  })
 
-  const unsubscribeMutations = document.subscribeMutations(() => {
-    if (disposed) return
-    synchronize()
-    if (!writingPresentedViewPoint) runtime.requestRender()
+  const unsubscribeMutations = document.subscribeMutations(batch => {
+    if (disposed || writingPresentedViewPoint) return
+    for (const record of batch.records) {
+      const target = record.target
+      if (target !== document && !space.contains(target)) continue
+      if (record.type === "childList") {
+        if (target === document || target instanceof XRSpaceElement || target instanceof XRObjectElement) structureDirty = true
+        continue
+      }
+      if (record.type !== "attributes") continue
+      if (target instanceof XRSpaceElement) backgroundDirty = true
+      else if (target instanceof XRViewPointElement) cameraDirty = true
+      else if (target instanceof XRDisplayElement) {
+        displayDirty = true
+        if (record.attributeName === "id") structureDirty = true
+      } else if (target instanceof XRHUDElement) {
+        hudDirty = true
+        if (record.attributeName === "id") structureDirty = true
+      } else if (target instanceof XRObjectElement) {
+        dirtyObjects.add(target)
+        if (record.attributeName === "factory-revision") animationDirty = true
+      } else if (target instanceof XRAnimationElement) animationDirty = true
+      else if (target instanceof XRGeometryElement || target instanceof XRMaterialElement) {
+        if (target.parentElement instanceof XRObjectElement) dirtyObjects.add(target.parentElement)
+        animationDirty = true
+      }
+    }
+    if (!inFrame) {
+      synchronize()
+      runtime.requestRender()
+    }
   })
 
   const unsubscribePresented = runtime.subscribePresented(sequence => {
     if (disposed || document.documentElement === null) return
     presentedFrame = sequence
-    for (const listener of [...presentedListeners]) listener(sequence)
-    const tree = readSpaceTree(document)
-    const snapshot = runtime.snapshotViewPoint()
-    const signature = viewPointSnapshotSignature(snapshot)
-    if (signature !== viewPointSignature) {
-      viewPointSignature = signature
-      writingPresentedViewPoint = true
-      try {
-        document.transaction(() => writeViewPointSnapshot(tree, snapshot))
-      } finally {
-        writingPresentedViewPoint = false
-      }
-    }
-
-    const now = typeof performance === "undefined" ? Date.now() : performance.now()
-    const deltaTime = lastAnimationTime === null
-      ? 0
-      : Math.max(0, (now - lastAnimationTime) / 1000)
-    lastAnimationTime = now
-    let playing = false
-    for (const animation of animations.values()) {
-      if (!animation.playing) continue
-      animation.mixer.update(deltaTime)
-      playing = true
-    }
-    if (playing) runtime.requestRender()
-    else lastAnimationTime = null
+    for (const listener of presentedListeners) listener(sequence)
+    if (environment.read().frameloop === "always" || environment.pendingFrame() ||
+      [...animations.values()].some(animation => animation.playing)) runtime.requestRender()
   })
+  environment.connect(runtime.requestRender)
 
   const requireDocumentProjectionRuntime = (
     owner: XRDisplayElement | XRHUDElement,
@@ -373,14 +526,14 @@ export async function createExperienceWithRuntimeFactory(
     }
     const binding = projectionBindings.get(owner)
     if (binding === undefined || binding.runtime.root !== owner) {
-      throw new Error("Projection owner is not active in this Experience")
+      throw new Error("Projection owner is not active in this Root")
     }
     return binding.runtime
   }
 
   const createProjectionHandle = (
     owner: XRDisplayElement | XRHUDElement,
-  ): ExperienceDocumentProjection => {
+  ): RootDocumentProjection => {
     const kind = owner instanceof XRDisplayElement ? "display" : "hud"
     return Object.freeze({
       kind,
@@ -399,39 +552,15 @@ export async function createExperienceWithRuntimeFactory(
         listeners.add(listener)
         return () => listeners?.delete(listener)
       },
-      pointerDown(input: ExperienceProjectionPointerInput) {
-        const projectionRuntime = requireDocumentProjectionRuntime(owner)
-        const target = projectionRuntime.pointerDown(
-          projectionPointerInput(input, projectionRuntime.viewport),
-        )
-        if (target !== null) {
-          runtime.nativeInputHost.setActiveDocument(document, owner.id)
-          runtime.nativeInputHost.synchronize()
-        }
-        return target
-      },
-      pointerMove(input: ExperienceProjectionPointerInput) {
-        const projectionRuntime = requireDocumentProjectionRuntime(owner)
-        return projectionRuntime.pointerMove(
-          projectionPointerInput(input, projectionRuntime.viewport),
-        )
-      },
-      pointerUp(input: ExperienceProjectionPointerInput) {
-        const projectionRuntime = requireDocumentProjectionRuntime(owner)
-        return projectionRuntime.pointerUp(
-          projectionPointerInput(input, projectionRuntime.viewport),
-        )
-      },
-      wheel(input: ExperienceProjectionWheelInput) {
-        const projectionRuntime = requireDocumentProjectionRuntime(owner)
-        return projectionRuntime.wheel(
-          projectionWheelInput(input, projectionRuntime.viewport),
-        )
+      projectPoint(point: Readonly<{x: number; y: number}>) {
+        requireDocumentProjectionRuntime(owner)
+        validatePoint(point)
+        return runtime.projectPoint(owner.id, point)
       },
     })
   }
 
-  const spaceProjection: ExperienceSpaceProjection = Object.freeze({
+  const spaceProjection: RootSpaceProjection = Object.freeze({
     kind: "space",
     owner: space,
     orbit(deltaX, deltaY) {
@@ -451,15 +580,15 @@ export async function createExperienceWithRuntimeFactory(
     },
   })
 
-  function getProjection(owner: XRSpaceElement): ExperienceSpaceProjection
+  function getProjection(owner: XRSpaceElement): RootSpaceProjection
   function getProjection(
     owner: XRDisplayElement | XRHUDElement,
-  ): ExperienceDocumentProjection
+  ): RootDocumentProjection
   function getProjection(
     owner: XRSpaceElement | XRDisplayElement | XRHUDElement,
-  ): ExperienceProjection {
+  ): RootProjection {
     if (owner instanceof XRSpaceElement) {
-      if (owner !== space) throw new Error("Space projection belongs to another Experience")
+      if (owner !== space) throw new Error("Space projection belongs to another Root")
       return spaceProjection
     }
     requireDocumentProjectionRuntime(owner)
@@ -471,10 +600,14 @@ export async function createExperienceWithRuntimeFactory(
     return handle
   }
 
-  synchronize()
-  runtime.requestRender()
-
-  const experience: Experience = Object.freeze({
+  const experience: Root = Object.freeze({
+    input: Object.freeze({
+      pointerDown: (input: RootPointerInput) => runtime.dispatchPointer("pointerdown", clientPointerInput({...input, buttons: input.buttons ?? 1})),
+      pointerMove: (input: RootPointerInput) => runtime.dispatchPointer("pointermove", clientPointerInput(input)),
+      pointerUp: (input: RootPointerInput) => runtime.dispatchPointer("pointerup", clientPointerInput(input)),
+      pointerCancel: (input: RootPointerInput) => runtime.dispatchPointer("pointercancel", clientPointerInput(input)),
+      wheel: (input: RootWheelInput) => runtime.dispatchWheel(clientWheelInput(input)),
+    }),
     canvas: options.canvas,
     document,
     space,
@@ -505,7 +638,7 @@ export async function createExperienceWithRuntimeFactory(
         runtime.nativeInputHost.ownerId !== owner.id ||
         runtime.nativeInputHost.inputTarget !== target
       ) {
-        throw new Error("Semantic key target does not own the Experience native proxy")
+        throw new Error("Semantic key target does not own the Root native proxy")
       }
       return runtime.nativeInputHost.dispatchKey(target, input)
     },
@@ -516,9 +649,7 @@ export async function createExperienceWithRuntimeFactory(
     render() {
       runtime.render()
     },
-    requestFrame() {
-      runtime.requestRender()
-    },
+    invalidate: environment.read().invalidate,
     resize() {
       assertActive(disposed)
       runtime.resize()
@@ -527,7 +658,7 @@ export async function createExperienceWithRuntimeFactory(
       assertActive(disposed)
       return runtime.captureLastPresentedFramePng()
     },
-    dispose() {
+    unmount() {
       if (disposed) return
       disposed = true
       unsubscribeMutations()
@@ -536,15 +667,35 @@ export async function createExperienceWithRuntimeFactory(
       releaseAnimations(animations)
       releaseObjects(runtime, objects)
       releaseProjectionBindings(projectionBindings)
-      runtime.dispose()
-      linkedAuthorStyleSheetHost?.dispose()
-      projectionListeners.clear()
-      projectionHandles.clear()
-      presentedListeners.clear()
+      try {
+        appRoot.unmount()
+      } finally {
+        try { runtime.dispose() } finally {
+          try { linkedAuthorStyleSheetHost?.dispose() } finally {
+            environment.dispose()
+            guardedObjects.clear()
+            dirtyObjects.clear()
+            for (const link of ownedLinks) link.remove()
+            projectionListeners.clear()
+            projectionHandles.clear()
+            presentedListeners.clear()
+            claim.release()
+          }
+        }
+      }
     },
   })
 
-  return experience
+  try {
+    synchronize()
+    const before = presentedFrame
+    runtime.render()
+    if (presentedFrame <= before) throw new Error("attach did not present the application's first frame")
+    return experience
+  } catch (error) {
+    experience.unmount()
+    throw error
+  }
 }
 
 const synchronizeViewPoint = (
@@ -570,7 +721,6 @@ const semanticViewPointSnapshot = (
       y: element.targetY,
       z: element.targetZ,
     }),
-    up: Object.freeze({x: element.upX, y: element.upY, z: element.upZ}),
     fov: element.fov,
     near: element.near,
     far: element.far,
@@ -607,15 +757,6 @@ const writeViewPointElement = (
   assignNumber(element.targetZ, snapshot.target.z, value => {
     element.targetZ = value
   })
-  assignNumber(element.upX, snapshot.up.x, value => {
-    element.upX = value
-  })
-  assignNumber(element.upY, snapshot.up.y, value => {
-    element.upY = value
-  })
-  assignNumber(element.upZ, snapshot.up.z, value => {
-    element.upZ = value
-  })
   assignNumber(element.fov, snapshot.fov, value => {
     element.fov = value
   })
@@ -647,9 +788,13 @@ const synchronizeDisplays = (
   for (const display of tree.displays) {
     const viewport = display.viewport
     const transform = {
+      quaternion: display.transform.quaternion,
       position: display.transform.position,
       visible: display.transform.visible,
     }
+    const orientation = new Quaternion(
+      transform.quaternion.x, transform.quaternion.y, transform.quaternion.z, transform.quaternion.w,
+    ).normalize()
     const held = runtime.getPlane(display.id)
     if (held !== undefined && held.root !== display.element) {
       runtime.removePlane(display.id)
@@ -672,6 +817,10 @@ const synchronizeDisplays = (
       current.plane.position.x !== transform.position.x ||
       current.plane.position.y !== transform.position.y ||
       current.plane.position.z !== transform.position.z ||
+      current.plane.quaternion.x !== orientation.x ||
+      current.plane.quaternion.y !== orientation.y ||
+      current.plane.quaternion.z !== orientation.z ||
+      current.plane.quaternion.w !== orientation.w ||
       current.plane.visible !== transform.visible
     ) {
       runtime.updatePlane(display.id, {
@@ -754,11 +903,10 @@ const releaseProjectionBindings = (
   bindings.clear()
 }
 
-const projectionPointerInput = (
-  input: ExperienceProjectionPointerInput,
-  viewport: Readonly<{width: number; height: number}>,
+const clientPointerInput = (
+  input: RootPointerInput,
 ): PointerInput => {
-  validateProjectionPoint(input, viewport)
+  validatePoint(input)
   return Object.freeze({
     clientX: input.x,
     clientY: input.y,
@@ -772,11 +920,10 @@ const projectionPointerInput = (
   })
 }
 
-const projectionWheelInput = (
-  input: ExperienceProjectionWheelInput,
-  viewport: Readonly<{width: number; height: number}>,
+const clientWheelInput = (
+  input: RootWheelInput,
 ): WheelInput => {
-  validateProjectionPoint(input, viewport)
+  validatePoint(input)
   return Object.freeze({
     clientX: input.x,
     clientY: input.y,
@@ -791,19 +938,9 @@ const projectionWheelInput = (
   })
 }
 
-const validateProjectionPoint = (
-  input: Readonly<{x: number; y: number}>,
-  viewport: Readonly<{width: number; height: number}>,
-): void => {
-  if (
-    !Number.isFinite(input.x) ||
-    !Number.isFinite(input.y) ||
-    input.x < 0 ||
-    input.y < 0 ||
-    input.x >= viewport.width ||
-    input.y >= viewport.height
-  ) {
-    throw new RangeError("Projection input point must be inside its logical viewport")
+const validatePoint = (input: Readonly<{x: number; y: number}>): void => {
+  if (input === null || typeof input !== "object" || !Number.isFinite(input.x) || !Number.isFinite(input.y)) {
+    throw new TypeError("Input point must contain finite client coordinates")
   }
 }
 
@@ -812,16 +949,19 @@ const synchronizeObjects = (
   runtime: DocumentSpaceRuntime,
   projections: Map<XRObjectElement, ObjectProjection>,
   font: TrueTypeFont,
+  guardedObjects: Map<Object3D, Readonly<{children: readonly Object3D[]; tag: string}>>,
+  changed?: ReadonlySet<XRObjectElement>,
 ): void => {
-  const live = new Set(tree.objects)
-  for (const [element, projection] of projections) {
+  let hierarchyChanged = changed === undefined
+  const live = changed === undefined ? new Set(tree.objects) : null
+  if (live !== null) for (const [element, projection] of projections) {
     if (live.has(element)) continue
     projection.object.parent?.remove(projection.object)
     invalidateObjectGeometry(runtime, projection.object, element instanceof XRAssetElement)
     projections.delete(element)
   }
 
-  for (const element of tree.objects) {
+  for (const element of changed ?? tree.objects) {
     const held = projections.get(element)
     const geometryElement = objectGeometryElement(element)
     const materialElement = objectMaterialElement(element)
@@ -843,6 +983,7 @@ const synchronizeObjects = (
     let projection = held
 
     if (projection === undefined || factoryChanged || factoryInputsChanged) {
+      hierarchyChanged = true
       const object = factory === null
         ? createBuiltInObject(element, geometry?.resource ?? null, material?.resource ?? null, font)
         : factory(element, {
@@ -874,6 +1015,7 @@ const synchronizeObjects = (
     applyObjectState(element, projection.object)
   }
 
+  if (!hierarchyChanged) return
   for (const projection of projections.values()) {
     projection.object.parent?.remove(projection.object)
   }
@@ -892,6 +1034,12 @@ const synchronizeObjects = (
       : runtime.space
     if (parent === undefined) throw new Error("Nested XRObjectElement parent is not projected")
     parent.add(projection.object)
+  }
+  guardedObjects.clear()
+  for (const [element, projection] of projections) {
+    if (projection.factory !== null && !(element instanceof XRAssetElement)) {
+      guardedObjects.set(projection.object, {children: [...projection.object.children], tag: element.localName})
+    }
   }
 }
 
@@ -1301,50 +1449,63 @@ const releaseObjects = (
 }
 
 const validateOptions = (
-  options: CreateExperienceOptions,
-  createRuntime: ExperienceRuntimeFactory,
-  seams: ExperienceSeams,
+  options: AttachOptions,
+  createRuntime: RootRuntimeFactory,
+  seams: RootSeams,
 ): void => {
   if (options === null || typeof options !== "object") {
-    throw new TypeError("Experience options are required")
+    throw new TypeError("Root options are required")
   }
   if (typeof createRuntime !== "function") {
-    throw new TypeError("Experience runtime factory is required")
+    throw new TypeError("Root runtime factory is required")
   }
   if (
     seams === null ||
     typeof seams !== "object" ||
     typeof seams.createLinkedAuthorStyleSheetHost !== "function"
   ) {
-    throw new TypeError("Experience seams are required")
+    throw new TypeError("Root seams are required")
   }
   if (
     options.canvas === null ||
     typeof options.canvas !== "object" ||
     typeof options.canvas.getContext !== "function"
   ) {
-    throw new TypeError("Experience requires one HTMLCanvasElement-compatible canvas")
+    throw new TypeError("Root requires one HTMLCanvasElement-compatible canvas")
   }
-  if (options.font === null || typeof options.font !== "object") {
-    throw new TypeError("Experience requires one resolved TrueTypeFont")
-  }
-  if (options.styleSheets !== undefined && !Array.isArray(options.styleSheets)) {
-    throw new TypeError("Experience styleSheets must be an array")
+  if (options.font !== undefined && (options.font === null || typeof options.font !== "object")) {
+    throw new TypeError("Root requires one resolved TrueTypeFont")
   }
   if (
-    options.linkedAuthorStyleSheets !== undefined &&
-    !Array.isArray(options.linkedAuthorStyleSheets)
+    options.stylesheets !== undefined &&
+    !Array.isArray(options.stylesheets)
   ) {
-    throw new TypeError("Experience linkedAuthorStyleSheets must be an array")
+    throw new TypeError("Root stylesheets must be an array")
+  }
+  if (options.frameloop !== undefined && options.frameloop !== "demand" && options.frameloop !== "always") {
+    throw new TypeError("frameloop must be demand or always")
   }
   if (
-    options.onLinkedAuthorStyleSheetError !== undefined &&
-    typeof options.onLinkedAuthorStyleSheetError !== "function"
+    options.onStyleSheetError !== undefined &&
+    typeof options.onStyleSheetError !== "function"
   ) {
-    throw new TypeError("Experience linked stylesheet error handler must be a function")
+    throw new TypeError("Root linked stylesheet error handler must be a function")
   }
 }
 
 const assertActive = (disposed: boolean): void => {
-  if (disposed) throw new Error("Experience is disposed")
+  if (disposed) throw new Error("Root is disposed")
+}
+
+
+const readRootSize = (options: AttachOptions): RootSize => {
+  const rect = options.canvas.getBoundingClientRect()
+  const dimension = (value: number) => Number.isFinite(value) && value > 0 ? Math.max(1, Math.round(value)) : 1
+  return {
+    width: dimension(rect.width),
+    height: dimension(rect.height),
+    left: rect.left ?? 0,
+    top: rect.top ?? 0,
+    dpr: options.pixelRatio ?? options.canvas.ownerDocument?.defaultView?.devicePixelRatio ?? 1,
+  }
 }

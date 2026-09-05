@@ -1,5 +1,8 @@
 import type {Event, Node} from "@zavx0z/dom"
 import {
+  bindChild,
+  bindKeyed,
+  writeBinding,
   defineCompiledTemplate,
   isCompiledTemplate,
   type CompiledTemplate
@@ -154,6 +157,51 @@ export function keyedComponents(entries: readonly ComponentValue<any>[]): KeyedC
     throw new TypeError("keyedComponents expects compiled component values")
   }
   return Object.freeze({[keyedValueBrand]: true as const, entries})
+}
+
+const fixedChildTemplates = new Map<number, CompiledTemplate<readonly ComponentValue[]>>()
+
+/** Compiler-owned fixed sibling slots; no authored keys or semantic wrapper. */
+export function fixedChildren(entries: readonly ComponentValue[]): ComponentValue {
+  if (!Array.isArray(entries) || entries.some(entry => !isComponentValue(entry))) {
+    throw new TypeError("Fixed children require component values")
+  }
+  let template = fixedChildTemplates.get(entries.length)
+  if (template === undefined) {
+    const count = entries.length
+    template = defineCompiledTemplate<readonly ComponentValue[]>({
+      displayName: "FixedChildren",
+      bindingCount: count,
+      mount(document) {
+        const pairs = Array.from({length: count}, () => [document.createComment("child:start"), document.createComment("child:end")] as const)
+        return {nodes: pairs.flat(), bindings: pairs.map(([start, end]) => bindChild(start, end))}
+      },
+      render(props, values) {
+        for (let index = 0; index < count; index++) writeBinding(values, index, props[index])
+      },
+    })
+    fixedChildTemplates.set(count, template)
+  }
+  return component(template, entries)
+}
+
+const keyedChildTemplate = defineCompiledTemplate<{children: KeyedComponentsValue}>({
+  displayName: "KeyedChildren",
+  bindingCount: 1,
+  mount(document) {
+    const start = document.createComment("keyed:start")
+    const end = document.createComment("keyed:end")
+    return {nodes: [start, end], bindings: [bindKeyed(start, end)]}
+  },
+  render(props, values) { writeBinding(values, 0, props.children) },
+})
+
+/** Normalizes authored nullable/single/list children to one ordinary child range. */
+export function normalizeChildren(value: ComponentValue | KeyedComponentsValue | null | undefined): ComponentValue | null {
+  if (value == null) return null
+  if (isComponentValue(value)) return value
+  if (isKeyedComponentsValue(value)) return component(keyedChildTemplate, {children: value})
+  throw new TypeError("Children require compiled component values")
 }
 
 export function isComponentValue(value: unknown): value is ComponentValue<any> {

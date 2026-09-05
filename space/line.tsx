@@ -20,7 +20,7 @@ export type LineProps = Readonly<{
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
-  children?: JsxSourceElement | null | undefined
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
   ref?: SpaceRef<XRLineElement> | null
 }>
 

@@ -8,7 +8,7 @@ import "./src/jsx.ts"
 export type HUDProps = Readonly<{
   id: string
   distance?: number
-  children?: JsxSourceElement | null | undefined
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
   ref?: SpaceRef<XRHUDElement> | null
 }>
 

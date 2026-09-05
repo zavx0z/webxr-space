@@ -4,5 +4,6 @@
   "kind": "package",
   "id": "@zavx0z/browser",
   "label": "Браузер",
-  "packageJson": "../package.json"
+  "packageJson": "../package.json",
+  "readme": "../README.md"
 }

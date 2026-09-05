@@ -54,10 +54,9 @@ export class RendererWebGpuScreenOverlay extends Object3D {
       .clone()
       .add(forward.clone().multiplyScalar(this.distance))
     const zAxis = forward.clone().negate().normalize()
-    const viewUp = viewPoint.getUp().clone().normalize()
-    let xAxis = new Vector3().crossVectors(viewUp, zAxis).normalize()
-    if (xAxis.length() === 0) xAxis = new Vector3(1, 0, 0)
-    const yAxis = new Vector3().crossVectors(zAxis, xAxis).normalize()
+    const view = viewPoint.viewMatrix.elements
+    const xAxis = new Vector3(view[0], view[4], view[8])
+    const yAxis = new Vector3(view[1], view[5], view[9])
     const rotation = new Matrix4().set(
       xAxis.x, yAxis.x, zAxis.x, 0,
       xAxis.y, yAxis.y, zAxis.y, 0,

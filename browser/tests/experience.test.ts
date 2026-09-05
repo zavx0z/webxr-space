@@ -1,4 +1,8 @@
 import {expect, test} from "bun:test"
+import {component} from "@zavx0z/component"
+import {useFrame, useSpace, type RootSize} from "../src/root-context.ts"
+import {defineCompiledTemplate} from "@zavx0z/template/compiled"
+import {bindRef, writeBinding} from "@zavx0z/template/compiled"
 import {
   HTMLElement as SemanticHTMLElement,
   type Element as SemanticElement,
@@ -22,6 +26,7 @@ import {
   MeshBasicMaterial,
   MeshLambertMaterial,
   Object3D,
+  Quaternion,
   Space,
   SphereGeometry,
   Text as EngineText,
@@ -50,8 +55,9 @@ import {
 } from "@zavx0z/space"
 import * as publicApi from "../src/index.ts"
 import {
-  createExperienceWithRuntimeFactory,
-} from "../src/experience.ts"
+  attachWithRuntimeFactory,
+  type AttachOptions,
+} from "../src/attach.ts"
 import type {
   CreateDocumentSpaceRuntimeOptions,
   DocumentSpaceOverlayRegistration,
@@ -62,6 +68,38 @@ import type {
 } from "../src/space-runtime.ts"
 import type {DocumentOverlayRuntime} from "../src/overlay-runtime.ts"
 import type {DocumentPlaneRuntime} from "../src/plane-runtime.ts"
+
+const testApp = defineCompiledTemplate({
+  displayName: "TestApp",
+  bindingCount: 0,
+  mount(document) {
+    const space = document.createElement("xr-space")
+    space.append(document.createElement("xr-view-point"))
+    return {nodes: [space], bindings: []}
+  },
+  render() {},
+})
+
+const attachFixture = (
+  options: Omit<AttachOptions, "app">,
+  factory: Parameters<typeof attachWithRuntimeFactory>[1],
+  seams?: Parameters<typeof attachWithRuntimeFactory>[2],
+) => attachWithRuntimeFactory({...options, app: component(testApp, {})}, factory, seams)
+
+const authoredApplication = (onMount: (space: XRSpaceElement) => () => void) => component(defineCompiledTemplate({
+  displayName: "AuthoredApplication",
+  bindingCount: 1,
+  mount(document) {
+    const space = document.createElement("xr-space") as XRSpaceElement
+    const camera = document.createElement("xr-view-point") as XRViewPointElement
+    space.id = "authored-space"
+    camera.x = 42
+    camera.z = 300
+    space.append(camera)
+    return {nodes: [space], bindings: [bindRef(space)]}
+  },
+  render(_props, values) { writeBinding(values, 0, onMount) },
+}), {})
 
 type FakeRuntimeState = {
   factoryCalls: number
@@ -100,7 +138,6 @@ const createFakeRuntimeState = (): FakeRuntimeState => ({
   snapshot: {
     position: {x: 0, y: 0, z: 1},
     target: {x: 0, y: 0, z: 0},
-    up: {x: 0, y: 0, z: 1},
     fov: 1,
     near: 0.1,
     far: 1000,
@@ -222,6 +259,7 @@ const createFakeRuntime = (
     },
     addPlane(registration: DocumentSpacePlaneRegistration) {
       const plane = {
+        quaternion: {...registration.transform?.quaternion ?? {x: 0, y: 0, z: 0, w: 1}},
         position: new Vector3(
           registration.transform?.position?.x ?? 0,
           registration.transform?.position?.y ?? 0,
@@ -273,13 +311,14 @@ const createFakeRuntime = (
       const mutable = held as unknown as {
         viewport: {width: number; height: number}
         worldUnitsPerPixel: number
-        plane: {position: Vector3; visible: boolean}
+        plane: {position: Vector3; visible: boolean; quaternion: {x: number; y: number; z: number; w: number}}
       }
       if (update.viewport !== undefined) mutable.viewport = update.viewport
       if (update.worldUnitsPerPixel !== undefined) {
         mutable.worldUnitsPerPixel = update.worldUnitsPerPixel
       }
       const transform = update.transform
+      if (transform?.quaternion !== undefined) Object.assign(mutable.plane.quaternion, transform.quaternion)
       if (transform?.position !== undefined) {
         mutable.plane.position.set(
           transform.position.x,
@@ -338,17 +377,30 @@ const createFakeRuntime = (
       return state.overlays.delete(id)
     },
     addWorld() {
-      throw new Error("Direct worlds are not part of the Experience public API")
+      throw new Error("Direct worlds are not part of the Root public API")
     },
     getWorld() {
       return undefined
     },
     updateWorld() {
-      throw new Error("Direct worlds are not part of the Experience public API")
+      throw new Error("Direct worlds are not part of the Root public API")
     },
     removeWorld() {
       return false
     },
+    dispatchPointer(type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel", input: PointerInput) {
+      if (state.disposed) throw new Error("Root is disposed")
+      state.projectionInputs.push({ownerId: "input", type, input})
+      if (type === "pointerdown" && state.pointerTarget !== null) {
+        state.nativeOwnerId = state.pointerTarget.parentElement?.id ?? null
+        state.nativeTarget = state.pointerTarget as SemanticHTMLElement
+      }
+    },
+    dispatchWheel(input: WheelInput) {
+      if (state.disposed) throw new Error("Root is disposed")
+      state.projectionInputs.push({ownerId: "input", type: "wheel", input})
+    },
+    projectPoint(_id: string, point: {x: number; y: number}) { return point },
     render() {
       for (const listener of [...state.beforeRender]) listener()
       state.renderedFrames += 1
@@ -370,7 +422,8 @@ const createFakeRuntime = (
     snapshotViewPoint() {
       return state.snapshot
     },
-    restoreViewPoint() {
+    restoreViewPoint(snapshot: DocumentSpaceViewPointSnapshot) {
+      state.snapshot = snapshot
       state.restoreCalls += 1
     },
     setCameraGesturesEnabled() {},
@@ -392,16 +445,17 @@ const createFakeRuntime = (
   return runtime
 }
 
-test("[BRW-004] createExperience создаёт один Document и синхронизирует один Space/ViewPoint", async () => {
+test("[BRW-004] attach монтирует один Document и синхронизирует один Space/ViewPoint", async () => {
   const state = createFakeRuntimeState()
   const canvas = {
     width: 640,
     height: 360,
     getContext: () => null,
+    getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0}),
   } as unknown as HTMLCanvasElement
   const font = {} as TrueTypeFont
   let runtimeDocument: CreateDocumentSpaceRuntimeOptions["document"] | null = null
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {canvas, font},
     async options => {
       state.factoryCalls += 1
@@ -435,22 +489,22 @@ test("[BRW-004] createExperience создаёт один Document и синхр�
 
   experience.render()
   experience.resize()
-  expect(state.renderedFrames).toBe(1)
+  expect(state.renderedFrames).toBe(2)
   expect(state.resizeCalls).toBe(1)
 
-  experience.dispose()
+  experience.unmount()
   expect(experience.disposed).toBe(true)
   expect(state.disposed).toBe(true)
 })
 
-test("[BRW-005] публичный Browser API содержит только createExperience", () => {
-  expect(Object.keys(publicApi)).toEqual(["createExperience"])
+test("[BRW-005] публичный Browser API содержит один attach и общие hooks", () => {
+  expect(Object.keys(publicApi)).toEqual(["attach", "useFrame", "useSpace"])
 })
 
-test("[BRW-006] presented ViewPoint синхронизируется в exact semantic Element без петли", async () => {
+test("[BRW-006] ViewPoint синхронизируется перед кадром в exact semantic Element без петли", async () => {
   const state = createFakeRuntimeState()
-  const canvas = {getContext: () => null} as unknown as HTMLCanvasElement
-  const experience = await createExperienceWithRuntimeFactory(
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  const experience = await attachFixture(
     {canvas, font: {} as TrueTypeFont},
     async options => createFakeRuntime(options, state),
   )
@@ -461,12 +515,11 @@ test("[BRW-006] presented ViewPoint синхронизируется в exact se
   state.snapshot = {
     position: {x: 11, y: 12, z: 13},
     target: {x: 1, y: 2, z: 3},
-    up: {x: 0.1, y: 0.2, z: 0.9},
     fov: 0.75,
     near: 0.25,
     far: 2500,
   }
-  presentFakeFrame(state)
+  experience.render()
 
   expect(readSpaceTree(document).viewPoint).toBe(identity)
   expect(viewPoint).toMatchObject({
@@ -476,23 +529,20 @@ test("[BRW-006] presented ViewPoint синхронизируется в exact se
     targetX: 1,
     targetY: 2,
     targetZ: 3,
-    upX: 0.1,
-    upY: 0.2,
-    upZ: 0.9,
     fov: 0.75,
     near: 0.25,
     far: 2500,
   })
   expect(state.restoreCalls).toBe(1)
   expect(state.requestedFrames).toBe(requestedBeforeWriteback)
-  experience.dispose()
+  experience.unmount()
 })
 
 test("[BRW-007] Geometry/Material factories сохраняют Object identity и invalidation", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -549,18 +599,18 @@ test("[BRW-007] Geometry/Material factories сохраняют Object identity �
   expect(customObject.geometry).toBe(sphere)
   expect(customObject.material).toBe(lambert)
   expect(state.invalidated).toContain(torus)
-  experience.dispose()
+  experience.unmount()
 })
 
-test("[BRW-008] Experience представляет Line, Text и DirectionalLight в одном Space", async () => {
+test("[BRW-008] Root представляет Line, Text и DirectionalLight в одном Space", async () => {
   const fontBytes = await Bun.file(
     `${import.meta.dir}/../../engine/static/fonts/inter-regular.ttf`,
   ).arrayBuffer()
   const font = new TrueTypeFont(fontBytes)
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font,
     },
     async options => createFakeRuntime(options, state),
@@ -594,14 +644,14 @@ test("[BRW-008] Experience представляет Line, Text и DirectionalLig
   expect((engineSpace.getObjectByName("line") as Line).material).toBeInstanceOf(LineBasicMaterial)
   expect(engineSpace.getObjectByName("text")).toBeInstanceOf(EngineText)
   expect(engineSpace.getObjectByName("light")).toBeInstanceOf(DirectionalLight)
-  experience.dispose()
+  experience.unmount()
 })
 
 test("[BRW-009] Animation behavior обновляет exact derived Object", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -625,21 +675,21 @@ test("[BRW-009] Animation behavior обновляет exact derived Object", asy
     space.append(group)
   })
   const object = state.space!.getObjectByName("animated")!
-  presentFakeFrame(state)
+  experience.render()
   await Bun.sleep(20)
-  presentFakeFrame(state)
+  experience.render()
 
   expect(state.space!.getObjectByName("animated")).toBe(object)
   expect(object.position.x).toBeGreaterThan(0)
   expect(state.requestedFrames).toBeGreaterThan(1)
-  experience.dispose()
+  experience.unmount()
 })
 
 test("[BRW-012] Asset factory удерживает один opaque GLTF-like subtree", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -664,16 +714,16 @@ test("[BRW-012] Asset factory удерживает один opaque GLTF-like sub
   expect(state.space!.getObjectByName("asset")).toBe(assetRoot)
   expect(assetRoot.getObjectByName("gltf-child")).toBe(gltfChild)
   expect(assetRoot.children).toEqual([gltfChild])
-  experience.dispose()
+  experience.unmount()
   expect(state.invalidated).toContain(gltfChild.geometry)
 })
 
 test("[BRW-013] post-projection opaque children fail closed для Group и Mesh", async () => {
   for (const kind of ["group", "mesh"] as const) {
     const state = createFakeRuntimeState()
-    const experience = await createExperienceWithRuntimeFactory(
+    const experience = await attachFixture(
       {
-        canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+        canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
         font: {} as TrueTypeFont,
       },
       async options => createFakeRuntime(options, state),
@@ -700,17 +750,17 @@ test("[BRW-013] post-projection opaque children fail closed для Group и Mesh
       `${element.localName} projection acquired an opaque Engine child after validation`,
     )
     expect(object.parent).toBeNull()
-    expect(state.renderedFrames).toBe(0)
-    expect(state.presentedFrames).toBe(0)
-    experience.dispose()
+    expect(state.renderedFrames).toBe(1)
+    expect(state.presentedFrames).toBe(1)
+    experience.unmount()
   }
 })
 
-test("[BRW-014] createExperience сразу владеет exact Space/ViewPoint без Display/HUD", async () => {
+test("[BRW-014] attach владеет авторским exact Space/ViewPoint без Display/HUD", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -722,14 +772,14 @@ test("[BRW-014] createExperience сразу владеет exact Space/ViewPoint
   expect(readSpaceTree(experience.document).viewPoint).toBe(experience.viewPoint)
   expect(readSpaceTree(experience.document).displays).toHaveLength(0)
   expect(readSpaceTree(experience.document).hud).toBeNull()
-  experience.dispose()
+  experience.unmount()
 })
 
 test("[BRW-015] projection handles читают frames и bounded route input", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -758,18 +808,18 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
   expect(frames).toEqual([frame])
 
   state.pointerTarget = button
-  expect(projection.pointerDown({x: 10, y: 20, pointerId: 7})).toBe(button)
-  projection.pointerMove({x: 11, y: 21, pointerId: 7})
-  projection.pointerUp({x: 12, y: 22, pointerId: 7})
-  projection.wheel({x: 13, y: 23, deltaX: 1, deltaY: 2})
+  experience.input.pointerDown({x: 10, y: 20, pointerId: 7})
+  experience.input.pointerMove({x: 11, y: 21, pointerId: 7})
+  experience.input.pointerUp({x: 12, y: 22, pointerId: 7})
+  experience.input.wheel({x: 13, y: 23, deltaX: 1, deltaY: 2})
   expect(state.projectionInputs.map(({type}) => type)).toEqual([
     "pointerdown",
     "pointermove",
     "pointerup",
     "wheel",
   ])
-  expect(() => projection.pointerDown({x: 320, y: 20})).toThrow(
-    "Projection input point must be inside its logical viewport",
+  expect(() => experience.input.pointerDown({x: Number.NaN, y: 20})).toThrow(
+    "Input point must contain finite client coordinates",
   )
 
   const spaceProjection = experience.getProjection(experience.space)
@@ -783,17 +833,17 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
   expect(experience.viewPoint.x).toBe(10)
 
   unsubscribe()
-  experience.dispose()
+  experience.unmount()
   expect(state.projectionSubscribers.get(display.id)?.size).toBe(0)
-  expect(() => projection.pointerDown({x: 1, y: 1})).toThrow("Experience is disposed")
-  expect(() => spaceProjection.orbit(1, 1)).toThrow("Experience is disposed")
+  expect(() => experience.input.pointerDown({x: 1, y: 1})).toThrow("Root is disposed")
+  expect(() => spaceProjection.orbit(1, 1)).toThrow("Root is disposed")
 })
 
-test("[BRW-016] Experience публикует monotonic presented sequence", async () => {
+test("[BRW-016] Root публикует monotonic presented sequence", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -802,19 +852,19 @@ test("[BRW-016] Experience публикует monotonic presented sequence", asy
   const unsubscribe = experience.subscribePresented(sequence => sequences.push(sequence))
   presentFakeFrame(state)
   presentFakeFrame(state)
-  expect(sequences).toEqual([1, 2])
-  expect(experience.presentedFrame).toBe(2)
+  expect(sequences).toEqual([2, 3])
+  expect(experience.presentedFrame).toBe(3)
   unsubscribe()
   presentFakeFrame(state)
-  expect(sequences).toEqual([1, 2])
-  experience.dispose()
+  expect(sequences).toEqual([2, 3])
+  experience.unmount()
 })
 
 test("[BRW-017] semantic key dispatch проверяет projection owner, target и native proxy", async () => {
   const state = createFakeRuntimeState()
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
     },
     async options => createFakeRuntime(options, state),
@@ -828,7 +878,7 @@ test("[BRW-017] semantic key dispatch проверяет projection owner, targe
   display.append(button, other)
   experience.space.append(display, hud)
   state.pointerTarget = button
-  experience.getProjection(display).pointerDown({x: 1, y: 1})
+  experience.input.pointerDown({x: 1, y: 1})
 
   expect(experience.dispatchKey(display, button, {
     type: "keydown",
@@ -839,23 +889,22 @@ test("[BRW-017] semantic key dispatch проверяет projection owner, targe
   expect(() => experience.dispatchKey(hud, button, {type: "keydown", key: "Enter"}))
     .toThrow("exact projection owner")
   expect(() => experience.dispatchKey(display, other, {type: "keydown", key: "Enter"}))
-    .toThrow("does not own the Experience native proxy")
-  experience.dispose()
+    .toThrow("does not own the Root native proxy")
+  experience.unmount()
 })
 
 test("[BRW-018] linked styles готовы до runtime и освобождаются после него", async () => {
   const state = createFakeRuntimeState()
   const link = {} as HTMLLinkElement
-  const experience = await createExperienceWithRuntimeFactory(
+  const experience = await attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
-      styleSheets: ["body { color: red; }"],
-      linkedAuthorStyleSheets: [{id: "theme", link}],
+      stylesheets: [{id: "theme", link}],
     },
     async options => {
       expect(state.lifecycle).toEqual(["styles:create", "styles:ready"])
-      expect(options.styleSheets).toEqual(["body { color: red; }"])
+      expect(options.styleSheets).toEqual([])
       return createFakeRuntime(options, state)
     },
     {
@@ -878,7 +927,7 @@ test("[BRW-018] linked styles готовы до runtime и освобождаю�
       },
     },
   )
-  experience.dispose()
+  experience.unmount()
   expect(state.lifecycle).toEqual([
     "styles:create",
     "styles:ready",
@@ -892,11 +941,11 @@ test("[BRW-019] linked stylesheet readiness fail closed до runtime", async () 
   const state = createFakeRuntimeState()
   let runtimeCalls = 0
   let linkedDisposed = false
-  await expect(createExperienceWithRuntimeFactory(
+  await expect(attachFixture(
     {
-      canvas: {getContext: () => null} as unknown as HTMLCanvasElement,
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
       font: {} as TrueTypeFont,
-      linkedAuthorStyleSheets: [{id: "broken", link: {} as HTMLLinkElement}],
+      stylesheets: [{id: "broken", link: {} as HTMLLinkElement}],
     },
     async options => {
       runtimeCalls += 1
@@ -920,4 +969,264 @@ test("[BRW-019] linked stylesheet readiness fail closed до runtime", async () 
   )).rejects.toThrow("linked stylesheet failed")
   expect(runtimeCalls).toBe(0)
   expect(linkedDisposed).toBe(true)
+})
+
+test("[BRW-ATTACH-001] авторский корень сохраняется, attach готов после кадра, dispose очищает App", async () => {
+  const state = createFakeRuntimeState()
+  let authored: XRSpaceElement | null = null
+  let cleaned = 0
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  const app = authoredApplication(space => {
+    authored = space
+    return () => { cleaned++ }
+  })
+  const experience = await attachWithRuntimeFactory({canvas, font: {} as TrueTypeFont, app}, async options => createFakeRuntime(options, state))
+  expect(experience.space as unknown).toBe(authored)
+  expect(experience.space.id).toBe("authored-space")
+  expect(experience.viewPoint.x).toBe(42)
+  expect(experience.presentedFrame).toBeGreaterThan(0)
+  experience.unmount()
+  experience.unmount()
+  expect(cleaned).toBe(1)
+  expect(experience.document.documentElement).toBeNull()
+  expect(state.disposed).toBe(true)
+  const second = await attachFixture({canvas, font: {} as TrueTypeFont}, async options => createFakeRuntime(options, createFakeRuntimeState()))
+  second.unmount()
+})
+
+test("[BRW-ATTACH-002] параллельный attach отклоняется до монтирования второго App", async () => {
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  let mounted = 0
+  let release!: () => void
+  const pending = new Promise<void>(resolve => { release = resolve })
+  const options = {canvas, font: {} as TrueTypeFont, app: authoredApplication(() => {
+    mounted++
+    return () => {}
+  })}
+  const first = attachWithRuntimeFactory(options, async input => {
+    await pending
+    return createFakeRuntime(input, createFakeRuntimeState())
+  })
+  await expect(attachWithRuntimeFactory(options, async input => createFakeRuntime(input, createFakeRuntimeState())))
+    .rejects.toThrow("already owns")
+  expect(mounted).toBe(1)
+  release()
+  const experience = await first
+  experience.unmount()
+})
+
+test("[BRW-ATTACH-003] ошибка первого кадра освобождает App, runtime и claim", async () => {
+  const state = createFakeRuntimeState()
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  let cleaned = 0
+  const app = authoredApplication(() => () => { cleaned++ })
+  await expect(attachWithRuntimeFactory({canvas, font: {} as TrueTypeFont, app}, async options => ({
+    ...createFakeRuntime(options, state),
+    render() { throw new Error("first frame failed") },
+  }))).rejects.toThrow("first frame failed")
+  expect(cleaned).toBe(1)
+  expect(state.disposed).toBe(true)
+  const recovered = await attachFixture({canvas, font: {} as TrueTypeFont}, async options => createFakeRuntime(options, createFakeRuntimeState()))
+  recovered.unmount()
+})
+
+test("[BRW-ATTACH-004] невалидный App не создаёт GPU runtime и не оставляет claim", async () => {
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  let created = 0
+  const invalid = component(defineCompiledTemplate({
+    displayName: "MissingCamera",
+    bindingCount: 0,
+    mount(document) { return {nodes: [document.createElement("xr-space")], bindings: []} },
+    render() {},
+  }), {})
+  await expect(attachWithRuntimeFactory({canvas, font: {} as TrueTypeFont, app: invalid}, async options => {
+    created++
+    return createFakeRuntime(options, createFakeRuntimeState())
+  })).rejects.toThrow("exactly one ViewPoint")
+  expect(created).toBe(0)
+  const recovered = await attachFixture({canvas, font: {} as TrueTypeFont}, async options => createFakeRuntime(options, createFakeRuntimeState()))
+  recovered.unmount()
+})
+
+test("[BRW-ATTACH-005] нормализация ориентации Display не создаёт бесконечную перерисовку", async () => {
+  const state = createFakeRuntimeState()
+  let updates = 0
+  const normalize = (plane: DocumentPlaneRuntime) => {
+    const value = plane.plane.quaternion
+    Object.assign(value, new Quaternion(value.x, value.y, value.z, value.w).normalize())
+    return plane
+  }
+  const experience = await attachFixture({canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement, font: {} as TrueTypeFont}, async options => {
+    const runtime = createFakeRuntime(options, state)
+    const add = runtime.addPlane
+    const update = runtime.updatePlane
+    return Object.assign(runtime, {
+      addPlane: (registration: DocumentSpacePlaneRegistration) => normalize(add(registration)),
+      updatePlane(id: string, value: DocumentSpacePlaneUpdate) {
+        updates++
+        return normalize(update(id, value))
+      },
+    })
+  })
+  const display = experience.document.createElement("xr-display") as XRDisplayElement
+  display.id = "rotated"
+  display.quaternionX = 1
+  display.quaternionW = 1
+  experience.space.append(display)
+  experience.render()
+  experience.render()
+  expect(updates).toBe(0)
+  expect(display.quaternionX).toBe(1)
+  experience.unmount()
+})
+
+
+test("[BRW-ROOT-001] контекст доступен при монтировании, size меняется до кадра, callbacks очищаются", async () => {
+  const state = createFakeRuntimeState()
+  const widths: number[] = []
+  const frames: Array<{width: number; delta: number; x: number}> = []
+  let resize: (size: RootSize) => void = () => {}
+  const app = component(defineCompiledTemplate({
+    displayName: "ResizeApp",
+    bindingCount: 0,
+    mount(document) {
+      const space = document.createElement("xr-space") as XRSpaceElement
+      space.append(document.createElement("xr-view-point"))
+      return {nodes: [space], bindings: []}
+    },
+    render() {
+      const size = useSpace(state => state.size)
+      widths.push(size.width)
+      useFrame((frame, delta) => { frames.push({width: frame.size.width, delta, x: frame.viewPoint.x}) })
+    },
+  }), {})
+  const root = await attachWithRuntimeFactory({
+    canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
+    font: {} as TrueTypeFont,
+    app,
+  }, async options => {
+    resize = options.onViewportChange!
+    return createFakeRuntime(options, state)
+  })
+  expect(widths).toEqual([800])
+  expect(frames).toEqual([{width: 800, delta: 0, x: root.viewPoint.x}])
+  state.snapshot = {...state.snapshot, position: {x: 125, y: -1000, z: 0}}
+  resize({width: 1200, height: 900, left: 0, top: 0, dpr: 2})
+  expect(widths).toEqual([800, 1200])
+  expect(root.viewPoint.x).toBe(125)
+  expect(frames).toHaveLength(1)
+  root.render()
+  expect(frames[1]).toMatchObject({width: 1200, x: 125})
+  resize({width: 1200, height: 900, left: 0, top: 0, dpr: 2})
+  expect(widths).toHaveLength(2)
+  root.unmount()
+  expect(state.beforeRender.size).toBe(0)
+  resize({width: 600, height: 400, left: 0, top: 0, dpr: 1})
+  expect(widths).toHaveLength(2)
+})
+
+test("[BRW-ROOT-002] selector без изменения результата не выполняет компонент повторно", async () => {
+  let renders = 0
+  let resize: (size: RootSize) => void = () => {}
+  const state = createFakeRuntimeState()
+  const app = component(defineCompiledTemplate({
+    displayName: "StableSelection",
+    bindingCount: 0,
+    mount(document) {
+      const space = document.createElement("xr-space")
+      space.append(document.createElement("xr-view-point"))
+      return {nodes: [space], bindings: []}
+    },
+    render() { useSpace(state => state.frameloop); renders++ },
+  }), {})
+  const root = await attachWithRuntimeFactory({
+    canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
+    font: {} as TrueTypeFont,
+    app,
+  }, async options => {
+    resize = options.onViewportChange!
+    return createFakeRuntime(options, state)
+  })
+  resize({width: 900, height: 700, left: 0, top: 0, dpr: 1})
+  root.render()
+  expect(renders).toBe(1)
+  root.unmount()
+})
+
+test("[BRW-ROOT-003] изменение одного объекта и камеры не перечитывает остальные объекты и не перестраивает иерархию", async () => {
+  const state = createFakeRuntimeState()
+  const root = await attachFixture({
+    canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
+    font: {} as TrueTypeFont,
+  }, async options => createFakeRuntime(options, state))
+  const objects = Array.from({length: 40}, (_, index) => {
+    const object = root.document.createElement("xr-asset") as XRAssetElement
+    object.name = "retained-" + index
+    object.factory = () => new Object3D()
+    return object
+  })
+  root.document.transaction(() => { for (const object of objects) root.space.append(object) })
+  let untouchedReads = 0
+  const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(objects[1]), "factory")!
+  Object.defineProperty(objects[1], "factory", {
+    configurable: true,
+    get() { untouchedReads++; return descriptor.get!.call(this) },
+  })
+  const held = [...state.space!.children]
+  objects[0]!.x = 120
+  root.viewPoint.x = 20
+  root.render()
+  expect(untouchedReads).toBe(0)
+  expect(state.space!.children).toEqual(held)
+  expect(state.space!.getObjectByName("retained-0")!.position.x).toBe(120)
+  root.unmount()
+})
+
+test("[BRW-ROOT-004] созданный по URL link принадлежит attach и удаляется при ошибке и unmount", async () => {
+  for (const failure of [false, true]) {
+    const links: Array<{rel: string; href: string; remove(): void}> = []
+    const canvas = {
+      getContext: () => null,
+      getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0}),
+      ownerDocument: {
+        createElement() {
+          const link = {rel: "", href: "", remove() { links.splice(links.indexOf(link), 1) }}
+          return link
+        },
+        head: {append(link: typeof links[number]) { links.push(link) }},
+      },
+    } as unknown as HTMLCanvasElement
+    const promise = attachFixture({canvas, font: {} as TrueTypeFont, stylesheets: ["/theme.css"]},
+      async options => createFakeRuntime(options, createFakeRuntimeState()), {
+        createLinkedAuthorStyleSheetHost(options) {
+          expect(links).toHaveLength(1)
+          expect(options.sources[0]!.link.href).toBe("/theme.css")
+          return {canvas, document: options.document, sources: options.sources,
+            ready: failure ? Promise.reject(new Error("style failure")) : Promise.resolve(),
+            disposed: false, refresh() {}, dispose() {},
+          }
+        },
+      })
+    if (failure) await expect(promise).rejects.toThrow("style failure")
+    else (await promise).unmount()
+    expect(links).toHaveLength(0)
+  }
+})
+
+test("[BRW-ROOT-005] demand объединяет запросы, always продолжает общий цикл", async () => {
+  for (const frameloop of ["demand", "always"] as const) {
+    const state = createFakeRuntimeState()
+    const root = await attachFixture({
+      canvas: {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement,
+      font: {} as TrueTypeFont,
+      frameloop,
+    }, async options => createFakeRuntime(options, state))
+    const before = state.renderedFrames
+    for (let index = 0; index < 10; index++) root.invalidate()
+    expect(state.renderedFrames).toBe(before)
+    state.requestedFrame!()
+    expect(state.renderedFrames).toBe(before + 1)
+    expect(state.requestedFrame === null).toBe(frameloop === "demand")
+    root.unmount()
+  }
 })

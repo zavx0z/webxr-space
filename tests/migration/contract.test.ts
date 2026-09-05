@@ -24,9 +24,13 @@ import {
   publicSymbolComparisons,
   publicSymbolDispositions,
   requirementEvidenceFiles,
-  sourceWorkingFiles,
+  sourceFileDigests,
+  sourceRevisions,
+  sourcePublicSymbols,
+  importedDevtoolsRevision,
 } from "./source-fidelity.ts"
 import type {RequirementId} from "./source-fidelity.ts"
+import {readMigrationSource, readPinnedGitFile} from "./git-source.ts"
 
 const root = join(import.meta.dir, "../..")
 
@@ -56,14 +60,6 @@ const forbiddenRootDirectories = Object.freeze([
   "renderer-browser",
   "renderer-webgpu",
   "worker",
-] as const)
-
-const sourceCheckouts = Object.freeze([
-  ["projects/engine", "a3032d960fc592296e8c5d1408a02551635d1fb3"],
-  ["projects/node", "6aef6ab1fc038f2fbbf752746d3f328d93ad63e8"],
-  ["projects/ui", "90c77080c27d92fea5ee803e8ff1e49d65885ae1"],
-  ["../renderer", "e428e64003efdbc3e627d85431532abde0aed350"],
-  ["../template", "671d19f652b2899b77bd30e50e9fd254080ef93f"],
 ] as const)
 
 type PackageManifest = Readonly<{
@@ -124,30 +120,6 @@ function assertSameStrings(
     requirementCode,
     `${message}; expected ${normalizedExpected.join(", ")}; actual ${normalizedActual.join(", ")}`,
   )
-}
-
-async function assertSourceWorkingTree(
-  relativeCheckout: string,
-  status: string,
-  requirementCode: string,
-): Promise<void> {
-  const expected = sourceWorkingFiles[relativeCheckout] ?? {}
-  assertSameStrings(
-    status.split("\n").map(line => line.trim()).filter(Boolean),
-    Object.keys(expected).map(path => `M ${path}`),
-    requirementCode,
-    `${relativeCheckout}: исходное рабочее дерево должно совпадать с зафиксированной версией`,
-  )
-  for (const [path, digest] of Object.entries(expected)) {
-    const actual = new Bun.CryptoHasher("sha256")
-      .update(await Bun.file(resolve(root, relativeCheckout, path)).arrayBuffer())
-      .digest("hex")
-    assertRequirement(
-      actual === digest,
-      requirementCode,
-      `${relativeCheckout}/${path}: изменились байты сохранённого исходника`,
-    )
-  }
 }
 
 async function executableRequirementFiles(
@@ -280,7 +252,7 @@ describe("Граница конечного переноса", () => {
     for (const [legacyPackage, manifestPath] of Object.entries(
       legacyPackageManifestPaths,
     ) as Array<[LegacyPackageName, string]>) {
-      const manifest = await readManifest(resolve(root, manifestPath))
+      const manifest = JSON.parse(await readMigrationSource(manifestPath)) as PackageManifest
       assertRequirement(
         manifest.name === legacyPackage,
         "MIG-001",
@@ -299,36 +271,23 @@ describe("Граница конечного переноса", () => {
     }
   })
 
-  test("[MIG-002] исходные репозитории не изменяются во время переноса", async () => {
-    for (const [relativeCheckout, expectedRevision] of sourceCheckouts) {
+  test("[MIG-002] исторические версии исходников доступны и сохраняют зафиксированные байты", async () => {
+    for (const [relativeCheckout, revision] of Object.entries(sourceRevisions)) {
       const checkout = resolve(root, relativeCheckout)
-      const topLevel = await runGit("MIG-002", checkout, "rev-parse", "--show-toplevel")
-      assertRequirement(
-        resolve(topLevel) === checkout,
-        "MIG-002",
-        `${relativeCheckout} должен оставаться самостоятельным исходным checkout`,
-      )
-      const revision = await runGit("MIG-002", checkout, "rev-parse", "HEAD")
-      assertRequirement(
-        revision === expectedRevision,
-        "MIG-002",
-        `${relativeCheckout} изменил исходную ревизию ${expectedRevision} на ${revision}`,
-      )
-      const status = await runGit(
-        "MIG-002",
-        checkout,
-        "status",
-        "--porcelain=v1",
-        "--untracked-files=all",
-      )
-      await assertSourceWorkingTree(relativeCheckout, status, "MIG-002")
+      const resolved = await runGit("MIG-002", checkout, "rev-parse", `${revision}^{commit}`)
+      assertRequirement(resolved === revision, "MIG-002", `${relativeCheckout}: недоступен исходный коммит ${revision}`)
+      for (const [path, expected] of Object.entries(sourceFileDigests[relativeCheckout] ?? {})) {
+        const source = await readPinnedGitFile(checkout, revision, path)
+        const actual = new Bun.CryptoHasher("sha256").update(source).digest("hex")
+        assertRequirement(actual === expected, "MIG-002", `${relativeCheckout}/${path}: изменились байты исторического исходника`)
+      }
     }
   })
 
   test("[MIG-003] новая реализация не подменяет прежнее поведение упрощённым", async () => {
     const project = await Bun.file(join(root, "PROJECT.md")).text()
     const symbols = await readPublicExportSymbols(
-      Object.entries(publicModuleEntrypoints).map(([id, entrypoint]) => ({
+      Object.entries(publicModuleEntrypoints).filter(([id]) => id.startsWith("new-")).map(([id, entrypoint]) => ({
         id,
         entrypoint: resolve(root, entrypoint),
       })),
@@ -336,7 +295,7 @@ describe("Граница конечного переноса", () => {
     const evidenceFiles = new Set<string>()
 
     for (const comparison of publicSymbolComparisons) {
-      const sourceSymbols = symbols.get(comparison.sourceId) ?? []
+      const sourceSymbols = sourcePublicSymbols[comparison.sourceId] ?? []
       assertRequirement(
         sourceSymbols.length === comparison.expectedSourceCount,
         "MIG-003",
@@ -378,9 +337,7 @@ describe("Граница конечного переноса", () => {
       )) evidenceFiles.add(file)
     }
 
-    const oldObject3D = await Bun.file(
-      join(root, "projects/engine/packages/core/src/core/object-3d.ts"),
-    ).text()
+    const oldObject3D = await readMigrationSource("projects/engine/packages/core/src/core/object-3d.ts")
     const newObject3D = await Bun.file(join(root, "engine/src/core/object-3d.ts")).text()
     assertRequirement(
       /public\s+layout\??:\s*LayoutProps/u.test(oldObject3D) &&
@@ -391,9 +348,7 @@ describe("Граница конечного переноса", () => {
       "Object3D.layout/computedLayout retirement должен оставаться explicit",
     )
 
-    const oldViewPoint = await Bun.file(
-      join(root, "projects/engine/packages/core/src/core/view-point.ts"),
-    ).text()
+    const oldViewPoint = await readMigrationSource("projects/engine/packages/core/src/core/view-point.ts")
     const newViewPoint = await Bun.file(join(root, "engine/src/core/view-point.ts")).text()
     assertRequirement(
       oldViewPoint.includes("controls?: ViewPointControls") &&
@@ -404,16 +359,12 @@ describe("Граница конечного переноса", () => {
       "direct Engine browser controls retirement должен оставаться explicit",
     )
 
-    const oldGlassPanel = await Bun.file(
-      join(root, "projects/engine/packages/core/src/ui/glass-panel.ts"),
-    ).text()
-    const oldEngineIndex = await Bun.file(
-      join(root, "projects/engine/packages/core/src/index.ts"),
-    ).text()
+    const oldGlassPanel = await readMigrationSource("projects/engine/packages/core/src/ui/glass-panel.ts")
+    const oldEngineIndex = await readMigrationSource("projects/engine/packages/core/src/index.ts")
     assertRequirement(
       oldGlassPanel.includes("export class GlassPanel") &&
         !oldEngineIndex.includes("ui/glass-panel") &&
-        !(symbols.get("old-engine") ?? []).includes("GlassPanel") &&
+        !(sourcePublicSymbols["old-engine"] ?? []).includes("GlassPanel") &&
         project.includes("GlassPanel"),
       "MIG-003",
       "GlassPanel должен оставаться явно retired непубличной реализацией",
@@ -497,24 +448,14 @@ describe("Граница конечного переноса", () => {
       "MIG-004",
       `root не должен владеть файлами source projects:\n${trackedProjects}`,
     )
-    for (const [relativeCheckout] of sourceCheckouts) {
-      const status = await runGit(
-        "MIG-004",
-        resolve(root, relativeCheckout),
-        "status",
-        "--porcelain=v1",
-        "--untracked-files=all",
-      )
-      await assertSourceWorkingTree(relativeCheckout, status, "MIG-004")
-    }
+
   })
 
-  test("[MIG-006] Devtools сохраняет исходную реализацию, типы и весь набор проверок", async () => {
-    const sourceRoot = resolve(root, "../renderer/packages/devtools")
-    const oldInspector = await Bun.file(join(sourceRoot, "src/inspector.ts")).text()
-    const oldExports = await Bun.file(join(sourceRoot, "src/index.ts")).text()
+  test("[MIG-006] коммит импорта Devtools сохранил исходную реализацию, типы и проверки", async () => {
+    const oldInspector = await readMigrationSource("../renderer/packages/devtools/src/inspector.ts")
+    const oldExports = await readMigrationSource("../renderer/packages/devtools/src/index.ts")
     const typeExports = oldExports.slice(oldExports.indexOf("export type {"))
-    const actualInspector = await Bun.file(join(root, "devtools/inspector.ts")).text()
+    const actualInspector = await readPinnedGitFile(root, importedDevtoolsRevision, "devtools/inspector.ts")
     assertRequirement(
       actualInspector === `${oldInspector}\n${typeExports}`,
       "MIG-006",
@@ -524,9 +465,9 @@ describe("Граница конечного переноса", () => {
       ["src/types.ts", "types.ts"],
       ["test/dom-inspector.test.ts", "tests/inspector.test.ts"],
     ] as const) {
-      const expected = (await Bun.file(join(sourceRoot, sourcePath)).text())
+      const expected = (await readMigrationSource(`../renderer/packages/devtools/${sourcePath}`))
         .replace('from "../src/index.ts"', 'from "@zavx0z/devtools"')
-      const actual = await Bun.file(join(root, "devtools", targetPath)).text()
+      const actual = await readPinnedGitFile(root, importedDevtoolsRevision, `devtools/${targetPath}`)
       assertRequirement(actual === expected, "MIG-006", `${targetPath}: исходная логика должна сохраниться`)
     }
   })

@@ -1,5 +1,4 @@
 import { Object3D } from "../core/object-3d"
-import { Space } from "../scenes/space"
 import { Vector3, Color, Matrix4, Quaternion } from "../math"
 import { Mesh } from "../core/mesh"
 import { BufferAttribute, BufferGeometry, type TypedArray } from "../core/buffer-geometry"
@@ -111,18 +110,33 @@ interface GLTFAnimationSampler {
   output: number // accessor to keyframe values
 }
 
-export interface GLTFLoaderOptions {
-  convertToZUp?: boolean
-}
-
+/** Импортированная модель уже приведена к Z-up и мм и может быть содержимым Asset. */
 export interface ParsedGLTF {
-  space: Space
+  scene: Object3D
   animations: AnimationClip[]
 }
 
 export class GLTFLoader {
-  public async load(url: string, options?: GLTFLoaderOptions): Promise<ParsedGLTF> {
-    const { convertToZUp = true } = options ?? {}
+  /**
+  Загружает glTF/GLB и приводит модель к неизменной системе координат платформы.
+
+  По [спецификации glTF](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units)
+  исходные расстояния заданы в метрах, а вверх направлена Y.
+  Внутренний корень модели поворачивается на π/2 вокруг X и масштабируется в 1000 раз.
+  Внешний `scene` остаётся обычным Object3D: его положение задаёт авторский Asset.
+  Камера и Space приложения при импорте не изменяются; преобразование действует
+  также на дочерние узлы, скелет и анимацию.
+
+  @param url - URL glTF/GLB; относительные buffer URI разрешаются от адреса файла.
+  @returns Модель в Z-up и мм с разобранными AnimationClip.
+  @throws Error При недоступном файле, неверном GLB или неподдерживаемых данных.
+  @example
+  ```ts
+  const model = await new GLTFLoader().load("/models/part.glb")
+  // model.scene передаётся factory авторского Asset.
+  ```
+  */
+  public async load(url: string): Promise<ParsedGLTF> {
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`Failed to load ${url}: ${response.status} ${response.statusText}`)
@@ -150,16 +164,11 @@ export class GLTFLoader {
     const materials = this.parseMaterials(gltf)
     const animations = this.parseAnimations(gltf, buffers)
 
-    const space = new Space()
-    let parentNode: Object3D = space
-
-    if (convertToZUp) {
-      const modelWrapper = new Object3D()
-      modelWrapper.rotation.x = Math.PI / 2
-      modelWrapper.updateMatrix()
-      space.add(modelWrapper)
-      parentNode = modelWrapper
-    }
+    const scene = new Object3D()
+    const parentNode = new Object3D()
+    parentNode.rotation.x = Math.PI / 2
+    parentNode.scale.set(1000, 1000, 1000)
+    scene.add(parentNode)
 
     const nodes = await this.parseNodes(gltf, buffers, materials)
     const skeletons = await this.parseSkins(gltf, buffers, nodes)
@@ -176,7 +185,7 @@ export class GLTFLoader {
       }
     }
 
-    return { space, animations }
+    return {scene, animations}
   }
 
   private parseGLB(data: ArrayBuffer): { gltf: GLTF; buffers: ArrayBuffer[] } {

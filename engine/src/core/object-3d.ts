@@ -134,7 +134,7 @@ export class Object3D {
 
   public lookAt(target: Vector3): void {
     const m = new Matrix4()
-    m.makeLookAt(this.position, target, new Vector3(0, 0, 1))
+    m.makeLookAt(this.position, target)
     m.invert()
     this.quaternion.setFromRotationMatrix(m)
   }

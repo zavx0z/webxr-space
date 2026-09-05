@@ -1,4 +1,4 @@
-type PresentationHostClaim = Readonly<{
+export type PresentationHostClaim = Readonly<{
   release(): void
 }>
 

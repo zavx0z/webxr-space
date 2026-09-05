@@ -1,28 +1,18 @@
 /**
- * # Engine Core
- *
- * **Built for [MetaFor](https://github.com/zavx0z/metafor)** and reusable by
- * other immersive applications that need a retained spatial foundation.
- *
- * The package owns retained scene transforms, geometry, materials, picking,
- * loading, animation, font data, and the target-neutral {@link ViewPoint}
- * camera boundary. Concrete WebGPU resources and drawing live in
- * `@zavx0z/webgpu`.
- *
- * ## Coordinate contract
- *
- * Engine uses a right-handed Z-up world:
- *
- * - **+X** points right
- * - **+Y** points forward
- * - **+Z** points up
- * - one world unit is one millimetre
- * - WebGPU clip-space depth is `[0, 1]`
- *
- * Product semantics and component policy belong to consumer repositories.
- *
- * @packageDocumentation
- */
+Пространственная основа платформы: преобразования объектов, геометрия,
+материалы, raycast, загрузка моделей, анимация и данные шрифтов.
+
+ViewPoint принимает уже маршрутизированные команды orbit/pan/zoom.
+Browser владеет Canvas, вводом и кадрами; конкретные ресурсы GPU и рисование
+принадлежат `@zavx0z/webgpu`.
+
+Система координат неизменна: правая, +X вправо, +Y вперёд, +Z вверх.
+Единица расстояния — миллиметр, углы задаются в радианах, глубина clip space
+лежит в [0, 1]. Камера не имеет настраиваемого up. glTF нормализуется
+преобразованием импортированного дерева объектов.
+
+@packageDocumentation
+*/
 
 export * from "./core/object-3d"
 export * from "./core/presentation-clip"

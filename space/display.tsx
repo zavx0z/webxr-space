@@ -5,17 +5,23 @@ import type {XRDisplayElement} from "./src/elements.ts"
 import type {SpaceRef} from "./src/jsx.ts"
 import "./src/jsx.ts"
 
+/** Положение задаётся в мм; viewportWidth/viewportHeight — размер содержимого в CSS px. */
 export type DisplayProps = Readonly<{
   id: string
   style?: CssStyle | undefined
   viewportWidth?: number
   viewportHeight?: number
+  /** Положительное количество миллиметров на один CSS px. */
   worldUnitsPerPixel?: number
+  quaternionX?: number
+  quaternionY?: number
+  quaternionZ?: number
+  quaternionW?: number
   x?: number
   y?: number
   z?: number
   visible?: boolean
-  children?: JsxSourceElement | null | undefined
+  children?: JsxSourceElement | readonly JsxSourceElement[] | null | undefined
   ref?: SpaceRef<XRDisplayElement> | null
 }>
 
@@ -27,6 +33,10 @@ export function Display(props: DisplayProps): JsxSourceElement {
       viewportWidth={props.viewportWidth}
       viewportHeight={props.viewportHeight}
       worldUnitsPerPixel={props.worldUnitsPerPixel}
+      quaternionX={props.quaternionX}
+      quaternionY={props.quaternionY}
+      quaternionZ={props.quaternionZ}
+      quaternionW={props.quaternionW}
       x={props.x}
       y={props.y}
       z={props.z}

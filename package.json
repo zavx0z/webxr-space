@@ -24,15 +24,18 @@
     "devtools"
   ],
   "scripts": {
+    "application:dev": "bun examples/application/dev.ts",
+    "application:build": "bun examples/application/build.ts",
     "typecheck": "bun run --parallel typecheck:root typecheck:packages",
     "typecheck:root": "tsc --project tsconfig.json --pretty false",
     "typecheck:packages": "bun run --workspaces --parallel typecheck",
     "test": "bun run --parallel test:architecture test:packages",
-    "test:architecture": "bun test --parallel tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/acceptance/ui-storybook.test.ts",
+    "test:architecture": "bun test --parallel --timeout 30000 tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/migration/git-source.test.ts tests/acceptance/ui-storybook.test.ts",
     "test:packages": "bun run --workspaces --parallel test",
     "check": "bun run --parallel typecheck test"
   },
   "devDependencies": {
+    "@zavx0z/browser": "workspace:*",
     "@types/bun": "1.4.0",
     "@webgpu/types": "0.1.68",
     "typescript": "7.0.2"

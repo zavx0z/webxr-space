@@ -40,13 +40,14 @@ import {
   type DocumentNativeInputHost,
   type DocumentNativeInputTarget,
 } from "./native-input-host.ts"
-import {claimBrowserPresentationHost} from "./presentation-host.ts"
+import {claimBrowserPresentationHost, type PresentationHostClaim} from "./presentation-host.ts"
 import {resizeCanvasBackingStore} from "./canvas-backing-store.ts"
 import {
   applyTouchCameraGesture,
   type TouchCameraPoint,
 } from "./touch-camera-gesture.ts"
 import {claimTouchCameraSurface} from "./touch-camera-surface.ts"
+import type {RootSize} from "./root-context.ts"
 
 export type DocumentSpaceVector3 = Readonly<{x: number; y: number; z: number}>
 export type DocumentSpaceQuaternion = Readonly<{x: number; y: number; z: number; w: number}>
@@ -54,7 +55,6 @@ export type DocumentSpaceQuaternion = Readonly<{x: number; y: number; z: number;
 export type DocumentSpaceViewPointSnapshot = Readonly<{
   position: DocumentSpaceVector3
   target: DocumentSpaceVector3
-  up: DocumentSpaceVector3
   fov: number
   near: number
   far: number
@@ -147,6 +147,7 @@ export type CreateDocumentSpaceRuntimeOptions = Readonly<{
   pixelRatio?: number
   viewPoint?: DocumentSpaceViewPointSnapshot
   cameraGestures?: boolean
+  onViewportChange?(size: RootSize): void
 }>
 
 export type DocumentSpaceRuntime = Readonly<{
@@ -194,6 +195,9 @@ export type DocumentSpaceRuntime = Readonly<{
   snapshotViewPoint(): DocumentSpaceViewPointSnapshot
   restoreViewPoint(snapshot: DocumentSpaceViewPointSnapshot): void
   setCameraGesturesEnabled(enabled: boolean): void
+  dispatchPointer(type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel", input: PointerInput): void
+  dispatchWheel(input: WheelInput): void
+  projectPoint(id: string, point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
   subscribeBeforeRender(listener: () => void): () => void
   subscribePresented(listener: (frame: number) => void): () => void
   dispose(): void
@@ -314,9 +318,8 @@ type OverlayHit = Readonly<{
 }>
 
 const DEFAULT_VIEW_POINT = Object.freeze({
-  position: Object.freeze({x: 0, y: 0, z: 1_000}),
+  position: Object.freeze({x: 0, y: -1_000, z: 0}),
   target: Object.freeze({x: 0, y: 0, z: 0}),
-  up: Object.freeze({x: 0, y: 1, z: 0}),
   fov: Math.PI / 4,
   near: 0.1,
   far: 5_000,
@@ -341,7 +344,6 @@ const defaultSeams = (): DocumentSpaceRuntimeSeams => Object.freeze({
       position: snapshot.position,
       target: snapshot.target,
     })
-    viewPoint.getUp().set(snapshot.up.x, snapshot.up.y, snapshot.up.z)
     viewPoint.update()
     return viewPoint
   },
@@ -359,7 +361,6 @@ const defaultSeams = (): DocumentSpaceRuntimeSeams => Object.freeze({
       position: snapshot.position,
       target: snapshot.target,
     })
-    viewPoint.getUp().set(snapshot.up.x, snapshot.up.y, snapshot.up.z)
     viewPoint.update()
     return viewPoint
   },
@@ -395,17 +396,19 @@ const defaultSeams = (): DocumentSpaceRuntimeSeams => Object.freeze({
 /** Creates the one canvas/Document/Space host for one browser Experience. */
 export async function createDocumentSpaceRuntime(
   options: CreateDocumentSpaceRuntimeOptions,
+  claim?: PresentationHostClaim,
 ): Promise<DocumentSpaceRuntime> {
-  return createDocumentSpaceRuntimeWithSeams(options, defaultSeams())
+  return createDocumentSpaceRuntimeWithSeams(options, defaultSeams(), claim)
 }
 
 /** Internal exact-seam constructor for lifecycle and input tests. */
 export async function createDocumentSpaceRuntimeWithSeams(
   options: CreateDocumentSpaceRuntimeOptions,
   seams: DocumentSpaceRuntimeSeams,
+  claim?: PresentationHostClaim,
 ): Promise<DocumentSpaceRuntime> {
   validateOptions(options)
-  const presentationHostClaim = claimBrowserPresentationHost(options.canvas)
+  const presentationHostClaim = claim ?? claimBrowserPresentationHost(options.canvas)
   try {
     return await createClaimedDocumentSpaceRuntime(options, seams, presentationHostClaim)
   } catch (error) {
@@ -457,12 +460,14 @@ const createClaimedDocumentSpaceRuntime = async (
   let tooltipOwner: Readonly<{kind: "plane" | "overlay"; id: string}> | null = null
   let resizeObserver: ResizeObserverOwner | null = null
   let rendering = false
+  let preparing = false
   let renderRequestedDuringFrame = false
   let disposed = false
 
   const requestRender = (): void => {
     assertActive(disposed)
     if (rendering) {
+      if (preparing) return
       renderRequestedDuringFrame = true
       return
     }
@@ -528,6 +533,7 @@ const createClaimedDocumentSpaceRuntime = async (
       requestedFrame = null
     }
     rendering = true
+    preparing = true
     renderRequestedDuringFrame = false
     try {
       for (const listener of [...beforeRenderListeners]) listener()
@@ -564,8 +570,10 @@ const createClaimedDocumentSpaceRuntime = async (
           })),
       })
       presentedFrames += 1
+      preparing = false
       for (const listener of [...presentedListeners]) listener(presentedFrames)
     } finally {
+      preparing = false
       rendering = false
     }
     if (
@@ -1036,6 +1044,7 @@ const createClaimedDocumentSpaceRuntime = async (
     const nextViewport = Object.freeze({width, height})
     const pixelRatio = fixedPixelRatio ?? finitePositiveOrOne(seams.devicePixelRatio())
     currentPixelRatio = pixelRatio
+    options.onViewportChange?.({width, height, left: rect.left, top: rect.top, dpr: pixelRatio})
     resizeCanvasBackingStore(options.canvas, width, height, pixelRatio)
     viewPoint.setViewport({
       left: rect.left,
@@ -1710,6 +1719,59 @@ const createClaimedDocumentSpaceRuntime = async (
     snapshotViewPoint,
     restoreViewPoint,
     setCameraGesturesEnabled,
+    dispatchPointer(type, input) {
+      assertActive(disposed)
+      const event = {
+        ...input,
+        pointerId: input.pointerId ?? 1,
+        pointerType: input.pointerType ?? "mouse",
+        button: input.button ?? 0,
+        buttons: input.buttons ?? (type === "pointerdown" ? 1 : 0),
+        pressure: input.pressure ?? 0,
+        isPrimary: input.isPrimary ?? true,
+        timeStamp: input.timeStamp ?? seams.now(),
+        cancelable: true,
+        preventDefault() {},
+      } as PointerEvent
+      if (type === "pointermove") onPointerMove(event)
+      else if (type === "pointerdown") onPointerDown(event)
+      else if (type === "pointerup") onPointerUp(event)
+      else onPointerCancel(event)
+    },
+    dispatchWheel(input) {
+      assertActive(disposed)
+      onWheel({
+        ...input,
+        deltaX: input.deltaX ?? 0,
+        deltaY: input.deltaY ?? 0,
+        deltaZ: input.deltaZ ?? 0,
+        deltaMode: input.deltaMode ?? 0,
+        cancelable: true,
+        preventDefault() {},
+      } as WheelEvent)
+    },
+    projectPoint(id, point) {
+      assertActive(disposed)
+      const rect = seams.readCanvasRect(options.canvas)
+      const overlay = overlays.get(id)?.runtime
+      if (overlay !== undefined) {
+        if (!overlay.overlay.visible || !overlay.overlay.content.visible) return null
+        return {
+          x: rect.left + point.x * rect.width / canvasViewport.width,
+          y: rect.top + point.y * rect.height / canvasViewport.height,
+        }
+      }
+      const plane = records.get(id)?.runtime.plane
+      if (plane === undefined || !plane.visible || !plane.content.visible) return null
+      viewPoint.update()
+      const view = plane.documentPointToWorld(point).applyMatrix4(viewPoint.viewMatrix)
+      if (-view.z < viewPoint.near || -view.z > viewPoint.far) return null
+      const projected = view.applyMatrix4(viewPoint.projectionMatrix)
+      return {
+        x: rect.left + (projected.x + 1) * rect.width / 2,
+        y: rect.top + (1 - projected.y) * rect.height / 2,
+      }
+    },
     subscribeBeforeRender,
     subscribePresented,
     dispose() {
@@ -1962,15 +2024,13 @@ const validateViewPointSnapshot = (
   if (value === null || typeof value !== "object") throw new TypeError("ViewPoint snapshot is required")
   const position = validateSnapshotVector(value.position, "position")
   const target = validateSnapshotVector(value.target, "target")
-  const up = validateSnapshotVector(value.up, "up")
   if (distance(position, target) === 0) throw new RangeError("ViewPoint position and target must differ")
-  if (Math.hypot(up.x, up.y, up.z) === 0) throw new RangeError("ViewPoint up must be non-zero")
   if (!Number.isFinite(value.fov) || value.fov <= 0 || value.fov >= Math.PI) {
     throw new RangeError("ViewPoint fov must be between zero and pi")
   }
   if (!Number.isFinite(value.near) || value.near <= 0) throw new RangeError("ViewPoint near must be positive")
   if (!Number.isFinite(value.far) || value.far <= value.near) throw new RangeError("ViewPoint far must exceed near")
-  return Object.freeze({position, target, up, fov: value.fov, near: value.near, far: value.far})
+  return Object.freeze({position, target, fov: value.fov, near: value.near, far: value.far})
 }
 
 const validateSnapshotVector = (value: DocumentSpaceVector3, label: string): DocumentSpaceVector3 => {
@@ -1990,7 +2050,6 @@ const applyViewPointSnapshot = (
 ): void => {
   viewPoint.position.set(snapshot.position.x, snapshot.position.y, snapshot.position.z)
   viewPoint.getTarget().set(snapshot.target.x, snapshot.target.y, snapshot.target.z)
-  viewPoint.getUp().set(snapshot.up.x, snapshot.up.y, snapshot.up.z)
   viewPoint.fov = snapshot.fov
   viewPoint.near = snapshot.near
   viewPoint.far = snapshot.far
@@ -2002,7 +2061,6 @@ const viewPointSnapshot = (viewPoint: ViewPoint): DocumentSpaceViewPointSnapshot
   validateViewPointSnapshot({
     position: {x: viewPoint.position.x, y: viewPoint.position.y, z: viewPoint.position.z},
     target: {x: viewPoint.getTarget().x, y: viewPoint.getTarget().y, z: viewPoint.getTarget().z},
-    up: {x: viewPoint.getUp().x, y: viewPoint.getUp().y, z: viewPoint.getUp().z},
     fov: viewPoint.fov,
     near: viewPoint.near,
     far: viewPoint.far,

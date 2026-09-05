@@ -41,9 +41,7 @@ export type XRViewPointIntrinsicProperties = Readonly<{
   targetX?: number | undefined
   targetY?: number | undefined
   targetZ?: number | undefined
-  upX?: number | undefined
-  upY?: number | undefined
-  upZ?: number | undefined
+  controls?: boolean | undefined
   fov?: number | undefined
   near?: number | undefined
   far?: number | undefined
@@ -119,6 +117,10 @@ export type XRMaterialIntrinsicProperties = Readonly<{
 }>
 
 export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & Readonly<{
+  quaternionX?: number | undefined
+  quaternionY?: number | undefined
+  quaternionZ?: number | undefined
+  quaternionW?: number | undefined
   id: string
   style?: CssStyle | undefined
   viewportWidth?: number | undefined

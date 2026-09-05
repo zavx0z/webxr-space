@@ -33,7 +33,7 @@ const createProjectionTree = () => {
 }
 
 test("[EXP-001] один Experience владеет ровно одним Document", async () => {
-  const experience = await source("browser/src/experience.ts")
+  const experience = await source("browser/src/attach.ts")
   expect(experience.match(/createDocument\(/gu)).toHaveLength(1)
   expect(experience).toContain("elementFactories: createSpaceElementFactories()")
   expect(experience).not.toContain("options.document")
@@ -45,12 +45,13 @@ test("[EXP-002] один Experience владеет ровно одним Canvas"
     exports: Record<string, string>
   }
   expect(Object.keys(manifest.exports)).toEqual(["."])
-  expect(index).toContain("createExperience")
+  expect(index).toContain("attach")
+  expect(index).not.toContain("createExperience")
   expect(index).not.toContain("createDocumentCanvasRuntime")
 })
 
 test("[EXP-003] один Experience владеет ровно одним Space и ViewPoint", async () => {
-  const experience = await source("browser/src/experience.ts")
+  const experience = await source("browser/src/attach.ts")
   const runtime = await source("browser/src/space-runtime.ts")
   expect(experience).toContain("readSpaceTree(document)")
   expect(experience.match(/createRuntime\(/gu)).toHaveLength(1)

@@ -1,4 +1,5 @@
 import {
+  Comment,
   Element,
   type Document,
   type Node,
@@ -121,6 +122,7 @@ export class XRSpaceElement extends XRElement {
     ]
 
     for (const child of children) {
+      if (child instanceof Comment) continue
       if (!(child instanceof XRElement)) {
         throw new TypeError("Space accepts only spatial elements")
       }
@@ -158,12 +160,8 @@ export class XRViewPointElement extends XRElement {
   set targetY(value: number) { setNumberAttribute(this, "target-y", value) }
   get targetZ(): number { return numberAttribute(this, "target-z", 0) }
   set targetZ(value: number) { setNumberAttribute(this, "target-z", value) }
-  get upX(): number { return numberAttribute(this, "up-x", 0) }
-  set upX(value: number) { setNumberAttribute(this, "up-x", value) }
-  get upY(): number { return numberAttribute(this, "up-y", 0) }
-  set upY(value: number) { setNumberAttribute(this, "up-y", value) }
-  get upZ(): number { return numberAttribute(this, "up-z", 1) }
-  set upZ(value: number) { setNumberAttribute(this, "up-z", value) }
+  get controls(): boolean { return booleanAttribute(this, "controls", false) }
+  set controls(value: boolean) { this.setAttribute("controls", String(value)) }
   get fov(): number { return numberAttribute(this, "fov", 1) }
   set fov(value: number) { setNumberAttribute(this, "fov", value) }
   get near(): number { return numberAttribute(this, "near", 0.1) }
@@ -222,6 +220,7 @@ export abstract class XRObjectElement extends XRElement {
       ...nodes,
     ]
     for (const child of children) {
+      if (child instanceof Comment) continue
       const isLeaf = leafTypes.some(type => child instanceof type)
       if (!(child instanceof XRObjectElement) && !(child instanceof XRAnimationElement) && !isLeaf) {
         throw new TypeError(`${this.localName} accepts only spatial Object or owned resource children`)
@@ -259,7 +258,7 @@ export class XRAssetElement extends XRObjectElement {
       ...this.childNodes.filter(node => !retained.has(node) && !moving.has(node)),
       ...nodes,
     ]
-    if (children.some(child => !(child instanceof XRAnimationElement))) {
+    if (children.some(child => !(child instanceof Comment) && !(child instanceof XRAnimationElement))) {
       throw new TypeError("Asset accepts only Animation behavior children")
     }
   }
@@ -485,6 +484,15 @@ export class XRDisplayElement extends XRElement {
   set viewportHeight(value: number) { setNumberAttribute(this, "viewport-height", value) }
   get worldUnitsPerPixel(): number { return numberAttribute(this, "world-units-per-pixel", 1) }
   set worldUnitsPerPixel(value: number) { setNumberAttribute(this, "world-units-per-pixel", value) }
+
+  get quaternionX(): number { return numberAttribute(this, "quaternion-x", 0) }
+  set quaternionX(value: number) { setNumberAttribute(this, "quaternion-x", value) }
+  get quaternionY(): number { return numberAttribute(this, "quaternion-y", 0) }
+  set quaternionY(value: number) { setNumberAttribute(this, "quaternion-y", value) }
+  get quaternionZ(): number { return numberAttribute(this, "quaternion-z", 0) }
+  set quaternionZ(value: number) { setNumberAttribute(this, "quaternion-z", value) }
+  get quaternionW(): number { return numberAttribute(this, "quaternion-w", 1) }
+  set quaternionW(value: number) { setNumberAttribute(this, "quaternion-w", value) }
   get x(): number { return numberAttribute(this, "x", 0) }
   set x(value: number) { setNumberAttribute(this, "x", value) }
   get y(): number { return numberAttribute(this, "y", 0) }
