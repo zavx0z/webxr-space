@@ -10,9 +10,14 @@ export type RenderObjectFit = "cover" | "contain"
 export type RenderPosition = "static" | "relative" | "absolute"
 export type RenderZIndex = "auto" | number
 
+export type RenderFontSelection = Readonly<{fontFamily: string; fontWeight: number; fontStyle: "normal" | "italic"}>
+export type RenderImageSize = Readonly<{width: number; height: number}>
+export type RenderImageMeasurer = Readonly<{measureImage(src: string): RenderImageSize | null}>
+
 export type RenderTextMeasurer = Readonly<{
   /** Returns one finite non-negative inline advance for the exact resolved font. */
-  measureTextAdvance(value: string, fontSize: number, letterSpacing: number): number
+  measureTextAdvance(value: string, fontSize: number, letterSpacing: number, font?: RenderFontSelection): number
+  measureTextBaseline?(fontSize: number, lineHeight: number, font?: RenderFontSelection): number
 }>
 
 export type RenderTransform = Readonly<{
@@ -147,10 +152,15 @@ export type TextDisplayItem = Readonly<{
   key: string
   node: Node
   text: string
+  /** Exact advance of a line fragment, when projected by inline formatting. */
+  width?: number
   x: number
   y: number
   color: string
   fontSize: number
+  fontFamily?: string
+  fontWeight?: number
+  fontStyle?: "normal" | "italic"
   /** Resolved line-box height; `y` is the line-box top, not the alphabetic baseline. */
   lineHeight: number
   letterSpacing: number
@@ -235,6 +245,8 @@ export type HitMetadata = Readonly<{
   role: string | null
   clips: readonly RenderClip[]
   transform: RenderTransform
+  /** Occupied inline fragments; the main rectangle is their bounding union. */
+  fragments?: readonly Readonly<{x: number; y: number; width: number; height: number}>[]
   path?: Readonly<{
     geometry: RenderPathGeometry
     originX: number
@@ -287,12 +299,15 @@ export type CreateDocumentRendererOptions = Readonly<{
   styleSheets?: readonly string[]
   interactionState?: DocumentInteractionState
   textMeasurer?: RenderTextMeasurer
+  imageMeasurer?: RenderImageMeasurer
 }>
 
 export interface DocumentRenderer {
   readonly document: Document
   readonly root: Node
   readonly viewport: RenderViewport
+  /** Changes layout bounds while preserving node identity and frame revision order. */
+  resize(viewport: RenderViewport): void
   invalidate(node: Node): void
   render(node?: Node): RenderFrame
   flush(): RenderFrame

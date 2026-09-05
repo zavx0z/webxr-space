@@ -1,3 +1,4 @@
+import type {RendererFontFace} from "@zavx0z/webgpu"
 import {
   Space,
   ViewPoint,
@@ -43,6 +44,7 @@ export type CreateDocumentCanvasRuntimeOptions = Readonly<{
   root: Node
   styleSheets: readonly string[]
   font: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[] | undefined
   pixelRatio?: number
   tooltipDelayMs?: number
   distance?: number
@@ -214,6 +216,7 @@ const createClaimedDocumentCanvasRuntime = async (
   let requestBackendPresentation = (): void => {}
   const backend = seams.createBackend({
     font: options.font,
+    ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
     invalidateGeometry: (geometry) => engineRenderer.invalidateGeometry(geometry),
     requestPresentation: () => requestBackendPresentation(),
   })
@@ -221,13 +224,22 @@ const createClaimedDocumentCanvasRuntime = async (
   if (textMeasurer === undefined) throw new Error("Document canvas font has no text measurer")
   let viewport = readViewport(options.canvas, seams)
   const interactionState = createDocumentInteractionState(options.document)
-  let documentRenderer = seams.createDocumentRenderer({
+  const imageMeasurer = typeof engineRenderer.readImageSize !== "function" ? undefined : {
+    measureImage: (src: string) => engineRenderer.readImageSize(src, onImageSizeChanged),
+  }
+  const onImageSizeChanged = () => {
+    if (disposed) return
+    documentRenderer.invalidate(options.root)
+    requestRender()
+  }
+  const documentRenderer = seams.createDocumentRenderer({
     document: options.document,
     root: options.root,
     viewport,
     styleSheets,
     interactionState,
     textMeasurer,
+    ...(imageMeasurer === undefined ? {} : {imageMeasurer}),
   })
   const interaction = seams.createInteraction({
     document: options.document,
@@ -317,18 +329,9 @@ const createClaimedDocumentCanvasRuntime = async (
       height: next.height,
     })
     if (next.width !== viewport.width || next.height !== viewport.height) {
-      const previous = documentRenderer
-      documentRenderer = seams.createDocumentRenderer({
-        document: options.document,
-        root: options.root,
-        viewport: next,
-        styleSheets,
-        interactionState,
-        textMeasurer,
-      })
+      documentRenderer.resize(next)
       viewport = next
       overlay.resize(next)
-      previous.dispose()
     }
     return render()
   }
@@ -464,6 +467,7 @@ const createClaimedDocumentCanvasRuntime = async (
     root: options.root,
     styleSheets,
     font: options.font,
+    ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
     engineRenderer,
     space,
     viewPoint,

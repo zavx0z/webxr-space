@@ -29,7 +29,7 @@ function TokenSpan(props: Readonly<{segment: CodeEditorSegment}>) {
     style={css`
       display: block;
       flex-shrink: 0;
-      white-space: nowrap;
+      white-space: pre;
       color: ${props.segment.foreground};
       background: ${props.segment.background ?? "transparent"};
     `}
@@ -69,7 +69,7 @@ export function CodeEditor(props: CodeEditorProps) {
       box-sizing: border-box;
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: stretch;
       width: 520px;
       height: 220px;
       min-width: 0;
@@ -81,6 +81,7 @@ export function CodeEditor(props: CodeEditorProps) {
       background: var(--editor-background);
       color: var(--editor-content);
       font-size: var(--font-size-sm);
+      font-family: monospace;
       line-height: 16px;
 
       ${props.style}
@@ -94,7 +95,7 @@ export function CodeEditor(props: CodeEditorProps) {
         display: flex;
         flex-direction: column;
         min-width: 42px;
-        height: 100%;
+        flex-shrink: 0;
         min-height: 0;
         margin: 0;
         padding: 8px;
@@ -114,7 +115,6 @@ export function CodeEditor(props: CodeEditorProps) {
         box-sizing: border-box;
         display: block;
         min-width: 0;
-        height: 100%;
         min-height: 0;
         flex-grow: 1;
         margin: 0;
@@ -129,7 +129,6 @@ export function CodeEditor(props: CodeEditorProps) {
           display: flex;
           flex-direction: column;
           min-width: 100%;
-          height: 100%;
           min-height: 0;
         `}
       >

@@ -120,6 +120,7 @@ export type XRMaterialIntrinsicProperties = Readonly<{
 
 export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & Readonly<{
   id: string
+  style?: CssStyle | undefined
   viewportWidth?: number | undefined
   viewportHeight?: number | undefined
   worldUnitsPerPixel?: number | undefined

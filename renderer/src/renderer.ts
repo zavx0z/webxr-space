@@ -25,6 +25,7 @@ import {
   resolveLength,
   resolveLineHeight,
   styleRulesDependOnAttribute,
+  styleRulesMayDependOnPointerState,
   type ComputedStyle,
   type CSSLength,
   type StyleRuleIndex,
@@ -62,6 +63,7 @@ import type {
   RenderViewport,
 } from "./types.ts"
 import {parseRenderPath} from "./path.ts"
+import {layoutInlineFlow, type InlineInput, type InlinePlan} from "./inline-flow.ts"
 import {
   readCanonicalRenderFrameChangeState,
   recordCanonicalRenderFrameChanges,
@@ -85,6 +87,12 @@ type LayoutNode = {
 type Size = Readonly<{
   width: number
   height: number
+}>
+
+type InlineLayout = Readonly<{
+  plan: InlinePlan<LayoutNode>
+  owners: readonly LayoutNode[]
+  paths: ReadonlyMap<LayoutNode, readonly LayoutNode[]>
 }>
 
 type FlexLine = Readonly<{
@@ -113,11 +121,28 @@ type BuildState = {
   readonly hits: Map<Node, HitMetadata>
   readonly hitOrder: Element[]
   readonly scrolls: Map<Element, RenderScrollMetrics>
+  readonly scrollProjections: Map<HTMLElement, ScrollProjection>
   readonly transforms: Map<Node, RenderTransform>
   readonly presentationTransforms: Map<Element, RenderTransform>
   readonly measured: WeakMap<LayoutNode, Map<string, Size>>
+  readonly inlinePlans: WeakMap<LayoutNode, Map<string, InlineLayout | null>>
+  readonly imageMeasurer?: CreateDocumentRendererOptions["imageMeasurer"]
   readonly textMeasurer: CreateDocumentRendererOptions["textMeasurer"]
 }
+
+/** Stable layout ranges; offsets and paint records stay in the immutable frame. */
+type ScrollProjection = Readonly<{
+  boxStart: number
+  boxEnd: number
+  displayStart: number
+  displayEnd: number
+  hitNodes: readonly Node[]
+  clipDepth: number
+  chromeStart: number
+  chromeEnd: number
+}>
+
+const scrollProjectionsByFrame = new WeakMap<RenderFrame, ReadonlyMap<HTMLElement, ScrollProjection>>()
 
 type FrameCollectionIndexes = Readonly<{
   boxByNode: WeakMap<Node, number>
@@ -289,6 +314,9 @@ const ROOT_STYLE: ComputedStyle = Object.freeze({
   strokeWidth: 1,
   pointerHitWidth: 0,
   fontSize: 16,
+  fontFamily: "sans-serif",
+  fontWeight: 400,
+  fontStyle: "normal",
   lineHeight: "normal",
   letterSpacing: 0,
   opacity: 1,
@@ -305,7 +333,7 @@ const ROOT_STYLE: ComputedStyle = Object.freeze({
 export const createDocumentRenderer = (
   options: CreateDocumentRendererOptions,
 ): DocumentRenderer => {
-  const viewport = validateViewport(options.viewport)
+  let viewport = validateViewport(options.viewport)
   validateRoot(options.document, options.root)
   if (
     options.interactionState !== undefined &&
@@ -320,6 +348,9 @@ export const createDocumentRenderer = (
   const characterDataTargets = new Set<Text>()
   const inputValueTargets = new Set<HTMLInputElement>()
   const vectorPathTargets = new Set<HTMLVectorPathElement>()
+  const scrollTargets = new Set<HTMLElement>()
+  let hasScrollChanges = false
+  let scrollFastPathBlocked = false
   let projectionNeutralMutations = 0
   let frame: RenderFrame | null = null
   let revision = 0
@@ -348,6 +379,7 @@ export const createDocumentRenderer = (
   )
   const unsubscribeInteraction = options.interactionState?.subscribe(({elements}) => {
     if (disposed) return
+    if (!styleRulesMayDependOnPointerState(rules, elements, options.interactionState)) return
     let affected = false
     for (const element of elements) {
       if (
@@ -369,7 +401,16 @@ export const createDocumentRenderer = (
   const renderer: DocumentRenderer = Object.freeze({
     document: options.document,
     root: options.root,
-    viewport,
+    get viewport() { return viewport },
+    resize(nextViewport: RenderViewport): void {
+      assertActive()
+      const next = validateViewport(nextViewport)
+      if (viewport.width === next.width && viewport.height === next.height) return
+      viewport = next
+      dirty.invalidate(options.root)
+      subtreeDirty.add(options.root)
+      blockFastPath()
+    },
     invalidate(node: Node): void {
       assertActive()
       dirty.invalidate(node)
@@ -410,6 +451,18 @@ export const createDocumentRenderer = (
       blockFastPath()
     }
     if (frame && !dirty.dirty) return frame
+    if (frame !== null && hasScrollChanges && !scrollFastPathBlocked) {
+      const next = tryBuildScrollFrame(frame, scrollTargets, revision + 1)
+      if (next !== null) {
+        revision++
+        frame = next
+        dirty.clear()
+        subtreeDirty.clear()
+        resetFastPath()
+        return frame
+      }
+    }
+    if (hasScrollChanges) blockFastPath()
     if (
       frame !== null &&
       !fastPathBlocked &&
@@ -523,6 +576,7 @@ export const createDocumentRenderer = (
       layoutCache,
       options.interactionState,
       options.textMeasurer,
+      options.imageMeasurer,
     )
     revision++
     frame = next
@@ -540,6 +594,7 @@ export const createDocumentRenderer = (
         record.target === options.root
       ) {
         dirty.invalidate(record.target)
+        scrollFastPathBlocked = true
         if (isProjectionNeutralMutation(record, rules)) {
           subtreeDirty.add(record.target)
           if (
@@ -600,6 +655,11 @@ export const createDocumentRenderer = (
       ) {
         dirty.invalidate(record.target)
         subtreeDirty.add(record.target)
+        if (record.type === "scroll") {
+          hasScrollChanges = true
+          scrollTargets.add(record.target)
+          continue
+        }
         if (
           !fastPathBlocked &&
           projectionNeutralMutations === 0 &&
@@ -621,6 +681,7 @@ export const createDocumentRenderer = (
   }
 
   function blockFastPath(): void {
+    scrollFastPathBlocked = true
     fastPathBlocked = true
     characterDataTargets.clear()
     inputValueTargets.clear()
@@ -630,6 +691,9 @@ export const createDocumentRenderer = (
   }
 
   function resetFastPath(): void {
+    scrollFastPathBlocked = false
+    hasScrollChanges = false
+    scrollTargets.clear()
     fastPathBlocked = false
     characterDataTargets.clear()
     inputValueTargets.clear()
@@ -661,6 +725,110 @@ const retainProjectionFrame = (previous: RenderFrame, revision: number): RenderF
   })
   recordCanonicalRenderFrameChanges(next, previous, [])
   collectionIndexesByFrame.set(next, collectionIndexes(previous))
+  const scrollProjections = scrollProjectionsByFrame.get(previous)
+  if (scrollProjections !== undefined) scrollProjectionsByFrame.set(next, scrollProjections)
+  return next
+}
+
+const tryBuildScrollFrame = (
+  previous: RenderFrame,
+  targets: ReadonlySet<HTMLElement>,
+  revision: number,
+): RenderFrame | null => {
+  const projections = scrollProjectionsByFrame.get(previous)
+  if (projections === undefined || [...targets].some(target => !projections.has(target))) return null
+  const indexes = collectionIndexes(previous)
+  const boxes = new Map<number, RenderBox>()
+  const display = new Map<number, DisplayItem>()
+  const hits = new Map<Node, HitMetadata>()
+  const scrolls = new Map<Element, RenderScrollMetrics>()
+  const presentationTransforms = new Map<Element, RenderTransform>()
+
+  // Layout records containers after their children. Preserve that order when
+  // several nested containers scroll in one transaction.
+  for (const [owner, projection] of projections) {
+    if (!targets.has(owner)) continue
+    const old = previous.scrolls.get(owner)
+    const ownerBox = previous.boxByNode.get(owner)
+    if (old === undefined || ownerBox === undefined || projection.clipDepth < 0) return null
+    const requestedScrollLeft = owner.scrollLeft
+    const requestedScrollTop = owner.scrollTop
+    const scrollLeft = Math.min(old.maxScrollLeft, requestedScrollLeft)
+    const scrollTop = Math.min(old.maxScrollTop, requestedScrollTop)
+    scrolls.set(owner, Object.freeze({...old, requestedScrollLeft, requestedScrollTop, scrollLeft, scrollTop}))
+    const dx = scrollLeft - old.scrollLeft
+    const dy = scrollTop - old.scrollTop
+    if (dx === 0 && dy === 0) continue
+    for (let index = projection.boxStart; index < projection.boxEnd; index++) {
+      const box = boxes.get(index) ?? previous.boxes[index]!
+      const shifted = scrollBox(box, dx, dy, ownerBox.transform)
+      boxes.set(index, shifted)
+      if (isElement(box.node) && previous.presentationTransforms?.has(box.node)) {
+        presentationTransforms.set(box.node, shifted.transform)
+      }
+    }
+    for (let index = projection.displayStart; index < projection.displayEnd; index++) {
+      const item = display.get(index) ?? previous.displayList[index]!
+      display.set(index, scrollDisplayItem(item, projection.clipDepth, dx, dy, ownerBox.transform))
+      if (item.kind === "path" && item.presentationOwner !== null && item.presentationOwner === item.node) {
+        const transform = presentationTransforms.get(item.presentationOwner) ?? previous.presentationTransforms?.get(item.presentationOwner)
+        if (transform !== undefined) {
+          presentationTransforms.set(item.presentationOwner, shiftTransformForScroll(transform, ownerBox.transform, dx, dy))
+        }
+      }
+    }
+    for (const node of projection.hitNodes) {
+      const hit = hits.get(node) ?? previous.hits.get(node)
+      if (hit !== undefined) hits.set(node, scrollHit(hit, projection.clipDepth, dx, dy, ownerBox.transform))
+    }
+    for (let index = projection.chromeStart; index + 1 < projection.chromeEnd; index += 2) {
+      const track = display.get(index) ?? previous.displayList[index]!
+      const thumb = display.get(index + 1) ?? previous.displayList[index + 1]!
+      if (track.kind !== "rect" || thumb.kind !== "rect") return null
+      const vertical = thumb.key === "ua:scrollbar-y-thumb"
+      const offset = scrollbarThumbOffset(
+        vertical ? track.height : track.width,
+        vertical ? thumb.height : thumb.width,
+        vertical ? scrollTop : scrollLeft,
+        vertical ? old.maxScrollTop : old.maxScrollLeft,
+      )
+      display.set(index + 1, Object.freeze({...thumb,
+        x: track.x + (vertical ? 0 : offset),
+        y: track.y + (vertical ? offset : 0),
+      }))
+    }
+  }
+  const boxEntries = [...boxes].map(([index, value]) => ({index, value}))
+  const displayEntries = [...display].map(([index, value]) => ({index, value}))
+  const hitEntries = [...hits].map(([node, value]) => ({node, value}))
+  const hitOrderEntries: Array<{index: number; value: HitMetadata}> = []
+  for (const [node, value] of hits) {
+    const before = previous.hits.get(node)!
+    const index = indexes.hitByRecord.get(before)
+    if (index !== undefined) {
+      hitOrderEntries.push({index, value})
+      indexes.hitByRecord.set(value, index)
+    }
+  }
+  const next: RenderFrame = Object.freeze({
+    revision,
+    document: previous.document,
+    root: previous.root,
+    viewport: previous.viewport,
+    boxes: replaceImmutableArrayEntries(previous.boxes, boxEntries),
+    boxByNode: replaceImmutableNodeMapEntries(previous.boxByNode, boxEntries.map(({value}) => ({node: value.node, value}))),
+    displayList: replaceImmutableArrayEntries(previous.displayList, displayEntries),
+    hits: replaceImmutableNodeMapEntries(previous.hits, hitEntries),
+    ...(previous.hitOrder === undefined ? {} : {hitOrder: replaceImmutableArrayEntries(previous.hitOrder, hitOrderEntries)}),
+    scrolls: replaceImmutableNodeMapEntries(previous.scrolls, [...scrolls].map(([node, value]) => ({node, value}))),
+    ...(previous.presentationTransforms === undefined ? {} : {
+      presentationTransforms: replaceImmutableNodeMapEntries(previous.presentationTransforms,
+        [...presentationTransforms].map(([node, value]) => ({node, value}))),
+    }),
+  })
+  recordCanonicalRenderFrameChanges(next, previous, [...display.keys()].sort((a, b) => a - b))
+  scrollProjectionsByFrame.set(next, projections)
+  collectionIndexesByFrame.set(next, indexes)
   return next
 }
 
@@ -1634,6 +1802,7 @@ const isStableTextContainer = (
     parent === null ||
     parent.transparent ||
     parent.style.display !== "block" ||
+    parent.style.whiteSpace === "normal" ||
     parent.style.height?.unit !== "px" ||
     parent.children.length !== 1 ||
     parent.children[0] !== text ||
@@ -1669,6 +1838,7 @@ const buildFrame = (
   layoutCache: WeakMap<Node, LayoutNode>,
   interactionState: CreateDocumentRendererOptions["interactionState"],
   textMeasurer: CreateDocumentRendererOptions["textMeasurer"],
+  imageMeasurer?: CreateDocumentRendererOptions["imageMeasurer"],
 ): RenderFrame => {
   const popoverInheritedStyles = new WeakMap<HTMLElement, ComputedStyle>()
   const inheritedStyle = projectionRootInheritedStyle(root, rules, interactionState)
@@ -1693,10 +1863,13 @@ const buildFrame = (
     hits: new Map(),
     hitOrder: [],
     scrolls: new Map(),
+    scrollProjections: new Map(),
     transforms: new Map(),
     presentationTransforms: new Map(),
     measured: new WeakMap(),
+    inlinePlans: new WeakMap(),
     textMeasurer,
+    imageMeasurer,
   }
   const margin = tree.style.margin
   const availableWidth = Math.max(0, viewport.width - horizontal(margin))
@@ -1741,7 +1914,8 @@ const buildFrame = (
     )
   }
 
-  for (const popover of showingPopovers(root)) {
+  const popovers = showingPopovers(root)
+  for (const popover of popovers) {
     const inheritedStyle = popoverInheritedStyles.get(popover) ??
       layoutCache.get(popover)?.parent?.style ??
       ROOT_STYLE
@@ -1815,6 +1989,11 @@ const buildFrame = (
     scrolls,
     presentationTransforms: immutableNodeMap(state.presentationTransforms),
   })
+  // Floating overlays may be positioned relative to a scrolled anchor.
+  // Their placement is recomputed by the normal layout path while open.
+  if (popovers.length === 0 && openSelect === null) {
+    scrollProjectionsByFrame.set(frame, state.scrollProjections)
+  }
   return frame
 }
 
@@ -1950,6 +2129,9 @@ const buildLayoutTree = (
       cached !== undefined &&
       (cached.style.color !== style.color ||
         cached.style.fontSize !== style.fontSize ||
+        cached.style.fontFamily !== style.fontFamily ||
+        cached.style.fontWeight !== style.fontWeight ||
+        cached.style.fontStyle !== style.fontStyle ||
         !sameLineHeight(cached.style.lineHeight, style.lineHeight) ||
         cached.style.letterSpacing !== style.letterSpacing ||
         cached.style.textAlign !== style.textAlign ||
@@ -2054,6 +2236,165 @@ const finalizeLayoutNodeChildren = (layoutNode: LayoutNode): void => {
     layoutNode.transformChildren.some((child) => child.ownsOverflowClipInSubtree)
 }
 
+const inlineLayout = (
+  owner: LayoutNode,
+  width: number,
+  height: number,
+  state: BuildState,
+): InlineLayout | null => {
+  if (owner.text !== null || owner.transparent || owner.style.display === "flex") return null
+  const key = `${width}:${height}`
+  let cached = state.inlinePlans.get(owner)
+  if (cached?.has(key)) return cached.get(key) ?? null
+  if (cached === undefined) {
+    cached = new Map()
+    state.inlinePlans.set(owner, cached)
+  }
+  const children = flowChildren(owner).filter(child => child.style.display !== "none")
+  const single = children.length === 1 ? children[0] : undefined
+  if (children.length === 0 || children.some(child => child.text === null && child.style.display !== "inline") ||
+    single?.text !== null && single?.text !== undefined &&
+      (single.style.whiteSpace !== "normal" || single.text === single.text.trim() &&
+        textAdvance(single.text, single.style, state.textMeasurer) <= width)) {
+    cached.set(key, null)
+    return null
+  }
+  const inputs: InlineInput<LayoutNode>[] = []
+  const owners: LayoutNode[] = []
+  const paths = new Map<LayoutNode, readonly LayoutNode[]>()
+  const visit = (node: LayoutNode, ancestors: readonly LayoutNode[]): void => {
+    if (node.style.display === "none") return
+    const path = Object.freeze([...ancestors, node])
+    if (node.text !== null) {
+      owners.push(node)
+      paths.set(node, path)
+      inputs.push({
+        owner: node, kind: "text", text: node.node.textContent ?? "",
+        whiteSpace: node.style.whiteSpace, width: 0, height: resolveLineHeight(node.style),
+        baseline: textBaseline(node.style, state.textMeasurer),
+      })
+    } else if (node.tag === "br") {
+      owners.push(node)
+      paths.set(node, path)
+      inputs.push({owner: node, kind: "break", text: "", whiteSpace: node.style.whiteSpace, width: 0, height: resolveLineHeight(node.style), baseline: textBaseline(node.style, state.textMeasurer)})
+    } else if (fragmentableInline(node)) {
+      owners.push(node)
+      paths.set(node, path)
+      for (const child of node.children) visit(child, path)
+    } else {
+      paths.set(node, ancestors)
+      const size = measure(node, Math.max(0, width - horizontal(node.style.margin)), height, state)
+      inputs.push({
+        owner: node, kind: "box", text: "", whiteSpace: node.style.whiteSpace,
+        width: size.width + horizontal(node.style.margin), height: size.height + vertical(node.style.margin),
+      })
+    }
+  }
+  for (const child of children) visit(child, [])
+  const result: InlineLayout = Object.freeze({
+    owners: Object.freeze(owners), paths,
+    plan: layoutInlineFlow(inputs, width, resolveLineHeight(owner.style), owner.style.textAlign,
+      (node, text) => textAdvance(text, node.style, state.textMeasurer), textBaseline(owner.style, state.textMeasurer)),
+  })
+  cached.set(key, result)
+  return result
+}
+
+const fragmentableInline = (node: LayoutNode): boolean => {
+  const style = node.style
+  return style.display === "inline" && style.position === "static" && style.transform.length === 0 &&
+    style.width === null && style.height === null && style.minWidth === null && style.maxWidth === null &&
+    style.minHeight === null && style.maxHeight === null && style.boxShadow === null &&
+    style.overflowX === "visible" && style.overflowY === "visible" &&
+    horizontal(style.padding) + vertical(style.padding) + horizontal(style.borderWidths) + vertical(style.borderWidths) === 0 &&
+    style.margin.top === 0 && style.margin.right === 0 && style.margin.bottom === 0 && style.margin.left === 0 &&
+    node.children.every(child => child.style.position === "static" &&
+      (child.text !== null || child.style.display === "inline" || child.style.display === "none")) &&
+    !["input", "img", "select", "textarea", "progress", "meter"].includes(node.tag ?? "")
+}
+
+type InlineRect = Readonly<{x: number; y: number; width: number; height: number}>
+
+const unionInlineRects = (rects: readonly InlineRect[]): InlineRect => {
+  if (rects.length === 0) return {x: 0, y: 0, width: 0, height: 0}
+  const left = rects.reduce((minimum, rect) => Math.min(minimum, rect.x), Infinity)
+  const top = rects.reduce((minimum, rect) => Math.min(minimum, rect.y), Infinity)
+  return {
+    x: left, y: top,
+    width: rects.reduce((maximum, rect) => Math.max(maximum, rect.x + rect.width), left) - left,
+    height: rects.reduce((maximum, rect) => Math.max(maximum, rect.y + rect.height), top) - top,
+  }
+}
+
+const placeInlineLayout = (
+  layout: InlineLayout,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  clips: readonly RenderClip[],
+  depth: number,
+  state: BuildState,
+  context: PlacementContext,
+): void => {
+  const rectangles = new Map<LayoutNode, Map<number, InlineRect[]>>()
+  for (const fragment of layout.plan.fragments) {
+    for (const node of layout.paths.get(fragment.owner) ?? []) {
+      const lines = rectangles.get(node) ?? new Map<number, InlineRect[]>()
+      const entries = lines.get(fragment.line) ?? []
+      entries.push({x: x + fragment.x, y: y + fragment.y, width: fragment.width, height: fragment.height})
+      lines.set(fragment.line, entries)
+      rectangles.set(node, lines)
+    }
+  }
+  for (const node of layout.owners) {
+    const rects = Object.freeze([...(rectangles.get(node)?.values() ?? [])].map(entries => Object.freeze(unionInlineRects(entries))))
+    const bounds = rects.length === 0 ? {x, y, width: 0, height: 0} : unionInlineRects(rects)
+    const nodeDepth = depth + (layout.paths.get(node)?.length ?? 1) - 1
+    const box = createBox(node, bounds.x, bounds.y, bounds.width, bounds.height, ZERO_EDGES, ZERO_BORDER, nodeDepth, "inline", context.presentation)
+    state.boxes.push(box)
+    state.boxByNode.set(node.node, box)
+    state.transforms.set(node.node, context.presentation)
+    if (!isElement(node.node)) continue
+    state.hits.set(node.node, Object.freeze({
+      ...createHit(node.node, node.tag ?? "", bounds.x, bounds.y, bounds.width, bounds.height, clips, context.presentation, node.style),
+      ...(rects.length > 1 ? {fragments: rects} : {}),
+    }))
+    state.hitOrder.push(node.node)
+    if (node.style.background !== null) {
+      for (const [index, rect] of rects.entries()) {
+        if (rect.width <= 0 || rect.height <= 0) continue
+        state.displayList.push(Object.freeze({
+          kind: "rect", key: `inline-background:${index}`, node: node.node,
+          ...rect, color: node.style.background, opacity: node.effectiveOpacity,
+          border: ZERO_BORDER, shadow: null, clips, transform: context.presentation,
+        }))
+      }
+    }
+  }
+  const indices = new Map<Node, number>()
+  for (const fragment of layout.plan.fragments) {
+    const node = fragment.owner
+    if (fragment.kind === "box") {
+      const margin = node.style.margin
+      place(node, x + fragment.x + margin.left, y + fragment.y + margin.top,
+        width, height, fragment.width - horizontal(margin), fragment.height - vertical(margin),
+        clips, depth + (layout.paths.get(node)?.length ?? 0), state, context)
+    } else if (fragment.kind === "text" && hasPaintableText(fragment.text)) {
+      const index = indices.get(node.node) ?? 0
+      indices.set(node.node, index + 1)
+      state.displayList.push(Object.freeze({
+        kind: "text", key: `inline-text:${index}`, node: node.node, text: fragment.text,
+        x: x + fragment.x, y: y + fragment.y, width: fragment.width,
+        color: node.style.color, fontSize: node.style.fontSize,
+        fontFamily: node.style.fontFamily, fontWeight: node.style.fontWeight, fontStyle: node.style.fontStyle,
+        lineHeight: fragment.height, letterSpacing: node.style.letterSpacing,
+        opacity: node.effectiveOpacity, clips, transform: context.presentation,
+      }))
+    }
+  }
+}
+
 const measure = (
   layoutNode: LayoutNode,
   availableWidth: number,
@@ -2079,6 +2420,25 @@ const measure = (
       height,
       state,
     )
+  }
+
+  if (layoutNode.node instanceof HTMLImageElement && state.imageMeasurer !== undefined) {
+    const natural = state.imageMeasurer.measureImage(layoutNode.node.src)
+    if (natural !== null && natural.width > 0 && natural.height > 0) {
+      const style = layoutNode.style
+      const edgeWidth = horizontalBoxEdges(style)
+      const edgeHeight = verticalBoxEdges(style)
+      const declaredWidth = resolveLength(style.width, availableWidth)
+      const declaredHeight = resolveLength(style.height, availableHeight)
+      const contentHeight = declaredHeight === null ? null : Math.max(0, declaredHeight - (style.boxSizing === "border-box" ? edgeHeight : 0))
+      const contentWidth = declaredWidth === null
+        ? contentHeight === null ? natural.width : contentHeight * natural.width / natural.height
+        : Math.max(0, declaredWidth - (style.boxSizing === "border-box" ? edgeWidth : 0))
+      const width = clampAxis(contentWidth + edgeWidth, style.minWidth, style.maxWidth, availableWidth, edgeWidth, style.boxSizing)
+      const height = clampAxis((contentHeight ?? Math.max(0, width - edgeWidth) * natural.height / natural.width) + edgeHeight,
+        style.minHeight, style.maxHeight, availableHeight, edgeHeight, style.boxSizing)
+      return rememberSize(layoutNode, availableWidth, availableHeight, width, height, state)
+    }
   }
 
   if (layoutNode.transparent) {
@@ -2127,9 +2487,18 @@ const measure = (
         ? explicitHeight
         : explicitHeight - edgeHeight,
   )
+  const inlineWidth = Math.max(0, clampAxis(
+    contentConstraintWidth + edgeWidth,
+    layoutNode.style.minWidth,
+    layoutNode.style.maxWidth,
+    availableWidth,
+    edgeWidth,
+    layoutNode.style.boxSizing,
+  ) - edgeWidth)
+  const inline = inlineLayout(layoutNode, inlineWidth, contentConstraintHeight, state)
   const children = layoutNode.style.display === "flex"
     ? flexFlowChildren(layoutNode)
-    : flowChildren(layoutNode)
+    : inline === null ? flowChildren(layoutNode) : []
   const rowFlex = layoutNode.style.display === "flex" &&
     layoutNode.style.flexDirection === "row"
   const wrappingMainAvailable = layoutNode.style.display === "flex" &&
@@ -2171,7 +2540,10 @@ const measure = (
     : 0
   const gaps = Math.max(0, childSizes.length - 1) * mainGap
 
-  if (
+  if (inline !== null) {
+    naturalContentWidth = inline.plan.width
+    naturalContentHeight = inline.plan.height
+  } else if (
     layoutNode.style.display === "flex" &&
     layoutNode.style.flexWrap !== "nowrap" &&
     wrappingMainAvailable !== null
@@ -2812,6 +3184,7 @@ const place = (
   )
   const descendantBoxStart = state.boxes.length
   const descendantDisplayStart = state.displayList.length
+  const descendantHitStart = state.hitOrder.length
   emitReplacedControlPresentation(layoutNode, box, descendantClips, state)
   const childrenContext = childPlacementContext(
     layoutNode,
@@ -2821,7 +3194,10 @@ const place = (
     presentationOwner,
   )
 
-  if (layoutNode.style.display === "flex") {
+  const inline = inlineLayout(layoutNode, contentWidth, contentHeight, state)
+  if (inline !== null) {
+    placeInlineLayout(inline, contentX, contentY, contentWidth, contentHeight, descendantClips, depth + 1, state, childrenContext)
+  } else if (layoutNode.style.display === "flex") {
     placeFlexChildren(
       layoutNode,
       contentX,
@@ -2934,6 +3310,7 @@ const place = (
     descendantClips,
     descendantBoxStart,
     descendantDisplayStart,
+    descendantHitStart,
     state,
   )
 
@@ -3321,36 +3698,49 @@ const distributeFlexSpace = (
   }
 
   const target = Math.max(0, bases.reduce((sum, base) => sum + base, 0) + freeSpace)
-  const sizes = [...bases]
-  for (let pass = 0; pass <= children.length; pass++) {
-    const deficit = sizes.reduce((sum, size) => sum + size, 0) - target
-    if (deficit <= 1e-9) break
-    const weights = sizes.map((size, index) => {
-      const minimum = automaticMinimums[index] ?? 0
-      const child = children[index]
-      return child && size > minimum
-        ? size * child.style.flexShrink
-        : 0
-    })
-    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
-    if (totalWeight <= 0) break
-    let changed = false
+  const edges = children.map(child =>
+    row ? horizontalBoxEdges(child.style) : verticalBoxEdges(child.style),
+  )
+  const minimums = children.map((child, index) => Math.max(
+    edges[index] ?? 0,
+    clampMainSize(child, row, 0, mainAvailable, automaticMinimums[index] ?? 0),
+  ))
+  const weights = children.map((child, index) =>
+    Math.max(0, (bases[index] ?? 0) - (edges[index] ?? 0)) * child.style.flexShrink,
+  )
+  const sizes = bases.map((base, index) => Math.max(base, minimums[index] ?? 0))
+  const frozen = sizes.map((size, index) =>
+    weights[index] === 0 || size <= (minimums[index] ?? 0),
+  )
+  const initialDeficit = sizes.reduce((sum, size) => sum + size, 0) - target
+
+  // Every continuing pass freezes at least one item. Unfrozen targets are
+  // recomputed from their original bases, never from an earlier partial shrink.
+  for (let pass = 0; pass < children.length; pass++) {
+    let deficit = -target
+    let totalWeight = 0
+    let totalShrink = 0
     for (let index = 0; index < sizes.length; index++) {
-      const child = children[index]
-      const size = sizes[index]
-      if (!child || size === undefined) continue
-      const shrink = deficit * ((weights[index] ?? 0) / totalWeight)
-      const next = clampMainSize(
-        child,
-        row,
-        Math.max(0, size - shrink),
-        mainAvailable,
-        automaticMinimums[index] ?? 0,
-      )
-      if (next !== size) changed = true
-      sizes[index] = next
+      deficit += frozen[index] ? sizes[index]! : bases[index]!
+      if (frozen[index]) continue
+      totalWeight += weights[index] ?? 0
+      totalShrink += children[index]?.style.flexShrink ?? 0
     }
-    if (!changed) break
+    if (deficit <= 0 || totalWeight <= 0) break
+    if (totalShrink < 1) deficit = Math.min(deficit, initialDeficit * totalShrink)
+
+    let frozeItem = false
+    for (let index = 0; index < sizes.length; index++) {
+      if (frozen[index]) continue
+      const minimum = minimums[index] ?? 0
+      const candidate = bases[index]! - deficit * ((weights[index] ?? 0) / totalWeight)
+      sizes[index] = Math.max(minimum, candidate)
+      if (candidate <= minimum) {
+        frozen[index] = true
+        frozeItem = true
+      }
+    }
+    if (!frozeItem) break
   }
   return Object.freeze(sizes)
 }
@@ -3376,6 +3766,8 @@ const intrinsicWidth = (
   state: BuildState,
 ): number => {
   if (node.text !== null)
+    return measure(node, availableWidth, availableHeight, state).width
+  if (node.node instanceof HTMLImageElement && state.imageMeasurer !== undefined)
     return measure(node, availableWidth, availableHeight, state).width
   if (node.transparent) {
     return flowChildren(node).reduce(
@@ -3451,6 +3843,8 @@ const intrinsicHeight = (
 ): number => {
   if (node.text !== null)
     return measure(node, availableWidth, availableHeight, state).height
+  if (node.node instanceof HTMLImageElement && state.imageMeasurer !== undefined)
+    return measure(node, availableWidth, availableHeight, state).height
   if (node.transparent) {
     return flowChildren(node).reduce(
       (sum, child) =>
@@ -3478,6 +3872,19 @@ const intrinsicHeight = (
     )
   }
 
+  const widthEdge = horizontalBoxEdges(node.style)
+  const declaredWidth = resolveLength(node.style.width, availableWidth)
+  const constrainedWidth = clampAxis(
+    borderBoxSize(declaredWidth, Math.max(0, availableWidth - widthEdge), widthEdge, node.style.boxSizing),
+    node.style.minWidth, node.style.maxWidth, availableWidth, widthEdge, node.style.boxSizing,
+  )
+  const childAvailableWidth = Math.max(0, constrainedWidth - widthEdge)
+  const inline = inlineLayout(node, childAvailableWidth, Math.max(0, availableHeight - edge), state)
+  if (inline !== null) {
+    return clampAxis(inline.plan.height + edge, node.style.minHeight, node.style.maxHeight,
+      availableHeight, edge, node.style.boxSizing)
+  }
+
   const wrappedContent = intrinsicWrappedFlexContent(
     node,
     availableWidth,
@@ -3498,7 +3905,7 @@ const intrinsicHeight = (
   const children = node.style.display === "flex" ? flexFlowChildren(node) : flowChildren(node)
   const childHeights = children.map(
     (child) =>
-      intrinsicHeight(child, availableWidth, availableHeight, state) +
+      intrinsicHeight(child, Math.max(0, childAvailableWidth - horizontal(child.style.margin)), availableHeight, state) +
       vertical(child.style.margin),
   )
   const content =
@@ -3926,6 +4333,7 @@ const projectElementScroll = (
   descendantClips: readonly RenderClip[],
   descendantBoxStart: number,
   descendantDisplayStart: number,
+  descendantHitStart: number,
   state: BuildState,
 ): void => {
   if (!isElement(layoutNode.node) || !(layoutNode.node instanceof HTMLElement))
@@ -3984,6 +4392,15 @@ const projectElementScroll = (
     maxScrollTop,
   })
   state.scrolls.set(layoutNode.node, metrics)
+  const projection = {
+    boxStart: descendantBoxStart,
+    boxEnd: state.boxes.length,
+    displayStart: descendantDisplayStart,
+    displayEnd: state.displayList.length,
+    hitNodes: Object.freeze([...new Set(state.hitOrder.slice(descendantHitStart))].filter(node => node !== layoutNode.node)),
+    clipDepth: descendantClips.length - 1,
+    chromeStart: state.displayList.length,
+  }
   if (scrollLeft !== 0 || scrollTop !== 0) {
     const ownClip = descendantClips.at(-1)
     if (ownClip) {
@@ -4004,7 +4421,7 @@ const projectElementScroll = (
         state,
       )
       shiftDescendantHits(
-        layoutNode.node,
+        projection.hitNodes,
         ownClip,
         scrollLeft,
         scrollTop,
@@ -4021,6 +4438,7 @@ const projectElementScroll = (
     chromeClips,
     state,
   )
+  state.scrollProjections.set(layoutNode.node, Object.freeze({...projection, chromeEnd: state.displayList.length}))
 }
 
 const descendantOverflowEnd = (
@@ -4168,10 +4586,7 @@ const emitScrollbarAxis = (options: Readonly<{
   const minimumThumb = options.thickness * 2
   const proportionalThumb = options.trackLength * options.clientLength / options.scrollLength
   const thumbLength = Math.min(options.trackLength, Math.max(minimumThumb, proportionalThumb))
-  const thumbTravel = Math.max(0, options.trackLength - thumbLength)
-  const thumbOffset = options.maximum > 0
-    ? thumbTravel * options.offset / options.maximum
-    : 0
+  const thumbOffset = scrollbarThumbOffset(options.trackLength, thumbLength, options.offset, options.maximum)
   const vertical = options.axis === "y"
   options.state.displayList.push(
     Object.freeze({
@@ -4213,6 +4628,40 @@ const emitScrollbarAxis = (options: Readonly<{
   )
 }
 
+const scrollbarThumbOffset = (trackLength: number, thumbLength: number, offset: number, maximum: number): number =>
+  maximum > 0 ? Math.max(0, trackLength - thumbLength) * offset / maximum : 0
+
+const scrollBox = (box: RenderBox, dx: number, dy: number, owner: RenderTransform): RenderBox => Object.freeze({
+  ...box,
+  x: box.x - dx,
+  y: box.y - dy,
+  contentX: box.contentX - dx,
+  contentY: box.contentY - dy,
+  transform: shiftTransformForScroll(box.transform, owner, dx, dy),
+})
+
+const scrollDisplayItem = (item: DisplayItem, clipDepth: number, dx: number, dy: number, owner: RenderTransform): DisplayItem => Object.freeze({
+  ...item,
+  x: item.x - dx,
+  y: item.y - dy,
+  clips: shiftInnerClips(item.clips, clipDepth, dx, dy, owner),
+  transform: shiftTransformForScroll(item.transform, owner, dx, dy),
+})
+
+const scrollHit = (hit: HitMetadata, clipDepth: number, dx: number, dy: number, owner: RenderTransform): HitMetadata => Object.freeze({
+  ...hit,
+  x: hit.x - dx,
+  y: hit.y - dy,
+  ...(hit.path === undefined ? {} : {path: Object.freeze({
+    ...hit.path, originX: hit.path.originX - dx, originY: hit.path.originY - dy,
+  })}),
+  ...(hit.fragments === undefined ? {} : {fragments: Object.freeze(hit.fragments.map(rect => Object.freeze({
+    ...rect, x: rect.x - dx, y: rect.y - dy,
+  })))}),
+  clips: shiftInnerClips(hit.clips, clipDepth, dx, dy, owner),
+  transform: shiftTransformForScroll(hit.transform, owner, dx, dy),
+})
+
 const shiftDescendantBoxes = (
   start: number,
   scrollLeft: number,
@@ -4223,17 +4672,13 @@ const shiftDescendantBoxes = (
   for (let index = start; index < state.boxes.length; index++) {
     const box = state.boxes[index]
     if (!box) continue
-    const shifted: RenderBox = Object.freeze({
-      ...box,
-      x: box.x - scrollLeft,
-      y: box.y - scrollTop,
-      contentX: box.contentX - scrollLeft,
-      contentY: box.contentY - scrollTop,
-      transform: shiftTransformForScroll(box.transform, ownerTransform, scrollLeft, scrollTop),
-    })
+    const shifted = scrollBox(box, scrollLeft, scrollTop, ownerTransform)
     state.boxes[index] = shifted
     state.boxByNode.set(box.node, shifted)
     state.transforms.set(box.node, shifted.transform)
+    if (isElement(box.node) && state.presentationTransforms.has(box.node)) {
+      state.presentationTransforms.set(box.node, shifted.transform)
+    }
   }
 }
 
@@ -4248,47 +4693,43 @@ const shiftDescendantDisplay = (
   for (let index = start; index < state.displayList.length; index++) {
     const item = state.displayList[index]
     if (!item) continue
-    state.displayList[index] = Object.freeze({
-      ...item,
-      x: item.x - scrollLeft,
-      y: item.y - scrollTop,
-      clips: shiftInnerClips(item.clips, ownClip, scrollLeft, scrollTop, ownerTransform),
-      transform: shiftTransformForScroll(item.transform, ownerTransform, scrollLeft, scrollTop),
-    })
+    state.displayList[index] = scrollDisplayItem(item, item.clips.indexOf(ownClip), scrollLeft, scrollTop, ownerTransform)
+    if (item.kind === "path" && item.presentationOwner !== null && item.presentationOwner === item.node) {
+      const transform = state.presentationTransforms.get(item.presentationOwner)
+      if (transform !== undefined) {
+        const shifted = shiftTransformForScroll(transform, ownerTransform, scrollLeft, scrollTop)
+        state.presentationTransforms.set(item.presentationOwner, shifted)
+        state.transforms.set(item.presentationOwner, shifted)
+      }
+    }
   }
 }
 
 const shiftDescendantHits = (
-  owner: Element,
+  nodes: readonly Node[],
   ownClip: RenderClip,
   scrollLeft: number,
   scrollTop: number,
   ownerTransform: RenderTransform,
   state: BuildState,
 ): void => {
-  for (const [node, hit] of state.hits) {
-    if (node === owner || !owner.contains(node)) continue
+  for (const node of nodes) {
+    const hit = state.hits.get(node)
+    if (hit === undefined) continue
     state.hits.set(
       node,
-      Object.freeze({
-        ...hit,
-        x: hit.x - scrollLeft,
-        y: hit.y - scrollTop,
-        clips: shiftInnerClips(hit.clips, ownClip, scrollLeft, scrollTop, ownerTransform),
-        transform: shiftTransformForScroll(hit.transform, ownerTransform, scrollLeft, scrollTop),
-      }),
+      scrollHit(hit, hit.clips.indexOf(ownClip), scrollLeft, scrollTop, ownerTransform),
     )
   }
 }
 
 const shiftInnerClips = (
   clips: readonly RenderClip[],
-  ownClip: RenderClip,
+  ownIndex: number,
   scrollLeft: number,
   scrollTop: number,
   ownerTransform: RenderTransform,
 ): readonly RenderClip[] => {
-  const ownIndex = clips.indexOf(ownClip)
   if (ownIndex < 0 || ownIndex === clips.length - 1) return clips
   return Object.freeze(
     clips.map((clip, index) =>
@@ -4450,6 +4891,7 @@ const emitReplacedControlPresentation = (
       y: box.contentY + Math.max(0, (box.contentHeight - lineHeight) / 2),
       color: layoutNode.style.color,
       fontSize: layoutNode.style.fontSize,
+        fontFamily: layoutNode.style.fontFamily, fontWeight: layoutNode.style.fontWeight, fontStyle: layoutNode.style.fontStyle,
       lineHeight,
       letterSpacing: layoutNode.style.letterSpacing,
       opacity: layoutNode.effectiveOpacity * (placeholder ? 0.55 : 1),
@@ -4619,6 +5061,7 @@ const emitSelectPresentation = (
       y: box.contentY + Math.max(0, (box.contentHeight - lineHeight) / 2),
       color: layoutNode.style.color,
       fontSize: layoutNode.style.fontSize,
+        fontFamily: layoutNode.style.fontFamily, fontWeight: layoutNode.style.fontWeight, fontStyle: layoutNode.style.fontStyle,
       lineHeight,
       letterSpacing: layoutNode.style.letterSpacing,
       opacity: layoutNode.effectiveOpacity,
@@ -4780,6 +5223,7 @@ const emitSelectPicker = (
         y: optionBox.contentY + Math.max(0, (optionBox.contentHeight - lineHeight) / 2),
         color: layoutNode.style.color,
         fontSize: layoutNode.style.fontSize,
+        fontFamily: layoutNode.style.fontFamily, fontWeight: layoutNode.style.fontWeight, fontStyle: layoutNode.style.fontStyle,
         lineHeight,
         letterSpacing: layoutNode.style.letterSpacing,
         opacity: layoutNode.effectiveOpacity * (option.disabled ? 0.5 : 1),
@@ -4871,6 +5315,7 @@ const emitTextAreaPresentation = (
       y: box.contentY + index * lineHeight,
       color: layoutNode.style.color,
       fontSize: layoutNode.style.fontSize,
+        fontFamily: layoutNode.style.fontFamily, fontWeight: layoutNode.style.fontWeight, fontStyle: layoutNode.style.fontStyle,
       lineHeight,
       letterSpacing: layoutNode.style.letterSpacing,
       opacity: layoutNode.effectiveOpacity * (placeholder ? 0.55 : 1),
@@ -5547,6 +5992,10 @@ const measureText = (
   })
 }
 
+const textBaseline = (style: ComputedStyle, measurer?: RenderTextMeasurer): number =>
+  measurer?.measureTextBaseline?.(style.fontSize, resolveLineHeight(style), style) ??
+    resolveLineHeight(style) / 2 + style.fontSize * 0.3
+
 const textAdvance = (
   value: string,
   style: ComputedStyle,
@@ -5559,6 +6008,7 @@ const textAdvance = (
       value,
       style.fontSize,
       style.letterSpacing,
+      style,
     )
     if (!Number.isFinite(measured) || measured < 0) {
       throw new Error("textMeasurer.measureTextAdvance() must return a finite non-negative number")
@@ -5661,6 +6111,7 @@ const emitTextItems = (
         y: y + index * lineHeight,
         color: layoutNode.style.color,
         fontSize: layoutNode.style.fontSize,
+        fontFamily: layoutNode.style.fontFamily, fontWeight: layoutNode.style.fontWeight, fontStyle: layoutNode.style.fontStyle,
         lineHeight,
         letterSpacing: layoutNode.style.letterSpacing,
         opacity: layoutNode.effectiveOpacity,
@@ -5718,6 +6169,9 @@ const textStyle = (inherited: ComputedStyle): ComputedStyle =>
     strokeWidth: inherited.strokeWidth,
     pointerHitWidth: 0,
     fontSize: inherited.fontSize,
+    fontFamily: inherited.fontFamily,
+    fontWeight: inherited.fontWeight,
+    fontStyle: inherited.fontStyle,
     lineHeight: inherited.lineHeight,
     letterSpacing: inherited.letterSpacing,
     opacity: 1,

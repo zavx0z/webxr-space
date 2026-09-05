@@ -106,6 +106,9 @@ export type ComputedStyle = Readonly<{
   strokeWidth: number
   pointerHitWidth: number
   fontSize: number
+  fontFamily: string
+  fontWeight: number
+  fontStyle: "normal" | "italic"
   lineHeight: ComputedLineHeight
   letterSpacing: number
   opacity: number
@@ -170,6 +173,7 @@ export type StyleRuleIndex = Readonly<{
 }>
 
 const selectorAttributeDependencies = new WeakMap<StyleRuleIndex, ReadonlySet<string>>()
+const pointerStateSelectors = new WeakMap<StyleRuleIndex, readonly ParsedSelector[]>()
 
 type CascadedValue = Readonly<{
   specificity: readonly [number, number, number]
@@ -227,6 +231,9 @@ const deferredVariablePropertySet: ReadonlySet<string> = new Set([
   "text-align",
   "line-height",
   "letter-spacing",
+  "font-family",
+  "font-weight",
+  "font-style",
   "white-space",
   "text-overflow",
   "object-fit",
@@ -307,10 +314,20 @@ const indexStyleRules = (rules: readonly StyleRule[]): StyleRuleIndex => {
   const byId = new Map<string, StyleRule[]>()
   const byTag = new Map<string, StyleRule[]>()
   const attributeDependencies = new Set<string>()
+  const pointerSelectors: ParsedSelector[] = []
 
   for (const rule of rules) {
-    for (const compound of rule.selector.compounds) {
+    for (const [index, compound] of rule.selector.compounds.entries()) {
       for (const attribute of compound.attributes) attributeDependencies.add(attribute.name)
+      if (compound.pseudos.some(pseudo => pseudo === "hover" || pseudo === "active")) {
+        pointerSelectors.push(Object.freeze({
+          ...rule.selector,
+          compounds: Object.freeze([...rule.selector.compounds.slice(0, index), Object.freeze({...compound,
+            pseudos: Object.freeze(compound.pseudos.filter(pseudo => pseudo !== "hover" && pseudo !== "active")),
+          })]),
+          combinators: Object.freeze(rule.selector.combinators.slice(0, index)),
+        }))
+      }
     }
     const compound = rule.selector.compounds.at(-1)!
     if (compound.id !== null) appendIndexedRule(byId, compound.id, rule)
@@ -331,6 +348,7 @@ const indexStyleRules = (rules: readonly StyleRule[]): StyleRuleIndex => {
     byTag: freezeRuleIndex(byTag),
   })
   selectorAttributeDependencies.set(result, attributeDependencies)
+  pointerStateSelectors.set(result, Object.freeze(pointerSelectors))
   return result
 }
 
@@ -338,6 +356,17 @@ export const styleRulesDependOnAttribute = (
   index: StyleRuleIndex,
   attributeName: string,
 ): boolean => selectorAttributeDependencies.get(index)?.has(attributeName) ?? true
+
+/** Pointer events still dispatch; only CSS-relevant state transitions dirty layout. */
+export const styleRulesMayDependOnPointerState = (
+  index: StyleRuleIndex,
+  elements: readonly Element[],
+  interactionState?: DocumentInteractionState,
+): boolean => {
+  const selectors = pointerStateSelectors.get(index)
+  if (selectors === undefined) return true
+  return elements.some(element => selectors.some(selector => matchesSelector(element, selector, interactionState)))
+}
 
 const appendIndexedRule = (
   index: Map<string, StyleRule[]>,
@@ -487,6 +516,10 @@ export const computeStyle = (
     ),
     pointerHitWidth: pixelNumber(readValue(values, "pointer-hit-width"), 0, false),
     fontSize,
+    fontFamily: readValue(values, "font-family") ?? parent?.fontFamily ?? "sans-serif",
+    fontWeight: parseFontWeight(readValue(values, "font-weight"), parent?.fontWeight ?? 400),
+    fontStyle: readValue(values, "font-style") === "normal" ? "normal"
+      : /^(italic|oblique)/u.test(readValue(values, "font-style") ?? "") ? "italic" : parent?.fontStyle ?? "normal",
     lineHeight: parseLineHeight(
       readValue(values, "line-height"),
       fontSize,
@@ -532,6 +565,10 @@ export const elementTag = (element: Element): string => {
 
 const uaDeclarations = (tag: string, element: Element): DeclarationMap => {
   switch (tag) {
+    case "strong":
+    case "b": return Object.freeze({display: "inline", "font-weight": "700"})
+    case "em":
+    case "i": return Object.freeze({display: "inline", "font-style": "italic"})
     case "aside":
     case "body":
     case "div":
@@ -572,6 +609,16 @@ const uaDeclarations = (tag: string, element: Element): DeclarationMap => {
     default:
       return Object.freeze({ display: "inline" })
   }
+}
+
+const parseFontWeight = (value: string | undefined, inherited: number): number => {
+  if (value === undefined || value === "inherit") return inherited
+  if (value === "normal") return 400
+  if (value === "bold") return 700
+  if (value === "bolder") return inherited < 400 ? 400 : inherited < 700 ? 700 : 900
+  if (value === "lighter") return inherited > 700 ? 700 : inherited > 400 ? 400 : 100
+  const number = Number(value)
+  return Number.isFinite(number) && number >= 1 && number <= 1000 ? number : inherited
 }
 
 const inputUaDeclarations = (element: Element): DeclarationMap => {
@@ -1611,9 +1658,11 @@ const matchesCompound = (
     return false
   if (selector.id && element.getAttribute("id") !== selector.id) return false
 
-  const classNames = new Set(classTokens(element.getAttribute("class") ?? ""))
-  for (const className of selector.classes)
-    if (!classNames.has(className)) return false
+  if (selector.classes.length > 0) {
+    const classNames = new Set(classTokens(element.getAttribute("class") ?? ""))
+    for (const className of selector.classes)
+      if (!classNames.has(className)) return false
+  }
 
   for (const attribute of selector.attributes) {
     if (!element.hasAttribute(attribute.name)) return false

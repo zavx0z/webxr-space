@@ -9,6 +9,7 @@
   ],
   "packageManager": "bun@1.4.0",
   "exports": {
+    "./markdown": "./markdown.ts",
     "./badge": "./badge.tsx",
     "./divider": "./divider.tsx",
     "./typography": "./typography.tsx",
@@ -37,6 +38,7 @@
     "./views/list": "./views/list.tsx",
     "./views/table": "./views/table.tsx",
     "./views/code-editor": "./views/code-editor.tsx",
+    "./views/markdown": "./views/markdown.tsx",
     "./views/timeline": "./views/timeline.tsx",
     "./feedback/notification": "./feedback/notification.tsx",
     "./feedback/status-bar": "./feedback/status-bar.tsx",
@@ -51,7 +53,9 @@
     "check": "bun run --parallel typecheck test"
   },
   "dependencies": {
-    "@zavx0z/highlighter": "link:@zavx0z/highlighter"
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter",
+    "markdown-it": "15.0.1",
+    "parse5": "8.0.1"
   },
   "peerDependencies": {
     "@zavx0z/component": "*",
@@ -59,8 +63,14 @@
     "@zavx0z/template": "*"
   },
   "peerDependenciesMeta": {
-    "@zavx0z/component": {"optional": true},
-    "@zavx0z/dom": {"optional": true},
-    "@zavx0z/template": {"optional": true}
+    "@zavx0z/component": {
+      "optional": true
+    },
+    "@zavx0z/dom": {
+      "optional": true
+    },
+    "@zavx0z/template": {
+      "optional": true
+    }
   }
 }

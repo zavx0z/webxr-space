@@ -1,3 +1,5 @@
+import {GifAnimation, type GifDecoderConstructor} from "./gif-animation.ts"
+
 export type TextureStatus = "loading" | "ready" | "failed"
 
 export interface TextureEntry {
@@ -16,6 +18,8 @@ export interface TextureEntry {
 
 const cache = new Map<string, TextureEntry>()
 const callbacks = new Map<string, Set<() => void>>()
+const animationObservers = new Map<string, Set<() => void>>()
+const animations = new Map<string, GifAnimation>()
 let fallbackTexture: GPUTexture | null = null
 
 export type PendingExternalSource = {
@@ -40,6 +44,44 @@ export type ExternalTexturePool = {
 }
 
 export class TextureLoader {
+  static addChangeListener(src: string, callback: () => void, options: Readonly<{animate?: boolean}> = {}): void {
+    let listeners = callbacks.get(src)
+    if (listeners === undefined) {
+      listeners = new Set()
+      callbacks.set(src, listeners)
+    }
+    if (listeners.has(callback)) return
+    listeners.add(callback)
+    if (options.animate !== false) TextureLoader.setAnimationVisible(src, callback, true)
+  }
+
+  /** A shared texture runs while at least one registered consumer is visible. */
+  static setAnimationVisible(src: string, callback: () => void, visible: boolean): void {
+    if (!callbacks.get(src)?.has(callback)) return
+    let observers = animationObservers.get(src)
+    if (visible) {
+      if (observers === undefined) {
+        observers = new Set()
+        animationObservers.set(src, observers)
+      }
+      observers.add(callback)
+      animations.get(src)?.start()
+    } else {
+      observers?.delete(callback)
+      if (observers?.size === 0) animationObservers.delete(src)
+      if (!animationObservers.has(src)) animations.get(src)?.pause()
+    }
+  }
+
+  static removeChangeListener(src: string, callback: () => void): void {
+    TextureLoader.setAnimationVisible(src, callback, false)
+    const listeners = callbacks.get(src)
+    listeners?.delete(callback)
+    if (listeners?.size === 0) {
+      callbacks.delete(src)
+      animations.get(src)?.stop()
+    }
+  }
   static status(src: string): TextureStatus | "idle" {
     return cache.get(src)?.status ?? "idle"
   }
@@ -49,14 +91,7 @@ export class TextureLoader {
   }
 
   static load(device: GPUDevice, src: string, onChange?: () => void): TextureEntry {
-    if (onChange) {
-      let set = callbacks.get(src)
-      if (!set) {
-        set = new Set()
-        callbacks.set(src, set)
-      }
-      set.add(onChange)
-    }
+    if (onChange) TextureLoader.addChangeListener(src, onChange)
 
     const existing = cache.get(src)
     if (existing) {
@@ -85,6 +120,8 @@ export class TextureLoader {
   }
 
   static replaceBitmap(src: string, bitmap: ImageBitmap): void {
+    animations.get(src)?.stop()
+    animations.delete(src)
     let entry = cache.get(src)
     if (entry === undefined) {
       entry = {
@@ -120,6 +157,8 @@ export class TextureLoader {
     height: number,
     options: ReplaceExternalSourceOptions = {},
   ): boolean {
+    animations.get(src)?.stop()
+    animations.delete(src)
     const normalizedWidth = Math.max(1, Math.round(width))
     const normalizedHeight = Math.max(1, Math.round(height))
     const bufferCount = Math.max(1, Math.round(options.bufferCount ?? 1))
@@ -209,7 +248,40 @@ async function loadTexture(device: GPUDevice, entry: TextureEntry): Promise<void
     }
     const response = await fetch(entry.src)
     if (!response.ok) throw new Error(`HTTP ${response.status} while loading ${entry.src}`)
-    await replaceTextureFromBitmap(device, entry, await decodeBitmap(await response.blob()))
+    const blob = await response.blob()
+    const signature = await blob.slice(0, 6).text()
+    if (signature === "GIF87a" || signature === "GIF89a") {
+      const Decoder = (globalThis as unknown as {ImageDecoder?: GifDecoderConstructor}).ImageDecoder
+      if (Decoder !== undefined && await Decoder.isTypeSupported("image/gif")) {
+        const data = await blob.arrayBuffer()
+        const animation = new GifAnimation({
+          createDecoder: () => new Decoder({type: "image/gif", data, preferAnimation: true}),
+          observed: () => (animationObservers.get(entry.src)?.size ?? 0) > 0,
+          present(frame) {
+            replaceTextureFromExternalSource(entry.device ?? device, entry, {
+              source: frame,
+              width: frame.displayWidth,
+              height: frame.displayHeight,
+              bufferCount: 1,
+              closeSourceAfterCopy: false,
+            })
+            if (entry.status === "failed") throw entry.error
+            if ((callbacks.get(entry.src)?.size ?? 0) === 0) animation.stop()
+          },
+          failed(error) {
+            entry.error = error
+            entry.status = "failed"
+            console.warn("[TextureLoader] failed to animate GIF:", entry.src, error)
+            notify(entry.src)
+          },
+        })
+        animations.set(entry.src, animation)
+        animation.start()
+        return
+      }
+      console.warn("[TextureLoader] GIF animation requires ImageDecoder; showing a static frame:", entry.src)
+    }
+    await replaceTextureFromBitmap(device, entry, await decodeBitmap(blob))
   } catch (err) {
     entry.status = "failed"
     entry.error = err

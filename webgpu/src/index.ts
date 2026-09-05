@@ -20,6 +20,7 @@ export {RendererWebGpuBackend} from "./webgpu-backend.ts"
 export type {
   RendererWebGpuBackendDiagnostics,
   RendererWebGpuBackendOptions,
+  RendererFontFace,
 } from "./webgpu-backend.ts"
 export {RendererWebGpuScreenOverlay} from "./screen-overlay.ts"
 export type {RendererWebGpuScreenOverlayOptions} from "./screen-overlay.ts"

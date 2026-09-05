@@ -1,3 +1,5 @@
+import type {RenderImageSize} from "@zavx0z/renderer"
+import type {RendererFontFace} from "@zavx0z/webgpu"
 import type {
   BufferGeometry,
   TrueTypeFont,
@@ -36,6 +38,8 @@ export type CreateDocumentOverlayRuntimeOptions = Readonly<{
   root: Node
   styleSheets: readonly string[]
   font: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[] | undefined
+  measureImage?: (src: string, changed: () => void) => RenderImageSize | null
   viewport: RenderViewport
   distance?: number
   invalidateGeometry(geometry: BufferGeometry): void
@@ -140,6 +144,11 @@ export function createDocumentOverlayRuntimeWithSeams(
     if (requestVersion === version) requestFrame()
   }
 
+  let imageSizeChanged = (): void => {}
+  const onImageSizeChanged = (): void => imageSizeChanged()
+  const imageMeasurer = options.measureImage === undefined ? undefined : {
+    measureImage: (src: string) => options.measureImage!(src, onImageSizeChanged),
+  }
   const cleanupOwners = (): void => {
     requestBackendPresentation = (): void => {}
     unsubscribeMutations()
@@ -158,6 +167,7 @@ export function createDocumentOverlayRuntimeWithSeams(
   try {
     backend = seams.createBackend({
       font: options.font,
+      ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       invalidateGeometry: options.invalidateGeometry,
       requestPresentation: () => requestBackendPresentation(),
     })
@@ -175,6 +185,7 @@ export function createDocumentOverlayRuntimeWithSeams(
       styleSheets,
       interactionState,
       textMeasurer,
+      ...(imageMeasurer === undefined ? {} : {imageMeasurer}),
     })
     interaction = seams.createInteraction({
       hitTest: hitTestProjection,
@@ -196,7 +207,7 @@ export function createDocumentOverlayRuntimeWithSeams(
 
   const requiredBackend = backend
   const requiredOverlay = overlay
-  let requiredRenderer = renderer
+  const requiredRenderer = renderer
   const requiredInteraction = interaction
   if (
     requiredBackend === null ||
@@ -205,7 +216,11 @@ export function createDocumentOverlayRuntimeWithSeams(
     requiredRenderer === null ||
     requiredInteraction === null
   ) throw new Error("Document overlay runtime owners were not created")
-  const requiredTextMeasurer = textMeasurer
+  imageSizeChanged = () => {
+    if (disposed) return
+    requiredRenderer.invalidate(requiredRenderer.root)
+    requestFrame()
+  }
 
   const flush = (): RenderFrame => {
     assertActive(disposed)
@@ -220,28 +235,8 @@ export function createDocumentOverlayRuntimeWithSeams(
   const resize = (viewport: RenderViewport): RenderFrame => {
     assertActive(disposed)
     validateViewport(viewport)
-    const viewportChanged =
-      viewport.width !== requiredOverlay.viewport.width ||
-      viewport.height !== requiredOverlay.viewport.height
-    if (!viewportChanged) return flush()
-    const nextRenderer = seams.createDocumentRenderer({
-      document: options.document,
-      root: options.root,
-      viewport,
-      styleSheets,
-      interactionState,
-      textMeasurer: requiredTextMeasurer,
-    })
-    try {
-      requiredOverlay.resize(viewport)
-    } catch (error) {
-      nextRenderer.dispose()
-      throw error
-    }
-    const previous = requiredRenderer
-    requiredRenderer = nextRenderer
-    renderer = nextRenderer
-    previous.dispose()
+    requiredOverlay.resize(viewport)
+    requiredRenderer.resize(viewport)
     return flush()
   }
 
@@ -258,6 +253,7 @@ export function createDocumentOverlayRuntimeWithSeams(
     root: options.root,
     styleSheets,
     font: options.font,
+    ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
     get renderer() { return requiredRenderer },
     interaction: requiredInteraction,
     interactionState,

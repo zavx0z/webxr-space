@@ -565,10 +565,10 @@ export const hitTest = (
       transform !== null &&
       local !== null &&
       (hit.path === undefined
-        ? local.x >= hit.x &&
-          local.y >= hit.y &&
-          local.x < hit.x + hit.width &&
-          local.y < hit.y + hit.height
+        ? hit.fragments === undefined
+          ? local.x >= hit.x && local.y >= hit.y && local.x < hit.x + hit.width && local.y < hit.y + hit.height
+          : hit.fragments.some(rect => local.x >= rect.x && local.y >= rect.y &&
+            local.x < rect.x + rect.width && local.y < rect.y + rect.height)
         : pointInStrokedPath(hit, transform, x, y)) &&
       hit.clips.every((clip) => pointInClip(frame, clip, x, y)) &&
       accept(hit)

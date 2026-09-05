@@ -1,3 +1,5 @@
+import type {RendererFontFace} from "@zavx0z/webgpu"
+import {loadFontFaces, type BrowserFontFaceSource} from "../font-faces.ts"
 import {
   AnimationMixer,
   AnimationClip,
@@ -69,6 +71,8 @@ import type {
 export type CreateExperienceOptions = Readonly<{
   canvas: HTMLCanvasElement
   font: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[] | undefined
+  fontSources?: readonly BrowserFontFaceSource[] | undefined
   styleSheets?: readonly string[]
   linkedAuthorStyleSheets?: readonly ExperienceLinkedAuthorStyleSheet[]
   onLinkedAuthorStyleSheetError?: ExperienceLinkedAuthorStyleSheetErrorHandler
@@ -262,11 +266,18 @@ export async function createExperienceWithRuntimeFactory(
       })
       await linkedAuthorStyleSheetHost.ready
     }
+    if (options.fontFaces !== undefined && options.fontSources !== undefined) {
+      throw new TypeError("Experience accepts either fontFaces or fontSources")
+    }
+    const fontFaces = options.fontFaces ?? (options.fontSources === undefined
+      ? undefined
+      : await loadFontFaces(options.fontSources, options.canvas.ownerDocument?.baseURI))
     runtime = await createRuntime({
       canvas: options.canvas,
       document,
       styleSheets: Object.freeze([...(options.styleSheets ?? [])]),
       font: options.font,
+      ...(fontFaces === undefined ? {} : {fontFaces}),
       ...(options.pixelRatio === undefined ? {} : {pixelRatio: options.pixelRatio}),
       ...(options.cameraGestures === undefined ? {} : {cameraGestures: options.cameraGestures}),
     })

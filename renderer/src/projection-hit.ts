@@ -50,7 +50,7 @@ const containsPaint = (
   const localX = (x - translateX) / scaleX - item.x
   const localY = (y - translateY) / scaleY - item.y
   const width = item.kind === "text"
-    ? frame.boxByNode.get(item.node)?.width ?? hit.width
+    ? item.width ?? frame.boxByNode.get(item.node)?.width ?? hit.width
     : item.width
   const height = item.kind === "text" ? item.lineHeight : item.height
   if (localX < 0 || localY < 0 || localX >= width || localY >= height) return false

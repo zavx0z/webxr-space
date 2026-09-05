@@ -4,6 +4,7 @@ import {resolve} from "node:path"
 const packageRoot = resolve(import.meta.dir, "..")
 
 const expectedExports = Object.freeze([
+  "./markdown",
   "./badge",
   "./divider",
   "./typography",
@@ -32,6 +33,7 @@ const expectedExports = Object.freeze([
   "./views/list",
   "./views/table",
   "./views/code-editor",
+  "./views/markdown",
   "./views/timeline",
   "./feedback/notification",
   "./feedback/status-bar",

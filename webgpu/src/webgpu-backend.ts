@@ -27,6 +27,7 @@ import {
   type TrueTypeFont,
 } from "@zavx0z/engine"
 import {readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
+import {TextureLoader} from "./texture-loader.ts"
 import type {
   DisplayItem,
   ImageDisplayItem,
@@ -34,14 +35,23 @@ import type {
   RectDisplayItem,
   RenderClip,
   RenderFrame,
+  RenderFontSelection,
   RenderTextMeasurer,
   RenderTransform,
   TextDisplayItem,
 } from "@zavx0z/renderer"
 
+export type RendererFontFace = Readonly<{
+  family: string
+  weight: number
+  style: "normal" | "italic"
+  font: TrueTypeFont
+}>
+
 export type RendererWebGpuBackendOptions = Readonly<{
-  /** One resolved Engine font for every Text item in this backend. */
+  /** Fallback font for unregistered families. */
   font?: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[]
   /** Releases renderer-owned GPU buffers for a geometry before it is forgotten. */
   invalidateGeometry(geometry: BufferGeometry): void
   /** Schedules a new host presentation after an asynchronous texture change. */
@@ -123,8 +133,10 @@ type PreparedRectPayload = Omit<PreparedRectItem, "token">
 
 type PreparedTextItem = Readonly<{
   kind: "text"
+  font: TrueTypeFont
   item: TextDisplayItem
   baselineY: number
+  viewport: RenderFrame["viewport"]
   color: Color
   opacity: number
   clips: readonly PreparedClip[]
@@ -133,6 +145,7 @@ type PreparedTextItem = Readonly<{
 
 type PreparedImageItem = Readonly<{
   kind: "image"
+  visible: boolean
   item: ImageDisplayItem
   boxAspect: number
   opacity: number
@@ -298,6 +311,9 @@ export class RendererWebGpuBackend {
   public readonly textMeasurer: RenderTextMeasurer | undefined
 
   readonly #font: TrueTypeFont | undefined
+  readonly #fontFaces: readonly RendererFontFace[]
+  readonly #fontMeasurers = new WeakMap<TrueTypeFont, RenderTextMeasurer>()
+  readonly #fontMetrics = new WeakMap<TrueTypeFont, ReturnType<typeof readFontMetrics>>()
   readonly #fontBaselineCenterRatio: number | undefined
   readonly #invalidateGeometry: (geometry: BufferGeometry) => void
   readonly #requestPresentation: (() => void) | undefined
@@ -337,13 +353,34 @@ export class RendererWebGpuBackend {
 
   constructor(options: RendererWebGpuBackendOptions) {
     this.#font = options.font
+    this.#fontFaces = Object.freeze([...(options.fontFaces ?? [])])
     if (options.font === undefined) {
       this.#fontBaselineCenterRatio = undefined
       this.textMeasurer = undefined
     } else {
       const metrics = readFontMetrics(options.font)
       this.#fontBaselineCenterRatio = metrics.baselineCenterRatio
-      this.textMeasurer = createFontTextMeasurer(options.font, metrics.unitsPerEm)
+      this.#fontMetrics.set(options.font, metrics)
+      this.textMeasurer = Object.freeze({
+        measureTextBaseline: (size: number, lineHeight: number, selection?: RenderFontSelection) => {
+          const font = this.#resolveFont(selection)
+          let metrics = this.#fontMetrics.get(font)
+          if (metrics === undefined) {
+            metrics = readFontMetrics(font)
+            this.#fontMetrics.set(font, metrics)
+          }
+          return lineHeight / 2 + size * metrics.baselineCenterRatio
+        },
+        measureTextAdvance: (value: string, size: number, spacing: number, selection?: RenderFontSelection) => {
+          const font = this.#resolveFont(selection)
+          let measurer = this.#fontMeasurers.get(font)
+          if (measurer === undefined) {
+            measurer = createFontTextMeasurer(font, font.unitsPerEm)
+            this.#fontMeasurers.set(font, measurer)
+          }
+          return measurer.measureTextAdvance(value, size, spacing)
+        },
+      })
     }
     this.#invalidateGeometry = options.invalidateGeometry
     this.#requestPresentation = options.requestPresentation
@@ -684,6 +721,20 @@ export class RendererWebGpuBackend {
       if (item === previous.item) continue
       if (frame.revision === cached.revision) return null
       if (!sameDisplayIdentity(previous.item, item)) return null
+      if (previous.kind === "text" && item.kind === "text" &&
+        sameTextPaint(previous.item, item) && isReusableDisplayItem(item)) {
+        assertFinite(item.x, "retained.text.x")
+        assertFinite(item.y, "retained.text.y")
+        this.#validateTransform(item.transform, "retained.text.transform")
+        const baselineY = item.y + (previous.baselineY - previous.item.y)
+        assertFinite(baselineY, "retained.text.baselineY")
+        const clips = previous.item.clips === item.clips &&
+          cached.frame.presentationTransforms === frame.presentationTransforms
+          ? previous.clips
+          : this.#prepareClips(item.clips, frame, "retained.text")
+        scalarUpdates.push(Object.freeze({index, value: Object.freeze({...previous, item, baselineY, clips})}))
+        continue
+      }
       if (previous.kind === "path" && item.kind === "path") {
         const isolatedFrame = Object.freeze({...frame, displayList: Object.freeze([item])})
         const value = this.#prepareFrame(isolatedFrame)[0]
@@ -1535,13 +1586,20 @@ export class RendererWebGpuBackend {
         assertFiniteNonNegative(item.lineHeight, `${label}.lineHeight`)
         assertFinite(item.letterSpacing, `${label}.letterSpacing`)
         const opacity = assertUnitOpacity(item.opacity, `${label}.opacity`)
-        const baselineY = item.y + item.lineHeight / 2 +
-          item.fontSize * this.#fontBaselineCenterRatio
+        const font = this.#resolveFont(item)
+        let metrics = this.#fontMetrics.get(font)
+        if (metrics === undefined) {
+          metrics = readFontMetrics(font)
+          this.#fontMetrics.set(font, metrics)
+        }
+        const baselineY = item.y + item.lineHeight / 2 + item.fontSize * metrics.baselineCenterRatio
         assertFinite(baselineY, `${label}.baselineY`)
         prepared.push(Object.freeze({
           kind: "text",
+          font,
           item,
           baselineY,
+          viewport: frame.viewport,
           color: parseDisplayColor(item.color || WHITE),
           opacity,
           clips: this.#prepareClips(item.clips, frame, label),
@@ -1565,12 +1623,15 @@ export class RendererWebGpuBackend {
         if (item.fit !== "cover" && item.fit !== "contain") {
           throw new Error(`${label}.fit must be cover or contain`)
         }
+        const clips = this.#prepareClips(item.clips, frame, label)
+        const opacity = assertUnitOpacity(item.opacity, `${label}.opacity`)
         prepared.push(Object.freeze({
           kind: "image",
+          visible: opacity > 0 && imageIntersectsViewport(item, clips, frame.viewport),
           item,
           boxAspect: item.width / item.height,
-          opacity: assertUnitOpacity(item.opacity, `${label}.opacity`),
-          clips: this.#prepareClips(item.clips, frame, label),
+          opacity,
+          clips,
           token,
         }))
       } else if (item.kind === "path") {
@@ -1832,13 +1893,30 @@ export class RendererWebGpuBackend {
     return entry
   }
 
+  #resolveFont(selection?: Partial<RenderFontSelection>): TrueTypeFont {
+    const weight = selection?.fontWeight ?? 400
+    const style = selection?.fontStyle ?? "normal"
+    for (const family of (selection?.fontFamily ?? "sans-serif").split(",")) {
+      const name = family.trim().replace(/^["']|["']$/gu, "").toLowerCase()
+      const faces = this.#fontFaces.filter(face => face.family.toLowerCase() === name)
+      if (faces.length === 0) continue
+      const styled = faces.filter(face => face.style === style)
+      return (styled.length > 0 ? styled : faces).reduce((best, face) =>
+        Math.abs(face.weight - weight) < Math.abs(best.weight - weight) ? face : best,
+      ).font
+    }
+    if (this.#font === undefined) throw new Error("Text display item requires a font")
+    return this.#font
+  }
+
   #createText(value: PreparedTextItem): TextEntry {
     const {item} = value
     if (this.#font === undefined) throw new Error("Text display item requires a font")
     const material = new TextMaterial({color: value.color, opacity: value.opacity})
-    const node = new CachedText(item.text, this.#font, item.fontSize, material)
-    if (node.letterSpacing !== item.letterSpacing) {
+    const node = new CachedText(item.text, value.font, item.fontSize, material)
+    if (node.letterSpacing !== item.letterSpacing || node.spaceAdvance !== fontSpaceAdvance(value.font, item.fontSize)) {
       node.letterSpacing = item.letterSpacing
+      node.spaceAdvance = fontSpaceAdvance(value.font, item.fontSize)
       node.updateGeometry()
     }
     node.name = `${item.node.nodeName}:${item.key}`
@@ -1853,6 +1931,7 @@ export class RendererWebGpuBackend {
     }
     this.#updateClips(entry, value.clips)
     positionText(node, item, value.baselineY)
+    node.visible = textIntersectsViewport(node, value)
     return entry
   }
 
@@ -1877,6 +1956,9 @@ export class RendererWebGpuBackend {
       clipSpaces: [],
     }
     material.onTextureChange = this.#textureChangeCallback(value.token, item.src)
+    TextureLoader.addChangeListener(item.src, material.onTextureChange, {animate: false})
+    TextureLoader.setAnimationVisible(item.src, material.onTextureChange, value.visible)
+    node.visible = value.visible
     node.name = `${item.node.nodeName}:${item.key}`
     this.#updateClips(entry, value.clips)
     positionPlane(node, item)
@@ -1931,11 +2013,14 @@ export class RendererWebGpuBackend {
     if (entry.kind === "text" && value.kind === "text") {
       if (
         entry.text !== value.item.text ||
+        entry.node.font !== value.font ||
         entry.fontSize !== value.item.fontSize ||
         entry.letterSpacing !== value.item.letterSpacing
       ) {
         entry.node.text = value.item.text
+        entry.node.font = value.font
         entry.node.fontSize = value.item.fontSize
+        entry.node.spaceAdvance = fontSpaceAdvance(value.font, value.item.fontSize)
         entry.node.letterSpacing = value.item.letterSpacing
         entry.node.updateGeometry()
         entry.text = value.item.text
@@ -1946,6 +2031,7 @@ export class RendererWebGpuBackend {
       entry.material.opacity = value.opacity
       this.#updateClips(entry, value.clips)
       positionText(entry.node, value.item, value.baselineY)
+      entry.node.visible = textIntersectsViewport(entry.node, value)
       return
     }
 
@@ -1956,13 +2042,19 @@ export class RendererWebGpuBackend {
         entry.height = value.item.height
       }
       if (entry.src !== value.item.src) {
+        if (entry.material.onTextureChange !== undefined) {
+          TextureLoader.removeChangeListener(entry.src, entry.material.onTextureChange)
+        }
         entry.src = value.item.src
         entry.material.src = value.item.src
         entry.material.onTextureChange = this.#textureChangeCallback(value.token, value.item.src)
+        TextureLoader.addChangeListener(entry.src, entry.material.onTextureChange, {animate: false})
       }
       entry.material.fit = value.item.fit
       entry.material.boxAspect = value.boxAspect
       entry.material.opacity = value.opacity
+      entry.node.visible = value.visible
+      TextureLoader.setAnimationVisible(entry.src, entry.material.onTextureChange!, value.visible)
       this.#updateClips(entry, value.clips)
       positionPlane(entry.node, value.item)
       return
@@ -2022,6 +2114,9 @@ export class RendererWebGpuBackend {
     entry.clipSpaces.length = 0
     entry.node.children = []
     if (entry.kind === "image") {
+      if (entry.material.onTextureChange !== undefined) {
+        TextureLoader.removeChangeListener(entry.src, entry.material.onTextureChange)
+      }
       entry.material.onTextureChange = undefined
     }
     if (entry.kind === "rect" || entry.kind === "image" || entry.kind === "path") {
@@ -2059,7 +2154,7 @@ export class RendererWebGpuBackend {
   #requestTexturePresentation(token: DisplayToken, src: string): void {
     if (this.#disposed) return
     const entry = this.#entries.get(token)
-    if (entry?.kind !== "image" || entry.src !== src || entry.material.src !== src) return
+    if (entry?.kind !== "image" || entry.src !== src || entry.material.src !== src || !entry.node.visible) return
     this.#requestPresentation?.()
   }
 
@@ -2143,19 +2238,109 @@ function rectInstanceBounds(value: PreparedRectItem): RectBounds {
   const {item} = value
   const geometryWidth = value.shadow?.geometryWidth ?? item.width
   const geometryHeight = value.shadow?.geometryHeight ?? item.height
-  const center = applyRenderTransform(
-    item.transform,
-    item.x + item.width / 2,
-    item.y + item.height / 2,
-  )
-  const halfWidth = Math.abs(item.transform.scaleX) * geometryWidth / 2
-  const halfHeight = Math.abs(item.transform.scaleY) * geometryHeight / 2
+  return transformedBounds(item.transform, item.x + item.width / 2, item.y + item.height / 2, geometryWidth, geometryHeight)
+}
+
+function transformedBounds(transform: RenderTransform, centerX: number, centerY: number, width: number, height: number): RectBounds {
+  const center = applyRenderTransform(transform, centerX, centerY)
+  const halfWidth = Math.abs(transform.scaleX) * width / 2
+  const halfHeight = Math.abs(transform.scaleY) * height / 2
   return Object.freeze({
     minX: center.x - halfWidth,
     minY: center.y - halfHeight,
     maxX: center.x + halfWidth,
     maxY: center.y + halfHeight,
   })
+}
+
+/** Conservative visibility in the logical viewport, including nested rounded clips. */
+function imageIntersectsViewport(item: ImageDisplayItem, clips: readonly PreparedClip[], viewport: RenderFrame["viewport"]): boolean {
+  const image = transformedBounds(item.transform, item.x + item.width / 2, item.y + item.height / 2, item.width, item.height)
+  return boundsIntersectViewport(image, clips, viewport)
+}
+
+const geometryInkBounds = new WeakMap<BufferAttribute, Readonly<{version: number; bounds: RectBounds | null}>>()
+
+function glyphBounds(geometry: BufferGeometry): RectBounds | null {
+  const position = geometry.attributes.position
+  if (position === undefined || position.count === 0) return null
+  const cached = geometryInkBounds.get(position)
+  if (cached?.version === position.version) return cached.bounds
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  const values = position.array
+  for (let index = 0; index < values.length; index += position.itemSize) {
+    minX = Math.min(minX, values[index]!)
+    maxX = Math.max(maxX, values[index]!)
+    minY = Math.min(minY, values[index + 1]!)
+    maxY = Math.max(maxY, values[index + 1]!)
+  }
+  const bounds = Object.freeze({minX, minY, maxX, maxY})
+  geometryInkBounds.set(position, Object.freeze({version: position.version, bounds}))
+  return bounds
+}
+
+function textIntersectsViewport(node: CachedText, value: PreparedTextItem): boolean {
+  if (value.opacity <= 0 || value.color.a <= 0) return false
+  const stencil = glyphBounds(node.stencilGeometry)
+  const cover = glyphBounds(node.coverGeometry)
+  if (stencil === null && cover === null) return false
+  const minX = Math.min(stencil?.minX ?? Infinity, cover?.minX ?? Infinity)
+  const minY = Math.min(stencil?.minY ?? Infinity, cover?.minY ?? Infinity)
+  const maxX = Math.max(stencil?.maxX ?? -Infinity, cover?.maxX ?? -Infinity)
+  const maxY = Math.max(stencil?.maxY ?? -Infinity, cover?.maxY ?? -Infinity)
+  const bounds = transformedBounds(value.item.transform,
+    value.item.x + (minX + maxX) / 2,
+    value.baselineY - (minY + maxY) / 2,
+    maxX - minX, maxY - minY)
+  // Retain an antialias fringe; logical advances are not glyph ink bounds.
+  return boundsIntersectViewport({minX:bounds.minX - 1,minY:bounds.minY - 1,maxX:bounds.maxX + 1,maxY:bounds.maxY + 1}, value.clips, value.viewport)
+}
+
+function boundsIntersectViewport(source: RectBounds, clips: readonly PreparedClip[], viewport: RenderFrame["viewport"]): boolean {
+  let minX = Math.max(0, source.minX)
+  let minY = Math.max(0, source.minY)
+  let maxX = Math.min(viewport.width, source.maxX)
+  let maxY = Math.min(viewport.height, source.maxY)
+  if (minX >= maxX || minY >= maxY) return false
+  for (const clip of clips) {
+    const bounds = transformedBounds(clip.transform, clip.x + clip.width / 2, clip.y + clip.height / 2, clip.width, clip.height)
+    minX = Math.max(minX, bounds.minX)
+    minY = Math.max(minY, bounds.minY)
+    maxX = Math.min(maxX, bounds.maxX)
+    maxY = Math.min(maxY, bounds.maxY)
+    if (minX >= maxX || minY >= maxY) return false
+  }
+  if (minX >= maxX || minY >= maxY) return false
+  return clips.every(clip => intersectsRoundedClip({minX, minY, maxX, maxY}, clip))
+}
+
+function intersectsRoundedClip(bounds: RectBounds, clip: PreparedClip): boolean {
+  const {scaleX, scaleY, translateX, translateY} = clip.transform
+  if (scaleX === 0 || scaleY === 0) return false
+  const x1 = (bounds.minX - translateX) / scaleX
+  const x2 = (bounds.maxX - translateX) / scaleX
+  const y1 = (bounds.minY - translateY) / scaleY
+  const y2 = (bounds.maxY - translateY) / scaleY
+  const left = Math.min(x1, x2)
+  const right = Math.max(x1, x2)
+  const top = Math.min(y1, y2)
+  const bottom = Math.max(y1, y2)
+  for (const [index, radius] of clip.radii.entries()) {
+    if (radius <= 0) continue
+    const rightCorner = index === 1 || index === 2
+    const bottomCorner = index === 2 || index === 3
+    const cx = clip.x + (rightCorner ? clip.width - radius : radius)
+    const cy = clip.y + (bottomCorner ? clip.height - radius : radius)
+    if ((rightCorner ? left >= cx : right <= cx) && (bottomCorner ? top >= cy : bottom <= cy)) {
+      const dx = Math.max(left, Math.min(right, cx)) - cx
+      const dy = Math.max(top, Math.min(bottom, cy)) - cy
+      return dx * dx + dy * dy < radius * radius
+    }
+  }
+  return true
 }
 
 function rectBoundsOverlap(left: RectBounds, right: RectBounds): boolean {
@@ -2526,6 +2711,14 @@ function sameDisplayIdentity(left: DisplayItem, right: DisplayItem): boolean {
   return left.kind === right.kind
     && left.node === right.node
     && left.key === right.key
+}
+
+function sameTextPaint(left: TextDisplayItem, right: TextDisplayItem): boolean {
+  return left.text === right.text && left.width === right.width &&
+    left.color === right.color && left.opacity === right.opacity &&
+    left.fontSize === right.fontSize && left.lineHeight === right.lineHeight &&
+    left.letterSpacing === right.letterSpacing && left.fontFamily === right.fontFamily &&
+    left.fontWeight === right.fontWeight && left.fontStyle === right.fontStyle
 }
 
 function sameRectBatchTopology(left: RectDisplayItem, right: RectDisplayItem): boolean {
@@ -2935,6 +3128,10 @@ function readFontMetrics(font: TrueTypeFont): Readonly<{
   })
 }
 
+function fontSpaceAdvance(font: TrueTypeFont, size: number): number {
+  return font.getHMetric(font.mapCharToGlyph(32)).advanceWidth / font.unitsPerEm * size
+}
+
 function createFontTextMeasurer(
   font: TrueTypeFont,
   unitsPerEm: number,
@@ -2952,9 +3149,7 @@ function createFontTextMeasurer(
         const codePoint = character.codePointAt(0)!
         let normalizedAdvance = normalizedAdvanceByCodePoint.get(codePoint)
         if (normalizedAdvance === undefined) {
-          normalizedAdvance = character === " "
-            ? 0.3
-            : font.getHMetric(font.mapCharToGlyph(codePoint)).advanceWidth / unitsPerEm
+          normalizedAdvance = font.getHMetric(font.mapCharToGlyph(codePoint)).advanceWidth / unitsPerEm
           assertFiniteNonNegative(normalizedAdvance, "font glyph advance")
           if (normalizedAdvanceByCodePoint.size >= FONT_ADVANCE_CACHE_LIMIT) {
             normalizedAdvanceByCodePoint.clear()

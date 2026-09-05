@@ -198,6 +198,32 @@ function hasDirectRenderItems(layer: PreparedRenderLayer): boolean {
  * * Автоматически управляет буферами uniform-ов и пайплайнами.
  */
 export class Renderer {
+  private readonly imageSizeListeners = new Map<string, Set<() => void>>()
+
+  /** Shares the texture loader's decoded dimensions with CPU layout. */
+  public readImageSize(src: string, onChange: () => void): Readonly<{width: number; height: number}> | null {
+    if (src.length === 0) return null
+    const device = this.device
+    if (device === null) throw new Error("Renderer must be initialized before loading an image")
+    const entry = TextureLoader.load(device, src)
+    if (entry.status === "ready") return {width: entry.width, height: entry.height}
+    if (entry.status === "failed") return null
+    let listeners = this.imageSizeListeners.get(src)
+    if (listeners === undefined) {
+      listeners = new Set()
+      this.imageSizeListeners.set(src, listeners)
+      const changed = () => {
+        if (TextureLoader.peek(src)?.status === "loading") return
+        TextureLoader.removeChangeListener(src, changed)
+        const callbacks = this.imageSizeListeners.get(src)
+        this.imageSizeListeners.delete(src)
+        for (const callback of callbacks ?? []) callback()
+      }
+      TextureLoader.addChangeListener(src, changed, {animate: false})
+    }
+    listeners.add(onChange)
+    return null
+  }
   private device: GPUDevice | null = null
   private context: GPUCanvasContext | null = null
   private presentationFormat: GPUTextureFormat | null = null

@@ -10,6 +10,12 @@
     ".": "./src/index.ts",
     "./default-font": "./src/text/default-font.ts",
     "./fonts/inter-regular.ttf": "./static/fonts/inter-regular.ttf",
+    "./fonts/inter-bold.ttf": "./static/fonts/inter-bold.ttf",
+    "./fonts/inter-italic.ttf": "./static/fonts/inter-italic.ttf",
+    "./fonts/inter-bold-italic.ttf": "./static/fonts/inter-bold-italic.ttf",
+    "./fonts/jetbrains-mono-regular.ttf": "./static/fonts/jetbrains-mono-regular.ttf",
+    "./fonts/jetbrains-mono-italic.ttf": "./static/fonts/jetbrains-mono-italic.ttf",
+    "./fonts/jetbrains-mono-bold-italic.ttf": "./static/fonts/jetbrains-mono-bold-italic.ttf",
     "./fonts/jetbrains-mono-bold.ttf": "./static/fonts/jetbrains-mono-bold.ttf"
   },
   "main": "./src/index.ts",

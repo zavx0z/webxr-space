@@ -1,3 +1,4 @@
+import type {RendererFontFace} from "@zavx0z/webgpu"
 import {
   Raycaster,
   Space,
@@ -142,6 +143,7 @@ export type CreateDocumentSpaceRuntimeOptions = Readonly<{
   document: Document
   styleSheets: readonly string[]
   font: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[] | undefined
   pixelRatio?: number
   viewPoint?: DocumentSpaceViewPointSnapshot
   cameraGestures?: boolean
@@ -600,8 +602,12 @@ const createClaimedDocumentSpaceRuntime = async (
     const runtime = seams.createPlaneRuntime({
       document: options.document,
       root: registration.root,
+      ...(typeof engineRenderer.readImageSize !== "function" ? {} : {
+        measureImage: (src: string, changed: () => void) => engineRenderer.readImageSize(src, changed),
+      }),
       styleSheets,
       font: options.font,
+      ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       viewport: registration.viewport,
       worldUnitsPerPixel: registration.worldUnitsPerPixel,
       interactionState,
@@ -703,8 +709,12 @@ const createClaimedDocumentSpaceRuntime = async (
     const runtime = seams.createOverlayRuntime({
       document: options.document,
       root: registration.root,
+      ...(typeof engineRenderer.readImageSize !== "function" ? {} : {
+        measureImage: (src: string, changed: () => void) => engineRenderer.readImageSize(src, changed),
+      }),
       styleSheets,
       font: options.font,
+      ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       viewport: canvasViewport,
       interactionState,
       ...(registration.distance === undefined ? {} : {distance: registration.distance}),
@@ -1654,6 +1664,7 @@ const createClaimedDocumentSpaceRuntime = async (
     document: options.document,
     styleSheets,
     font: options.font,
+    ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
     interactionState,
     engineRenderer,
     space,

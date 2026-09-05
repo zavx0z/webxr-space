@@ -1508,6 +1508,60 @@
           }
         },
         {
+          "id": "markdown",
+          "label": "Markdown",
+          "route": "components/data/markdown",
+          "apiName": "Markdown",
+          "kind": "component",
+          "readme": "../views/markdown.md",
+          "tags": ["документ", "текст", "markdown", "md", "readme"],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Документ",
+              "group": {"id": "basic", "label": "Основное"},
+              "route": "components/data/markdown/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-data-markdown.ts",
+                "export": "story_basic_default"
+              },
+              "resources": {
+                "fixture": "../views/markdown.fixture.tsx",
+                "tests": ["../tests/markdown.test.ts"]
+              }
+            },
+            {
+              "id": "rendering-wrapping",
+              "label": "С переносом",
+              "group": {"id": "rendering", "label": "Текстовая вёрстка"},
+              "route": "components/data/markdown/rendering/wrapping",
+              "module": {
+                "path": "./stories/subjects/components-data-markdown.ts",
+                "export": "story_rendering_wrapping"
+              },
+              "resources": {
+                "fixture": "../views/markdown.fixture.tsx"
+              }
+            },
+            {
+              "id": "rendering-no-wrap",
+              "label": "Без переноса",
+              "group": {"id": "rendering", "label": "Текстовая вёрстка"},
+              "route": "components/data/markdown/rendering/no-wrap",
+              "module": {
+                "path": "./stories/subjects/components-data-markdown.ts",
+                "export": "story_rendering_no_wrap"
+              },
+              "resources": {"fixture": "../views/markdown.fixture.tsx"}
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": ["props", "source", "diagnostics"]
+          }
+        },
+        {
           "id": "code-editor",
           "label": "Редактор кода",
           "route": "components/data/code-editor",

@@ -14,7 +14,7 @@ afterEach(() => {
 
 // Only GPU submission, native text proxies and scheduling are substituted.
 // CPU layout, hit testing, projection geometry, dispatch and scrolling are real.
-const fixture = async () => {
+const fixture = async (readImageSize?: Renderer["readImageSize"]) => {
   const document = createDocument()
   const root = document.createElement("div")
   document.append(root)
@@ -54,6 +54,7 @@ const fixture = async () => {
     dispose() {},
   } as unknown as DocumentNativeInputHost
   const engineRenderer = {
+    ...(readImageSize === undefined ? {} : {readImageSize}),
     setPixelRatio() {},
     setSize() {},
     invalidateGeometry() {},
@@ -119,6 +120,79 @@ const fixture = async () => {
   }
   return {runtime, document, captured, cameraInputs, camera, element, projection, emit, observe}
 }
+
+test("resizing Display and HUD preserves the Renderer and advances already presented revisions", async () => {
+  const f = await fixture()
+  for (const kind of ["plane", "overlay"] as const) {
+    const root = f.projection(kind, kind)
+    root.setAttribute("style", "width:100%;height:100%;overflow:auto")
+    const button = f.element("box-sizing:border-box;width:100%;height:40px", root, "button")
+    f.runtime.render()
+    button.textContent = "second frame"
+    f.runtime.render()
+    const projection = kind === "plane" ? f.runtime.getPlane(kind)! : f.runtime.getOverlay(kind)!
+    const renderer = projection.renderer
+    let revision = projection.frame.revision
+    expect(revision).toBeGreaterThan(1)
+    for (const width of [160, 240, 120]) {
+      const frame = projection.resize({width, height: 180})
+      expect(projection.renderer === renderer).toBe(true)
+      expect(frame.revision).toBeGreaterThan(revision)
+      expect(frame.viewport).toEqual({width, height: 180})
+      expect(frame.boxByNode.get(button)?.width).toBe(width)
+      expect(button.parentElement === root).toBe(true)
+      revision = frame.revision
+    }
+  }
+})
+
+test("wheel plus stationary-pointer hover does not leave an unstyled projection dirty", async () => {
+  const f = await fixture()
+  const display = f.projection("plane", "scroll-hover")
+  display.setAttribute("style", "width:200px;height:200px;overflow:auto")
+  for (let index = 0; index < 20; index++) {
+    const row = f.element("width:200px;height:40px;line-height:20px", display)
+    const span = f.document.createElement("span")
+    span.textContent = `Row ${index}`
+    row.append(span)
+  }
+  f.runtime.render()
+  f.emit("pointermove", 40, 15)
+  f.runtime.render()
+  const projection = f.runtime.getPlane("scroll-hover")!
+  for (let step = 0; step < 8; step++) {
+    f.emit("wheel", 40, 15, {deltaY:40})
+    f.runtime.render()
+    expect(projection.renderer.flush() === projection.frame).toBe(true)
+  }
+  expect(display.scrollTop).toBe(320)
+})
+
+test("decoded image dimensions invalidate both HUD and Display layout", async () => {
+  let ready = false
+  const waiting = new Set<() => void>()
+  const f = await fixture((_src, changed) => {
+    if (ready) return {width: 640, height: 360}
+    waiting.add(changed)
+    return null
+  })
+  for (const kind of ["overlay", "plane"] as const) {
+    const root = f.projection(kind, kind)
+    const image = f.document.createElement("img")
+    image.src = "fixture.gif"
+    image.width = 100
+    root.append(image)
+  }
+  f.runtime.render()
+  expect(waiting.size).toBe(2)
+  ready = true
+  for (const changed of waiting) changed()
+  f.runtime.render()
+  for (const projection of [f.runtime.getOverlay("overlay"), f.runtime.getPlane("plane")]) {
+    const image = projection!.root.firstChild!
+    expect(projection!.frame!.boxByNode.get(image)).toMatchObject({width: 100, height: 56.25})
+  }
+})
 
 test("[BRW-002] пустой HUD пропускает hover, click и wheel к Display", async () => {
   const f = await fixture()

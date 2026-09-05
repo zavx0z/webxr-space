@@ -1,3 +1,5 @@
+import type {RenderImageSize} from "@zavx0z/renderer"
+import type {RendererFontFace} from "@zavx0z/webgpu"
 import type {
   BufferGeometry,
   TrueTypeFont,
@@ -35,6 +37,8 @@ export type CreateDocumentPlaneRuntimeOptions = Readonly<{
   root: Node
   styleSheets: readonly string[]
   font: TrueTypeFont
+  fontFaces?: readonly RendererFontFace[] | undefined
+  measureImage?: (src: string, changed: () => void) => RenderImageSize | null
   viewport: RenderViewport
   worldUnitsPerPixel: number
   invalidateGeometry(geometry: BufferGeometry): void
@@ -145,6 +149,11 @@ export function createDocumentPlaneRuntimeWithSeams(
     if (requestVersion === version) requestFrame()
   }
 
+  let imageSizeChanged = (): void => {}
+  const onImageSizeChanged = (): void => imageSizeChanged()
+  const imageMeasurer = options.measureImage === undefined ? undefined : {
+    measureImage: (src: string) => options.measureImage!(src, onImageSizeChanged),
+  }
   const cleanupOwners = (): void => {
     requestBackendPresentation = (): void => {}
     unsubscribeMutations()
@@ -163,6 +172,7 @@ export function createDocumentPlaneRuntimeWithSeams(
   try {
     backend = seams.createBackend({
       font: options.font,
+      ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       invalidateGeometry: options.invalidateGeometry,
       requestPresentation: () => requestBackendPresentation(),
     })
@@ -180,6 +190,7 @@ export function createDocumentPlaneRuntimeWithSeams(
       styleSheets,
       interactionState,
       textMeasurer,
+      ...(imageMeasurer === undefined ? {} : {imageMeasurer}),
     })
     interaction = seams.createInteraction({
       hitTest: hitTestProjection,
@@ -201,7 +212,7 @@ export function createDocumentPlaneRuntimeWithSeams(
 
   const requiredBackend = backend
   const requiredPlane = plane
-  let requiredRenderer = renderer
+  const requiredRenderer = renderer
   const requiredInteraction = interaction
   if (
     requiredBackend === null ||
@@ -210,7 +221,11 @@ export function createDocumentPlaneRuntimeWithSeams(
     requiredRenderer === null ||
     requiredInteraction === null
   ) throw new Error("Document plane runtime owners were not created")
-  const requiredTextMeasurer = textMeasurer
+  imageSizeChanged = () => {
+    if (disposed) return
+    requiredRenderer.invalidate(requiredRenderer.root)
+    requestFrame()
+  }
 
   const flush = (): RenderFrame => {
     assertActive(disposed)
@@ -230,32 +245,8 @@ export function createDocumentPlaneRuntimeWithSeams(
     validateViewport(viewport)
     const scale = finitePositive(worldUnitsPerPixel, "worldUnitsPerPixel")
     validatePhysicalExtents(viewport, scale)
-    const viewportChanged =
-      viewport.width !== requiredPlane.viewport.width ||
-      viewport.height !== requiredPlane.viewport.height
-    let nextRenderer: DocumentRenderer | null = null
-    if (viewportChanged) {
-      nextRenderer = seams.createDocumentRenderer({
-        document: options.document,
-        root: options.root,
-        viewport,
-        styleSheets,
-        interactionState,
-        textMeasurer: requiredTextMeasurer,
-      })
-    }
-    try {
-      requiredPlane.configure(viewport, scale)
-    } catch (error) {
-      nextRenderer?.dispose()
-      throw error
-    }
-    if (nextRenderer !== null) {
-      const previous = requiredRenderer
-      requiredRenderer = nextRenderer
-      renderer = nextRenderer
-      previous.dispose()
-    }
+    requiredPlane.configure(viewport, scale)
+    requiredRenderer.resize(viewport)
     return flush()
   }
 
@@ -272,6 +263,7 @@ export function createDocumentPlaneRuntimeWithSeams(
     root: options.root,
     styleSheets,
     font: options.font,
+    ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
     get renderer() { return requiredRenderer },
     interaction: requiredInteraction,
     interactionState,
