@@ -22,6 +22,9 @@ import type {
   RenderTransform,
 } from "./types.ts"
 import {appendImmutableArray} from "./immutable-array.ts"
+import {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
+import {isRendererOwnedFrame, markRendererOwnedFrame, recordCanonicalRenderFrameChanges} from "./frame-change-state.ts"
+import {scrollHitCandidates} from "./scroll-hit-index.ts"
 import type {DocumentInteractionState} from "./pseudo-state.ts"
 
 export type PointerInput = Readonly<{
@@ -149,6 +152,8 @@ export const createDocumentInteractionController = (
   let cachedBase: RenderFrame | null = null
   let cachedSignature = ""
   let cachedPresentation: RenderFrame | null = null
+  let lastComposedBase: RenderFrame | null = null
+  let lastComposedFrame: RenderFrame | null = null
   let disposed = false
 
   const controller: DocumentInteractionController = {
@@ -332,7 +337,7 @@ export const createDocumentInteractionController = (
         cachedBase = null
         cachedPresentation = null
         cachedSignature = ""
-        return frame
+        return rememberComposition(frame, frame)
       }
 
       const signature = [
@@ -364,7 +369,7 @@ export const createDocumentInteractionController = (
       cachedBase = frame
       cachedSignature = signature
       cachedPresentation = presentation
-      return presentation
+      return rememberComposition(frame, presentation)
     },
     dispose() {
       if (disposed) return
@@ -381,11 +386,40 @@ export const createDocumentInteractionController = (
       options.interactionState?.setActiveElement(null)
       titleCandidate = null
       currentTooltip = null
+      lastComposedBase = null
+      lastComposedFrame = null
       invalidatePresentation()
     },
   }
 
   return Object.freeze(controller)
+
+  function rememberComposition(base: RenderFrame, presentation: RenderFrame): RenderFrame {
+    if (isRendererOwnedFrame(base)) markRendererOwnedFrame(presentation)
+    if (presentation === base && lastComposedFrame === lastComposedBase) {
+      lastComposedBase = base
+      lastComposedFrame = presentation
+      return presentation
+    }
+    if (lastComposedBase !== null && lastComposedFrame !== null &&
+      presentation !== lastComposedFrame &&
+      base.displayList.length === lastComposedBase.displayList.length &&
+      presentation.displayList.length === lastComposedFrame.displayList.length) {
+      const changes = base === lastComposedBase ? null : readCanonicalRenderFrameChanges(base)
+      if (base === lastComposedBase || changes?.previous === lastComposedBase) {
+        const overlayIndexes: number[] = []
+        for (let index = base.displayList.length; index < presentation.displayList.length; index++) {
+          if (presentation.displayList[index] !== lastComposedFrame.displayList[index]) overlayIndexes.push(index)
+        }
+        const indexes = appendImmutableArray(changes?.indexes ?? [], overlayIndexes)
+        recordCanonicalRenderFrameChanges(presentation, lastComposedFrame, indexes, changes?.operations,
+          changes?.scroll ?? readCanonicalRenderFrameChanges(base)?.scroll)
+      }
+    }
+    lastComposedBase = base
+    lastComposedFrame = presentation
+    return presentation
+  }
 
   function transitionHover(
     target: Element | null,
@@ -556,8 +590,9 @@ export const hitTest = (
 ): HitMetadata | null => {
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null
   const hits = frame.hitOrder ?? [...frame.hits.values()]
-  for (let index = hits.length - 1; index >= 0; index--) {
-    const hit = hits[index]
+  const candidates = scrollHitCandidates(frame, x, y)
+  for (let index = (candidates?.length ?? hits.length) - 1; index >= 0; index--) {
+    const hit = hits[candidates?.[index] ?? index]
     const transform = hit === undefined ? null : hitTransform(frame, hit)
     const local = transform === null ? null : inverseTransformPoint(transform, x, y)
     if (

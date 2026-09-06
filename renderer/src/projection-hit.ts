@@ -1,8 +1,49 @@
 import type {Node} from "@zavx0z/dom"
 import {hitTest, pointInClip} from "./interaction.ts"
+import {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
 import type {DisplayItem, HitMetadata, RenderFrame} from "./types.ts"
 
-const paintByFrame = new WeakMap<RenderFrame, ReadonlyMap<Node, readonly DisplayItem[]>>()
+const paintByFrame = new WeakMap<RenderFrame, ReadonlyMap<Node, readonly number[]>>()
+
+/** Stable paint ownership; coordinates and visibility are read from the current frame. */
+export function projectionPaintIndex(frame: RenderFrame): ReadonlyMap<Node, readonly number[]> {
+  const cached = paintByFrame.get(frame)
+  if (cached !== undefined) return cached
+  const changes = readCanonicalRenderFrameChanges(frame)
+  if (changes?.scroll !== undefined && frame.displayList.length === changes.scroll.source.displayList.length) {
+    const source = projectionPaintIndex(changes.scroll.source)
+    paintByFrame.set(frame, source)
+    return source
+  }
+  const previous = changes === null ? undefined : paintByFrame.get(changes.previous)
+  if (previous !== undefined && changes?.scroll !== undefined &&
+    frame.displayList.length === changes.previous.displayList.length) {
+    paintByFrame.set(frame, previous)
+    return previous
+  }
+  if (previous !== undefined && changes !== null &&
+    frame.displayList.length === changes.previous.displayList.length &&
+    changes.indexes.every(index => {
+      const before = changes.previous.displayList[index]
+      const after = frame.displayList[index]
+      return before?.node === after?.node && before?.key === after?.key && before?.kind === after?.kind
+    })) {
+    paintByFrame.set(frame, previous)
+    return previous
+  }
+  const index = new Map<Node, number[]>()
+  for (let offset = 0; offset < frame.displayList.length; offset++) {
+    const item = frame.displayList[offset]!
+    let owner: Node | null = item.node
+    while (owner !== null && !frame.hits.has(owner)) owner = owner.parentNode
+    if (owner === null) continue
+    const entries = index.get(owner)
+    if (entries === undefined) index.set(owner, [offset])
+    else entries.push(offset)
+  }
+  paintByFrame.set(frame, index)
+  return index
+}
 
 /**
  * Finds occupied content in a shared projection. Layout-only ancestors do not
@@ -12,26 +53,12 @@ const paintByFrame = new WeakMap<RenderFrame, ReadonlyMap<Node, readonly Display
  * ordinary document input. Exhausted scroll viewports still occlude content.
  */
 export const hitTestProjection = (frame: RenderFrame, x: number, y: number): HitMetadata | null => {
-  let paint = paintByFrame.get(frame)
-  if (paint === undefined) {
-    const index = new Map<Node, DisplayItem[]>()
-    for (const item of frame.displayList) {
-      if (item.opacity <= 0 || item.kind === "rect" && item.shadow !== null) continue
-      let owner: Node | null = item.node
-      while (owner !== null && !frame.hits.has(owner)) owner = owner.parentNode
-      if (owner === null) continue
-      const entries = index.get(owner) ?? []
-      entries.push(item)
-      index.set(owner, entries)
-    }
-    paint = index
-    paintByFrame.set(frame, paint)
-  }
+  const paint = projectionPaintIndex(frame)
   return hitTest(frame, x, y, hit => {
     if (hit.interactive || hit.disabled) return true
     const scroll = frame.scrolls.get(hit.node)
     if (scroll !== undefined && (scroll.maxScrollLeft > 0 || scroll.maxScrollTop > 0)) return true
-    return (paint.get(hit.node) ?? []).some(item => containsPaint(frame, item, hit, x, y))
+    return (paint.get(hit.node) ?? []).some(index => containsPaint(frame, frame.displayList[index]!, hit, x, y))
   })
 }
 
@@ -42,6 +69,7 @@ const containsPaint = (
   x: number,
   y: number,
 ): boolean => {
+  if (item.opacity <= 0 || item.kind === "rect" && item.shadow !== null) return false
   if (!item.clips.every(clip => pointInClip(frame, clip, x, y))) return false
   // Vector paths already passed the exact stroke hit test, including retained transforms.
   if (item.kind === "path") return visibleColor(item.stroke)

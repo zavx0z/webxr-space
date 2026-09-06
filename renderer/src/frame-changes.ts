@@ -1,4 +1,5 @@
 import type {RenderFrame} from "./types.ts"
+export {isRendererOwnedFrame} from "./frame-change-state.ts"
 import {
   readCanonicalRenderFrameChangeState,
   type CanonicalRenderFrameChanges,

@@ -123,25 +123,60 @@ class ChunkedArrayData<Value> {
 }
 
 const dataByArray = new WeakMap<readonly unknown[], ChunkedArrayData<unknown>>()
+const readersByArray = new WeakMap<readonly unknown[], (index: number) => unknown>()
+type ArraySegment<Value> = Readonly<{source: readonly Value[]; end: number}>
+const segmentsByArray = new WeakMap<readonly unknown[], readonly ArraySegment<unknown>[]>()
+
+/** Private owner registration: the reader must expose a stable immutable snapshot. */
+export const registerImmutableArrayReader = <Value>(
+  values: readonly Value[],
+  read: (index: number) => Value | undefined,
+): void => {
+  if (readersByArray.has(values) || dataByArray.has(values)) throw new Error("Immutable array reader is already registered")
+  readersByArray.set(values, read)
+}
+
+export const isImmutableArray = (values: readonly unknown[]): boolean =>
+  dataByArray.has(values) || readersByArray.has(values) || Object.isFrozen(values)
+
+/** Internal indexed consumers bypass the Array-compatible proxy's string-key conversion. */
+export const readImmutableArrayEntry = <Value>(values: readonly Value[], index: number): Value | undefined => {
+  const data = dataByArray.get(values) as ChunkedArrayData<Value> | undefined
+  if (data !== undefined) return data.get(index)
+  const reader = readersByArray.get(values)
+  return reader === undefined ? values[index] : reader(index) as Value | undefined
+}
 
 export const immutableArray = <Value>(values: readonly Value[]): readonly Value[] => {
-  const current = dataByArray.get(values) as ChunkedArrayData<Value> | undefined
-  if (current) return values
-  return proxyFor(ChunkedArrayData.from(values))
+  if (dataByArray.has(values) || readersByArray.has(values)) return values
+  return values.length <= CHUNK_SIZE ? Object.freeze([...values]) : proxyFor(ChunkedArrayData.from(values))
 }
 
 export const replaceImmutableArray = <Value>(
   values: readonly Value[],
   index: number,
   value: Value,
-): readonly Value[] => proxyFor(dataFor(values).with(index, value))
+): readonly Value[] => replaceImmutableArrayEntries(values, [{index, value}])
 
 export const replaceImmutableArrayEntries = <Value>(
   values: readonly Value[],
   entries: readonly Readonly<{index: number; value: Value}>[],
-): readonly Value[] => entries.length === 0
-  ? values
-  : proxyFor(dataFor(values).withMany(entries))
+): readonly Value[] => {
+  if (entries.length === 0) return values
+  // Small lists use native indexing; larger frames keep copy-on-write chunks.
+  if (values.length <= CHUNK_SIZE) {
+    const data = dataByArray.get(values) as ChunkedArrayData<Value> | undefined
+    const next: Value[] = data === undefined ? Array.prototype.slice.call(values) : data.chunks().flat() as Value[]
+    for (const {index, value} of entries) {
+      if (!Number.isSafeInteger(index) || index < 0 || index >= values.length) {
+        throw new RangeError("Immutable array replacement index is out of bounds")
+      }
+      next[index] = value
+    }
+    return Object.freeze(next)
+  }
+  return proxyFor(dataFor(values).withMany(entries))
+}
 
 export const moveImmutableArrayEntry = <Value>(
   values: readonly Value[],
@@ -153,7 +188,50 @@ export const moveImmutableArrayEntry = <Value>(
 export const appendImmutableArray = <Value>(
   values: readonly Value[],
   appended: readonly Value[],
-): readonly Value[] => proxyFor(dataFor(values).append(appended))
+): readonly Value[] => {
+  if (appended.length === 0 && readersByArray.has(values)) return values
+  if (values.length === 0 && readersByArray.has(appended)) return appended
+  if (!readersByArray.has(values) && !readersByArray.has(appended)) {
+    return proxyFor(dataFor(values).append(appended))
+  }
+  const segments: ArraySegment<Value>[] = []
+  let length = 0
+  for (const input of [values, appended]) {
+    if (input.length === 0) continue
+    const flattened = segmentsByArray.get(input) as readonly ArraySegment<Value>[] | undefined
+    if (flattened !== undefined) {
+      for (const segment of flattened) {
+        length += segment.source.length
+        segments.push(Object.freeze({source: segment.source, end: length}))
+      }
+    } else {
+      const source = immutableArray(input)
+      length += source.length
+      segments.push(Object.freeze({source, end: length}))
+    }
+  }
+  if (segments.length === 0) return Object.freeze([])
+  if (segments.length === 1) return segments[0]!.source
+  const retained = Object.freeze(segments)
+  const read = (index: number): Value | undefined => {
+    if (index < 0 || index >= length) return undefined
+    let low = 0
+    let high = retained.length
+    while (low < high) {
+      const middle = (low + high) >>> 1
+      if (retained[middle]!.end <= index) low = middle + 1
+      else high = middle
+    }
+    const segment = retained[low]!
+    return readImmutableArrayEntry(segment.source, index - (segment.end - segment.source.length))
+  }
+  const result = readonlyArrayProxy(length, read, function* () {
+    for (const segment of retained) yield* segment.source
+  })
+  registerImmutableArrayReader(result, read)
+  segmentsByArray.set(result, retained as readonly ArraySegment<unknown>[])
+  return result
+}
 
 export const sharedImmutableArrayChunks = (
   left: readonly unknown[],
@@ -171,37 +249,53 @@ export const sharedImmutableArrayChunks = (
 
 const dataFor = <Value>(values: readonly Value[]): ChunkedArrayData<Value> => {
   const data = dataByArray.get(values) as ChunkedArrayData<Value> | undefined
-  return data ?? ChunkedArrayData.from(values)
+  if (data !== undefined) return data
+  const created = ChunkedArrayData.from(values)
+  if (readersByArray.has(values) || Object.isFrozen(values)) dataByArray.set(values, created as ChunkedArrayData<unknown>)
+  return created
 }
 
 const proxyFor = <Value>(data: ChunkedArrayData<Value>): readonly Value[] => {
-  const target = new Array<Value>(data.length)
+  const proxy = readonlyArrayProxy(data.length, index => data.get(index), function* () {
+    for (const chunk of data.chunks()) yield* chunk
+  })
+  dataByArray.set(proxy, data as ChunkedArrayData<unknown>)
+  return proxy
+}
+
+const readonlyArrayProxy = <Value>(
+  length: number,
+  read: (index: number) => Value | undefined,
+  iterate: () => IterableIterator<Value>,
+): readonly Value[] => {
+  const target = new Array<Value>(length)
   const proxy = new Proxy(target, {
     get(array, property, receiver) {
+      if (property === Symbol.iterator) return iterate
       const index = arrayIndex(property)
-      return index === null ? Reflect.get(array, property, receiver) : data.get(index)
+      return index === null ? Reflect.get(array, property, receiver) : read(index)
     },
     has(array, property) {
       const index = arrayIndex(property)
       return index === null
         ? Reflect.has(array, property)
-        : index >= 0 && index < data.length
+        : index >= 0 && index < length
     },
     ownKeys() {
       return [
-        ...Array.from({length: data.length}, (_, index) => String(index)),
+        ...Array.from({length}, (_, index) => String(index)),
         "length",
       ]
     },
     getOwnPropertyDescriptor(array, property) {
       const index = arrayIndex(property)
       if (index === null) return Reflect.getOwnPropertyDescriptor(array, property)
-      if (index < 0 || index >= data.length) return undefined
+      if (index < 0 || index >= length) return undefined
       return {
         configurable: true,
         enumerable: true,
         writable: false,
-        value: data.get(index),
+        value: read(index),
       }
     },
     set() {
@@ -220,7 +314,6 @@ const proxyFor = <Value>(data: ChunkedArrayData<Value>): readonly Value[] => {
       throw readonlyArrayError()
     },
   })
-  dataByArray.set(proxy, data as ChunkedArrayData<unknown>)
   return proxy
 }
 

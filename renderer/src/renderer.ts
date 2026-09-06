@@ -31,6 +31,8 @@ import {
   type StyleRuleIndex,
 } from "./css.ts"
 import { DirtyTracker } from "./dirty.ts"
+import {ImmutableNodeMap} from "./immutable-node-map.ts"
+import {isProjectedArray, projectArray, ProjectedMap} from "./projected-collections.ts"
 import {
   cachedDocumentStyleRules,
   prepareHostStyleSheets
@@ -66,7 +68,8 @@ import {parseRenderPath} from "./path.ts"
 import {layoutInlineFlow, type InlineInput, type InlinePlan} from "./inline-flow.ts"
 import {
   readCanonicalRenderFrameChangeState,
-  recordCanonicalRenderFrameChanges,
+  markRendererOwnedFrame,
+  recordRendererOwnedFrameChanges as recordCanonicalRenderFrameChanges,
   type CanonicalRenderFrameOperation,
 } from "./frame-change-state.ts"
 
@@ -164,6 +167,19 @@ type PathStackBlock = {
 }
 
 const collectionIndexesByFrame = new WeakMap<RenderFrame, FrameCollectionIndexes>()
+
+type LazyScrollContext = Readonly<{
+  owner: HTMLElement
+  source: RenderFrame
+  projection: ScrollProjection
+  indexes: FrameCollectionIndexes
+  hitNodes: ReadonlySet<Node>
+  hitStart: number
+  hitEnd: number
+  changesTransforms: boolean
+  changedIndexes: readonly number[]
+}>
+const lazyScrollContexts = new WeakMap<RenderFrame, LazyScrollContext>()
 
 const ZERO_EDGES: RenderEdges = Object.freeze({
   top: 0,
@@ -356,7 +372,8 @@ export const createDocumentRenderer = (
   let revision = 0
   let disposed = false
   let fastPathBlocked = false
-  let transformTarget: Element | null = null
+  const transformTargets = new Set<Element>()
+  let transformFastPathBlocked = false
   const unsubscribe = options.document.subscribeMutations(
     invalidateMutationBatch,
   )
@@ -475,10 +492,10 @@ export const createDocumentRenderer = (
       resetFastPath()
       return frame
     }
-    if (frame !== null && transformTarget !== null) {
-      const incremental = tryBuildTransformFrame(
+    if (frame !== null && transformTargets.size > 0) {
+      const incremental = tryBuildTransformFrames(
         frame,
-        transformTarget,
+        [...transformTargets],
         layoutCache,
         rules,
         options.interactionState,
@@ -578,6 +595,7 @@ export const createDocumentRenderer = (
       options.textMeasurer,
       options.imageMeasurer,
     )
+    markRendererOwnedFrame(next)
     revision++
     frame = next
     dirty.clear()
@@ -602,7 +620,7 @@ export const createDocumentRenderer = (
             characterDataTargets.size > 0 ||
             inputValueTargets.size > 0 ||
             vectorPathTargets.size > 0 ||
-            transformTarget !== null
+            transformTargets.size > 0
           ) blockFastPath()
           else projectionNeutralMutations += 1
         } else if (projectionNeutralMutations > 0) {
@@ -615,12 +633,14 @@ export const createDocumentRenderer = (
           subtreeDirty.add(record.target)
           vectorPathTargets.add(record.target)
           characterDataTargets.clear()
-        } else if (isTransformOnlyStyleMutation(record)) {
+        } else if (isTransformOnlyStyleMutation(record) && !styleRulesDependOnAttribute(rules, "style")) {
           subtreeDirty.add(record.target)
-          if (transformTarget === null || transformTarget === record.target) {
-            transformTarget = record.target
+          if (!transformFastPathBlocked && characterDataTargets.size === 0 &&
+            inputValueTargets.size === 0 && vectorPathTargets.size === 0 && projectionNeutralMutations === 0 &&
+            (transformTargets.has(record.target) || transformTargets.size < 8 &&
+              [...transformTargets].every(target => !target.contains(record.target) && !record.target.contains(target)))) {
+            transformTargets.add(record.target)
             fastPathBlocked = true
-            characterDataTargets.clear()
           } else {
             blockFastPath()
           }
@@ -686,7 +706,8 @@ export const createDocumentRenderer = (
     characterDataTargets.clear()
     inputValueTargets.clear()
     projectionNeutralMutations = 0
-    transformTarget = null
+    transformTargets.clear()
+    transformFastPathBlocked = true
     vectorPathTargets.clear()
   }
 
@@ -698,7 +719,8 @@ export const createDocumentRenderer = (
     characterDataTargets.clear()
     inputValueTargets.clear()
     projectionNeutralMutations = 0
-    transformTarget = null
+    transformTargets.clear()
+    transformFastPathBlocked = false
     vectorPathTargets.clear()
   }
 
@@ -737,6 +759,11 @@ const tryBuildScrollFrame = (
 ): RenderFrame | null => {
   const projections = scrollProjectionsByFrame.get(previous)
   if (projections === undefined || [...targets].some(target => !projections.has(target))) return null
+  if (targets.size === 1) {
+    const owner = targets.values().next().value!
+    const lazy = tryBuildLazyScrollFrame(previous, owner, projections, revision)
+    if (lazy !== null) return lazy
+  }
   const indexes = collectionIndexes(previous)
   const boxes = new Map<number, RenderBox>()
   const display = new Map<number, DisplayItem>()
@@ -763,7 +790,8 @@ const tryBuildScrollFrame = (
       const box = boxes.get(index) ?? previous.boxes[index]!
       const shifted = scrollBox(box, dx, dy, ownerBox.transform)
       boxes.set(index, shifted)
-      if (isElement(box.node) && previous.presentationTransforms?.has(box.node)) {
+      if (isElement(box.node) && previous.presentationTransforms?.has(box.node) &&
+        previous.presentationTransforms.get(box.node) !== shifted.transform) {
         presentationTransforms.set(box.node, shifted.transform)
       }
     }
@@ -827,6 +855,106 @@ const tryBuildScrollFrame = (
     }),
   })
   recordCanonicalRenderFrameChanges(next, previous, [...display.keys()].sort((a, b) => a - b))
+  scrollProjectionsByFrame.set(next, projections)
+  collectionIndexesByFrame.set(next, indexes)
+  return next
+}
+
+const tryBuildLazyScrollFrame = (
+  previous: RenderFrame,
+  owner: HTMLElement,
+  projections: ReadonlyMap<HTMLElement, ScrollProjection>,
+  revision: number,
+): RenderFrame | null => {
+  const projection = projections.get(owner)!
+  if (projection.boxEnd - projection.boxStart < 256 || projection.clipDepth < 0 || previous.hitOrder === undefined) return null
+  let context = lazyScrollContexts.get(previous)
+  if (context?.owner !== owner) {
+    // Rebase through the eager path when another owner or update interrupts the run.
+    // This bounds retained history instead of nesting lazy views indefinitely.
+    if (isProjectedArray(previous.boxes)) return null
+    for (let index = projection.displayStart; index < projection.displayEnd; index++) {
+      if (previous.displayList[index]?.kind === "path") return null
+    }
+    const indexes = collectionIndexes(previous)
+    const hitIndexes = projection.hitNodes.map(node => indexes.hitByRecord.get(previous.hits.get(node)!))
+    if (hitIndexes.some(index => index === undefined)) return null
+    let hitStart = Infinity
+    let hitEnd = 0
+    for (const index of hitIndexes) {
+      hitStart = Math.min(hitStart, index!)
+      hitEnd = Math.max(hitEnd, index! + 1)
+    }
+    if (hitEnd - hitStart !== hitIndexes.length) return null
+    const transform = previous.boxByNode.get(owner)?.transform
+    if (transform === undefined) return null
+    let changesTransforms = false
+    for (let index = projection.boxStart; index < projection.boxEnd; index++) {
+      const current = previous.boxes[index]!.transform
+      if (current.scaleX !== transform.scaleX || current.scaleY !== transform.scaleY) changesTransforms = true
+    }
+    const changedIndexes = Array.from({length: projection.displayEnd - projection.displayStart}, (_, index) => projection.displayStart + index)
+    for (let index = projection.chromeStart; index + 1 < projection.chromeEnd; index += 2) changedIndexes.push(index + 1)
+    context = {owner, source: previous, projection, indexes, hitNodes: new Set(projection.hitNodes), hitStart, hitEnd,
+      changesTransforms, changedIndexes: Object.freeze(changedIndexes)}
+  }
+  const {source, indexes} = context
+  const old = source.scrolls.get(owner)!
+  const current = previous.scrolls.get(owner)!
+  const ownerBox = source.boxByNode.get(owner)!
+  const requestedScrollLeft = owner.scrollLeft
+  const requestedScrollTop = owner.scrollTop
+  const scrollLeft = Math.min(old.maxScrollLeft, requestedScrollLeft)
+  const scrollTop = Math.min(old.maxScrollTop, requestedScrollTop)
+  if (scrollLeft === current.scrollLeft && scrollTop === current.scrollTop) return null
+  const dx = scrollLeft - old.scrollLeft
+  const dy = scrollTop - old.scrollTop
+  const boxes = projectArray(source.boxes, projection.boxStart, projection.boxEnd, box => scrollBox(box, dx, dy, ownerBox.transform))
+  const changedThumbs = new Map<number, DisplayItem>()
+  for (let index = projection.chromeStart; index + 1 < projection.chromeEnd; index += 2) {
+    const track = source.displayList[index]!
+    const thumb = source.displayList[index + 1]!
+    if (track.kind !== "rect" || thumb.kind !== "rect") return null
+    const vertical = thumb.key === "ua:scrollbar-y-thumb"
+    const offset = scrollbarThumbOffset(vertical ? track.height : track.width, vertical ? thumb.height : thumb.width,
+      vertical ? scrollTop : scrollLeft, vertical ? old.maxScrollTop : old.maxScrollLeft)
+    changedThumbs.set(index + 1, Object.freeze({...thumb, x: track.x + (vertical ? 0 : offset), y: track.y + (vertical ? offset : 0)}))
+  }
+  const displayList = projectArray(source.displayList, projection.displayStart, projection.chromeEnd, (item, index) =>
+    index < projection.displayEnd ? scrollDisplayItem(item, projection.clipDepth, dx, dy, ownerBox.transform) : changedThumbs.get(index) ?? item)
+  const hitCache = new Map<Node, HitMetadata>()
+  const hits = new ProjectedMap(source.hits, (node, hit) => {
+    if (!context!.hitNodes.has(node)) return hit
+    let projected = hitCache.get(node)
+    if (projected === undefined) {
+      projected = scrollHit(hit, projection.clipDepth, dx, dy, ownerBox.transform)
+      hitCache.set(node, projected)
+      indexes.hitByRecord.set(projected, indexes.hitByRecord.get(hit)!)
+    }
+    return projected
+  })
+  const hitOrder = projectArray(source.hitOrder!, context.hitStart, context.hitEnd, hit => hits.get(hit.node)!)
+  const boxByNode = new ProjectedMap(source.boxByNode, (node, box) => {
+    const index = indexes.boxByNode.get(node)
+    return index === undefined ? box : boxes[index]!
+  })
+  const transforms = source.presentationTransforms === undefined || !context.changesTransforms ? source.presentationTransforms :
+    new ProjectedMap(source.presentationTransforms, (node, transform) => {
+      const index = indexes.boxByNode.get(node)
+      return index !== undefined && index >= projection.boxStart && index < projection.boxEnd
+        ? shiftTransformForScroll(transform, ownerBox.transform, dx, dy) : transform
+    })
+  const next: RenderFrame = Object.freeze({
+    ...source, revision, boxes, boxByNode, displayList, hits, hitOrder,
+    scrolls: replaceImmutableNodeMap(source.scrolls, owner, Object.freeze({...old, requestedScrollLeft, requestedScrollTop, scrollLeft, scrollTop})),
+    ...(transforms === undefined ? {} : {presentationTransforms: transforms}),
+  })
+  recordCanonicalRenderFrameChanges(next, previous, context.changedIndexes, undefined, {
+    owner, source, dx, dy, transform: ownerBox.transform,
+    displayStart: projection.displayStart, displayEnd: projection.displayEnd,
+    hitStart: context.hitStart, hitEnd: context.hitEnd, clipDepth: projection.clipDepth,
+  })
+  lazyScrollContexts.set(next, context)
   scrollProjectionsByFrame.set(next, projections)
   collectionIndexesByFrame.set(next, indexes)
   return next
@@ -1290,6 +1418,33 @@ const samePathStyleExceptPaint = (left: ComputedStyle, right: ComputedStyle): bo
     ...rightComparable
   } = right
   return JSON.stringify(leftComparable) === JSON.stringify(rightComparable)
+}
+
+const tryBuildTransformFrames = (
+  previous: RenderFrame,
+  targets: readonly Element[],
+  layoutCache: WeakMap<Node, LayoutNode>,
+  rules: StyleRuleIndex,
+  interactionState: CreateDocumentRendererOptions["interactionState"],
+  projectionInheritedStyle: ComputedStyle,
+  revision: number,
+): RenderFrame | null => {
+  if (targets.length === 1) {
+    return tryBuildTransformFrame(previous, targets[0]!, layoutCache, rules, interactionState, projectionInheritedStyle, revision)
+  }
+  let current = previous
+  const changed = new Set<number>()
+  for (const target of targets) {
+    const next = tryBuildTransformFrame(current, target, layoutCache, rules, interactionState, projectionInheritedStyle, revision)
+    if (next === null) return null
+    const changes = readCanonicalRenderFrameChangeState(next)
+    if (changes === null || changes.previous !== current || changes.operations !== undefined) return null
+    for (const index of changes.indexes) changed.add(index)
+    current = next
+  }
+  if (current === previous) return null
+  recordCanonicalRenderFrameChanges(current, previous, [...changed].sort((left, right) => left - right))
+  return current
 }
 
 const tryBuildTransformFrame = (
@@ -4756,11 +4911,14 @@ const shiftTransformForScroll = (
   scrollLeft: number,
   scrollTop: number,
 ): RenderTransform => {
+  const translateX = transform.translateX + (transform.scaleX - owner.scaleX) * scrollLeft
+  const translateY = transform.translateY + (transform.scaleY - owner.scaleY) * scrollTop
+  if (Object.is(translateX, transform.translateX) && Object.is(translateY, transform.translateY)) return transform
   const result = Object.freeze({
     scaleX: transform.scaleX,
     scaleY: transform.scaleY,
-    translateX: transform.translateX + (transform.scaleX - owner.scaleX) * scrollLeft,
-    translateY: transform.translateY + (transform.scaleY - owner.scaleY) * scrollTop,
+    translateX,
+    translateY,
   })
   return isIdentityTransform(result) ? IDENTITY_TRANSFORM : result
 }
@@ -6205,105 +6363,6 @@ const validateRoot = (document: Document, root: Node): void => {
     throw new TypeError("Renderer root must belong to the supplied document")
 }
 
-class ImmutableNodeMap<Key extends Node, Value> implements ReadonlyMap<Key, Value> {
-  readonly #base: ReadonlyMap<Key, Value>
-  readonly #changes: ReadonlyMap<Key, Value>
-  readonly #size: number
-
-  constructor(
-    values: ReadonlyMap<Key, Value>,
-    changes: ReadonlyMap<Key, Value> = new Map(),
-    adopt = false,
-  ) {
-    this.#base = adopt ? values : new Map(values)
-    this.#changes = changes
-    let size = this.#base.size
-    for (const node of changes.keys()) {
-      if (!this.#base.has(node)) size += 1
-    }
-    this.#size = size
-    Object.freeze(this)
-  }
-
-  with(node: Key, value: Value): ImmutableNodeMap<Key, Value> {
-    if (this.#changes.size >= 128 && !this.#changes.has(node)) {
-      const compacted = new Map(this)
-      compacted.set(node, value)
-      return new ImmutableNodeMap(compacted, new Map(), true)
-    }
-    const changes = new Map(this.#changes)
-    changes.set(node, value)
-    return new ImmutableNodeMap(this.#base, changes, true)
-  }
-
-  withMany(entries: readonly Readonly<{node: Key; value: Value}>[]): ImmutableNodeMap<Key, Value> {
-    if (entries.length === 0) return this
-    if (this.#changes.size + entries.length >= 128) {
-      const compacted = new Map(this)
-      for (const {node, value} of entries) compacted.set(node, value)
-      return new ImmutableNodeMap(compacted, new Map(), true)
-    }
-    const changes = new Map(this.#changes)
-    for (const {node, value} of entries) changes.set(node, value)
-    return new ImmutableNodeMap(this.#base, changes, true)
-  }
-
-  get size(): number {
-    return this.#size
-  }
-
-  get(node: Key): Value | undefined {
-    return this.#changes.has(node)
-      ? this.#changes.get(node)
-      : this.#base.get(node)
-  }
-
-  has(node: Key): boolean {
-    return this.#changes.has(node) || this.#base.has(node)
-  }
-
-  forEach(
-    callback: (value: Value, key: Key, map: ReadonlyMap<Key, Value>) => void,
-    thisArg?: unknown,
-  ): void {
-    for (const [node, value] of this)
-      callback.call(thisArg, value, node, this)
-  }
-
-  entries(): MapIterator<[Key, Value]> {
-    return this.iterateEntries()
-  }
-
-  keys(): MapIterator<Key> {
-    return this.iterateKeys()
-  }
-
-  values(): MapIterator<Value> {
-    return this.iterateValues()
-  }
-
-  [Symbol.iterator](): MapIterator<[Key, Value]> {
-    return this.entries()
-  }
-
-  private *iterateEntries(): MapIterator<[Key, Value]> {
-    for (const [node, value] of this.#base) {
-      yield [node, this.#changes.has(node) ? this.#changes.get(node)! : value]
-    }
-    for (const [node, value] of this.#changes) {
-      if (!this.#base.has(node)) yield [node, value]
-    }
-  }
-
-  private *iterateKeys(): MapIterator<Key> {
-    for (const [node] of this) yield node
-  }
-
-  private *iterateValues(): MapIterator<Value> {
-    for (const [, value] of this) yield value
-  }
-}
-
 const immutableNodeMap = <Key extends Node, Value>(
   values: Map<Key, Value>,
 ): ReadonlyMap<Key, Value> => new ImmutableNodeMap(values)
@@ -6316,7 +6375,7 @@ const replaceImmutableNodeMap = <Key extends Node, Value>(
   if (values instanceof ImmutableNodeMap) return values.with(node, value)
   const next = new Map(values)
   next.set(node, value)
-  return new ImmutableNodeMap(next, new Map(), true)
+  return new ImmutableNodeMap(next)
 }
 
 const replaceImmutableNodeMapEntries = <Key extends Node, Value>(
@@ -6327,5 +6386,5 @@ const replaceImmutableNodeMapEntries = <Key extends Node, Value>(
   if (values instanceof ImmutableNodeMap) return values.withMany(entries)
   const next = new Map(values)
   for (const {node, value} of entries) next.set(node, value)
-  return new ImmutableNodeMap(next, new Map(), true)
+  return new ImmutableNodeMap(next)
 }

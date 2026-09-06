@@ -1,6 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {createDocumentInteractionController, createDocumentRenderer, hitTestProjection} from "../src/index.ts"
+import {projectionPaintIndex} from "../src/projection-hit.ts"
 
 const fixture = () => {
   const document = createDocument()
@@ -17,6 +18,31 @@ const fixture = () => {
   const hit = (x: number, y: number) => hitTestProjection(renderer.flush(), x, y)?.node ?? null
   return {document, root, renderer, add, hit}
 }
+
+test("scroll retains paint ownership while hit coordinates follow the new frame", () => {
+  const f = fixture()
+  const scroll = f.add("width:100px;height:50px;overflow:auto")
+  const first = f.document.createElement("div")
+  first.setAttribute("style", "width:100px;height:50px;background:#ff0000")
+  const second = f.document.createElement("div")
+  second.setAttribute("style", "width:100px;height:50px;background:#0000ff")
+  scroll.append(first, second)
+  try {
+    const before = f.renderer.flush()
+    const index = projectionPaintIndex(before)
+    expect(hitTestProjection(before, 20, 20)?.node).toBe(first)
+    scroll.scrollTop = 50
+    const after = f.renderer.flush()
+    expect(projectionPaintIndex(after)).toBe(index)
+    expect(hitTestProjection(after, 20, 20)?.node).toBe(second)
+    expect(hitTestProjection(before, 20, 20)?.node).toBe(first)
+    first.setAttribute("style", "width:100px;height:50px;background:transparent")
+    scroll.scrollTop = 0
+    const changed = f.renderer.flush()
+    expect(projectionPaintIndex(changed)).not.toBe(index)
+    expect(hitTestProjection(changed, 20, 20)?.node).toBe(scroll)
+  } finally { f.renderer.dispose() }
+})
 
 test("empty projection wrappers pass input while a passive painted panel occludes it", () => {
   const f = fixture()

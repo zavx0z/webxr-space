@@ -76,7 +76,42 @@ test("scroll retains line layout, sibling records and canonical sparse paint cha
       previous = f.compareFull(next)
     }
   } finally { f.renderer.dispose() }
-})
+}, 30_000)
+
+test("large scroll projections retain a bounded source and match full layout across owner changes", () => {
+  const f = fixture()
+  const left = f.add(f.root, "width:180px;height:90px;overflow:auto;border:2px solid #333;transform:scale(0.9);transform-origin:0 0")
+  const right = f.add(f.root, "width:180px;height:90px;overflow:auto")
+  for (const owner of [left, right]) {
+    const content = f.add(owner, "width:300px;transform:scale(1.1);transform-origin:0 0")
+    for (let index = 0; index < 180; index++) {
+      f.add(content, "height:20px;line-height:20px", "p").textContent = `line ${index}`
+    }
+  }
+  try {
+    const source = f.renderer.flush()
+    const original = f.snapshot(source)
+    let current = source
+    for (const top of [20, 70, 35, 90]) {
+      f.resetMeasured()
+      left.scrollLeft = top / 4
+      left.scrollTop = top
+      current = f.renderer.flush()
+      expect(readCanonicalRenderFrameChanges(current)?.scroll?.source).toBe(source)
+      expect(f.measured()).toBe(0)
+      expect(f.snapshot(source)).toEqual(original)
+    }
+    f.compareFull(current)
+    left.scrollTop += 10
+    f.renderer.flush()
+    right.scrollTop = 30
+    const changedOwner = f.renderer.flush()
+    expect(readCanonicalRenderFrameChanges(changedOwner)?.scroll).toBeUndefined()
+    f.compareFull(changedOwner)
+    right.scrollTop = 50
+    f.compareFull(f.renderer.flush())
+  } finally { f.renderer.dispose() }
+}, 30_000)
 
 test("nested scrolling on both axes with scaled content matches a full layout", () => {
   const f = fixture()
