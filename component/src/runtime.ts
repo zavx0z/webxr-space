@@ -1612,10 +1612,11 @@ function placeInstanceRunBefore(
       fragment.appendChild(instance.stagedRegion)
       continue
     }
-    appendInstanceRegion(fragment, instance)
+    if (fragment.firstChild !== null) parent.insertBefore(fragment, anchor)
+    moveInstanceRegionBefore(instance, parent, anchor)
     committedMoves += 1
   }
-  parent.insertBefore(fragment, anchor)
+  if (fragment.firstChild !== null) parent.insertBefore(fragment, anchor)
   if (committedMoves > 0) order[low]!.scheduler.moves += committedMoves
 }
 
@@ -1626,20 +1627,19 @@ function placeInstanceBefore(instance: ComponentInstance<unknown>, anchor: Node)
     parent.insertBefore(instance.stagedRegion, anchor)
     return
   }
-  const fragment = instance.document.createDocumentFragment()
-  appendInstanceRegion(fragment, instance)
-  parent.insertBefore(fragment, anchor)
+  moveInstanceRegionBefore(instance, parent, anchor)
   instance.scheduler.moves += 1
 }
 
-function appendInstanceRegion(
-  fragment: DocumentFragment,
-  instance: ComponentInstance<unknown>
+function moveInstanceRegionBefore(
+  instance: ComponentInstance<unknown>,
+  parent: Node,
+  anchor: Node,
 ): void {
   let current: Node | null = instance.start
   while (current) {
     const following: Node | null = current.nextSibling
-    fragment.appendChild(current)
+    parent.insertBefore(current, anchor)
     if (current === instance.end) break
     current = following
   }

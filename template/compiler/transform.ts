@@ -635,7 +635,7 @@ function compileComponent(
 function compileJsx(expression: Expression, context: CompileContext): string[] {
   context.consumedJsx.add(expression)
   if (isJsxFragment(expression)) {
-    throw compileError(context.sourcePath, "JSX fragments are outside the first compiler profile")
+    return expression.children.flatMap(child => compileChild(child, context))
   }
   if (!isJsxElement(expression) && !isJsxSelfClosingElement(expression)) {
     throw compileError(context.sourcePath, "component return must be one JSX element")
@@ -1047,6 +1047,7 @@ function collectUnstableStyleSymbols(
 }
 
 function compileChild(child: JsxChild, context: CompileContext): string[] {
+  if (isJsxFragment(child)) return compileJsx(child, context)
   if (isJsxText(child)) {
     const value = normalizeJsxText(child.text)
     if (value === "") return []
@@ -1062,6 +1063,7 @@ function compileChild(child: JsxChild, context: CompileContext): string[] {
   }
   if (!isJsxExpression(child) || !child.expression) return []
   const expression = skipParentheses(child.expression)
+  if (isJsxFragment(expression)) return compileJsx(expression, context)
   const childrenKind = context.childrenExpressionKinds.get(expression)
   if (isDirectPropsChildrenExpression(expression, context)) {
     if (childrenKind === "component-children") {
