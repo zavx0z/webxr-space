@@ -191,7 +191,12 @@ export class RendererWebGpuDocumentPlane extends Object3D {
       this.#viewport.height / 2 - localPoint.y / this.#worldUnitsPerPixel,
     )
     const nearestDocumentPoint = this.nearestDocumentPoint(documentAtIntersection)
-    const nearestWorldPoint = this.documentPointToWorld(nearestDocumentPoint)
+    const nearestWorldPoint = new Vector3(
+      (nearestDocumentPoint.x - this.#viewport.width / 2) * this.#worldUnitsPerPixel,
+      (this.#viewport.height / 2 - nearestDocumentPoint.y) * this.#worldUnitsPerPixel,
+      0,
+    ).applyMatrix4(matrixWorld)
+    validateVector(nearestWorldPoint, "converted world point")
     const distance = ray.origin.distanceTo(worldPoint)
     const nearestDistance = worldPoint.distanceTo(nearestWorldPoint)
     if (!Number.isFinite(distance) || !Number.isFinite(nearestDistance)) {
@@ -219,9 +224,7 @@ export class RendererWebGpuDocumentPlane extends Object3D {
   }
 
   #currentWorldMatrix(): Matrix4 {
-    let root: Object3D = this
-    while (root.parent !== null) root = root.parent
-    root.updateWorldMatrix(true)
+    this.updateWorldMatrix(true, {parents: true, children: false})
     validateMatrix(this.matrixWorld)
     return this.matrixWorld
   }

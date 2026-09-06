@@ -44,7 +44,15 @@ export class RendererWebGpuScreenOverlay extends Object3D {
     this.#viewport = validateViewport(viewport)
   }
 
-  public updateForViewPoint(viewPoint: ViewPoint): void {
+  /**
+   * Fits the overlay to its camera. The default also updates all descendant
+   * world matrices. The Renderer defers that traversal until every overlay is
+   * fitted, then synchronizes each composition tree once.
+   */
+  public updateForViewPoint(
+    viewPoint: ViewPoint,
+    options: Readonly<{updateWorldMatrix?: boolean}> = {},
+  ): void {
     const forward = new Vector3()
       .subVectors(viewPoint.getTarget(), viewPoint.position)
       .normalize()
@@ -67,7 +75,7 @@ export class RendererWebGpuScreenOverlay extends Object3D {
     this.position.copy(center)
     this.quaternion.setFromRotationMatrix(rotation)
     this.#fitContent(viewPoint)
-    this.updateWorldMatrix(true)
+    if (options.updateWorldMatrix !== false) this.updateWorldMatrix(true)
   }
 
   #fitContent(viewPoint: ViewPoint): void {
@@ -85,7 +93,6 @@ export class RendererWebGpuScreenOverlay extends Object3D {
     const scale = Math.min(visibleWidth / width, visibleHeight / height)
     this.content.scale.set(scale, scale, scale)
     this.content.position.set(-width * scale / 2, height * scale / 2, 0)
-    this.content.updateMatrix()
   }
 }
 

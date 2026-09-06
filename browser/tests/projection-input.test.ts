@@ -1,7 +1,7 @@
 import {afterEach, expect, test} from "bun:test"
 import {createDocument, type HTMLElement} from "@zavx0z/dom"
-import {Raycaster, Space, TrueTypeFont, ViewPoint} from "@zavx0z/engine"
-import type {Renderer} from "@zavx0z/webgpu"
+import {Object3D, Raycaster, Space, TrueTypeFont, ViewPoint} from "@zavx0z/engine"
+import type {RenderComposition, Renderer, RenderOverlay} from "@zavx0z/webgpu"
 import {createDocumentOverlayRuntime} from "../src/overlay-runtime.ts"
 import {createDocumentPlaneRuntime} from "../src/plane-runtime.ts"
 import type {DocumentNativeInputHost} from "../src/native-input-host.ts"
@@ -57,7 +57,17 @@ const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: r
     setPixelRatio() {},
     setSize() {},
     invalidateGeometry() {},
-    renderComposition() {},
+    renderComposition(composition: RenderComposition) {
+      const overlays = composition.overlays == null
+        ? []
+        : Array.isArray(composition.overlays)
+          ? composition.overlays
+          : [composition.overlays as RenderOverlay]
+      for (const overlay of overlays) {
+        overlay.updateForViewPoint?.(composition.viewPoint, {updateWorldMatrix: false})
+      }
+      composition.space.updateWorldMatrix(true, {parents: true})
+    },
   } as unknown as Renderer
   const runtime = await createDocumentSpaceRuntimeWithSeams({
     canvas, document, font, styleSheets, cameraGestures: true,
@@ -119,7 +129,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: r
     }
     return events
   }
-  return {runtime, document, captured, cameraInputs, camera, element, projection, projections, emit, observe}
+  return {runtime, document, captured, cameraInputs, camera, engineRenderer, element, projection, projections, emit, observe}
 }
 
 test("DOM id остаётся CSS-селектором без замены проекции", async () => {
@@ -366,4 +376,101 @@ test("[BRW-ATTACH-COORDINATES] Z-up Display преобразует CSS px в м�
   f.runtime.dispatchPointer("pointerdown", {clientX: client.x, clientY: client.y})
   f.runtime.dispatchPointer("pointerup", {clientX: client.x, clientY: client.y})
   expect(events).toContain("click")
+})
+
+test("projection input uses current transforms without traversing unrelated HUD content", async () => {
+  const f = await fixture()
+  const display = f.projection("plane", "display")
+  const button = f.element("position:absolute;left:80px;top:80px;width:40px;height:40px", display, "button")
+  const hud = f.projection("overlay", "hud")
+  const events = f.observe(button)
+  f.runtime.render()
+  let unrelatedUpdates = 0
+  const unrelated = new Object3D()
+  const originalUpdate = unrelated.updateMatrix.bind(unrelated)
+  unrelated.updateMatrix = () => {
+    unrelatedUpdates += 1
+    originalUpdate()
+  }
+  f.runtime.getOverlay(hud)!.overlay.content.add(unrelated)
+  const plane = f.runtime.getPlane(display)!.plane
+  plane.position.x = 40
+
+  f.emit("pointerdown", 140, 100)
+  f.emit("pointermove", 145, 100, {buttons: 1})
+  expect(f.runtime.activePlaneRoot === display).toBe(true)
+  f.emit("pointerup", 145, 100)
+  f.emit("wheel", 140, 100)
+  expect(events).toEqual(["pointerdown", "pointermove", "pointerup", "click", "wheel"])
+  expect(f.cameraInputs).toEqual([])
+  expect(unrelatedUpdates).toBe(0)
+})
+
+test("bounded-world and camera input do not require projection descendant matrices", async () => {
+  const f = await fixture()
+  const display = f.projection("plane", "display")
+  const world = new Space()
+  let doubleClicks = 0
+  f.runtime.addWorld({
+    space: world,
+    viewport: {x: 100, y: 100, width: 100, height: 100},
+    viewPoint: f.runtime.snapshotViewPoint(),
+    onDoubleClick() { doubleClicks += 1 },
+  })
+  f.runtime.render()
+  let descendantUpdates = 0
+  const descendant = new Object3D()
+  descendant.updateMatrix = () => { descendantUpdates += 1 }
+  f.runtime.getPlane(display)!.plane.content.add(descendant)
+
+  f.emit("pointermove", 150, 150)
+  expect(f.runtime.hoveredWorldSpace).toBe(world)
+  f.emit("pointerdown", 150, 150)
+  f.emit("pointermove", 155, 155, {buttons: 1})
+  f.emit("pointerup", 155, 155)
+  f.emit("wheel", 150, 150)
+  f.emit("dblclick", 150, 150)
+  f.emit("wheel", 20, 20)
+  expect(f.cameraInputs).toEqual(["orbit", "pan", "pan"])
+  expect(doubleClicks).toBe(1)
+  expect(descendantUpdates).toBe(0)
+})
+
+test("Browser delegates projection matrix traversal to the composition renderer exactly once", async () => {
+  const f = await fixture()
+  const display = f.projection("plane", "display")
+  const hud = f.projection("overlay", "hud")
+  f.runtime.render()
+  const planeMarker = new Object3D()
+  const overlayMarker = new Object3D()
+  f.runtime.getPlane(display)!.plane.content.add(planeMarker)
+  f.runtime.getOverlay(hud)!.overlay.content.add(overlayMarker)
+  const updates = [0, 0]
+  for (const [index, marker] of [planeMarker, overlayMarker].entries()) {
+    const update = marker.updateMatrix.bind(marker)
+    marker.updateMatrix = () => {
+      updates[index] = updates[index]! + 1
+      update()
+    }
+  }
+  const renderComposition = f.engineRenderer.renderComposition.bind(f.engineRenderer)
+  let presentations = 0
+  f.engineRenderer.renderComposition = composition => {
+    expect(updates).toEqual([0, 0])
+    renderComposition(composition)
+    expect(updates).toEqual([1, 1])
+    presentations += 1
+  }
+  f.runtime.subscribeBeforeRender(() => {
+    planeMarker.position.x += 10
+    overlayMarker.position.x += 20
+  })
+
+  for (let index = 1; index <= 2; index += 1) {
+    updates.fill(0)
+    f.runtime.render()
+    expect(planeMarker.modelMatrix.elements[12]).toBe(index * 10)
+    expect(overlayMarker.modelMatrix.elements[12]).toBe(index * 20)
+  }
+  expect(presentations).toBe(2)
 })

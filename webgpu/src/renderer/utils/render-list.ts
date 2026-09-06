@@ -6,6 +6,7 @@ import {InstancedStrokedPath} from "@zavx0z/engine"
 import { LineSegments } from "@zavx0z/engine"
 import { Text } from "@zavx0z/engine"
 import { Light } from "@zavx0z/engine"
+import {LineGlowMaterial} from "@zavx0z/engine"
 import { SkinnedMesh } from "@zavx0z/engine"
 import { WireframeInstancedMesh } from "@zavx0z/engine";
 import { Matrix4, Frustum, Sphere, Vector3 } from "@zavx0z/engine";
@@ -22,6 +23,74 @@ export interface RenderItem {
 export interface LightItem {
   light: Light
   worldMatrix: Matrix4
+}
+
+export type ClassifiedRenderItems = {
+  glassObjects: RenderItem[]
+  regularObjects: RenderItem[]
+  overlayLines: RenderItem[]
+  uiObjects: RenderItem[]
+}
+
+/** Classifies one frame without reordering within a pass or deduplicating draws. */
+export function classifyRenderItems(renderList: readonly RenderItem[]): ClassifiedRenderItems {
+  const glassObjects: RenderItem[] = []
+  const regularObjects: RenderItem[] = []
+  const silhouettes: RenderItem[] = []
+  const overlayLines: RenderItem[] = []
+  const uiObjects: RenderItem[] = []
+  const uiAncestry = new Map<Object3D, boolean>()
+  for (const item of renderList) {
+    const ui = isUiLayerObject(item.object, uiAncestry)
+    const material = (item.object as {material?: {isGlassMaterial?: boolean}}).material
+    const glass = material?.isGlassMaterial
+    const lineMode = item.type === "line" && material instanceof LineGlowMaterial
+      ? material.visibilityMode
+      : null
+    // Existing pass membership is intentionally non-exclusive for glass/UI
+    // and glass/overlay-line objects. Preserve it rather than changing paint.
+    if (glass === true) glassObjects.push(item)
+    if (ui) {
+      uiObjects.push(item)
+    } else if (lineMode === "overlay") {
+      overlayLines.push(item)
+    } else if (!glass) {
+      if (lineMode === "silhouette") silhouettes.push(item)
+      else regularObjects.push(item)
+    }
+  }
+  return {
+    glassObjects,
+    regularObjects: silhouettes.length === 0 ? regularObjects : [...silhouettes, ...regularObjects],
+    overlayLines,
+    uiObjects,
+  }
+}
+
+function isUiLayerObject(object: Object3D, cache: Map<Object3D, boolean>): boolean {
+  const cached = cache.get(object)
+  if (cached !== undefined) return cached
+  let current: Object3D | null = object
+  let ui = false
+  while (current !== null) {
+    const inherited = cache.get(current)
+    if (inherited !== undefined) {
+      ui = inherited
+      break
+    }
+    if (current.renderLayer === "ui" || (current as {isUIDisplay?: unknown}).isUIDisplay) {
+      ui = true
+      cache.set(current, true)
+      break
+    }
+    current = current.parent
+  }
+  // A second short walk avoids allocating a temporary ancestor array and does
+  // not recurse, including for very deep imported scene hierarchies.
+  for (let node: Object3D | null = object; node !== current && node !== null; node = node.parent) {
+    cache.set(node, ui)
+  }
+  return ui
 }
 
 export function collectSpaceObjects(

@@ -40,7 +40,7 @@ import {
   LINE_SCENE_DEPTH_STATE,
   LINE_SILHOUETTE_DEPTH_STATE,
 } from "./line-pipeline"
-import {collectSpaceObjects, type LightItem, type RenderItem} from "./utils/render-list"
+import {classifyRenderItems, collectSpaceObjects, type LightItem, type RenderItem} from "./utils/render-list"
 import {GlassMaterial} from "@zavx0z/engine"
 import {TextureLoader} from "../texture-loader"
 import {
@@ -73,6 +73,8 @@ import {
 } from "./buffer-attribute-upload"
 import {
   planRenderComposition,
+  prepareCompositionWorldMatrices,
+  prepareHiddenRenderDependencies,
   renderCompositionBackgroundShader,
   type PlannedRenderComposition,
   type RenderBoundedView,
@@ -1511,58 +1513,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
   }
 
-  private collectSpaceObjectsByType(
-    renderList: RenderItem[]
-  ): {
-    glassObjects: RenderItem[],
-    regularObjects: RenderItem[],
-    overlayLines: RenderItem[],
-    uiObjects: RenderItem[]
-  } {
-    const isUiLayerObject = (obj: Object3D): boolean => {
-      if (obj.renderLayer === "ui" || (obj as any).isUIDisplay) return true
-      let parent = obj.parent
-      while (parent) {
-        if (parent.renderLayer === "ui" || (parent as any).isUIDisplay) return true
-        parent = parent.parent
-      }
-      return false
-    }
-
-    const isOverlayLine = (item: RenderItem): boolean =>
-      item.type === "line" &&
-      (item.object as LineSegments).material instanceof LineGlowMaterial &&
-      ((item.object as LineSegments).material as LineGlowMaterial).visibilityMode === "overlay"
-
-    const isSilhouetteLine = (item: RenderItem): boolean =>
-      item.type === "line" &&
-      (item.object as LineSegments).material instanceof LineGlowMaterial &&
-      ((item.object as LineSegments).material as LineGlowMaterial).visibilityMode === "silhouette"
-
-    const regularObjects = renderList.filter(item =>
-      !((item.object as {material?: {isGlassMaterial?: boolean}}).material?.isGlassMaterial) &&
-      !isUiLayerObject(item.object) &&
-      !isOverlayLine(item)
-    )
-
-    return {
-      glassObjects: renderList.filter(item =>
-        (item.object as {material?: {isGlassMaterial?: boolean}}).material?.isGlassMaterial === true
-      ),
-      // Non-depth-writing silhouettes go first so later relation lines retain
-      // visual priority even where their projected paths cross the Torus.
-      regularObjects: [
-        ...regularObjects.filter(isSilhouetteLine),
-        ...regularObjects.filter(item => !isSilhouetteLine(item)),
-      ],
-      overlayLines: renderList.filter(item =>
-        !isUiLayerObject(item.object) &&
-        isOverlayLine(item)
-      ),
-      uiObjects: renderList.filter(item => isUiLayerObject(item.object))
-    }
-  }
-
   private isReadyToRender(): boolean {
     return !!(
       this.device &&
@@ -1697,6 +1647,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (canvas === null) return
     const planned = planRenderComposition(composition, canvas)
     if (!this.isReadyToRender()) return
+    prepareCompositionWorldMatrices(planned)
 
     this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length)
     const baseResources = this.viewUniformResources[0]!
@@ -1744,7 +1695,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       return {layer, resources, viewport: view.viewport, paintBackground: true}
     })
     const overlayLayers: PreparedCompositionLayer[] = planned.overlays.map((overlay) => {
-      overlay.updateForViewPoint?.(planned.viewPoint)
       return {
         layer: this.prepareRenderLayer(
           overlay,
@@ -1764,6 +1714,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       if (!renderIndexByItem.has(item)) renderIndexByItem.set(item, index)
     })
 
+    prepareHiddenRenderDependencies(planned, frameRenderItems)
     this.ensurePerObjectCapacity(frameRenderItems.length)
     const presentationClipUpload = encodePresentationClipChains(
       frameRenderItems.map((item) => item.object),
@@ -1880,7 +1831,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     const lights: LightItem[] = []
     collectSpaceObjects(root, allRenderItems, lights, frustum, excludedRoots)
     const {glassObjects, regularObjects, overlayLines, uiObjects} =
-      this.collectSpaceObjectsByType(allRenderItems)
+      classifyRenderItems(allRenderItems)
 
     frameRenderItems.push(...allRenderItems)
     frameLights.push(...lights)
@@ -2152,7 +2103,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     offsetFloats: number,
     boneMatricesOffsetFloats: number,
   ): void {
-    this.updateMeshData(mesh, worldMatrix, offsetFloats)
+    this.updateMeshData(mesh, worldMatrix, offsetFloats, true)
 
     const boneCount = Math.min(mesh.skeleton.bones.length, mesh.skeleton.boneInverses.length, MAX_BONES)
     // The skinned shader applies modelMatrix after skinning, so uniforms stay mesh-local.
@@ -2170,17 +2121,31 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     })
   }
 
-  private updateMeshData(mesh: Mesh, worldMatrix: Matrix4, offsetFloats: number): void {
+  private updateMeshData(
+    mesh: Mesh,
+    worldMatrix: Matrix4,
+    offsetFloats: number,
+    forceNormalMatrix = false,
+  ): void {
     const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material
     if (!material || !material.visible) return
     const roundedBorder = material instanceof RoundedRectMaterial
       ? validateRoundedBorderUpload(material)
       : null
 
-    const normalMatrix = this.meshNormalMatrix.copy(worldMatrix).invert().transpose()
-
     this.perObjectDataCPU!.set(worldMatrix.elements, offsetFloats)
-    this.perObjectDataCPU!.set(normalMatrix.elements, offsetFloats + 16)
+    // These scalar shaders reserve the common normal-matrix slot but never
+    // read it. Skinned and instanced meshes use separate lit shader paths.
+    if (forceNormalMatrix || !(
+      material instanceof MeshBasicMaterial ||
+      material instanceof RoundedRectMaterial ||
+      material instanceof ImageMaterial ||
+      material instanceof ColorPickerMaterial ||
+      isRadialBackdropMaterial(material)
+    )) {
+      const normalMatrix = this.meshNormalMatrix.copy(worldMatrix).invert().transpose()
+      this.perObjectDataCPU!.set(normalMatrix.elements, offsetFloats + 16)
+    }
 
     if (material instanceof MeshBasicMaterial || material instanceof MeshLambertMaterial) {
       this.writePerObjectRgba(offsetFloats + 32, material.color)

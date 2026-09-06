@@ -44,6 +44,7 @@ const INVALID_RECORD = new Float32Array([
   0, 0, -1, -1,
   0, 0, 0, 0,
 ])
+const immutableChainEligibility = new WeakMap<readonly PresentationClipShape[], boolean>()
 
 /**
  * Flattens and interns resolved clip chains for one frame.
@@ -51,7 +52,10 @@ const INVALID_RECORD = new Float32Array([
  * The frame-local signature cache hashes coordinate-space identity and the
  * canonical f32 geometry consumed by the GPU. Hash buckets are always checked
  * against the full signature, so a collision cannot share an unrelated range.
- * Coordinate inverses are sampled once per frame and never survive this call.
+ * Deeply frozen shape chains also share their range by identity, avoiding
+ * repeated canonicalisation for every renderable using the same clips. Only
+ * immutable data properties qualify: a frozen object with getters still takes
+ * the value-based path. Coordinate inverses and ranges never survive this call.
  *
  * The record budget includes one lazily emitted fail-closed record. A chain
  * that is invalid, too deep, or cannot fit whole is mapped to that shared
@@ -67,6 +71,8 @@ export function encodePresentationClipChains(
   const internedChains = new Map<number, InternedPresentationClipChain[]>()
   const coordinateIds = new Map<Object3D, number>()
   const inverseCache = new Map<Object3D, Float32Array | null>()
+  const chainEligibility = new Map<readonly PresentationClipShape[], boolean>()
+  const immutableChainRanges = new Map<readonly PresentationClipShape[], PresentationClipRange>()
   const coordinateScratch = new Array<Object3D>(MAX_PRESENTATION_CLIPS_PER_OBJECT)
   const geometryScratch = new Float32Array(
     MAX_PRESENTATION_CLIPS_PER_OBJECT * PRESENTATION_CLIP_GEOMETRY_FLOATS,
@@ -97,6 +103,18 @@ export function encodePresentationClipChains(
     if (shapeCount > MAX_PRESENTATION_CLIPS_PER_OBJECT) {
       ranges.set(object, failClosedRange())
       continue
+    }
+    let immutable = chainEligibility.get(shapes)
+    if (immutable === undefined) {
+      immutable = isImmutableClipChain(shapes)
+      chainEligibility.set(shapes, immutable)
+    }
+    if (immutable) {
+      const sharedRange = immutableChainRanges.get(shapes)
+      if (sharedRange !== undefined) {
+        ranges.set(object, sharedRange)
+        continue
+      }
     }
 
     let signatureHash = mixPresentationClipHash(PRESENTATION_CLIP_HASH_OFFSET, shapeCount)
@@ -134,7 +152,9 @@ export function encodePresentationClipChains(
       }
     }
     if (!signatureValid) {
-      ranges.set(object, failClosedRange())
+      const range = failClosedRange()
+      if (immutable) immutableChainRanges.set(shapes, range)
+      ranges.set(object, range)
       continue
     }
 
@@ -145,6 +165,7 @@ export function encodePresentationClipChains(
       geometryBitsScratch,
     )
     if (interned !== null) {
+      if (immutable) immutableChainRanges.set(shapes, interned.range)
       ranges.set(object, interned.range)
       continue
     }
@@ -161,6 +182,7 @@ export function encodePresentationClipChains(
         geometryBitsScratch,
         range,
       )
+      if (immutable) immutableChainRanges.set(shapes, range)
       ranges.set(object, range)
       continue
     }
@@ -201,10 +223,52 @@ export function encodePresentationClipChains(
       geometryBitsScratch,
       range,
     )
+    if (immutable) immutableChainRanges.set(shapes, range)
     ranges.set(object, range)
   }
 
   return {data: new Float32Array(values), ranges}
+}
+
+function isImmutableClipChain(shapes: readonly PresentationClipShape[]): boolean {
+  const cached = immutableChainEligibility.get(shapes)
+  if (cached !== undefined) return cached
+  let immutable = false
+  try {
+    immutable = Object.isFrozen(shapes)
+    for (let index = 0; immutable && index < shapes.length; index += 1) {
+      const shape = immutableDataProperty(shapes, String(index))
+      if (shape === undefined || !Object.isFrozen(shape)) {
+        immutable = false
+        break
+      }
+      const kind = immutableDataProperty(shape, "kind")
+      const coordinateSpace = immutableDataProperty(shape, "coordinateSpace")
+      immutable = kind === "rounded-rect" && coordinateSpace !== undefined &&
+        isImmutableTuple(immutableDataProperty(shape, "center"), 2) &&
+        isImmutableTuple(immutableDataProperty(shape, "halfSize"), 2) &&
+        isImmutableTuple(immutableDataProperty(shape, "radii"), 4)
+    }
+  } catch {
+    immutable = false
+  }
+  // Frozen eligibility cannot change. Mutable inputs may be frozen later.
+  if (immutable) immutableChainEligibility.set(shapes, true)
+  return immutable
+}
+
+function immutableDataProperty(value: unknown, key: string): unknown {
+  if (value === null || (typeof value !== "object" && typeof value !== "function")) return undefined
+  const property = Object.getOwnPropertyDescriptor(value, key)
+  return property !== undefined && "value" in property ? property.value : undefined
+}
+
+function isImmutableTuple(value: unknown, size: number): boolean {
+  if (value === null || typeof value !== "object" || !Object.isFrozen(value)) return false
+  for (let index = 0; index < size; index += 1) {
+    if (typeof immutableDataProperty(value, String(index)) !== "number") return false
+  }
+  return true
 }
 
 function readPresentationClipShapes(object: Object3D): readonly PresentationClipShape[] | null {

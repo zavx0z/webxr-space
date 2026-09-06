@@ -26,7 +26,7 @@ test("scroll patches reuse retained text objects and geometry across frames", as
     const retained: Text[] = []
     backend.root.traverse(node => { if (node instanceof Text) retained.push(node) })
     expect(retained.length).toBeGreaterThan(1)
-    const geometries = retained.map(node => ({stencil: node.stencilGeometry, cover: node.coverGeometry, material: node.material}))
+    const geometries = retained.map(node => ({stencil: node.stencilGeometry, cover: node.coverGeometry, material: node.material, clips: node.presentationClips}))
     expect(geometries[0]!.stencil.attributes.position!.array.length).toBeGreaterThan(0)
     const beforeY = retained[0]!.position.y
     measurements = 0
@@ -38,7 +38,8 @@ test("scroll patches reuse retained text objects and geometry across frames", as
       expect(current.every((node, index) => node === retained[index] &&
         node.stencilGeometry === geometries[index]!.stencil &&
         node.coverGeometry === geometries[index]!.cover &&
-        node.material === geometries[index]!.material)).toBe(true)
+        node.material === geometries[index]!.material &&
+        node.presentationClips === geometries[index]!.clips)).toBe(true)
       expect(retained[0]!.position.y).toBeCloseTo(beforeY + top, 8)
       expect(backend.diagnostics.rectPlanReused).toBe(true)
     }

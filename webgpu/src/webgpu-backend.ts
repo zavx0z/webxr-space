@@ -26,8 +26,9 @@ import {
   type PresentationClipShape,
   type TrueTypeFont,
 } from "@zavx0z/engine"
-import {readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
+import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
 import {TextureLoader} from "./texture-loader.ts"
+import {PaintVisibilityIndex, type IndexedPaintBounds} from "./paint-visibility-index.ts"
 import type {
   DisplayItem,
   ImageDisplayItem,
@@ -72,6 +73,8 @@ export type RendererWebGpuBackendDiagnostics = Readonly<{
   rectPlanReused: boolean
   /** Display-list items traversed by prepare; reused frames count only changed references. */
   rectPreparedItems: number
+  /** Text paint records prepared this frame; excludes cheap retained position updates. */
+  textPreparedItems: number
   rectScalarDraws: number
   rectInstancedDraws: number
   rectInstancedInstances: number
@@ -111,9 +114,18 @@ type PreparedClip = Readonly<{
   transform: RenderTransform
 }>
 
+type PreparedClipChainCache = Readonly<{
+  document: RenderFrame["document"]
+  viewportWidth: number
+  viewportHeight: number
+  transforms: readonly RenderTransform[]
+  prepared: readonly PreparedClip[]
+}>
+
 type PreparedRectItem = Readonly<{
   kind: "rect"
   item: RectDisplayItem
+  viewport: RenderFrame["viewport"]
   fill: Color
   border: Color
   borderWidths: readonly [number, number, number, number]
@@ -183,6 +195,8 @@ type PlannedItem = PreparedItem | PreparedRectBatch | PreparedPathBatch
 
 type PreparedFramePlan = Readonly<{
   items: readonly PlannedItem[]
+  rectBatches: readonly PreparedRectBatch[]
+  pathBatches: readonly PreparedPathBatch[]
   slottedRects: readonly PreparedRectItem[]
   batchedTokens: ReadonlySet<DisplayToken>
   paths: readonly PreparedPathItem[]
@@ -199,6 +213,7 @@ type PreparedFrameCache = Readonly<{
   prepared: PreparedItem[]
   plan: PreparedFramePlan
   rootChildren: readonly Object3D[]
+  sourceRootChildren: readonly Object3D[]
   reusableSources: boolean
   recordVersion: number
   orderVersion: number
@@ -240,7 +255,7 @@ type RetainedClipSpace = {
 }
 
 type RetainedClipState = {
-  clipSpaces: RetainedClipSpace[]
+  appliedClips?: readonly PreparedClip[]
 }
 
 type RectEntry = RetainedClipState & {
@@ -250,6 +265,7 @@ type RectEntry = RetainedClipState & {
   material: RoundedRectMaterial
   width: number
   height: number
+  paint: PreparedRectItem
 }
 
 type TextEntry = RetainedClipState & {
@@ -272,6 +288,22 @@ type ImageEntry = RetainedClipState & {
 }
 
 type RetainedEntry = RectEntry | TextEntry | ImageEntry | PathEntry
+
+type ScrollPaintProjection = Readonly<{
+  source: RenderFrame
+  owner: object
+  paintIndexes: ReadonlySet<number>
+  paints: readonly Readonly<{index: number; entry: TextEntry | RectEntry; x: number; y: number}>[]
+  visibility: PaintVisibilityIndex
+  clip: PreparedClip | undefined
+}>
+type ScrollPaintUpdate = Readonly<{
+  projection: ScrollPaintProjection
+  indexes: readonly number[]
+  visible: ReadonlySet<number>
+  dx: number
+  dy: number
+}>
 
 type PathRunEntry = RetainedClipState & {
   node: InstancedStrokedPath
@@ -325,6 +357,9 @@ export class RendererWebGpuBackend {
   readonly #rectSourceItems = new Map<DisplayToken, RectDisplayItem>()
   readonly #rectRuns: InstancedRoundedRect[] = []
   readonly #preparedRectCache = new WeakMap<RectDisplayItem, PreparedRectPayload>()
+  #preparedClipChains = new WeakMap<readonly RenderClip[], PreparedClipChainCache>()
+  #currentClipChains = new WeakMap<readonly RenderClip[], readonly PreparedClip[]>()
+  #presentationClipChains = new WeakMap<readonly PreparedClip[], readonly PresentationClipShape[]>()
   readonly #pathLayer: StrokedPathInstanceLayer
   readonly #pathStyleHandles = new Map<DisplayToken, InstanceHandle>()
   readonly #pathStyleRecords = new Map<DisplayToken, Uint8Array>()
@@ -335,12 +370,14 @@ export class RendererWebGpuBackend {
   readonly #pathRuns: PathRunEntry[] = []
   #entries = new Map<DisplayToken, RetainedEntry>()
   #preparedFrameCache: PreparedFrameCache | null = null
+  #scrollPaintProjection: ScrollPaintProjection | null = null
   #frameDocument: RenderFrame["document"] | null = null
   #frameRoot: RenderFrame["root"] | null = null
   #lastFrameRevision = -1
   #diagnosticRevision = 0
   #rectPlanReused = false
   #rectPreparedItems = 0
+  #textPreparedItems = 0
   #rectScalarDraws = 0
   #rectInstancedInstances = 0
   #rectLayerWasPresented = false
@@ -430,6 +467,7 @@ export class RendererWebGpuBackend {
       revision: this.#diagnosticRevision,
       rectPlanReused: this.#rectPlanReused,
       rectPreparedItems: this.#rectPreparedItems,
+      textPreparedItems: this.#textPreparedItems,
       rectScalarDraws: this.#rectScalarDraws,
       rectInstancedDraws: this.#rectRuns.filter((run) => run.parent === this.root).length,
       rectInstancedInstances: this.#rectInstancedInstances,
@@ -474,17 +512,31 @@ export class RendererWebGpuBackend {
       this.#diagnosticRevision = frame.revision
       this.#rectPlanReused = true
       this.#rectPreparedItems = 0
+      this.#textPreparedItems = 0
       this.#pathPreparedItems = 0
       return
     }
 
-    const reused = this.#tryReusePreparedFrame(frame)
+    this.#currentClipChains = new WeakMap()
+
+    const scrollPaint = this.#prepareScrollPaintUpdate(frame)
+    const reused = this.#scrollPaintProjection !== null && scrollPaint === null ? null :
+      this.#tryReusePreparedFrame(frame, scrollPaint?.indexes)
     if (reused !== null) {
       this.#resetPathWriteDiagnostics()
       this.#applyReusedPreparedFrame(frame, reused)
+      if (scrollPaint !== null) {
+        for (const paint of scrollPaint.projection.paints) {
+          paint.entry.node.position.x = paint.x - scrollPaint.dx
+          paint.entry.node.position.y = paint.y + scrollPaint.dy
+          if (!scrollPaint.visible.has(paint.index)) paint.entry.node.visible = false
+        }
+        this.#scrollPaintProjection = scrollPaint.projection
+      }
       return
     }
 
+    this.#scrollPaintProjection = null
     const prepared = this.#prepareFrame(frame)
     const plan = this.#planFrame(prepared)
     this.#validatePathCapacity(plan.paths)
@@ -528,7 +580,7 @@ export class RendererWebGpuBackend {
       if (value.kind === "path-batch") {
         let entry = this.#pathRuns[pathRunIndex]
         if (entry === undefined) {
-          entry = {node: new InstancedStrokedPath(this.#pathLayer), clipSpaces: []}
+          entry = {node: new InstancedStrokedPath(this.#pathLayer)}
           this.#pathRuns.push(entry)
         }
         entry.node.name = `path-run:${pathRunIndex}`
@@ -563,7 +615,7 @@ export class RendererWebGpuBackend {
       const entry = this.#pathRuns[index]!
       entry.node.parent = null
       entry.node.presentationClips = NO_PRESENTATION_CLIPS
-      entry.clipSpaces.length = 0
+      delete entry.appliedClips
     }
 
     this.#entries = nextEntries
@@ -571,6 +623,7 @@ export class RendererWebGpuBackend {
     this.#diagnosticRevision = frame.revision
     this.#rectPlanReused = false
     this.#rectPreparedItems = prepared.filter((item) => item.kind === "rect").length
+    this.#textPreparedItems = prepared.filter((item) => item.kind === "text").length
     this.#rectScalarDraws = rectScalarDraws
     this.#rectInstancedInstances = rectInstancedInstances
     this.#pathPreparedItems = prepared.filter((item) => item.kind === "path").length
@@ -611,14 +664,21 @@ export class RendererWebGpuBackend {
     this.#pathSourceItems.clear()
     this.#pathGeometrySources.clear()
     this.#preparedFrameCache = null
+    this.#preparedClipChains = new WeakMap()
+    this.#currentClipChains = new WeakMap()
+    this.#presentationClipChains = new WeakMap()
+    this.#scrollPaintProjection = null
     this.#frameDocument = null
     this.#frameRoot = null
     this.#lastFrameRevision = -1
-    for (const run of this.#rectRuns) run.parent = null
+    for (const run of this.#rectRuns) {
+      run.parent = null
+      run.presentationClips = NO_PRESENTATION_CLIPS
+    }
     for (const entry of this.#pathRuns) {
       entry.node.parent = null
       entry.node.presentationClips = NO_PRESENTATION_CLIPS
-      entry.clipSpaces.length = 0
+      delete entry.appliedClips
     }
     for (const geometry of geometries) this.#invalidateGeometry(geometry)
     if (this.#rectLayerWasPresented) this.#invalidateGeometry(this.#rectLayer.geometry)
@@ -671,7 +731,66 @@ export class RendererWebGpuBackend {
     assertFiniteNonNegative(frame.viewport.height, "frame.viewport.height")
   }
 
-  #tryReusePreparedFrame(frame: RenderFrame): ReusedPreparedFrame | null {
+  #prepareScrollPaintUpdate(frame: RenderFrame): ScrollPaintUpdate | null {
+    if (!isRendererOwnedFrame(frame)) return null
+    const cached = this.#preparedFrameCache
+    const changes = readCanonicalRenderFrameChanges(frame)
+    const scroll = changes?.scroll
+    if (cached === null || scroll === undefined || changes?.previous !== cached.frame ||
+      cached.prepared.length !== frame.displayList.length) return null
+    let projection = this.#scrollPaintProjection
+    if (projection !== null && (projection.source !== scroll.source || projection.owner !== scroll.owner)) return null
+    if (projection === null) {
+      const sourceMetrics = scroll.source.scrolls.get(scroll.owner)
+      const previousMetrics = cached.frame.scrolls.get(scroll.owner)
+      if (sourceMetrics === undefined || previousMetrics === undefined) return null
+      const originX = (previousMetrics.scrollLeft - sourceMetrics.scrollLeft) * scroll.transform.scaleX
+      const originY = (previousMetrics.scrollTop - sourceMetrics.scrollTop) * scroll.transform.scaleY
+      const paints: Array<{index: number; entry: TextEntry | RectEntry; x: number; y: number}> = []
+      const bounds: IndexedPaintBounds[] = []
+      const paintIndexes = new Set<number>()
+      let clip: PreparedClip | undefined
+      for (let index = scroll.displayStart; index < scroll.displayEnd; index++) {
+        const value = cached.prepared[index]
+        if (value?.kind !== "text" && value?.kind !== "rect") continue
+        const entry = this.#entries.get(value.token)
+        if (entry === undefined && value.kind === "rect" && cached.plan.batchedTokens.has(value.token)) continue
+        if (entry?.kind !== value.kind || entry.kind !== "text" && entry.kind !== "rect") return null
+        paintIndexes.add(index)
+        paints.push({index, entry, x: entry.node.position.x + originX, y: entry.node.position.y - originY})
+        clip ??= value.clips[scroll.clipDepth]
+        let ink: RectBounds | null
+        if (value.kind === "text") {
+          if (entry.kind !== "text") return null
+          ink = textPaintBounds(entry.node, value)
+        } else ink = rectPaintBounds(value)
+        if (ink !== null) bounds.push({index, minX: ink.minX + originX, maxX: ink.maxX + originX, minY: ink.minY + originY, maxY: ink.maxY + originY})
+      }
+      if (paints.length === 0) return null
+      projection = {source: scroll.source, owner: scroll.owner, paints, paintIndexes, visibility: new PaintVisibilityIndex(bounds), clip}
+    }
+    const dx = scroll.dx * scroll.transform.scaleX
+    const dy = scroll.dy * scroll.transform.scaleY
+    let minX = 0
+    let minY = 0
+    let maxX = frame.viewport.width
+    let maxY = frame.viewport.height
+    const clip = projection.clip
+    if (clip !== undefined) {
+      const bounds = transformedBounds(clip.transform, clip.x + clip.width / 2, clip.y + clip.height / 2, clip.width, clip.height)
+      minX = Math.max(minX, bounds.minX)
+      minY = Math.max(minY, bounds.minY)
+      maxX = Math.min(maxX, bounds.maxX)
+      maxY = Math.min(maxY, bounds.maxY)
+    }
+    const visible = new Set(projection.visibility.query({minX: minX + dx, maxX: maxX + dx, minY: minY + dy, maxY: maxY + dy}))
+    const indexes = [...visible]
+    for (const index of changes.indexes) if (!projection.paintIndexes.has(index)) indexes.push(index)
+    indexes.sort((left, right) => left - right)
+    return {projection, indexes, visible, dx, dy}
+  }
+
+  #tryReusePreparedFrame(frame: RenderFrame, selectedIndexes?: readonly number[]): ReusedPreparedFrame | null {
     const cached = this.#preparedFrameCache
     if (
       this.#rectInstancing !== "safe"
@@ -682,6 +801,10 @@ export class RendererWebGpuBackend {
       || cached.prepared.length !== frame.displayList.length
       || !sameObjectOrder(this.root.children, cached.rootChildren)
     ) return null
+    // An unbranded caller frame may mutate or replace entries inside the same
+    // presentation-transform Map. Only canonical Renderer deltas establish the
+    // changed-index contract needed to skip those dependencies safely.
+    if (frame.presentationTransforms !== undefined && !isRendererOwnedFrame(frame)) return null
     if (
       this.#rectLayer.instances.recordAttribute.version !== cached.recordVersion
       || this.#rectLayer.instances.orderAttribute.version !== cached.orderVersion
@@ -703,6 +826,15 @@ export class RendererWebGpuBackend {
     const pathUpdates: Array<Readonly<{index: number; value: PreparedPathItem}>> = []
     const canonicalChanges = validatedChangedDisplayChanges(frame, cached)
     if (canonicalChanges === null) return null
+    const ownedDelta = isRendererOwnedFrame(frame) && readCanonicalRenderFrameChanges(frame) !== null
+    const reusableItem = (item: DisplayItem): boolean => {
+      if (!ownedDelta) return isReusableDisplayItem(item)
+      // This producer provenance cannot be acquired by a caller-authored frame
+      // or by composing its tooltip. Initial paint was validated above; numeric
+      // and clipping checks below still run for every changed owned record.
+      reusableDisplayItems.add(item)
+      return true
+    }
     if (canonicalChanges.operations !== undefined) {
       return this.#prepareCanonicalPathOperations(
         frame,
@@ -711,18 +843,15 @@ export class RendererWebGpuBackend {
         canonicalChanges.operations,
       )
     }
-    const changedIndexes = canonicalChanges.indexes
-    if (changedIndexes.some((index) =>
-      !sameDisplayIdentity(cached.prepared[index]!.item, frame.displayList[index]!)
-    )) return this.#preparePathReorder(frame, cached, changedIndexes)
+    const changedIndexes = selectedIndexes ?? canonicalChanges.indexes
     for (const index of changedIndexes) {
       const previous = cached.prepared[index]!
       const item = frame.displayList[index]!
-      if (item === previous.item) continue
-      if (frame.revision === cached.revision) return null
-      if (!sameDisplayIdentity(previous.item, item)) return null
+      if (item === previous.item && sameResolvedPresentationInputs(item, cached.frame, frame)) continue
+      if (frame.revision === cached.revision && readCanonicalRenderFrameChanges(frame)?.previous !== cached.frame) return null
+      if (!sameDisplayIdentity(previous.item, item)) return this.#preparePathReorder(frame, cached, changedIndexes)
       if (previous.kind === "text" && item.kind === "text" &&
-        sameTextPaint(previous.item, item) && isReusableDisplayItem(item)) {
+        sameTextPaint(previous.item, item) && reusableItem(item)) {
         assertFinite(item.x, "retained.text.x")
         assertFinite(item.y, "retained.text.y")
         this.#validateTransform(item.transform, "retained.text.transform")
@@ -733,6 +862,19 @@ export class RendererWebGpuBackend {
           ? previous.clips
           : this.#prepareClips(item.clips, frame, "retained.text")
         scalarUpdates.push(Object.freeze({index, value: Object.freeze({...previous, item, baselineY, clips})}))
+        continue
+      }
+      if (previous.kind === "rect" && item.kind === "rect" &&
+        !cached.plan.batchedTokens.has(previous.token) &&
+        sameRectPaint(previous.item, item) && reusableItem(item)) {
+        assertFinite(item.x, "retained.rect.x")
+        assertFinite(item.y, "retained.rect.y")
+        this.#validateTransform(item.transform, "retained.rect.transform")
+        scalarUpdates.push({index, value: Object.freeze({
+          ...previous,
+          item,
+          clips: this.#prepareClips(item.clips, frame, "retained.rect"),
+        })})
         continue
       }
       if (previous.kind === "path" && item.kind === "path") {
@@ -755,7 +897,7 @@ export class RendererWebGpuBackend {
         || item.kind !== "rect"
         || !cached.plan.batchedTokens.has(previous.token)
         || !sameRectBatchTopology(previous.item, item)
-        || !isReusableDisplayItem(item)
+        || !reusableItem(item)
       ) {
         if (
           previous.kind !== item.kind
@@ -794,7 +936,7 @@ export class RendererWebGpuBackend {
       }))
     }
 
-    if (!rectBatchPlanRemainsSafe(cached.plan, recordUpdates)) return null
+    if (!rectBatchPlanRemainsSafe(cached.plan, recordUpdates, this.#rectSourceItems)) return null
 
     return Object.freeze({
       plan: cached.plan,
@@ -1161,11 +1303,11 @@ export class RendererWebGpuBackend {
     this.#rectPlanReused = true
     this.#rectPreparedItems = reused.recordUpdates.length +
       reused.scalarUpdates.filter((update) => update.value.kind === "rect").length
+    this.#textPreparedItems = reused.scalarUpdates.filter(update => update.value.kind === "text").length
     this.#pathPreparedItems = reused.pathUpdates.length +
       reused.scalarUpdates.filter((update) => update.value.kind === "path").length
     let pathRunIndex = 0
-    for (const value of reused.plan.items) {
-      if (value.kind !== "path-batch") continue
+    for (const value of reused.plan.pathBatches) {
       const entry = this.#pathRuns[pathRunIndex++]
       if (entry === undefined) throw new Error("Retained Path run is missing")
       const first = value.items[0]!.item
@@ -1199,7 +1341,10 @@ export class RendererWebGpuBackend {
       viewportHeight: frame.viewport.height,
       prepared,
       plan,
-      rootChildren: Object.freeze([...this.root.children]),
+      rootChildren: this.#preparedFrameCache?.sourceRootChildren === this.root.children
+        ? this.#preparedFrameCache.rootChildren
+        : Object.freeze([...this.root.children]),
+      sourceRootChildren: this.root.children,
       reusableSources,
       recordVersion: this.#rectLayer.instances.recordAttribute.version,
       orderVersion: this.#rectLayer.instances.orderAttribute.version,
@@ -1216,19 +1361,11 @@ export class RendererWebGpuBackend {
     if (this.#pathLayer.segments.count !== plan.pathSegmentCount) return false
     let runIndex = 0
     let pathRunIndex = 0
-    for (const item of plan.items) {
-      if (item.kind === "path-batch") {
-        const run = this.#pathRuns[pathRunIndex]?.node
-        if (
-          run === undefined
-          || run.parent !== this.root
-          || run.firstInstance !== item.firstInstance
-          || run.count !== item.segmentCount
-        ) return false
-        pathRunIndex += 1
-        continue
-      }
-      if (item.kind !== "rect-batch") continue
+    for (const item of plan.pathBatches) {
+      const run = this.#pathRuns[pathRunIndex++]?.node
+      if (run === undefined || run.parent !== this.root || run.firstInstance !== item.firstInstance || run.count !== item.segmentCount) return false
+    }
+    for (const item of plan.rectBatches) {
       const run = this.#rectRuns[runIndex]
       if (
         run === undefined
@@ -1255,16 +1392,14 @@ export class RendererWebGpuBackend {
         scalarPathIndexes.push(index)
       }
     }
-    const orderIndexByToken = new Map<DisplayToken, number>()
+    const instanceCandidates = new Set<DisplayToken>()
     for (const value of prepared) {
       if (
         this.#rectInstancing === "disabled"
         || value.kind !== "rect"
         || !isRectInstanceCompatible(value)
-        || slottedRects.length >= this.#rectLayer.instances.maxCapacity
       ) continue
-      orderIndexByToken.set(value.token, slottedRects.length)
-      slottedRects.push(value)
+      instanceCandidates.add(value.token)
     }
 
     const items: PlannedItem[] = []
@@ -1278,18 +1413,22 @@ export class RendererWebGpuBackend {
     }
     let spatialIndex = new RectRunSpatialIndex()
     const flushRun = (): void => {
-      if (run.length >= 2) {
-        const firstInstance = orderIndexByToken.get(run[0]!.token)
-        if (firstInstance === undefined) throw new Error("Rect run lost its instance order")
-        for (const value of run) batchedTokens.add(value.token)
+      const capacity = this.#rectLayer.instances.maxCapacity - slottedRects.length
+      const count = Math.min(run.length, capacity)
+      if (count >= 2) {
+        const batch = run.slice(0, count)
+        const firstInstance = slottedRects.length
+        for (const value of batch) {
+          batchedTokens.add(value.token)
+          slottedRects.push(value)
+        }
         items.push(Object.freeze({
           kind: "rect-batch",
-          items: Object.freeze([...run]),
+          items: Object.freeze(batch),
           firstInstance,
         }))
-      } else if (run.length === 1) {
-        items.push(run[0]!)
-      }
+        for (let index = count; index < run.length; index++) items.push(run[index]!)
+      } else for (const value of run) items.push(value)
       run = []
       spatialIndex = new RectRunSpatialIndex()
     }
@@ -1319,10 +1458,7 @@ export class RendererWebGpuBackend {
         pathRun.push(value)
         continue
       }
-      const orderIndex = value.kind === "rect"
-        ? orderIndexByToken.get(value.token)
-        : undefined
-      if (value.kind !== "rect" || orderIndex === undefined) {
+      if (value.kind !== "rect" || !instanceCandidates.has(value.token)) {
         flushRun()
         flushPathRun()
         items.push(value)
@@ -1348,6 +1484,8 @@ export class RendererWebGpuBackend {
 
     return Object.freeze({
       items: Object.freeze(items),
+      rectBatches: Object.freeze(items.filter((item): item is PreparedRectBatch => item.kind === "rect-batch")),
+      pathBatches: Object.freeze(items.filter((item): item is PreparedPathBatch => item.kind === "path-batch")),
       slottedRects: Object.freeze(slottedRects),
       batchedTokens,
       paths: Object.freeze(paths),
@@ -1727,9 +1865,9 @@ export class RendererWebGpuBackend {
     label: string,
     frame: RenderFrame,
   ): PreparedRectItem {
-    const cacheable = Array.isArray(item.clips) && item.clips.length === 0
+    const cacheable = Array.isArray(item.clips) && item.clips.length === 0 && isReusableDisplayItem(item)
     const cached = cacheable ? this.#preparedRectCache.get(item) : undefined
-    if (cached !== undefined) return Object.freeze({...cached, token})
+    if (cached !== undefined) return Object.freeze({...cached, viewport: frame.viewport, token})
 
     const opacity = assertUnitOpacity(item.opacity, `${label}.opacity`)
     const border = item.border
@@ -1757,6 +1895,7 @@ export class RendererWebGpuBackend {
     const prepared = Object.freeze({
       kind: "rect",
       item,
+      viewport: frame.viewport,
       fill: parseDisplayColor(item.color || WHITE),
       border: borderColor,
       borderWidths: widths,
@@ -1781,6 +1920,25 @@ export class RendererWebGpuBackend {
     if (!Array.isArray(clips)) throw new TypeError(`${itemLabel}.clips must be an array`)
     if (clips.length === 0) return NO_PREPARED_CLIPS
 
+    const current = this.#currentClipChains.get(clips)
+    if (current !== undefined) return current
+
+    const cached = this.#preparedClipChains.get(clips)
+    if (cached !== undefined && cached.document === frame.document &&
+      cached.viewportWidth === frame.viewport.width && cached.viewportHeight === frame.viewport.height &&
+      clips.every((clip, index) => {
+        const owner = clip.presentationOwner
+        if (owner !== null && owner !== undefined && owner.ownerDocument !== frame.document) return false
+        const transform = owner === null || owner === undefined
+          ? clip.transform
+          : frame.presentationTransforms?.get(owner)
+        return transform === cached.transforms[index]
+      })) {
+      this.#currentClipChains.set(clips, cached.prepared)
+      return cached.prepared
+    }
+
+    const transforms: RenderTransform[] = []
     const prepared = clips.map((clip, index): PreparedClip => {
       const label = `${itemLabel}.clips[${index}]`
       if (clip === null || typeof clip !== "object") {
@@ -1827,7 +1985,16 @@ export class RendererWebGpuBackend {
         throw new Error(`${label}.presentationOwner has no frame presentation transform`)
       }
       this.#validateTransform(sourceTransform, `${label}.presentationTransform`)
-      const transform = partialClipTransform(clip, sourceTransform)
+      transforms.push(sourceTransform)
+      // Prepared values must not retain mutable caller-owned transform objects.
+      const transform = partialClipTransform(clip, isImmutableRenderTransform(sourceTransform)
+        ? sourceTransform
+        : Object.freeze({
+          scaleX: sourceTransform.scaleX,
+          scaleY: sourceTransform.scaleY,
+          translateX: sourceTransform.translateX,
+          translateY: sourceTransform.translateY,
+        }))
       const x = clip.clipX ? clip.x : 0
       const y = clip.clipY ? clip.y : 0
       const width = clip.clipX ? clip.width : frame.viewport.width
@@ -1841,7 +2008,19 @@ export class RendererWebGpuBackend {
         transform,
       })
     })
-    return Object.freeze(prepared)
+    const result = Object.freeze(prepared)
+    if (isReusableRenderClipChain(clips) &&
+      transforms.every(isImmutableRenderTransform)) {
+      this.#preparedClipChains.set(clips, {
+        document: frame.document,
+        viewportWidth: frame.viewport.width,
+        viewportHeight: frame.viewport.height,
+        transforms,
+        prepared: result,
+      })
+      this.#currentClipChains.set(clips, result)
+    }
+    return result
   }
 
   #validateTransform(transform: RenderTransform, label: string): void {
@@ -1886,10 +2065,11 @@ export class RendererWebGpuBackend {
       material,
       width: geometryWidth,
       height: geometryHeight,
-      clipSpaces: [],
+      paint: value,
     }
     this.#updateClips(entry, value.clips)
     positionPlane(node, item)
+    node.visible = rectIntersectsViewport(value)
     return entry
   }
 
@@ -1927,7 +2107,6 @@ export class RendererWebGpuBackend {
       text: item.text,
       fontSize: item.fontSize,
       letterSpacing: item.letterSpacing,
-      clipSpaces: [],
     }
     this.#updateClips(entry, value.clips)
     positionText(node, item, value.baselineY)
@@ -1953,7 +2132,6 @@ export class RendererWebGpuBackend {
       src: item.src,
       width: item.width,
       height: item.height,
-      clipSpaces: [],
     }
     material.onTextureChange = this.#textureChangeCallback(value.token, item.src)
     TextureLoader.addChangeListener(item.src, material.onTextureChange, {animate: false})
@@ -1980,7 +2158,6 @@ export class RendererWebGpuBackend {
       originX: value.item.x,
       originY: value.item.y,
       strokeWidth: value.item.strokeWidth,
-      clipSpaces: [],
     }
     this.#updateClips(entry, value.clips)
     positionPathMesh(node, value.transform)
@@ -1996,17 +2173,24 @@ export class RendererWebGpuBackend {
         entry.width = geometryWidth
         entry.height = geometryHeight
       }
-      entry.material.width = value.item.width
-      entry.material.height = value.item.height
-      entry.material.fill.copy(value.fill)
-      entry.material.border.copy(value.border)
-      entry.material.borderWidths = value.borderWidths
-      copyRadii(entry.material.radii, value.radii)
-      entry.material.opacity = value.opacity
-      entry.material.shadowBlur = value.shadow?.blurRadius ?? 0
-      entry.material.shadowSpread = value.shadow?.spreadRadius ?? 0
+      if (entry.paint.fill !== value.fill || entry.paint.border !== value.border ||
+        entry.paint.borderWidths !== value.borderWidths || entry.paint.radii !== value.radii ||
+        entry.paint.opacity !== value.opacity || entry.paint.shadow !== value.shadow ||
+        entry.material.width !== value.item.width || entry.material.height !== value.item.height) {
+        entry.material.width = value.item.width
+        entry.material.height = value.item.height
+        entry.material.fill.copy(value.fill)
+        entry.material.border.copy(value.border)
+        entry.material.borderWidths = value.borderWidths
+        copyRadii(entry.material.radii, value.radii)
+        entry.material.opacity = value.opacity
+        entry.material.shadowBlur = value.shadow?.blurRadius ?? 0
+        entry.material.shadowSpread = value.shadow?.spreadRadius ?? 0
+      }
+      entry.paint = value
       this.#updateClips(entry, value.clips)
       positionPlane(entry.node, value.item)
+      entry.node.visible = rectIntersectsViewport(value)
       return
     }
 
@@ -2087,31 +2271,34 @@ export class RendererWebGpuBackend {
     entry: RetainedClipState & {node: Object3D},
     clips: readonly PreparedClip[],
   ): void {
-    while (entry.clipSpaces.length < clips.length) {
-      entry.clipSpaces.push(createRetainedClipSpace(this.root))
-    }
-    if (entry.clipSpaces.length > clips.length) entry.clipSpaces.length = clips.length
+    if (entry.appliedClips === clips) return
+    entry.appliedClips = clips
     if (clips.length === 0) {
       entry.node.presentationClips = NO_PRESENTATION_CLIPS
       return
     }
-    entry.node.presentationClips = Object.freeze(clips.map((clip, index): PresentationClipShape => {
-      const clipSpace = entry.clipSpaces[index]!
-      writeEngineTransform(clipSpace.localMatrix, clip.transform)
-      return Object.freeze({
-        kind: "rounded-rect",
-        coordinateSpace: clipSpace.coordinateSpace,
-        center: Object.freeze([clip.x + clip.width / 2, -(clip.y + clip.height / 2)] as const),
-        halfSize: Object.freeze([clip.width / 2, clip.height / 2] as const),
-        radii: clip.radii,
-      })
-    }))
+    let shapes = this.#presentationClipChains.get(clips)
+    if (shapes === undefined) {
+      shapes = Object.freeze(clips.map((clip): PresentationClipShape => {
+        const clipSpace = createRetainedClipSpace(this.root)
+        writeEngineTransform(clipSpace.localMatrix, clip.transform)
+        return Object.freeze({
+          kind: "rounded-rect",
+          coordinateSpace: clipSpace.coordinateSpace,
+          center: Object.freeze([clip.x + clip.width / 2, -(clip.y + clip.height / 2)] as const),
+          halfSize: Object.freeze([clip.width / 2, clip.height / 2] as const),
+          radii: clip.radii,
+        })
+      }))
+      this.#presentationClipChains.set(clips, shapes)
+    }
+    entry.node.presentationClips = shapes
   }
 
   #detachEntry(entry: RetainedEntry, geometries: Set<BufferGeometry>): void {
     entry.node.parent?.remove(entry.node)
     entry.node.presentationClips = NO_PRESENTATION_CLIPS
-    entry.clipSpaces.length = 0
+    delete entry.appliedClips
     entry.node.children = []
     if (entry.kind === "image") {
       if (entry.material.onTextureChange !== undefined) {
@@ -2227,8 +2414,7 @@ class RectRunSpatialIndex {
 }
 
 function isRectInstanceCompatible(value: PreparedRectItem): boolean {
-  return value.clips.length === 0
-    && value.item.width > 0
+  return value.clips.length === 0 && value.item.width > 0
     && value.item.height > 0
     && value.item.transform.scaleX !== 0
     && value.item.transform.scaleY !== 0
@@ -2282,11 +2468,28 @@ function glyphBounds(geometry: BufferGeometry): RectBounds | null {
   return bounds
 }
 
+function rectPaintBounds(value: PreparedRectItem): RectBounds {
+  const {item, shadow} = value
+  const bounds = transformedBounds(item.transform,
+    item.x + item.width / 2, item.y + item.height / 2,
+    shadow?.geometryWidth ?? item.width, shadow?.geometryHeight ?? item.height)
+  return {minX: bounds.minX - 1, minY: bounds.minY - 1, maxX: bounds.maxX + 1, maxY: bounds.maxY + 1}
+}
+
+function rectIntersectsViewport(value: PreparedRectItem): boolean {
+  return value.opacity > 0 && boundsIntersectViewport(rectPaintBounds(value), value.clips, value.viewport)
+}
+
 function textIntersectsViewport(node: CachedText, value: PreparedTextItem): boolean {
   if (value.opacity <= 0 || value.color.a <= 0) return false
+  const bounds = textPaintBounds(node, value)
+  return bounds !== null && boundsIntersectViewport(bounds, value.clips, value.viewport)
+}
+
+function textPaintBounds(node: CachedText, value: PreparedTextItem): RectBounds | null {
   const stencil = glyphBounds(node.stencilGeometry)
   const cover = glyphBounds(node.coverGeometry)
-  if (stencil === null && cover === null) return false
+  if (stencil === null && cover === null) return null
   const minX = Math.min(stencil?.minX ?? Infinity, cover?.minX ?? Infinity)
   const minY = Math.min(stencil?.minY ?? Infinity, cover?.minY ?? Infinity)
   const maxX = Math.max(stencil?.maxX ?? -Infinity, cover?.maxX ?? -Infinity)
@@ -2296,7 +2499,7 @@ function textIntersectsViewport(node: CachedText, value: PreparedTextItem): bool
     value.baselineY - (minY + maxY) / 2,
     maxX - minX, maxY - minY)
   // Retain an antialias fringe; logical advances are not glyph ink bounds.
-  return boundsIntersectViewport({minX:bounds.minX - 1,minY:bounds.minY - 1,maxX:bounds.maxX + 1,maxY:bounds.maxY + 1}, value.clips, value.viewport)
+  return {minX: bounds.minX - 1, minY: bounds.minY - 1, maxX: bounds.maxX + 1, maxY: bounds.maxY + 1}
 }
 
 function boundsIntersectViewport(source: RectBounds, clips: readonly PreparedClip[], viewport: RenderFrame["viewport"]): boolean {
@@ -2659,6 +2862,8 @@ function sameObjectOrder(left: readonly object[], right: readonly object[]): boo
     && left.every((value, index) => value === right[index])
 }
 
+const validatedIndexMaximum = new WeakMap<readonly number[], number>()
+
 function validatedChangedDisplayChanges(
   frame: RenderFrame,
   cached: PreparedFrameCache,
@@ -2671,19 +2876,25 @@ function validatedChangedDisplayChanges(
     replacement: DisplayItem
   }>[]
 }> | null {
-  const changes = readCanonicalRenderFrameChanges(frame)
+  const changes = isRendererOwnedFrame(frame) ? readCanonicalRenderFrameChanges(frame) : null
   if (changes === null) {
     return Object.freeze({
       indexes: Object.freeze(Array.from({length: frame.displayList.length}, (_, index) => index)),
     })
   }
-  if (changes.previous !== cached.frame || frame.revision !== cached.revision + 1) return null
-  const seen = new Set<number>()
-  for (const index of changes.indexes) {
-    if (!Number.isSafeInteger(index) || index < 0 || index >= frame.displayList.length || seen.has(index)) {
-      return null
+  if (changes.previous !== cached.frame || frame.revision < cached.revision) return null
+  const maximum = validatedIndexMaximum.get(changes.indexes)
+  if (maximum !== undefined) {
+    if (maximum >= frame.displayList.length) return null
+  } else {
+    const seen = new Set<number>()
+    let maximum = -1
+    for (const index of changes.indexes) {
+      if (!Number.isSafeInteger(index) || index < 0 || index >= frame.displayList.length || seen.has(index)) return null
+      seen.add(index)
+      maximum = Math.max(maximum, index)
     }
-    seen.add(index)
+    validatedIndexMaximum.set(changes.indexes, maximum)
   }
   if (changes.operations !== undefined) {
     if (changes.operations.length === 0 || changes.operations.length > 8) return null
@@ -2713,6 +2924,17 @@ function sameDisplayIdentity(left: DisplayItem, right: DisplayItem): boolean {
     && left.key === right.key
 }
 
+function sameResolvedPresentationInputs(item: DisplayItem, previous: RenderFrame, next: RenderFrame): boolean {
+  if (previous.presentationTransforms === next.presentationTransforms) return true
+  if (item.kind === "path" && item.presentationOwner !== null &&
+    previous.presentationTransforms?.get(item.presentationOwner) !== next.presentationTransforms?.get(item.presentationOwner)) return false
+  for (const clip of item.clips) {
+    if (clip.presentationOwner !== null && clip.presentationOwner !== undefined &&
+      previous.presentationTransforms?.get(clip.presentationOwner) !== next.presentationTransforms?.get(clip.presentationOwner)) return false
+  }
+  return true
+}
+
 function sameTextPaint(left: TextDisplayItem, right: TextDisplayItem): boolean {
   return left.text === right.text && left.width === right.width &&
     left.color === right.color && left.opacity === right.opacity &&
@@ -2722,27 +2944,30 @@ function sameTextPaint(left: TextDisplayItem, right: TextDisplayItem): boolean {
 }
 
 function sameRectBatchTopology(left: RectDisplayItem, right: RectDisplayItem): boolean {
-  return Object.is(left.x, right.x)
-    && Object.is(left.y, right.y)
-    && Object.is(left.width, right.width)
+  // Position is instance data. The run's overlap check below decides whether
+  // moving an instance preserves painter order; movement alone is not a replan.
+  return Object.is(left.width, right.width)
     && Object.is(left.height, right.height)
     && sameRectShadowGeometry(left.shadow, right.shadow)
     && Array.isArray(right.clips)
-    && left.clips.length === 0
-    && right.clips.length === 0
+    && left.clips.length === 0 && right.clips.length === 0
 }
 
 function rectBatchPlanRemainsSafe(
   plan: PreparedFramePlan,
   updates: readonly PreparedRectRecordUpdate[],
+  currentItems: ReadonlyMap<DisplayToken, RectDisplayItem>,
 ): boolean {
   if (updates.length === 0) return true
   const changed = new Map(updates.map((update) => [update.value.token, update.value]))
-  for (const item of plan.items) {
-    if (item.kind !== "rect-batch") continue
+  for (const item of plan.rectBatches) {
     const spatialIndex = new RectRunSpatialIndex()
     for (const previous of item.items) {
-      const value = changed.get(previous.token) ?? previous
+      const current = currentItems.get(previous.token)
+      if (current === undefined) return false
+      const value = changed.get(previous.token) ?? (current === previous.item
+        ? previous
+        : {...previous, item: current})
       if (!isRectInstanceCompatible(value) || spatialIndex.add(rectInstanceBounds(value)) !== "accepted") {
         return false
       }
@@ -2771,47 +2996,103 @@ function isReusablePreparedItem(value: PreparedItem): boolean {
   return isReusableDisplayItem(value.item)
 }
 
+const reusableDisplayItems = new WeakSet<DisplayItem>()
+const displayFields = ["kind", "key", "node", "x", "y", "opacity", "clips", "transform"] as const
+const transformFields = ["scaleX", "scaleY", "translateX", "translateY"] as const
+const edgeFields = ["top", "right", "bottom", "left"] as const
+const cornerFields = ["topLeft", "topRight", "bottomRight", "bottomLeft"] as const
+const pointFields = ["x", "y"] as const
+
 function isReusableDisplayItem(item: DisplayItem): boolean {
+  if (reusableDisplayItems.has(item)) return true
   if (
-    !Object.isFrozen(item)
-    || !Object.isFrozen(item.transform)
-    || !Object.isFrozen(item.clips)
-    || !item.clips.every(isReusableRenderClip)
+    !isFrozenDataRecord(item, displayFields)
+    || !isImmutableRenderTransform(item.transform)
+    || !isReusableRenderClipChain(item.clips)
   ) return false
+  let reusable: boolean
   if (item.kind === "path") {
-    return Object.isFrozen(item.geometry)
-      && Object.isFrozen(item.geometry.cubics)
-      && Object.isFrozen(item.geometry.segments)
-      && Object.isFrozen(item.geometry.bounds)
+    reusable = isFrozenDataRecord(item, ["geometry", "stroke", "strokeWidth", "presentationOwner"])
+      && isFrozenDataRecord(item.geometry, ["cubics", "segments", "bounds"])
+      && isFrozenDataRecord(item.geometry.cubics)
+      && isFrozenDataRecord(item.geometry.segments)
+      && isFrozenDataRecord(item.geometry.bounds, ["x", "y", "width", "height"])
       && item.geometry.cubics.every((cubic) =>
-        Object.isFrozen(cubic)
-        && Object.isFrozen(cubic.from)
-        && Object.isFrozen(cubic.control1)
-        && Object.isFrozen(cubic.control2)
-        && Object.isFrozen(cubic.to)
+        isFrozenDataRecord(cubic, ["from", "control1", "control2", "to"])
+        && isFrozenDataRecord(cubic.from, pointFields)
+        && isFrozenDataRecord(cubic.control1, pointFields)
+        && isFrozenDataRecord(cubic.control2, pointFields)
+        && isFrozenDataRecord(cubic.to, pointFields)
       )
       && item.geometry.segments.every((segment) =>
-        Object.isFrozen(segment)
-        && Object.isFrozen(segment.from)
-        && Object.isFrozen(segment.to)
+        isFrozenDataRecord(segment, ["from", "to"])
+        && isFrozenDataRecord(segment.from, pointFields)
+        && isFrozenDataRecord(segment.to, pointFields)
       )
+  } else if (item.kind === "rect") {
+    reusable = isFrozenDataRecord(item, ["width", "height", "color", "border", "shadow"])
+      && isFrozenDataRecord(item.border, ["widths", "colors", "radii"])
+      && isFrozenDataRecord(item.border.widths, edgeFields)
+      && isFrozenDataRecord(item.border.colors, edgeFields)
+      && isFrozenDataRecord(item.border.radii, cornerFields)
+      && (item.shadow === null || isFrozenDataRecord(item.shadow, ["blurRadius", "spreadRadius"]))
+  } else if (item.kind === "text") {
+    reusable = isFrozenDataRecord(item, ["text", "color", "fontSize", "lineHeight", "letterSpacing"])
+      && ["width", "fontFamily", "fontWeight", "fontStyle"].every(key => !(key in item) || Object.hasOwn(item, key))
+  } else {
+    reusable = isFrozenDataRecord(item, ["src", "width", "height", "fit"])
   }
-  if (item.kind !== "rect") return true
-  return Object.isFrozen(item.border)
-    && Object.isFrozen(item.border.widths)
-    && Object.isFrozen(item.border.colors)
-    && Object.isFrozen(item.border.radii)
-    && (item.shadow === null || Object.isFrozen(item.shadow))
+  if (reusable) reusableDisplayItems.add(item)
+  return reusable
 }
 
-function isReusableRenderClip(clip: RenderClip): boolean {
-  return Object.isFrozen(clip)
-    && Object.isFrozen(clip.transform)
-    && Object.isFrozen(clip.radii)
-    && Object.isFrozen(clip.radii.topLeft)
-    && Object.isFrozen(clip.radii.topRight)
-    && Object.isFrozen(clip.radii.bottomRight)
-    && Object.isFrozen(clip.radii.bottomLeft)
+function sameRectPaint(previous: RectDisplayItem, next: RectDisplayItem): boolean {
+  return previous.width === next.width && previous.height === next.height &&
+    previous.color === next.color && previous.opacity === next.opacity &&
+    previous.border === next.border && previous.shadow === next.shadow
+}
+
+const frozenDataRecords = new WeakMap<object, ReadonlySet<string>>()
+
+function isFrozenDataRecord(value: object, required: readonly string[] = []): boolean {
+  if (value === null || typeof value !== "object") return false
+  let keys = frozenDataRecords.get(value)
+  if (keys === undefined) {
+    if (!Object.isFrozen(value)) return false
+    const prototype = Object.getPrototypeOf(value)
+    if (prototype !== null && prototype !== Object.prototype &&
+      !(Array.isArray(value) && prototype === Array.prototype)) return false
+    const descriptors = Object.getOwnPropertyDescriptors(value)
+    if (!Object.values(descriptors).every(descriptor => "value" in descriptor)) return false
+    if (Array.isArray(value)) {
+      for (let index = 0; index < value.length; index++) {
+        if (!Object.hasOwn(descriptors, index)) return false
+      }
+    }
+    keys = new Set(Object.keys(descriptors))
+    frozenDataRecords.set(value, keys)
+  }
+  return required.every(key => keys!.has(key))
+}
+
+function isImmutableRenderTransform(transform: RenderTransform): boolean {
+  return isFrozenDataRecord(transform, transformFields)
+}
+
+function isReusableClipCacheSource(clip: RenderClip): boolean {
+  return isFrozenDataRecord(clip, ["x", "y", "width", "height", "clipX", "clipY", "transform", "radii"])
+    && (!("presentationOwner" in clip) || Object.hasOwn(clip, "presentationOwner"))
+    && isImmutableRenderTransform(clip.transform) && isFrozenDataRecord(clip.radii, cornerFields)
+    && cornerFields.every(corner => isFrozenDataRecord(clip.radii[corner], pointFields))
+}
+
+const reusableRenderClipChains = new WeakSet<readonly RenderClip[]>()
+
+function isReusableRenderClipChain(clips: readonly RenderClip[]): boolean {
+  if (reusableRenderClipChains.has(clips)) return true
+  if (!isFrozenDataRecord(clips) || !clips.every(isReusableClipCacheSource)) return false
+  reusableRenderClipChains.add(clips)
+  return true
 }
 
 function pendingUploadBytes(attribute: BufferAttribute): number {

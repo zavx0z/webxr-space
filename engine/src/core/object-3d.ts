@@ -4,6 +4,8 @@ import type {PresentationClipShape} from "./presentation-clip"
 
 export type RenderLayer = "world" | "ui"
 
+const visibleMatrixSubtree = Object.freeze({visibleOnly: true})
+
 /**
  * Базовый класс для всех объектов в сцене.
  * Обеспечивает иерархическую структуру (граф сцены).
@@ -139,15 +141,38 @@ export class Object3D {
     this.quaternion.setFromRotationMatrix(m)
   }
 
-  public updateWorldMatrix(force: boolean = false): void {
-    this.updateMatrix();
-    if (this.parent) {
-      this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.modelMatrix);
-    } else {
-      this.matrixWorld.copy(this.modelMatrix);
+  /**
+   * Синхронизирует мировую матрицу с текущими локальными преобразованиями.
+   *
+   * По умолчанию сохраняет обновление всего поддерева. Для запроса координат
+   * одного объекта `{parents: true, children: false}` обновляет только его
+   * цепочку предков и сам объект, не затрагивая соседние поддеревья.
+   * Явный `visibleOnly: true` пропускает невидимые поддеревья при подготовке
+   * отрисовки. Без него, в том числе при запросах координат, видимость не
+   * ограничивает синхронизацию матриц.
+   */
+  public updateWorldMatrix(
+    force: boolean = false,
+    options?: Readonly<{
+      parents?: boolean
+      children?: boolean
+      visibleOnly?: boolean
+    }>,
+  ): void {
+    if (options?.visibleOnly === true && !this.visible) return
+    if (options?.parents === true && this.parent !== null) {
+      this.parent.updateWorldMatrix(force, {parents: true, children: false})
     }
+    this.updateMatrix()
+    if (this.parent) {
+      this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.modelMatrix)
+    } else {
+      this.matrixWorld.copy(this.modelMatrix)
+    }
+    if (options?.children === false) return
+    const childOptions = options?.visibleOnly === true ? visibleMatrixSubtree : undefined
     for (const child of this.children) {
-      child.updateWorldMatrix(force);
+      child.updateWorldMatrix(force, childOptions)
     }
   }
 

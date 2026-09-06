@@ -1,6 +1,8 @@
 import {Object3D} from "@zavx0z/engine"
 import {ViewPoint} from "@zavx0z/engine"
 import {Space} from "@zavx0z/engine"
+import {SkinnedMesh} from "@zavx0z/engine"
+import type {RenderItem} from "./utils/render-list"
 
 export const renderCompositionBackgroundShader = /* wgsl */ `
 struct BackgroundUniform {
@@ -41,7 +43,7 @@ export type RenderBoundedView = Readonly<{
 }>
 
 export type RenderOverlay = Object3D & {
-  updateForViewPoint?(viewPoint: ViewPoint): void
+  updateForViewPoint?(viewPoint: ViewPoint, options?: Readonly<{updateWorldMatrix?: boolean}>): void
 }
 
 /** One ordered presentation owned by a single Renderer and native canvas. */
@@ -59,6 +61,103 @@ export type PlannedRenderComposition = Readonly<{
   boundedViews: readonly RenderBoundedView[]
   excludedBaseRoots: ReadonlySet<Object3D>
 }>
+
+/**
+ * Fits camera-locked roots before updating the composition's world matrices.
+ *
+ * Attached overlays and bounded Spaces are descendants of the base Space and
+ * share its traversal. Detached overlays still synchronize their live ancestry
+ * and children. Root ancestry is checked rather than assumed, so no overlapping
+ * subtree is visited twice by this phase. Legacy custom overlays may ignore the
+ * optional deferred-matrix hint; their default fitting behavior is preserved.
+ */
+export function prepareCompositionWorldMatrices(composition: PlannedRenderComposition): void {
+  for (const overlay of composition.overlays) {
+    overlay.updateForViewPoint?.(composition.viewPoint, {updateWorldMatrix: false})
+  }
+  const roots = compositionMatrixRoots(composition)
+  for (const root of roots) {
+    let covered = false
+    for (let parent = root.parent; parent !== null; parent = parent.parent) {
+      // Projection roots are collected independently of presentation ancestors.
+      // A hidden ancestor would prune it from the enclosing root's traversal.
+      if (!parent.visible) break
+      if (roots.has(parent)) {
+        covered = true
+        break
+      }
+    }
+    if (!covered) root.updateWorldMatrix(true, {parents: true, visibleOnly: true})
+  }
+}
+
+/**
+ * Visible draws may still depend on hidden clip coordinate spaces or bones.
+ * Synchronize only references in composition trees that the former full walk
+ * visited. Detached/manual matrix providers are sampled, never overwritten.
+ */
+export function prepareHiddenRenderDependencies(
+  composition: PlannedRenderComposition,
+  items: readonly RenderItem[],
+): void {
+  const roots = compositionMatrixRoots(composition)
+  // 0: outside the composition, 1: visited by visible traversal, 2: hidden path.
+  const ancestry = new Map<Object3D, 0 | 1 | 2>()
+  const synchronized = new Set<Object3D>()
+  const visited = new Set<Object3D>()
+  const syncHidden = (object: Object3D): void => {
+    if (synchronized.has(object)) return
+    synchronized.add(object)
+    const path: Object3D[] = []
+    let current: Object3D | null = object
+    let state: 0 | 1 | 2 = 0
+    while (current !== null) {
+      const cached = ancestry.get(current)
+      if (cached !== undefined) {
+        state = cached
+        break
+      }
+      if (roots.has(current)) {
+        state = current.visible ? 1 : 2
+        ancestry.set(current, state)
+        break
+      }
+      path.push(current)
+      current = current.parent
+    }
+    for (let index = path.length - 1; index >= 0; index -= 1) {
+      const node = path[index]!
+      if (state !== 0 && !node.visible) state = 2
+      ancestry.set(node, state)
+    }
+    if (state === 2) object.updateWorldMatrix(true, {parents: true, children: false})
+  }
+
+  for (const item of items) {
+    const object = item.object
+    if (visited.has(object)) continue
+    visited.add(object)
+    if (object instanceof SkinnedMesh) {
+      for (const bone of object.skeleton.bones) syncHidden(bone)
+    }
+    try {
+      const shapes = object.presentationClips
+      if (!Array.isArray(shapes)) continue
+      for (const shape of shapes) {
+        const coordinateSpace = shape?.coordinateSpace
+        if (coordinateSpace instanceof Object3D) syncHidden(coordinateSpace)
+      }
+    } catch {
+      // The encoder owns malformed-clip validation and fail-closed records.
+    }
+  }
+}
+
+function compositionMatrixRoots(composition: PlannedRenderComposition): Set<Object3D> {
+  const roots = new Set<Object3D>([composition.space, ...composition.overlays])
+  for (const view of composition.boundedViews) roots.add(view.space)
+  return roots
+}
 
 /** Internal fail-closed normalization shared by Renderer and focused tests. */
 export function planRenderComposition(

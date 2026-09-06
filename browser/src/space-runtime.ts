@@ -545,12 +545,10 @@ const createClaimedDocumentSpaceRuntime = async (
         record.runtime.flush()
       }
       viewPoint.update()
-      for (const record of overlays.values()) record.runtime.updateForViewPoint(viewPoint)
       for (const record of worlds.values()) {
         synchronizeWorldGeometry(record)
         if (record.visible && record.logicalViewport !== null) record.runtime.viewPoint.update()
       }
-      space.updateWorldMatrix(true)
       engineRenderer.renderComposition({
         space,
         viewPoint,
@@ -1130,7 +1128,6 @@ const createClaimedDocumentSpaceRuntime = async (
       return false
     }
     viewPoint.update()
-    space.updateWorldMatrix(true)
     raycaster.setFromCamera({
       x: ((clientX - rect.left) / rect.width) * 2 - 1,
       y: 1 - ((clientY - rect.top) / rect.height) * 2,

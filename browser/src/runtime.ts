@@ -269,7 +269,6 @@ const createClaimedDocumentCanvasRuntime = async (
     inputHost?.synchronize()
     const frame = interaction.composeFrame(documentRenderer.flush(), seams.now())
     backend.applyFrame(frame)
-    space.updateWorldMatrix()
     viewPoint.update()
     engineRenderer.renderFrame(space, overlay, viewPoint)
     currentFrame = frame
