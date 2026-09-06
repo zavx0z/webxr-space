@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/webxr",
+  "label": "WebXR",
   "version": "0.0.0",
   "description": "Единая WebXR-платформа MetaFor",
   "private": true,

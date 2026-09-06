@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/layout",
+  "label": "Раскладка",
   "version": "0.0.0",
   "description": "Алгоритмы расположения нод и Worker",
   "private": true,

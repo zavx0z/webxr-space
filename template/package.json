@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/template",
+  "label": "Шаблоны TSX",
   "version": "0.0.0",
   "description": "Компилятор TSX и формат готового шаблона",
   "private": true,

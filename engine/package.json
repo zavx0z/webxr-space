@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/engine",
+  "label": "Движок",
   "version": "0.0.0",
   "private": true,
   "description": "Объекты сцены, геометрия, материалы, математика и анимация без WebGPU",

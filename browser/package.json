@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/browser",
+  "label": "Браузер",
   "version": "0.0.0",
   "private": true,
   "description": "Canvas, resize, input, RAF и общий цикл кадров",

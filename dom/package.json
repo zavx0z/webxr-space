@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/dom",
+  "label": "DOM",
   "version": "0.0.0",
   "description": "Document, элементы, атрибуты, события, focus и состояние полей",
   "private": true,

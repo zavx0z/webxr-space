@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/webgpu",
+  "label": "WebGPU",
   "version": "0.0.0",
   "private": true,
   "description": "Shaders, buffers, textures, uploads и рисование",

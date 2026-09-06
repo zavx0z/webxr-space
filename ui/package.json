@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/ui",
+  "label": "UI",
   "version": "0.0.0",
   "description": "Универсальные UI-компоненты, тема и иконки",
   "private": true,

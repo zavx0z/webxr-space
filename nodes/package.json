@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/nodes",
+  "label": "Нодовая система",
   "version": "0.0.0",
   "description": "Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link",
   "private": true,

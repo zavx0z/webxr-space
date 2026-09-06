@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/space",
+  "label": "Пространство",
   "version": "0.0.0",
   "description": "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material, Display и HUD",
   "private": true,

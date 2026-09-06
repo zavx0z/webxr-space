@@ -1,5 +1,6 @@
 {
   "name": "@zavx0z/component",
+  "label": "Компоненты",
   "version": "0.0.0",
   "description": "Состояние компонентов, hooks, context, эффекты и очистка",
   "private": true,
