@@ -86,6 +86,7 @@ export type DocumentOverlayRuntimeSeams = Readonly<{
     document: Document
     interactionState: DocumentInteractionState
     tooltipDelayMs: number
+    textMeasurer: NonNullable<CreateDocumentRendererOptions["textMeasurer"]>
     hitTest: typeof hitTestProjection
   }>): DocumentInteractionController
   now(): number
@@ -192,6 +193,7 @@ export function createDocumentOverlayRuntimeWithSeams(
       document: options.document,
       interactionState,
       tooltipDelayMs,
+      textMeasurer,
     })
     requestBackendPresentation = (): void => {
       if (!disposed) options.requestPresentation()

@@ -132,6 +132,21 @@ const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: r
   return {runtime, document, captured, cameraInputs, camera, engineRenderer, element, projection, projections, emit, observe}
 }
 
+test.each(["overlay", "plane"] as const)("%s title uses the loaded backend font for its background bounds", async kind => {
+  const f = await fixture()
+  const owner = f.projection(kind, "title-owner")
+  const button = f.element("width: 120px; height: 24px", owner, "button")
+  button.title = "WebXR"
+  const projection = kind === "overlay" ? f.runtime.getOverlay(owner)! : f.runtime.getPlane(owner)!
+  const base = projection.flush()
+  projection.interaction.pointerMove(base, {clientX: 10, clientY: 10, timeStamp: performance.now() - 501})
+  const frame = projection.flush()
+  const background = frame.displayList.find(item => item.key === "ua:title-background")
+  // This font has 500-unit advances at 1000 units/em: 6 px at the 12 px title size.
+  expect(background).toMatchObject({kind: "rect", width: 46, color: "#111827"})
+  expect(projection.interaction.tooltip?.lines).toEqual(["WebXR"])
+})
+
 test("DOM id остаётся CSS-селектором без замены проекции", async () => {
   const f = await fixture(undefined, ["#before { background: #112233; } #after { background: #445566; }"])
   const owner = f.projection("plane", "style-owner")

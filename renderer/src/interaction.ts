@@ -20,6 +20,7 @@ import type {
   RenderFrame,
   RenderScrollMetrics,
   RenderTransform,
+  RenderTextMeasurer,
 } from "./types.ts"
 import {appendImmutableArray} from "./immutable-array.ts"
 import {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
@@ -66,6 +67,8 @@ export type TitleTooltip = Readonly<{
 export type CreateDocumentInteractionControllerOptions = Readonly<{
   document: Document
   tooltipDelayMs?: number
+  /** Use the same default-font measurer as the renderer and presentation backend. */
+  textMeasurer?: RenderTextMeasurer
   tooltipFontSize?: number
   tooltipMaxWidth?: number
   tooltipBackground?: string
@@ -112,7 +115,7 @@ const UA_TITLE_BORDER: RenderBorder = Object.freeze({
     bottom: "#000000",
     left: "#000000",
   }),
-  radii: Object.freeze({topLeft: 0, topRight: 0, bottomRight: 0, bottomLeft: 0}),
+  radii: Object.freeze({topLeft: 3, topRight: 3, bottomRight: 3, bottomLeft: 3}),
 })
 
 export const createDocumentInteractionController = (
@@ -126,7 +129,7 @@ export const createDocumentInteractionController = (
   const tooltipDelayMs = nonNegative(options.tooltipDelayMs ?? 500, "tooltipDelayMs")
   const tooltipFontSize = positive(options.tooltipFontSize ?? 12, "tooltipFontSize")
   const tooltipMaxWidth = positive(options.tooltipMaxWidth ?? 320, "tooltipMaxWidth")
-  const tooltipBackground = options.tooltipBackground ?? "#111827f2"
+  const tooltipBackground = options.tooltipBackground ?? "#111827"
   const tooltipColor = options.tooltipColor ?? "#f9fafb"
   let hovered: Element | null = null
   let pressedTarget: Element | null = null
@@ -331,6 +334,7 @@ export const createDocumentInteractionController = (
         tooltipDelayMs,
         tooltipFontSize,
         tooltipMaxWidth,
+        options.textMeasurer,
       )
       currentTooltip = tooltip
       if (tooltip === null) {
@@ -1074,6 +1078,7 @@ const createTooltip = (
   delay: number,
   fontSize: number,
   maxWidth: number,
+  textMeasurer?: RenderTextMeasurer,
 ): TitleTooltip | null => {
   if (
     candidate === null ||
@@ -1091,20 +1096,18 @@ const createTooltip = (
   const lineHeight = fontSize * 1.25
   const availableWidth = Math.max(1, frame.viewport.width - margin * 2)
   const widthLimit = Math.min(maxWidth, availableWidth)
-  const charactersPerLine = Math.max(
-    1,
-    Math.floor((widthLimit - paddingX * 2) / (fontSize * 0.6)),
+  const contentWidth = widthLimit - paddingX * 2
+  const maximumLines = Math.floor(
+    (frame.viewport.height - margin * 2 - paddingY * 2) / lineHeight,
   )
-  const wrapped = wrapTitle(candidate.text, charactersPerLine)
-  const maximumLines = Math.max(
-    1,
-    Math.floor((frame.viewport.height - margin * 2 - paddingY * 2) / lineHeight),
+  if (contentWidth <= 0 || maximumLines < 1) return null
+  const measure = (text: string): number => nonNegative(
+    textMeasurer?.measureTextAdvance(text, fontSize, 0) ?? Array.from(text).length * fontSize * 0.6,
+    "textMeasurer.measureTextAdvance()",
   )
-  const lines = fitLines(wrapped, maximumLines)
-  const textWidth = lines.reduce(
-    (maximum, line) => Math.max(maximum, line.length * fontSize * 0.6),
-    0,
-  )
+  const wrapped = wrapTitle(candidate.text, contentWidth, measure)
+  const lines = fitLines(wrapped, maximumLines, contentWidth, measure)
+  const textWidth = lines.reduce((maximum, line) => Math.max(maximum, measure(line)), 0)
   const width = Math.min(widthLimit, Math.max(1, textWidth + paddingX * 2))
   const height = Math.min(
     frame.viewport.height - margin * 2,
@@ -1173,32 +1176,56 @@ const tooltipDisplayItems = (
   return Object.freeze(items)
 }
 
-const wrapTitle = (text: string, maximum: number): string[] => {
+/** Wrap by measured advance, preserving code points and preferring word boundaries. */
+const wrapTitle = (text: string, maximum: number, measure: (text: string) => number): string[] => {
   const output: string[] = []
   for (const sourceLine of text.split("\n")) {
-    if (sourceLine.length === 0) {
-      output.push("")
-      continue
-    }
     let remaining = sourceLine
-    while (remaining.length > maximum) {
-      const candidate = remaining.slice(0, maximum + 1)
-      const space = candidate.lastIndexOf(" ")
-      const cut = space > 0 ? space : maximum
+    while (measure(remaining) > maximum) {
+      const points = Array.from(remaining)
+      const count = fittingPrefix(points, maximum, measure)
+      if (count === 0) {
+        output.push(measure("…") <= maximum ? "…" : "")
+        remaining = points.slice(1).join("")
+        continue
+      }
+      const prefix = points.slice(0, count).join("")
+      const space = prefix.lastIndexOf(" ")
+      const cut = space > 0 ? space : prefix.length
       output.push(remaining.slice(0, cut))
-      remaining = remaining.slice(cut)
-      if (remaining.startsWith(" ")) remaining = remaining.slice(1)
+      remaining = remaining.slice(cut).replace(/^ +/u, "")
     }
     output.push(remaining)
   }
-  return output.length > 0 ? output : [""]
+  return output
 }
 
-const fitLines = (lines: readonly string[], maximum: number): string[] => {
+const fittingPrefix = (
+  points: readonly string[],
+  maximum: number,
+  measure: (text: string) => number,
+): number => {
+  let low = 0
+  let high = points.length
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2)
+    if (measure(points.slice(0, middle).join("")) <= maximum) low = middle
+    else high = middle - 1
+  }
+  return low
+}
+
+const fitLines = (
+  lines: readonly string[],
+  maximum: number,
+  width: number,
+  measure: (text: string) => number,
+): string[] => {
   if (lines.length <= maximum) return [...lines]
   const fitted = lines.slice(0, maximum)
-  const last = fitted.at(-1) ?? ""
-  fitted[fitted.length - 1] = `${last.slice(0, Math.max(0, last.length - 1))}…`
+  const points = Array.from(fitted.at(-1) ?? "")
+  const count = fittingPrefix(points, width, text => measure(`${text}…`))
+  fitted[fitted.length - 1] = measure("…") <= width ? `${points.slice(0, count).join("")}…` : ""
   return fitted
 }
 

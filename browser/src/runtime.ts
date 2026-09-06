@@ -106,6 +106,7 @@ export type DocumentCanvasRuntimeSeams = Readonly<{
     document: Document
     interactionState: DocumentInteractionState
     tooltipDelayMs: number
+    textMeasurer: NonNullable<CreateDocumentRendererOptions["textMeasurer"]>
   }>): DocumentInteractionController
   createNativeInputHost(options: Readonly<{requestFrame(): void}>): DocumentNativeInputHost
   createResizeObserver(callback: () => void): ResizeObserverOwner
@@ -245,6 +246,7 @@ const createClaimedDocumentCanvasRuntime = async (
     document: options.document,
     interactionState,
     tooltipDelayMs,
+    textMeasurer,
   })
   const overlay = seams.createOverlay({content: backend.root, viewport, distance})
   const subscribers = new Set<DocumentCanvasFrameSubscriber>()

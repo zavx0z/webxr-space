@@ -85,6 +85,7 @@ export type DocumentPlaneRuntimeSeams = Readonly<{
     document: Document
     interactionState: DocumentInteractionState
     tooltipDelayMs: number
+    textMeasurer: NonNullable<CreateDocumentRendererOptions["textMeasurer"]>
     hitTest: typeof hitTestProjection
   }>): DocumentInteractionController
   now(): number
@@ -197,6 +198,7 @@ export function createDocumentPlaneRuntimeWithSeams(
       document: options.document,
       interactionState,
       tooltipDelayMs,
+      textMeasurer,
     })
     requestBackendPresentation = (): void => {
       if (!disposed) options.requestPresentation()

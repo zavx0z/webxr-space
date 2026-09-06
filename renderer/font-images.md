@@ -9,6 +9,18 @@ WebGPU сопоставляет family, style и ближайший доступ
 `RendererFontFace`. Измерение и retained Text используют один TrueTypeFont.
 `font` остаётся обязательным базовым шрифтом для текста и fallback.
 
+Общая подсказка HTML `title` использует этот же базовый шрифт. Browser передаёт
+его `textMeasurer` в `createDocumentInteractionController` для Canvas, HUD и
+Display. Ширина и переносы рассчитываются по реальному advance, включая
+многоточие при ограничении высоты. Поля составляют 8 px слева и справа, 6 px
+сверху и снизу; фон по умолчанию непрозрачный `#111827`, радиус — 3 px.
+Подсказка остаётся внутри viewport с внешним зазором 4 px. Если места нет даже
+для одной строки с полями, она не рисуется. CPU-only controller без измерителя
+сохраняет приблизительные метрики; Browser всегда предоставляет метрики шрифта.
+Задержка, поиск `title` у предков и подавление через `title=""` сохраняются.
+Проверки: `renderer/tests/title-tooltip.test.ts` и
+`browser/tests/projection-input.test.ts`.
+
 Browser `createExperience` принимает `fontSources`: список `{family, weight,
 style, src}`. Он загружает эти файлы через общий Engine font cache до запуска
 проекций. Для уже загруженных шрифтов предусмотрен `fontFaces`; одновременно
