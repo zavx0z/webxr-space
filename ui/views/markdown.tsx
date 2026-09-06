@@ -106,10 +106,6 @@ function Heading6(props: InlineListProps) {
   </h6>
 }
 
-function InlineText(props: Readonly<{value: string}>) {
-  return <span>{props.value}</span>
-}
-
 function InlineCode(props: Readonly<{value: string}>) {
   return <code
     style={css`
@@ -176,8 +172,9 @@ function InlineImage(props: Readonly<{image: Extract<MarkdownInline, {kind: "ima
 }
 
 function Inline(props: Readonly<{inline: MarkdownInline}>) {
-  return <span data-markdown-inline={props.inline.kind}>
-    {props.inline.kind === "text" ? <InlineText value={props.inline.value} /> : null}
+  const text = props.inline.kind === "text" ? props.inline.value : ""
+  return <>
+    {text}
     {props.inline.kind === "code" ? <InlineCode value={props.inline.value} /> : null}
     {props.inline.kind === "strong" ? <Strong content={props.inline.content} /> : null}
     {props.inline.kind === "em" ? <Emphasis content={props.inline.content} /> : null}
@@ -189,16 +186,16 @@ function Inline(props: Readonly<{inline: MarkdownInline}>) {
       href={props.inline.href}
       external={props.inline.external}
     /> : null}
-  </span>
+  </>
 }
 
 function InlineList(props: InlineListProps) {
-  return <span>
+  return <>
     {props.content.map(inline => <Inline
       key={inline.key}
       inline={inline}
     />)}
-  </span>
+  </>
 }
 
 function Paragraph(props: InlineListProps) {

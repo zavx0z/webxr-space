@@ -2,6 +2,7 @@ import {describe, expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
 import {createDocument} from "@zavx0z/dom"
+import {registerLanguageHighlighter} from "@zavx0z/highlighter"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {parseMarkdown} from "../markdown.ts"
@@ -28,6 +29,33 @@ function mount(props: MarkdownProps) {
 }
 
 describe("Markdown production owner", () => {
+  test("CodeEditor memoizes automatic syntax but observes replacement of its language definition", async () => {
+    const {CodeEditor} = await import("../views/code-editor.tsx")
+    const languageId = "code-editor-memo-test"
+    let calls = 0
+    const language = (increment: number) => ({id: languageId, name: languageId, tokenize(lines: readonly string[]) {
+      calls += increment
+      return lines.map(line => line.length === 0 ? [] : [{s: 0, e: line.length, c: "k", fg: "#123456"}])
+    }})
+    registerLanguageHighlighter(language(1))
+    const document = createDocument()
+    const host = document.createElement("div")
+    document.append(host)
+    const component = createRoot(host)
+    const editor = CodeEditor as unknown as CompiledTemplate<import("../views/code-editor.tsx").CodeEditorProps>
+    try {
+      component.render(editor, {value: "code", readOnly: true, languageId, title: "First"})
+      const line = host.querySelector('code [data-line-index="0"]')
+      component.render(editor, {value: "code", readOnly: true, languageId, title: "Changed", showLineNumbers: false})
+      expect(calls).toBe(1)
+      expect(host.querySelector('code [data-line-index="0"]')).toBe(line)
+      registerLanguageHighlighter(language(10))
+      component.render(editor, {value: "code", readOnly: true, languageId})
+      expect(calls).toBe(11)
+      expect(host.querySelector("section")?.textContent).toContain("code")
+    } finally { component.unmount() }
+  })
+
   test("lays out a loaded HTML image inside the production article", () => {
     const {component, container, document} = mount({
       source: '# Title\n\n<div align="center">\n  <img src="docs/image.gif" width="444" />\n</div>\n\n**Text**',
@@ -163,12 +191,14 @@ describe("Markdown production owner", () => {
     })
     try {
       const frame = renderer.flush()
-      const spaces = [...container.querySelectorAll("[data-token-key]")]
-        .filter(token => token.textContent.length > 0 && token.textContent.trim() === "")
-      expect(spaces.length).toBeGreaterThan(0)
-      for (const token of spaces) {
-        expect(frame.boxByNode.get(token)?.width).toBeGreaterThan(0)
-      }
+      const line = container.querySelector('code [data-line-index="0"]')!
+      const text = frame.displayList.filter(item => item.kind === "text" && line.contains(item.node))
+      expect(line.textContent).toBe("const value = 1")
+      const equals = text.find(item => item.kind === "text" && item.text === "=")
+      const number = text.find(item => item.kind === "text" && item.text === "1")
+      if (equals?.kind !== "text" || number?.kind !== "text") throw new Error("Expected operator and number paint")
+      // Whitespace has layout but deliberately no glyph draw of its own.
+      expect(number.x).toBeGreaterThan(equals.x + equals.width!)
     } finally {
       renderer.dispose()
       component.unmount()

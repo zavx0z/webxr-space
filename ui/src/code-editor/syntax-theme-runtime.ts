@@ -410,6 +410,13 @@ export const codeEditorSyntaxTheme = Object.freeze({
   ]
 }) as SyntaxRuntimeTheme
 
+const foregroundRules = codeEditorSyntaxTheme.tokenColors.map(rule => ({
+  foreground: rule.settings.foreground,
+  scopes: ruleScopes(rule.scope).map(scope => ({scope, parts: scope.split(/\\s+|>/u).map(part => part.trim())})),
+}))
+const foregroundCache = new Map<string, string | undefined>()
+const foregroundCacheLimit = 4096
+
 export function resolveCodeEditorSyntaxScopeColorHex(
   scopes: readonly string[],
   fallback?: string
@@ -421,14 +428,22 @@ export function resolveCodeEditorSyntaxScopeColorHex(
   return normalized === undefined ? undefined : `#${normalized}`
 }
 function foregroundFor(selectors: readonly string[]): string | undefined {
-  const rules = codeEditorSyntaxTheme.tokenColors
+  const key = JSON.stringify(selectors)
+  if (foregroundCache.has(key)) return foregroundCache.get(key)
+  const color = resolveForeground(selectors)
+  if (foregroundCache.size >= foregroundCacheLimit) foregroundCache.delete(foregroundCache.keys().next().value!)
+  foregroundCache.set(key, color)
+  return color
+}
+
+function resolveForeground(selectors: readonly string[]): string | undefined {
   for (const exact of [true, false]) {
     for (const selector of selectors) {
-      for (let index = rules.length - 1; index >= 0; index -= 1) {
-        const rule = rules[index]
-        const foreground = rule?.settings.foreground
-        if (foreground === undefined) continue
-        if (ruleScopes(rule?.scope).some(scope => matchesScope(scope, selector, exact))) return foreground
+      for (let index = foregroundRules.length - 1; index >= 0; index -= 1) {
+        const rule = foregroundRules[index]
+        if (rule === undefined) continue
+        if (rule.scopes.some(({scope, parts}) => scope === selector || parts.some(part =>
+          part === selector || !exact && (part.startsWith(`${selector}.`) || selector.startsWith(`${part}.`))))) return rule.foreground
       }
     }
   }
@@ -445,16 +460,6 @@ function ruleScopes(scope: string | readonly string[] | undefined): readonly str
     }
   }
   return scopes
-}
-
-function matchesScope(scope: string, selector: string, exact: boolean): boolean {
-  if (scope === selector) return true
-  for (const part of scope.split(/\\s+|>/u)) {
-    const trimmed = part.trim()
-    if (trimmed === selector) return true
-    if (!exact && (trimmed.startsWith(`${selector}.`) || selector.startsWith(`${trimmed}.`))) return true
-  }
-  return false
 }
 
 function normalizeHexColor(value: string | undefined): string | undefined {

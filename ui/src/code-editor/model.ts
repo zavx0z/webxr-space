@@ -35,6 +35,7 @@ export type CodeEditorSegment = Readonly<{
   text: string
   foreground: string
   background?: string | undefined
+  inheritForeground?: true | undefined
 }>
 
 export type CodeEditorViewModel = Readonly<{
@@ -59,6 +60,11 @@ export const codeEditorPalette = Object.freeze({
 })
 
 export function buildCodeEditorViewModel(props: CodeEditorProps): CodeEditorViewModel {
+  assertCodeEditorProps(props)
+  return buildViewModel(props)
+}
+
+export function assertCodeEditorProps(props: CodeEditorProps): void {
   if (typeof props !== "object" || props === null) throw new TypeError("CodeEditor props must be an object")
   if (typeof props.value !== "string") throw new TypeError("CodeEditor value must be a string")
   if (props.readOnly !== true) throw new TypeError("CodeEditor readOnly must be true")
@@ -68,6 +74,9 @@ export function buildCodeEditorViewModel(props: CodeEditorProps): CodeEditorView
     throw new TypeError("CodeEditor showLineNumbers must be a boolean")
   }
   if (props.title !== undefined && typeof props.title !== "string") throw new TypeError("CodeEditor title must be a string")
+}
+
+function buildViewModel(props: CodeEditorProps): CodeEditorViewModel {
   const value = normalizeLineEndings(props.value)
   const lines = Object.freeze(value.split("\n"))
   const resolved = props.tokens === undefined
@@ -96,13 +105,17 @@ function tokenize(
   languageId: string | undefined,
   path: string | undefined
 ): Readonly<{tokens: readonly (readonly NormalizedToken[])[]; languageId: string}> {
-  const highlighter = resolveLanguageHighlighter({
+  const highlighter = resolveCodeEditorHighlighter(languageId, path)
+  const tokens = highlighter.tokenize(lines, {resolveForeground: resolveCodeEditorSyntaxScopeColorHex})
+  return Object.freeze({tokens: normalizeTokens(tokens, lines, true), languageId: highlighter.id})
+}
+
+export function resolveCodeEditorHighlighter(languageId?: string, path?: string) {
+  return resolveLanguageHighlighter({
     ...(languageId === undefined ? {} : {languageId}),
     ...(path === undefined ? {} : {path}),
     fallbackLanguageId: "plaintext"
   })
-  const tokens = highlighter.tokenize(lines, {resolveForeground: resolveCodeEditorSyntaxScopeColorHex})
-  return Object.freeze({tokens: normalizeTokens(tokens, lines, true), languageId: highlighter.id})
 }
 
 function normalizeTokens(
@@ -182,6 +195,7 @@ function segment(
     category,
     text: line.slice(start, end),
     foreground: color,
+    ...(category === "plain" && foreground === undefined ? {inheritForeground: true as const} : {}),
     ...(background === undefined ? {} : {background})
   })
 }

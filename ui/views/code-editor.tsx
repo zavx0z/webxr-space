@@ -1,9 +1,12 @@
+import {useMemo} from "@zavx0z/component"
 import {
+  assertCodeEditorProps,
   buildCodeEditorViewModel,
-  codeEditorPalette,
+  resolveCodeEditorHighlighter,
   type CodeEditorProps,
   type CodeEditorSegment
 } from "../src/code-editor/model.ts"
+import {codeEditorPaintRuns, type CodeEditorPaintRun} from "../src/code-editor/paint-runs.ts"
 
 function LineNumber(props: Readonly<{index: number}>) {
   return <li
@@ -22,42 +25,57 @@ function LineNumber(props: Readonly<{index: number}>) {
   </li>
 }
 
-function TokenSpan(props: Readonly<{segment: CodeEditorSegment}>) {
+function StyledCodeRun(props: Readonly<{run: CodeEditorPaintRun}>) {
   return <span
-    data-token-key={props.segment.key}
-    data-token-category={props.segment.category}
+    data-token-key={props.run.key}
+    data-token-category={props.run.category}
     style={css`
-      display: block;
-      flex-shrink: 0;
+      display: inline;
       white-space: pre;
-      color: ${props.segment.foreground};
-      background: ${props.segment.background ?? "transparent"};
+      color: ${props.run.foreground};
+      background: ${props.run.background ?? "transparent"};
     `}
   >
-    {props.segment.text}
+    {props.run.text}
   </span>
 }
 
+function CodeRun(props: Readonly<{run: CodeEditorPaintRun}>) {
+  const plain = props.run.inheritForeground === true && props.run.background === undefined
+  const text = plain ? props.run.text : ""
+  return <>
+    {text}
+    {!plain ? <StyledCodeRun run={props.run} /> : null}
+  </>
+}
+
 function CodeLine(props: Readonly<{index: number; segments: readonly CodeEditorSegment[]}>) {
+  const runs = codeEditorPaintRuns(props.segments)
   return <span
     data-line-index={String(props.index)}
     style={css`
-      display: flex;
-      flex-direction: row;
-      align-items: flex-start;
+      display: block;
       width: 100%;
       min-width: 0;
       height: 16px;
       min-height: 16px;
-      white-space: nowrap;
+      white-space: pre;
     `}
   >
-    {props.segments.map(segment => <TokenSpan key={segment.key} segment={segment} />)}
+    {runs.map(run => <CodeRun
+      key={run.key}
+      run={run}
+    />)}
   </span>
 }
 
 export function CodeEditor(props: CodeEditorProps) {
-  const view = buildCodeEditorViewModel(props)
+  assertCodeEditorProps(props)
+  const highlighter = props.tokens === undefined ? resolveCodeEditorHighlighter(props.languageId, props.path) : null
+  // Supplied token arrays can be mutable. Only automatic highlighting is memoized.
+  const automatic = useMemo(() => props.tokens === undefined ? buildCodeEditorViewModel(props) : null,
+    [props.value, props.languageId, props.path, highlighter, highlighter?.tokenize, props.tokens === undefined])
+  const view = automatic ?? buildCodeEditorViewModel(props)
   return <section
     role="region"
     aria-label={props.title ?? "Code editor"}
