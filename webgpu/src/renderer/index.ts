@@ -67,6 +67,7 @@ import {
   type PresentationClipRange,
 } from "./presentation-clip-upload"
 import {renderItemSupportsPresentationClips} from "./presentation-clip-support"
+import {RenderBundleCache, type RenderCommandEncoder} from "./render-bundle-cache"
 import {
   applyBufferAttributeUploadPlan,
   planBufferAttributeUpload,
@@ -115,6 +116,7 @@ if (import.meta.hot) {
 const INITIAL_RENDERABLE_CAPACITY = 512
 const MAX_LIGHTS = 4 // Максимальное количество источников света
 const WEBGPU_INIT_TIMEOUT_MS = 15000
+const MAX_CACHED_RENDER_LAYERS = 32
 
 const LIGHT_STRUCT_SIZE = 32
 const SCENE_UNIFORM_LAYOUT = createSceneUniformLayout(MAX_LIGHTS, LIGHT_STRUCT_SIZE)
@@ -181,6 +183,7 @@ interface RenderViewUniformResources {
 }
 
 interface PreparedCompositionLayer {
+  root: Object3D
   layer: PreparedRenderLayer
   resources: RenderViewUniformResources
   viewport: RendererPhysicalViewport
@@ -288,6 +291,7 @@ export class Renderer {
   private presentationClipRanges: ReadonlyMap<Object3D, PresentationClipRange> = new Map()
 
   private geometryCache: Map<BufferGeometry, GeometryBuffers> = new Map()
+  private readonly renderBundleCaches = new Map<Object3D, RenderBundleCache>()
   private geometryAttributeSources: WeakMap<BufferGeometry, Map<string, GeometryAttributeBinding>> = new WeakMap()
   private depthTexture: GPUTexture | null = null
   private depthTextureView: GPUTextureView | null = null
@@ -322,6 +326,7 @@ export class Renderer {
     if (!adapter) throw new Error("Не удалось получить WebGPU адаптер.")
 
     this.device = await withWebGpuInitTimeout(adapter.requestDevice(), "WebGPU device")
+    this.renderBundleCaches.clear()
     const presentationClipLimitBytes = Math.min(
       this.device.limits.maxStorageBufferBindingSize,
       this.device.limits.maxBufferSize,
@@ -1667,6 +1672,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     const frameRenderItems: RenderItem[] = []
     const baseLights: LightItem[] = []
     const baseLayer: PreparedCompositionLayer = {
+      root: planned.space,
       layer: this.prepareRenderLayer(
         planned.space,
         frameRenderItems,
@@ -1692,10 +1698,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         view.space.background,
       )
       this.updateSceneUniforms(resources.sceneUniformBuffer, lights, view.viewPoint.viewMatrix)
-      return {layer, resources, viewport: view.viewport, paintBackground: true}
+      return {root: view.space, layer, resources, viewport: view.viewport, paintBackground: true}
     })
     const overlayLayers: PreparedCompositionLayer[] = planned.overlays.map((overlay) => {
       return {
+        root: overlay,
         layer: this.prepareRenderLayer(
           overlay,
           frameRenderItems,
@@ -1709,6 +1716,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     })
     this.updateSceneUniforms(baseResources.sceneUniformBuffer, baseLights, planned.viewPoint.viewMatrix)
     const preparedLayers = [baseLayer, ...boundedLayers, ...overlayLayers]
+    this.pruneRenderBundleCaches(preparedLayers)
     const renderIndexByItem = new Map<RenderItem, number>()
     frameRenderItems.forEach((item, index) => {
       if (!renderIndexByItem.has(item)) renderIndexByItem.set(item, index)
@@ -1819,6 +1827,17 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return this.compositionFrustums[index]!.setFromProjectionMatrix(viewProjectionMatrix)
   }
 
+  private pruneRenderBundleCaches(layers: readonly PreparedCompositionLayer[]): void {
+    const activeRoots = new Set(layers
+      .filter(({layer, paintBackground}) => paintBackground || hasDirectRenderItems(layer))
+      .map(({root}) => root))
+    for (const [root, cache] of this.renderBundleCaches) {
+      if (activeRoots.has(root)) continue
+      cache.clear()
+      this.renderBundleCaches.delete(root)
+    }
+  }
+
   private prepareRenderLayer(
     root: Object3D,
     frameRenderItems: RenderItem[],
@@ -1853,7 +1872,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     clearColor: boolean,
     clearValue?: GPUColor,
   ): void {
-    const {layer, resources, viewport, paintBackground} = prepared
+    const {root, layer, resources, viewport, paintBackground} = prepared
     const colorLoadOp: GPULoadOp = clearColor ? "clear" : "load"
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [
@@ -1877,6 +1896,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     this.configurePassViewport(passEncoder, viewport)
+    // Bundles inherit rasterization state from the pass, but capture their own
+    // bindings. Text uses the same zero stencil reference for every draw.
+    passEncoder.setStencilReference(0)
     if (paintBackground) {
       const color = layer.background ?? [0, 0, 0, 0]
       const components = "r" in color
@@ -1891,18 +1913,31 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         0,
         this.backgroundUniformData,
       )
-      passEncoder.setPipeline(this.backgroundPipeline!)
-      passEncoder.setBindGroup(0, resources.backgroundBindGroup)
-      passEncoder.draw(3)
     }
-    passEncoder.setBindGroup(0, resources.globalBindGroup)
 
-    // Рендерим обычные объекты
-    this.renderObjectList(passEncoder, layer.regularObjects, renderIndexByItem)
-    // Рендерим стеклянные объекты (пока как обычные, но с прозрачностью)
-    this.renderObjectList(passEncoder, layer.glassObjects, renderIndexByItem)
-    // Рендерим UI объекты
-    this.renderObjectList(passEncoder, layer.uiObjects, renderIndexByItem, true)
+    const record = (encoder: RenderCommandEncoder): void => {
+      if (paintBackground) {
+        encoder.setPipeline(this.backgroundPipeline!)
+        encoder.setBindGroup(0, resources.backgroundBindGroup)
+        encoder.draw(3)
+      }
+      encoder.setBindGroup(0, resources.globalBindGroup)
+      // Keep pass membership and transparency order exactly as collected.
+      this.renderObjectList(encoder, layer.regularObjects, renderIndexByItem)
+      this.renderObjectList(encoder, layer.glassObjects, renderIndexByItem)
+      this.renderObjectList(encoder, layer.uiObjects, renderIndexByItem, true)
+    }
+    let cache = this.renderBundleCaches.get(root)
+    if (cache === undefined && this.renderBundleCaches.size < MAX_CACHED_RENDER_LAYERS) {
+      cache = new RenderBundleCache()
+      this.renderBundleCaches.set(root, cache)
+    }
+    if (cache === undefined) record(passEncoder)
+    else cache.execute(this.device!, {
+      colorFormat: this.presentationFormat!,
+      depthStencilFormat: "depth24plus-stencil8",
+      sampleCount: this.sampleCount,
+    }, passEncoder, record)
 
     passEncoder.end()
   }
@@ -2364,7 +2399,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderObjectList(
-    passEncoder: GPURenderPassEncoder,
+    passEncoder: RenderCommandEncoder,
     objectsToRender: RenderItem[],
     renderIndexByItem: ReadonlyMap<RenderItem, number>,
     isUiLayer = false,
@@ -2479,11 +2514,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
           this.renderLines(passEncoder, item.object as LineSegments, renderIndex)
           break
         case "text-stencil":
-          passEncoder.setStencilReference(0)
           this.renderTextPass(passEncoder, item.object as Text, renderIndex, true)
           break
         case "text-cover":
-          passEncoder.setStencilReference(0)
           this.renderTextPass(passEncoder, item.object as Text, renderIndex, false)
           break
       }
@@ -3001,7 +3034,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderMesh(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     mesh: Mesh | SkinnedMesh,
     worldMatrix: Matrix4,
     renderIndex: number,
@@ -3046,7 +3079,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderInstancedMesh(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     mesh: InstancedMesh,
     renderIndex: number,
   ): void {
@@ -3085,7 +3118,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderInstancedRoundedRect(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     batch: InstancedRoundedRect,
     renderIndex: number,
   ): void {
@@ -3117,7 +3150,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderInstancedStrokedPath(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     batch: InstancedStrokedPath,
     renderIndex: number,
   ): void {
@@ -3199,7 +3232,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderLines(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     lines: LineSegments,
     renderIndex: number,
   ): void {
@@ -3226,7 +3259,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderInstancedLines(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     lines: WireframeInstancedMesh,
     renderIndex: number,
   ): void {
@@ -3253,7 +3286,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
   }
 
   private renderTextPass(
-    passEncoder: GPURenderPassEncoder | null,
+    passEncoder: RenderCommandEncoder | null,
     text: Text,
     renderIndex: number,
     isStencil: boolean,
@@ -3340,11 +3373,6 @@ function validateRoundedBorderUpload(material: RoundedRectMaterial): Readonly<{
     throw new RangeError("RoundedRectMaterial.borderWidths must be finite and non-negative")
   }
   const uniform = top === right && top === bottom && top === left
-  if (!uniform && material.radii.some(radius => radius !== 0)) {
-    throw new RangeError(
-      "RoundedRectMaterial non-uniform border widths require zero corner radii",
-    )
-  }
   return Object.freeze({
     widths: Object.freeze([top, right, bottom, left] as const),
     uniformWidth: uniform ? top : 0,

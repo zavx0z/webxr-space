@@ -29,6 +29,7 @@ import {
 import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
 import {TextureLoader} from "./texture-loader.ts"
 import {PaintVisibilityIndex, type IndexedPaintBounds} from "./paint-visibility-index.ts"
+import {RetainedPlaneGeometryPool} from "./retained-plane-geometry-pool.ts"
 import type {
   DisplayItem,
   ImageDisplayItem,
@@ -356,6 +357,7 @@ export class RendererWebGpuBackend {
   readonly #rectRecords = new Map<DisplayToken, Float32Array>()
   readonly #rectSourceItems = new Map<DisplayToken, RectDisplayItem>()
   readonly #rectRuns: InstancedRoundedRect[] = []
+  readonly #rectGeometries = new RetainedPlaneGeometryPool()
   readonly #preparedRectCache = new WeakMap<RectDisplayItem, PreparedRectPayload>()
   #preparedClipChains = new WeakMap<readonly RenderClip[], PreparedClipChainCache>()
   #currentClipChains = new WeakMap<readonly RenderClip[], readonly PreparedClip[]>()
@@ -2044,7 +2046,6 @@ export class RendererWebGpuBackend {
     const {item} = value
     const geometryWidth = value.shadow?.geometryWidth ?? item.width
     const geometryHeight = value.shadow?.geometryHeight ?? item.height
-    const geometry = new PlaneGeometry({width: geometryWidth, height: geometryHeight})
     const material = new RoundedRectMaterial({
       width: item.width,
       height: item.height,
@@ -2056,6 +2057,7 @@ export class RendererWebGpuBackend {
       shadowBlur: value.shadow?.blurRadius ?? 0,
       shadowSpread: value.shadow?.spreadRadius ?? 0,
     })
+    const geometry = this.#rectGeometries.acquire(geometryWidth, geometryHeight)
     const node = new Mesh(geometry, material)
     node.name = `${item.node.nodeName}:${item.key}`
     const entry: RectEntry = {
@@ -2169,9 +2171,13 @@ export class RendererWebGpuBackend {
       const geometryWidth = value.shadow?.geometryWidth ?? value.item.width
       const geometryHeight = value.shadow?.geometryHeight ?? value.item.height
       if (entry.width !== geometryWidth || entry.height !== geometryHeight) {
-        resizePlane(entry.geometry, geometryWidth, geometryHeight)
+        const previousGeometry = entry.geometry
+        const geometry = this.#rectGeometries.acquire(geometryWidth, geometryHeight)
+        entry.geometry = geometry
+        entry.node.geometry = geometry
         entry.width = geometryWidth
         entry.height = geometryHeight
+        if (this.#rectGeometries.release(previousGeometry)) this.#invalidateGeometry(previousGeometry)
       }
       if (entry.paint.fill !== value.fill || entry.paint.border !== value.border ||
         entry.paint.borderWidths !== value.borderWidths || entry.paint.radii !== value.radii ||
@@ -2306,7 +2312,9 @@ export class RendererWebGpuBackend {
       }
       entry.material.onTextureChange = undefined
     }
-    if (entry.kind === "rect" || entry.kind === "image" || entry.kind === "path") {
+    if (entry.kind === "rect") {
+      if (this.#rectGeometries.release(entry.geometry)) geometries.add(entry.geometry)
+    } else if (entry.kind === "image" || entry.kind === "path") {
       geometries.add(entry.geometry)
     }
   }
