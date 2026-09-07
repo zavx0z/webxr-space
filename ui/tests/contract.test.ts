@@ -5,6 +5,11 @@ const packageRoot = resolve(import.meta.dir, "..")
 
 const expectedExports = Object.freeze([
   "./markdown",
+  "./code-editor-model",
+  "./terminal-model",
+  "./menus/menu",
+  "./menus/menu-item",
+  "./menus/clipboard-menu",
   "./badge",
   "./divider",
   "./typography",
@@ -38,6 +43,9 @@ const expectedExports = Object.freeze([
   "./feedback/notification",
   "./feedback/status-bar",
   "./widgets/inspector",
+  "./widgets/editor",
+  "./widgets/terminal",
+  "./widgets/tree",
   "./themes/icons",
   "./themes/syntax-theme",
   "./themes/theme.css",
@@ -46,11 +54,14 @@ const expectedExports = Object.freeze([
 test("[UI-001] публичные UI-компоненты распределены по принятой taxonomy", async () => {
   const packageJson = await readPackageJson()
   expect(Object.keys(packageJson.exports)).toEqual([...expectedExports])
-  expect(Object.keys(packageJson.exports).some(key => key.startsWith("./menus/"))).toBe(false)
+  expect(Object.keys(packageJson.exports).filter(key => key.startsWith("./menus/"))).toEqual([
+    "./menus/menu", "./menus/menu-item", "./menus/clipboard-menu",
+  ])
 
   for (const [subpath, target] of Object.entries(packageJson.exports)) {
     expect(await Bun.file(resolve(packageRoot, target)).exists()).toBe(true)
     if (subpath.startsWith("./buttons/")) expect(target).toStartWith("./buttons/")
+    if (subpath.startsWith("./menus/")) expect(target).toStartWith("./menus/")
     if (subpath.startsWith("./fields/")) expect(target).toStartWith("./fields/")
     if (subpath.startsWith("./navigation/")) expect(target).toStartWith("./navigation/")
     if (subpath.startsWith("./surfaces/")) expect(target).toStartWith("./surfaces/")
@@ -99,10 +110,13 @@ test("[UI-003] FieldGroup принадлежит fields, а ToggleButtonGroup �
   expect(toggleButtonGroup).not.toContain("OptionGroupField")
 })
 
-test("[UI-004] widgets содержит только самостоятельный Inspector owner", async () => {
+test("[UI-004] widgets содержит самостоятельные универсальные владельцы", async () => {
   const packageJson = await readPackageJson()
   expect(Object.keys(packageJson.exports).filter(key => key.startsWith("./widgets/"))).toEqual([
     "./widgets/inspector",
+    "./widgets/editor",
+    "./widgets/terminal",
+    "./widgets/tree",
   ])
   const source = await Bun.file(resolve(packageRoot, "widgets/inspector.tsx")).text()
   expect(source).toContain("export function Inspector(")

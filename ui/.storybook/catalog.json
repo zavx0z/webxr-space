@@ -1553,6 +1553,20 @@
                 "export": "story_rendering_no_wrap"
               },
               "resources": {"fixture": "../views/markdown.fixture.tsx"}
+            },
+            {
+              "id": "selection-cross-block",
+              "label": "Через текст и код",
+              "group": {"id": "selection", "label": "Выделение"},
+              "route": "components/data/markdown/selection/cross-block",
+              "module": {
+                "path": "./stories/subjects/components-data-markdown.ts",
+                "export": "story_selection_cross_block"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-selection-production-stories.tsx",
+                "tests": ["../tests/selection-stories.test.ts"]
+              }
             }
           ],
           "presentation": {
@@ -1567,6 +1581,7 @@
           "route": "components/data/code-editor",
           "apiName": "CodeEditor",
           "kind": "component",
+          "readme": "../views/code-editor.md",
           "tags": [
             "данные",
             "редактор",
@@ -1593,6 +1608,34 @@
               "module": {
                 "path": "./stories/subjects/components-data-code-editor.ts",
                 "export": "story_state_read_only"
+              }
+            },
+            {
+              "id": "state-editable",
+              "label": "Редактирование",
+              "group": {"id": "state", "label": "Состояние"},
+              "route": "components/data/code-editor/state/editable",
+              "module": {
+                "path": "./stories/subjects/components-data-code-editor.ts",
+                "export": "story_state_editable"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-selection-production-stories.tsx",
+                "tests": ["../tests/code-editor-interaction.test.ts", "../tests/selection-stories.test.ts"]
+              }
+            },
+            {
+              "id": "selection-multiple",
+              "label": "Несколько диапазонов",
+              "group": {"id": "selection", "label": "Выделение"},
+              "route": "components/data/code-editor/selection/multiple",
+              "module": {
+                "path": "./stories/subjects/components-data-code-editor.ts",
+                "export": "story_selection_multiple"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-selection-production-stories.tsx",
+                "tests": ["../tests/editor-transactions.test.ts", "../tests/selection-stories.test.ts"]
               }
             },
             {
@@ -1829,6 +1872,68 @@
               "diagnostics"
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "components-widgets",
+      "label": "Виджеты",
+      "route": "components/widgets",
+      "group": {"id": "components", "label": "Компоненты"},
+      "subjects": [
+        {
+          "id": "editor",
+          "label": "Редактор",
+          "route": "components/widgets/editor",
+          "apiName": "Editor",
+          "kind": "component",
+          "readme": "../widgets/widgets.md",
+          "tags": ["виджет", "редактор", "текст", "выделение"],
+          "variants": [{
+            "id": "basic-default",
+            "label": "Общий редактор",
+            "group": {"id": "basic", "label": "Основное"},
+            "route": "components/widgets/editor/basic/default",
+            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_editor"},
+            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/widgets.test.ts", "../tests/widget-stories.test.ts"]}
+          }],
+          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
+        },
+        {
+          "id": "terminal",
+          "label": "Терминал",
+          "route": "components/widgets/terminal",
+          "apiName": "Terminal",
+          "kind": "component",
+          "readme": "../widgets/widgets.md",
+          "tags": ["виджет", "терминал", "вывод", "ANSI"],
+          "variants": [{
+            "id": "basic-default",
+            "label": "Общий терминал",
+            "group": {"id": "basic", "label": "Основное"},
+            "route": "components/widgets/terminal/basic/default",
+            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_terminal"},
+            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/terminal-model.test.ts", "../tests/widget-stories.test.ts"]}
+          }],
+          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
+        },
+        {
+          "id": "tree",
+          "label": "Дерево",
+          "route": "components/widgets/tree",
+          "apiName": "Tree",
+          "kind": "component",
+          "readme": "../widgets/widgets.md",
+          "tags": ["виджет", "дерево", "иерархия", "выбор"],
+          "variants": [{
+            "id": "basic-default",
+            "label": "Иерархия данных",
+            "group": {"id": "basic", "label": "Основное"},
+            "route": "components/widgets/tree/basic/default",
+            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_tree"},
+            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/widgets.test.ts", "../tests/widget-stories.test.ts"]}
+          }],
+          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
         }
       ]
     },

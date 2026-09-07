@@ -564,6 +564,7 @@ export class Renderer {
       code: lineShaderCode,
     })
     const roundedInstancedShaderModule = this.device.createShaderModule({
+      label: "rounded-instanced",
       code: roundedInstancedShaderCode,
     })
     const strokedPathInstancedShaderModule = this.device.createShaderModule({
@@ -579,8 +580,16 @@ export class Renderer {
       code: imageExternalShaderCode,
     })
     const roundedShaderModule = this.device.createShaderModule({
+      label: "rounded",
       code: roundedShaderCode,
     })
+    await Promise.all([roundedShaderModule, roundedInstancedShaderModule].map(async module => {
+      const diagnostics = await module.getCompilationInfo()
+      const errors = diagnostics.messages.filter(message => message.type === "error")
+      if (errors.length > 0) {
+        throw new Error(`${module.label}: ${errors.map(message => `${message.lineNum}:${message.linePos} ${message.message}`).join("\n")}`)
+      }
+    }))
     const radialBackdropShaderModule = this.device.createShaderModule({
       label: "radialBackdropShader",
       code: radialBackdropShaderCode,

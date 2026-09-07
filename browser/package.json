@@ -8,7 +8,8 @@
   "sideEffects": false,
   "packageManager": "bun@1.4.0",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./clipboard": "./clipboard.ts"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
@@ -25,7 +26,8 @@
     "@zavx0z/engine": "*",
     "@zavx0z/renderer": "*",
     "@zavx0z/space": "*",
-    "@zavx0z/webgpu": "*"
+    "@zavx0z/webgpu": "*",
+    "@zavx0z/ui": "*"
   },
   "peerDependenciesMeta": {
     "@zavx0z/component": {"optional": true},

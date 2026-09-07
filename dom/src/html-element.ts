@@ -91,6 +91,29 @@ export class HTMLElement extends Element {
     else this.removeAttribute("hidden")
   }
 
+  get contentEditable(): string {
+    const value = this.getAttribute("contenteditable")?.toLowerCase()
+    if (value === "" || value === "true") return "true"
+    return value === "false" || value === "plaintext-only" ? value : "inherit"
+  }
+
+  set contentEditable(value: string) {
+    const normalized = String(value).toLowerCase()
+    if (normalized === "inherit") this.removeAttribute("contenteditable")
+    else if (normalized === "true" || normalized === "false" || normalized === "plaintext-only") {
+      this.setAttribute("contenteditable", normalized)
+    } else throw domError("SyntaxError", "Unknown contentEditable state")
+  }
+
+  get isContentEditable(): boolean {
+    for (let current: Element | null = this; current; current = current.parentElement) {
+      const state = current.getAttribute("contenteditable")?.toLowerCase()
+      if (state === "false") return false
+      if (state === "" || state === "true" || state === "plaintext-only") return true
+    }
+    return false
+  }
+
   get popover(): PopoverValue {
     return reflectedPopoverValue(this.getAttribute("popover"))
   }
@@ -240,7 +263,8 @@ export class HTMLElement extends Element {
   }
 
   protected get defaultTabIndex(): number {
-    return -1
+    return this.isContentEditable &&
+      !(this.parentElement instanceof HTMLElement && this.parentElement.isContentEditable) ? 0 : -1
   }
 
   private setRequestedScroll(left: number, top: number): void {

@@ -41,6 +41,7 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
       "@zavx0z/renderer",
       "@zavx0z/space",
       "@zavx0z/webgpu",
+      "@zavx0z/ui",
     ],
     "@zavx0z/space": [
       "@zavx0z/component",
@@ -308,9 +309,9 @@ describe("Направление производственных зависим
     assertRequirement(
       rootScripts.typecheck?.includes("bun run --parallel") === true &&
       rootScripts.test?.includes("bun run --parallel") === true &&
-      rootScripts["test:packages"]?.includes("bun run --workspaces --parallel"),
+      rootScripts["test:packages"] === "bun run --workspaces --sequential test",
       "PKG-008",
-      "корневые проверки типов и тесты должны использовать параллельный запуск Bun",
+      "Bun параллелит общие phases и тесты внутри пакета; package suites запускаются последовательно без двойной CPU-нагрузки",
     )
 
     for (const packageName of packageNames) {
@@ -363,6 +364,13 @@ describe("Направление производственных зависим
       for (const sourceImport of await scanPackageImports(packageName)) {
         const importedPackage = internalPackageName(sourceImport.specifier)
         if (!importedPackage || importedPackage === packageName) continue
+        if (packageName === "@zavx0z/browser" && importedPackage === "@zavx0z/ui") {
+          assertRequirement(
+            sourceImport.specifier === "@zavx0z/ui/themes/theme.css",
+            "PKG-009",
+            "Browser может подключать только публичный CSS asset темы, но не UI-компоненты или widget runtime",
+          )
+        }
         assertRequirement(
           allowed.has(importedPackage),
           "PKG-009",

@@ -1,5 +1,6 @@
 import type {RenderFrame} from "./types.ts"
 export {isRendererOwnedFrame} from "./frame-change-state.ts"
+export type {CanonicalStructuralSplice, FrameIndexRange, FrameSpliceRange, RetainedFrameRange} from "./frame-structural.ts"
 import {
   readCanonicalRenderFrameChangeState,
   type CanonicalRenderFrameChanges,

@@ -75,6 +75,9 @@ import type {
   DocumentSpaceRuntime,
   DocumentSpaceViewPointSnapshot,
 } from "./space-runtime.ts"
+import type {DocumentClipboardController} from "../clipboard.ts"
+import {readRenderedSelectionText} from "@zavx0z/renderer"
+import {withDefaultTheme} from "./default-theme.ts"
 
 export type AttachOptions = Readonly<{
   canvas: HTMLCanvasElement
@@ -83,6 +86,8 @@ export type AttachOptions = Readonly<{
   fontFaces?: readonly RendererFontFace[] | undefined
   fontSources?: readonly BrowserFontFaceSource[] | undefined
   stylesheets?: readonly (string | RootLinkedAuthorStyleSheet)[]
+  /** Omitted: the bundled UI theme. No page link id or consumer theme setup is required. */
+  theme?: string | RootLinkedAuthorStyleSheet
   onStyleSheetError?: RootLinkedAuthorStyleSheetErrorHandler
   frameloop?: FrameLoop
   pixelRatio?: number
@@ -111,6 +116,10 @@ export type RootPointerInput = Readonly<{
   pressure?: number
   isPrimary?: boolean
   timeStamp?: number
+  altKey?: boolean
+  ctrlKey?: boolean
+  metaKey?: boolean
+  shiftKey?: boolean
 }>
 
 export type RootWheelInput = Readonly<{
@@ -176,6 +185,7 @@ unmount освобождает ресурсы и подписки; повтор�
 */
 export type Root = Readonly<{
   input: RootInput
+  clipboard: DocumentClipboardController
   canvas: HTMLCanvasElement
   document: Document
   space: XRSpaceElement
@@ -189,6 +199,11 @@ export type Root = Readonly<{
     owner: XRDisplayElement | XRHUDElement,
     target: SemanticHTMLElement,
     input: RootKeyInput,
+  ): boolean
+  dispatchText(
+    owner: XRDisplayElement | XRHUDElement,
+    target: SemanticHTMLElement,
+    text: string,
   ): boolean
   resetViewPoint(): void
   render(): void
@@ -273,7 +288,7 @@ root.unmount()
 export async function attach(
   options: AttachOptions,
 ): Promise<Root> {
-  return attachWithRuntimeFactory(options, async (runtimeOptions, claim) => {
+  return attachWithRuntimeFactory(withDefaultTheme(options), async (runtimeOptions, claim) => {
     const {createDocumentSpaceRuntime} = await import("./space-runtime.ts")
     return createDocumentSpaceRuntime(runtimeOptions, claim)
   })
@@ -352,6 +367,7 @@ const createAttachedRoot = async (
     runtime = await createRuntime({
       canvas: options.canvas,
       document,
+      clipboard: environment.read().clipboard,
       styleSheets: Object.freeze([]),
       onViewportChange(size) {
         synchronizeCamera()
@@ -371,6 +387,24 @@ const createAttachedRoot = async (
   const objects = new Map<XRObjectElement, ObjectProjection>()
   const animations = new Map<XRAnimationElement, AnimationProjection>()
   const projectionBindings = new Map<XRDisplayElement | XRHUDElement, ProjectionBinding>()
+  environment.read().clipboard.configure(
+    () => readRenderedSelectionText([...projectionBindings.values()].map(binding => binding.runtime.frame), document.getSelection()),
+    () => runtime.nativeInputHost.synchronize(),
+    target => {
+      const node = target ?? document.getSelection().focusNode
+      for (const [owner, binding] of projectionBindings) {
+        if (node === null || !owner.contains(node)) continue
+        const box = binding.runtime.frame.boxByNode.get(node)
+        if (box === undefined) continue
+        const point = getProjection(owner).projectPoint({
+          x: box.x * box.transform.scaleX + box.transform.translateX,
+          y: (box.y + box.height) * box.transform.scaleY + box.transform.translateY,
+        })
+        if (point !== null) return {x: point.x - environment.read().size.left, y: point.y - environment.read().size.top}
+      }
+      return {x: 0, y: 0}
+    },
+  )
   let projectionListeners = new WeakMap<
     XRDisplayElement | XRHUDElement,
     Set<(frame: RenderFrame) => void>
@@ -612,6 +646,7 @@ const createAttachedRoot = async (
   }
 
   const experience: Root = Object.freeze({
+    clipboard: environment.read().clipboard,
     input: Object.freeze({
       pointerDown: (input: RootPointerInput) => runtime.dispatchPointer("pointerdown", clientPointerInput({...input, buttons: input.buttons ?? 1})),
       pointerMove: (input: RootPointerInput) => runtime.dispatchPointer("pointermove", clientPointerInput(input)),
@@ -645,6 +680,9 @@ const createAttachedRoot = async (
       ) {
         throw new Error("Semantic key target does not belong to the exact projection owner")
       }
+      if (document.activeElement === target && runtime.nativeInputHost.owner !== owner) {
+        runtime.nativeInputHost.setActiveRoot(owner)
+      }
       if (
         runtime.nativeInputHost.owner !== owner ||
         runtime.nativeInputHost.inputTarget !== target
@@ -652,6 +690,19 @@ const createAttachedRoot = async (
         throw new Error("Semantic key target does not own the Root native proxy")
       }
       return runtime.nativeInputHost.dispatchKey(target, input)
+    },
+    dispatchText(owner, target, text) {
+      const projectionRuntime = requireDocumentProjectionRuntime(owner)
+      if (!(target instanceof SemanticHTMLElement) || projectionRuntime.root !== owner || !owner.contains(target)) {
+        throw new Error("Semantic text target does not belong to the exact projection owner")
+      }
+      if (document.activeElement === target && runtime.nativeInputHost.owner !== owner) {
+        runtime.nativeInputHost.setActiveRoot(owner)
+      }
+      if (runtime.nativeInputHost.owner !== owner || runtime.nativeInputHost.inputTarget !== target) {
+        throw new Error("Semantic text target does not own the Root native proxy")
+      }
+      return runtime.nativeInputHost.dispatchText(target, text)
     },
     resetViewPoint() {
       assertActive(disposed)
@@ -920,6 +971,10 @@ const clientPointerInput = (
     pressure: input.pressure ?? 0,
     isPrimary: input.isPrimary ?? true,
     timeStamp: input.timeStamp ?? 0,
+    altKey: input.altKey ?? false,
+    ctrlKey: input.ctrlKey ?? false,
+    metaKey: input.metaKey ?? false,
+    shiftKey: input.shiftKey ?? false,
   })
 }
 

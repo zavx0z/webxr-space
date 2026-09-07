@@ -1,6 +1,7 @@
 import {createContext, useContext, useLayoutEffect, useRef, useSyncExternalStore} from "@zavx0z/component"
 import type {Document} from "@zavx0z/dom"
 import type {XRSpaceElement, XRViewPointElement} from "@zavx0z/space"
+import {createDocumentClipboardController, type DocumentClipboardController} from "../clipboard.ts"
 
 /** Размер и положение Canvas в CSS px; `dpr` переводит их в пиксели буфера. */
 export type RootSize = Readonly<{width: number; height: number; left: number; top: number; dpr: number}>
@@ -17,6 +18,7 @@ export type RootState = Readonly<{
   document: Document
   size: RootSize
   frameloop: FrameLoop
+  clipboard: DocumentClipboardController
   invalidate(): void
 }>
 
@@ -87,7 +89,8 @@ export function createRootEnvironment(document: Document, size: RootSize, framel
     pending = true
     if (!inFrame) request()
   }
-  let state: RootState = Object.freeze({document, size: Object.freeze({...size}), frameloop, invalidate})
+  const clipboard = createDocumentClipboardController(document, {requestFrame: invalidate})
+  let state: RootState = Object.freeze({document, size: Object.freeze({...size}), frameloop, clipboard, invalidate})
   return Object.freeze({
     read: () => state,
     pendingFrame: () => pending,
@@ -129,6 +132,7 @@ export function createRootEnvironment(document: Document, size: RootSize, framel
       disposed = true
       listeners.clear()
       frames.clear()
+      clipboard.dispose()
       request = () => {}
     },
   })

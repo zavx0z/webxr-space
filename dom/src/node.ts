@@ -3,6 +3,9 @@ import {domError} from "./internal/errors.ts"
 import {clearFocusInSubtree} from "./internal/focus.ts"
 import {closePopoversInSubtree} from "./internal/popover.ts"
 import {closeSelectPickersInSubtree} from "./select-picker-state.ts"
+import {hasDocumentRanges, updateDocumentRanges} from "./internal/live-ranges.ts"
+import {invalidateTextPositionIndexes} from "./internal/text-position-index.ts"
+import {validateRangeInsertion} from "./internal/range-insertion.ts"
 import type {Document} from "./document.ts"
 import type {Element} from "./element.ts"
 import type {ChildListMutation} from "./mutation.ts"
@@ -39,6 +42,7 @@ export abstract class Node extends EventTarget {
   private next: Node | null = null
   private first: Node | null = null
   private last: Node | null = null
+  private childCount = 0
 
   protected constructor(ownerDocument: Document | null, nodeType: number, nodeName: string) {
     super()
@@ -116,6 +120,13 @@ export abstract class Node extends EventTarget {
 
   appendChild<T extends Node>(node: T): T {
     return this.insertBefore(node, null)
+  }
+
+  [validateRangeInsertion](node: Node, reference: Node | null): void {
+    if (!this.canHaveChildren()) throw domError("HierarchyRequestError", `${this.nodeName} cannot contain child nodes`)
+    if (reference && reference.parent !== this) throw domError("NotFoundError", "The reference child does not belong to this parent")
+    const nodes = node.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? node.childNodes : [node]
+    this.validateInsertion(nodes, [])
   }
 
   insertBefore<T extends Node>(node: T, child: Node | null): T {
@@ -421,6 +432,9 @@ export abstract class Node extends EventTarget {
 
   private linkBefore(node: Node, reference: Node | null): void {
     const previous = reference ? reference.previous : this.last
+    const document = mutationDocument(this)
+    const tracksRanges = hasDocumentRanges(document)
+    const index = tracksRanges && reference ? this.childNodes.indexOf(reference) : this.childCount
     node.parent = this
     node.previous = previous
     node.next = reference
@@ -428,13 +442,26 @@ export abstract class Node extends EventTarget {
     else this.first = node
     if (reference) reference.previous = node
     else this.last = node
+    this.childCount += 1
+    invalidateTextPositionIndexes(this)
+    if (tracksRanges) updateDocumentRanges(document, {type: "insert", parent: this, index})
   }
 
   private detach(record: boolean, destinationDocument: Document | null = null): void {
     const parent = this.parent
     if (!parent) return
+    invalidateTextPositionIndexes(parent)
     const document = mutationDocument(this)
     const preservesDocumentState = document !== null && document === destinationDocument
+    if (hasDocumentRanges(document)) {
+      updateDocumentRanges(document, {
+        type: "remove",
+        parent,
+        node: this,
+        index: parent.childNodes.indexOf(this),
+        preserve: preservesDocumentState,
+      })
+    }
     if (!preservesDocumentState) {
       document?.[clearFocusInSubtree](this)
       closePopoversInSubtree(this)
@@ -449,6 +476,7 @@ export abstract class Node extends EventTarget {
     this.parent = null
     this.previous = null
     this.next = null
+    parent.childCount -= 1
     if (record) parent.recordChildMutation([], [this], previous, next)
   }
 

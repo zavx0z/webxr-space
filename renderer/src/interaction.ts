@@ -8,6 +8,8 @@ import {
   MouseEvent,
   PointerEvent,
   WheelEvent,
+  readDocumentTextHighlights,
+  type Node,
   type Document,
   type Element,
 } from "@zavx0z/dom"
@@ -22,11 +24,12 @@ import type {
   RenderTransform,
   RenderTextMeasurer,
 } from "./types.ts"
-import {appendImmutableArray} from "./immutable-array.ts"
+import {appendImmutableArray, immutableArrayFromReader} from "./immutable-array.ts"
 import {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
 import {isRendererOwnedFrame, markRendererOwnedFrame, recordCanonicalRenderFrameChanges} from "./frame-change-state.ts"
 import {scrollHitCandidates} from "./scroll-hit-index.ts"
 import type {DocumentInteractionState} from "./pseudo-state.ts"
+import {caretPositionAtPoint, rangeHighlightItems} from "./text-selection.ts"
 
 export type PointerInput = Readonly<{
   clientX: number
@@ -38,6 +41,10 @@ export type PointerInput = Readonly<{
   pressure?: number
   isPrimary?: boolean
   timeStamp?: number
+  ctrlKey?: boolean
+  shiftKey?: boolean
+  altKey?: boolean
+  metaKey?: boolean
 }>
 
 export type WheelInput = Readonly<{
@@ -83,6 +90,8 @@ export interface DocumentInteractionController {
   readonly hoveredElement: Element | null
   readonly pressedElement: Element | null
   readonly tooltip: TitleTooltip | null
+  /** Active ordinary-text drag only; native controls and prevented component gestures are excluded. */
+  readonly selectionPointerId: number | null
   pointerMove(frame: RenderFrame, input: PointerInput): Element | null
   pointerDown(frame: RenderFrame, input: PointerInput): Element | null
   pointerUp(frame: RenderFrame, input: PointerInput): Element | null
@@ -145,10 +154,18 @@ export const createDocumentInteractionController = (
     pointerId: number
     anchor: number
   }> | null = null
+  let documentSelectionDrag: Readonly<{
+    target: Element
+    pointerId: number
+    anchor: Readonly<{offsetNode: Node; offset: number}>
+    root: Node | null
+  }> | null = null
+  let selectionMoved = false
   let titleCandidate: TitleCandidate | null = null
   let hoverStartedAt = 0
   let pointerX = 0
   let pointerY = 0
+  let lastPointerId = 1
   let hasPointerPosition = false
   const activePointers = new Set<number>()
   let currentTooltip: TitleTooltip | null = null
@@ -170,6 +187,10 @@ export const createDocumentInteractionController = (
     get tooltip() {
       return currentTooltip
     },
+    get selectionPointerId() {
+      if (documentSelectionDrag !== null) readCaptureTarget(documentSelectionDrag.pointerId)
+      return documentSelectionDrag?.pointerId ?? null
+    },
     pointerMove(frame, input) {
       assertActive()
       validateFrame(frame)
@@ -179,14 +200,18 @@ export const createDocumentInteractionController = (
       hasPointerPosition = true
       const now = input.timeStamp ?? Date.now()
       const id = pointerIdOf(input)
-      const target = rangeDrag?.pointerId === id ? rangeDrag.input :
+      lastPointerId = id
+      const captured = readCaptureTarget(id)
+      const target = captured ?? (rangeDrag?.pointerId === id ? rangeDrag.input :
         textSelectionDrag?.pointerId === id ? textSelectionDrag.textArea :
-        options.document.readPointerCaptureTarget(id) ??
-        pickHit(frame, pointerX, pointerY)?.node ?? null
+        documentSelectionDrag?.pointerId === id ? documentSelectionDrag.target :
+        pickHit(frame, pointerX, pointerY)?.node ?? null)
       transitionHover(target, input, now)
       const accepted = target?.dispatchEvent(pointerEvent("pointermove", input, null, true, true)) ?? true
+      readCaptureTarget(id)
       if (accepted && rangeDrag?.pointerId === id) updateRangeDrag(frame, input)
       if (accepted && textSelectionDrag?.pointerId === id) updateTextSelectionDrag(frame, input)
+      if (accepted && documentSelectionDrag?.pointerId === id) updateDocumentSelectionDrag(frame, input)
       invalidatePresentation()
       return target
     },
@@ -199,6 +224,7 @@ export const createDocumentInteractionController = (
       hasPointerPosition = true
       const now = input.timeStamp ?? Date.now()
       const id = pointerIdOf(input)
+      lastPointerId = id
       options.document.beginPointer(id)
       activePointers.add(id)
       const hit = pickHit(frame, pointerX, pointerY)
@@ -209,6 +235,7 @@ export const createDocumentInteractionController = (
       pressedTarget = hit?.node ?? null
       pressedOwner = ownerHit?.node ?? pressedTarget
       pressedOwnerDisabled = ownerHit?.disabled ?? hit?.disabled ?? false
+      selectionMoved = false
       options.interactionState?.setActiveElement(pressedTarget)
       titleCandidate = null
       currentTooltip = null
@@ -229,7 +256,33 @@ export const createDocumentInteractionController = (
             }
           }
         }
+        if (accepted && (input.button ?? 0) === 0 && !pressedOwnerDisabled &&
+          !(ownerHit && ["input", "textarea", "select", "button"].includes(ownerHit.node.localName))) {
+          const point = caretPositionAtPoint(frame, pointerX, pointerY, {nearest: true, root: hit.node})
+          if (point !== null) {
+            const active = options.document.activeElement
+            if (active instanceof HTMLElement && !active.contains(hit.node)) active.blur()
+            const sourceItem = frame.displayList.find(item => item.kind === "text" && item.node === point.offsetNode && item.source)
+            const source = sourceItem?.kind === "text" ? sourceItem.source : undefined
+            const selection = options.document.getSelection()
+            if (source?.userSelect === "all" && source.selectionRoot !== null) {
+              const range = options.document.createRange()
+              range.selectNodeContents(source.selectionRoot)
+              selection.removeAllRanges()
+              selection.addRange(range)
+            } else {
+              const anchor = input.shiftKey && selection.anchorNode !== null
+                ? {offsetNode: selection.anchorNode, offset: selection.anchorOffset}
+                : point
+              selection.setBaseAndExtent(anchor.offsetNode, anchor.offset, point.offsetNode, point.offset)
+              documentSelectionDrag = Object.freeze({target: hit.node, pointerId: id,
+                anchor,
+                root: source?.selectionRoot ?? null})
+            }
+          }
+        }
       }
+      readCaptureTarget(id)
       invalidatePresentation()
       return hit?.node ?? null
     },
@@ -243,23 +296,27 @@ export const createDocumentInteractionController = (
       const now = input.timeStamp ?? Date.now()
       const hit = pickHit(frame, pointerX, pointerY)
       const id = pointerIdOf(input)
-      const captured = options.document.readPointerCaptureTarget(id)
-      const released = rangeDrag?.pointerId === id
+      lastPointerId = id
+      const captured = readCaptureTarget(id)
+      const released = captured ?? (rangeDrag?.pointerId === id
         ? rangeDrag.input
         : textSelectionDrag?.pointerId === id
           ? textSelectionDrag.textArea
-          : captured ?? hit?.node ?? null
+          : documentSelectionDrag?.pointerId === id ? documentSelectionDrag.target : hit?.node ?? null)
       const ownerHit = resolvePointerOwnerHitForTarget(frame, released, hit)
       transitionHover(released, input, now)
       const releasedOwner = ownerHit?.node ?? released
       const releasedOwnerDisabled = ownerHit?.disabled ?? hit?.disabled ?? false
       try {
         const accepted = released?.dispatchEvent(pointerEvent("pointerup", input, null, true, true)) ?? true
+        readCaptureTarget(id)
         if (accepted && rangeDrag?.pointerId === id) updateRangeDrag(frame, input)
         if (accepted && textSelectionDrag?.pointerId === id) updateTextSelectionDrag(frame, input)
+        if (accepted && documentSelectionDrag?.pointerId === id) updateDocumentSelectionDrag(frame, input)
         if (
           releasedOwner !== null &&
           releasedOwner === pressedOwner &&
+          !selectionMoved &&
           !pressedOwnerDisabled &&
           !releasedOwnerDisabled
         ) {
@@ -269,8 +326,10 @@ export const createDocumentInteractionController = (
           )
         }
         finishRangeDrag(id, true)
-        finishTextSelectionDrag(id)
       } finally {
+        finishRangeDrag(id, false)
+        finishTextSelectionDrag(id)
+        if (documentSelectionDrag?.pointerId === id) documentSelectionDrag = null
         options.document.endPointer(id)
         activePointers.delete(id)
         pressedTarget = null
@@ -287,14 +346,17 @@ export const createDocumentInteractionController = (
       validateFrame(frame)
       validatePointer(input)
       const id = pointerIdOf(input)
-      const target = rangeDrag?.pointerId === id ? rangeDrag.input :
+      const captured = readCaptureTarget(id)
+      const target = captured ?? (rangeDrag?.pointerId === id ? rangeDrag.input :
         textSelectionDrag?.pointerId === id ? textSelectionDrag.textArea :
-        options.document.readPointerCaptureTarget(id) ?? pressedTarget ?? hovered
+        documentSelectionDrag?.pointerId === id ? documentSelectionDrag.target :
+        pressedTarget ?? hovered)
       try {
         target?.dispatchEvent(pointerEvent("pointercancel", input, null, true, false))
       } finally {
         finishRangeDrag(id, false)
         finishTextSelectionDrag(id)
+        if (documentSelectionDrag?.pointerId === id) documentSelectionDrag = null
         options.document.endPointer(id)
         activePointers.delete(id)
         pressedTarget = null
@@ -341,7 +403,7 @@ export const createDocumentInteractionController = (
         cachedBase = null
         cachedPresentation = null
         cachedSignature = ""
-        return rememberComposition(frame, frame)
+        return rememberComposition(frame, withTextHighlights(frame))
       }
 
       const signature = [
@@ -357,7 +419,7 @@ export const createDocumentInteractionController = (
         cachedPresentation !== null &&
         cachedSignature === signature
       ) {
-        return cachedPresentation
+        return rememberComposition(frame, withTextHighlights(cachedPresentation))
       }
 
       const overlay = tooltipDisplayItems(
@@ -373,15 +435,17 @@ export const createDocumentInteractionController = (
       cachedBase = frame
       cachedSignature = signature
       cachedPresentation = presentation
-      return rememberComposition(frame, presentation)
+      return rememberComposition(frame, withTextHighlights(presentation))
     },
     dispose() {
       if (disposed) return
       disposed = true
+      options.document.removeEventListener("gotpointercapture", onGotPointerCapture, true)
       for (const pointerId of activePointers) options.document.endPointer(pointerId)
       activePointers.clear()
       rangeDrag = null
       textSelectionDrag = null
+      documentSelectionDrag = null
       hovered = null
       pressedTarget = null
       pressedOwner = null
@@ -396,7 +460,26 @@ export const createDocumentInteractionController = (
     },
   }
 
+  options.document.addEventListener("gotpointercapture", onGotPointerCapture, true)
   return Object.freeze(controller)
+
+  function onGotPointerCapture(event: Event): void {
+    if (event instanceof PointerEvent && activePointers.has(event.pointerId)) readCaptureTarget(event.pointerId)
+  }
+
+  function readCaptureTarget(id: number): Element | null {
+    const captured = options.document.readPointerCaptureTarget(id)
+    if (!activePointers.has(id)) return captured
+    const displaced = (owner: Element): boolean => !owner.isConnected || captured !== null && captured !== owner
+    if (rangeDrag?.pointerId === id && displaced(rangeDrag.input)) finishRangeDrag(id, false)
+    if (textSelectionDrag?.pointerId === id && displaced(textSelectionDrag.textArea)) finishTextSelectionDrag(id)
+    if (documentSelectionDrag?.pointerId === id && displaced(documentSelectionDrag.target)) {
+      documentSelectionDrag = null
+      selectionMoved = true
+    }
+    if (captured !== null && captured !== pressedOwner && captured !== pressedTarget) selectionMoved = true
+    return captured
+  }
 
   function rememberComposition(base: RenderFrame, presentation: RenderFrame): RenderFrame {
     if (isRendererOwnedFrame(base)) markRendererOwnedFrame(presentation)
@@ -405,11 +488,35 @@ export const createDocumentInteractionController = (
       lastComposedFrame = presentation
       return presentation
     }
+    const changes = base === lastComposedBase ? null : readCanonicalRenderFrameChanges(base)
+    if (changes?.structural !== undefined && lastComposedBase !== null && lastComposedFrame !== null &&
+      changes.previous === lastComposedBase && isRendererOwnedFrame(base) &&
+      isRendererOwnedFrame(lastComposedBase) && isRendererOwnedFrame(lastComposedFrame)) {
+      const oldExtra = lastComposedFrame.displayList.length - lastComposedBase.displayList.length
+      const extra = presentation.displayList.length - base.displayList.length
+      let sameTopology = oldExtra === extra
+      for (let index = 0; sameTopology && index < extra; index++) {
+        const before = lastComposedFrame.displayList[lastComposedBase.displayList.length + index]!
+        const after = presentation.displayList[base.displayList.length + index]!
+        sameTopology = before.node === after.node && before.key === after.key && before.kind === after.kind
+      }
+      if (sameTopology) {
+        // Do not rewrite the base producer's predecessor when a highlight-only
+        // composition disappears. A derived frame keeps both histories immutable.
+        const composed = presentation === base ? Object.freeze({...presentation}) : presentation
+        markRendererOwnedFrame(composed)
+        recordCanonicalRenderFrameChanges(composed, lastComposedFrame,
+          immutableArrayFromReader(composed.displayList.length, index => index), changes.operations, changes.scroll, changes.structural)
+        lastComposedBase = base
+        lastComposedFrame = composed
+        return composed
+      }
+    }
     if (lastComposedBase !== null && lastComposedFrame !== null &&
       presentation !== lastComposedFrame &&
+      isRendererOwnedFrame(base) && isRendererOwnedFrame(lastComposedBase) && isRendererOwnedFrame(lastComposedFrame) &&
       base.displayList.length === lastComposedBase.displayList.length &&
       presentation.displayList.length === lastComposedFrame.displayList.length) {
-      const changes = base === lastComposedBase ? null : readCanonicalRenderFrameChanges(base)
       if (base === lastComposedBase || changes?.previous === lastComposedBase) {
         const overlayIndexes: number[] = []
         for (let index = base.displayList.length; index < presentation.displayList.length; index++) {
@@ -423,6 +530,29 @@ export const createDocumentInteractionController = (
     lastComposedBase = base
     lastComposedFrame = presentation
     return presentation
+  }
+
+  function withTextHighlights(frame: RenderFrame): RenderFrame {
+    const selection = options.document.getSelection()
+    const active = options.document.activeElement
+    const caret = selection.isCollapsed && active instanceof HTMLElement && active.isContentEditable && active.contains(selection.anchorNode)
+    const highlights = selection.rangeCount > 0 && (!selection.isCollapsed || caret)
+      ? [...rangeHighlightItems(frame, selection.getRangeAt(0), "ua:selection", caret ? "#e6e6e6" : "#6da4ff", caret)]
+      : []
+    for (const [index, highlight] of readDocumentTextHighlights(options.document).entries()) {
+      highlights.push(...rangeHighlightItems(frame, highlight.range, `ua:selection-extra:${index}`,
+        highlight.range.collapsed ? highlight.caretColor : highlight.color, true))
+    }
+    return highlights.length === 0 ? frame : Object.freeze({...frame, textHighlights: Object.freeze(highlights)})
+  }
+
+  function updateDocumentSelectionDrag(frame: RenderFrame, input: PointerInput): void {
+    const drag = documentSelectionDrag
+    if (drag === null) return
+    const point = caretPositionAtPoint(frame, input.clientX, input.clientY, {nearest: true, ...(drag.root === null ? {} : {root: drag.root})})
+    if (point === null) return
+    selectionMoved ||= point.offsetNode !== drag.anchor.offsetNode || point.offset !== drag.anchor.offset
+    options.document.getSelection().setBaseAndExtent(drag.anchor.offsetNode, drag.anchor.offset, point.offsetNode, point.offset)
   }
 
   function transitionHover(
@@ -459,11 +589,13 @@ export const createDocumentInteractionController = (
 
   function synchronizeHover(frame: RenderFrame, now: number): void {
     if (!hasPointerPosition) return
-    const target = pickHit(frame, pointerX, pointerY)?.node ?? null
+    const captured = activePointers.has(lastPointerId) ? readCaptureTarget(lastPointerId) : null
+    const target = captured ?? pickHit(frame, pointerX, pointerY)?.node ?? null
     if (target === hovered) return
     transitionHover(target, {
       clientX: pointerX,
       clientY: pointerY,
+      pointerId: lastPointerId,
       timeStamp: now,
     }, now)
   }
@@ -870,6 +1002,10 @@ const pointerEvent = (
     button: input.button ?? 0,
     buttons: input.buttons ?? 0,
     pressure: input.pressure ?? 0,
+    ctrlKey: input.ctrlKey ?? false,
+    shiftKey: input.shiftKey ?? false,
+    altKey: input.altKey ?? false,
+    metaKey: input.metaKey ?? false,
     isPrimary: input.isPrimary ?? true,
     relatedTarget,
   })

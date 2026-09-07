@@ -9,6 +9,13 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./range": "./range.ts",
+    "./selection": "./selection.ts",
+    "./text-highlights": "./text-highlights.ts",
+    "./text-position": "./text-position.ts",
+    "./scroll-into-view": "./scroll-into-view.ts",
+    "./data-transfer": "./data-transfer.ts",
+    "./clipboard-event": "./clipboard-event.ts",
     "./event": "./src/event.ts",
     "./toggle-event": "./src/toggle-event.ts",
     "./ui-event": "./src/ui-event.ts",

@@ -29,3 +29,8 @@ export const story_rendering_no_wrap = defineOwnerStory(
     return createCompiledMarkdownWrappingStory(document, false)
   },
 )
+
+export const story_selection_cross_block = defineOwnerStory("components/data/markdown/selection/cross-block", async document => {
+  const {createCompiledCrossBlockSelectionStory} = await import("../compiled/compiled-selection-production-stories.tsx")
+  return createCompiledCrossBlockSelectionStory(document)
+})

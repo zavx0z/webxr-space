@@ -63,6 +63,8 @@ fn sdRoundBox(p: vec2<f32>, halfSize: vec2<f32>, radii: vec4<f32>) -> f32 {
     return min(max(q.x, q.y), 0.0) + length(max(q, vec2<f32>(0.0))) - radius;
 }
 
+// @engine-rounded-border
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let record = records[in.slot];
@@ -77,6 +79,22 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let outerDistance = sdRoundBox(point, halfSize, radii);
     let antialias = max(fwidth(outerDistance), 0.00001);
     let outerMask = 1.0 - smoothstep(-antialias, antialias, outerDistance);
+
+    // Derivatives execute before any storage-dependent return. Flat instance
+    // data is not uniform control flow in WGSL's derivative-uniformity rules.
+    var innerDistance: f32;
+    let uniformWidth = borderWidths.x;
+    let uniformBorderWidths = all(borderWidths == vec4<f32>(uniformWidth));
+    if (uniformBorderWidths) {
+        let innerHalf = max(halfSize - vec2<f32>(uniformWidth), vec2<f32>(0.0));
+        let innerRadii = max(radii - vec4<f32>(uniformWidth), vec4<f32>(0.0));
+        innerDistance = sdRoundBox(point, innerHalf, innerRadii);
+        if (any(halfSize <= vec2<f32>(uniformWidth))) { innerDistance = 1e20; }
+    } else {
+        innerDistance = roundedInnerDistance(point, halfSize, radii, borderWidths);
+    }
+    let innerAA = max(fwidth(innerDistance), 0.00001);
+    let innerMask = min(outerMask, 1.0 - smoothstep(-innerAA, innerAA, innerDistance));
 
     if (shadowBlur > 0.0 || shadowSpread > 0.0) {
         let shadowDistance = outerDistance - shadowSpread;
@@ -95,37 +113,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let alpha = record.fill.a * outerMask * opacity;
         if (alpha <= 0.0) { discard; }
         return vec4<f32>(record.fill.rgb, alpha);
-    }
-
-    var innerMask: f32;
-    let uniformWidth = borderWidths.x;
-    let uniformBorderWidths = all(borderWidths == vec4<f32>(uniformWidth));
-    if (uniformBorderWidths) {
-        let innerHalf = max(halfSize - vec2<f32>(uniformWidth), vec2<f32>(0.0));
-        let innerRadii = max(radii - vec4<f32>(uniformWidth), vec4<f32>(0.0));
-        let innerDistance = sdRoundBox(point, innerHalf, innerRadii);
-        innerMask = 1.0 - smoothstep(-antialias, antialias, innerDistance);
-    } else {
-        let innerMin = vec2<f32>(
-            -halfSize.x + borderWidths.w,
-            -halfSize.y + borderWidths.z,
-        );
-        let innerMax = vec2<f32>(
-            halfSize.x - borderWidths.y,
-            halfSize.y - borderWidths.x,
-        );
-        if (all(innerMax > innerMin)) {
-            let innerCenter = (innerMin + innerMax) * 0.5;
-            let innerHalf = (innerMax - innerMin) * 0.5;
-            let innerDistance = sdRoundBox(
-                point - innerCenter,
-                innerHalf,
-                vec4<f32>(0.0),
-            );
-            innerMask = 1.0 - smoothstep(-antialias, antialias, innerDistance);
-        } else {
-            innerMask = 0.0;
-        }
     }
 
     let borderStrength = max(outerMask - innerMask, 0.0);

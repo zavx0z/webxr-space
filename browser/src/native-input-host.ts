@@ -9,7 +9,10 @@ import {
   KeyboardEvent as SemanticKeyboardEvent,
   Document as SemanticDocument,
   Node as SemanticNode,
+  textOffsetAtPosition,
+  textPositionAtOffset,
 } from "@zavx0z/dom"
+import type {DocumentClipboardController} from "../clipboard.ts"
 
 export type DocumentNativeInputTarget = SemanticHTMLElement
 
@@ -28,10 +31,12 @@ export type DocumentNativeKeyInput = Readonly<{
 
 type NativeInputProxy = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 type NativeTextProxy = HTMLInputElement | HTMLTextAreaElement
+type NativeTextInput = Pick<InputEvent, "data" | "inputType" | "isComposing" | "cancelable" | "preventDefault">
 type ActiveProxy = "input" | "select" | "textarea" | null
 
 export type CreateDocumentNativeInputHostOptions = Readonly<{
   requestFrame(): void
+  clipboard?: DocumentClipboardController
 }>
 
 export type DocumentNativeInputHost = Readonly<{
@@ -45,6 +50,8 @@ export type DocumentNativeInputHost = Readonly<{
   setActiveRoot(root: SemanticNode | null): void
   synchronize(): void
   dispatchKey(target: DocumentNativeInputTarget, input: DocumentNativeKeyInput): boolean
+  /** Automation text uses the same beforeinput/native-proxy/input default path. */
+  dispatchText(target: DocumentNativeInputTarget, text: string): boolean
   blur(): void
   dispose(): void
 }>
@@ -109,11 +116,14 @@ export function createDocumentNativeInputHostWithSeams(
   let activeProxy: ActiveProxy = null
   let synchronizing = false
   let disposed = false
+  let composingTarget: DocumentNativeInputTarget | null = null
+  let suppressedProxyInput: DocumentNativeInputTarget | null = null
+  let compositionCommit: Readonly<{target: DocumentNativeInputTarget; text: string}> | null = null
 
   const proxyForTarget = (
     candidate: DocumentNativeInputTarget,
   ): NativeInputProxy =>
-    candidate instanceof SemanticHTMLTextAreaElement
+    candidate instanceof SemanticHTMLTextAreaElement || candidate.isContentEditable
       ? proxies.textarea
       : candidate instanceof SemanticHTMLSelectElement
         ? proxies.select
@@ -163,7 +173,7 @@ export function createDocumentNativeInputHostWithSeams(
       }
       const proxy = proxyForTarget(next)
       activeProxy = proxy === proxies.input ? "input" : proxy === proxies.select ? "select" : "textarea"
-      mirrorProxy(proxy, next)
+      if (composingTarget !== next) mirrorProxy(proxy, next)
       blurProxies(proxy)
       proxy.focus({preventScroll: true})
     } finally {
@@ -213,6 +223,7 @@ export function createDocumentNativeInputHostWithSeams(
     try {
       previousDocument?.removeEventListener("focusin", onSemanticFocus)
       previousDocument?.removeEventListener("focusout", onSemanticFocus)
+      previousDocument?.removeEventListener("selectionchange", onSemanticSelection)
       target = null
       activeProxy = null
       previousTarget?.blur()
@@ -221,6 +232,7 @@ export function createDocumentNativeInputHostWithSeams(
       owner = nextDocument === null ? null : nextOwner
       document?.addEventListener("focusin", onSemanticFocus)
       document?.addEventListener("focusout", onSemanticFocus)
+      document?.addEventListener("selectionchange", onSemanticSelection)
     } finally {
       synchronizing = false
     }
@@ -228,6 +240,9 @@ export function createDocumentNativeInputHostWithSeams(
   }
 
   const onSemanticFocus = (): void => synchronize()
+  const onSemanticSelection = (): void => {
+    if (target?.isContentEditable && composingTarget !== target) synchronize()
+  }
 
   const onNativeBlur = (
     proxy: NativeInputProxy,
@@ -243,6 +258,7 @@ export function createDocumentNativeInputHostWithSeams(
   ): void => {
     const current = activeTarget(proxy)
     if (current === null) return
+    if (type === "keydown") compositionCommit = null
     const accepted = current.dispatchEvent(new SemanticKeyboardEvent(type, {
       bubbles: true,
       cancelable: event.cancelable,
@@ -268,6 +284,11 @@ export function createDocumentNativeInputHostWithSeams(
       modifierSymbolLock: modifierState(event, "SymbolLock"),
     }))
     if (!accepted) {
+      event.preventDefault()
+      return
+    }
+    if (type === "keydown" && (event.key === "ContextMenu" || event.key === "F10" && event.shiftKey) &&
+      options.clipboard?.openContextMenu(current)) {
       event.preventDefault()
       return
     }
@@ -315,6 +336,7 @@ export function createDocumentNativeInputHostWithSeams(
       throw new TypeError("Key input type must be keydown or keyup")
     }
     if (typeof input.key !== "string") throw new TypeError("Key input key must be a string")
+    if (input.type === "keydown") compositionCommit = null
     synchronize()
     const proxy = activeNativeProxy(proxies, activeProxy)
     if (proxy === null || target !== candidate || activeTarget(proxy) !== candidate) {
@@ -345,6 +367,18 @@ export function createDocumentNativeInputHostWithSeams(
       modifierSymbolLock: false,
     }))
     if (!accepted) return false
+    if (input.type === "keydown" && (input.key === "ContextMenu" || input.key === "F10" && input.shiftKey) &&
+      options.clipboard?.openContextMenu(candidate)) return true
+    if (input.type === "keydown" && (input.metaKey || input.ctrlKey) && !input.altKey && options.clipboard !== undefined) {
+      if (input.key.toLowerCase() === "c") {
+        void options.clipboard.copy()
+        return true
+      }
+      if (input.key.toLowerCase() === "v") {
+        void options.clipboard.paste()
+        return true
+      }
+    }
     if (
       input.type === "keydown" &&
       candidate instanceof SemanticHTMLSelectElement &&
@@ -375,27 +409,66 @@ export function createDocumentNativeInputHostWithSeams(
 
   const onBeforeInput = (
     proxy: NativeTextProxy,
-    event: InputEvent,
+    event: NativeTextInput,
   ): void => {
     const current = activeTarget(proxy)
-    if (current === null || !isTextEntryTarget(current)) return
+    if (current === null || !isTextEntryTarget(current) && !current.isContentEditable) return
+    suppressedProxyInput = null
+    if (current.isContentEditable && compositionCommit?.target === current &&
+      (event.inputType === "insertText" || event.inputType === "insertFromComposition") && event.data === compositionCommit.text) {
+      compositionCommit = null
+      suppressedProxyInput = current
+      event.preventDefault()
+      queueMicrotask(synchronize)
+      return
+    }
+    if (event.inputType !== "insertCompositionText") compositionCommit = null
     const accepted = current.dispatchEvent(new SemanticInputEvent("beforeinput", {
       bubbles: true,
-      cancelable: event.cancelable,
+      // The proxy event and the semantic editing action are distinct. Even when
+      // the browser cannot cancel its IME proxy update, our default has not run.
+      cancelable: current.isContentEditable ? true : event.cancelable,
       composed: true,
       data: event.data,
       inputType: event.inputType,
       isComposing: event.isComposing,
       dataTransfer: null,
     }))
-    if (!accepted) event.preventDefault()
+    if (!accepted) {
+      if (current.isContentEditable) suppressedProxyInput = current
+      event.preventDefault()
+      if (composingTarget !== current) queueMicrotask(synchronize)
+    }
   }
 
   const onInput = (
     proxy: NativeTextProxy,
-    event: InputEvent,
+    event: NativeTextInput,
   ): void => {
     const current = activeTarget(proxy)
+    if (current?.isContentEditable) {
+      if (suppressedProxyInput === current) {
+        suppressedProxyInput = null
+        current.dispatchEvent(new SemanticInputEvent("input", {
+          bubbles: true, composed: true, inputType: event.inputType, data: event.data, isComposing: event.isComposing,
+        }))
+        if (composingTarget !== current) queueMicrotask(synchronize)
+        options.requestFrame()
+        return
+      }
+      const nextValue = proxy.value
+      const previousValue = current.textContent
+      document!.transaction(() => {
+        if (previousValue !== nextValue) replaceEditableText(current, nextValue)
+        const next = selectionOf(proxy)
+        if (next !== null) applySelection(current, next)
+        current.dispatchEvent(new SemanticInputEvent("input", {
+          bubbles: true, composed: true, inputType: event.inputType, data: event.data, isComposing: event.isComposing,
+        }))
+      })
+      options.requestFrame()
+      return
+    }
     if (current === null || !isTextEntryTarget(current)) return
     const previousValue = current.value
     const previousSelection = selectionOf(current)
@@ -427,6 +500,37 @@ export function createDocumentNativeInputHostWithSeams(
     }
   }
 
+  const dispatchText = (candidate: DocumentNativeInputTarget, text: string): boolean => {
+    if (disposed) throw new Error("Document native input host is disposed")
+    if (typeof text !== "string") throw new TypeError("Text input must be a string")
+    synchronize()
+    const proxy = activeNativeProxy(proxies, activeProxy)
+    if (proxy === null || target !== candidate || activeTarget(proxy) !== candidate) {
+      throw new Error("Semantic text target does not own the active native proxy")
+    }
+    if (candidate instanceof SemanticHTMLSelectElement ||
+      !candidate.isContentEditable && (!isTextEntryTarget(candidate) || candidate instanceof SemanticHTMLInputElement && candidate.type === "range")) {
+      throw new Error("Semantic text target is not an editable text control or contenteditable host")
+    }
+    if (targetDisabled(candidate) || isTextEntryTarget(candidate) && candidate.readOnly) return false
+    const textProxy = proxy as NativeTextProxy
+    compositionCommit = null
+    let prevented = false
+    onBeforeInput(textProxy, {data: text, inputType: "insertText", isComposing: false, cancelable: true,
+      preventDefault() { prevented = true }})
+    if (prevented) {
+      options.requestFrame()
+      return false
+    }
+    synchronize()
+    if (activeTarget(textProxy) !== candidate) return false
+    const selected = selectionOf(textProxy)
+    if (selected === null) textProxy.value += text
+    else textProxy.setRangeText(text, selected.start, selected.end, "end")
+    onInput(textProxy, {data: text, inputType: "insertText", isComposing: false, cancelable: false, preventDefault() {}})
+    return true
+  }
+
   const onChange = (proxy: NativeTextProxy): void => {
     const current = activeTarget(proxy)
     if (current === null || !isTextEntryTarget(current)) return
@@ -436,6 +540,10 @@ export function createDocumentNativeInputHostWithSeams(
 
   const onCopy = (proxy: NativeTextProxy, event: Event): void => {
     const current = activeTarget(proxy)
+    if (options.clipboard !== undefined) {
+      options.clipboard.handleNative(event as ClipboardEvent, current)
+      return
+    }
     if (current === null || !isTextEntryTarget(current)) return
     const accepted = current.dispatchEvent(new SemanticEvent("copy", {
       bubbles: true,
@@ -451,13 +559,23 @@ export function createDocumentNativeInputHostWithSeams(
     type: "compositionstart" | "compositionupdate" | "compositionend",
   ): void => {
     const current = activeTarget(proxy)
-    if (current === null || !isTextEntryTarget(current)) return
+    if (current === null || !isTextEntryTarget(current) && !current.isContentEditable) return
+    if (type === "compositionstart") {
+      compositionCommit = null
+      suppressedProxyInput = null
+      composingTarget = current
+    }
     const accepted = current.dispatchEvent(new SemanticCompositionEvent(type, {
       bubbles: true,
       cancelable: event.cancelable,
       composed: true,
       data: event.data,
     }))
+    if (type === "compositionend") {
+      composingTarget = null
+      compositionCommit = current.isContentEditable && event.data.length > 0 ? {target: current, text: event.data} : null
+      queueMicrotask(synchronize)
+    }
     if (!accepted) event.preventDefault()
   }
 
@@ -467,7 +585,8 @@ export function createDocumentNativeInputHostWithSeams(
   ): void => {
     if (disposed || synchronizing) return
     const current = activeTarget(proxy)
-    if (current === null || !isTextEntryTarget(current)) return
+    if (current === null || !isTextEntryTarget(current) && !current.isContentEditable) return
+    if (composingTarget === current) return
     const previous = selectionOf(current)
     const next = selectionOf(proxy)
     const changed = previous !== null && next !== null && !sameSelection(previous, next)
@@ -489,6 +608,7 @@ export function createDocumentNativeInputHostWithSeams(
       input: (event: Event) => onInput(proxy, event as InputEvent),
       change: () => onChange(proxy),
       copy: (event: Event) => onCopy(proxy, event),
+      cut: (event: Event) => onCopy(proxy, event),
       compositionstart: (event: Event) => dispatchComposition(proxy, event as CompositionEvent, "compositionstart"),
       compositionupdate: (event: Event) => dispatchComposition(proxy, event as CompositionEvent, "compositionupdate"),
       compositionend: (event: Event) => dispatchComposition(proxy, event as CompositionEvent, "compositionend"),
@@ -514,6 +634,16 @@ export function createDocumentNativeInputHostWithSeams(
     if (proxy === proxies.input || proxy === proxies.textarea) onNativeSelection(proxy, false)
   }
   proxies.selectionTarget.addEventListener("selectionchange", onSelectionChange)
+  const onClipboard = (event: Event): void => {
+    if (options.clipboard === undefined || event.defaultPrevented) return
+    const nativeTarget = event.target as {tagName?: string} | null
+    if (event.target !== proxies.input && event.target !== proxies.textarea &&
+      nativeTarget?.tagName !== "CANVAS" && nativeTarget?.tagName !== "BODY" && event.target !== proxies.selectionTarget) return
+    options.clipboard.handleNative(event as ClipboardEvent)
+  }
+  proxies.selectionTarget.addEventListener("copy", onClipboard)
+  proxies.selectionTarget.addEventListener("cut", onClipboard)
+  proxies.selectionTarget.addEventListener("paste", onClipboard)
 
   const host: DocumentNativeInputHost = Object.freeze({
     nativeInput: proxies.input,
@@ -525,6 +655,7 @@ export function createDocumentNativeInputHostWithSeams(
     setActiveRoot,
     synchronize,
     dispatchKey,
+    dispatchText,
     blur,
     dispose() {
       if (disposed) return
@@ -532,6 +663,10 @@ export function createDocumentNativeInputHostWithSeams(
       document?.removeEventListener("focusin", onSemanticFocus)
       document?.removeEventListener("focusout", onSemanticFocus)
       proxies.selectionTarget.removeEventListener("selectionchange", onSelectionChange)
+      proxies.selectionTarget.removeEventListener("copy", onClipboard)
+      proxies.selectionTarget.removeEventListener("cut", onClipboard)
+      proxies.selectionTarget.removeEventListener("paste", onClipboard)
+      document?.removeEventListener("selectionchange", onSemanticSelection)
       for (const [proxy, handler] of handlers) {
         for (const [type, listener] of Object.entries(handler)) {
           proxy.removeEventListener(type, listener as EventListener)
@@ -564,6 +699,14 @@ type SelectionSnapshot = Readonly<{
 const selectionOf = (
   target: DocumentNativeInputTarget | NativeInputProxy,
 ): SelectionSnapshot | null => {
+  if (target instanceof SemanticHTMLElement && target.isContentEditable) {
+    const selected = target.ownerDocument!.getSelection()
+    if (selected.anchorNode === null || selected.focusNode === null) return null
+    const anchor = textOffsetAtPosition(target, selected.anchorNode, selected.anchorOffset)
+    const focus = textOffsetAtPosition(target, selected.focusNode, selected.focusOffset)
+    if (anchor === null || focus === null) return null
+    return {start: Math.min(anchor, focus), end: Math.max(anchor, focus), direction: anchor > focus ? "backward" : "forward"}
+  }
   if (target instanceof SemanticHTMLSelectElement || !("setSelectionRange" in target)) return null
   const textTarget = target as SemanticHTMLInputElement |
     SemanticHTMLTextAreaElement |
@@ -583,6 +726,16 @@ const applySelection = (
   target: DocumentNativeInputTarget,
   selection: SelectionSnapshot,
 ): void => {
+  if (target.isContentEditable) {
+    const start = textPositionAtOffset(target, selection.start)
+    const end = textPositionAtOffset(target, selection.end)
+    const backward = selection.direction === "backward"
+    target.ownerDocument!.getSelection().setBaseAndExtent(
+      backward ? end.node : start.node, backward ? end.offset : start.offset,
+      backward ? start.node : end.node, backward ? start.offset : end.offset,
+    )
+    return
+  }
   if (!isTextEntryTarget(target)) return
   target.setSelectionRange(selection.start, selection.end, selection.direction)
 }
@@ -600,6 +753,16 @@ const mirrorProxy = (
     return
   }
   if (!isTextEntryTarget(target)) {
+    if (target.isContentEditable) {
+      const textarea = proxy as HTMLTextAreaElement
+      textarea.readOnly = false
+      textarea.disabled = false
+      const value = target.textContent
+      if (textarea.value !== value) textarea.value = value
+      const selected = selectionOf(target)
+      if (selected !== null) textarea.setSelectionRange(selected.start, selected.end, selected.direction)
+      return
+    }
     const nativeInput = proxy as HTMLInputElement
     nativeInput.type = "text"
     nativeInput.min = ""
@@ -691,3 +854,22 @@ const isTextEntryTarget = (
 
 const targetDisabled = (target: SemanticHTMLElement): boolean =>
   "disabled" in target && (target as SemanticHTMLElement & {disabled?: unknown}).disabled === true
+
+function replaceEditableText(target: SemanticHTMLElement, value: string): void {
+  const previous = target.textContent
+  let start = 0
+  while (start < previous.length && start < value.length && previous[start] === value[start]) start++
+  let oldEnd = previous.length
+  let newEnd = value.length
+  while (oldEnd > start && newEnd > start && previous[oldEnd - 1] === value[newEnd - 1]) {
+    oldEnd--
+    newEnd--
+  }
+  const begin = textPositionAtOffset(target, start)
+  const end = textPositionAtOffset(target, oldEnd)
+  const range = target.ownerDocument!.createRange()
+  range.setStart(begin.node, begin.offset)
+  range.setEnd(end.node, end.offset)
+  range.deleteContents()
+  if (newEnd > start) range.insertNode(target.ownerDocument!.createTextNode(value.slice(start, newEnd)))
+}

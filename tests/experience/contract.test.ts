@@ -44,7 +44,11 @@ test("[EXP-002] один Experience владеет ровно одним Canvas"
   const manifest = await Bun.file(join(root, "browser/package.json")).json() as {
     exports: Record<string, string>
   }
-  expect(Object.keys(manifest.exports)).toEqual(["."])
+  expect(Object.keys(manifest.exports)).toEqual([".", "./clipboard"])
+  expect(manifest.exports["./clipboard"]).toBe("./clipboard.ts")
+  const clipboard = await source("browser/clipboard.ts")
+  expect(clipboard).not.toContain('createElement("canvas")')
+  expect(clipboard).not.toContain("createDocument(")
   expect(index).toContain("attach")
   expect(index).not.toContain("createExperience")
   expect(index).not.toContain("createDocumentCanvasRuntime")

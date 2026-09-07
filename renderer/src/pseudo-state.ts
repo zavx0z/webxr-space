@@ -36,8 +36,14 @@ export const createDocumentInteractionState = (
 
   const state: DocumentInteractionState = {
     document,
-    isActive: (element: Element) => active.has(element),
-    isHovered: (element: Element) => hovered.has(element),
+    isActive(element: Element) {
+      active = refreshChain(active, activeTarget)
+      return active.has(element)
+    },
+    isHovered(element: Element) {
+      hovered = refreshChain(hovered, hoveredTarget)
+      return hovered.has(element)
+    },
     setActiveElement(element: Element | null) {
       if (element === activeTarget) return
       const replacement = replaceChain(active, element, document)
@@ -100,4 +106,13 @@ const elementChain = (target: Element | null): Set<Element> => {
     elements.add(element)
   }
   return elements
+}
+
+const refreshChain = (previous: Set<Element>, target: Element | null): Set<Element> => {
+  let count = 0
+  for (let element = target; element !== null; element = element.parentElement) {
+    if (!previous.has(element)) return elementChain(target)
+    count++
+  }
+  return count === previous.size ? previous : elementChain(target)
 }

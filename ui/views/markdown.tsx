@@ -261,6 +261,7 @@ function CodeBlock(props: Readonly<{languageId: string; value: string}>) {
     style={css`
       width: 100%;
       height: auto;
+      margin-bottom: 8px;
     `}
   />
 }

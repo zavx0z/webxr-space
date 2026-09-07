@@ -88,7 +88,9 @@ test("tooltip composition propagates provenance only from actual Renderer frames
     color = "#00ff00"
     callerInteraction.pointerMove(callerFrame, {clientX: 6, clientY: 5, timeStamp: 10})
     const next = callerInteraction.composeFrame(callerFrame, 20)
-    expect(readCanonicalRenderFrameChanges(next)?.previous === first).toBe(true)
+    // Caller accessors can change outside Renderer invalidation; composition
+    // cannot certify that only its tooltip changed.
+    expect(readCanonicalRenderFrameChanges(next)).toBeNull()
     expect(isRendererOwnedFrame(next)).toBe(false)
     backend.applyFrame(next)
     expect((backend.root.children[0] as unknown as {material: {fill: {g: number}}}).material.fill.g).toBe(1)

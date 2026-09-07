@@ -32,7 +32,7 @@
     "typecheck:packages": "bun run --workspaces --parallel typecheck",
     "test": "bun run --parallel test:architecture test:packages",
     "test:architecture": "bun test --parallel --timeout 30000 tests/architecture/packages.test.ts tests/architecture/dependencies.test.ts tests/experience/contract.test.ts tests/migration/contract.test.ts tests/migration/git-source.test.ts tests/acceptance/ui-storybook.test.ts",
-    "test:packages": "bun run --workspaces --parallel test",
+    "test:packages": "bun run --workspaces --sequential test",
     "check": "bun run --parallel typecheck test"
   },
   "devDependencies": {

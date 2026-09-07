@@ -25,6 +25,7 @@ export type WindowProps = Readonly<{
   minimized: boolean
   actions: readonly WindowAction[]
   children: JsxSourceElement | null
+  layout?: "floating" | "fill" | undefined
   style?: CssStyle | undefined
   onMinimizedChange?: ((minimized: boolean, event: Event) => void) | undefined
   onAction?: ((key: string, event: Event) => void) | undefined
@@ -77,6 +78,14 @@ export function Window(props: WindowProps) {
       width: 320px;
       min-height: 160px;
 
+      ${props.layout === "fill" && css`
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        flex-grow: 1;
+      `}
+
       ${props.style}
     `}
   >
@@ -110,6 +119,13 @@ export function Window(props: WindowProps) {
       id={bodyId}
       hidden={props.minimized}
       style={css`
+        ${props.layout === "fill" && css`
+          display: flex;
+          min-width: 0;
+          min-height: 0;
+          height: 0;
+        `}
+
         ${props.minimized && css`
           display: none;
         `}
@@ -125,4 +141,5 @@ function assertWindow(props: WindowProps): void {
   if (typeof props.subtitle !== "string") throw new TypeError("Window subtitle must be a string")
   if (typeof props.active !== "boolean") throw new TypeError("Window active must be a boolean")
   if (typeof props.minimized !== "boolean") throw new TypeError("Window minimized must be a boolean")
+  if (props.layout !== undefined && props.layout !== "floating" && props.layout !== "fill") throw new TypeError("Window layout must be floating or fill")
 }

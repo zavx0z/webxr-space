@@ -7,10 +7,36 @@ import {
   codeEditorSyntaxTheme,
   resolveCodeEditorSyntaxScopeColorHex
 } from "./syntax-theme-runtime.ts"
+import {CodeEditorModel} from "../../code-editor-model.ts"
+import type {CodeEditorRange} from "../../code-editor-model.ts"
+import type {BadgeTone} from "../../badge.tsx"
+
+export type CodeEditorSelectionSet = Readonly<{selections: readonly CodeEditorRange[]; primary: number}>
+export type CodeEditorHandle = Readonly<{
+  focus(): void
+  isFocused(): boolean
+  getSelection(): CodeEditorSelectionSet
+  setSelections(selections: readonly CodeEditorRange[], primary?: number): void
+  scrollToLine(line: number, options?: Readonly<{block?: "start" | "center" | "end" | "nearest"}>): void
+}>
+export type CodeEditorLineDecoration = Readonly<{
+  line: number
+  lineTone?: BadgeTone | undefined
+  markerTone?: BadgeTone | undefined
+  gutterTone?: BadgeTone | undefined
+  title?: string | undefined
+}>
 
 export type CodeEditorProps = Readonly<{
   value: string
-  readOnly: true
+  readOnly: boolean
+  model?: CodeEditorModel | undefined
+  onChange?: ((value: string) => void) | undefined
+  ref?: ((root: HTMLElement | null) => void) | undefined
+  onLineNumberClick?: ((line: number, event: MouseEvent) => void) | undefined
+  onReady?: ((handle: CodeEditorHandle | null) => void) | undefined
+  onSelectionChange?: ((selection: CodeEditorSelectionSet) => void) | undefined
+  lineDecorations?: readonly CodeEditorLineDecoration[] | undefined
   languageId?: string | undefined
   path?: string | undefined
   tokens?: Tokens | undefined
@@ -41,6 +67,7 @@ export type CodeEditorSegment = Readonly<{
 export type CodeEditorViewModel = Readonly<{
   props: CodeEditorProps
   lines: readonly string[]
+  lineEndings: readonly string[]
   segments: readonly (readonly CodeEditorSegment[])[]
   resolvedLanguageId: string
 }>
@@ -67,7 +94,13 @@ export function buildCodeEditorViewModel(props: CodeEditorProps): CodeEditorView
 export function assertCodeEditorProps(props: CodeEditorProps): void {
   if (typeof props !== "object" || props === null) throw new TypeError("CodeEditor props must be an object")
   if (typeof props.value !== "string") throw new TypeError("CodeEditor value must be a string")
-  if (props.readOnly !== true) throw new TypeError("CodeEditor readOnly must be true")
+  if (typeof props.readOnly !== "boolean") throw new TypeError("CodeEditor readOnly must be a boolean")
+  if (props.model !== undefined && !(props.model instanceof CodeEditorModel)) throw new TypeError("CodeEditor model must be a CodeEditorModel")
+  if (props.onChange !== undefined && typeof props.onChange !== "function") throw new TypeError("CodeEditor onChange must be a function")
+  if (props.ref !== undefined && typeof props.ref !== "function") throw new TypeError("CodeEditor ref must be a function")
+  if (props.onLineNumberClick !== undefined && typeof props.onLineNumberClick !== "function") {
+    throw new TypeError("CodeEditor onLineNumberClick must be a function")
+  }
   if (props.languageId !== undefined) assertNonEmpty(props.languageId, "CodeEditor languageId")
   if (props.path !== undefined) assertNonEmpty(props.path, "CodeEditor path")
   if (props.showLineNumbers !== undefined && typeof props.showLineNumbers !== "boolean") {
@@ -77,14 +110,19 @@ export function assertCodeEditorProps(props: CodeEditorProps): void {
 }
 
 function buildViewModel(props: CodeEditorProps): CodeEditorViewModel {
-  const value = normalizeLineEndings(props.value)
-  const lines = Object.freeze(value.split("\n"))
+  const value = props.value
+  const lines = Object.freeze(value.split(/\r\n|\r|\n/u))
+  const lineEndings = Object.freeze(value.match(/\r\n|\r|\n/gu) ?? [])
   const resolved = props.tokens === undefined
     ? tokenize(lines, props.languageId, props.path)
     : Object.freeze({tokens: normalizeTokens(props.tokens, lines, false), languageId: props.languageId ?? "supplied"})
   const snapshot: CodeEditorProps = Object.freeze({
     value,
-    readOnly: true,
+    readOnly: props.readOnly,
+    ...(props.model === undefined ? {} : {model: props.model}),
+    ...(props.onChange === undefined ? {} : {onChange: props.onChange}),
+    ...(props.ref === undefined ? {} : {ref: props.ref}),
+    ...(props.onLineNumberClick === undefined ? {} : {onLineNumberClick: props.onLineNumberClick}),
     ...(props.languageId === undefined ? {} : {languageId: props.languageId}),
     ...(props.path === undefined ? {} : {path: props.path}),
     ...(props.tokens === undefined ? {} : {tokens: resolved.tokens as Tokens}),
@@ -95,6 +133,7 @@ function buildViewModel(props: CodeEditorProps): CodeEditorViewModel {
   return Object.freeze({
     props: snapshot,
     lines,
+    lineEndings,
     segments: Object.freeze(lines.map((line, index) => segmentsFor(line, resolved.tokens[index] ?? []))),
     resolvedLanguageId: resolved.languageId
   })
@@ -217,10 +256,6 @@ function categoryColor(category: string): string {
 function themeColor(key: string, fallback: string): string {
   const value = codeEditorSyntaxTheme.colors[key]
   return value === undefined || !isHexColor(value) ? fallback : normalizeHexColor(value)
-}
-
-function normalizeLineEndings(value: string): string {
-  return value.replaceAll("\r\n", "\n").replaceAll("\r", "\n")
 }
 
 function assertNonEmpty(value: unknown, label: string): asserts value is string {

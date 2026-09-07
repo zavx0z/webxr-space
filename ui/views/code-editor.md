@@ -57,6 +57,64 @@ inline-flow Renderer. Неоформленный текст компилируе
 областью принадлежит [Renderer](../../renderer/scrolling.md), а не локальным
 координатам, отдельному Canvas или второму дереву.
 
+## Выделение и редактирование
+
+`readOnly` остаётся обязательным boolean. При `true` компонент не устанавливает
+редактируемый host или собственную модель жестов: обычный Document.Selection
+может проходить из абзаца Markdown через код в следующий абзац. Номера строк
+исключены из пользовательского выделения через `user-select: none`.
+
+При `false` внутренний `<code>` — один `contenteditable="plaintext-only"` host.
+Его стандартный default tabindex равен 0; readonly-код не получает tabstop.
+Внешний section и readonly code явно имеют `contenteditable="false"`, поэтому
+readonly не наследует редактирование от внешнего editable родителя. Включённый
+inner code явно переопределяет эту границу и остаётся самостоятельной целью ввода.
+Общий Renderer определяет позиции и выполняет drag, а Browser пересылает
+семантические beforeinput, composition и clipboard events. Нативных listeners,
+скрытого textarea, собственного hit testing или GPU-объектов в CodeEditor нет.
+
+`model?: CodeEditorModel` позволяет Interpreter владеть той же общей
+[моделью транзакций](../code-editor-model.md). Без него компонент создаёт свою
+модель. `value` задаёт исходное значение и внешние изменения; новые значения
+переносят выделения и очищают старую историю. Пока внешний prop не изменяется,
+модель хранит локальные правки. `onChange(value)` сообщает текстовые изменения,
+включая preview IME, но не движения выделения и не внешнее обновление props.
+Простой возврат текущего value через controlled props не отменяет IME.
+
+`ref(root | null)` получает внешний semantic `<section>` и очищается при unmount.
+`onLineNumberClick(zeroBasedLine, event)` предоставляет один делегированный callback
+клика по номеру строки; доменных команд Git или debugger в UI нет. Кодовые строки
+и номера сохраняют публичный `data-line-index` с нулевым индексом для интеграции
+потребителя через обычный DOM/CSS. Получение ref не создаёт новый owner или Canvas.
+
+Обычный клик заменяет набор выделений, Alt/Meta + клик или drag добавляет диапазон.
+Основной диапазон отображается стандартным Document.Selection, дополнительные
+передаются через общий DOM transport подсветки. Arrow/Home/End, Shift-extension,
+multi-copy/paste, beforeinput insert/delete, undo/redo и IME используют модель.
+Глобальный Browser clipboard вызывает тот же semantic copy/beforeinput; меню
+не собирает текст самостоятельно.
+
+Между строками остаются настоящие Text-разделители LF/CRLF/CR. `code.textContent`
+совпадает с value, поэтому UTF-16 смещения не зависят от границ подсветки или
+наличия styled span. Separators не добавляют строки в layout: code использует
+block flow с обычным межблочным whitespace, а каждая строка — `white-space: pre`.
+
+Подписка TSX читает только value: изменения выделений не запускают render или
+highlighter. Memoized строки сравнивают фактический текст и оформление, поэтому
+изменение одной строки не перерисовывает остальные. Переданные `tokens` относятся
+к `props.value`: пока имеется неподтверждённая локальная правка, используется
+автоматическая подсветка нового value, а не устаревшие offsets старых tokens.
+
+Проверки: `ui/tests/code-editor-interaction.test.ts` монтирует production TSX,
+проверяет реальный Renderer drag, additive ranges, copy/paste, IME, Unicode offsets,
+cleanup, сохранение readonly и отсутствие лишних render при выделении.
+
+Русскоязычные production-примеры в Storybook:
+`components/data/code-editor/state/editable` и
+`components/data/code-editor/selection/multiple`. Кнопка «Выделить два значения»
+использует публичную модель; затем реальное копирование, вставка и undo работают
+через общую платформу. Эти примеры не создают второе глобальное меню.
+
 ## Прокрутка большого исходника в Storybook
 
 В разделе «Производительность» находятся два production-сценария:

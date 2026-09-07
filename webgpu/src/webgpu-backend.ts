@@ -371,6 +371,8 @@ export class RendererWebGpuBackend {
   readonly #pathGeometrySources = new Map<DisplayToken, PathDisplayItem["geometry"]>()
   readonly #pathRuns: PathRunEntry[] = []
   #entries = new Map<DisplayToken, RetainedEntry>()
+  #textHighlightRoot = new Object3D()
+  #textHighlightEntries: RectEntry[] = []
   #preparedFrameCache: PreparedFrameCache | null = null
   #scrollPaintProjection: ScrollPaintProjection | null = null
   #frameDocument: RenderFrame["document"] | null = null
@@ -470,7 +472,7 @@ export class RendererWebGpuBackend {
       rectPlanReused: this.#rectPlanReused,
       rectPreparedItems: this.#rectPreparedItems,
       textPreparedItems: this.#textPreparedItems,
-      rectScalarDraws: this.#rectScalarDraws,
+      rectScalarDraws: this.#rectScalarDraws + this.#textHighlightEntries.filter(entry => entry.node.visible).length,
       rectInstancedDraws: this.#rectRuns.filter((run) => run.parent === this.root).length,
       rectInstancedInstances: this.#rectInstancedInstances,
       rectActiveSlots: instances.count,
@@ -507,6 +509,63 @@ export class RendererWebGpuBackend {
 
   /** Applies one complete immutable display frame to the stable Engine root. */
   public applyFrame(frame: RenderFrame): void {
+    if (this.#disposed) throw new Error("RendererWebGpuBackend is disposed")
+    this.#validateFrameEnvelope(frame)
+    const highlights = frame.textHighlights ?? []
+    if (!Array.isArray(highlights)) throw new TypeError("frame.textHighlights must be an array")
+    const prepared = highlights.map((item, index) => {
+      if (item.kind !== "rect") throw new TypeError("Text highlights must be rectangle display items")
+      this.#validateDisplayNode(item.node, frame, `frame.textHighlights[${index}].node`)
+      return this.#prepareRectAt(item, this.#tokenFor(item.node, `text-highlight:${index}`), index, frame)
+    })
+    const cached = this.#preparedFrameCache
+    const sameBase = cached !== null && cached.reusableSources && isRendererOwnedFrame(frame) &&
+      isRendererOwnedFrame(cached.frame) && frame.displayList === cached.frame.displayList &&
+      frame.presentationTransforms === cached.frame.presentationTransforms &&
+      frame.revision === cached.revision && frame.viewport.width === cached.viewportWidth &&
+      frame.viewport.height === cached.viewportHeight && sameObjectOrder(this.root.children, cached.rootChildren)
+    if (sameBase) {
+      this.#rectPlanReused = true
+      this.#rectPreparedItems = 0
+      this.#textPreparedItems = 0
+      this.#pathPreparedItems = 0
+      this.#resetPathWriteDiagnostics()
+    } else this.#applyBaseFrame(frame)
+    this.#applyTextHighlights(prepared)
+    if (this.#preparedFrameCache !== null) {
+      const cache = this.#preparedFrameCache
+      this.#preparedFrameCache = Object.freeze({...cache, frame,
+        rootChildren: cache.sourceRootChildren === this.root.children ? cache.rootChildren : Object.freeze([...this.root.children]),
+        sourceRootChildren: this.root.children,
+      })
+    }
+  }
+
+  #applyTextHighlights(prepared: readonly PreparedRectItem[]): void {
+    const geometries = new Set<BufferGeometry>()
+    for (let index = 0; index < prepared.length; index++) {
+      const value = prepared[index]!
+      let entry = this.#textHighlightEntries[index]
+      if (entry === undefined) {
+        entry = this.#createRect(value)
+        this.#textHighlightEntries.push(entry)
+        this.#textHighlightRoot.add(entry.node)
+      } else this.#updateEntry(entry, value)
+    }
+    while (this.#textHighlightEntries.length > prepared.length) {
+      this.#detachEntry(this.#textHighlightEntries.pop()!, geometries)
+    }
+    this.#textHighlightRoot.visible = prepared.length > 0
+    if (prepared.length > 0 && this.#textHighlightRoot.parent !== this.root) {
+      this.#textHighlightRoot.name = "text-highlights"
+      // Object3D.add mutates children; retain the previous frame's topology snapshot.
+      this.root.children = [...this.root.children]
+      this.root.add(this.#textHighlightRoot)
+    }
+    for (const geometry of geometries) this.#invalidateGeometry(geometry)
+  }
+
+  #applyBaseFrame(frame: RenderFrame): void {
     if (this.#disposed) throw new Error("RendererWebGpuBackend is disposed")
     this.#validateFrameEnvelope(frame)
     if (this.#preparedFrameCache?.frame === frame) {
@@ -652,6 +711,8 @@ export class RendererWebGpuBackend {
     }
     const geometries = new Set<BufferGeometry>()
     for (const entry of this.#entries.values()) this.#detachEntry(entry, geometries)
+    for (const entry of this.#textHighlightEntries) this.#detachEntry(entry, geometries)
+    this.#textHighlightEntries = []
     this.#entries.clear()
     this.#rectLayer.instances.clear()
     this.#rectHandles.clear()
@@ -1888,10 +1949,6 @@ export class RendererWebGpuBackend {
     assertFiniteNonNegative(bottomLeft, `${label}.border.radii.bottomLeft`)
 
     const widths = Object.freeze([top, right, bottom, left] as const)
-    const uniformWidths = top === right && top === bottom && top === left
-    if (!uniformWidths && [topLeft, topRight, bottomRight, bottomLeft].some(radius => radius !== 0)) {
-      throw new Error(`${label} has non-uniform border widths with non-zero corner radii`)
-    }
     const borderColor = visibleUniformBorderColor(widths, border.colors, label)
     const shadow = prepareRectShadow(item, widths, label)
     const prepared = Object.freeze({
@@ -2320,6 +2377,7 @@ export class RendererWebGpuBackend {
   }
 
   #setRootChildren(next: readonly Object3D[]): void {
+    if (this.#textHighlightRoot.parent === this.root && !next.includes(this.#textHighlightRoot)) next = [...next, this.#textHighlightRoot]
     const unchanged = this.root.children.length === next.length
       && this.root.children.every((child, index) => child === next[index])
     if (unchanged) return

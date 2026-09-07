@@ -7,6 +7,9 @@ import type {
 import {
   subscribeDocumentAuthorStyleSheets,
   subscribeDocumentCompiledStyleSheets,
+  subscribeDocumentTextHighlights,
+  subscribeDocumentScrollIntoViewRequests,
+  clearDocumentScrollIntoViewRequests,
   type Document,
   type Element,
   type Node,
@@ -16,6 +19,7 @@ import {
   hitTestProjection,
   createDocumentInteractionState,
   createDocumentRenderer,
+  fulfillScrollIntoViewRequests,
   type CreateDocumentRendererOptions,
   type DocumentInteractionController,
   type DocumentInteractionState,
@@ -135,6 +139,8 @@ export function createDocumentPlaneRuntimeWithSeams(
   let currentFrame: RenderFrame | null = null
   let unsubscribeMutations = (): void => {}
   let unsubscribeStateChanges = (): void => {}
+  let unsubscribeTextHighlights = (): void => {}
+  let unsubscribeScrollIntoView = (): void => {}
   let unsubscribeAuthorStyleSheets = (): void => {}
   let unsubscribeCompiledStyleSheets = (): void => {}
   let disposed = false
@@ -159,10 +165,15 @@ export function createDocumentPlaneRuntimeWithSeams(
     requestBackendPresentation = (): void => {}
     unsubscribeMutations()
     unsubscribeStateChanges()
+    unsubscribeTextHighlights()
+    unsubscribeScrollIntoView()
+    clearDocumentScrollIntoViewRequests(options.document, options.root)
+    options.document.removeEventListener("selectionchange", requestFrame)
     unsubscribeAuthorStyleSheets()
     unsubscribeCompiledStyleSheets()
     unsubscribeMutations = () => {}
     unsubscribeStateChanges = () => {}
+    unsubscribeTextHighlights = () => {}
     unsubscribeAuthorStyleSheets = () => {}
     unsubscribeCompiledStyleSheets = () => {}
     interaction?.dispose()
@@ -205,6 +216,11 @@ export function createDocumentPlaneRuntimeWithSeams(
     }
     unsubscribeMutations = options.document.subscribeMutations(requestFrame)
     unsubscribeStateChanges = options.document.subscribeStateChanges(requestFrame)
+    options.document.addEventListener("selectionchange", requestFrame)
+    unsubscribeTextHighlights = subscribeDocumentTextHighlights(options.document, requestFrame)
+    unsubscribeScrollIntoView = subscribeDocumentScrollIntoViewRequests(options.document, request => {
+      if (options.root.contains(request.target)) requestFrame()
+    })
     unsubscribeAuthorStyleSheets = subscribeDocumentAuthorStyleSheets(options.document, requestFrame)
     unsubscribeCompiledStyleSheets = subscribeDocumentCompiledStyleSheets(options.document, requestFrame)
   } catch (error) {
@@ -231,7 +247,7 @@ export function createDocumentPlaneRuntimeWithSeams(
 
   const flush = (): RenderFrame => {
     assertActive(disposed)
-    const frame = requiredInteraction.composeFrame(requiredRenderer.flush(), seams.now())
+    const frame = requiredInteraction.composeFrame(fulfillScrollIntoViewRequests(requiredRenderer), seams.now())
     requiredBackend.applyFrame(frame)
     currentFrame = frame
     for (const subscriber of [...subscribers]) subscriber(frame)

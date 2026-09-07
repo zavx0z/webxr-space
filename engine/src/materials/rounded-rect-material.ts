@@ -11,8 +11,8 @@ import { Material, type MaterialParameters } from "./material"
  *
  * `radius` — единое значение либо per-corner кортеж {tl, tr, br, bl}.
  * `borderWidth` — uniform shorthand. `borderWidths` — canonical tuple
- * `[top, right, bottom, left]`. Non-uniform widths are supported only when all
- * corner radii are zero; a rounded asymmetric inner contour is not claimed.
+ * `[top, right, bottom, left]`. Independent insets produce an elliptical inner
+ * corner; WebGPU evaluates that contour without changing the outer radius.
  *
  * Антиалиасинг работает через fwidth() в фрагментном шейдере — независим
  * от размера меша и pixelRatio, даёт стабильный 1-px переход на любой DPR.
@@ -102,7 +102,6 @@ export class RoundedRectMaterial extends Material {
 
   set borderWidths(value: RoundedRectBorderWidths) {
     const widths = validatedBorderWidths(value)
-    assertRoundedBorderCompatibility(widths, this.radii)
     this.edgeBorderWidths = widths
   }
 
@@ -134,17 +133,4 @@ const validatedBorderWidths = (
     throw new RangeError("RoundedRectMaterial.borderWidths must be finite and non-negative")
   }
   return widths
-}
-
-const assertRoundedBorderCompatibility = (
-  widths: RoundedRectBorderWidths,
-  radii: readonly number[],
-): void => {
-  const [top, right, bottom, left] = widths
-  const uniform = top === right && top === bottom && top === left
-  if (!uniform && radii.some(radius => radius !== 0)) {
-    throw new RangeError(
-      "RoundedRectMaterial non-uniform border widths require zero corner radii",
-    )
-  }
 }

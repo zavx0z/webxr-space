@@ -7,6 +7,7 @@ import {
 } from "@zavx0z/engine"
 import {
   MouseEvent as SemanticMouseEvent,
+  KeyboardEvent as SemanticKeyboardEvent,
   type Document,
   type Element as DomElement,
   type Node,
@@ -14,6 +15,7 @@ import {
 import {
   createDocumentInteractionState,
   hitTestProjection,
+  selectTextWordAtPoint,
   type DocumentInteractionState,
   type HitMetadata,
   type PointerInput,
@@ -39,6 +41,7 @@ import {
   createDocumentNativeInputHost,
   type DocumentNativeInputHost,
   type DocumentNativeInputTarget,
+  type CreateDocumentNativeInputHostOptions,
 } from "./native-input-host.ts"
 import {claimBrowserPresentationHost, type PresentationHostClaim} from "./presentation-host.ts"
 import {resizeCanvasBackingStore} from "./canvas-backing-store.ts"
@@ -48,6 +51,8 @@ import {
 } from "./touch-camera-gesture.ts"
 import {claimTouchCameraSurface} from "./touch-camera-surface.ts"
 import type {RootSize} from "./root-context.ts"
+import type {DocumentClipboardController} from "../clipboard.ts"
+import {createDocumentSelectionInput} from "./document-selection-input.ts"
 
 export type DocumentSpaceVector3 = Readonly<{x: number; y: number; z: number}>
 export type DocumentSpaceQuaternion = Readonly<{x: number; y: number; z: number; w: number}>
@@ -139,6 +144,7 @@ export type DocumentSpaceWorldRuntime = Readonly<{
 export type CreateDocumentSpaceRuntimeOptions = Readonly<{
   canvas: HTMLCanvasElement
   document: Document
+  clipboard?: DocumentClipboardController
   styleSheets: readonly string[]
   font: TrueTypeFont
   fontFaces?: readonly RendererFontFace[] | undefined
@@ -188,6 +194,9 @@ export type DocumentSpaceRuntime = Readonly<{
   removeWorld(owner: Space): boolean
   render(): void
   requestRender(): void
+  /** Fatal presentation faults latch until deliberate recovery, never network-driven retries. */
+  readonly renderError: Error | null
+  resumeRendering(): void
   resize(): void
   captureLastPresentedFramePng(): Promise<Blob | null>
   snapshotViewPoint(): DocumentSpaceViewPointSnapshot
@@ -224,7 +233,7 @@ export type DocumentSpaceRuntimeSeams = Readonly<{
     viewport: DocumentSpaceWorldViewport,
   ): ViewPoint
   createRaycaster(): Raycaster
-  createNativeInputHost(options: Readonly<{requestFrame(): void}>): DocumentNativeInputHost
+  createNativeInputHost(options: CreateDocumentNativeInputHostOptions): DocumentNativeInputHost
   createPlaneRuntime(options: CreateDocumentPlaneRuntimeOptions): DocumentPlaneRuntime
   createOverlayRuntime(options: CreateDocumentOverlayRuntimeOptions): DocumentOverlayRuntime
   createResizeObserver(callback: () => void): ResizeObserverOwner
@@ -460,9 +469,23 @@ const createClaimedDocumentSpaceRuntime = async (
   let preparing = false
   let renderRequestedDuringFrame = false
   let disposed = false
+  let lastSelectionFrameTime: number | null = null
+  let renderError: Error | null = null
+  let reportedRenderError = false
+
+  const resumeRendering = (): void => {
+    assertActive(disposed)
+    if (renderError === null) return
+    renderError = null
+    reportedRenderError = false
+    for (const record of records.values()) record.dirty = true
+    for (const record of overlays.values()) record.dirty = true
+    requestRender()
+  }
 
   const requestRender = (): void => {
     assertActive(disposed)
+    if (renderError !== null) return
     if (rendering) {
       if (preparing) return
       renderRequestedDuringFrame = true
@@ -471,7 +494,15 @@ const createClaimedDocumentSpaceRuntime = async (
     if (requestedFrame !== null) return
     requestedFrame = seams.requestFrame(() => {
       requestedFrame = null
-      if (!disposed) render()
+      if (disposed) return
+      try {
+        render()
+      } catch (error) {
+        if (!reportedRenderError) {
+          reportedRenderError = true
+          console.error("WebXR rendering suspended after a failed frame. Automatic retries are stopped; repair the source, then resume rendering or resize the viewport.", error)
+        }
+      }
     })
   }
 
@@ -514,6 +545,7 @@ const createClaimedDocumentSpaceRuntime = async (
   let nativeInputHost: DocumentNativeInputHost
   try {
     nativeInputHost = seams.createNativeInputHost({
+      ...(options.clipboard === undefined ? {} : {clipboard: options.clipboard}),
       requestFrame() {
         if (!disposed) requestRender()
       },
@@ -522,8 +554,19 @@ const createClaimedDocumentSpaceRuntime = async (
     throw error
   }
 
+  const selectionInput = createDocumentSelectionInput({
+    document: options.document,
+    readFrames: () => [...records.values(), ...overlays.values()].map(record => record.runtime.frame),
+    readActiveFrame: () => (activeOverlayRoot !== null ? overlays.get(activeOverlayRoot)?.runtime.frame :
+      activePlaneRoot !== null ? records.get(activePlaneRoot)?.runtime.frame : null) ?? null,
+    isSelectionActive: (root, pointerId) =>
+      (records.get(root) ?? overlays.get(root))?.runtime.interaction.selectionPointerId === pointerId,
+    requestFrame: requestRender,
+  })
+
   const render = (): void => {
     assertActive(disposed)
+    if (renderError !== null) return
     if (rendering) throw new Error("Document space render is already in progress")
     if (requestedFrame !== null) {
       seams.cancelFrame(requestedFrame)
@@ -534,6 +577,10 @@ const createClaimedDocumentSpaceRuntime = async (
     renderRequestedDuringFrame = false
     try {
       for (const listener of [...beforeRenderListeners]) listener()
+      const selectionTime = performance.now()
+      const selecting = selectionInput.advance(lastSelectionFrameTime === null ? 16 : selectionTime - lastSelectionFrameTime)
+      lastSelectionFrameTime = selecting ? selectionTime : null
+      if (selecting) renderRequestedDuringFrame = true
       for (const record of records.values()) {
         if (!record.dirty) continue
         record.dirty = false
@@ -567,6 +614,28 @@ const createClaimedDocumentSpaceRuntime = async (
       presentedFrames += 1
       preparing = false
       for (const listener of [...presentedListeners]) listener(presentedFrames)
+    } catch (error) {
+      renderError = error instanceof Error ? error : new Error("WebXR frame failed", {cause: error})
+      renderRequestedDuringFrame = false
+      lastSelectionFrameTime = null
+      selectionInput.clearPointer()
+      if (requestedFrame !== null) seams.cancelFrame(requestedFrame)
+      requestedFrame = null
+      cancelTooltipFrame()
+      const cleanupErrors: unknown[] = []
+      for (const pointerId of [...captures.keys()]) {
+        try {
+          cancelCapturedPointer(pointerId, true)
+        } catch (cleanupError) {
+          cleanupErrors.push(cleanupError)
+        }
+      }
+      if (cleanupErrors.length > 0) {
+        renderError = new AggregateError([renderError, ...cleanupErrors], "WebXR frame failed and pointer cancellation also failed")
+      }
+      for (const record of records.values()) record.dirty = true
+      for (const record of overlays.values()) record.dirty = true
+      throw renderError
     } finally {
       preparing = false
       rendering = false
@@ -1022,6 +1091,7 @@ const createClaimedDocumentSpaceRuntime = async (
     const height = positiveExtent(rect.height)
     const nextViewport = Object.freeze({width, height})
     const pixelRatio = fixedPixelRatio ?? finitePositiveOrOne(seams.devicePixelRatio())
+    if (renderError !== null && (canvasViewport.width !== width || canvasViewport.height !== height || currentPixelRatio !== pixelRatio)) resumeRendering()
     currentPixelRatio = pixelRatio
     options.onViewportChange?.({width, height, left: rect.left, top: rect.top, dpr: pixelRatio})
     resizeCanvasBackingStore(options.canvas, width, height, pixelRatio)
@@ -1058,6 +1128,10 @@ const createClaimedDocumentSpaceRuntime = async (
     pressure: event.pressure,
     isPrimary: event.isPrimary,
     timeStamp: event.timeStamp,
+    ctrlKey: event.ctrlKey,
+    altKey: event.altKey,
+    shiftKey: event.shiftKey,
+    metaKey: event.metaKey,
   })
 
   const localWheelInput = (
@@ -1184,7 +1258,17 @@ const createClaimedDocumentSpaceRuntime = async (
       metaKey: event.metaKey,
       detail: event.detail,
     }))
+    if (type === "contextmenu" && accepted && options.clipboard !== undefined) {
+      const bounds = options.canvas.getBoundingClientRect()
+      if (options.clipboard.openContextMenu(target, {x: event.clientX - bounds.left, y: event.clientY - bounds.top})) {
+        event.preventDefault()
+      }
+    }
     if (!accepted && event.cancelable) event.preventDefault()
+    if (type === "dblclick" && accepted) {
+      const frame = input.overlay?.record.runtime.frame ?? input.plane?.record.runtime.frame
+      if (frame !== undefined) selectTextWordAtPoint(frame, point.x, point.y)
+    }
     requestRender()
     return true
   }
@@ -1248,20 +1332,34 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const releasePointer = (pointerId: number): void => {
-    if (options.canvas.hasPointerCapture?.(pointerId)) options.canvas.releasePointerCapture(pointerId)
-    captures.delete(pointerId)
-    refreshActiveOwners()
+    selectionInput.clearPointer(pointerId)
+    try {
+      if (options.canvas.hasPointerCapture?.(pointerId)) options.canvas.releasePointerCapture(pointerId)
+    } finally {
+      captures.delete(pointerId)
+      refreshActiveOwners()
+    }
   }
 
-  const cancelCapturedPointer = (pointerId: number): void => {
+  const cancelCapturedPointer = (pointerId: number, cachedFrameOnly = false): void => {
     const capture = captures.get(pointerId)
     if (capture === undefined) return
-    if (capture.kind === "plane") {
-      records.get(capture.planeRoot)?.runtime.pointerCancel(capture.input)
-    } else if (capture.kind === "overlay") {
-      overlays.get(capture.overlayRoot)?.runtime.pointerCancel(capture.input)
+    try {
+      const runtime = capture.kind === "plane" ? records.get(capture.planeRoot)?.runtime
+        : capture.kind === "overlay" ? overlays.get(capture.overlayRoot)?.runtime : undefined
+      if (runtime !== undefined && (capture.kind === "plane" || capture.kind === "overlay")) {
+        if (cachedFrameOnly) runtime.interaction.pointerCancel(runtime.frame, capture.input)
+        else runtime.pointerCancel(capture.input)
+      }
+    } finally {
+      // Fault cleanup must never flush layout or retry GPU preparation. Closing
+      // the existing semantic/native gesture is safe even if its listener throws.
+      try {
+        options.document.endPointer(pointerId)
+      } finally {
+        releasePointer(pointerId)
+      }
     }
-    releasePointer(pointerId)
   }
 
   function cancelCapturedPlane(owner: Node): void {
@@ -1340,6 +1438,7 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onPointerMove = (event: PointerEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
     const capture = captures.get(event.pointerId)
     if (capture !== undefined) {
@@ -1386,6 +1485,7 @@ const createClaimedDocumentSpaceRuntime = async (
         const input = localPointerInput(event, point)
         capture.input = input
         record.runtime.pointerMove(input)
+        selectionInput.updatePointer(record.runtime.frame, input, record.runtime.interaction.selectionPointerId === event.pointerId)
         hoveredOverlayRoot = record.owner
         activeOverlayRoot = record.owner
         activeWorldSpace = null
@@ -1407,6 +1507,7 @@ const createClaimedDocumentSpaceRuntime = async (
       const input = localPointerInput(event, intersection.documentPoint)
       capture.input = input
       record.runtime.pointerMove(input)
+      selectionInput.updatePointer(record.runtime.frame, input, record.runtime.interaction.selectionPointerId === event.pointerId)
       hoveredPlaneRoot = record.owner
       activePlaneRoot = record.owner
       activeWorldSpace = null
@@ -1441,6 +1542,10 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onPointerDown = (event: PointerEvent): void => {
+    if (renderError !== null) {
+      resumeRendering()
+      return
+    }
     if (disposed) return
     cancelTooltipFrame()
     cancelCapturedPointer(event.pointerId)
@@ -1546,7 +1651,9 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onPointerUp = (event: PointerEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
+    selectionInput.clearPointer(event.pointerId)
     const capture = captures.get(event.pointerId)
     if (capture === undefined) return
     if (capture.kind === "camera") {
@@ -1580,11 +1687,14 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onPointerCancel = (event: PointerEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
+    selectionInput.clearPointer(event.pointerId)
     cancelCapturedPointer(event.pointerId)
   }
 
   const onPointerLeave = (event: PointerEvent): void => {
+    if (renderError !== null) return
     if (disposed || captures.has(event.pointerId)) return
     clearHoveredOverlay(event)
     clearHoveredWorld()
@@ -1592,6 +1702,7 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onWheel = (event: WheelEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
     const {overlay, plane, world} = pickInput(event.clientX, event.clientY)
     if (overlay !== null) {
@@ -1616,9 +1727,17 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onContextMenu = (event: MouseEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
     const input = pickInput(event.clientX, event.clientY)
     if (dispatchProjectedMouse("contextmenu", event, input)) return
+    if (options.clipboard?.openContextMenu(null, {
+      x: event.clientX - options.canvas.getBoundingClientRect().left,
+      y: event.clientY - options.canvas.getBoundingClientRect().top,
+    })) {
+      event.preventDefault()
+      return
+    }
     const {world} = input
     if ((world?.cameraGestures === true || world === null && cameraGesturesEnabled) && event.cancelable) {
       event.preventDefault()
@@ -1626,6 +1745,7 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const onDoubleClick = (event: MouseEvent): void => {
+    if (renderError !== null) return
     if (disposed) return
     const input = pickInput(event.clientX, event.clientY)
     if (dispatchProjectedMouse("dblclick", event, input)) return
@@ -1636,6 +1756,29 @@ const createClaimedDocumentSpaceRuntime = async (
   }
 
   const releaseTouchCameraSurface = claimTouchCameraSurface(options.canvas)
+  const onDocumentKeyDown = (event: KeyboardEvent): void => {
+    if (renderError !== null) return
+    if (disposed || event.defaultPrevented || options.clipboard?.getSnapshot().open) return
+    if (nativeInputHost.inputTarget === null) {
+      const nativeTarget = event.target as {tagName?: string} | null
+      if (nativeTarget?.tagName !== "BODY" && nativeTarget?.tagName !== "CANVAS" && event.target !== options.canvas.ownerDocument) return
+      const accepted = options.document.dispatchEvent(new SemanticKeyboardEvent("keydown", {
+        bubbles: true, cancelable: true, composed: true, key: event.key, code: event.code,
+        ctrlKey: event.ctrlKey, altKey: event.altKey, shiftKey: event.shiftKey, metaKey: event.metaKey,
+      }))
+      if (!accepted) {
+        event.preventDefault()
+        return
+      }
+      if ((event.key === "ContextMenu" || event.key === "F10" && event.shiftKey) &&
+        options.clipboard?.openContextMenu(options.document.getSelection().focusNode?.parentElement ?? null)) {
+        event.preventDefault()
+        return
+      }
+    }
+    selectionInput.keyDown(event)
+  }
+  options.canvas.ownerDocument?.addEventListener("keydown", onDocumentKeyDown)
 
   options.canvas.addEventListener("pointermove", onPointerMove)
   options.canvas.addEventListener("pointerdown", onPointerDown)
@@ -1689,6 +1832,8 @@ const createClaimedDocumentSpaceRuntime = async (
     removeWorld,
     render,
     requestRender,
+    get renderError() { return renderError },
+    resumeRendering,
     resize,
     captureLastPresentedFramePng: () => {
       assertActive(disposed)
@@ -1768,6 +1913,8 @@ const createClaimedDocumentSpaceRuntime = async (
       options.canvas.removeEventListener("wheel", onWheel)
       options.canvas.removeEventListener("contextmenu", onContextMenu)
       options.canvas.removeEventListener("dblclick", onDoubleClick)
+      options.canvas.ownerDocument?.removeEventListener("keydown", onDocumentKeyDown)
+      selectionInput.dispose()
       releaseTouchCameraSurface()
       for (const pointerId of [...captures.keys()]) cancelCapturedPointer(pointerId)
       hoveredPlaneRoot = null

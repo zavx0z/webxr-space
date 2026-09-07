@@ -194,9 +194,14 @@ export const appendImmutableArray = <Value>(
   if (!readersByArray.has(values) && !readersByArray.has(appended)) {
     return proxyFor(dataFor(values).append(appended))
   }
+  return concatenateImmutableArrays([values, appended])
+}
+
+/** Joins retained ranges in one pass without reading or copying their records. */
+export const concatenateImmutableArrays = <Value>(parts: readonly (readonly Value[])[]): readonly Value[] => {
   const segments: ArraySegment<Value>[] = []
   let length = 0
-  for (const input of [values, appended]) {
+  for (const input of parts) {
     if (input.length === 0) continue
     const flattened = segmentsByArray.get(input) as readonly ArraySegment<Value>[] | undefined
     if (flattened !== undefined) {
@@ -230,6 +235,39 @@ export const appendImmutableArray = <Value>(
   })
   registerImmutableArrayReader(result, read)
   segmentsByArray.set(result, retained as readonly ArraySegment<unknown>[])
+  return result
+}
+
+const slicesByArray = new WeakMap<readonly unknown[], Readonly<{source: readonly unknown[]; start: number}>>()
+
+/** Producer-owned dense immutable view. A read must keep its value for this snapshot. */
+export const immutableArrayFromReader = <Value>(length: number, read: (index: number) => Value): readonly Value[] => {
+  if (!Number.isSafeInteger(length) || length < 0) throw new RangeError("Immutable view length is invalid")
+  const at = (index: number): Value | undefined => index < 0 || index >= length ? undefined : read(index)
+  const result = readonlyArrayProxy(length, at, function* () {
+    for (let index = 0; index < length; index++) yield read(index)
+  })
+  registerImmutableArrayReader(result, at)
+  return result
+}
+
+/** A stable, flattened range view; repeated trims never build a chain of readers. */
+export const sliceImmutableArray = <Value>(values: readonly Value[], start: number, end = values.length): readonly Value[] => {
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > values.length) {
+    throw new RangeError("Immutable array slice bounds are invalid")
+  }
+  if (start === 0 && end === values.length) return immutableArray(values)
+  if (start === end) return Object.freeze([])
+  const previous = slicesByArray.get(values)
+  const source = previous === undefined ? immutableArray(values) : previous.source as readonly Value[]
+  const offset = start + (previous?.start ?? 0)
+  const length = end - start
+  const read = (index: number): Value | undefined => index < 0 || index >= length ? undefined : readImmutableArrayEntry(source, offset + index)
+  const result = readonlyArrayProxy(length, read, function* () {
+    for (let index = 0; index < length; index++) yield read(index)!
+  })
+  registerImmutableArrayReader(result, read)
+  slicesByArray.set(result, Object.freeze({source, start: offset}))
   return result
 }
 

@@ -93,6 +93,8 @@ import type {
 } from "./state-change.ts"
 import {sameTextSelection} from "./internal/text-selection.ts"
 import {Text} from "./text.ts"
+import {Range} from "../range.ts"
+import {Selection} from "../selection.ts"
 
 type StateChangeState = {
   flushing: boolean
@@ -185,6 +187,7 @@ export class Document extends Node {
   private stateChangeState: StateChangeState | null = null
   private authorStyleSheetState: AuthorStyleSheetState | null = null
   private compiledStyleSheetState: CompiledStyleSheetState | null = null
+  private documentSelection: Selection | null = null
 
   constructor(options: DocumentOptions = {}) {
     super(null, Node.DOCUMENT_NODE, "#document")
@@ -282,6 +285,14 @@ export class Document extends Node {
 
   createDocumentFragment(): DocumentFragment {
     return new DocumentFragment(this)
+  }
+
+  createRange(): Range {
+    return new Range(this)
+  }
+
+  getSelection(): Selection {
+    return this.documentSelection ??= new Selection(this)
   }
 
   append(...nodes: NodeOrString[]): void {

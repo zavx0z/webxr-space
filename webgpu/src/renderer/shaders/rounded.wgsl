@@ -80,6 +80,8 @@ fn sdRoundBox(p: vec2<f32>, halfSize: vec2<f32>, r: vec4<f32>) -> f32 {
     return min(max(q.x, q.y), 0.0) + length(max(q, vec2<f32>(0.0))) - rr;
 }
 
+// @engine-rounded-border
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (!isClipDisabled()) {
@@ -137,38 +139,19 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         return vec4<f32>(perObject.fill.rgb, a);
     }
 
-    var innerMask: f32;
+    var dInner: f32;
     let uniformBorderWidths = all(borderWidths == vec4<f32>(borderWidth));
     if (uniformBorderWidths) {
         // Existing rounded path for the scalar uniform shorthand.
         let innerHalf = max(halfSize - vec2<f32>(borderWidth), vec2<f32>(0.0));
         let innerRadii = max(radii - vec4<f32>(borderWidth), vec4<f32>(0.0));
-        let dInner = sdRoundBox(p, innerHalf, innerRadii);
-        innerMask = 1.0 - smoothstep(-aa, aa, dInner);
+        dInner = sdRoundBox(p, innerHalf, innerRadii);
+        if (any(halfSize <= vec2<f32>(borderWidth))) { dInner = 1e20; }
     } else {
-        // Exact asymmetric inner rectangle. CPU validation admits this branch
-        // only when every outer corner radius is zero.
-        let innerMin = vec2<f32>(
-            -halfSize.x + borderWidths.w,
-            -halfSize.y + borderWidths.z
-        );
-        let innerMax = vec2<f32>(
-            halfSize.x - borderWidths.y,
-            halfSize.y - borderWidths.x
-        );
-        if (all(innerMax > innerMin)) {
-            let innerCenter = (innerMin + innerMax) * 0.5;
-            let innerHalf = (innerMax - innerMin) * 0.5;
-            let dInner = sdRoundBox(
-                p - innerCenter,
-                innerHalf,
-                vec4<f32>(0.0)
-            );
-            innerMask = 1.0 - smoothstep(-aa, aa, dInner);
-        } else {
-            innerMask = 0.0;
-        }
+        dInner = roundedInnerDistance(p, halfSize, radii, borderWidths);
     }
+    let innerAA = max(fwidth(dInner), 0.00001);
+    let innerMask = min(outerMask, 1.0 - smoothstep(-innerAA, innerAA, dInner));
 
     // border region = outer ∧ ¬inner
     let borderStrength = max(outerMask - innerMask, 0.0);

@@ -1,4 +1,7 @@
 export {CustomEvent, Event} from "./event.ts"
+export {DataTransfer, sealDataTransfer} from "../data-transfer.ts"
+export {ClipboardEvent} from "../clipboard-event.ts"
+export type {ClipboardEventInit} from "../clipboard-event.ts"
 export type {CustomEventInit, EventInit} from "./event.ts"
 export {ToggleEvent} from "./toggle-event.ts"
 export type {ToggleEventInit} from "./toggle-event.ts"
@@ -26,6 +29,21 @@ export type {
   EventListenerOptions
 } from "./event-target.ts"
 export {Node} from "./node.ts"
+export {AbstractRange, StaticRange, Range, compareRangeBoundaries} from "../range.ts"
+export type {RangeBoundary, StaticRangeInit} from "../range.ts"
+export {Selection} from "../selection.ts"
+export type {SelectionDirection} from "../selection.ts"
+export {
+  setDocumentTextHighlights,
+  clearDocumentTextHighlights,
+  readDocumentTextHighlights,
+  subscribeDocumentTextHighlights,
+} from "../text-highlights.ts"
+export type {DocumentTextHighlight, DocumentTextHighlightOptions} from "../text-highlights.ts"
+export {textOffsetAtPosition, textPositionAtOffset} from "../text-position.ts"
+export {readDocumentScrollIntoViewRequests, completeDocumentScrollIntoViewRequest,
+  clearDocumentScrollIntoViewRequests, subscribeDocumentScrollIntoViewRequests} from "../scroll-into-view.ts"
+export type {ScrollIntoViewOptions, ScrollLogicalPosition, DocumentScrollIntoViewRequest} from "../scroll-into-view.ts"
 export type {NodeOrString} from "./node.ts"
 export {NodeList} from "./node-list.ts"
 export {DOMTokenList} from "./dom-token-list.ts"

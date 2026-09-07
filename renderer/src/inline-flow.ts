@@ -12,6 +12,8 @@ export type InlineFragment<Owner> = Readonly<{
   owner: Owner
   kind: "text" | "box" | "break"
   text: string
+  /** DOM UTF-16 boundary for every emitted UTF-16 boundary, before whitespace processing. */
+  sourceOffsets: readonly number[]
   x: number
   y: number
   width: number
@@ -25,7 +27,7 @@ export type InlinePlan<Owner> = Readonly<{
   fragments: readonly InlineFragment<Owner>[]
 }>
 
-type Piece<Owner> = {input: InlineInput<Owner>; text: string; width: number}
+type Piece<Owner> = {input: InlineInput<Owner>; text: string; width: number; sourceOffsets: number[]}
 type Group<Owner> = {pieces: Piece<Owner>[]; gap: Piece<Owner> | null; breakBefore: boolean; hardBreak: boolean}
 
 /** Builds shared line boxes without splitting words at semantic element boundaries. */
@@ -44,13 +46,14 @@ export function layoutInlineFlow<Owner>(
     if (current.pieces.length > 0 || current.hardBreak) groups.push(current)
     current = {pieces: [], gap: null, breakBefore: false, hardBreak: false}
   }
-  const append = (input: InlineInput<Owner>, text: string) => {
+  const append = (input: InlineInput<Owner>, text: string, sourceOffsets: number[] = [0]) => {
     const previous = current.pieces.at(-1)
     if (previous?.input === input && input.kind === "text") {
       previous.text += text
+      previous.sourceOffsets.push(...sourceOffsets.slice(1))
       previous.width = advance(input.owner, previous.text)
     } else {
-      current.pieces.push({input, text, width: input.kind === "text" ? advance(input.owner, text) : input.width})
+      current.pieces.push({input, text, sourceOffsets, width: input.kind === "text" ? advance(input.owner, text) : input.width})
     }
   }
   const flushSpace = () => {
@@ -60,7 +63,7 @@ export function layoutInlineFlow<Owner>(
       current.gap = pending.piece
       current.breakBefore = true
     } else if (current.pieces.length > 0 || groups.length > 0) {
-      append(pending.piece.input, " ")
+      append(pending.piece.input, " ", pending.piece.sourceOffsets)
     }
     pending = null
   }
@@ -86,21 +89,25 @@ export function layoutInlineFlow<Owner>(
     if (input.whiteSpace === "pre") {
       flushSpace()
       const lines = input.text.split(/\r\n|\r|\n/u)
+      let sourceOffset = 0
       for (const [index, text] of lines.entries()) {
         if (index > 0) {
           current.hardBreak = true
           commit()
         }
-        if (text.length > 0) append(input, text)
+        if (text.length > 0) append(input, text, Array.from({length: text.length + 1}, (_, offset) => sourceOffset + offset))
+        sourceOffset += text.length
+        if (input.text[sourceOffset] === "\r" && input.text[sourceOffset + 1] === "\n") sourceOffset += 2
+        else if (sourceOffset < input.text.length) sourceOffset++
       }
       continue
     }
     for (const match of input.text.matchAll(/[^\t\n\f\r ]+|[\t\n\f\r ]+/gu)) {
       if (/^[\t\n\f\r ]/u.test(match[0])) {
-        pending ??= {piece: {input, text: " ", width: advance(input.owner, " ")}, breakable: input.whiteSpace === "normal"}
+        pending ??= {piece: {input, text: " ", sourceOffsets: [match.index, match.index + match[0].length], width: advance(input.owner, " ")}, breakable: input.whiteSpace === "normal"}
       } else {
         flushSpace()
-        append(input, match[0])
+        append(input, match[0], Array.from({length: match[0].length + 1}, (_, offset) => match.index + offset))
       }
     }
   }
@@ -119,7 +126,7 @@ export function layoutInlineFlow<Owner>(
       const text = previous.piece.text + piece.text
       const measured = advance(piece.input.owner, text)
       x += measured - previous.piece.width
-      previous.piece = {input: piece.input, text, width: measured}
+      previous.piece = {input: piece.input, text, width: measured, sourceOffsets: [...previous.piece.sourceOffsets, ...piece.sourceOffsets.slice(1)]}
     } else {
       linePieces.push({piece, x})
       x += piece.width
@@ -133,7 +140,7 @@ export function layoutInlineFlow<Owner>(
         const text = tail.text + piece.text
         const measured = advance(piece.input.owner, text)
         total += measured - tail.width
-        tail = {input: piece.input, text, width: measured}
+        tail = {input: piece.input, text, width: measured, sourceOffsets: []}
       } else {
         total += piece.width
         tail = piece
@@ -153,6 +160,7 @@ export function layoutInlineFlow<Owner>(
         owner: piece.input.owner,
         kind: piece.input.kind,
         text: piece.text,
+        sourceOffsets: Object.freeze(piece.sourceOffsets),
         x: left + offset,
         y: y + baseline - (piece.input.baseline ?? piece.input.height),
         width: piece.width,

@@ -1,6 +1,7 @@
 import type {Element} from "@zavx0z/dom"
 import {isImmutableArray} from "./immutable-array.ts"
 import type {DisplayItem, RenderFrame, RenderTransform} from "./types.ts"
+import type {CanonicalStructuralSplice} from "./frame-structural.ts"
 
 export type CanonicalScrollProjection = Readonly<{
   owner: Element
@@ -27,6 +28,7 @@ export type CanonicalRenderFrameChanges = Readonly<{
   indexes: readonly number[]
   operations?: readonly CanonicalRenderFrameOperation[]
   scroll?: CanonicalScrollProjection
+  structural?: CanonicalStructuralSplice
 }>
 
 type StoredCanonicalRenderFrameChanges = Readonly<{
@@ -34,6 +36,7 @@ type StoredCanonicalRenderFrameChanges = Readonly<{
   indexes: readonly number[]
   operations?: readonly CanonicalRenderFrameOperation[]
   scroll?: CanonicalScrollProjection
+  structural?: CanonicalStructuralSplice
 }>
 
 const canonicalDisplayChanges = new WeakMap<RenderFrame, StoredCanonicalRenderFrameChanges>()
@@ -64,6 +67,7 @@ export function readCanonicalRenderFrameChangeState(
     indexes: stored.indexes,
     ...(stored.operations === undefined ? {} : {operations: stored.operations}),
     ...(stored.scroll === undefined ? {} : {scroll: stored.scroll}),
+    ...(stored.structural === undefined ? {} : {structural: stored.structural}),
   })
 }
 
@@ -73,6 +77,7 @@ export function recordCanonicalRenderFrameChanges(
   indexes: readonly number[],
   operations?: readonly CanonicalRenderFrameOperation[],
   scroll?: CanonicalScrollProjection,
+  structural?: CanonicalStructuralSplice,
 ): void {
   canonicalDisplayChanges.set(frame, Object.freeze({
     previous: new WeakRef(previous),
@@ -81,6 +86,12 @@ export function recordCanonicalRenderFrameChanges(
       operations: Object.freeze(operations.map((operation) => Object.freeze({...operation}))),
     }),
     ...(scroll === undefined ? {} : {scroll: Object.freeze({...scroll})}),
+    ...(structural === undefined ? {} : {structural: Object.freeze({...structural,
+      previousRange: Object.freeze({...structural.previousRange}), nextRange: Object.freeze({...structural.nextRange}),
+      retained: Object.freeze(structural.retained.map(range => Object.freeze({...range}))),
+      inserted: Object.freeze(structural.inserted.map(range => Object.freeze({...range}))),
+      removed: Object.freeze(structural.removed.map(range => Object.freeze({...range}))),
+    })}),
   }))
 }
 

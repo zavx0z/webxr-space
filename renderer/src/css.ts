@@ -119,6 +119,8 @@ export type ComputedStyle = Readonly<{
   textAlign: RenderTextAlign
   textOverflow: ComputedTextOverflow
   whiteSpace: RenderWhiteSpace
+  userSelect: "text" | "none" | "all" | "contain"
+  selectionBoundary: "all" | "contain" | null
   zIndex: RenderZIndex
 }>
 
@@ -174,6 +176,8 @@ export type StyleRuleIndex = Readonly<{
 
 const selectorAttributeDependencies = new WeakMap<StyleRuleIndex, ReadonlySet<string>>()
 const pointerStateSelectors = new WeakMap<StyleRuleIndex, readonly ParsedSelector[]>()
+const ancestryLocalSelectors = new WeakMap<StyleRuleIndex, boolean>()
+const customEnvironments = new WeakMap<Element, ComputedCustomProperties>()
 
 type CascadedValue = Readonly<{
   specificity: readonly [number, number, number]
@@ -349,8 +353,17 @@ const indexStyleRules = (rules: readonly StyleRule[]): StyleRuleIndex => {
   })
   selectorAttributeDependencies.set(result, attributeDependencies)
   pointerStateSelectors.set(result, Object.freeze(pointerSelectors))
+  ancestryLocalSelectors.set(result, rules.every(rule =>
+    rule.selector.combinators.every(combinator => combinator === "child" || combinator === "descendant") &&
+    rule.selector.compounds.every(compound => compound.pseudos.every(pseudo =>
+      pseudo === "active" || pseudo === "checked" || pseudo === "disabled" || pseudo === "focus" || pseudo === "focus-within" ||
+      pseudo === "hover" || pseudo === "indeterminate" || pseudo === "root"))))
   return result
 }
+
+/** Unknown/future structural selectors take the conservative subtree invalidation path. */
+export const styleRulesPermitStructuralRetention = (index: StyleRuleIndex): boolean =>
+  ancestryLocalSelectors.get(index) === true
 
 export const styleRulesDependOnAttribute = (
   index: StyleRuleIndex,
@@ -449,7 +462,7 @@ export const computeStyle = (
       sequence,
     )
 
-  const customProperties = createCustomPropertyEnvironment(parent, customValues)
+  const customProperties = createCustomPropertyEnvironment(element, parent, customValues)
   values = resolveCascadedVariables(values, customProperties)
 
   const inheritedColor = parent?.color ?? "#000000"
@@ -470,12 +483,12 @@ export const computeStyle = (
     parseOverflow(readValue(values, "overflow-x")),
     parseOverflow(readValue(values, "overflow-y")),
   )
+  const position = parsePosition(readValue(values, "position"))
+  const declaredDisplay = element.hasAttribute("hidden") ? "none" : parseDisplay(readValue(values, "display"), tag)
 
   return Object.freeze({
     customProperties,
-    display: element.hasAttribute("hidden")
-      ? "none"
-      : parseDisplay(readValue(values, "display"), tag),
+    display: position === "fixed" && declaredDisplay === "inline" ? "block" : declaredDisplay,
     boxSizing: parseBoxSizing(readValue(values, "box-sizing")),
     flexDirection: parseFlexDirection(readValue(values, "flex-direction")),
     flexWrap: parseFlexWrap(readValue(values, "flex-wrap")),
@@ -491,7 +504,7 @@ export const computeStyle = (
     minHeight: parseLength(readValue(values, "min-height"), fontSize),
     maxWidth: parseLength(readValue(values, "max-width"), fontSize),
     maxHeight: parseLength(readValue(values, "max-height"), fontSize),
-    position: parsePosition(readValue(values, "position")),
+    position,
     left: parseLength(readValue(values, "left"), fontSize),
     top: parseLength(readValue(values, "top"), fontSize),
     right: parseLength(readValue(values, "right"), fontSize),
@@ -544,6 +557,14 @@ export const computeStyle = (
       readValue(values, "white-space"),
       parent?.whiteSpace ?? "normal",
     ),
+    userSelect: readValue(values, "user-select") === "inherit" ? parent?.userSelect ?? "text"
+      : readValue(values, "user-select") === "none" ? "none"
+      : readValue(values, "user-select") === "all" ? "all"
+      : readValue(values, "user-select") === "contain" ? "contain"
+      : readValue(values, "user-select") === "text" || readValue(values, "user-select") === "initial" ? "text"
+      : parent?.userSelect === "none" || parent?.userSelect === "all" ? parent.userSelect : "text",
+    selectionBoundary: readValue(values, "user-select") === "all" ? "all"
+      : readValue(values, "user-select") === "contain" ? "contain" : null,
     zIndex: parseZIndex(readValue(values, "z-index")),
   })
 }
@@ -767,14 +788,20 @@ const validCustomPropertyName = (value: string): boolean =>
   value !== "--" && customPropertyNamePattern.test(value)
 
 const createCustomPropertyEnvironment = (
+  element: Element,
   parent: ComputedStyle | null,
   values: ReadonlyMap<string, CascadedValue>,
 ): ComputedCustomProperties => {
   const inherited = parent?.customProperties ?? EMPTY_CUSTOM_PROPERTIES
   if (values.size === 0) return inherited
+  const previous = customEnvironments.get(element)
+  if (previous?.parent === inherited && Object.keys(previous.own).length === values.size &&
+    [...values].every(([name, value]) => previous.own[name] === value.value)) return previous
   const own = Object.create(null) as Record<string, string>
   for (const [name, value] of values) own[name] = value.value
-  return Object.freeze({parent: inherited, own: Object.freeze(own)})
+  const next = Object.freeze({parent: inherited, own: Object.freeze(own)})
+  customEnvironments.set(element, next)
+  return next
 }
 
 const resolveCascadedVariables = (
@@ -1980,12 +2007,12 @@ const parseObjectFit = (value: string | undefined): RenderObjectFit =>
 
 const validPosition = (value: string): boolean => {
   const normalized = value.trim().toLowerCase()
-  return normalized === "static" || normalized === "relative" || normalized === "absolute"
+  return normalized === "static" || normalized === "relative" || normalized === "absolute" || normalized === "fixed"
 }
 
 const parsePosition = (value: string | undefined): RenderPosition => {
   const normalized = value?.trim().toLowerCase()
-  return normalized === "relative" || normalized === "absolute" ? normalized : "static"
+  return normalized === "relative" || normalized === "absolute" || normalized === "fixed" ? normalized : "static"
 }
 
 const validInset = (value: string): boolean =>

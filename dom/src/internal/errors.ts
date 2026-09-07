@@ -6,6 +6,8 @@ export type DOMErrorName =
   | "NotFoundError"
   | "NotSupportedError"
   | "SyntaxError"
+  | "WrongDocumentError"
+  | "InvalidNodeTypeError"
 
 export function domError(name: DOMErrorName, message: string): Error {
   const error = new Error(message)

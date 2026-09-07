@@ -5,6 +5,7 @@ import type {AttributeMutation} from "./mutation.ts"
 import {Node} from "./node.ts"
 import type {NodeOrString} from "./node.ts"
 import type {NodeList} from "./node-list.ts"
+import {requestElementScrollIntoView, type ScrollIntoViewOptions} from "../scroll-into-view.ts"
 import {
   hasElementPointerCapture,
   releaseElementPointerCapture,
@@ -67,6 +68,10 @@ export class Element extends Node {
 
   get classList(): DOMTokenList {
     return getClassList(this)
+  }
+
+  scrollIntoView(options?: boolean | ScrollIntoViewOptions): void {
+    requestElementScrollIntoView(this, options)
   }
 
   hasAttributes(): boolean {

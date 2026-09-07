@@ -26,6 +26,7 @@ import {
   resolveLineHeight,
   styleRulesDependOnAttribute,
   styleRulesMayDependOnPointerState,
+  styleRulesPermitStructuralRetention,
   type ComputedStyle,
   type CSSLength,
   type StyleRuleIndex,
@@ -39,6 +40,9 @@ import {
 } from "./stylesheet-cache.ts"
 import {
   immutableArray,
+  readImmutableArrayEntry,
+  concatenateImmutableArrays,
+  immutableArrayFromReader,
   moveImmutableArrayEntry,
   replaceImmutableArray,
   replaceImmutableArrayEntries,
@@ -66,8 +70,14 @@ import type {
 } from "./types.ts"
 import {parseRenderPath} from "./path.ts"
 import {layoutInlineFlow, type InlineInput, type InlinePlan} from "./inline-flow.ts"
+import {createTextSource} from "./text-selection.ts"
+import {createPopoverIndex} from "./popover-index.ts"
+import {structuralFrameRanges, type CanonicalStructuralSplice} from "./frame-structural.ts"
+import {createTextStreamCollections, SplicedNodeMap, type TextStreamCollections, type TextStreamIndex,
+  type TextStreamPlacement} from "./text-stream-collections.ts"
 import {
   readCanonicalRenderFrameChangeState,
+  isRendererOwnedFrame,
   markRendererOwnedFrame,
   recordRendererOwnedFrameChanges as recordCanonicalRenderFrameChanges,
   type CanonicalRenderFrameOperation,
@@ -81,8 +91,10 @@ type LayoutNode = {
   children: readonly LayoutNode[]
   transformChildren: readonly LayoutNode[]
   ownsOverflowClipInSubtree: boolean
+  hasFixedDescendants: boolean
   vectorPathOnly: boolean
   text: string | null
+  inlineTextOnly?: boolean
   readonly tag: string | null
   readonly transparent: boolean
 }
@@ -115,6 +127,14 @@ type PlacementContext = Readonly<{
   normal: ContainingBlock
   presentation: RenderTransform
   presentationOwner: Element | null
+  fixed: Readonly<{
+    box: ContainingBlock
+    owner: Node | null
+    presentation: RenderTransform
+    presentationOwner: Element | null
+    clips: readonly RenderClip[]
+  }>
+  fixedBoundaries: readonly Readonly<{root: Node; containing: Node | null}>[]
 }>
 
 type BuildState = {
@@ -129,8 +149,50 @@ type BuildState = {
   readonly presentationTransforms: Map<Element, RenderTransform>
   readonly measured: WeakMap<LayoutNode, Map<string, Size>>
   readonly inlinePlans: WeakMap<LayoutNode, Map<string, InlineLayout | null>>
+  readonly textPaint: WeakMap<LayoutNode, RetainedTextPaint>
+  readonly textOverflow: Map<LayoutNode, RetainedTextPaint>
+  readonly deferTextScroll: boolean
+  deferredTextScroll: HTMLElement | null
+  readonly streamReuse: {value: StreamReuse | null}
+  readonly allowTextStream: boolean
+  stream: BuiltTextStream | null
+  readonly fixedBoundaries: Map<Node, PlacementContext["fixedBoundaries"]>
   readonly imageMeasurer?: CreateDocumentRendererOptions["imageMeasurer"]
   readonly textMeasurer: CreateDocumentRendererOptions["textMeasurer"]
+}
+
+type RetainedTextPaint = Readonly<{
+  coordinates: readonly (number | undefined)[]
+  clips: readonly RenderClip[]
+  transform: RenderTransform
+  presentationOwner: Element | null
+  fixedBoundaries: PlacementContext["fixedBoundaries"]
+  boxes: readonly RenderBox[]
+  display: readonly DisplayItem[]
+  hits: readonly HitMetadata[]
+  size: Size
+  right: number
+  bottom: number
+}>
+
+type StreamReuse = Readonly<{owner: HTMLElement; nodes: readonly Node[]; index: TextStreamIndex}>
+type BuiltTextStream = Readonly<{
+  owner: HTMLElement
+  collections: TextStreamCollections
+  boxStart: number
+  displayStart: number
+  hitStart: number
+  chromeCount: number
+  clipDepth: number
+  transform: RenderTransform
+  clips: readonly RenderClip[]
+}>
+const textStreamFrames = new WeakMap<RenderFrame, BuiltTextStream>()
+
+/** Internal deterministic evidence; not part of the package's author-facing entry. */
+export const textStreamFrameStatistics = (frame: RenderFrame): ReturnType<TextStreamCollections["statistics"]> | null => {
+  const source = lazyScrollContexts.get(frame)?.source ?? frame
+  return textStreamFrames.get(source)?.collections.statistics() ?? null
 }
 
 /** Stable layout ranges; offsets and paint records stay in the immutable frame. */
@@ -147,11 +209,12 @@ type ScrollProjection = Readonly<{
 
 const scrollProjectionsByFrame = new WeakMap<RenderFrame, ReadonlyMap<HTMLElement, ScrollProjection>>()
 
+type ObjectLookup<Key extends object, Value> = Pick<WeakMap<Key, Value>, "get" | "set">
 type FrameCollectionIndexes = Readonly<{
-  boxByNode: WeakMap<Node, number>
-  displayByNode: WeakMap<Node, ReadonlyMap<string, number>>
-  hitByRecord: WeakMap<HitMetadata, number>
-  pathStackByParent: WeakMap<Element, PathStackBlock>
+  boxByNode: ObjectLookup<Node, number>
+  displayByNode: ObjectLookup<Node, ReadonlyMap<string, number>>
+  hitByRecord: ObjectLookup<HitMetadata, number>
+  pathStackByParent: ObjectLookup<Element, PathStackBlock>
 }>
 
 type PathStackBlock = {
@@ -173,7 +236,7 @@ type LazyScrollContext = Readonly<{
   source: RenderFrame
   projection: ScrollProjection
   indexes: FrameCollectionIndexes
-  hitNodes: ReadonlySet<Node>
+  hitNodes: Pick<ReadonlySet<Node>, "has">
   hitStart: number
   hitEnd: number
   changesTransforms: boolean
@@ -343,6 +406,8 @@ const ROOT_STYLE: ComputedStyle = Object.freeze({
   textAlign: "start",
   textOverflow: "clip",
   whiteSpace: "normal",
+  userSelect: "text",
+  selectionBoundary: null,
   zIndex: "auto",
 })
 
@@ -360,6 +425,11 @@ export const createDocumentRenderer = (
   let rules = styleRuleEntry.rules
   const dirty = new DirtyTracker(options.root)
   const layoutCache = new WeakMap<Node, LayoutNode>()
+  const popovers = createPopoverIndex(options.root)
+  let measured = new WeakMap<LayoutNode, Map<string, Size>>()
+  let inlinePlans = new WeakMap<LayoutNode, Map<string, InlineLayout | null>>()
+  let textPaint = new WeakMap<LayoutNode, RetainedTextPaint>()
+  const streamReuse: {value: StreamReuse | null} = {value: null}
   const subtreeDirty = new Set<Node>([options.root])
   const characterDataTargets = new Set<Text>()
   const inputValueTargets = new Set<HTMLInputElement>()
@@ -452,6 +522,7 @@ export const createDocumentRenderer = (
       unsubscribeAuthorStyleSheets()
       unsubscribeCompiledStyleSheets()
       unsubscribeInteraction()
+      popovers.clear()
     },
   })
 
@@ -503,6 +574,7 @@ export const createDocumentRenderer = (
         revision + 1,
       )
       if (incremental !== null) {
+        resetMeasurements()
         revision++
         frame = incremental
         dirty.clear()
@@ -526,6 +598,7 @@ export const createDocumentRenderer = (
             revision + 1,
           )
       if (incremental !== null) {
+        resetMeasurements()
         revision++
         frame = incremental
         dirty.clear()
@@ -550,6 +623,7 @@ export const createDocumentRenderer = (
             revision + 1,
           )
       if (incremental !== null) {
+        resetMeasurements()
         revision++
         frame = incremental
         dirty.clear()
@@ -574,6 +648,7 @@ export const createDocumentRenderer = (
             revision + 1,
           )
       if (incremental !== null) {
+        resetMeasurements()
         revision++
         frame = incremental
         dirty.clear()
@@ -594,8 +669,19 @@ export const createDocumentRenderer = (
       options.interactionState,
       options.textMeasurer,
       options.imageMeasurer,
+      measured,
+      inlinePlans,
+      textPaint,
+      true,
+      popovers.read(),
+      streamReuse,
     )
     markRendererOwnedFrame(next)
+    if (frame !== null) {
+      const structural = structuralFrameDelta(frame, next)
+      if (structural !== null) recordCanonicalRenderFrameChanges(next, frame,
+        immutableArrayFromReader(next.displayList.length, index => index), undefined, undefined, structural)
+    }
     revision++
     frame = next
     dirty.clear()
@@ -604,9 +690,26 @@ export const createDocumentRenderer = (
     return next
   }
 
+  function resetMeasurements(): void {
+    measured = new WeakMap()
+    inlinePlans = new WeakMap()
+    textPaint = new WeakMap()
+    streamReuse.value = null
+  }
+
   function invalidateMutationBatch(batch: MutationBatch): void {
     if (disposed || batch.document !== options.document) return
+    popovers.mutations(batch)
     for (const record of batch.records) {
+      if (record.type === "childList" && [...record.addedNodes, ...record.removedNodes].some(node =>
+        options.document.activeElement !== null && node.contains(options.document.activeElement) ||
+        isElement(node) && (options.interactionState?.isHovered(node) || options.interactionState?.isActive(node)))) {
+        // A moved interaction target changes descendant-sensitive pseudo selectors
+        // on old and new ancestors, even when semantic focus itself is preserved.
+        dirty.invalidate(options.root)
+        subtreeDirty.add(options.root)
+        blockFastPath()
+      }
       if (
         options.root.contains(record.target) ||
         record.target === options.root
@@ -614,7 +717,7 @@ export const createDocumentRenderer = (
         dirty.invalidate(record.target)
         scrollFastPathBlocked = true
         if (isProjectionNeutralMutation(record, rules)) {
-          subtreeDirty.add(record.target)
+          if (record.type !== "childList") subtreeDirty.add(record.target)
           if (
             fastPathBlocked ||
             characterDataTargets.size > 0 ||
@@ -623,6 +726,13 @@ export const createDocumentRenderer = (
             transformTargets.size > 0
           ) blockFastPath()
           else projectionNeutralMutations += 1
+        } else if (record.type === "childList" && styleRulesPermitStructuralRetention(rules) &&
+          !["fieldset", "select", "optgroup"].includes(isElement(record.target) ? record.target.localName : "") &&
+          record.addedNodes.every(node => !layoutCache.has(node) || layoutCache.get(node)!.parent?.node === record.target)) {
+          // Keyed fragments can insert inert markers before their content in the same
+          // batch. Membership/order changes reflow the parent, but unchanged siblings
+          // keep their style/inline plan when selectors only depend on ancestry.
+          blockFastPath()
         } else if (projectionNeutralMutations > 0) {
           subtreeDirty.add(record.target)
           blockFastPath()
@@ -668,18 +778,19 @@ export const createDocumentRenderer = (
 
   function invalidateStateBatch(batch: StateChangeBatch): void {
     if (disposed || batch.document !== options.document) return
+    popovers.states(batch)
     for (const record of batch.records) {
       if (
         options.root.contains(record.target) ||
         record.target === options.root
       ) {
         dirty.invalidate(record.target)
-        subtreeDirty.add(record.target)
         if (record.type === "scroll") {
           hasScrollChanges = true
           scrollTargets.add(record.target)
           continue
         }
+        subtreeDirty.add(record.target)
         if (
           !fastPathBlocked &&
           projectionNeutralMutations === 0 &&
@@ -869,12 +980,21 @@ const tryBuildLazyScrollFrame = (
   const projection = projections.get(owner)!
   if (projection.boxEnd - projection.boxStart < 256 || projection.clipDepth < 0 || previous.hitOrder === undefined) return null
   let context = lazyScrollContexts.get(previous)
+  const retainedStream = textStreamFrames.get(previous)
+  if (context?.owner !== owner && retainedStream?.owner === owner) {
+    const changedIndexes = Array.from({length: projection.displayEnd - projection.displayStart}, (_, index) => projection.displayStart + index)
+    for (let index = projection.chromeStart; index + 1 < projection.chromeEnd; index += 2) changedIndexes.push(index + 1)
+    context = {owner, source: previous, projection, indexes: collectionIndexes(previous),
+      hitNodes: {has: node => retainedStream.collections.hitIndex(node) !== undefined},
+      hitStart: retainedStream.hitStart, hitEnd: retainedStream.hitStart + retainedStream.collections.hits.length,
+      changesTransforms: false, changedIndexes: immutableArrayFromReader(changedIndexes.length, index => changedIndexes[index]!)}
+  }
   if (context?.owner !== owner) {
     // Rebase through the eager path when another owner or update interrupts the run.
     // This bounds retained history instead of nesting lazy views indefinitely.
     if (isProjectedArray(previous.boxes)) return null
     for (let index = projection.displayStart; index < projection.displayEnd; index++) {
-      if (previous.displayList[index]?.kind === "path") return null
+      if (readImmutableArrayEntry(previous.displayList, index)?.kind === "path") return null
     }
     const indexes = collectionIndexes(previous)
     const hitIndexes = projection.hitNodes.map(node => indexes.hitByRecord.get(previous.hits.get(node)!))
@@ -890,7 +1010,7 @@ const tryBuildLazyScrollFrame = (
     if (transform === undefined) return null
     let changesTransforms = false
     for (let index = projection.boxStart; index < projection.boxEnd; index++) {
-      const current = previous.boxes[index]!.transform
+      const current = readImmutableArrayEntry(previous.boxes, index)!.transform
       if (current.scaleX !== transform.scaleX || current.scaleY !== transform.scaleY) changesTransforms = true
     }
     const changedIndexes = Array.from({length: projection.displayEnd - projection.displayStart}, (_, index) => projection.displayStart + index)
@@ -1091,6 +1211,13 @@ const tryBuildCharacterDataFrame = (
   const nextItem: DisplayItem = Object.freeze({
     ...previousItem,
     text: displayText,
+    width: textAdvance(displayText, layoutNode.style, textMeasurer),
+    source: createTextSource({
+      offsets: normalizedSourceOffsets(target.data, layoutNode.style.whiteSpace).slice(0, displayText.length + 1),
+      userSelect: layoutNode.style.userSelect,
+      selectionRoot: previousItem.source?.selectionRoot ?? null,
+      whiteSpace: layoutNode.style.whiteSpace,
+    }, layoutNode.style, textMeasurer),
     x: parentBox
       ? alignedTextX(
           layoutNode.style,
@@ -1462,6 +1589,7 @@ const tryBuildTransformFrame = (
   const layoutNode = layoutCache.get(target)
   const targetBox = previous.boxByNode.get(target)
   if (!layoutNode || !targetBox) return null
+  if (layoutNode.hasFixedDescendants) return null
   const nextStyle = computeStyle(
     target,
     layoutNode.parent?.style ?? projectionInheritedStyle,
@@ -1994,7 +2122,16 @@ const buildFrame = (
   interactionState: CreateDocumentRendererOptions["interactionState"],
   textMeasurer: CreateDocumentRendererOptions["textMeasurer"],
   imageMeasurer?: CreateDocumentRendererOptions["imageMeasurer"],
+  measured = new WeakMap<LayoutNode, Map<string, Size>>(),
+  inlinePlans = new WeakMap<LayoutNode, Map<string, InlineLayout | null>>(),
+  textPaint = new WeakMap<LayoutNode, RetainedTextPaint>(),
+  allowDeferredTextScroll = true,
+  popovers: readonly HTMLElement[] = [],
+  streamReuse: {value: StreamReuse | null} = {value: null},
+  allowTextStream = true,
 ): RenderFrame => {
+  const selectedPicker = document.readOpenSelectPicker()
+  const openSelect = selectedPicker !== null && (root === selectedPicker || root.contains(selectedPicker)) ? selectedPicker : null
   const popoverInheritedStyles = new WeakMap<HTMLElement, ComputedStyle>()
   const inheritedStyle = projectionRootInheritedStyle(root, rules, interactionState)
   const tree = buildLayoutTree(
@@ -2021,8 +2158,16 @@ const buildFrame = (
     scrollProjections: new Map(),
     transforms: new Map(),
     presentationTransforms: new Map(),
-    measured: new WeakMap(),
-    inlinePlans: new WeakMap(),
+    measured,
+    inlinePlans,
+    textPaint,
+    textOverflow: new Map(),
+    deferTextScroll: allowDeferredTextScroll && popovers.length === 0 && openSelect === null,
+    deferredTextScroll: null,
+    streamReuse,
+    allowTextStream,
+    stream: null,
+    fixedBoundaries: new Map(),
     textMeasurer,
     imageMeasurer,
   }
@@ -2040,10 +2185,12 @@ const buildFrame = (
     normal: viewportBlock,
     presentation: IDENTITY_TRANSFORM,
     presentationOwner: null,
+    fixed: Object.freeze({box: viewportBlock, owner: null, presentation: IDENTITY_TRANSFORM, presentationOwner: null, clips: viewportTopLayerClips(viewport)}),
+    fixedBoundaries: Object.freeze([]),
   })
 
   measure(tree, availableWidth, availableHeight, state)
-  if (tree.style.position === "absolute") {
+  if (isOutOfFlow(tree.style)) {
     placeAbsoluteChild(
       tree,
       margin.left,
@@ -2069,7 +2216,6 @@ const buildFrame = (
     )
   }
 
-  const popovers = showingPopovers(root)
   for (const popover of popovers) {
     const inheritedStyle = popoverInheritedStyles.get(popover) ??
       layoutCache.get(popover)?.parent?.style ??
@@ -2093,6 +2239,7 @@ const buildFrame = (
     const height = Math.min(viewport.height, size.height)
     const placement = popoverTopLayerPlacement(
       popover,
+      topTree.style,
       width,
       height,
       viewport,
@@ -2109,26 +2256,36 @@ const buildFrame = (
       viewportTopLayerClips(viewport),
       0,
       state,
-      viewportContext,
+      Object.freeze({...viewportContext, fixedBoundaries: Object.freeze([{root: popover, containing: null}])}),
       false,
     )
   }
 
-  const openSelect = document.readOpenSelectPicker()
   if (openSelect !== null && (root === openSelect || root.contains(openSelect))) {
     emitSelectPicker(openSelect, viewport, layoutCache, state)
   }
 
-  const boxes = immutableArray(state.boxes)
-  const displayList = immutableArray(state.displayList)
-  const boxByNode = immutableNodeMap(state.boxByNode)
+  const stream = state.stream
+  const splice = <Value>(outside: readonly Value[], at: number, contents: readonly Value[]): readonly Value[] =>
+    concatenateImmutableArrays([outside.slice(0, at), contents, outside.slice(at)])
+  const boxes = stream === null ? immutableArray(state.boxes) : splice(state.boxes, stream.boxStart, stream.collections.boxes)
+  const displayList = stream === null ? immutableArray(state.displayList) : splice(state.displayList, stream.displayStart, stream.collections.display)
+  const outsideBoxes = immutableNodeMap(state.boxByNode)
+  const boxByNode = stream === null ? outsideBoxes : new SplicedNodeMap(outsideBoxes, state.boxes[stream.boxStart]?.node ?? null, {
+    size: stream.collections.boxes.length, keys: stream.collections.boxKeys,
+    read: stream.collections.readBox, has: node => stream.collections.boxIndex(node) !== undefined,
+  })
   const orderedHits = new Map<Element, HitMetadata>()
   for (const node of state.hitOrder) {
     const hit = state.hits.get(node)
     if (hit) orderedHits.set(node, hit)
   }
-  const hits = immutableNodeMap(orderedHits)
-  const hitOrder = immutableArray([...orderedHits.values()])
+  const outsideHits = immutableNodeMap(orderedHits)
+  const hits = stream === null ? outsideHits : new SplicedNodeMap(outsideHits, state.hitOrder[stream.hitStart] ?? null, {
+    size: stream.collections.hits.length, keys: stream.collections.hitKeys,
+    read: stream.collections.readHit, has: node => stream.collections.hitIndex(node) !== undefined,
+  })
+  const hitOrder = stream === null ? immutableArray([...orderedHits.values()]) : splice([...orderedHits.values()], stream.hitStart, stream.collections.hits)
   const scrolls = immutableNodeMap(state.scrolls)
 
   const frame: RenderFrame = Object.freeze({
@@ -2149,16 +2306,49 @@ const buildFrame = (
   if (popovers.length === 0 && openSelect === null) {
     scrollProjectionsByFrame.set(frame, state.scrollProjections)
   }
+  if (stream !== null) {
+    textStreamFrames.set(frame, stream)
+    const projection: ScrollProjection = Object.freeze({
+      boxStart: stream.boxStart, boxEnd: stream.boxStart + stream.collections.boxes.length,
+      displayStart: stream.displayStart, displayEnd: stream.displayStart + stream.collections.display.length,
+      hitNodes: stream.collections.hitNodes, clipDepth: stream.clipDepth,
+      chromeStart: stream.displayStart + stream.collections.display.length,
+      chromeEnd: stream.displayStart + stream.collections.display.length + stream.chromeCount,
+    })
+    scrollProjectionsByFrame.set(frame, new Map([[stream.owner, projection]]))
+    collectionIndexesByFrame.set(frame, indexStreamFrame(frame, state, stream, [...orderedHits.values()]))
+    return frame
+  }
+  streamReuse.value = null
+  if (state.deferredTextScroll !== null) {
+    markRendererOwnedFrame(frame)
+    collectionIndexesByFrame.set(frame, indexCollections(state.boxes, state.displayList, [...orderedHits.values()]))
+    const scrolled = tryBuildLazyScrollFrame(frame, state.deferredTextScroll, state.scrollProjections, revision)
+    if (scrolled !== null) return scrolled
+    return buildFrame(document, root, viewport, rules, revision, dirtyNodes, subtreeDirty,
+      layoutCache, interactionState, textMeasurer, imageMeasurer, measured, inlinePlans, textPaint, false, popovers, streamReuse, false)
+  }
   return frame
 }
 
 const popoverTopLayerPlacement = (
   popover: HTMLElement,
+  style: ComputedStyle,
   width: number,
   height: number,
   viewport: RenderViewport,
   state: BuildState,
 ): Readonly<{x: number; y: number}> => {
+  const left = resolveLength(style.left, viewport.width)
+  const right = resolveLength(style.right, viewport.width)
+  const top = resolveLength(style.top, viewport.height)
+  const bottom = resolveLength(style.bottom, viewport.height)
+  if (style.position !== "static" && (left !== null || right !== null || top !== null || bottom !== null)) {
+    return Object.freeze({
+      x: left !== null ? left + style.margin.left : right !== null ? viewport.width - right - width - style.margin.right : Math.max(0, (viewport.width - width) / 2),
+      y: top !== null ? top + style.margin.top : bottom !== null ? viewport.height - bottom - height - style.margin.bottom : Math.max(0, (viewport.height - height) / 2),
+    })
+  }
   const source = (popover as HTMLElement & {
     [getPopoverSource](): HTMLElement | null
   })[getPopoverSource]()
@@ -2261,6 +2451,7 @@ const buildLayoutTree = (
       children: Object.freeze([]),
       transformChildren: Object.freeze([]),
       ownsOverflowClipInSubtree: false,
+      hasFixedDescendants: false,
       vectorPathOnly: false,
       text: readText(node, style),
       tag: null,
@@ -2291,6 +2482,10 @@ const buildLayoutTree = (
         cached.style.letterSpacing !== style.letterSpacing ||
         cached.style.textAlign !== style.textAlign ||
         cached.style.whiteSpace !== style.whiteSpace ||
+        cached.style.stroke !== style.stroke ||
+        cached.style.strokeWidth !== style.strokeWidth ||
+        cached.style.userSelect !== style.userSelect ||
+        cached.style.selectionBoundary !== style.selectionBoundary ||
         cached.style.customProperties !== style.customProperties ||
         cached.effectiveOpacity !== effectiveOpacity)
     const forceChildren = force || subtreeDirty.has(node) || inheritedChanged
@@ -2302,6 +2497,7 @@ const buildLayoutTree = (
       children: [],
       transformChildren: [],
       ownsOverflowClipInSubtree: false,
+      hasFixedDescendants: false,
       vectorPathOnly: false,
       text: null,
       tag,
@@ -2349,6 +2545,7 @@ const buildLayoutTree = (
     children: [],
     transformChildren: [],
     ownsOverflowClipInSubtree: false,
+    hasFixedDescendants: false,
     vectorPathOnly: false,
     text: null,
     tag: null,
@@ -2379,6 +2576,15 @@ const buildLayoutTree = (
 }
 
 const finalizeLayoutNodeChildren = (layoutNode: LayoutNode): void => {
+  layoutNode.inlineTextOnly = layoutNode.children.every(child =>
+    child.text !== null || child.transparent && child.inlineTextOnly === true ||
+    child.style.display === "none" || child.style.display === "inline" &&
+    child.style.position === "static" && child.style.transform.length === 0 &&
+    child.style.overflowX === "visible" && child.style.overflowY === "visible" &&
+    !["input", "img", "select", "textarea", "progress", "meter", "vector-path"].includes(child.tag ?? "") &&
+    child.inlineTextOnly === true)
+  layoutNode.hasFixedDescendants = layoutNode.children.some(child => child.style.display !== "none" &&
+    (child.style.position === "fixed" || child.hasFixedDescendants))
   layoutNode.transformChildren = Object.freeze(
     layoutNode.children.filter((child) =>
       child.style.display !== "none" && !(child.node instanceof HTMLVectorPathElement)),
@@ -2405,6 +2611,7 @@ const inlineLayout = (
     cached = new Map()
     state.inlinePlans.set(owner, cached)
   }
+  if (cached.size >= 8) cached.clear()
   const children = flowChildren(owner).filter(child => child.style.display !== "none")
   const single = children.length === 1 ? children[0] : undefined
   if (children.length === 0 || children.some(child => child.text === null && child.style.display !== "inline") ||
@@ -2503,10 +2710,12 @@ const placeInlineLayout = (
     }
   }
   for (const node of layout.owners) {
+    if (context.fixedBoundaries.length > 0) state.fixedBoundaries.set(node.node, context.fixedBoundaries)
     const rects = Object.freeze([...(rectangles.get(node)?.values() ?? [])].map(entries => Object.freeze(unionInlineRects(entries))))
     const bounds = rects.length === 0 ? {x, y, width: 0, height: 0} : unionInlineRects(rects)
     const nodeDepth = depth + (layout.paths.get(node)?.length ?? 1) - 1
-    const box = createBox(node, bounds.x, bounds.y, bounds.width, bounds.height, ZERO_EDGES, ZERO_BORDER, nodeDepth, "inline", context.presentation)
+    const box = createBox(node, bounds.x, bounds.y, bounds.width, bounds.height, ZERO_EDGES, ZERO_BORDER, nodeDepth, "inline", context.presentation,
+      state.fixedBoundaries.get(node.node))
     state.boxes.push(box)
     state.boxByNode.set(node.node, box)
     state.transforms.set(node.node, context.presentation)
@@ -2540,6 +2749,7 @@ const placeInlineLayout = (
       indices.set(node.node, index + 1)
       state.displayList.push(Object.freeze({
         kind: "text", key: `inline-text:${index}`, node: node.node, text: fragment.text,
+        source: textSource(node, fragment.sourceOffsets, state),
         x: x + fragment.x, y: y + fragment.y, width: fragment.width,
         color: node.style.color, fontSize: node.style.fontSize,
         fontFamily: node.style.fontFamily, fontWeight: node.style.fontWeight, fontStyle: node.style.fontStyle,
@@ -2788,10 +2998,12 @@ const measure = (
   )
 }
 
+const isOutOfFlow = (style: ComputedStyle): boolean => style.position === "absolute" || style.position === "fixed"
+
 const flowChildren = (layoutNode: LayoutNode): readonly LayoutNode[] => {
   const children = layoutNode.children
-  return children.some((child) => child.style.position === "absolute")
-    ? children.filter((child) => child.style.position !== "absolute")
+  return children.some((child) => isOutOfFlow(child.style))
+    ? children.filter((child) => !isOutOfFlow(child.style))
     : children
 }
 
@@ -3037,14 +3249,17 @@ const childPlacementContext = (
   parent: PlacementContext,
   presentation: RenderTransform,
   presentationOwner: Element | null,
+  clips: readonly RenderClip[],
 ): PlacementContext => {
-  const establishesAbsolute = layoutNode.style.position !== "static" &&
+  const establishesFixed = layoutNode.style.transform.length > 0
+  const establishesAbsolute = (layoutNode.style.position !== "static" || establishesFixed) &&
     (layoutNode.style.display === "block" || layoutNode.style.display === "flex")
   const hasRelativeChild = layoutNode.children.some(
     (child) => child.style.position === "relative",
   )
   if (
     !establishesAbsolute &&
+    !establishesFixed &&
     !hasRelativeChild &&
     presentation === parent.presentation &&
     presentationOwner === parent.presentationOwner
@@ -3065,7 +3280,12 @@ const childPlacementContext = (
         height: Math.max(0, box.height - vertical(box.border.widths)),
       })
     : parent.absolute
-  return Object.freeze({absolute, normal, presentation, presentationOwner})
+  const fixed = establishesFixed ? Object.freeze({
+    box: Object.freeze({x: box.x + box.border.widths.left, y: box.y + box.border.widths.top,
+      width: Math.max(0, box.width - horizontal(box.border.widths)), height: Math.max(0, box.height - vertical(box.border.widths))}),
+    owner: layoutNode.node, presentation, presentationOwner, clips,
+  }) : parent.fixed
+  return Object.freeze({absolute, normal, presentation, presentationOwner, fixed, fixedBoundaries: parent.fixedBoundaries})
 }
 
 const placeAbsoluteChild = (
@@ -3077,7 +3297,15 @@ const placeAbsoluteChild = (
   state: BuildState,
   context: PlacementContext,
 ): Size => {
-  const containing = context.absolute
+  const fixed = child.style.position === "fixed" ? context.fixed : null
+  const containing = fixed?.box ?? context.absolute
+  if (fixed !== null) {
+    clips = fixed.clips
+    context = Object.freeze({...context, absolute: fixed.box, normal: fixed.box,
+      presentation: fixed.presentation, presentationOwner: fixed.presentationOwner,
+      fixedBoundaries: Object.freeze([...context.fixedBoundaries, {root: child.node, containing: fixed.owner}]),
+    })
+  }
   const margin = child.style.margin
   const availableWidth = Math.max(0, containing.width - horizontal(margin))
   const availableHeight = Math.max(0, containing.height - vertical(margin))
@@ -3153,6 +3381,46 @@ const place = (
 ): Size => {
   if (layoutNode.style.display === "none")
     return Object.freeze({ width: 0, height: 0 })
+  const retainText = canRetainTextPaint(layoutNode)
+  const textCoordinates = retainText ? [x, y, availableWidth, availableHeight, forcedWidth, forcedHeight, depth] : null
+  let retained = retainText ? state.textPaint.get(layoutNode) : undefined
+  if (retained !== undefined && textCoordinates !== null &&
+    retained.coordinates.every((value, index) => index < 2 || value === textCoordinates[index]) &&
+    samePaintTransform(retained.transform, context.presentation) &&
+    retained.presentationOwner === context.presentationOwner && samePaintClips(retained.clips, clips) &&
+    retained.fixedBoundaries.length === context.fixedBoundaries.length &&
+    retained.fixedBoundaries.every((boundary, index) => boundary.root === context.fixedBoundaries[index]!.root &&
+      boundary.containing === context.fixedBoundaries[index]!.containing)) {
+    const dx = x - retained.coordinates[0]!
+    const dy = y - retained.coordinates[1]!
+    if (dx !== 0 || dy !== 0) {
+      retained = Object.freeze({...retained,
+        coordinates: Object.freeze(textCoordinates),
+        boxes: Object.freeze(retained.boxes.map(box => scrollBox(box, -dx, -dy, context.presentation))),
+        display: Object.freeze(retained.display.map(item => scrollDisplayItem(item, clips.length - 1, -dx, -dy, context.presentation))),
+        hits: Object.freeze(retained.hits.map(hit => scrollHit(hit, clips.length - 1, -dx, -dy, context.presentation))),
+        right: retained.right + dx, bottom: retained.bottom + dy,
+      })
+      state.textPaint.set(layoutNode, retained)
+    }
+    for (const box of retained.boxes) {
+      state.boxes.push(box)
+      state.boxByNode.set(box.node, box)
+      state.transforms.set(box.node, box.transform)
+      if (box.scrollBoundaries !== undefined) state.fixedBoundaries.set(box.node, box.scrollBoundaries)
+    }
+    for (const item of retained.display) state.displayList.push(item)
+    for (const hit of retained.hits) {
+      state.hits.set(hit.node, hit)
+      state.hitOrder.push(hit.node)
+    }
+    state.textOverflow.set(layoutNode, retained)
+    return retained.size
+  }
+  const textBoxStart = retainText ? state.boxes.length : 0
+  const textDisplayStart = retainText ? state.displayList.length : 0
+  const textHitStart = retainText ? state.hitOrder.length : 0
+  if (context.fixedBoundaries.length > 0) state.fixedBoundaries.set(layoutNode.node, context.fixedBoundaries)
 
   const measured = measure(layoutNode, availableWidth, availableHeight, state)
   const width = Math.max(0, forcedWidth ?? measured.width)
@@ -3205,6 +3473,7 @@ const place = (
       depth,
       "inline",
       presentation,
+      state.fixedBoundaries.get(layoutNode.node),
     )
     state.boxes.push(box)
     state.boxByNode.set(layoutNode.node, box)
@@ -3224,7 +3493,7 @@ const place = (
     let usedWidth = 0
     for (const child of layoutNode.children) {
       const margin = child.style.margin
-      if (child.style.position === "absolute") {
+      if (isOutOfFlow(child.style)) {
         placeAbsoluteChild(
           child,
           x + margin.left,
@@ -3283,6 +3552,7 @@ const place = (
     depth,
     display,
     presentation,
+    state.fixedBoundaries.get(layoutNode.node),
   )
   state.boxes.push(box)
   state.boxByNode.set(layoutNode.node, box)
@@ -3347,10 +3617,14 @@ const place = (
     context,
     presentation,
     presentationOwner,
+    descendantClips,
   )
 
-  const inline = inlineLayout(layoutNode, contentWidth, contentHeight, state)
-  if (inline !== null) {
+  const streamed = placeTextStream(layoutNode, box, descendantClips, clips, depth + 1, state, childrenContext)
+  const inline = streamed ? null : inlineLayout(layoutNode, contentWidth, contentHeight, state)
+  if (streamed) {
+    // The full dense records are retained ranges, inserted when this frame is sealed.
+  } else if (inline !== null) {
     placeInlineLayout(inline, contentX, contentY, contentWidth, contentHeight, descendantClips, depth + 1, state, childrenContext)
   } else if (layoutNode.style.display === "flex") {
     placeFlexChildren(
@@ -3375,7 +3649,7 @@ const place = (
       const margin = child.style.margin
       const displayStart = stackSlices === null ? 0 : state.displayList.length
       const hitStart = stackSlices === null ? 0 : state.hitOrder.length
-      if (child.style.position === "absolute") {
+      if (isOutOfFlow(child.style)) {
         placeAbsoluteChild(
           child,
           childX + margin.left,
@@ -3419,7 +3693,7 @@ const place = (
       const margin = child.style.margin
       const displayStart = stackSlices === null ? 0 : state.displayList.length
       const hitStart = stackSlices === null ? 0 : state.hitOrder.length
-      if (child.style.position === "absolute") {
+      if (isOutOfFlow(child.style)) {
         placeAbsoluteChild(
           child,
           contentX + margin.left,
@@ -3454,7 +3728,7 @@ const place = (
     if (stackSlices !== null) reorderChildStacking(stackSlices, state)
   }
 
-  projectElementScroll(
+  if (!streamed) projectElementScroll(
     layoutNode,
     x,
     y,
@@ -3469,7 +3743,245 @@ const place = (
     state,
   )
 
-  return Object.freeze({ width, height })
+  const size = Object.freeze({width, height})
+  if (textCoordinates !== null) {
+    const boxes = Object.freeze(state.boxes.slice(textBoxStart))
+    const retained: RetainedTextPaint = Object.freeze({
+      coordinates: Object.freeze(textCoordinates), clips, transform: context.presentation,
+      presentationOwner: context.presentationOwner, fixedBoundaries: context.fixedBoundaries,
+      boxes,
+      display: Object.freeze(state.displayList.slice(textDisplayStart)),
+      hits: Object.freeze(state.hitOrder.slice(textHitStart).map(node => state.hits.get(node)!)),
+      size,
+      right: boxes.reduce((value, box) => Math.max(value, box.x + box.width + Math.max(0, box.margin.right)), -Infinity),
+      bottom: boxes.reduce((value, box) => Math.max(value, box.y + box.height + Math.max(0, box.margin.bottom)), -Infinity),
+    })
+    state.textPaint.set(layoutNode, retained)
+    state.textOverflow.set(layoutNode, retained)
+  }
+  return size
+}
+
+const samePaintTransform = (left: RenderTransform, right: RenderTransform): boolean =>
+  left === right || left.scaleX === right.scaleX && left.scaleY === right.scaleY &&
+  left.translateX === right.translateX && left.translateY === right.translateY
+
+const structuralFrameDelta = (previous: RenderFrame, next: RenderFrame): CanonicalStructuralSplice | null => {
+  if (!isRendererOwnedFrame(previous) || !isRendererOwnedFrame(next) || previous.document !== next.document ||
+    previous.root !== next.root || next.revision <= previous.revision ||
+    previous.viewport.width !== next.viewport.width || previous.viewport.height !== next.viewport.height) return null
+  const oldSource = lazyScrollContexts.get(previous)?.source ?? previous
+  const nextSource = lazyScrollContexts.get(next)?.source ?? next
+  const before = textStreamFrames.get(oldSource)
+  const after = textStreamFrames.get(nextSource)
+  if (before === undefined || after === undefined || before.owner !== after.owner ||
+    !next.root.contains(after.owner) || !samePaintTransform(before.transform, after.transform) ||
+    !samePaintClips(before.clips, after.clips)) return null
+  const previousRange = {start: before.displayStart, end: before.displayStart + before.collections.display.length}
+  const nextRange = {start: after.displayStart, end: after.displayStart + after.collections.display.length}
+  if (previousRange.start !== nextRange.start || previous.displayList.length - previousRange.end !== next.displayList.length - nextRange.end) return null
+  const sameIdentity = (oldIndex: number, newIndex: number) => {
+    const left = readImmutableArrayEntry(previous.displayList, oldIndex)
+    const right = readImmutableArrayEntry(next.displayList, newIndex)
+    return left !== undefined && right !== undefined && left.node === right.node && left.key === right.key && left.kind === right.kind
+  }
+  for (let index = 0; index < previousRange.start; index++) if (!sameIdentity(index, index)) return null
+  for (let index = 0; index < previous.displayList.length - previousRange.end; index++) {
+    if (!sameIdentity(previousRange.end + index, nextRange.end + index)) return null
+  }
+  const blocks = (stream: BuiltTextStream, source: RenderFrame, frame: RenderFrame) => {
+    const sourceScroll = source.scrolls.get(stream.owner)
+    const frameScroll = frame.scrolls.get(stream.owner)
+    const dx = (frameScroll?.scrollLeft ?? 0) - (sourceScroll?.scrollLeft ?? 0)
+    const dy = (frameScroll?.scrollTop ?? 0) - (sourceScroll?.scrollTop ?? 0)
+    return Array.from(stream.collections.blocks, block => ({
+      source: block.source, start: stream.displayStart + block.displayEnd - block.source.display.length,
+      count: block.source.display.length, dx: block.dx - dx, dy: block.dy - dy,
+    }))
+  }
+  return structuralFrameRanges(after.owner, previousRange, nextRange,
+    blocks(before, oldSource, previous), blocks(after, nextSource, next))
+}
+
+const placeTextStream = (
+  owner: LayoutNode,
+  box: RenderBox,
+  clips: readonly RenderClip[],
+  chromeClips: readonly RenderClip[],
+  depth: number,
+  state: BuildState,
+  context: PlacementContext,
+): boolean => {
+  if (!state.allowTextStream || !state.deferTextScroll || state.stream !== null || state.deferredTextScroll !== null ||
+    !(owner.node instanceof HTMLElement) || owner.style.display !== "block" || owner.children.length < 256 ||
+    !scrollableOverflow(owner.style.overflowX) || !scrollableOverflow(owner.style.overflowY) ||
+    owner.hasFixedDescendants || clips.length === 0 || hasScrolledAncestor(owner) || hasReorderedAncestor(owner) ||
+    !owner.children.every(child => child.text === "" || canRetainTextPaint(child))) return false
+  const nodes = owner.children.map(child => child.node)
+  const previous = state.streamReuse.value?.owner === owner.node ? state.streamReuse.value : null
+  if (previous !== null) {
+    const start = previous.nodes.indexOf(nodes[0]!)
+    if (start < 0 || nodes.slice(0, Math.min(nodes.length, previous.nodes.length - start))
+      .some((node, index) => node !== readImmutableArrayEntry(previous.nodes, start + index))) return false
+  }
+  const placements: TextStreamPlacement[] = []
+  let y = box.contentY
+  let right = -Infinity
+  let bottom = -Infinity
+  for (const child of owner.children) {
+    const margin = child.style.margin
+    const width = Math.max(0, box.contentWidth - horizontal(margin))
+    const height = Math.max(0, box.contentHeight - vertical(margin))
+    const size = measure(child, width, height, state)
+    const x = box.contentX + margin.left
+    const top = y + margin.top
+    const coordinates = [x, top, width, height, size.width, size.height, depth]
+    let source = state.textPaint.get(child)
+    if (source === undefined || !source.coordinates.every((value, index) => index < 2 || value === coordinates[index]) ||
+      !samePaintTransform(source.transform, context.presentation) || source.presentationOwner !== context.presentationOwner ||
+      !samePaintClips(source.clips, clips) || source.fixedBoundaries.length !== context.fixedBoundaries.length ||
+      !source.fixedBoundaries.every((boundary, index) => boundary.root === context.fixedBoundaries[index]!.root &&
+        boundary.containing === context.fixedBoundaries[index]!.containing)) {
+      const scratch: BuildState = {...state,
+        boxes: [], boxByNode: new Map(), displayList: [], hits: new Map(), hitOrder: [], scrolls: new Map(),
+        scrollProjections: new Map(), transforms: new Map(), presentationTransforms: new Map(), fixedBoundaries: new Map(),
+        textOverflow: new Map(), stream: null, allowTextStream: false, deferTextScroll: false, deferredTextScroll: null,
+      }
+      const placed = place(child, x, top, width, height, size.width, size.height, clips, depth, scratch, context)
+      const boxes = Object.freeze(scratch.boxes)
+      source = Object.freeze({
+        coordinates: Object.freeze(coordinates), clips, transform: context.presentation,
+        presentationOwner: context.presentationOwner, fixedBoundaries: context.fixedBoundaries,
+        boxes, display: Object.freeze(scratch.displayList),
+        hits: Object.freeze(scratch.hitOrder.map(node => scratch.hits.get(node)!)), size: placed,
+        right: boxes.reduce((maximum, value) => Math.max(maximum, value.x + value.width + Math.max(0, value.margin.right)), -Infinity),
+        bottom: boxes.reduce((maximum, value) => Math.max(maximum, value.y + value.height + Math.max(0, value.margin.bottom)), -Infinity),
+      })
+      state.textPaint.set(child, source)
+    }
+    const dx = x - source.coordinates[0]!
+    const dy = top - source.coordinates[1]!
+    placements.push({source, dx, dy})
+    right = Math.max(right, source.right + dx)
+    bottom = Math.max(bottom, source.bottom + dy)
+    y += margin.top + size.height + margin.bottom
+  }
+  const clientX = box.x + box.border.widths.left
+  const clientY = box.y + box.border.widths.top
+  const clientWidth = Math.max(0, box.width - horizontal(box.border.widths))
+  const clientHeight = Math.max(0, box.height - vertical(box.border.widths))
+  const scrollWidth = normalizedScrollExtent(clientX, clientWidth, Math.max(clientX + clientWidth, right + owner.style.padding.right))
+  const scrollHeight = normalizedScrollExtent(clientY, clientHeight, Math.max(clientY + clientHeight, bottom + owner.style.padding.bottom))
+  const maxScrollLeft = Math.max(0, scrollWidth - clientWidth)
+  const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
+  const requestedScrollLeft = owner.node.scrollLeft
+  const requestedScrollTop = owner.node.scrollTop
+  const scrollLeft = Math.min(maxScrollLeft, requestedScrollLeft)
+  const scrollTop = Math.min(maxScrollTop, requestedScrollTop)
+  const metrics: RenderScrollMetrics = Object.freeze({node: owner.node, clientWidth, clientHeight, scrollWidth, scrollHeight,
+    requestedScrollLeft, requestedScrollTop, scrollLeft, scrollTop, maxScrollLeft, maxScrollTop})
+  const transform = context.presentation
+  const collections = createTextStreamCollections(placements, {
+    box: (value, dx, dy) => scrollBox(value, -dx, -dy, transform),
+    display: (value, dx, dy) => scrollDisplayItem(value, clips.length - 1, -dx, -dy, transform),
+    hit: (value, dx, dy) => scrollHit(value, clips.length - 1, -dx, -dy, transform),
+  }, previous?.index, {dx: -scrollLeft, dy: -scrollTop})
+  const boxStart = state.boxes.length
+  const displayStart = state.displayList.length
+  const hitStart = state.hitOrder.length
+  state.scrolls.set(owner.node, metrics)
+  emitScrollbars(owner, clientX, clientY, metrics, chromeClips, state)
+  state.stream = Object.freeze({owner: owner.node, collections, boxStart, displayStart, hitStart,
+    chromeCount: state.displayList.length - displayStart, clipDepth: clips.length - 1, transform, clips})
+  state.streamReuse.value = Object.freeze({owner: owner.node,
+    nodes: immutableArrayFromReader(nodes.length, index => nodes[index]!), index: collections.index})
+  return true
+}
+
+const lookupWithFallback = <Key extends object, Value>(read: (key: Key) => Value | undefined): ObjectLookup<Key, Value> => {
+  const cache = new WeakMap<Key, Value>()
+  return Object.freeze({
+    get(key: Key) {
+      let value = cache.get(key)
+      if (value === undefined) { value = read(key); if (value !== undefined) cache.set(key, value) }
+      return value
+    },
+    set(key: Key, value: Value) { return cache.set(key, value) },
+  })
+}
+
+const indexStreamFrame = (frame: RenderFrame, state: BuildState, stream: BuiltTextStream, outsideHitOrder: readonly HitMetadata[]): FrameCollectionIndexes => {
+  const outside = indexCollections(state.boxes, state.displayList, outsideHitOrder)
+  const shifted = (index: number, start: number, size: number) => index < start ? index : index + size
+  return Object.freeze({
+    boxByNode: lookupWithFallback<Node, number>(node => {
+      const own = outside.boxByNode.get(node)
+      if (own !== undefined) return shifted(own, stream.boxStart, stream.collections.boxes.length)
+      const inside = stream.collections.boxIndex(node)
+      return inside === undefined ? undefined : stream.boxStart + inside
+    }),
+    displayByNode: lookupWithFallback<Node, ReadonlyMap<string, number>>(node => {
+      const own = outside.displayByNode.get(node)
+      if (own !== undefined) return new ProjectedMap(own, (_key, index) => shifted(index, stream.displayStart, stream.collections.display.length))
+      const inside = stream.collections.displayIndexes(node)
+      return inside === undefined ? undefined : new ProjectedMap(inside, (_key, index) => stream.displayStart + index)
+    }),
+    hitByRecord: lookupWithFallback<HitMetadata, number>(hit => {
+      const own = outside.hitByRecord.get(hit)
+      if (own !== undefined) return shifted(own, stream.hitStart, stream.collections.hits.length)
+      const inside = stream.collections.hitIndex(hit.node)
+      return inside === undefined || frame.hits.get(hit.node) !== hit ? undefined : stream.hitStart + inside
+    }),
+    pathStackByParent: lookupWithFallback<Element, PathStackBlock>(node => {
+      const block = outside.pathStackByParent.get(node)
+      if (block === undefined || block.displayStart < stream.displayStart && block.displayStart + block.nodes.length > stream.displayStart) return undefined
+      return {...block,
+        displayStart: shifted(block.displayStart, stream.displayStart, stream.collections.display.length),
+        hitStart: shifted(block.hitStart, stream.hitStart, stream.collections.hits.length),
+      }
+    }),
+  })
+}
+
+const canRetainTextPaint = (node: LayoutNode): boolean =>
+  node.inlineTextOnly === true && node.style.display === "block" &&
+  node.style.position === "static" && node.style.transform.length === 0 &&
+  node.style.overflowX === "visible" && node.style.overflowY === "visible" &&
+  !node.transparent && !["input", "img", "select", "textarea", "progress", "meter", "vector-path"].includes(node.tag ?? "")
+
+const textStreamChild = (node: LayoutNode): boolean =>
+  node.text !== null || node.style.display === "none" ||
+  node.transparent && node.children.every(textStreamChild) || canRetainTextPaint(node)
+
+const hasScrolledAncestor = (node: LayoutNode): boolean => {
+  for (let parent = node.parent; parent !== null; parent = parent.parent) {
+    if (parent.node instanceof HTMLElement && (parent.node.scrollLeft !== 0 || parent.node.scrollTop !== 0)) return true
+  }
+  return false
+}
+
+const hasReorderedAncestor = (node: LayoutNode): boolean => {
+  for (let parent = node.parent; parent !== null; parent = parent.parent) if (requiresChildStackingReorder(parent)) return true
+  return false
+}
+
+const paintClipComparisons = new WeakMap<readonly RenderClip[], WeakMap<readonly RenderClip[], boolean>>()
+const samePaintClips = (left: readonly RenderClip[], right: readonly RenderClip[]): boolean => {
+  if (left === right) return true
+  const previous = paintClipComparisons.get(left)?.get(right)
+  if (previous !== undefined) return previous
+  const equal = left.length === right.length && left.every((clip, index) => {
+    const other = right[index]!
+    return clip === other || clip.x === other.x && clip.y === other.y && clip.width === other.width &&
+      clip.height === other.height && clip.clipX === other.clipX && clip.clipY === other.clipY &&
+      clip.presentationOwner === other.presentationOwner && samePaintTransform(clip.transform, other.transform) &&
+      (["topLeft", "topRight", "bottomRight", "bottomLeft"] as const).every(corner =>
+        clip.radii[corner].x === other.radii[corner].x && clip.radii[corner].y === other.radii[corner].y)
+  })
+  const comparisons = paintClipComparisons.get(left) ?? new WeakMap<readonly RenderClip[], boolean>()
+  comparisons.set(right, equal)
+  paintClipComparisons.set(left, comparisons)
+  return equal
 }
 
 const placeFlexChildren = (
@@ -3648,7 +4160,7 @@ const placeFlexChildren = (
 
   for (let index = 0; index < layoutNode.children.length; index++) {
     const child = layoutNode.children[index]
-    if (!child || child.style.position !== "absolute") continue
+    if (!child || !isOutOfFlow(child.style)) continue
     const staticPosition = flexAbsoluteStaticPosition(child, layoutNode, x, y, width, height, state)
     const displayStart = stackSlices === null ? 0 : state.displayList.length
     const hitStart = stackSlices === null ? 0 : state.hitOrder.length
@@ -3676,7 +4188,7 @@ const placeFlexChildren = (
 const requiresChildStackingReorder = (parent: LayoutNode): boolean => {
   if (
     parent.style.display === "flex" &&
-    parent.children.some((child) => child.style.position === "absolute")
+    parent.children.some((child) => isOutOfFlow(child.style))
   ) return true
   return parent.children.some((child) => {
     const applies = parent.style.display === "flex" || child.style.position !== "static"
@@ -4503,12 +5015,14 @@ const projectElementScroll = (
   const clientHeight = Math.max(0, height - vertical(border.widths))
   const descendantRight = descendantOverflowEnd(
     layoutNode.children,
+    layoutNode.node,
     "x",
     presentationFor(layoutNode.node, state),
     state,
   )
   const descendantBottom = descendantOverflowEnd(
     layoutNode.children,
+    layoutNode.node,
     "y",
     presentationFor(layoutNode.node, state),
     state,
@@ -4533,16 +5047,22 @@ const projectElementScroll = (
   const requestedScrollTop = layoutNode.node.scrollTop
   const scrollLeft = Math.min(maxScrollLeft, requestedScrollLeft)
   const scrollTop = Math.min(maxScrollTop, requestedScrollTop)
+  const deferred = state.deferTextScroll && state.stream === null && state.deferredTextScroll === null &&
+    (scrollLeft !== 0 || scrollTop !== 0) && state.boxes.length - descendantBoxStart >= 256 &&
+    descendantClips.length > 0 && !layoutNode.hasFixedDescendants &&
+    layoutNode.style.display === "block" && layoutNode.children.every(textStreamChild) &&
+    !hasScrolledAncestor(layoutNode)
+  if (deferred) state.deferredTextScroll = layoutNode.node
   const metrics: RenderScrollMetrics = Object.freeze({
     node: layoutNode.node,
     clientWidth,
     clientHeight,
     scrollWidth,
     scrollHeight,
-    requestedScrollLeft,
-    requestedScrollTop,
-    scrollLeft,
-    scrollTop,
+    requestedScrollLeft: deferred ? 0 : requestedScrollLeft,
+    requestedScrollTop: deferred ? 0 : requestedScrollTop,
+    scrollLeft: deferred ? 0 : scrollLeft,
+    scrollTop: deferred ? 0 : scrollTop,
     maxScrollLeft,
     maxScrollTop,
   })
@@ -4556,12 +5076,13 @@ const projectElementScroll = (
     clipDepth: descendantClips.length - 1,
     chromeStart: state.displayList.length,
   }
-  if (scrollLeft !== 0 || scrollTop !== 0) {
+  if (!deferred && (scrollLeft !== 0 || scrollTop !== 0)) {
     const ownClip = descendantClips.at(-1)
     if (ownClip) {
       const ownerTransform = presentationFor(layoutNode.node, state)
       shiftDescendantBoxes(
         descendantBoxStart,
+        layoutNode.node,
         scrollLeft,
         scrollTop,
         ownerTransform,
@@ -4569,6 +5090,7 @@ const projectElementScroll = (
       )
       shiftDescendantDisplay(
         descendantDisplayStart,
+        layoutNode.node,
         ownClip,
         scrollLeft,
         scrollTop,
@@ -4577,6 +5099,7 @@ const projectElementScroll = (
       )
       shiftDescendantHits(
         projection.hitNodes,
+        layoutNode.node,
         ownClip,
         scrollLeft,
         scrollTop,
@@ -4593,17 +5116,28 @@ const projectElementScroll = (
     chromeClips,
     state,
   )
-  state.scrollProjections.set(layoutNode.node, Object.freeze({...projection, chromeEnd: state.displayList.length}))
+  if (!layoutNode.hasFixedDescendants) state.scrollProjections.set(layoutNode.node, Object.freeze({...projection, chromeEnd: state.displayList.length}))
 }
+
+const scrollAffectsNode = (node: Node, owner: Node, state: BuildState): boolean =>
+  (state.fixedBoundaries.get(node) ?? []).every(boundary => boundary.root.contains(owner) ||
+    boundary.containing !== null && owner.contains(boundary.containing))
 
 const descendantOverflowEnd = (
   nodes: readonly LayoutNode[],
+  owner: Node,
   axis: "x" | "y",
   ownerTransform: RenderTransform,
   state: BuildState,
 ): number => {
   let maximum = Number.NEGATIVE_INFINITY
   for (const node of nodes) {
+    if (!scrollAffectsNode(node.node, owner, state)) continue
+    const text = state.textOverflow.get(node)
+    if (text !== undefined && samePaintTransform(text.transform, ownerTransform)) {
+      maximum = Math.max(maximum, axis === "x" ? text.right : text.bottom)
+      continue
+    }
     const box = state.boxByNode.get(node.node)
     if (box) {
       const bounds = transformBounds(
@@ -4624,7 +5158,7 @@ const descendantOverflowEnd = (
     if (node.transparent || overflow === "visible") {
       maximum = Math.max(
         maximum,
-        descendantOverflowEnd(node.children, axis, ownerTransform, state),
+        descendantOverflowEnd(node.children, owner, axis, ownerTransform, state),
       )
     }
   }
@@ -4819,6 +5353,7 @@ const scrollHit = (hit: HitMetadata, clipDepth: number, dx: number, dy: number, 
 
 const shiftDescendantBoxes = (
   start: number,
+  owner: Node,
   scrollLeft: number,
   scrollTop: number,
   ownerTransform: RenderTransform,
@@ -4826,7 +5361,7 @@ const shiftDescendantBoxes = (
 ): void => {
   for (let index = start; index < state.boxes.length; index++) {
     const box = state.boxes[index]
-    if (!box) continue
+    if (!box || !scrollAffectsNode(box.node, owner, state)) continue
     const shifted = scrollBox(box, scrollLeft, scrollTop, ownerTransform)
     state.boxes[index] = shifted
     state.boxByNode.set(box.node, shifted)
@@ -4839,6 +5374,7 @@ const shiftDescendantBoxes = (
 
 const shiftDescendantDisplay = (
   start: number,
+  owner: Node,
   ownClip: RenderClip,
   scrollLeft: number,
   scrollTop: number,
@@ -4847,7 +5383,7 @@ const shiftDescendantDisplay = (
 ): void => {
   for (let index = start; index < state.displayList.length; index++) {
     const item = state.displayList[index]
-    if (!item) continue
+    if (!item || !scrollAffectsNode(item.node, owner, state)) continue
     state.displayList[index] = scrollDisplayItem(item, item.clips.indexOf(ownClip), scrollLeft, scrollTop, ownerTransform)
     if (item.kind === "path" && item.presentationOwner !== null && item.presentationOwner === item.node) {
       const transform = state.presentationTransforms.get(item.presentationOwner)
@@ -4862,6 +5398,7 @@ const shiftDescendantDisplay = (
 
 const shiftDescendantHits = (
   nodes: readonly Node[],
+  owner: Node,
   ownClip: RenderClip,
   scrollLeft: number,
   scrollTop: number,
@@ -4869,6 +5406,7 @@ const shiftDescendantHits = (
   state: BuildState,
 ): void => {
   for (const node of nodes) {
+    if (!scrollAffectsNode(node, owner, state)) continue
     const hit = state.hits.get(node)
     if (hit === undefined) continue
     state.hits.set(
@@ -5948,12 +6486,16 @@ const createBox = (
   depth: number,
   display: "block" | "inline" | "flex",
   transform: RenderTransform,
+  scrollBoundaries?: PlacementContext["fixedBoundaries"],
 ): RenderBox =>
   Object.freeze({
     node: layoutNode.node,
     parent: layoutNode.parent?.node ?? null,
     depth,
     display,
+    userSelect: layoutNode.style.userSelect,
+    whiteSpace: layoutNode.style.whiteSpace,
+    ...(scrollBoundaries === undefined ? {} : {scrollBoundaries}),
     x,
     y,
     width,
@@ -6010,6 +6552,8 @@ const createHit = (
         tag === "input" ||
         tag === "select" ||
         tag === "textarea" ||
+        node instanceof HTMLElement && node.isContentEditable &&
+          !(node.parentElement instanceof HTMLElement && node.parentElement.isContentEditable) ||
         tabIndex >= 0),
     disabled,
     role,
@@ -6073,6 +6617,7 @@ const rememberSize = (
     values = new Map()
     state.measured.set(node, values)
   }
+  if (values.size >= 8) values.clear()
   values.set(measureKey(availableWidth, availableHeight), size)
   return size
 }
@@ -6097,22 +6642,6 @@ const childNodes = (node: Node): Node[] => {
 
 const layoutChildNodes = (node: Node): Node[] =>
   childNodes(node).filter(child => child.nodeType !== 8)
-
-const showingPopovers = (root: Node): readonly HTMLElement[] => {
-  const popovers: HTMLElement[] = []
-  const visit = (node: Node): void => {
-    if (
-      node instanceof HTMLElement &&
-      node.popover !== null &&
-      node[getPopoverVisibilityState]() === "showing"
-    ) {
-      popovers.push(node)
-    }
-    for (const child of childNodes(node)) visit(child)
-  }
-  visit(root)
-  return popovers
-}
 
 const isElement = (node: Node): node is Element => node.nodeType === 1
 const isText = (node: Node): node is Text => node.nodeType === 3
@@ -6238,11 +6767,17 @@ const emitTextItems = (
   const value = layoutNode.text
   if (!value) return
   const lines = splitTextLines(value)
+  const sourceOffsets = normalizedSourceOffsets(layoutNode.node.textContent ?? "", layoutNode.style.whiteSpace)
+  let valueOffset = 0
   const multiline = lines.length > 1
   const lineHeight = resolveLineHeight(layoutNode.style)
   const overflowStyle = layoutNode.parent?.style ?? layoutNode.style
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index]
+    const lineOffset = valueOffset
+    valueOffset += (line?.length ?? 0)
+    if (value[valueOffset] === "\r" && value[valueOffset + 1] === "\n") valueOffset += 2
+    else if (valueOffset < value.length) valueOffset++
     if (!line) continue
     const displayLine = !multiline
       ? ellipsizeSingleLine(
@@ -6254,17 +6789,21 @@ const emitTextItems = (
         )
       : line
     if (displayLine === "" || !hasPaintableText(displayLine)) continue
+    const displayWidth = textAdvance(displayLine, layoutNode.style, state.textMeasurer)
     state.displayList.push(
       Object.freeze({
         kind: "text",
         key: multiline ? `text:${index}` : "text",
         node: layoutNode.node,
         text: displayLine,
+        width: displayWidth,
+        source: textSource(layoutNode, Array.from({length: displayLine.length + 1}, (_, offset) =>
+          sourceOffsets[lineOffset + Math.min(offset, displayLine === line ? line.length : Math.max(0, displayLine.length - 1))] ?? 0), state),
         x: alignedTextX(
           layoutNode.style,
           x,
           alignmentWidth,
-          textAdvance(displayLine, layoutNode.style, state.textMeasurer),
+          displayWidth,
         ),
         y: y + index * lineHeight,
         color: layoutNode.style.color,
@@ -6278,6 +6817,27 @@ const emitTextItems = (
       }),
     )
   }
+}
+
+const textSource = (node: LayoutNode, offsets: readonly number[], state: BuildState) => {
+  let selectionRoot: Node | null = null
+  for (let parent = node.parent; parent !== null; parent = parent.parent) {
+    if (parent.style.selectionBoundary !== null) {
+      selectionRoot = parent.node
+      break
+    }
+  }
+  return createTextSource({offsets, userSelect: node.style.userSelect, selectionRoot, whiteSpace: node.style.whiteSpace}, node.style, state.textMeasurer)
+}
+
+const normalizedSourceOffsets = (value: string, whiteSpace: ComputedStyle["whiteSpace"]): readonly number[] => {
+  if (whiteSpace === "pre") return Array.from({length: value.length + 1}, (_, offset) => offset)
+  const offsets: number[] = [0]
+  for (const match of value.matchAll(/[^\t\n\f\r ]+|[\t\n\f\r ]+/gu)) {
+    if (/^[\t\n\f\r ]/u.test(match[0])) offsets.push(match.index + match[0].length)
+    else for (let index = 1; index <= match[0].length; index++) offsets.push(match.index + index)
+  }
+  return offsets
 }
 
 const splitTextLines = (value: string): readonly string[] =>
@@ -6340,6 +6900,8 @@ const textStyle = (inherited: ComputedStyle): ComputedStyle =>
     textAlign: inherited.textAlign,
     textOverflow: inherited.textOverflow,
     whiteSpace: inherited.whiteSpace,
+    userSelect: inherited.userSelect,
+    selectionBoundary: null,
     zIndex: "auto",
   })
 

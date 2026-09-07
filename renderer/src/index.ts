@@ -1,6 +1,9 @@
 export { createDocumentRenderer } from "./renderer.ts"
 export {hitTestProjection} from "./projection-hit.ts"
 export {createDocumentInteractionState} from "./pseudo-state.ts"
+export {fulfillScrollIntoViewRequests} from "./scroll-into-view.ts"
+export {caretPositionAtPoint, getRangeClientRects, readRenderedSelectionText, selectTextWordAtPoint} from "./text-selection.ts"
+export type {RenderCaretPosition, RenderRangeRect} from "./text-selection.ts"
 export {readCanonicalRenderFrameChanges} from "./frame-changes.ts"
 export {VECTOR_PATH_COORDINATE_LIMIT} from "@zavx0z/dom"
 export {
@@ -45,6 +48,8 @@ export type {
   RenderPosition,
   RenderScrollMetrics,
   RenderTextAlign,
+  RenderTextSource,
+  RenderUserSelect,
   RenderTextMeasurer,
   RenderFontSelection,
   RenderImageSize,

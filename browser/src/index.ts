@@ -26,3 +26,4 @@ export type {
 
 export {useSpace, useFrame} from "./root-context.ts"
 export type {RootSize, RootState, FrameState, FrameCallback, FrameLoop} from "./root-context.ts"
+export type {DocumentClipboardController, ClipboardMenuState, ClipboardResult} from "../clipboard.ts"

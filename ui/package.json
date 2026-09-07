@@ -11,6 +11,11 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     "./markdown": "./markdown.ts",
+    "./code-editor-model": "./code-editor-model.ts",
+    "./terminal-model": "./terminal-model.ts",
+    "./menus/menu": "./menus/menu.tsx",
+    "./menus/menu-item": "./menus/menu-item.tsx",
+    "./menus/clipboard-menu": "./menus/clipboard-menu.tsx",
     "./badge": "./badge.tsx",
     "./divider": "./divider.tsx",
     "./typography": "./typography.tsx",
@@ -44,6 +49,9 @@
     "./feedback/notification": "./feedback/notification.tsx",
     "./feedback/status-bar": "./feedback/status-bar.tsx",
     "./widgets/inspector": "./widgets/inspector.tsx",
+    "./widgets/editor": "./widgets/editor.tsx",
+    "./widgets/terminal": "./widgets/terminal.tsx",
+    "./widgets/tree": "./widgets/tree.tsx",
     "./themes/icons": "./themes/icons.ts",
     "./themes/syntax-theme": "./themes/syntax-theme.ts",
     "./themes/theme.css": "./themes/theme.css"

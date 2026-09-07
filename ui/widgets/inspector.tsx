@@ -45,7 +45,7 @@ export type InspectorProps = Readonly<{
   toolbarLeadingActions?: readonly InspectorAction[] | undefined
   toolbarActions?: readonly InspectorAction[] | undefined
   context?: InspectorContext | undefined
-  children: readonly JsxSourceElement[]
+  children: JsxSourceElement | readonly JsxSourceElement[]
   style?: CssStyle | undefined
   onCategoryChange?: ((id: string, event: Event) => void) | undefined
   onQueryChange?: ((query: string, event: Event) => void) | undefined

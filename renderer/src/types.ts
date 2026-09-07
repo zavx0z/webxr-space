@@ -7,8 +7,17 @@ export type RenderFlexWrap = "nowrap" | "wrap" | "wrap-reverse"
 export type RenderWhiteSpace = "normal" | "pre" | "nowrap"
 export type RenderTextAlign = "start" | "end" | "left" | "right" | "center"
 export type RenderObjectFit = "cover" | "contain"
-export type RenderPosition = "static" | "relative" | "absolute"
+export type RenderPosition = "static" | "relative" | "absolute" | "fixed"
 export type RenderZIndex = "auto" | number
+export type RenderUserSelect = "text" | "none" | "all" | "contain"
+
+export type RenderTextSource = Readonly<{
+  offsets: readonly number[]
+  userSelect: RenderUserSelect
+  /** Nearest author-owned selection boundary, not a second semantic owner. */
+  selectionRoot: Node | null
+  whiteSpace: RenderWhiteSpace
+}>
 
 export type RenderFontSelection = Readonly<{fontFamily: string; fontWeight: number; fontStyle: "normal" | "italic"}>
 export type RenderImageSize = Readonly<{width: number; height: number}>
@@ -117,6 +126,11 @@ export type RenderBox = Readonly<{
   parent: Node | null
   depth: number
   display: Exclude<RenderDisplay, "none">
+  /** Resolved selection policy, including boxes with no painted glyphs. */
+  userSelect?: RenderUserSelect
+  whiteSpace?: RenderWhiteSpace
+  /** Fixed-position boundaries whose semantic ancestors do not all scroll this box. */
+  scrollBoundaries?: readonly Readonly<{root: Node; containing: Node | null}>[]
   x: number
   y: number
   width: number
@@ -152,6 +166,8 @@ export type TextDisplayItem = Readonly<{
   key: string
   node: Node
   text: string
+  /** Exact source boundaries for ordinary DOM Text, absent for generated control labels. */
+  source?: RenderTextSource
   /** Exact advance of a line fragment, when projected by inline formatting. */
   width?: number
   x: number
@@ -284,6 +300,8 @@ export interface RenderFrame {
   readonly boxes: readonly RenderBox[]
   readonly boxByNode: ReadonlyMap<Node, RenderBox>
   readonly displayList: readonly DisplayItem[]
+  /** Independent selection paint channel: changing it never rebuilds the document display list. */
+  readonly textHighlights?: readonly RectDisplayItem[]
   readonly hits: ReadonlyMap<Node, HitMetadata>
   /** Exact paint-order hit records; adapters may omit it on synthetic frames. */
   readonly hitOrder?: readonly HitMetadata[]
