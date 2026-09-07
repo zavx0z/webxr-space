@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type FunctionComponent,
 } from "@zavx0z/component"
 import {
@@ -20,12 +21,14 @@ import {
   type NodeTreeProps,
   type NodeTreeSelection,
   type NodeTreeStore,
+  type NodeTreeLayout,
 } from "./node-tree.tsx"
 import type {ParameterInput} from "./parameter.tsx"
+import {getNodeTreeLayoutStore, type NodeTreeLayoutState} from "./src/projection/layout-state.ts"
 
 export type NodeEditorProps = Readonly<{
   store: NodeTreeStore
-  layout: LayoutResult
+  layout: LayoutResult | NodeTreeLayout
   label?: string | undefined
   title?: string | undefined
   width?: number | undefined
@@ -61,7 +64,11 @@ export function NodeEditor(props: NodeEditorProps) {
   if (maxScale < minScale) throw new RangeError("NodeEditor maxScale must be at least minScale")
   const padding = nonNegative(props.fitPadding ?? 24, "NodeEditor fitPadding")
   const gridSize = positive(props.gridSize ?? 24, "NodeEditor gridSize")
-  const initialGeometry = useMemo(() => geometry(props.store, props.layout), [props.store, props.layout])
+  const layoutStore = useMemo(() => getNodeTreeLayoutStore(props.store, props.layout), [props.store, props.layout])
+  const layoutState = useSyncExternalStore(layoutStore.subscribe, layoutStore.getSnapshot)
+  const initialGeometry = useMemo(() => geometry(layoutState), [layoutState.snapshot, layoutState.layout])
+  const activeLayout = useRef(layoutStore)
+  activeLayout.current = layoutStore
   const initialTransform = useMemo(
     () => fitNodeTreeTransform(initialGeometry.bounds, width, contentHeight, padding, minScale, maxScale),
     [initialGeometry, width, contentHeight, padding, minScale, maxScale],
@@ -75,7 +82,10 @@ export function NodeEditor(props: NodeEditorProps) {
   const selection = props.selection ?? ownedSelection
   const collapsed = props.collapsedNodeIds ?? ownedCollapsed
   const previews = props.previewNodeIds ?? ownedPreview
-  const interactive = props.interactive !== false
+  const interactive = props.interactive !== false && !layoutState.pending
+  const current = () => activeLayout.current === layoutStore && !layoutStore.getSnapshot().pending &&
+    props.store.getTopologySnapshot() === layoutState.topology
+  if (layoutState.pending) pointers.current.clear()
   const viewport = useMemo(() => Object.freeze({
     x: -transform.x / transform.scale,
     y: -transform.y / transform.scale,
@@ -86,6 +96,7 @@ export function NodeEditor(props: NodeEditorProps) {
   const gridPoints = useMemo(() => createGridPoints(gridSize, width, contentHeight), [gridSize, width, contentHeight])
 
   const publishTransform = (next: NodeTreeTransform, event: Event) => {
+    if (!current()) return
     const normalized = Object.freeze({
       x: finite(next.x, "NodeEditor transform x"),
       y: finite(next.y, "NodeEditor transform y"),
@@ -95,21 +106,27 @@ export function NodeEditor(props: NodeEditorProps) {
     props.onTransformChange?.(normalized, event)
   }
   const publishSelection: NonNullable<NodeTreeProps["onSelectionChange"]> = (next, event) => {
+    if (!current()) return
     if (props.selection === undefined) setOwnedSelection(next)
     props.onSelectionChange?.(next, event)
   }
   const publishCollapse: NonNullable<NodeTreeProps["onNodeCollapseChange"]> = (nodeId, value, event) => {
+    if (!current()) return
     if (props.collapsedNodeIds === undefined) setOwnedCollapsed(updateSet(collapsed, nodeId, value))
     props.onNodeCollapseChange?.(nodeId, value, event)
   }
   const publishPreview: NonNullable<NodeTreeProps["onNodePreviewChange"]> = (nodeId, value, event) => {
+    if (!current()) return
     if (props.previewNodeIds === undefined) setOwnedPreview(updateSet(previews, nodeId, value))
     props.onNodePreviewChange?.(nodeId, value, event)
   }
-  const fit = (event: Event) => publishTransform(
-    fitNodeTreeTransform(geometry(props.store, props.layout).bounds, width, contentHeight, padding, minScale, maxScale),
-    event,
-  )
+  const fit = (event: Event) => {
+    if (!current()) return
+    publishTransform(
+      fitNodeTreeTransform(initialGeometry.bounds, width, contentHeight, padding, minScale, maxScale),
+      event,
+    )
+  }
   const onWheel = (event: WheelEvent) => {
     if (!interactive) return
     event.preventDefault()
@@ -179,6 +196,8 @@ export function NodeEditor(props: NodeEditorProps) {
   return <section
     aria-label={props.label ?? "Node editor"}
     data-node-editor=""
+    data-layout-pending={layoutState.pending ? "true" : undefined}
+    aria-busy={layoutState.pending ? "true" : "false"}
     data-selection-kind={selection?.kind}
     data-selection-id={selection?.id}
     style={css`
@@ -339,9 +358,9 @@ function GridPoint(props: Readonly<{point: GridPointValue}>) {
 
 export type NodeEditorComponent = FunctionComponent<NodeEditorProps>
 
-function geometry(store: NodeTreeStore, layout: LayoutResult) {
-  const snapshot = store.getTopologySnapshot()
-  return createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, layout)
+function geometry(state: NodeTreeLayoutState) {
+  const snapshot = state.snapshot
+  return createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, state.layout)
 }
 
 function initialCollapsed(store: NodeTreeStore): ReadonlySet<string> {

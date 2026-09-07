@@ -9,6 +9,8 @@ import type {LayoutResult} from "@zavx0z/layout/types"
 import {
   memo,
   useMemo,
+  useRef,
+  useLayoutEffect,
   useSyncExternalStore,
   type FunctionComponent,
 } from "@zavx0z/component"
@@ -32,6 +34,7 @@ import {Link, projectLinkRoute, type LinkRoute} from "./link.tsx"
 import {Node, type NodePreview} from "./node.tsx"
 import type {ParameterInput} from "./parameter.tsx"
 import {SOCKET_KINDS, type SocketKind} from "./socket.tsx"
+import {getNodeTreeLayoutStore, registerNodeTreeLayout, type NodeTreeLayoutState} from "./src/projection/layout-state.ts"
 
 export type {
   NodeRect,
@@ -39,8 +42,69 @@ export type {
   NodeTreeViewport,
 } from "./src/projection/geometry.ts"
 export {nodeSocketLayoutPortId} from "./src/projection/geometry.ts"
+export {socketKey}
 
 export type NodeTreeStore = NodeTreeExternalStore<NodeTreeSnapshot, ParameterSnapshot>
+const nodeTreeLayoutBrand: unique symbol = Symbol("NodeTreeLayout")
+
+/** One validated layout bound to the exact source snapshot used to compute it. */
+export type NodeTreeLayout = Readonly<{
+  [nodeTreeLayoutBrand]: true
+  snapshot: NodeTreeSnapshot
+  layout: LayoutResult
+}>
+
+export class StaleNodeTreeLayoutError extends Error {
+  constructor() {
+    super("NodeTree changed while its layout was being computed")
+    this.name = "StaleNodeTreeLayoutError"
+  }
+}
+
+export function createNodeTreeLayout(store: NodeTreeStore, compute: (snapshot: NodeTreeSnapshot) => LayoutResult): NodeTreeLayout
+export function createNodeTreeLayout(store: NodeTreeStore, compute: (snapshot: NodeTreeSnapshot) => Promise<LayoutResult>): Promise<NodeTreeLayout>
+export function createNodeTreeLayout(store: NodeTreeStore, compute: (snapshot: NodeTreeSnapshot) => LayoutResult | Promise<LayoutResult>): NodeTreeLayout | Promise<NodeTreeLayout>
+/**
+ * Captures before calling the layout owner and rejects an outdated async result.
+ * Values remain in the supplied Store; the receipt contains only derived data.
+ */
+export function createNodeTreeLayout(
+  store: NodeTreeStore,
+  compute: (snapshot: NodeTreeSnapshot) => LayoutResult | Promise<LayoutResult>,
+): NodeTreeLayout | Promise<NodeTreeLayout> {
+  const topology = store.getTopologySnapshot()
+  const snapshot = store.getSnapshot()
+  const complete = (layout: LayoutResult): NodeTreeLayout => {
+    if (store.getTopologySnapshot() !== topology || store.getSnapshot() !== snapshot) {
+      throw new StaleNodeTreeLayoutError()
+    }
+    createNodeGeometryIndex(snapshot.nodes, snapshot.frames, snapshot.links, layout)
+    const owned = Object.freeze({
+      direction: layout.direction,
+      bounds: Object.freeze({...layout.bounds}),
+      nodes: Object.freeze(layout.nodes.map(node => Object.freeze({...node}))),
+      ports: Object.freeze(layout.ports.map(port => Object.freeze({...port}))),
+      edges: Object.freeze(layout.edges.map(edge => Object.freeze({
+        id: edge.id,
+        sections: Object.freeze(edge.sections.map(section => Object.freeze({
+          startPoint: Object.freeze({...section.startPoint}),
+          endPoint: Object.freeze({...section.endPoint}),
+          bendPoints: Object.freeze(section.bendPoints.map(point => Object.freeze({...point}))),
+        }))) as LayoutResult["edges"][number]["sections"],
+      }))),
+    })
+    if (store.getTopologySnapshot() !== topology || store.getSnapshot() !== snapshot) {
+      throw new StaleNodeTreeLayoutError()
+    }
+    const receipt: NodeTreeLayout = Object.freeze({[nodeTreeLayoutBrand]: true, snapshot, layout: owned})
+    registerNodeTreeLayout(receipt, store, topology)
+    return receipt
+  }
+  const result = compute(snapshot)
+  return result !== null && typeof result === "object" && "then" in result
+    ? Promise.resolve(result).then(complete)
+    : complete(result)
+}
 
 export type NodeTreeSelection =
   | Readonly<{kind: "frame" | "link" | "node"; id: string}>
@@ -49,7 +113,7 @@ export type NodeTreeSelection =
 export type NodeTreeProps = Readonly<{
   store: NodeTreeStore
   label?: string | undefined
-  layout: LayoutResult
+  layout: LayoutResult | NodeTreeLayout
   viewport?: NodeTreeViewport | undefined
   materializeCulled?: boolean | undefined
   transform?: NodeTreeTransform | undefined
@@ -87,26 +151,39 @@ type NodeTreeView = Readonly<{
 }>
 
 export function NodeTree(props: NodeTreeProps) {
-  const viewStore = useMemo(
-    () => createNodeTreeViewStore(props.store, props.layout, props.viewport, props.materializeCulled === true),
-    [props.store, props.layout, props.viewport, props.materializeCulled],
+  const layoutStore = useMemo(
+    () => getNodeTreeLayoutStore(props.store, props.layout),
+    [props.store, props.layout],
   )
-  const view = useSyncExternalStore(viewStore.subscribe, viewStore.getSnapshot)
-  const actions = useMemo(() => createActions(props), [
-    props.store,
-    props.onSelectionChange,
-    props.onNodeCollapseChange,
-    props.onNodePreviewChange,
-    props.onSocketActivate,
+  const layoutState = useSyncExternalStore(layoutStore.subscribe, layoutStore.getSnapshot)
+  const activeLayout = useRef(layoutStore)
+  const selectView = useMemo(() => createNodeTreeViewSelector(props.store), [props.store])
+  const previous = useRef<Readonly<{view: NodeTreeView; treeProps: NodeTreeProps; actions: NodeTreeActions}> | null>(null)
+  const actions = useMemo(() => createActions(props, layoutState.topology, layoutStore,
+    () => activeLayout.current === layoutStore), [
+    props.store, props.layout, layoutState.topology, props.onSelectionChange, props.onNodeCollapseChange,
+    props.onNodePreviewChange, props.onSocketActivate, props.onParameterInput, props.onParameterChange,
   ])
+  const presentation = layoutState.pending ? previous.current : {
+    view: selectView(layoutState, props.viewport, props.materializeCulled === true), treeProps: props, actions,
+  }
+  // Revoke the old input before DOM changes (including blur/change on hiding).
+  // Invalid geometry throws above and cannot replace the active input.
+  activeLayout.current = layoutStore
+  useLayoutEffect(() => {
+    if (!layoutState.pending) previous.current = presentation
+  }, [layoutState.pending, presentation])
+  const view = presentation?.view
   const transform = props.transform ?? DEFAULT_NODE_TREE_TRANSFORM
   return <section
     role="tree"
     aria-label={props.label ?? "Node tree"}
     data-node-tree=""
-    data-frame-count={view.frames.length}
-    data-link-count={view.links.length}
-    data-node-count={view.nodes.length}
+    data-layout-pending={layoutState.pending ? "true" : undefined}
+    aria-busy={layoutState.pending ? "true" : "false"}
+    data-frame-count={view?.frames.length ?? 0}
+    data-link-count={view?.links.length ?? 0}
+    data-node-count={view?.nodes.length ?? 0}
     style={css`
       box-sizing: border-box;
       position: relative;
@@ -122,10 +199,27 @@ export function NodeTree(props: NodeTreeProps) {
       ${props.style}
     `}
   >
+    <p
+      role="status"
+      data-layout-status=""
+      hidden={!layoutState.pending}
+      style={css`
+        margin: 0;
+        padding: 12px;
+        color: #a8a8a8;
+
+        &[hidden] {
+          display: none;
+        }
+      `}
+    >
+      Ожидание раскладки
+    </p>
     <div
       role="group"
       aria-label={props.label ?? "Node tree scene"}
       data-node-tree-scene=""
+      hidden={layoutState.pending}
       style={css`
         box-sizing: border-box;
         position: absolute;
@@ -136,13 +230,18 @@ export function NodeTree(props: NodeTreeProps) {
         height: 100%;
         transform: translate(${transform.x}px, ${transform.y}px) scale(${transform.scale});
         transform-origin: 0 0;
+
+        &[hidden] {
+          visibility: hidden;
+          pointer-events: none;
+        }
       `}
     >
-      <MemoNodeTreeContent
-        view={view}
-        treeProps={props}
-        actions={actions}
-      />
+      {presentation === null ? null : <MemoNodeTreeContent
+        view={presentation.view}
+        treeProps={presentation.treeProps}
+        actions={presentation.actions}
+      />}
     </div>
   </section>
 }
@@ -388,8 +487,8 @@ function NodeProjection(projection: NodeProjectionProps) {
     onActivate={actions.selectNode(node.id)}
     onCollapseChange={actions.collapseNode(node.id)}
     onPreviewChange={actions.previewNode(node.id)}
-    onParameterInput={props.onParameterInput}
-    onParameterChange={props.onParameterChange}
+    onParameterInput={actions.parameterInput}
+    onParameterChange={actions.parameterChange}
     onSocketActivate={actions.socket(node.id)}
   />
 }
@@ -420,6 +519,8 @@ function sameLinkEntry(left: VisibleLink, right: VisibleLink): boolean {
 }
 
 type NodeTreeActions = Readonly<{
+  parameterInput(change: ParameterInput, event: Event): void
+  parameterChange(change: ParameterInput, event: Event): void
   selectFrame(id: string): (event: Event) => void
   selectLink(id: string): (event: Event) => void
   selectNode(id: string): (event: Event) => void
@@ -429,7 +530,13 @@ type NodeTreeActions = Readonly<{
   parameterStore(nodeId: string): (parameterId: string) => ReturnType<NodeTreeStore["parameter"]>
 }>
 
-function createActions(props: NodeTreeProps): NodeTreeActions {
+function createActions(
+  props: NodeTreeProps,
+  topology: NodeTreeSnapshot,
+  layoutStore: ReturnType<typeof getNodeTreeLayoutStore>,
+  isActive: () => boolean,
+): NodeTreeActions {
+  const current = () => isActive() && props.store.getTopologySnapshot() === topology && !layoutStore.getSnapshot().pending
   const frame = new Map<string, (event: Event) => void>()
   const link = new Map<string, (event: Event) => void>()
   const node = new Map<string, (event: Event) => void>()
@@ -438,11 +545,18 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
   const sockets = new Map<string, (socketId: string, event: Event) => void>()
   const parameterStores = new Map<string, (parameterId: string) => ReturnType<NodeTreeStore["parameter"]>>()
   return Object.freeze({
+    parameterInput(change, event) {
+      if (current()) props.onParameterInput?.(change, event)
+    },
+    parameterChange(change, event) {
+      if (current()) props.onParameterChange?.(change, event)
+    },
     selectFrame(id) {
       let action = frame.get(id)
       if (action === undefined) {
         action = event => {
           event.stopPropagation()
+          if (!current()) return
           props.onSelectionChange?.(Object.freeze({kind: "frame", id}), event)
         }
         frame.set(id, action)
@@ -454,6 +568,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
       if (action === undefined) {
         action = event => {
           event.stopPropagation()
+          if (!current()) return
           props.onSelectionChange?.(Object.freeze({kind: "link", id}), event)
         }
         link.set(id, action)
@@ -465,6 +580,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
       if (action === undefined) {
         action = event => {
           event.stopPropagation()
+          if (!current()) return
           props.onSelectionChange?.(Object.freeze({kind: "node", id}), event)
         }
         node.set(id, action)
@@ -474,7 +590,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
     collapseNode(id) {
       let action = collapse.get(id)
       if (action === undefined) {
-        action = (collapsed, event) => props.onNodeCollapseChange?.(id, collapsed, event)
+        action = (collapsed, event) => { if (current()) props.onNodeCollapseChange?.(id, collapsed, event) }
         collapse.set(id, action)
       }
       return action
@@ -482,7 +598,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
     previewNode(id) {
       let action = preview.get(id)
       if (action === undefined) {
-        action = (enabled, event) => props.onNodePreviewChange?.(id, enabled, event)
+        action = (enabled, event) => { if (current()) props.onNodePreviewChange?.(id, enabled, event) }
         preview.set(id, action)
       }
       return action
@@ -490,7 +606,7 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
     socket(nodeId) {
       let action = sockets.get(nodeId)
       if (action === undefined) {
-        action = (socketId, event) => props.onSocketActivate?.(nodeId, socketId, event)
+        action = (socketId, event) => { if (current()) props.onSocketActivate?.(nodeId, socketId, event) }
         sockets.set(nodeId, action)
       }
       return action
@@ -506,34 +622,36 @@ function createActions(props: NodeTreeProps): NodeTreeActions {
   })
 }
 
-function createNodeTreeViewStore(
-  store: NodeTreeStore,
-  layout: LayoutResult,
-  viewport: NodeTreeViewport | undefined,
-  materializeCulled: boolean,
-): Readonly<{
-  subscribe(listener: () => void): () => void
-  getSnapshot(): NodeTreeView
-}> {
+/** Geometry is derived only from an accepted pair during component render. */
+function createNodeTreeViewSelector(store: NodeTreeStore) {
   let source: UiSnapshot | undefined
+  let previousLayout: LayoutResult | undefined
+  let previousViewport: NodeTreeViewport | undefined
+  let previousMaterialization = false
   let selected: NodeTreeView | undefined
-  const getSnapshot = (): NodeTreeView => {
+  return (
+    state: NodeTreeLayoutState,
+    viewport: NodeTreeViewport | undefined,
+    materializeCulled: boolean,
+  ): NodeTreeView => {
+    const snapshot = state.snapshot
+    const layout = state.layout
+    const sameInputs = layout === previousLayout && viewport === previousViewport &&
+      materializeCulled === previousMaterialization
+    if (snapshot === source && sameInputs && selected !== undefined) return selected
     const update = store.getTopologyUpdate()
-    const snapshot = update.snapshot
-    if (snapshot === source && selected !== undefined) return selected
-    const incremental = source === undefined || selected === undefined
+    const incremental = !sameInputs || snapshot !== update.snapshot || source === undefined || selected === undefined
       ? null
       : appendNodeTreeView(source, selected, update, viewport, materializeCulled)
     const next = incremental ?? createFullNodeTreeView(snapshot, layout, viewport, materializeCulled)
     source = snapshot
+    previousLayout = layout
+    previousViewport = viewport
+    previousMaterialization = materializeCulled
     if (selected !== undefined && sameView(selected, next)) return selected
     selected = next
     return selected
   }
-  return Object.freeze({
-    subscribe: store.subscribeTopology,
-    getSnapshot,
-  })
 }
 
 function createFullNodeTreeView(

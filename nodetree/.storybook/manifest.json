@@ -4,5 +4,8 @@
   "kind": "package",
   "id": "@zavx0z/nodetree",
   "label": "Дерево нодов",
-  "packageJson": "../package.json"
+  "packageJson": "../package.json",
+  "readme": "../README.md",
+  "runtime": {"module": "./runtime.ts", "export": "runtime"},
+  "catalog": "./catalog.json"
 }

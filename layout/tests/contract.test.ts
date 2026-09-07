@@ -97,7 +97,7 @@ async function sourceUnder(relativeRoot: string): Promise<string> {
   const root = resolve(packageRoot, relativeRoot)
   const sources: string[] = []
   for await (const relativePath of new Bun.Glob("**/*.ts").scan({cwd: root})) {
-    if (relativePath.startsWith("tests/")) continue
+    if (relativePath.startsWith("tests/") || relativePath.startsWith(".storybook/")) continue
     sources.push(await Bun.file(resolve(root, relativePath)).text())
   }
   return sources.join("\n")

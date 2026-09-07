@@ -27,7 +27,7 @@ Bun.plugin(createTemplateJsxBunPlugin({
   sourceRoots: [nodesRoot, uiRoot],
 }))
 
-test("[NODES-STORYBOOK-001] WebXR объявляет один package-owned Nodes catalog с шестью Display-примерами", async () => {
+test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шесть исходных Display-примеров раскладки", async () => {
   const project = await Bun.file(resolve(root, ".storybook/manifest.json")).json() as {
     packages: readonly Readonly<{declaration: string}>[]
   }
@@ -52,7 +52,7 @@ test("[NODES-STORYBOOK-001] WebXR объявляет один package-owned Node
       route: variant.route,
       presentation: subject.presentation,
     }))))
-  expect(variants.map(({route}) => route)).toEqual(expected.map(({route}) => route))
+  expect(variants.filter(({route}) => route.startsWith("layout/")).map(({route}) => route)).toEqual(expected.map(({route}) => route))
   for (const {presentation} of variants) {
     expect(presentation).toEqual({
       protocol: "story-presentation/1",

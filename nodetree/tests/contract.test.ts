@@ -150,7 +150,7 @@ function createFixture() {
 async function productionSource(): Promise<string> {
   const sources: string[] = []
   for await (const relativePath of new Bun.Glob("**/*.ts").scan({cwd: packageRoot})) {
-    if (relativePath.startsWith("tests/")) continue
+    if (relativePath.startsWith("tests/") || relativePath.startsWith(".storybook/")) continue
     sources.push(await Bun.file(resolve(packageRoot, relativePath)).text())
   }
   return sources.join("\n")

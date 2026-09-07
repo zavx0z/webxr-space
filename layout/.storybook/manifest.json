@@ -4,5 +4,11 @@
   "kind": "package",
   "id": "@zavx0z/layout",
   "label": "Раскладка",
-  "packageJson": "../package.json"
+  "packageJson": "../package.json",
+  "readme": "../README.md",
+  "runtime": {
+    "module": "./runtime.ts",
+    "export": "runtime"
+  },
+  "catalog": "./catalog.json"
 }

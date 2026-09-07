@@ -1,0 +1,3815 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-09-07T20:44:00Z",
+  "scope": "Initial-render acceptance of package/category/subject/variant routes; interactions are separate evidence.",
+  "summary": {
+    "routes": 403,
+    "variants": 314,
+    "initialRenderFailures": 0,
+    "openTimeoutsVerifiedByExactInspection": 5
+  },
+  "catalogs": [
+    {
+      "packageId": "@zavx0z/nodes",
+      "categories": 4,
+      "subjects": 41,
+      "variants": 263
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "categories": 7,
+      "subjects": 20,
+      "variants": 25
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "categories": 3,
+      "subjects": 11,
+      "variants": 26
+    }
+  ],
+  "checks": {
+    "nodes": {
+      "typecheck": "passed",
+      "tests": {
+        "passed": 24,
+        "failed": 1,
+        "assertions": 3315
+      },
+      "sourceExamplesCompiled": 60
+    },
+    "nodetree": {
+      "typecheck": "passed",
+      "tests": {
+        "passed": 21,
+        "failed": 0,
+        "assertions": 681
+      }
+    },
+    "layout": {
+      "typecheck": "passed",
+      "tests": {
+        "passed": 15,
+        "failed": 0,
+        "assertions": 438
+      }
+    },
+    "storybook": {
+      "typecheck": "passed",
+      "aggregateTests": {
+        "passed": 27,
+        "assertions": 289
+      },
+      "selfAndBoundaryTests": {
+        "passed": 18,
+        "assertions": 237
+      },
+      "mcp": {
+        "typecheck": "passed",
+        "testsPassed": 7,
+        "assertions": 49
+      },
+      "browserLifecycle": {
+        "typecheck": "passed",
+        "testsPassed": 51,
+        "assertions": 168
+      },
+      "packageIdentity": {
+        "passed": 2,
+        "assertions": 59
+      },
+      "fullLifecycleSuite": "not run against the active canonical daemon"
+    }
+  },
+  "interactionEvidence": {
+    "parameter": {
+      "route": "parameters/text/field",
+      "sameNodeId": "node:110",
+      "value": "\"ПримерПроверено\"",
+      "parameterRevision": 1,
+      "consoleErrors": []
+    },
+    "workers": {
+      "packageId": "@zavx0z/layout",
+      "routes": [
+        "workers/fixed/equivalence",
+        "workers/adaptive/equivalence",
+        "workers/top-down/equivalence",
+        "workers/coffman-graham/equivalence",
+        "workers/transport/lifecycle"
+      ],
+      "status": "ready/presented after actual worker evaluation"
+    },
+    "overviewFit": {
+      "status": "success",
+      "captureId": "capture_eWioyiL419RXt8Lk6U7TuwgS",
+      "resourceUri": "storybook://captures/capture_eWioyiL419RXt8Lk6U7TuwgS",
+      "mimeType": "image/png",
+      "width": 2304,
+      "height": 2048,
+      "bytes": 43716,
+      "sha256": "f4164e028eb7cc1bbcf1722f75196b730803ae69a0810b949e2340d6568efc67",
+      "packageId": "@zavx0z/nodes",
+      "route": "layout",
+      "graphDigest": "ba4bcb6b85ab77e029c0b90070b5286d864412609d5de0914812a358de1fe4ed",
+      "revision": "98ebbe5f800587efc849318a",
+      "area": "preview",
+      "consoleErrors": [],
+      "capturedAt": "2026-09-07T19:32:42.690Z"
+    }
+  },
+  "knownUnaccepted": [
+    {
+      "capability": "NodeType",
+      "status": "proposed contract only; not implemented",
+      "contract": "../nodetree/node-type.md"
+    },
+    {
+      "capability": "TopDown/Coffman-Graham in NodeEditor",
+      "status": "numeric Layout/Worker examples work; upper/lower Socket and integrated layout projection contract remain pending"
+    },
+    {
+      "capability": "disconnected Socket layout geometry",
+      "owner": "Nodes/Layout contract",
+      "status": "separate existing mismatch; see topology-layout-gap.md"
+    }
+  ],
+  "finalConsoleScan": [
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive/compound/down",
+      "revision": "d057486c159a30fa3471358b",
+      "ready": true,
+      "diagnostics": [],
+      "consoleErrors": []
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/topology/references",
+      "revision": "333f76bd43c241a4877e4694",
+      "ready": true,
+      "diagnostics": [],
+      "consoleErrors": []
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/transport/faults",
+      "revision": "90b0e463890d6113a39a95da",
+      "ready": true,
+      "diagnostics": [],
+      "consoleErrors": []
+    }
+  ],
+  "routes": [
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg",
+      "note": "open timed out during view replacement; exact-view inspection verified ready/presented, consoleErrors=[]"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/frame",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-tree",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-editor",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg",
+      "note": "open timeout; exact inspection verified"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/fixed",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg",
+      "note": "open timeout; exact inspection verified"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/boolean/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/float/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/integer/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/vector/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/rotation/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/color/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/string/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/menu/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/object/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/collection/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "b9cf320a90dbb180736dd532",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/image/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/material/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/texture/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/geometry/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/matrix/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/shader/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/bundle/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/closure/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/bidirectional",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "7bf7c0d1a67828a42337d66b",
+      "viewId": "storybook-view-v1_7oKJJVk15yRSNo2g1jcKn5-25haJX1aJrOkMooOaGzg"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/shapes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M",
+      "note": "open timeout; exact inspection verified"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "sockets/custom/presentation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/text/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "0c0e37078cab650e4f512144",
+      "viewId": "storybook-view-v1_pIeIzE-ka6npgIFYgotPTUTWjKKb-2qCAmXqCgf7j_M"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/number/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E",
+      "note": "open timeout; exact inspection verified"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/slider/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/checkbox/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/switch/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/select/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/cycle/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/option-group/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/color/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/vector/geometry",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/matrix/geometry",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/path/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/reference/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/collection/geometry",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/field",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/input",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/output",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/both",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/connected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "parameters/output/projected",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/basic",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/empty",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/collapsed",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/preview",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node/authored-content",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/frame/basic",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/frame/nested",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/frame/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link/orthogonal",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link/cubic",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link/states",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link/disabled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/link/live-store",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-tree/live-store",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-tree/viewport",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-tree/interaction",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-tree/topology",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-editor/navigation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-editor/controlled",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "components/node-editor/readonly",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/fixed/baseline/right",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/fixed/baseline/down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive/shared/right",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive/shared/down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive/compound/right",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodes",
+      "route": "layout/adaptive/compound/down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "d057486c159a30fa3471358b",
+      "viewId": "storybook-view-v1_NzGhgE8suiZ1fc-mLhPLKGvnqeeso4O5TggoJ-yo8_E"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "projections",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "templates",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/topology",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/scopes",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/groups",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/snapshots",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/lifecycle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/store",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/value",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/value-type",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/subscriptions",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/topology",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/reconcile",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/delta",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "projections/cache",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "projections/generation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "templates/node",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "templates/graph",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/document",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/json-patch",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/links",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/topology",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/topology/baseline",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/scopes/nested",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/groups/nested",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/snapshots/identity",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "model/lifecycle/dispose",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/store/updates",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/store/shared",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/value/ownership",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/value-type/validation",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "parameters/subscriptions/scoped",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/topology/append",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/reconcile/identity",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/reconcile/conflict",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "changes/delta/entities",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "projections/cache/reuse",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "projections/generation/stale",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "templates/node/reference",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "templates/graph/reference",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/document/roundtrip",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/document/invalid",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/json-patch/operations",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "serialization/json-patch/atomic-error",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/links/types",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/topology/cycles",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/nodetree",
+      "route": "validation/topology/references",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "333f76bd43c241a4877e4694",
+      "viewId": "storybook-view-v1_LVW6zgICG-zH7HRYx-6xGbwLFk3GN1naz1NtE7xsVLo"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "protocol",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/fixed",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/top-down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/coffman-graham",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "protocol/graph",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "protocol/result",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/fixed",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/adaptive",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/top-down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/coffman-graham",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/transport",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/fixed/baseline",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/fixed/down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/fixed/compound",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/fixed/invalid",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive/shared",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive/down",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive/compound",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive/diagnostics",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/adaptive/no-assignment",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/top-down/baseline",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/top-down/cycle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/coffman-graham/baseline",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/coffman-graham/narrow",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "algorithms/coffman-graham/cycle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "protocol/graph/compound",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "protocol/result/geometry",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/fixed/equivalence",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/fixed/failure",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/adaptive/equivalence",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/adaptive/failure",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/top-down/equivalence",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/top-down/failure",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/coffman-graham/equivalence",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/coffman-graham/failure",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/transport/lifecycle",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    },
+    {
+      "packageId": "@zavx0z/layout",
+      "route": "workers/transport/faults",
+      "status": "success",
+      "ready": true,
+      "presented": true,
+      "revision": "90b0e463890d6113a39a95da",
+      "viewId": "storybook-view-v1_uMcNL4EzIma430V_ni3JzKOFbH_rPPob0jUUCGtWxMk"
+    }
+  ],
+  "followUpCoherence": {
+    "date": "2026-09-08",
+    "status": "fixed",
+    "tests": {
+      "passed": 36,
+      "failed": 0,
+      "assertions": 3408,
+      "typecheck": "passed"
+    },
+    "newRegressionTests": 11,
+    "route": "components/node-tree/topology",
+    "revision": "302347b5ac0ae5a819e3da7b",
+    "sourceElementBefore": "node:103",
+    "sourceElementAfter": "node:103",
+    "nodeCountAfter": 3,
+    "ready": true,
+    "consoleErrors": [],
+    "buttons": "story native controls replaced with public UI Button",
+    "capture": "storybook://captures/capture_efhNImIKlSdbj7QR5_CkUYF0",
+    "contract": "topology-layout-gap.md",
+    "separateLimit": "Fixed/Adaptive omit disconnected ports; removing the last Link while retaining Socket still requires a separate contract correction"
+  }
+}

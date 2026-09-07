@@ -52,11 +52,9 @@ export const runtime = Object.freeze({
       try {
         const result = await descriptor.create(context.document)
         const story = ownerStoryResult(result, context.document)
-        try {
-          assertActive(disposed, context.signal, input.signal)
-        } catch (error) {
+        if (disposed || context.signal.aborted || input.signal.aborted) {
           story.dispose()
-          throw error
+          assertActive(disposed, context.signal, input.signal)
         }
         current = story
         context.present(Object.freeze({
@@ -90,16 +88,16 @@ export const runtime = Object.freeze({
 })
 
 function ownerStory(value: unknown, route: string): OwnerStoryDescriptor {
-  if (value === null || typeof value !== "object") throw new TypeError(`Invalid Nodes owner story: ${route}`)
+  if (value === null || typeof value !== "object") throw new TypeError(`Invalid NodeTree owner story: ${route}`)
   const descriptor = value as Partial<OwnerStoryDescriptor>
   if (descriptor.route !== route || typeof descriptor.create !== "function") {
-    throw new TypeError(`Nodes owner story does not match route: ${route}`)
+    throw new TypeError(`NodeTree owner story does not match route: ${route}`)
   }
   return descriptor as OwnerStoryDescriptor
 }
 
 function ownerStoryResult(value: unknown, document: Document): OwnerStoryResult["story"] {
-  if (value === null || typeof value !== "object") throw new TypeError("Nodes owner story returned no result")
+  if (value === null || typeof value !== "object") throw new TypeError("NodeTree owner story returned no result")
   const result = value as Partial<OwnerStoryResult>
   const story = result.story
   if (story === null || typeof story !== "object" ||
@@ -108,7 +106,7 @@ function ownerStoryResult(value: unknown, document: Document): OwnerStoryResult[
     typeof story.componentRoot.readStyleSheets !== "function" ||
     typeof story.dispose !== "function" ||
     (story.afterPresent !== undefined && typeof story.afterPresent !== "function")) {
-    throw new TypeError("Nodes owner story returned an incompatible DOM node")
+    throw new TypeError("NodeTree owner story returned an incompatible DOM node")
   }
   return story
 }
