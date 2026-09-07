@@ -56,3 +56,20 @@ inline-flow Renderer. Неоформленный текст компилируе
 Все строки остаются в semantic Document. Ограничение дорогой работы видимой
 областью принадлежит [Renderer](../../renderer/scrolling.md), а не локальным
 координатам, отдельному Canvas или второму дереву.
+
+## Прокрутка большого исходника в Storybook
+
+В разделе «Производительность» находятся два production-сценария:
+
+- `components/data/code-editor/performance/large` — 420 HTML-строк, область 700×440.
+- `components/data/code-editor/performance/compact` — тот же текст, область
+  700×180 и обычная подсказка заголовка.
+
+Рядом находится неподвижная панель. Колесо и кнопки изменяют `scrollTop` и
+`scrollLeft` настоящего CodeEditor; «В начало» сбрасывает обе оси. Весь сценарий
+живёт в предоставленном Storybook Document и использует его Display, Canvas и
+общий frame/input lifecycle. Отдельный браузерный сервер не требуется.
+
+`ui/tests/code-editor-scroll-story.test.ts` проверяет оба маршрута, геометрию,
+прокрутку, сохранение текста/узлов, неизменность старого Frame и cleanup.
+Исторические измерения GPU описаны в [WebGPU](../../webgpu/scrolling.md).

@@ -1594,6 +1594,34 @@
                 "path": "./stories/subjects/components-data-code-editor.ts",
                 "export": "story_state_read_only"
               }
+            },
+            {
+              "id": "performance-large",
+              "label": "420 строк",
+              "group": {"id": "performance", "label": "Производительность"},
+              "route": "components/data/code-editor/performance/large",
+              "module": {
+                "path": "./stories/subjects/components-data-code-editor.ts",
+                "export": "story_performance_large"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-code-editor-scroll-story.tsx",
+                "tests": ["../tests/code-editor-scroll-story.test.ts"]
+              }
+            },
+            {
+              "id": "performance-compact",
+              "label": "Компактная область с подсказкой",
+              "group": {"id": "performance", "label": "Производительность"},
+              "route": "components/data/code-editor/performance/compact",
+              "module": {
+                "path": "./stories/subjects/components-data-code-editor.ts",
+                "export": "story_performance_compact"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-code-editor-scroll-story.tsx",
+                "tests": ["../tests/code-editor-scroll-story.test.ts"]
+              }
             }
           ],
           "presentation": {
