@@ -13,7 +13,7 @@ await import("../.storybook/stories/compiled/report.tsx")
 test("[LAYOUT-STORYBOOK-MOUNT] числовой сценарий использует Document и Display host, повторный расчёт и cleanup", async () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("xr-space")
-  const display = document.createElement("xr-display")
+  const display = document.createElement("display")
   space.append(document.createElement("xr-view-point"), display)
   document.append(space)
   const abort = new AbortController()

@@ -1,6 +1,6 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import {
   readSpaceTree,
-  XRDisplayElement,
   XRHUDElement,
 } from "@zavx0z/space"
 import {Button} from "@zavx0z/ui/buttons/button"
@@ -108,7 +108,7 @@ function assertProjectionOwner(
 ): void {
   let ancestor = owner.parentElement
   while (ancestor !== null) {
-    if (projection === "display" && ancestor instanceof XRDisplayElement) return
+    if (projection === "display" && ancestor instanceof DisplayElement) return
     if (projection === "hud" && ancestor instanceof XRHUDElement) return
     ancestor = ancestor.parentElement
   }

@@ -1,7 +1,6 @@
 export {
   XRAnimationElement,
   XRAssetElement,
-  XRDisplayElement,
   XRElement,
   XRGeometryElement,
   XRGroupElement,
@@ -24,9 +23,8 @@ export type {
   XRObjectProjectionFactory,
 } from "./elements.ts"
 export {createSpaceElementFactories} from "./factories.ts"
-export {readSpaceTree, readDisplayProjection} from "./tree.ts"
+export {readSpaceTree} from "./tree.ts"
 export type {
-  SpaceDisplayProjection,
   SpaceHUDProjection,
   SpaceTree,
 } from "./tree.ts"
@@ -34,7 +32,6 @@ export type {
   SpaceRef,
   XRAnimationIntrinsicProperties,
   XRAssetIntrinsicProperties,
-  XRDisplayIntrinsicProperties,
   XRGeometryIntrinsicProperties,
   XRGroupIntrinsicProperties,
   XRHUDIntrinsicProperties,
@@ -49,4 +46,4 @@ export type {
   XRViewPointIntrinsicProperties,
 } from "./jsx.ts"
 
-export type {SpatialVector, SpatialQuaternion, OrientationProps, TransformProps, DisplayExtent, DisplayMetricsProps} from "./props.ts"
+export type {SpatialVector, SpatialQuaternion, OrientationProps, TransformProps} from "./props.ts"

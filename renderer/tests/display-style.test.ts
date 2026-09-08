@@ -1,6 +1,7 @@
 import {createDocumentInteractionState} from "../src/pseudo-state.ts"
 import {expect, test} from "bun:test"
-import {createDocument, DisplayElement, acquireDocumentAuthorStyleSheetOwner} from "@zavx0z/dom"
+import {createDocument, acquireDocumentAuthorStyleSheetOwner} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import {readDisplayStyle} from "../src/display-style.ts"
 import {createDocumentRenderer} from "../src/renderer.ts"
 

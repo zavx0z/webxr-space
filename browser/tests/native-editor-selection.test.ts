@@ -15,7 +15,7 @@ import {createDocumentPlaneRuntime} from "../src/plane-runtime.ts"
 import {createDocumentOverlayRuntime} from "../src/overlay-runtime.ts"
 import {createRootWithSeams} from "../create-root.ts"
 import {inspectRoot} from "../diagnostics.ts"
-import type {XRDisplayElement} from "@zavx0z/space"
+import type {DisplayElement} from "@zavx0z/dom/display"
 
 const workspace = resolve(import.meta.dir, "../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "ui"), resolve(workspace, "space"), import.meta.dir]}))
@@ -88,7 +88,7 @@ test.each([
   const font = new TrueTypeFont(await Bun.file(resolve(workspace, "engine/static/fonts/jetbrains-mono-bold.ttf")).arrayBuffer())
   const theme = await Bun.file(resolve(workspace, "ui/themes/theme.css")).text()
   const runtime = await createDocumentSpaceRuntimeWithSeams({canvas, document, font, styleSheets: [theme]}, {
-    createEngineRenderer: () => ({setPixelRatio() {}, setSize() {}, invalidateGeometry() {}, renderComposition(composition: Parameters<Renderer["renderComposition"]>[0]) {
+    createEngineRenderer: () => ({setPixelRatio() {}, setSize() {}, invalidateGeometry() {}, releaseDisplay() {}, renderComposition(composition: Parameters<Renderer["renderComposition"]>[0]) {
       composition.space.updateWorldMatrix(true, {parents: true})
     }}) as unknown as Renderer,
     initializeEngineRenderer: async () => {}, createSpace: () => new Space(),
@@ -215,7 +215,7 @@ test("real createRoot App keeps two Editor projections isolated across every sel
     loadFont: async () => font,
     createStyleSheets: () => ({refresh() {}, async whenReady() {}, dispose() {}}),
     createRuntime: (options, claim) => createDocumentSpaceRuntimeWithSeams({...options, styleSheets: [theme]}, {
-    createEngineRenderer: () => ({setPixelRatio() {}, setSize() {}, invalidateGeometry() {}, renderComposition(composition: Parameters<Renderer["renderComposition"]>[0]) {
+    createEngineRenderer: () => ({setPixelRatio() {}, setSize() {}, invalidateGeometry() {}, releaseDisplay() {}, renderComposition(composition: Parameters<Renderer["renderComposition"]>[0]) {
       composition.space.updateWorldMatrix(true, {parents: true})
     }}) as unknown as Renderer,
     initializeEngineRenderer: async () => {}, createSpace: () => new Space(),
@@ -237,8 +237,8 @@ test("real createRoot App keeps two Editor projections isolated across every sel
   })
   root.render(app)
   const experience = await inspectRoot(root).whenReady()
-  const first = experience.document.getElementById("alpha") as XRDisplayElement
-  const second = experience.document.getElementById("beta") as XRDisplayElement
+  const first = experience.document.getElementById("alpha") as DisplayElement
+  const second = experience.document.getElementById("beta") as DisplayElement
   const code = first.querySelector("code") as HTMLElement
   const projection = experience.getProjection(first)
   const settle = async () => {

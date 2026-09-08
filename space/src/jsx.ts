@@ -4,7 +4,6 @@ import type {
   XRAnimationElement,
   XRAnimationProjectionFactory,
   XRAssetElement,
-  XRDisplayElement,
   XRGeometryElement,
   XRGeometryProjectionFactory,
   XRGroupElement,
@@ -117,25 +116,6 @@ export type XRMaterialIntrinsicProperties = Readonly<{
   ref?: SpaceRef<XRMaterialElement> | null | undefined
 }>
 
-export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & Readonly<{
-  quaternionX?: number | undefined
-  quaternionY?: number | undefined
-  quaternionZ?: number | undefined
-  quaternionW?: number | undefined
-  id?: string | undefined
-  style?: CssStyle | undefined
-  viewportWidth?: number | undefined
-  viewportHeight?: number | undefined
-  worldUnitsPerPixel?: number | undefined
-  x?: number | undefined
-  y?: number | undefined
-  z?: number | undefined
-  scaleX?: number | undefined
-  scaleY?: number | undefined
-  scaleZ?: number | undefined
-  visible?: boolean | undefined
-}>
-
 export type XRHUDIntrinsicProperties = SpatialChildren<XRHUDElement> & Readonly<{
   id?: string | undefined
   distance?: number | undefined
@@ -155,7 +135,6 @@ declare module "@zavx0z/dom" {
     "xr-animation": XRAnimationElement
     "xr-geometry": XRGeometryElement
     "xr-material": XRMaterialElement
-    "xr-display": XRDisplayElement
     "xr-hud": XRHUDElement
   }
 }
@@ -175,7 +154,6 @@ declare module "@zavx0z/template/jsx-runtime" {
       "xr-animation": XRAnimationIntrinsicProperties
       "xr-geometry": XRGeometryIntrinsicProperties
       "xr-material": XRMaterialIntrinsicProperties
-      "xr-display": XRDisplayIntrinsicProperties
       "xr-hud": XRHUDIntrinsicProperties
     }
   }

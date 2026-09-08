@@ -195,7 +195,7 @@ Nodes.
 | `renderer` | `@zavx0z/renderer` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
 | `webgpu` | `@zavx0z/webgpu` | Шейдеры, буферы, текстуры, загрузка данных и рисование |
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
-| `space` | `@zavx0z/space` | `Space`, `ViewPoint`, `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material`, `Display` и `HUD` |
+| `space` | `@zavx0z/space` | `Space`, `ViewPoint`, `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` и `HUD` |
 | `ui` | `@zavx0z/ui` | Универсальные UI-компоненты, тема и иконки |
 | `nodetree` | `@zavx0z/nodetree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
 | `layout` | `@zavx0z/layout` | Алгоритмы расположения нод и Worker |
@@ -301,7 +301,7 @@ space/
 ├── abstractions/   # Asset, Group, Text, Animation
 ├── cameras/        # ViewPoint
 ├── gizmos/         # Grid
-├── portals/        # Display, HUD того же Document
+├── portals/        # HUD того же Document
 ├── shaders/        # Material
 ├── shapes/         # Mesh, Line, LineSegments, Geometry
 ├── staging/        # Space, Light

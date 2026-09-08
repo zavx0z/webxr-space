@@ -1,5 +1,6 @@
 import type {DocumentInteractionState} from "./pseudo-state.ts"
-import {DisplayElement, type Document, type Element} from "@zavx0z/dom"
+import type {Document, Element} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import {computeStyle, type ComputedStyle} from "./css.ts"
 import {cachedDocumentStyleRules, prepareHostStyleSheets} from "./stylesheet-cache.ts"
 

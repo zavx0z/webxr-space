@@ -37,7 +37,7 @@ Source-примеров настоящим Template compiler.
 | NodeType | Есть [проект договора](../nodetree/node-type.md); production API отсутствует | Нет декларации состава типа в коде, материализации defaults в новые Stores и подключения типа к NodeEditor |
 
 Первоначальная live-проверка общего обзора `nodes/layout` выявила ошибку
-`Пример нодовой раскладки смонтирован вне host-owned XRDisplayElement`.
+`Пример нодовой раскладки смонтирован вне host-owned DisplayElement`.
 [Runtime истории](.storybook/runtime.ts) проверяет Display после `present`.
 Порядок подключения aggregate исправлен владельцем Storybook; новые истории
 не обходят эту проверку. Generic regression находится в

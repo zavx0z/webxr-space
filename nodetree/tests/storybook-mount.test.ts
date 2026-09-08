@@ -13,7 +13,7 @@ await import("../.storybook/stories/compiled-model-story.tsx")
 test("[NODETREE-STORYBOOK-MOUNT] все compiled истории используют Document host, повторяют сценарии и освобождают lifecycle", async () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("xr-space")
-  const display = document.createElement("xr-display")
+  const display = document.createElement("display")
   space.append(document.createElement("xr-view-point"), display)
   document.append(space)
   const abort = new AbortController()

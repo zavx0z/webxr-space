@@ -1,6 +1,7 @@
 import {ABSOLUTE_LENGTH_FACTORS, displaySurfaceStyle} from "./spatial-css.ts"
 import type {DisplayStyle} from "./display-style.ts"
-import {DisplayElement, type Element, type Node} from "@zavx0z/dom"
+import type {Element, Node} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import type {DocumentInteractionState} from "./pseudo-state.ts"
 import type {
   RenderAlignContent,

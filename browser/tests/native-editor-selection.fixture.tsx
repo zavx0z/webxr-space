@@ -1,6 +1,4 @@
-import {Space} from "@zavx0z/space/staging/space"
 import {ViewPoint} from "@zavx0z/space/cameras/view-point"
-import {Display} from "@zavx0z/space/portals/display"
 import {HUD} from "@zavx0z/space/portals/hud"
 import {useSpace} from "@zavx0z/browser"
 import {ClipboardMenu} from "@zavx0z/ui/menus/clipboard-menu"
@@ -49,33 +47,31 @@ function AlphaRegion(props: Readonly<{model: CodeEditorModel}>) {
 
 export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorModel; beta: CodeEditorModel}>) {
   return (
-    <Space>
+    <xr-space>
       <ViewPoint
         position={{x: 10, y: -140, z: 10}}
         fov={Math.PI / 2}
         controls={false}
       />
-      <Display
+      <display
         id="alpha"
-        size={{width: 600, height: 280}}
-        resolution={{width: 600, height: 280}}
+        dpi={96}
         style={css`
           display: block;
-          width: 100%;
-          height: 100%;
+          width: 600px;
+          height: 280px;
         `}
       >
         <AlphaRegion model={props.alpha} />
-      </Display>
-      <Display
+      </display>
+      <display
         id="beta"
-        position={{x: 652, y: 0, z: 0}}
-        size={{width: 600, height: 280}}
-        resolution={{width: 600, height: 280}}
+        dpi={96}
         style={css`
+          translate: 652mm 0 0;
           display: block;
-          width: 100%;
-          height: 100%;
+          width: 600px;
+          height: 280px;
         `}
       >
         <Editor
@@ -85,10 +81,10 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
           readOnly={false}
           languageId="typescript"
         />
-      </Display>
+      </display>
       <HUD>
         <ClipboardHud />
       </HUD>
-    </Space>
+    </xr-space>
   )
 }

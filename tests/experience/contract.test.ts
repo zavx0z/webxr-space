@@ -1,3 +1,4 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import {expect, test} from "bun:test"
 import {join} from "node:path"
 import {
@@ -8,7 +9,6 @@ import {
 import {
   createSpaceElementFactories,
   readSpaceTree,
-  XRDisplayElement,
   XRHUDElement,
   XRSpaceElement,
   XRViewPointElement,
@@ -23,7 +23,7 @@ const createProjectionTree = () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("xr-space") as XRSpaceElement
   const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
-  const display = document.createElement("xr-display") as XRDisplayElement
+  const display = document.createElement("display") as DisplayElement
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "main"
   hud.id = "hud"
@@ -75,7 +75,7 @@ test("[EXP-005] Display и HUD используют тот же Document и Spac
   const {display, document, hud, space} = createProjectionTree()
   const tree = readSpaceTree(document)
   expect(tree.space).toBe(space)
-  expect(tree.displays[0]?.element).toBe(display)
+  expect(tree.displays[0]).toBe(display)
   expect(tree.hud?.element).toBe(hud)
   expect(display.ownerDocument).toBe(document)
   expect(hud.ownerDocument).toBe(document)

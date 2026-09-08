@@ -1,10 +1,7 @@
 import type {JsxSourceElement} from "./jsx-runtime.ts"
 import type {jsxEventNames} from "./jsx-events.ts"
-import type {
-  Element as SemanticElement,
-  DisplayElement,
-  EventTarget as SemanticEventTarget,
-} from "@zavx0z/dom"
+import type {Element as SemanticElement, EventTarget as SemanticEventTarget} from "@zavx0z/dom"
+import type {DisplayElement} from "@zavx0z/dom/display"
 
 type PrimitiveAttributeValue = string | number | bigint | boolean | null | undefined
 

@@ -19,7 +19,6 @@ const owners = Object.freeze([
   ["abstractions/animation.tsx", "xr-animation"],
   ["shapes/geometry.tsx", "xr-geometry"],
   ["shaders/material.tsx", "xr-material"],
-  ["portals/display.tsx", "xr-display"],
   ["portals/hud.tsx", "xr-hud"],
 ] as const)
 

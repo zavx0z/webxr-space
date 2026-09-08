@@ -2,7 +2,6 @@ import type {DocumentElementFactory} from "@zavx0z/dom"
 import {
   XRAnimationElement,
   XRAssetElement,
-  XRDisplayElement,
   XRGeometryElement,
   XRGroupElement,
   XRHUDElement,
@@ -30,6 +29,5 @@ export const createSpaceElementFactories = (): Readonly<Record<string, DocumentE
     "xr-animation": document => new XRAnimationElement(document),
     "xr-geometry": document => new XRGeometryElement(document),
     "xr-material": document => new XRMaterialElement(document),
-    "xr-display": document => new XRDisplayElement(document),
     "xr-hud": document => new XRHUDElement(document),
   })

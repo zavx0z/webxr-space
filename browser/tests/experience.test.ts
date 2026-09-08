@@ -3,13 +3,8 @@ import {component} from "@zavx0z/component"
 import {useFrame, useSpace, type RootSize} from "../src/root-context.ts"
 import {defineCompiledTemplate} from "@zavx0z/template/compiled"
 import {bindRef, writeBinding} from "@zavx0z/template/compiled"
-import {
-  acquireDocumentAuthorStyleSheetOwner,
-  DisplayElement,
-  HTMLElement as SemanticHTMLElement,
-  type Element as SemanticElement,
-  type Node as SemanticNode,
-} from "@zavx0z/dom"
+import {acquireDocumentAuthorStyleSheetOwner, HTMLElement as SemanticHTMLElement, type Element as SemanticElement, type Node as SemanticNode} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import type {
   PointerInput,
   RenderFrame,
@@ -43,7 +38,6 @@ import {
   readSpaceTree,
   XRAnimationElement,
   XRAssetElement,
-  XRDisplayElement,
   XRGeometryElement,
   XRGroupElement,
   XRHUDElement,
@@ -472,8 +466,10 @@ test("проекции без id сохраняют runtime, подписки и
       addOverlay(registration: DocumentSpaceOverlayRegistration) { overlayCreations++; return addOverlay(registration) },
     })
   })
-  const first = root.document.createElement("xr-display") as XRDisplayElement
-  const second = root.document.createElement("xr-display") as XRDisplayElement
+  const first = root.document.createElement("display") as DisplayElement
+  first.setAttribute("style", "width: 960px; height: 680px")
+  const second = root.document.createElement("display") as DisplayElement
+  second.setAttribute("style", "width: 960px; height: 680px")
   const hud = root.document.createElement("xr-hud") as XRHUDElement
   const button = root.document.createElement("button")
   first.append(button)
@@ -536,7 +532,8 @@ test("[BRW-004] attach монтирует один Document и синхрони�
   const document = experience.document
   const space = experience.space
   const viewPoint = experience.viewPoint
-  const display = document.createElement("xr-display") as XRDisplayElement
+  const display = document.createElement("display") as DisplayElement
+  display.setAttribute("style", "width: 960px; height: 680px")
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "display"
   hud.id = "hud"
@@ -849,12 +846,12 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
     },
     async options => createFakeRuntime(options, state),
   )
-  const display = experience.document.createElement("xr-display") as XRDisplayElement
+  const display = experience.document.createElement("display") as DisplayElement
+  display.setAttribute("style", "width: 960px; height: 680px")
   const hud = experience.document.createElement("xr-hud") as XRHUDElement
   const button = experience.document.createElement("button")
   display.id = "display-projection"
-  display.viewportWidth = 320
-  display.viewportHeight = 180
+  display.setAttribute("style", "width: 320px; height: 180px")
   hud.id = "hud-projection"
   display.append(button)
   experience.space.append(display, hud)
@@ -934,7 +931,8 @@ test("[BRW-017] semantic key dispatch проверяет projection owner, targe
     },
     async options => createFakeRuntime(options, state),
   )
-  const display = experience.document.createElement("xr-display") as XRDisplayElement
+  const display = experience.document.createElement("display") as DisplayElement
+  display.setAttribute("style", "width: 960px; height: 680px")
   const hud = experience.document.createElement("xr-hud") as XRHUDElement
   const button = experience.document.createElement("button")
   const other = experience.document.createElement("button")
@@ -1133,15 +1131,15 @@ test("[BRW-ATTACH-005] нормализация ориентации Display н�
       },
     })
   })
-  const display = experience.document.createElement("xr-display") as XRDisplayElement
+  const display = experience.document.createElement("display") as DisplayElement
+  display.setAttribute("style", "width: 960px; height: 680px")
   display.id = "rotated"
-  display.quaternionX = 1
-  display.quaternionW = 1
+  display.setAttribute("style", "width: 960px; height: 680px; rotate: x 90deg")
   experience.space.append(display)
   experience.render()
   experience.render()
   expect(updates).toBe(0)
-  expect(display.quaternionX).toBe(1)
+  expect(display.getAttribute("style")).toContain("rotate: x 90deg")
   experience.unmount()
 })
 
@@ -1555,28 +1553,23 @@ test("Display scale synchronizes to the existing plane without replacing UI or c
   const state = createFakeRuntimeState()
   const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
   const root = await attachFixture({canvas, font: {} as TrueTypeFont}, options => Promise.resolve(createFakeRuntime(options, state)))
-  const display = root.document.createElement("xr-display") as XRDisplayElement
-  display.viewportWidth = 1280
-  display.viewportHeight = 720
-  display.worldUnitsPerPixel = 600 / 1280
+  const display = root.document.createElement("display") as DisplayElement
+  display.setAttribute("style", "width: 960px; height: 680px")
+  display.setAttribute("style", "width: 1280px; height: 720px")
   const button = root.document.createElement("button")
   display.append(button)
   root.space.append(display)
   const held = state.planes.get(display)!
   button.focus()
   root.document.transaction(() => {
-    display.scaleX = 2
-    display.scaleY = 3
-    display.scaleZ = -1
+    display.setAttribute("style", "width: 1280px; height: 720px; scale: 2 3 -1")
   })
   expect(state.planes.get(display)).toBe(held)
   expect([held.plane.scale.x, held.plane.scale.y, held.plane.scale.z]).toEqual([2, 3, -1])
   expect(held.viewport).toEqual({width: 1280, height: 720})
   expect(root.document.activeElement).toBe(button)
   root.document.transaction(() => {
-    display.scaleX = 1
-    display.scaleY = 1
-    display.scaleZ = 1
+    display.setAttribute("style", "width: 1280px; height: 720px; scale: 1 1 1")
   })
   expect([held.plane.scale.x, held.plane.scale.y, held.plane.scale.z]).toEqual([1, 1, 1])
   root.unmount()

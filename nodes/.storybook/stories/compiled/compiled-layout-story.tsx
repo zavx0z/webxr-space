@@ -1,9 +1,9 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import {layoutAdaptiveWithDiagnostics} from "@zavx0z/layout/adaptive"
 import {layoutFixed} from "@zavx0z/layout/fixed"
 import type {LayoutResult} from "@zavx0z/layout/types"
 import {createNodeTree, createNodeTreeExternalStore} from "@zavx0z/nodetree"
 import {NodeEditor} from "@zavx0z/nodes/node-editor"
-import {XRDisplayElement} from "@zavx0z/space"
 import {createRoot} from "@zavx0z/component"
 import type {
   Document as SemanticDocument,
@@ -125,10 +125,10 @@ function computeLayout(fixture: LayoutStoryFixture): ComputedLayout {
 function assertDisplayAncestor(owner: SemanticHTMLElement): void {
   let ancestor = owner.parentElement
   while (ancestor !== null) {
-    if (ancestor instanceof XRDisplayElement) return
+    if (ancestor instanceof DisplayElement) return
     ancestor = ancestor.parentElement
   }
-  throw new Error("Пример нодовой раскладки смонтирован вне host-owned XRDisplayElement")
+  throw new Error("Пример нодовой раскладки смонтирован вне host-owned DisplayElement")
 }
 
 function sourceFor(fixture: LayoutStoryFixture): string {

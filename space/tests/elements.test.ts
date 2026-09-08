@@ -1,3 +1,4 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import {describe, expect, test} from "bun:test"
 import {Event, createDocument} from "@zavx0z/dom"
 import {
@@ -8,7 +9,6 @@ import {
 import {
   XRAnimationElement,
   XRAssetElement,
-  XRDisplayElement,
   XRGeometryElement,
   XRGroupElement,
   XRHUDElement,
@@ -44,7 +44,7 @@ describe("Пространственные элементы одного Documen
     const asset = document.createElement("xr-asset")
     const geometry = document.createElement("xr-geometry")
     const material = document.createElement("xr-material")
-    const display = document.createElement("xr-display")
+    const display = document.createElement("display")
     const hud = document.createElement("xr-hud")
 
     expect(space).toBeInstanceOf(XRSpaceElement)
@@ -62,7 +62,7 @@ describe("Пространственные элементы одного Documen
     expect(asset).toBeInstanceOf(XRAssetElement)
     expect(geometry).toBeInstanceOf(XRGeometryElement)
     expect(material).toBeInstanceOf(XRMaterialElement)
-    expect(display).toBeInstanceOf(XRDisplayElement)
+    expect(display).toBeInstanceOf(DisplayElement)
     expect(hud).toBeInstanceOf(XRHUDElement)
     for (const element of [
       space,
@@ -146,12 +146,9 @@ describe("Пространственные элементы одного Documen
     const document = createSpaceDocument()
     const space = document.createElement("xr-space") as XRSpaceElement
     const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
-    const display = document.createElement("xr-display") as XRDisplayElement
+    const display = document.createElement("display") as DisplayElement
     const hud = document.createElement("xr-hud") as XRHUDElement
     display.id = "main"
-    display.viewportWidth = 960
-    display.viewportHeight = 680
-    display.worldUnitsPerPixel = 0.5
     hud.id = "hud"
     space.append(viewPoint, display, hud)
     document.append(space)
@@ -159,11 +156,7 @@ describe("Пространственные элементы одного Documen
     const tree = readSpaceTree(document)
     expect(tree.space).toBe(space)
     expect(tree.viewPoint).toBe(viewPoint)
-    expect(tree.displays[0]).toMatchObject({
-      element: display,
-      viewport: {width: 960, height: 680},
-      worldUnitsPerPixel: 0.5,
-    })
+    expect(tree.displays[0]).toBe(display)
     expect(tree.hud).toMatchObject({element: hud})
   })
 
@@ -171,14 +164,14 @@ describe("Пространственные элементы одного Documen
     const document = createSpaceDocument()
     const space = document.createElement("xr-space") as XRSpaceElement
     const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
-    const first = document.createElement("xr-display") as XRDisplayElement
-    const second = document.createElement("xr-display") as XRDisplayElement
+    const first = document.createElement("display") as DisplayElement
+    const second = document.createElement("display") as DisplayElement
     first.id = "duplicate"
     second.id = "duplicate"
     space.append(viewPoint, first, second)
     document.append(space)
 
-    expect(readSpaceTree(document).displays.map(projection => projection.element)).toEqual([first, second])
+    expect(readSpaceTree(document).displays).toEqual([first, second])
   })
 
   test("[SPC-002] отклоняет не пространственного ребёнка Space", () => {
@@ -192,7 +185,7 @@ describe("Пространственные элементы одного Documen
 
   test("[SPC-004] переносит один UI Element между Display и HUD без замены", () => {
     const document = createSpaceDocument()
-    const display = document.createElement("xr-display") as XRDisplayElement
+    const display = document.createElement("display") as DisplayElement
     const hud = document.createElement("xr-hud") as XRHUDElement
     const button = document.createElement("button")
     let clicks = 0

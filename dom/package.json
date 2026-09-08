@@ -9,6 +9,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./display": "./display/index.ts",
     "./range": "./range.ts",
     "./selection": "./selection.ts",
     "./text-highlights": "./text-highlights.ts",

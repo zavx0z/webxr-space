@@ -88,7 +88,7 @@ test("[UI-ACCEPT-STATIC-002] story consumes the host Space and never creates ano
   expect(source).toContain("UI display acceptance requires a host-owned @zavx0z/space Display")
   expect(source).toContain("UI HUD acceptance requires a host-owned @zavx0z/space HUD")
   expect(source).toContain("assertProjectionOwner(owner, projection)")
-  expect(source).toContain("ancestor instanceof XRDisplayElement")
+  expect(source).toContain("ancestor instanceof DisplayElement")
   expect(source).toContain("ancestor instanceof XRHUDElement")
   expect(source).toContain(
     "UI acceptance requires the Storybook host to use one @zavx0z/browser Experience",

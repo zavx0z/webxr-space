@@ -7,8 +7,7 @@ import {createDocument} from "@zavx0z/dom"
 import {Object3D, Quaternion, Vector3} from "@zavx0z/engine"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import {createSpaceElementFactories, readDisplayProjection, type XRDisplayElement, type XRObjectElement, type XRViewPointElement} from "../src/index.ts"
-import type {DisplayProps} from "../portals/display.tsx"
+import {createSpaceElementFactories, type XRObjectElement, type XRViewPointElement} from "../src/index.ts"
 import type {GroupProps} from "../abstractions/group.tsx"
 
 let directory = ""
@@ -18,7 +17,7 @@ const entries = [
   ["abstractions/text", "Text"], ["shapes/mesh", "Mesh"],
   ["shapes/line", "Line"], ["shapes/line-segments", "LineSegments"],
   ["staging/light", "Light"], ["gizmos/grid", "Grid"],
-  ["portals/display", "Display"], ["cameras/view-point", "ViewPoint"],
+  ["cameras/view-point", "ViewPoint"],
 ] as const
 
 beforeAll(async () => {
@@ -42,16 +41,14 @@ afterAll(async () => {
   if (directory) await rm(directory, {recursive: true, force: true})
 })
 
-const metrics = {size: {width: 600, height: 337.5}, resolution: {width: 2560, height: 1440}, pixelRatio: 2}
 const factory = () => new Object3D()
 
 test("every spatial object uses the same position, Blender XYZ degrees, quaternion and scale contract", () => {
   for (const [, name] of entries.filter(([, name]) => name !== "ViewPoint")) {
     const document = createDocument({elementFactories: createSpaceElementFactories()})
     const root = createRoot(document)
-    const ref = {current: null as XRObjectElement | XRDisplayElement | null}
-    const defaults = name === "Display" ? metrics : {}
-    const props = {...defaults, factory, ref, position: {x: 100, y: -200, z: 300}, rotation: {x: 90, y: 90, z: 0}, scale: {x: 2, y: 3, z: -1}}
+    const ref = {current: null as XRObjectElement | null}
+    const props = {factory, ref, position: {x: 100, y: -200, z: 300}, rotation: {x: 90, y: 90, z: 0}, scale: {x: 2, y: 3, z: -1}}
     root.render(templates.get(name)!, props)
     const element = ref.current!
     expect([element.x, element.y, element.z]).toEqual([100, -200, 300])
@@ -66,11 +63,11 @@ test("every spatial object uses the same position, Blender XYZ degrees, quaterni
     root.render(templates.get(name)!, {...props, position: {...props.position}, rotation: {...props.rotation}, scale: {...props.scale}})
     expect(ref.current).toBe(element)
     expect(element.x).toBe(999)
-    root.render(templates.get(name)!, {...defaults, factory, ref, quaternion: {x: 2, y: 0, z: 0, w: 2}})
+    root.render(templates.get(name)!, {factory, ref, quaternion: {x: 2, y: 0, z: 0, w: 2}})
     expect(element.quaternionX).toBeCloseTo(Math.SQRT1_2)
     expect(element.quaternionW).toBeCloseTo(Math.SQRT1_2)
     expect([element.x, element.scaleX, element.scaleY, element.scaleZ]).toEqual([0, 1, 1, 1])
-    root.render(templates.get(name)!, {...defaults, factory, ref})
+    root.render(templates.get(name)!, {factory, ref})
     expect([element.quaternionX, element.quaternionY, element.quaternionZ, element.quaternionW]).toEqual([0, 0, 0, 1])
     root.unmount()
     expect(ref.current).toBeNull()
@@ -96,65 +93,32 @@ test("camera target is a whole vector; fresh equal props preserve dolly state an
   root.unmount()
 })
 
-test("Display physical size survives CSS density changes and supports independent matrix proportions and scale", () => {
+test("invalid transforms leave the mounted spatial object unchanged", () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const root = createRoot(document)
-  const ref = {current: null as XRDisplayElement | null}
-  const physical = () => {
-    const display = readDisplayProjection(ref.current!)
-    return [display.viewport.width * display.worldUnitsPerPixel * display.transform.scale.x,
-      display.viewport.height * display.worldUnitsPerPixel * display.transform.scale.y]
-  }
-  root.render(templates.get("Display")!, {...metrics, ref})
+  const ref = {current: null as XRObjectElement | null}
+  const props = {factory, ref, position: {x: 100, y: 200, z: 300}}
+  root.render(templates.get("Group")!, props)
   const element = ref.current!
-  const child = document.createElement("button")
-  let clicks = 0
-  child.addEventListener("click", () => clicks++)
-  element.append(child)
-  expect(readDisplayProjection(element).viewport).toEqual({width: 1280, height: 720})
-  expect(physical()).toEqual([600, 337.5])
-  root.render(templates.get("Display")!, {...metrics, pixelRatio: 1, ref})
-  expect(readDisplayProjection(element).viewport).toEqual(metrics.resolution)
-  expect(physical()).toEqual([600, 337.5])
-  root.render(templates.get("Display")!, {...metrics, resolution: {width: 1000, height: 1000}, scale: {x: 2, y: 3, z: 1}, ref})
-  expect(physical()[0]).toBeCloseTo(1200)
-  expect(physical()[1]).toBeCloseTo(1012.5)
-  expect(ref.current).toBe(element)
-  expect(element.firstElementChild === child).toBe(true)
-  child.click()
-  expect(clicks).toBe(1)
-  root.unmount()
-})
-
-test("invalid authored characteristics fail before changing the mounted Display", () => {
-  const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const root = createRoot(document)
-  const ref = {current: null as XRDisplayElement | null}
-  root.render(templates.get("Display")!, {...metrics, ref})
-  const previous = readDisplayProjection(ref.current!)
   for (const invalid of [
-    {position: {x: NaN, y: 0, z: 0}}, {rotation: {x: Infinity, y: 0, z: 0}},
-    {scale: {x: 0, y: 1, z: 1}}, {quaternion: {x: 0, y: 0, z: 0, w: 0}},
+    {position: {x: NaN, y: 0, z: 0}},
+    {rotation: {x: Infinity, y: 0, z: 0}},
+    {scale: {x: 0, y: 1, z: 1}},
+    {quaternion: {x: 0, y: 0, z: 0, w: 0}},
     {rotation: {x: 0, y: 0, z: 0}, quaternion: {x: 0, y: 0, z: 0, w: 1}},
-    {size: {width: -1, height: 10}}, {resolution: {width: 1.5, height: 10}},
-    {pixelRatio: 0}, {pixelRatio: Infinity}, {size: undefined},
   ]) {
-    expect(() => root.render(templates.get("Display")!, {...metrics, ref, ...invalid})).toThrow()
-    expect(readDisplayProjection(ref.current!)).toEqual(previous)
+    expect(() => root.render(templates.get("Group")!, {...props, ...invalid})).toThrow()
+    expect(ref.current).toBe(element)
+    expect([element.x, element.y, element.z]).toEqual([100, 200, 300])
   }
   root.unmount()
 })
 
 // Compile-time guards: the public author API has no scalar transform or projection aliases.
 const acceptsGroup = (_props: GroupProps) => {}
-const acceptsDisplay = (_props: DisplayProps) => {}
 if (false) {
   // @ts-expect-error A position is one complete vector.
   acceptsGroup({x: 1})
   // @ts-expect-error Orientation has exactly one author representation.
   acceptsGroup({rotation: {x: 0, y: 0, z: 0}, quaternion: {x: 0, y: 0, z: 0, w: 1}})
-  // @ts-expect-error Display characteristics are required.
-  acceptsDisplay({})
-  // @ts-expect-error Projection density is derived inside Space.
-  acceptsDisplay({...metrics, worldUnitsPerPixel: 1})
 }

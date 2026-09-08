@@ -15,19 +15,6 @@ export type TransformProps = OrientationProps & Readonly<{
   scale?: SpatialVector | undefined
 }>
 
-/** Размер поверхности в мм либо разрешение матрицы в пикселях по имени свойства. */
-export type DisplayExtent = Readonly<{width: number; height: number}>
-
-/**
-Характеристики [физического Display](../README.md#физический-display).
-Size и resolution независимы от окна и камеры; pixelRatio задаёт масштаб CSS.
-*/
-export type DisplayMetricsProps = Readonly<{
-  size: DisplayExtent
-  resolution: DisplayExtent
-  pixelRatio?: number | undefined
-}>
-
 export function validateVector(value: SpatialVector | undefined, label: string, nonzero = false): void {
   if (value === undefined) return
   if (value === null || ![value.x, value.y, value.z].every(Number.isFinite) ||
@@ -75,22 +62,4 @@ export function resolveTransform(props: TransformProps): SpatialQuaternion | und
     z: cx * cy * sz - sx * sy * cz,
     w: cx * cy * cz + sx * sy * sz,
   }
-}
-
-export function resolveDisplayMetrics(props: DisplayMetricsProps) {
-  const {size, resolution} = props
-  const pixelRatio = props.pixelRatio ?? 1
-  if (size == null || resolution == null ||
-    ![size.width, size.height, pixelRatio].every(value => Number.isFinite(value) && value > 0) ||
-    ![resolution.width, resolution.height].every(value => Number.isSafeInteger(value) && value > 0)) {
-    throw new RangeError("Display requires positive finite size and pixelRatio and positive integer resolution")
-  }
-  const width = resolution.width / pixelRatio
-  const height = resolution.height / pixelRatio
-  const units = size.width / width
-  const aspectScale = size.height / height / units
-  if (![width, height, units, aspectScale].every(value => Number.isFinite(value) && value > 0)) {
-    throw new RangeError("Display characteristics exceed finite projection dimensions")
-  }
-  return {width, height, units, aspectScale}
 }

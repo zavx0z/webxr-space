@@ -1,6 +1,6 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import type {ComponentRoot} from "@zavx0z/component"
 import type {Document, Element, Node} from "@zavx0z/dom"
-import {XRDisplayElement} from "@zavx0z/space"
 import type {RoutedNodesStory} from "./story-types.ts"
 
 /** Mounts authored production components into the host's exact semantic Document. */
@@ -28,10 +28,10 @@ export function mountNodesStory(
       afterPresent() {
         let ancestor = element.parentElement
         while (ancestor !== null) {
-          if (ancestor instanceof XRDisplayElement) return
+          if (ancestor instanceof DisplayElement) return
           ancestor = ancestor.parentElement
         }
-        throw new Error(`История ${route} смонтирована вне host-owned XRDisplayElement`)
+        throw new Error(`История ${route} смонтирована вне host-owned DisplayElement`)
       },
       dispose() {
         if (disposed) return

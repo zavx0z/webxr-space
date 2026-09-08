@@ -1,10 +1,5 @@
-import {
-  Comment,
-  DisplayElement,
-  Element,
-  type Document,
-  type Node,
-} from "@zavx0z/dom"
+import {Comment, Element, type Document, type Node} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import type {
   AnimationClip,
   BufferGeometry,
@@ -140,7 +135,6 @@ export class XRSpaceElement extends XRElement {
       }
       if (!(child instanceof XRViewPointElement) &&
         !(child instanceof XRObjectElement) &&
-        !(child instanceof XRDisplayElement) &&
         !(child instanceof XRHUDElement)) {
         throw new TypeError(`Space does not accept ${child.localName}`)
       }
@@ -566,42 +560,6 @@ export class XRMaterialElement extends XRElement {
   protected override validateChildInsertion(): void {
     throw new TypeError("Material cannot contain children")
   }
-}
-
-export class XRDisplayElement extends XRElement {
-  constructor(ownerDocument: Document) {
-    super(ownerDocument, "xr-display")
-  }
-
-  get viewportWidth(): number { return numberAttribute(this, "viewport-width", 960) }
-  set viewportWidth(value: number) { setNumberAttribute(this, "viewport-width", value) }
-  get viewportHeight(): number { return numberAttribute(this, "viewport-height", 680) }
-  set viewportHeight(value: number) { setNumberAttribute(this, "viewport-height", value) }
-  get worldUnitsPerPixel(): number { return numberAttribute(this, "world-units-per-pixel", 1) }
-  set worldUnitsPerPixel(value: number) { setNumberAttribute(this, "world-units-per-pixel", value) }
-
-  get quaternionX(): number { return numberAttribute(this, "quaternion-x", 0) }
-  set quaternionX(value: number) { setNumberAttribute(this, "quaternion-x", value) }
-  get quaternionY(): number { return numberAttribute(this, "quaternion-y", 0) }
-  set quaternionY(value: number) { setNumberAttribute(this, "quaternion-y", value) }
-  get quaternionZ(): number { return numberAttribute(this, "quaternion-z", 0) }
-  set quaternionZ(value: number) { setNumberAttribute(this, "quaternion-z", value) }
-  get quaternionW(): number { return numberAttribute(this, "quaternion-w", 1) }
-  set quaternionW(value: number) { setNumberAttribute(this, "quaternion-w", value) }
-  get x(): number { return numberAttribute(this, "x", 0) }
-  set x(value: number) { setNumberAttribute(this, "x", value) }
-  get y(): number { return numberAttribute(this, "y", 0) }
-  set y(value: number) { setNumberAttribute(this, "y", value) }
-  get z(): number { return numberAttribute(this, "z", 0) }
-  set z(value: number) { setNumberAttribute(this, "z", value) }
-  get scaleX(): number { return numberAttribute(this, "scale-x", 1) }
-  set scaleX(value: number) { setNumberAttribute(this, "scale-x", value) }
-  get scaleY(): number { return numberAttribute(this, "scale-y", 1) }
-  set scaleY(value: number) { setNumberAttribute(this, "scale-y", value) }
-  get scaleZ(): number { return numberAttribute(this, "scale-z", 1) }
-  set scaleZ(value: number) { setNumberAttribute(this, "scale-z", value) }
-  get visible(): boolean { return booleanAttribute(this, "visible", true) }
-  set visible(value: boolean) { this.setAttribute("visible", String(value)) }
 }
 
 export class XRHUDElement extends XRElement {

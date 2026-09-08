@@ -1,5 +1,6 @@
 import {expect, test} from "bun:test"
-import {createDocument, DisplayElement, publishDisplayMetrics, UIEvent} from "../src/index.ts"
+import {createDocument, UIEvent} from "../src/index.ts"
+import {DisplayElement, publishDisplayMetrics} from "./index.ts"
 
 test("display is native without Space registration and publishes only changed committed dimensions", async () => {
   const document = createDocument()

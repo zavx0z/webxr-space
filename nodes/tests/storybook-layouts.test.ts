@@ -84,7 +84,7 @@ test("[NODES-STORYBOOK-002] каждый route вычисляет реальны
     const document = createDocument({elementFactories: createSpaceElementFactories()})
     const space = document.createElement("xr-space")
     const viewPoint = document.createElement("xr-view-point")
-    const display = document.createElement("xr-display")
+    const display = document.createElement("display")
     document.transaction(() => {
       space.append(viewPoint, display)
       document.append(space)

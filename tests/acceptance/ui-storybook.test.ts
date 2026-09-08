@@ -1,3 +1,4 @@
+import {DisplayElement} from "@zavx0z/dom/display"
 import {test} from "bun:test"
 import {resolve} from "node:path"
 import {
@@ -11,7 +12,6 @@ import {
 import {
   createSpaceElementFactories,
   readSpaceTree,
-  XRDisplayElement,
   XRGroupElement,
   XRHUDElement,
   XRSpaceElement,
@@ -55,7 +55,7 @@ const createSemanticExperience = () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("xr-space") as XRSpaceElement
   const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
-  const display = document.createElement("xr-display") as XRDisplayElement
+  const display = document.createElement("display") as DisplayElement
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "storybook-display"
   hud.id = "storybook-workbench"
@@ -77,7 +77,7 @@ const loadAcceptanceStories = async () => {
 
 const mountStory = async (
   document: Document,
-  host: XRDisplayElement | XRHUDElement,
+  host: DisplayElement | XRHUDElement,
   descriptor: OwnerStoryDescriptor,
 ) => {
   const abort = new AbortController()
@@ -127,7 +127,7 @@ test("[UI-ACCEPT-LOCAL-001] один semantic Document содержит exact Sp
     "Space должен содержать один exact ViewPoint того же Document",
   )
   assertRequirement(
-    tree.displays[0]?.element === display && tree.hud?.element === hud,
+    tree.displays[0] === display && tree.hud?.element === hud,
     "UI-ACCEPT-LOCAL-001",
     "Display и HUD должны быть projection roots exact Space",
   )

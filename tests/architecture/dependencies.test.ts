@@ -318,7 +318,7 @@ describe("Направление производственных зависим
         join(root, packageDirectories[packageName], "package.json"),
       ).json() as {scripts: Readonly<Record<string, string>>}
       assertRequirement(
-        manifest.scripts.test === "bun test --parallel tests",
+        /^bun test --parallel tests(?: [\w./-]+)*$/u.test(manifest.scripts.test ?? ""),
         "PKG-008",
         `${packageName} должен запускать package tests нативным параллельным Bun test`,
       )

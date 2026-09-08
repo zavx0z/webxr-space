@@ -336,7 +336,7 @@ test("[NODES-LAYOUT-COHERENCE-011] value-only changes invalidate an exact receip
 function mount(graph: Graph, kind: "tree" | "editor", layout?: Parameters<typeof mountLayoutFixture>[3]): Mounted {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("xr-space")
-  const display = document.createElement("xr-display")
+  const display = document.createElement("display")
   space.append(document.createElement("xr-view-point"), display)
   document.append(space)
   const mounted = mountLayoutFixture(document, graph, kind, layout)

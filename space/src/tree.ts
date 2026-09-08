@@ -1,24 +1,12 @@
-import {DisplayElement, type Document} from "@zavx0z/dom"
+import type {Document} from "@zavx0z/dom"
+import {DisplayElement} from "@zavx0z/dom/display"
 import {
-  XRDisplayElement,
   XRHUDElement,
   XRMeshElement,
   XRObjectElement,
   XRSpaceElement,
   XRViewPointElement,
 } from "./elements.ts"
-
-export type SpaceDisplayProjection = Readonly<{
-  element: XRDisplayElement
-  viewport: Readonly<{width: number; height: number}>
-  worldUnitsPerPixel: number
-  transform: Readonly<{
-    quaternion: Readonly<{x: number; y: number; z: number; w: number}>
-    position: Readonly<{x: number; y: number; z: number}>
-    scale: Readonly<{x: number; y: number; z: number}>
-    visible: boolean
-  }>
-}>
 
 export type SpaceHUDProjection = Readonly<{
   element: XRHUDElement
@@ -30,8 +18,7 @@ export type SpaceTree = Readonly<{
   viewPoint: XRViewPointElement
   objects: readonly XRObjectElement[]
   meshes: readonly XRMeshElement[]
-  displays: readonly SpaceDisplayProjection[]
-  cssDisplays: readonly DisplayElement[]
+  displays: readonly DisplayElement[]
   hud: SpaceHUDProjection | null
 }>
 
@@ -54,10 +41,6 @@ export const readSpaceTree = (document: Document): SpaceTree => {
     throw new TypeError("Space must contain exactly one ViewPoint")
   }
 
-  const displays = space.children
-    .filter((child): child is XRDisplayElement => child instanceof XRDisplayElement)
-    .map(readDisplayProjection)
-
   const hudElements = space.children.filter(
     (child): child is XRHUDElement => child instanceof XRHUDElement,
   )
@@ -72,8 +55,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
     meshes: Object.freeze(objects.filter(
       (element): element is XRMeshElement => element instanceof XRMeshElement,
     )),
-    displays: Object.freeze(displays),
-    cssDisplays: Object.freeze(space.children.filter((child): child is DisplayElement => child instanceof DisplayElement)),
+    displays: Object.freeze(space.children.filter((child): child is DisplayElement => child instanceof DisplayElement)),
     hud: hudElement
       ? Object.freeze({element: hudElement, distance: hudElement.distance})
       : null,
@@ -92,29 +74,4 @@ const collectObjects = (root: XRSpaceElement): XRObjectElement[] => {
     if (child instanceof XRObjectElement) visit(child)
   }
   return objects
-}
-
-
-/** Читает только параметры одного Display, не обходя объекты Space. */
-export function readDisplayProjection(element: XRDisplayElement): SpaceDisplayProjection {
-  if (element.viewportWidth <= 0 || element.viewportHeight <= 0) {
-    throw new TypeError(`Display ${element.id} viewport must be positive`)
-  }
-  if (element.worldUnitsPerPixel <= 0) {
-    throw new TypeError(`Display ${element.id} worldUnitsPerPixel must be positive`)
-  }
-  return Object.freeze({
-    element,
-    viewport: Object.freeze({
-      width: element.viewportWidth,
-      height: element.viewportHeight,
-    }),
-    worldUnitsPerPixel: element.worldUnitsPerPixel,
-    transform: Object.freeze({
-      quaternion: Object.freeze({x: element.quaternionX, y: element.quaternionY, z: element.quaternionZ, w: element.quaternionW}),
-      position: Object.freeze({x: element.x, y: element.y, z: element.z}),
-      scale: Object.freeze({x: element.scaleX, y: element.scaleY, z: element.scaleZ}),
-      visible: element.visible,
-    }),
-  })
 }

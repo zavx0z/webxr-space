@@ -12,7 +12,7 @@ const packages = Object.freeze([
   ["renderer", "@zavx0z/renderer", "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU"],
   ["webgpu", "@zavx0z/webgpu", "Shaders, buffers, textures, uploads и рисование"],
   ["browser", "@zavx0z/browser", "Canvas, resize, input, RAF и общий цикл кадров"],
-  ["space", "@zavx0z/space", "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material, Display и HUD"],
+  ["space", "@zavx0z/space", "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material и HUD"],
   ["ui", "@zavx0z/ui", "Универсальные UI-компоненты, тема и иконки"],
   ["nodetree", "@zavx0z/nodetree", "Живая модель NodeTree, Parameter stores, снимки и сохранение"],
   ["layout", "@zavx0z/layout", "Алгоритмы расположения нод и Worker"],
