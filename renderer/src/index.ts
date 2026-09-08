@@ -73,3 +73,6 @@ export type {
   DocumentInteractionStateChange,
   DocumentInteractionStateSubscriber,
 } from "./pseudo-state.ts"
+
+export {readDisplayStyle, MILLIMETRES_PER_CSS_PIXEL} from "./display-style.ts"
+export type {DisplayStyle} from "./display-style.ts"

@@ -1,3 +1,4 @@
+import {DisplayElement} from "./display-element.ts"
 import {Comment} from "./comment.ts"
 import {
   acquireDocumentAuthorStyleSheetOwnerInternal,
@@ -133,6 +134,7 @@ export type DocumentOptions = Readonly<{
 }>
 
 export interface HTMLElementTagNameMap {
+  display: DisplayElement
   button: HTMLButtonElement
   div: HTMLDivElement
   fieldset: HTMLFieldSetElement
@@ -223,6 +225,7 @@ export class Document extends Node {
   createElement(localName: string): Element {
     const normalizedLocalName = String(localName).toLowerCase()
     switch (normalizedLocalName) {
+      case "display": return new DisplayElement(this)
       case "button": return new HTMLButtonElement(this)
       case "div": return new HTMLDivElement(this)
       case "fieldset": return new HTMLFieldSetElement(this)

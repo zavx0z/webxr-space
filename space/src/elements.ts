@@ -1,5 +1,6 @@
 import {
   Comment,
+  DisplayElement,
   Element,
   type Document,
   type Node,
@@ -133,7 +134,7 @@ export class XRSpaceElement extends XRElement {
     ]
 
     for (const child of children) {
-      if (child instanceof Comment) continue
+      if (child instanceof Comment || child instanceof DisplayElement) continue
       if (!(child instanceof XRElement)) {
         throw new TypeError("Space accepts only spatial elements")
       }

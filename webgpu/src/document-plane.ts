@@ -15,6 +15,7 @@ export type RendererWebGpuDocumentPlaneOptions = Readonly<{
   content: Object3D
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  rasterSize?: RenderViewport
 }>
 
 export type RendererWebGpuDocumentPlaneIntersection = Readonly<{

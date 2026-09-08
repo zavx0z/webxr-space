@@ -1,3 +1,5 @@
+import {DisplayElement, publishDisplayMetrics, subscribeDocumentAuthorStyleSheets, subscribeDocumentCompiledStyleSheets} from "@zavx0z/dom"
+import {readDisplayStyle} from "@zavx0z/renderer"
 import type {RendererFontFace} from "@zavx0z/webgpu"
 import {loadFontFaces, type BrowserFontFaceSource} from "../font-faces.ts"
 import {
@@ -149,7 +151,7 @@ export type RootKeyInput = Readonly<{
 /** Читает существующую проекцию того же Document, не создавая Renderer или отдельный ввод. */
 export type RootDocumentProjection = Readonly<{
   kind: "display" | "hud"
-  owner: XRDisplayElement | XRHUDElement
+  owner: DisplayElement | XRDisplayElement | XRHUDElement
   readFrame(): RenderFrame | null
   subscribeFrames(listener: (frame: RenderFrame) => void): () => void
   projectPoint(point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
@@ -190,15 +192,15 @@ export type Root = Readonly<{
   presentedFrame: number
   disposed: boolean
   getProjection(owner: XRSpaceElement): RootSpaceProjection
-  getProjection(owner: XRDisplayElement | XRHUDElement): RootDocumentProjection
+  getProjection(owner: DisplayElement | XRDisplayElement | XRHUDElement): RootDocumentProjection
   subscribePresented(listener: (sequence: number) => void): () => void
   dispatchKey(
-    owner: XRDisplayElement | XRHUDElement,
+    owner: DisplayElement | XRDisplayElement | XRHUDElement,
     target: SemanticHTMLElement,
     input: RootKeyInput,
   ): boolean
   dispatchText(
-    owner: XRDisplayElement | XRHUDElement,
+    owner: DisplayElement | XRDisplayElement | XRHUDElement,
     target: SemanticHTMLElement,
     text: string,
   ): boolean
@@ -370,7 +372,7 @@ export const createAttachedRoot = async (
 
   const objects = new Map<XRObjectElement, ObjectProjection>()
   const animations = new Map<XRAnimationElement, AnimationProjection>()
-  const projectionBindings = new Map<XRDisplayElement | XRHUDElement, ProjectionBinding>()
+  const projectionBindings = new Map<DisplayElement | XRDisplayElement | XRHUDElement, ProjectionBinding>()
   environment.read().clipboard.configure(
     () => readRenderedSelectionText([...projectionBindings.values()].map(binding => binding.runtime.frame), document.getSelection()),
     () => runtime.nativeInputHost.synchronize(),
@@ -390,11 +392,11 @@ export const createAttachedRoot = async (
     },
   )
   let projectionListeners = new WeakMap<
-    XRDisplayElement | XRHUDElement,
+    DisplayElement | XRDisplayElement | XRHUDElement,
     Set<(frame: RenderFrame) => void>
   >()
   let projectionHandles = new WeakMap<
-    XRDisplayElement | XRHUDElement,
+    DisplayElement | XRDisplayElement | XRHUDElement,
     RootDocumentProjection
   >()
   const presentedListeners = new Set<(sequence: number) => void>()
@@ -477,6 +479,7 @@ export const createAttachedRoot = async (
   const unsubscribeBeforeRender = runtime.subscribeBeforeRender(() => {
     inFrame = true
     try {
+      if (tree.cssDisplays.length > 0) displayDirty = true
       synchronize()
       synchronizeCamera()
       const delta = environment.frame(space, viewPoint, typeof performance === "undefined" ? Date.now() : performance.now())
@@ -498,7 +501,7 @@ export const createAttachedRoot = async (
   const synchronizeInputOwner = (): void => {
     let owner: Element | null = document.activeElement
     while (owner !== null) {
-      if ((owner instanceof XRDisplayElement || owner instanceof XRHUDElement) && owner.parentElement === space) break
+      if ((owner instanceof DisplayElement || owner instanceof XRDisplayElement || owner instanceof XRHUDElement) && owner.parentElement === space) break
       owner = owner.parentElement
     }
     if (runtime.nativeInputHost.owner !== owner) runtime.nativeInputHost.setActiveRoot(owner)
@@ -520,10 +523,11 @@ export const createAttachedRoot = async (
         continue
       }
       if (record.type !== "attributes") continue
+      if (tree.cssDisplays.length > 0) displayDirty = true
       if (record.attributeName === "id") continue
       if (target instanceof XRSpaceElement) backgroundDirty = true
       else if (target instanceof XRViewPointElement) cameraDirty = true
-      else if (target instanceof XRDisplayElement) {
+      else if (target instanceof XRDisplayElement || target instanceof DisplayElement) {
         displayDirty = true
       } else if (target instanceof XRHUDElement) {
         hudDirty = true
@@ -542,6 +546,15 @@ export const createAttachedRoot = async (
     }
   })
 
+  const refreshCssDisplays = () => {
+    if (disposed || tree.cssDisplays.length === 0) return
+    displayDirty = true
+    if (!inFrame && !lifecycle?.updating()) synchronize()
+    runtime.requestRender()
+  }
+  const unsubscribeDisplayAuthorStyles = subscribeDocumentAuthorStyleSheets(document, refreshCssDisplays)
+  const unsubscribeDisplayCompiledStyles = subscribeDocumentCompiledStyleSheets(document, refreshCssDisplays)
+
   const unsubscribePresented = runtime.subscribePresented(sequence => {
     if (disposed || document.documentElement === null) return
     presentedFrame = sequence
@@ -552,7 +565,7 @@ export const createAttachedRoot = async (
   environment.connect(runtime.requestRender)
 
   const requireDocumentProjectionRuntime = (
-    owner: XRDisplayElement | XRHUDElement,
+    owner: DisplayElement | XRDisplayElement | XRHUDElement,
   ): ProjectionRuntime => {
     assertActive(disposed)
     if (owner.ownerDocument !== document) {
@@ -566,9 +579,9 @@ export const createAttachedRoot = async (
   }
 
   const createProjectionHandle = (
-    owner: XRDisplayElement | XRHUDElement,
+    owner: DisplayElement | XRDisplayElement | XRHUDElement,
   ): RootDocumentProjection => {
-    const kind = owner instanceof XRDisplayElement ? "display" : "hud"
+    const kind = owner instanceof DisplayElement || owner instanceof XRDisplayElement ? "display" : "hud"
     return Object.freeze({
       kind,
       owner,
@@ -616,10 +629,10 @@ export const createAttachedRoot = async (
 
   function getProjection(owner: XRSpaceElement): RootSpaceProjection
   function getProjection(
-    owner: XRDisplayElement | XRHUDElement,
+    owner: DisplayElement | XRDisplayElement | XRHUDElement,
   ): RootDocumentProjection
   function getProjection(
-    owner: XRSpaceElement | XRDisplayElement | XRHUDElement,
+    owner: XRSpaceElement | DisplayElement | XRDisplayElement | XRHUDElement,
   ): RootProjection {
     if (owner instanceof XRSpaceElement) {
       if (owner !== space) throw new Error("Space projection belongs to another Root")
@@ -713,6 +726,8 @@ export const createAttachedRoot = async (
       if (disposed) return
       disposed = true
       document.removeEventListener("focusin", synchronizeInputOwner)
+      unsubscribeDisplayAuthorStyles()
+      unsubscribeDisplayCompiledStyles()
       unsubscribeMutations()
       unsubscribeBeforeRender()
       unsubscribePresented()
@@ -833,12 +848,19 @@ const synchronizeDisplays = (
   tree: SpaceTree,
   runtime: DocumentSpaceRuntime,
 ): void => {
-  const desired = new Set<Node>(tree.displays.map(display => display.element))
+  const cssDisplays = tree.cssDisplays.map(element => {
+    const style = readDisplayStyle(element.ownerDocument!, element, runtime.interactionState)
+    publishDisplayMetrics(element, {width: style.viewport.width, height: style.viewport.height,
+      pixelWidth: style.pixels.width, pixelHeight: style.pixels.height, resolution: style.resolution})
+    return {element, ...style, rasterSize: style.pixels}
+  })
+  const displays = [...tree.displays.map(display => ({...display, rasterSize: undefined})), ...cssDisplays]
+  const desired = new Set<Node>(displays.map(display => display.element))
   for (const owner of runtime.planeRoots) {
     if (!desired.has(owner)) runtime.removePlane(owner)
   }
 
-  for (const display of tree.displays) {
+  for (const display of displays) {
     const viewport = display.viewport
     const transform = {
       quaternion: display.transform.quaternion,
@@ -855,11 +877,14 @@ const synchronizeDisplays = (
         root: display.element,
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
+        ...(display.rasterSize === undefined ? {} : {rasterSize: display.rasterSize}),
         transform,
       })
       continue
     }
     if (
+      current.rasterSize?.width !== display.rasterSize?.width ||
+      current.rasterSize?.height !== display.rasterSize?.height ||
       current.viewport.width !== viewport.width ||
       current.viewport.height !== viewport.height ||
       current.worldUnitsPerPixel !== display.worldUnitsPerPixel ||
@@ -878,6 +903,7 @@ const synchronizeDisplays = (
       runtime.updatePlane(display.element, {
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
+        ...(display.rasterSize === undefined ? {} : {rasterSize: display.rasterSize}),
         transform,
       })
     }
@@ -911,16 +937,20 @@ const synchronizeHud = (
 const synchronizeProjectionBindings = (
   tree: SpaceTree,
   runtime: DocumentSpaceRuntime,
-  bindings: Map<XRDisplayElement | XRHUDElement, ProjectionBinding>,
+  bindings: Map<DisplayElement | XRDisplayElement | XRHUDElement, ProjectionBinding>,
   listeners: WeakMap<
-    XRDisplayElement | XRHUDElement,
+    DisplayElement | XRDisplayElement | XRHUDElement,
     ReadonlySet<(frame: RenderFrame) => void>
   >,
 ): void => {
-  const desired = new Map<XRDisplayElement | XRHUDElement, ProjectionRuntime>()
+  const desired = new Map<DisplayElement | XRDisplayElement | XRHUDElement, ProjectionRuntime>()
   for (const display of tree.displays) {
     const plane = runtime.getPlane(display.element)
     if (plane !== undefined && plane.root === display.element) desired.set(display.element, plane)
+  }
+  for (const element of tree.cssDisplays) {
+    const plane = runtime.getPlane(element)
+    if (plane && plane.root === element) desired.set(element, plane)
   }
   if (tree.hud !== null) {
     const overlay = runtime.getOverlay(tree.hud.element)
@@ -944,7 +974,7 @@ const synchronizeProjectionBindings = (
 }
 
 const releaseProjectionBindings = (
-  bindings: Map<XRDisplayElement | XRHUDElement, ProjectionBinding>,
+  bindings: Map<DisplayElement | XRDisplayElement | XRHUDElement, ProjectionBinding>,
 ): void => {
   for (const binding of bindings.values()) binding.unsubscribe()
   bindings.clear()

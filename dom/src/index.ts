@@ -154,3 +154,6 @@ export type {
   TextAreaStateChange,
   TextAreaValueStateChange
 } from "./state-change.ts"
+
+export {DisplayElement, publishDisplayMetrics} from "./display-element.ts"
+export type {DisplayMetrics} from "./display-element.ts"

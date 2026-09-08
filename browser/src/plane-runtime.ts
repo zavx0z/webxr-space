@@ -32,6 +32,7 @@ import {
 import {
   RendererWebGpuBackend,
   RendererWebGpuDocumentPlane,
+  RendererWebGpuDisplayPlane,
   type RendererWebGpuBackendOptions,
   type RendererWebGpuDocumentPlaneOptions,
 } from "@zavx0z/webgpu"
@@ -45,6 +46,7 @@ export type CreateDocumentPlaneRuntimeOptions = Readonly<{
   measureImage?: (src: string, changed: () => void) => RenderImageSize | null
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  rasterSize?: RenderViewport | undefined
   invalidateGeometry(geometry: BufferGeometry): void
   requestFrame(): void
   requestPresentation(): void
@@ -68,9 +70,11 @@ export type DocumentPlaneRuntime = Readonly<{
   frame: RenderFrame
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  rasterSize?: RenderViewport | undefined
   disposed: boolean
   flush(): RenderFrame
   resize(viewport: RenderViewport, worldUnitsPerPixel?: number): RenderFrame
+  setRasterSize(size: RenderViewport): void
   pointerMove(input: PointerInput): Element | null
   pointerDown(input: PointerInput): Element | null
   pointerUp(input: PointerInput): Element | null
@@ -97,7 +101,9 @@ export type DocumentPlaneRuntimeSeams = Readonly<{
 
 const defaultSeams = (): DocumentPlaneRuntimeSeams => Object.freeze({
   createBackend: (options) => new RendererWebGpuBackend(options),
-  createPlane: (options) => new RendererWebGpuDocumentPlane(options),
+  createPlane: (options) => options.rasterSize
+    ? new RendererWebGpuDisplayPlane({...options, rasterSize: options.rasterSize})
+    : new RendererWebGpuDocumentPlane(options),
   createDocumentRenderer,
   createInteraction: (options) => createDocumentInteractionController(options),
   now: () => performance.now(),
@@ -194,6 +200,7 @@ export function createDocumentPlaneRuntimeWithSeams(
       content: backend.root,
       viewport: options.viewport,
       worldUnitsPerPixel: options.worldUnitsPerPixel,
+      ...(options.rasterSize === undefined ? {} : {rasterSize: options.rasterSize}),
     })
     renderer = seams.createDocumentRenderer({
       document: options.document,
@@ -293,6 +300,11 @@ export function createDocumentPlaneRuntimeWithSeams(
     },
     get viewport() { return requiredPlane.viewport },
     get worldUnitsPerPixel() { return requiredPlane.worldUnitsPerPixel },
+    get rasterSize() { return requiredPlane instanceof RendererWebGpuDisplayPlane ? requiredPlane.rasterSize : undefined },
+    setRasterSize(size: RenderViewport) {
+      if (!(requiredPlane instanceof RendererWebGpuDisplayPlane)) throw new TypeError("Only a CSS display has a raster matrix")
+      requiredPlane.setRasterSize(size)
+    },
     get disposed() { return disposed },
     flush,
     resize,

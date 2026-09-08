@@ -25,6 +25,7 @@ import {
 } from "@zavx0z/renderer"
 import {
   Renderer as EngineRenderer,
+  RendererWebGpuDisplayPlane,
   type RendererWebGpuDocumentPlaneIntersection,
 } from "@zavx0z/webgpu"
 import {
@@ -77,6 +78,7 @@ export type DocumentSpacePlaneRegistration = Readonly<{
   root: Node
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  rasterSize?: RenderViewport
   transform?: DocumentSpacePlaneTransform
   tooltipDelayMs?: number
 }>
@@ -84,6 +86,7 @@ export type DocumentSpacePlaneRegistration = Readonly<{
 export type DocumentSpacePlaneUpdate = Readonly<{
   viewport?: RenderViewport
   worldUnitsPerPixel?: number
+  rasterSize?: RenderViewport
   transform?: DocumentSpacePlaneTransform
 }>
 
@@ -678,6 +681,7 @@ const createClaimedDocumentSpaceRuntime = async (
       ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       viewport: registration.viewport,
       worldUnitsPerPixel: registration.worldUnitsPerPixel,
+      ...(registration.rasterSize === undefined ? {} : {rasterSize: registration.rasterSize}),
       interactionState,
       tooltipDelayMs,
       invalidateGeometry: (geometry) => engineRenderer.invalidateGeometry(geometry),
@@ -722,6 +726,7 @@ const createClaimedDocumentSpaceRuntime = async (
     if (update === null || typeof update !== "object") throw new TypeError("Plane update is required")
     const transform = update.transform === undefined ? null : validateTransform(update.transform)
     const viewport = update.viewport ?? record.runtime.viewport
+    if (update.rasterSize !== undefined) record.runtime.setRasterSize(update.rasterSize)
     const worldUnitsPerPixel = update.worldUnitsPerPixel ?? record.runtime.worldUnitsPerPixel
     if (update.viewport !== undefined || update.worldUnitsPerPixel !== undefined) {
       record.runtime.resize(viewport, worldUnitsPerPixel)
@@ -747,6 +752,7 @@ const createClaimedDocumentSpaceRuntime = async (
     space.remove(record.runtime.plane)
     records.delete(owner)
     projectionRoots.delete(record.runtime.root)
+    if (record.runtime.plane instanceof RendererWebGpuDisplayPlane) engineRenderer.releaseDisplay(record.runtime.plane)
     record.runtime.dispose()
     requestRender()
     return true
@@ -1926,6 +1932,7 @@ const createClaimedDocumentSpaceRuntime = async (
       nativeInputHost.setActiveRoot(null)
       nativeInputHost.dispose()
       for (const record of records.values()) {
+        if (record.runtime.plane instanceof RendererWebGpuDisplayPlane) engineRenderer.releaseDisplay(record.runtime.plane)
         space.remove(record.runtime.plane)
         record.runtime.dispose()
       }

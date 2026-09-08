@@ -2,6 +2,7 @@ import type {JsxSourceElement} from "./jsx-runtime.ts"
 import type {jsxEventNames} from "./jsx-events.ts"
 import type {
   Element as SemanticElement,
+  DisplayElement,
   EventTarget as SemanticEventTarget,
 } from "@zavx0z/dom"
 
@@ -106,6 +107,7 @@ export type StandardIntrinsicElements = Readonly<{
 }>
 
 export type TemplateIntrinsicElements = StandardIntrinsicElements & Readonly<{
+  display: IntrinsicElementProperties<DisplayElement>
   "vector-path": IntrinsicElementProperties<HTMLElement> & Readonly<{
     d?: string | null | undefined
   }>

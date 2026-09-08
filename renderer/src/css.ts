@@ -1,3 +1,5 @@
+import {ABSOLUTE_LENGTH_FACTORS, displaySurfaceStyle, resolutionDpi} from "./spatial-css.ts"
+import type {DisplayStyle} from "./display-style.ts"
 import type { Element, Node } from "@zavx0z/dom"
 import type {DocumentInteractionState} from "./pseudo-state.ts"
 import type {
@@ -68,6 +70,8 @@ export const EMPTY_CUSTOM_PROPERTIES: ComputedCustomProperties = Object.freeze({
 export type ComputedTextOverflow = "clip" | "ellipsis"
 
 export type ComputedStyle = Readonly<{
+  displaySurface: DisplayStyle | null
+  visibility: "visible" | "hidden"
   customProperties: ComputedCustomProperties
   display: RenderDisplay
   boxSizing: RenderBoxSizing
@@ -248,6 +252,11 @@ const deferredVariablePropertySet: ReadonlySet<string> = new Set([
   "bottom",
   "transform",
   "transform-origin",
+  "translate",
+  "rotate",
+  "scale",
+  "resolution",
+  "visibility",
   "box-shadow",
   "z-index",
 ])
@@ -486,10 +495,18 @@ export const computeStyle = (
   const position = parsePosition(readValue(values, "position"))
   const declaredDisplay = element.hasAttribute("hidden") ? "none" : parseDisplay(readValue(values, "display"), tag)
 
+  const displayWidth = parseLength(readValue(values, "width"), fontSize)
+  const displayHeight = parseLength(readValue(values, "height"), fontSize)
+  const displaySurface = tag === "display" && displayWidth?.unit === "px" && displayHeight?.unit === "px" &&
+    displayWidth.value > 0 && displayHeight.value > 0
+    ? displaySurfaceStyle(displayWidth.value, displayHeight.value, name => readValue(values, name)) : null
+
   return Object.freeze({
+    displaySurface,
+    visibility: readValue(values, "visibility") === "hidden" ? "hidden" : readValue(values, "visibility") === "visible" ? "visible" : parent?.visibility ?? "visible",
     customProperties,
     display: position === "fixed" && declaredDisplay === "inline" ? "block" : declaredDisplay,
-    boxSizing: parseBoxSizing(readValue(values, "box-sizing")),
+    boxSizing: parseBoxSizing(readValue(values, "box-sizing") ?? (tag === "display" ? "border-box" : undefined)),
     flexDirection: parseFlexDirection(readValue(values, "flex-direction")),
     flexWrap: parseFlexWrap(readValue(values, "flex-wrap")),
     flexGrow: nonNegativeNumber(readValue(values, "flex-grow"), 0),
@@ -1173,10 +1190,12 @@ const expandDeclaration = (
     case "right":
     case "bottom":
       return validInset(value) ? [[property, value.trim().toLowerCase()]] : []
+    case "resolution":
+      return resolutionDpi(value) !== null ? [[property, value.trim()]] : []
     case "transform":
       return parseTransform(value) !== null ? [["transform", value.trim()]] : []
     case "transform-origin":
-      return parseTransformOrigin(value) !== null
+      return parseTransformOrigin(value) !== null || value.trim().split(/\s+/).length === 3
         ? [["transform-origin", value.trim()]]
         : []
     case "box-shadow":
@@ -2296,6 +2315,8 @@ const parseLength = (value: string | undefined, emBase?: number): CSSLength | nu
   if (calculated !== null) return calculated
   const numeric = Number.parseFloat(source)
   if (!Number.isFinite(numeric)) return null
+  const absolute = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(mm|cm|q|in|pt|pc)$/.exec(source)
+  if (absolute) return Object.freeze({unit: "px", value: Number(absolute[1]) * ABSOLUTE_LENGTH_FACTORS[absolute[2]!]!})
   if (/^-?(?:\d+|\d*\.\d+)%$/.test(source)) {
     return Object.freeze({unit: "percent", value: numeric})
   }
@@ -2411,7 +2432,7 @@ class CalculationParser {
     const unit = /^[a-z]+/i.exec(this.source.slice(this.cursor))?.[0]?.toLowerCase()
     if (unit !== undefined) this.cursor += unit.length
     if (unit === undefined) return Object.freeze({unit: "number", value: numeric})
-    if (unit === "px") return Object.freeze({unit: "px", value: numeric})
+    if (ABSOLUTE_LENGTH_FACTORS[unit] !== undefined) return Object.freeze({unit: "px", value: numeric * ABSOLUTE_LENGTH_FACTORS[unit]!})
     if (unit === "em" && this.emBase !== undefined) {
       return Object.freeze({unit: "px", value: numeric * this.emBase})
     }

@@ -347,6 +347,8 @@ const readVectorPathGeometry = (path: HTMLVectorPathElement): RenderPathGeometry
 }
 
 const ROOT_STYLE: ComputedStyle = Object.freeze({
+  displaySurface: null,
+  visibility: "visible",
   customProperties: EMPTY_CUSTOM_PROPERTIES,
   display: "block",
   boxSizing: "content-box",
@@ -6849,6 +6851,8 @@ const hasLineBreak = (value: string): boolean => /[\r\n]/.test(value)
 
 const textStyle = (inherited: ComputedStyle): ComputedStyle =>
   Object.freeze({
+    displaySurface: null,
+    visibility: inherited.visibility,
     customProperties: inherited.customProperties,
     display: "inline",
     boxSizing: "content-box",

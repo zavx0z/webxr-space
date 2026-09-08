@@ -1,4 +1,4 @@
-import type {Document} from "@zavx0z/dom"
+import {DisplayElement, type Document} from "@zavx0z/dom"
 import {
   XRDisplayElement,
   XRHUDElement,
@@ -31,6 +31,7 @@ export type SpaceTree = Readonly<{
   objects: readonly XRObjectElement[]
   meshes: readonly XRMeshElement[]
   displays: readonly SpaceDisplayProjection[]
+  cssDisplays: readonly DisplayElement[]
   hud: SpaceHUDProjection | null
 }>
 
@@ -72,6 +73,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
       (element): element is XRMeshElement => element instanceof XRMeshElement,
     )),
     displays: Object.freeze(displays),
+    cssDisplays: Object.freeze(space.children.filter((child): child is DisplayElement => child instanceof DisplayElement)),
     hud: hudElement
       ? Object.freeze({element: hudElement, distance: hudElement.distance})
       : null,

@@ -30,3 +30,5 @@ export type {
   RendererWebGpuDocumentPlaneOptions,
   RendererWebGpuDocumentPoint,
 } from "./document-plane.ts"
+
+export {RendererWebGpuDisplayPlane} from "./display-plane.ts"

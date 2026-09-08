@@ -81,7 +81,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 0.0, 0.0, 0.0);
         }
         uv = (uv - rect.xy) / rect.wz;
-    } else {
+    } else if (fitMode >= 0.0) {
         if (imageAspect > boxAspect) {
             let sourceW = boxAspect / imageAspect;
             let sourceX = (1.0 - sourceW) * 0.5;
@@ -94,7 +94,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     }
 
     let sourceUv = vec2<f32>(vb.x + uv.x * vb.z, vb.y + uv.y * vb.w);
-    let color = textureSampleLevel(imageTexture, imageSampler, sourceUv, 0.0);
+    var color = textureSampleLevel(imageTexture, imageSampler, sourceUv, 0.0);
+    if (fitMode < 0.0) {
+        if (color.a <= 0.0) { discard; }
+        color = vec4<f32>(color.rgb / color.a, color.a);
+    }
     return vec4<f32>(
         color.rgb * perObject.color.rgb,
         color.a * perObject.color.a * opacity * alpha * presentationCoverage,

@@ -1,3 +1,4 @@
+import {RendererWebGpuDisplayPlane, DisplayRasterMaterial} from "../display-plane.ts"
 import {Space} from "@zavx0z/engine"
 import {ViewPoint} from "@zavx0z/engine"
 import {Mesh} from "@zavx0z/engine"
@@ -166,6 +167,14 @@ interface StrokedPathStorageValidationEntry {
   readonly orderBytes: number
 }
 
+type DisplayRasterTarget = {
+  texture: GPUTexture
+  multisample: GPUTexture
+  depth: GPUTexture
+  width: number
+  height: number
+}
+
 interface PreparedRenderLayer {
   background: GPUColor | undefined
   glassObjects: RenderItem[]
@@ -245,6 +254,10 @@ export class Renderer {
   private textStencilPipeline: GPURenderPipeline | null = null
   private textCoverPipeline: GPURenderPipeline | null = null
   private textDepthCoverPipeline: GPURenderPipeline | null = null
+  private readonly displayRasterTargets = new Map<RendererWebGpuDisplayPlane, DisplayRasterTarget>()
+  private readonly displayRasterImages = new WeakMap<ImageMaterial, GPUTexture>()
+  private displaySampler: GPUSampler | null = null
+
   private imagePipeline: GPURenderPipeline | null = null
   private externalImagePipeline: GPURenderPipeline | null = null
   private roundedPipeline: GPURenderPipeline | null = null
@@ -1663,7 +1676,20 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (!this.isReadyToRender()) return
     prepareCompositionWorldMatrices(planned)
 
-    this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length)
+    const displayPlanes: RendererWebGpuDisplayPlane[] = []
+    const collectDisplays = (object: Object3D) => {
+      if (!object.visible) return
+      if (object instanceof RendererWebGpuDisplayPlane) displayPlanes.push(object)
+      for (const child of object.children) collectDisplays(child)
+    }
+    collectDisplays(planned.space)
+    const activeDisplays = new Set(displayPlanes)
+    for (const plane of this.displayRasterTargets.keys()) {
+      if (!activeDisplays.has(plane)) this.releaseDisplay(plane)
+    }
+    const excludedRoots = new Set(planned.excludedBaseRoots)
+    for (const plane of displayPlanes) excludedRoots.add(plane.content)
+    this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length + displayPlanes.length)
     const baseResources = this.viewUniformResources[0]!
     const baseFrustum = this.prepareCompositionView(0, planned.viewPoint)
     const fullViewport: RendererPhysicalViewport = {
@@ -1687,7 +1713,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         frameRenderItems,
         baseLights,
         baseFrustum,
-        planned.excludedBaseRoots,
+        excludedRoots,
         planned.space.background,
       ),
       resources: baseResources,
@@ -1723,9 +1749,20 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         paintBackground: false,
       }
     })
+    const rasterLayers = displayPlanes.map((plane, index) => {
+      const resourceIndex = 1 + planned.boundedViews.length + index
+      const resources = this.viewUniformResources[resourceIndex]!
+      const matrix = plane.rasterProjection()
+      this.device!.queue.writeBuffer(resources.globalUniformBuffer, 0, matrix.elements)
+      const frustum = this.compositionFrustums[resourceIndex]!.setFromProjectionMatrix(matrix)
+      const target = this.ensureDisplayRasterTarget(plane)
+      const layer = this.prepareRenderLayer(plane.content, frameRenderItems, [], frustum)
+      return {root: plane.content, layer, resources, viewport: {x: 0, y: 0, width: target.width, height: target.height}, paintBackground: false, target}
+    })
     this.updateSceneUniforms(baseResources.sceneUniformBuffer, baseLights, planned.viewPoint.viewMatrix)
     const preparedLayers = [baseLayer, ...boundedLayers, ...overlayLayers]
-    this.pruneRenderBundleCaches(preparedLayers)
+    const allLayers = [...preparedLayers, ...rasterLayers]
+    this.pruneRenderBundleCaches(allLayers)
     const renderIndexByItem = new Map<RenderItem, number>()
     frameRenderItems.forEach((item, index) => {
       if (!renderIndexByItem.has(item)) renderIndexByItem.set(item, index)
@@ -1764,6 +1801,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       this.device!.queue.writeBuffer(this.presentationClipBuffer, 0, presentationClipUpload.data)
     }
 
+    for (const raster of rasterLayers) {
+      this.renderPreparedLayer(commandEncoder, raster.target.texture.createView(), raster, renderIndexByItem, true, [0, 0, 0, 0], raster.target)
+      this.renderOverlayLines(commandEncoder, raster.target.texture.createView(), raster, renderIndexByItem)
+    }
     const directDrawLayers = preparedLayers.filter(({layer}) => hasDirectRenderItems(layer))
     if (boundedLayers.length > 0) {
       this.renderPreparedLayer(
@@ -1880,13 +1921,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     renderIndexByItem: ReadonlyMap<RenderItem, number>,
     clearColor: boolean,
     clearValue?: GPUColor,
+    rasterTarget?: DisplayRasterTarget,
   ): void {
     const {root, layer, resources, viewport, paintBackground} = prepared
     const colorLoadOp: GPULoadOp = clearColor ? "clear" : "load"
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [
         {
-          view: this.multisampleTextureView!,
+          view: rasterTarget?.multisample.createView() ?? this.multisampleTextureView!,
           resolveTarget: textureView,
           loadOp: colorLoadOp,
           storeOp: "store",
@@ -1894,7 +1936,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         },
       ],
       depthStencilAttachment: {
-        view: this.depthTextureView!,
+        view: rasterTarget?.depth.createView() ?? this.depthTextureView!,
         depthClearValue: 1.0,
         depthLoadOp: "clear",
         depthStoreOp: "store",
@@ -2300,7 +2342,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         offsetFloats + 44,
         clamp01(material.opacity),
         Math.max(0.0001, material.boxAspect),
-        material.fit === "contain" ? 1 : 0,
+        material instanceof DisplayRasterMaterial ? -1 : material.fit === "contain" ? 1 : 0,
         sourceAspect,
       )
     } else if ((material as any).isGlassMaterial) {
@@ -2995,20 +3037,64 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return bindGroup
   }
 
+  /** Releases a removed display's derived attachments; the semantic owner is managed by Browser. */
+  public releaseDisplay(plane: RendererWebGpuDisplayPlane): void {
+    const target = this.displayRasterTargets.get(plane)
+    target?.texture.destroy()
+    target?.multisample.destroy()
+    target?.depth.destroy()
+    this.displayRasterTargets.delete(plane)
+    this.displayRasterImages.delete(plane.rasterMaterial)
+    this.invalidateGeometry(plane.surface.geometry)
+  }
+
+  private ensureDisplayRasterTarget(plane: RendererWebGpuDisplayPlane): DisplayRasterTarget {
+    const {width, height} = plane.rasterSize
+    const device = this.device!
+    if (Math.max(width, height) > device.limits.maxTextureDimension2D) throw new RangeError("Display matrix exceeds GPU maxTextureDimension2D")
+    const current = this.displayRasterTargets.get(plane)
+    if (current?.width === width && current.height === height) return current
+    const created: GPUTexture[] = []
+    const allocate = (descriptor: GPUTextureDescriptor): GPUTexture => {
+      const texture = device.createTexture(descriptor)
+      created.push(texture)
+      return texture
+    }
+    let texture: GPUTexture
+    let multisample: GPUTexture
+    let depth: GPUTexture
+    try {
+      texture = allocate({label: "display-matrix", size: [width, height], format: this.presentationFormat!, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING})
+      multisample = allocate({label: "display-matrix-msaa", size: [width, height], format: this.presentationFormat!, sampleCount: this.sampleCount, usage: GPUTextureUsage.RENDER_ATTACHMENT})
+      depth = allocate({label: "display-matrix-depth", size: [width, height], format: "depth24plus-stencil8", sampleCount: this.sampleCount, usage: GPUTextureUsage.RENDER_ATTACHMENT})
+    } catch (error) {
+      for (const texture of created) texture.destroy()
+      throw error
+    }
+    current?.texture.destroy()
+    current?.multisample.destroy()
+    current?.depth.destroy()
+    const next = {texture, multisample, depth, width, height}
+    for (const cache of this.renderBundleCaches.values()) cache.clear()
+    this.displayRasterTargets.set(plane, next)
+    this.displayRasterImages.set(plane.rasterMaterial, texture)
+    return next
+  }
+
   private getImageBindGroup(material: ImageMaterial): GPUBindGroup {
     if (!this.device || !this.imageBindGroupLayout || !this.imageSampler) {
       throw new Error("Image pipeline is not initialized")
     }
-    const entry = TextureLoader.load(this.device, material.src, material.onTextureChange)
-    const texture = entry.status === "ready" && entry.texture
-      ? entry.texture
-      : TextureLoader.fallback(this.device)
+    const raster = this.displayRasterImages.get(material)
+    if (material instanceof DisplayRasterMaterial && !raster) throw new Error("Display raster is not allocated")
+    const entry = raster ? undefined : TextureLoader.load(this.device, material.src, material.onTextureChange)
+    const texture = raster ?? (entry?.status === "ready" && entry.texture ? entry.texture : TextureLoader.fallback(this.device))
     const cached = this.imageBindGroupCache.get(texture)
     if (cached) return cached
     const bindGroup = this.device.createBindGroup({
       layout: this.imageBindGroupLayout,
       entries: [
-        { binding: 0, resource: this.imageSampler },
+        { binding: 0, resource: raster ? (this.displaySampler ??= this.device.createSampler({magFilter: "nearest", minFilter: "nearest"})) : this.imageSampler },
         { binding: 1, resource: texture.createView() },
       ],
     })
