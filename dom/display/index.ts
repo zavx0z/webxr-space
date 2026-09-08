@@ -1,6 +1,6 @@
-import type {Document} from "./document.ts"
-import {HTMLElement} from "./html-element.ts"
-import {UIEvent} from "./ui-event.ts"
+import type {Document} from "../src/document.ts"
+import {HTMLElement} from "../src/html-element.ts"
+import {UIEvent} from "../src/ui-event.ts"
 
 /** Derived presentation facts. CSS owns dimensions; the dpi attribute owns pixel density. */
 export type DisplayMetrics = Readonly<{

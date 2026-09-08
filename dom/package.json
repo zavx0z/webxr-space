@@ -63,7 +63,7 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel tests",
+    "test": "bun test --parallel tests display",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

@@ -4,5 +4,5 @@
     "exactOptionalPropertyTypes": false,
     "lib": ["ESNext"]
   },
-  "include": ["*.ts", "src/**/*.ts", "tests/**/*.ts"]
+  "include": ["*.ts", "src/**/*.ts", "tests/**/*.ts", "display/**/*.ts"]
 }

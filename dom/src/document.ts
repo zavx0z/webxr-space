@@ -1,4 +1,4 @@
-import {DisplayElement} from "./display-element.ts"
+import {DisplayElement} from "../display/index.ts"
 import {Comment} from "./comment.ts"
 import {
   acquireDocumentAuthorStyleSheetOwnerInternal,
