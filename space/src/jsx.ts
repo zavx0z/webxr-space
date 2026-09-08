@@ -130,6 +130,9 @@ export type XRDisplayIntrinsicProperties = SpatialChildren<XRDisplayElement> & R
   x?: number | undefined
   y?: number | undefined
   z?: number | undefined
+  scaleX?: number | undefined
+  scaleY?: number | undefined
+  scaleZ?: number | undefined
   visible?: boolean | undefined
 }>
 

@@ -1,3 +1,4 @@
+import {resolveTransform, type TransformProps} from "../src/props.ts"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
   XRObjectProjectionFactory,
@@ -6,20 +7,10 @@ import type {
 import type {SpaceRef} from "../src/jsx.ts"
 import "../src/jsx.ts"
 
-export type TextProps = Readonly<{
+export type TextProps = TransformProps & Readonly<{
   text?: string
   fontSize?: number
   letterSpacing?: number
-  x?: number
-  y?: number
-  z?: number
-  quaternionX?: number
-  quaternionY?: number
-  quaternionZ?: number
-  quaternionW?: number
-  scaleX?: number
-  scaleY?: number
-  scaleZ?: number
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
@@ -28,21 +19,22 @@ export type TextProps = Readonly<{
 }>
 
 export function Text(props: TextProps): JsxSourceElement {
+  const quaternion = resolveTransform(props)
   return (
     <xr-text
       text={props.text}
       fontSize={props.fontSize}
       letterSpacing={props.letterSpacing}
-      x={props.x}
-      y={props.y}
-      z={props.z}
-      quaternionX={props.quaternionX}
-      quaternionY={props.quaternionY}
-      quaternionZ={props.quaternionZ}
-      quaternionW={props.quaternionW}
-      scaleX={props.scaleX}
-      scaleY={props.scaleY}
-      scaleZ={props.scaleZ}
+      x={props.position?.x}
+      y={props.position?.y}
+      z={props.position?.z}
+      quaternionX={quaternion?.x}
+      quaternionY={quaternion?.y}
+      quaternionZ={quaternion?.z}
+      quaternionW={quaternion?.w}
+      scaleX={props.scale?.x}
+      scaleY={props.scale?.y}
+      scaleZ={props.scale?.z}
       visible={props.visible}
       name={props.name}
       factory={props.factory}

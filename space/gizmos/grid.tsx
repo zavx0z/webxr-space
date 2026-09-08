@@ -1,10 +1,11 @@
+import {resolveTransform, type TransformProps} from "../src/props.ts"
 import {useMemo} from "@zavx0z/component"
 import {GridHelper} from "@zavx0z/engine"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {LineSegmentsProps} from "../shapes/line-segments.tsx"
 import "../src/jsx.ts"
 
-export type GridProps = Omit<LineSegmentsProps, "factory" | "children"> & Readonly<{
+export type GridProps = TransformProps & Omit<LineSegmentsProps, "factory" | "children"> & Readonly<{
   /** Сторона квадратной сетки в мм; конечное число строго больше нуля. */
   size?: number
   /** Число ячеек вдоль стороны; целое число от 1. */
@@ -28,6 +29,7 @@ export type GridProps = Omit<LineSegmentsProps, "factory" | "children"> & Readon
 ```
 */
 export function Grid(props: GridProps): JsxSourceElement {
+  const quaternion = resolveTransform(props)
   const size = props.size ?? 10
   const divisions = props.divisions ?? 10
   const colorCenterLine = props.colorCenterLine ?? 0x444444
@@ -48,16 +50,16 @@ export function Grid(props: GridProps): JsxSourceElement {
   return <xr-line-segments
     factory={factory}
     name={props.name}
-    x={props.x}
-    y={props.y}
-    z={props.z}
-    quaternionX={props.quaternionX}
-    quaternionY={props.quaternionY}
-    quaternionZ={props.quaternionZ}
-    quaternionW={props.quaternionW}
-    scaleX={props.scaleX}
-    scaleY={props.scaleY}
-    scaleZ={props.scaleZ}
+    x={props.position?.x}
+    y={props.position?.y}
+    z={props.position?.z}
+    quaternionX={quaternion?.x}
+    quaternionY={quaternion?.y}
+    quaternionZ={quaternion?.z}
+    quaternionW={quaternion?.w}
+    scaleX={props.scale?.x}
+    scaleY={props.scale?.y}
+    scaleZ={props.scale?.z}
     visible={props.visible}
     ref={props.ref}
   />

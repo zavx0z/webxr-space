@@ -76,23 +76,18 @@ export function Counter() {
 export function App() {
   return <Space background="#101722">
     <ViewPoint
-      x={0}
-      y={-800}
-      z={0}
-      targetX={0}
-      targetY={0}
-      targetZ={0}
+      position={{x: 0, y: -800, z: 0}}
+      target={{x: 0, y: 0, z: 0}}
       far={3000}
     />
-    <Mesh x={280} y={200} z={-60}>
+    <Mesh position={{x: 280, y: 200, z: -60}}>
       <Geometry kind="box" width={100} height={100} depth={100} />
       <Material kind="basic" color="#4166af" />
     </Mesh>
     <Display
-      viewportWidth={360}
-      viewportHeight={300}
-      quaternionX={Math.SQRT1_2}
-      quaternionW={Math.SQRT1_2}
+      size={{width: 360, height: 300}}
+      resolution={{width: 360, height: 300}}
+      rotation={{x: 90, y: 0, z: 0}}
     >
       <DisplayContent />
     </Display>

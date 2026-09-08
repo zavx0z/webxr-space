@@ -1,3 +1,4 @@
+import {resolveTransform, validateVector, type TransformProps, type SpatialVector} from "../src/props.ts"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {
   XRLightElement,
@@ -6,23 +7,11 @@ import type {
 import type {SpaceRef} from "../src/jsx.ts"
 import "../src/jsx.ts"
 
-export type LightProps = Readonly<{
+export type LightProps = TransformProps & Readonly<{
   kind?: string
   color?: string
   intensity?: number
-  targetX?: number
-  targetY?: number
-  targetZ?: number
-  x?: number
-  y?: number
-  z?: number
-  quaternionX?: number
-  quaternionY?: number
-  quaternionZ?: number
-  quaternionW?: number
-  scaleX?: number
-  scaleY?: number
-  scaleZ?: number
+  target?: SpatialVector
   visible?: boolean
   name?: string
   factory?: XRObjectProjectionFactory | null
@@ -31,24 +20,26 @@ export type LightProps = Readonly<{
 }>
 
 export function Light(props: LightProps): JsxSourceElement {
+  const quaternion = resolveTransform(props)
+  validateVector(props.target, "target")
   return (
     <xr-light
       kind={props.kind}
       color={props.color}
       intensity={props.intensity}
-      targetX={props.targetX}
-      targetY={props.targetY}
-      targetZ={props.targetZ}
-      x={props.x}
-      y={props.y}
-      z={props.z}
-      quaternionX={props.quaternionX}
-      quaternionY={props.quaternionY}
-      quaternionZ={props.quaternionZ}
-      quaternionW={props.quaternionW}
-      scaleX={props.scaleX}
-      scaleY={props.scaleY}
-      scaleZ={props.scaleZ}
+      targetX={props.target?.x}
+      targetY={props.target?.y}
+      targetZ={props.target?.z}
+      x={props.position?.x}
+      y={props.position?.y}
+      z={props.position?.z}
+      quaternionX={quaternion?.x}
+      quaternionY={quaternion?.y}
+      quaternionZ={quaternion?.z}
+      quaternionW={quaternion?.w}
+      scaleX={props.scale?.x}
+      scaleY={props.scale?.y}
+      scaleZ={props.scale?.z}
       visible={props.visible}
       name={props.name}
       factory={props.factory}

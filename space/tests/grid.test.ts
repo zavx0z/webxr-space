@@ -47,7 +47,7 @@ test("Grid создаёт одну сетку XY в мм и сохраняет �
   for (let index = 2; index < positions.length; index += 3) expect(positions[index]).toBe(0)
   expect(Math.min(...positions)).toBe(-1200)
   expect(Math.max(...positions)).toBe(1200)
-  for (let index = 0; index < 10; index++) root.render(grid, {size: 2400, divisions: 24, x: index, ref})
+  for (let index = 0; index < 10; index++) root.render(grid, {size: 2400, divisions: 24, position: {x: index, y: 0, z: 0}, ref})
   expect(ref.current).toBe(element)
   expect(element.factory).toBe(factory)
   expect(element.x).toBe(9)

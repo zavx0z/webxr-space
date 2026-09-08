@@ -48,3 +48,5 @@ export type {
   XRTextIntrinsicProperties,
   XRViewPointIntrinsicProperties,
 } from "./jsx.ts"
+
+export type {SpatialVector, SpatialQuaternion, OrientationProps, TransformProps, DisplayExtent, DisplayMetricsProps} from "./props.ts"

@@ -593,6 +593,12 @@ export class XRDisplayElement extends XRElement {
   set y(value: number) { setNumberAttribute(this, "y", value) }
   get z(): number { return numberAttribute(this, "z", 0) }
   set z(value: number) { setNumberAttribute(this, "z", value) }
+  get scaleX(): number { return numberAttribute(this, "scale-x", 1) }
+  set scaleX(value: number) { setNumberAttribute(this, "scale-x", value) }
+  get scaleY(): number { return numberAttribute(this, "scale-y", 1) }
+  set scaleY(value: number) { setNumberAttribute(this, "scale-y", value) }
+  get scaleZ(): number { return numberAttribute(this, "scale-z", 1) }
+  set scaleZ(value: number) { setNumberAttribute(this, "scale-z", value) }
   get visible(): boolean { return booleanAttribute(this, "visible", true) }
   set visible(value: boolean) { this.setAttribute("visible", String(value)) }
 }

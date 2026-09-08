@@ -15,6 +15,7 @@ export type SpaceDisplayProjection = Readonly<{
   transform: Readonly<{
     quaternion: Readonly<{x: number; y: number; z: number; w: number}>
     position: Readonly<{x: number; y: number; z: number}>
+    scale: Readonly<{x: number; y: number; z: number}>
     visible: boolean
   }>
 }>
@@ -110,6 +111,7 @@ export function readDisplayProjection(element: XRDisplayElement): SpaceDisplayPr
     transform: Object.freeze({
       quaternion: Object.freeze({x: element.quaternionX, y: element.quaternionY, z: element.quaternionZ, w: element.quaternionW}),
       position: Object.freeze({x: element.x, y: element.y, z: element.z}),
+      scale: Object.freeze({x: element.scaleX, y: element.scaleY, z: element.scaleZ}),
       visible: element.visible,
     }),
   })

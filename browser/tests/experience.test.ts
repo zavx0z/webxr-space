@@ -267,6 +267,11 @@ const createFakeRuntime = (
           registration.transform?.position?.y ?? 0,
           registration.transform?.position?.z ?? 0,
         ),
+        scale: new Vector3(
+          registration.transform?.scale?.x ?? 1,
+          registration.transform?.scale?.y ?? 1,
+          registration.transform?.scale?.z ?? 1,
+        ),
         visible: registration.transform?.visible ?? true,
       }
       const frame = createFakeFrame({
@@ -313,13 +318,14 @@ const createFakeRuntime = (
       const mutable = held as unknown as {
         viewport: {width: number; height: number}
         worldUnitsPerPixel: number
-        plane: {position: Vector3; visible: boolean; quaternion: {x: number; y: number; z: number; w: number}}
+        plane: {position: Vector3; scale: Vector3; visible: boolean; quaternion: {x: number; y: number; z: number; w: number}}
       }
       if (update.viewport !== undefined) mutable.viewport = update.viewport
       if (update.worldUnitsPerPixel !== undefined) {
         mutable.worldUnitsPerPixel = update.worldUnitsPerPixel
       }
       const transform = update.transform
+      if (transform?.scale !== undefined) mutable.plane.scale.set(transform.scale.x, transform.scale.y, transform.scale.z)
       if (transform?.quaternion !== undefined) Object.assign(mutable.plane.quaternion, transform.quaternion)
       if (transform?.position !== undefined) {
         mutable.plane.position.set(
@@ -1538,4 +1544,36 @@ test("Browser integration options do not acquire the stylesheet registry a secon
   expect(fixture.state.factoryCalls).toBe(1)
   root.unmount()
   expect(released).toBe(true)
+})
+
+
+test("Display scale synchronizes to the existing plane without replacing UI or changing CSS viewport", async () => {
+  const state = createFakeRuntimeState()
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  const root = await attachFixture({canvas, font: {} as TrueTypeFont}, options => Promise.resolve(createFakeRuntime(options, state)))
+  const display = root.document.createElement("xr-display") as XRDisplayElement
+  display.viewportWidth = 1280
+  display.viewportHeight = 720
+  display.worldUnitsPerPixel = 600 / 1280
+  const button = root.document.createElement("button")
+  display.append(button)
+  root.space.append(display)
+  const held = state.planes.get(display)!
+  button.focus()
+  root.document.transaction(() => {
+    display.scaleX = 2
+    display.scaleY = 3
+    display.scaleZ = -1
+  })
+  expect(state.planes.get(display)).toBe(held)
+  expect([held.plane.scale.x, held.plane.scale.y, held.plane.scale.z]).toEqual([2, 3, -1])
+  expect(held.viewport).toEqual({width: 1280, height: 720})
+  expect(root.document.activeElement).toBe(button)
+  root.document.transaction(() => {
+    display.scaleX = 1
+    display.scaleY = 1
+    display.scaleZ = 1
+  })
+  expect([held.plane.scale.x, held.plane.scale.y, held.plane.scale.z]).toEqual([1, 1, 1])
+  root.unmount()
 })

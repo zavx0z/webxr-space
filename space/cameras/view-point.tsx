@@ -1,3 +1,4 @@
+import {validateVector, type SpatialVector} from "../src/props.ts"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import type {XRViewPointElement} from "../src/elements.ts"
 import type {SpaceRef} from "../src/jsx.ts"
@@ -9,12 +10,8 @@ Props применяются при изменении их авторских �
 сохраняют положение камеры при повторном render с прежними координатами.
 */
 export type ViewPointProps = Readonly<{
-  x?: number
-  y?: number
-  z?: number
-  targetX?: number
-  targetY?: number
-  targetZ?: number
+  position?: SpatialVector
+  target?: SpatialVector
   /** Разрешает orbit/pan/zoom в свободной области общего ввода; по умолчанию выключено. */
   controls?: boolean
   fov?: number
@@ -24,14 +21,16 @@ export type ViewPointProps = Readonly<{
 }>
 
 export function ViewPoint(props: ViewPointProps): JsxSourceElement {
+  validateVector(props.position, "position")
+  validateVector(props.target, "target")
   return (
     <xr-view-point
-      x={props.x}
-      y={props.y}
-      z={props.z}
-      targetX={props.targetX}
-      targetY={props.targetY}
-      targetZ={props.targetZ}
+      x={props.position?.x}
+      y={props.position?.y}
+      z={props.position?.z}
+      targetX={props.target?.x}
+      targetY={props.target?.y}
+      targetZ={props.target?.z}
       controls={props.controls}
       fov={props.fov}
       near={props.near}

@@ -51,15 +51,14 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
   return (
     <Space>
       <ViewPoint
-        y={-140}
+        position={{x: 10, y: -140, z: 10}}
         fov={Math.PI / 2}
         controls={false}
       />
       <Display
         id="alpha"
-        viewportWidth={600}
-        viewportHeight={280}
-        worldUnitsPerPixel={1}
+        size={{width: 600, height: 280}}
+        resolution={{width: 600, height: 280}}
         style={css`
           display: block;
           width: 100%;
@@ -70,10 +69,9 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
       </Display>
       <Display
         id="beta"
-        x={652}
-        viewportWidth={600}
-        viewportHeight={280}
-        worldUnitsPerPixel={1}
+        position={{x: 652, y: 0, z: 0}}
+        size={{width: 600, height: 280}}
+        resolution={{width: 600, height: 280}}
         style={css`
           display: block;
           width: 100%;

@@ -843,6 +843,7 @@ const synchronizeDisplays = (
     const transform = {
       quaternion: display.transform.quaternion,
       position: display.transform.position,
+      scale: display.transform.scale,
       visible: display.transform.visible,
     }
     const orientation = new Quaternion(
@@ -869,6 +870,9 @@ const synchronizeDisplays = (
       current.plane.quaternion.y !== orientation.y ||
       current.plane.quaternion.z !== orientation.z ||
       current.plane.quaternion.w !== orientation.w ||
+      current.plane.scale.x !== transform.scale.x ||
+      current.plane.scale.y !== transform.scale.y ||
+      current.plane.scale.z !== transform.scale.z ||
       current.plane.visible !== transform.visible
     ) {
       runtime.updatePlane(display.element, {
