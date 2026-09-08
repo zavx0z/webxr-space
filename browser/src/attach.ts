@@ -86,7 +86,7 @@ export type AttachOptions = Readonly<{
   fontFaces?: readonly RendererFontFace[] | undefined
   fontSources?: readonly BrowserFontFaceSource[] | undefined
   stylesheets?: readonly (string | RootLinkedAuthorStyleSheet)[]
-  /** Omitted: the bundled UI theme. No page link id or consumer theme setup is required. */
+  /** Omitted: the application's separate ./theme.css. A supplied URL/link replaces that default. */
   theme?: string | RootLinkedAuthorStyleSheet
   onStyleSheetError?: RootLinkedAuthorStyleSheetErrorHandler
   frameloop?: FrameLoop
@@ -338,13 +338,24 @@ const createAttachedRoot = async (
   let runtime: DocumentSpaceRuntime
   let synchronizeCamera = () => {}
   try {
-    linkedSources = (options.stylesheets ?? []).map(source => {
+    const stylesheets = options.stylesheets ?? []
+    const head = options.canvas.ownerDocument?.head
+    const firstBorrowedLink = head !== undefined && typeof stylesheets[0] === "string" ? stylesheets
+      .filter((source): source is RootLinkedAuthorStyleSheet => typeof source !== "string")
+      .map(source => source.link)
+      .filter(link => link.parentNode === head)
+      .sort((left, right) => left === right ? 0 : left.compareDocumentPosition(right) & 4 ? -1 : 1)[0] : undefined
+    linkedSources = stylesheets.map((source, index) => {
       if (typeof source !== "string") return source
       const link = options.canvas.ownerDocument.createElement("link")
       link.rel = "stylesheet"
       link.href = source
       ownedLinks.push(link)
-      options.canvas.ownerDocument.head.append(link)
+      if (index === 0 && firstBorrowedLink !== undefined) {
+        options.canvas.ownerDocument.head.insertBefore(link, firstBorrowedLink)
+      } else {
+        options.canvas.ownerDocument.head.append(link)
+      }
       return Object.freeze({id: link.href, link})
     })
     if (linkedSources.length > 0) {

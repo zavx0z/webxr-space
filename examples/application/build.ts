@@ -5,11 +5,15 @@ const root = resolve(import.meta.dir, "../..")
 export const buildApplication = async (outdir = resolve(import.meta.dir, "dist")) => {
   const manifest = await Bun.file(resolve(root, "package.json")).json() as {workspaces: string[]}
   const result = await Bun.build({
-    entrypoints: [resolve(import.meta.dir, "main.tsx")],
+    entrypoints: [
+      resolve(import.meta.dir, "main.tsx"),
+      Bun.resolveSync("@zavx0z/ui/themes/theme.css", root),
+    ],
     outdir,
     target: "browser",
     format: "esm",
     minify: true,
+    naming: {entry: "[name].[ext]"},
     loader: {".wgsl": "text"},
     plugins: [createTemplateJsxBunPlugin({
       cwd: root,

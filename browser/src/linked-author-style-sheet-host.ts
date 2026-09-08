@@ -73,11 +73,11 @@ export function createBrowserLinkedAuthorStyleSheetHostWithSeams(
     throw new TypeError("Linked author stylesheet host seams are required")
   }
 
-  const owner = acquireDocumentAuthorStyleSheetOwner(options.document)
-  const pendingLoads = new Set<HTMLLinkElement>(sources.map(source => source.link))
   for (const source of sources) {
     validateActiveLink(source, true)
   }
+  const owner = acquireDocumentAuthorStyleSheetOwner(options.document)
+  const pendingLoads = new Set<HTMLLinkElement>(sources.map(source => source.link))
   const sourceByLink = new Map(sources.map(source => [source.link, source] as const))
   const listeners = new Map<HTMLLinkElement, Readonly<{
     load(): void

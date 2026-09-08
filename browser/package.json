@@ -26,8 +26,7 @@
     "@zavx0z/engine": "*",
     "@zavx0z/renderer": "*",
     "@zavx0z/space": "*",
-    "@zavx0z/webgpu": "*",
-    "@zavx0z/ui": "*"
+    "@zavx0z/webgpu": "*"
   },
   "peerDependenciesMeta": {
     "@zavx0z/component": {"optional": true},

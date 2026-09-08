@@ -41,7 +41,6 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
       "@zavx0z/renderer",
       "@zavx0z/space",
       "@zavx0z/webgpu",
-      "@zavx0z/ui",
     ],
     "@zavx0z/space": [
       "@zavx0z/component",
@@ -364,13 +363,6 @@ describe("Направление производственных зависим
       for (const sourceImport of await scanPackageImports(packageName)) {
         const importedPackage = internalPackageName(sourceImport.specifier)
         if (!importedPackage || importedPackage === packageName) continue
-        if (packageName === "@zavx0z/browser" && importedPackage === "@zavx0z/ui") {
-          assertRequirement(
-            sourceImport.specifier === "@zavx0z/ui/themes/theme.css",
-            "PKG-009",
-            "Browser может подключать только публичный CSS asset темы, но не UI-компоненты или widget runtime",
-          )
-        }
         assertRequirement(
           allowed.has(importedPackage),
           "PKG-009",

@@ -1284,3 +1284,39 @@ test("[BRW-ROOT-005] demand объединяет запросы, always прод
     root.unmount()
   }
 })
+
+test("default URL link is inserted before an existing borrowed stylesheet", async () => {
+  type Link = {rel: string; href: string; parentNode: unknown; remove(): void}
+  const links: Link[] = []
+  const head = {
+    append(link: Link) { links.push(link) },
+    insertBefore(link: Link, before: Link) { links.splice(links.indexOf(before), 0, link) },
+  }
+  const borrowed: Link = {rel: "stylesheet", href: "/extra.css", parentNode: head, remove() {}}
+  links.push(borrowed)
+  const canvas = {
+    getContext: () => null,
+    getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0}),
+    ownerDocument: {
+      head,
+      createElement() {
+        const link: Link = {rel: "", href: "", parentNode: head,
+          remove() { links.splice(links.indexOf(link), 1) },
+        }
+        return link
+      },
+    },
+  } as unknown as HTMLCanvasElement
+  const root = await attachFixture({canvas, font: {} as TrueTypeFont,
+    stylesheets: ["/theme.css", {id: "extra", link: borrowed as unknown as HTMLLinkElement}],
+  }, async options => createFakeRuntime(options, createFakeRuntimeState()), {
+    createLinkedAuthorStyleSheetHost(options) {
+      expect(links.map(link => link.href)).toEqual(["/theme.css", "/extra.css"])
+      return {canvas, document: options.document, sources: options.sources,
+        ready: Promise.resolve(), disposed: false, refresh() {}, dispose() {},
+      }
+    },
+  })
+  root.unmount()
+  expect(links).toEqual([borrowed])
+})

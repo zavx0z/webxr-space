@@ -107,13 +107,12 @@ coordinates, без отдельной отправки событий в выб
 
 ### Выделение и общий буфер обмена
 
-Публичный `attach` по умолчанию загружает существующую UI-тему сам.
-Она остаётся единственным package-owned `ui/themes/theme.css`, поставляется
-как CSS asset сборки и подключается настоящим native link в том же author
-stylesheet registry. Приложение не обязано передавать тему или готовить link id.
-Browser имеет только asset-зависимость от публичного CSS темы, не импортирует
-UI-компоненты и не копирует палитру в TypeScript. Явный `theme`, если передан,
-заменяет default slot; Interpreter использует только default, без overrides.
+Публичный `attach` по умолчанию загружает отдельный `./theme.css` приложения
+настоящим native link в том же author stylesheet registry. Исходник выбирает
+сборка приложения; стандартная тема остаётся публичным `ui/themes/theme.css`.
+Browser не импортирует CSS, UI-компоненты или палитру. Приложению не нужна
+локальная CSS-обёртка. Явный `theme` задаёт другой URL либо готовый link и
+заменяет default slot.
 
 Один Document владеет стандартным Selection с одним Range. Range хранит
 semantic Node и UTF-16 offset, не пиксели и не токены. Изменения дерева

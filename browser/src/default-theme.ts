@@ -1,17 +1,13 @@
-/// <reference path="./assets.d.ts" />
-import defaultThemeAsset from "@zavx0z/ui/themes/theme.css" with {type: "file"}
-import type {AttachOptions, RootLinkedAuthorStyleSheet} from "./attach.ts"
+import type {AttachOptions} from "./attach.ts"
 
-const themeId = "@zavx0z/ui/themes/theme.css"
-export const defaultThemeUrl = new URL(defaultThemeAsset, import.meta.url).href
+/** Application build output, resolved by the native link against the page URL. */
+export const defaultThemeUrl = "./theme.css"
 
-/** Runtime default, not a consumer stylesheet requirement or a copy of UI tokens. */
+/** Selects the application's stylesheet without importing its source into JavaScript. */
 export function withDefaultTheme(options: AttachOptions): AttachOptions {
   if (options === null || typeof options !== "object") throw new TypeError("attach options are required")
   const stylesheets = options.stylesheets ?? []
-  const declaredDefault = stylesheets.find((source): source is RootLinkedAuthorStyleSheet =>
-    typeof source === "object" && source !== null && source.id === themeId)
-  const theme = options.theme ?? declaredDefault ?? defaultThemeUrl
-  return {...options, stylesheets: [theme, ...stylesheets.filter(source => source !== theme &&
-    !(options.theme !== undefined && source === declaredDefault))]}
+  if (!Array.isArray(stylesheets)) throw new TypeError("Root stylesheets must be an array")
+  const theme = options.theme ?? defaultThemeUrl
+  return {...options, stylesheets: [theme, ...stylesheets.filter(source => source !== theme)]}
 }
