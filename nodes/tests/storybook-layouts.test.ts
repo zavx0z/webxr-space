@@ -29,7 +29,7 @@ Bun.plugin(createTemplateJsxBunPlugin({
 
 test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шесть исходных Display-примеров раскладки", async () => {
   const project = await Bun.file(resolve(root, ".storybook/manifest.json")).json() as {
-    packages: readonly Readonly<{declaration: string}>[]
+    packages?: unknown
   }
   const manifest = await Bun.file(resolve(nodesRoot, ".storybook/manifest.json")).json() as {
     id: string
@@ -38,8 +38,12 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   }
   const catalog = await Bun.file(resolve(nodesRoot, ".storybook/catalog.json")).json() as Catalog
 
-  expect(project.packages).toContainEqual({declaration: "../ui/.storybook/manifest.json"})
-  expect(project.packages).toContainEqual({declaration: "../nodes/.storybook/manifest.json"})
+  const workspace = await Bun.file(resolve(root, "package.json")).json() as {
+    workspaces: readonly string[]
+  }
+  expect(Object.hasOwn(project, "packages")).toBeFalse()
+  expect(workspace.workspaces).toContain("ui")
+  expect(workspace.workspaces).toContain("nodes")
   expect(manifest).toMatchObject({
     id: "@zavx0z/nodes",
     runtime: {module: "./runtime.ts", export: "runtime"},

@@ -97,16 +97,12 @@ describe("Конечный состав пакетов", () => {
     )
 
     const storybookManifest = await Bun.file(join(root, ".storybook/manifest.json")).json() as {
-      packages?: readonly Readonly<{declaration?: string}>[]
+      packages?: unknown
     }
-    const expectedDeclarations = acceptedDirectories.map(directory => ({
-      declaration: `../${directory}/.storybook/manifest.json`,
-    }))
-
     assertRequirement(
-      JSON.stringify(storybookManifest.packages) === JSON.stringify(expectedDeclarations),
+      !Object.hasOwn(storybookManifest, "packages"),
       "PKG-003",
-      `корневой Storybook должен объявлять все ${packages.length} пакетов в порядке рабочего пространства: ${expectedDeclarations.map(({declaration}) => declaration).join(", ")}`,
+      "состав Storybook задаётся package.json#workspaces и не должен дублироваться в manifest.packages",
     )
 
     for (const [directory, packageName] of packages) {
@@ -115,6 +111,7 @@ describe("Конечный состав пакетов", () => {
       const packageManifest = await Bun.file(packageManifestPath).json() as {
         name?: string
       }
+      if (!await Bun.file(storybookPackageManifestPath).exists()) continue
       const storybookPackageManifest = await Bun.file(storybookPackageManifestPath).json() as {
         schemaVersion?: number
         kind?: string

@@ -202,9 +202,11 @@ Nodes.
 | `nodes` | `@zavx0z/nodes` | Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link |
 | `devtools` | `@zavx0z/devtools` | Диагностика Document, состояния элементов и результатов Renderer |
 
-Корневой Storybook объявляет все согласованные пакеты в том же порядке. Каждый
-пакет владеет собственной `.storybook/manifest.json`; `catalog` и `runtime`
-появляются только вместе с настоящими примерами пакета. Пустой каталог и
+Состав Storybook и порядок пакетов задаются корневым `package.json#workspaces`.
+Корневой `.storybook/manifest.json` не дублирует этот список в `packages`.
+Пакет может владеть собственной `.storybook/manifest.json`; без неё он также
+остаётся видимым. `catalog` и `runtime` появляются только вместе с настоящими
+примерами пакета. Пустой каталог и
 вымышленная история не используются вместо ещё не перенесённого поведения.
 
 ## Модули пакета
