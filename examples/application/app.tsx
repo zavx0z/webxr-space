@@ -83,10 +83,10 @@ export function App() {
       <Material kind="basic" color="#4166af" />
     </Mesh>
     <display
+      dpi={96}
       style={css`
         width: 360mm;
         height: 300mm;
-        resolution: 96dpi;
         rotate: x 90deg;
       `}
     >

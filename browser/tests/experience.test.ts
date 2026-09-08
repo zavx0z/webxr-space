@@ -1589,7 +1589,8 @@ test("native display CSS updates the same projection, pixels, focus and derived 
   const root = await attachFixture({canvas, font: {} as TrueTypeFont}, options => Promise.resolve(createFakeRuntime(options, state)))
   const display = root.document.createElement("display")
   expect(display).toBeInstanceOf(DisplayElement)
-  display.setAttribute("style", "width: 254mm; height: 127mm; resolution: 10dpi; translate: 0 0 900mm; rotate: x 90deg")
+  display.setAttribute("style", "width: 254mm; height: 127mm; translate: 0 0 900mm; rotate: x 90deg")
+  display.dpi = 10
   let resized = 0
   display.addEventListener("resize", () => resized++)
   const button = root.document.createElement("button")
@@ -1606,7 +1607,8 @@ test("native display CSS updates the same projection, pixels, focus and derived 
   expect(handle.kind).toBe("display")
   button.focus()
   expect(state.nativeOwner).toBe(display)
-  display.setAttribute("style", "width: 254mm; height: 127mm; resolution: 2dppx; translate: 20mm 0 900mm; rotate: x 90deg")
+  display.dpi = 192
+  display.setAttribute("style", "width: 254mm; height: 127mm; translate: 20mm 0 900mm; rotate: x 90deg")
   await Promise.resolve()
   expect(resized).toBe(2)
   expect(state.planes.get(display)).toBe(held)

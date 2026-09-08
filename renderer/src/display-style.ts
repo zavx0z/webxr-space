@@ -8,7 +8,7 @@ export const MILLIMETRES_PER_CSS_PIXEL = 25.4 / 96
 export type DisplayStyle = Readonly<{
   viewport: Readonly<{width: number; height: number}>
   pixels: Readonly<{width: number; height: number}>
-  resolution: number
+  dpi: number
   worldUnitsPerPixel: number
   transform: Readonly<{
     position: Readonly<{x: number; y: number; z: number}>

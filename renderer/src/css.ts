@@ -1,6 +1,6 @@
-import {ABSOLUTE_LENGTH_FACTORS, displaySurfaceStyle, resolutionDpi} from "./spatial-css.ts"
+import {ABSOLUTE_LENGTH_FACTORS, displaySurfaceStyle} from "./spatial-css.ts"
 import type {DisplayStyle} from "./display-style.ts"
-import type { Element, Node } from "@zavx0z/dom"
+import {DisplayElement, type Element, type Node} from "@zavx0z/dom"
 import type {DocumentInteractionState} from "./pseudo-state.ts"
 import type {
   RenderAlignContent,
@@ -255,7 +255,6 @@ const deferredVariablePropertySet: ReadonlySet<string> = new Set([
   "translate",
   "rotate",
   "scale",
-  "resolution",
   "visibility",
   "box-shadow",
   "z-index",
@@ -497,9 +496,9 @@ export const computeStyle = (
 
   const displayWidth = parseLength(readValue(values, "width"), fontSize)
   const displayHeight = parseLength(readValue(values, "height"), fontSize)
-  const displaySurface = tag === "display" && displayWidth?.unit === "px" && displayHeight?.unit === "px" &&
+  const displaySurface = element instanceof DisplayElement && displayWidth?.unit === "px" && displayHeight?.unit === "px" &&
     displayWidth.value > 0 && displayHeight.value > 0
-    ? displaySurfaceStyle(displayWidth.value, displayHeight.value, name => readValue(values, name)) : null
+    ? displaySurfaceStyle(displayWidth.value, displayHeight.value, element.dpi, name => readValue(values, name)) : null
 
   return Object.freeze({
     displaySurface,
@@ -1190,8 +1189,6 @@ const expandDeclaration = (
     case "right":
     case "bottom":
       return validInset(value) ? [[property, value.trim().toLowerCase()]] : []
-    case "resolution":
-      return resolutionDpi(value) !== null ? [[property, value.trim()]] : []
     case "transform":
       return parseTransform(value) !== null ? [["transform", value.trim()]] : []
     case "transform-origin":

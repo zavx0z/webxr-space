@@ -9,15 +9,6 @@ export const ABSOLUTE_LENGTH_FACTORS: Readonly<Record<string, number>> = Object.
 const number = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:e[+-]?\\d+)?"
 const dimension = new RegExp(`^(${number})([a-z%]*)$`, "i")
 
-export function resolutionDpi(value: string | undefined): number | null {
-  if (value === undefined) return 96
-  const match = dimension.exec(value.trim())
-  if (!match) return null
-  const factor = ({dpi: 1, dpcm: 2.54, dppx: 96, x: 96} as Record<string, number>)[match[2]!.toLowerCase()]
-  const result = Number(match[1]) * (factor ?? NaN)
-  return Number.isFinite(result) && result > 0 ? result : null
-}
-
 function length(value: string, extent: number, allowPercent = true): number {
   const match = dimension.exec(value)
   if (!match) throw new TypeError(`Invalid spatial CSS length: ${value}`)
@@ -43,13 +34,12 @@ function angle(value: string): number {
 export function displaySurfaceStyle(
   width: number,
   height: number,
+  dpi: number,
   read: (name: string) => string | undefined,
 ): DisplayStyle {
   if ((read("box-sizing") ?? "border-box").trim() !== "border-box") throw new TypeError("Display currently requires border-box physical dimensions")
-  const resolution = resolutionDpi(read("resolution"))
-  if (resolution === null) throw new TypeError("Display resolution requires positive dpi, dpcm or dppx")
-  const pixelWidth = Math.max(1, Math.round(width * resolution / 96))
-  const pixelHeight = Math.max(1, Math.round(height * resolution / 96))
+  const pixelWidth = Math.max(1, Math.round(width * dpi / 96))
+  const pixelHeight = Math.max(1, Math.round(height * dpi / 96))
   if (!Number.isSafeInteger(pixelWidth) || !Number.isSafeInteger(pixelHeight)) throw new RangeError("Display matrix exceeds safe integer dimensions")
   const translated = (read("translate") ?? "none").trim()
   const t = translated === "none" ? ["0", "0", "0"] : translated.split(/\s+/)
@@ -97,6 +87,6 @@ export function displaySurfaceStyle(
   position.y += pivot.y - (y + q.w * ty + q.z * tx - q.x * tz)
   position.z += pivot.z - (z + q.w * tz + q.x * ty - q.y * tx)
   if ((read("transform") ?? "none").trim() !== "none") throw new TypeError("Display currently uses individual translate, rotate and scale properties")
-  return {viewport: {width, height}, pixels: {width: pixelWidth, height: pixelHeight}, resolution,
+  return {viewport: {width, height}, pixels: {width: pixelWidth, height: pixelHeight}, dpi,
     worldUnitsPerPixel: MM_PER_PX, transform: {position, quaternion, scale, visible: true}}
 }

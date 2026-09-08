@@ -12,12 +12,12 @@ test("display is native without Space registration and publishes only changed co
     expect(event.target).toBe(display)
     events++
   })
-  const initial = {width: 960, height: 480, pixelWidth: 960, pixelHeight: 480, resolution: 96}
+  const initial = {width: 960, height: 480, pixelWidth: 960, pixelHeight: 480, dpi: 96}
   publishDisplayMetrics(display, initial)
   publishDisplayMetrics(display, {...initial})
   await Promise.resolve()
   expect(events).toBe(1)
-  publishDisplayMetrics(display, {...initial, pixelWidth: 1920, pixelHeight: 960, resolution: 192})
+  publishDisplayMetrics(display, {...initial, pixelWidth: 1920, pixelHeight: 960, dpi: 192})
   await Promise.resolve()
   expect(events).toBe(2)
   expect(display.viewport).toEqual({width: 960, height: 480})
@@ -26,4 +26,22 @@ test("display is native without Space registration and publishes only changed co
   display.remove()
   await Promise.resolve()
   expect(events).toBe(2)
+})
+
+
+test("dpi reflects a numeric attribute, defaults to 96, and rejects invalid values", () => {
+  const element = createDocument().createElement("display")
+  expect(element.dpi).toBe(96)
+  element.dpi = 6.35
+  expect(element.getAttribute("dpi")).toBe("6.35")
+  element.setAttribute("dpi", "192")
+  expect(element.dpi).toBe(192)
+  for (const value of [0, -1, NaN, Infinity]) {
+    expect(() => { element.dpi = value }).toThrow(RangeError)
+    expect(element.dpi).toBe(192)
+  }
+  element.removeAttribute("dpi")
+  expect(element.dpi).toBe(96)
+  element.setAttribute("dpi", "96dpi")
+  expect(() => element.dpi).toThrow(RangeError)
 })

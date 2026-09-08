@@ -851,7 +851,7 @@ const synchronizeDisplays = (
   const cssDisplays = tree.cssDisplays.map(element => {
     const style = readDisplayStyle(element.ownerDocument!, element, runtime.interactionState)
     publishDisplayMetrics(element, {width: style.viewport.width, height: style.viewport.height,
-      pixelWidth: style.pixels.width, pixelHeight: style.pixels.height, resolution: style.resolution})
+      pixelWidth: style.pixels.width, pixelHeight: style.pixels.height, dpi: style.dpi})
     return {element, ...style, rasterSize: style.pixels}
   })
   const displays = [...tree.displays.map(display => ({...display, rasterSize: undefined})), ...cssDisplays]

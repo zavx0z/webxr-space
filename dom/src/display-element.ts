@@ -2,20 +2,20 @@ import type {Document} from "./document.ts"
 import {HTMLElement} from "./html-element.ts"
 import {UIEvent} from "./ui-event.ts"
 
-/** Derived presentation facts. Authored dimensions and density belong to CSS. */
+/** Derived presentation facts. CSS owns dimensions; the dpi attribute owns pixel density. */
 export type DisplayMetrics = Readonly<{
   width: number
   height: number
   pixelWidth: number
   pixelHeight: number
-  resolution: number
+  dpi: number
 }>
 
 const metrics = new WeakMap<DisplayElement, DisplayMetrics>()
 
 /**
 Native document surface with ordinary HTML children, focus and scrolling.
-CSS owns physical dimensions, density and transform. Browser publishes derived
+CSS owns physical dimensions and transform; dpi is a numeric element attribute. Browser publishes derived
 layout/matrix dimensions; `resize` fires after a changed presentation is committed.
 No Canvas, renderer, camera or animation loop belongs to this element.
 */
@@ -30,8 +30,14 @@ export class DisplayElement extends HTMLElement {
   }
   get pixelWidth(): number { return metrics.get(this)?.pixelWidth ?? 0 }
   get pixelHeight(): number { return metrics.get(this)?.pixelHeight ?? 0 }
-  /** Computed pixel density in dpi; zero until the first presentation. */
-  get resolution(): number { return metrics.get(this)?.resolution ?? 0 }
+  /** Pixel density in dots per inch. Defaults to 96; must be finite and positive. */
+  get dpi(): number {
+    const value = this.getAttribute("dpi")
+    return value === null ? 96 : validDpi(Number(value))
+  }
+  set dpi(value: number) {
+    this.setAttribute("dpi", String(validDpi(value)))
+  }
 }
 
 /** Presentation-owner hook; updates facts without author attributes or a DOM mutation. */
@@ -39,10 +45,15 @@ export function publishDisplayMetrics(element: DisplayElement, value: DisplayMet
   const previous = metrics.get(element)
   if (previous && previous.width === value.width && previous.height === value.height &&
     previous.pixelWidth === value.pixelWidth && previous.pixelHeight === value.pixelHeight &&
-    previous.resolution === value.resolution) return
+    previous.dpi === value.dpi) return
   const next = Object.freeze({...value})
   metrics.set(element, next)
   queueMicrotask(() => {
     if (element.isConnected && metrics.get(element) === next) element.dispatchEvent(new UIEvent("resize"))
   })
+}
+
+function validDpi(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) throw new RangeError("Display dpi must be a finite positive number")
+  return value
 }
