@@ -4,6 +4,7 @@ import {useFrame, useSpace, type RootSize} from "../src/root-context.ts"
 import {defineCompiledTemplate} from "@zavx0z/template/compiled"
 import {bindRef, writeBinding} from "@zavx0z/template/compiled"
 import {
+  acquireDocumentAuthorStyleSheetOwner,
   HTMLElement as SemanticHTMLElement,
   type Element as SemanticElement,
   type Node as SemanticNode,
@@ -56,7 +57,7 @@ import {
 import * as publicApi from "../src/index.ts"
 import {
   attachWithRuntimeFactory,
-  type AttachOptions,
+  type PresentationOptions,
 } from "../src/attach.ts"
 import type {
   CreateDocumentSpaceRuntimeOptions,
@@ -81,7 +82,7 @@ const testApp = defineCompiledTemplate({
 })
 
 const attachFixture = (
-  options: Omit<AttachOptions, "app">,
+  options: Omit<PresentationOptions, "app">,
   factory: Parameters<typeof attachWithRuntimeFactory>[1],
   seams?: Parameters<typeof attachWithRuntimeFactory>[2],
 ) => attachWithRuntimeFactory({...options, app: component(testApp, {})}, factory, seams)
@@ -551,8 +552,8 @@ test("[BRW-004] attach монтирует один Document и синхрони�
   expect(state.disposed).toBe(true)
 })
 
-test("[BRW-005] публичный Browser API содержит один attach и общие hooks", () => {
-  expect(Object.keys(publicApi)).toEqual(["attach", "useFrame", "useSpace"])
+test("[BRW-005] публичный Browser API содержит один createRoot и общие hooks", () => {
+  expect(Object.keys(publicApi)).toEqual(["createRoot", "useFrame", "useSpace"])
 })
 
 test("[BRW-006] ViewPoint синхронизируется перед кадром в exact semantic Element без петли", async () => {
@@ -1319,4 +1320,222 @@ test("default URL link is inserted before an existing borrowed stylesheet", asyn
   })
   root.unmount()
   expect(links).toEqual([borrowed])
+})
+
+// Browser author API: these use the same runtime seam as the projection evidence above.
+import {createRootWithSeams} from "../create-root.ts"
+import {inspectRoot} from "../diagnostics.ts"
+import {useState, useLayoutEffect} from "@zavx0z/component"
+import {bindText} from "@zavx0z/template/compiled"
+
+const browserRootFixture = (state = createFakeRuntimeState(), changes: Partial<Parameters<typeof createRootWithSeams>[2]> = {}) => {
+  const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
+  const errors: Error[] = []
+  const seams = {
+    loadFont: async () => ({} as TrueTypeFont),
+    createRuntime: async (options: CreateDocumentSpaceRuntimeOptions) => { state.factoryCalls++; return createFakeRuntime(options, state) },
+    createStyleSheets: () => ({refresh() {}, async whenReady() {}, dispose() {}}),
+    ...changes,
+  }
+  return {canvas, errors, seams, state, root: createRootWithSeams(canvas, {onUncaughtError: error => errors.push(error)}, seams)}
+}
+
+test("Browser createRoot: render preserves component state, Element identity and one runtime", async () => {
+  let increment = () => {}
+  const template = defineCompiledTemplate<{label: string; frameloop: "demand" | "always"}>({
+    displayName: "BrowserCounter",
+    bindingCount: 2,
+    mount(document) {
+      const link = document.createElement("link")
+      link.setAttribute("rel", "stylesheet")
+      link.setAttribute("href", "/dark.css")
+      const space = document.createElement("xr-space") as XRSpaceElement
+      space.append(document.createElement("xr-view-point"))
+      const text = document.createTextNode("")
+      const hud = document.createElement("xr-hud")
+      hud.append(text)
+      space.append(hud)
+      return {nodes: [link, space], bindings: [bindText(text), bindRef(space)]}
+    },
+    render(props, values) {
+      const [count, setCount] = useState(0)
+      increment = () => setCount(count + 1)
+      writeBinding(values, 0, `${props.label}:${count}`)
+      writeBinding(values, 1, (element: XRSpaceElement) => { if (element) element.frameloop = props.frameloop })
+    },
+  })
+  const {root, state, errors} = browserRootFixture()
+  expect(root.render(component(template, {label: "first", frameloop: "demand"}))).toBeUndefined()
+  const first = await inspectRoot(root).whenReady()
+  const space = first.space
+  const document = first.document
+  expect(document.documentElement?.localName).toBe("html")
+  expect(document.querySelector("body")?.children[1]).toBe(space)
+  increment()
+  root.render(component(template, {label: "second", frameloop: "always"}))
+  const second = await inspectRoot(root).whenReady()
+  expect(second.document).toBe(document)
+  expect(second.space).toBe(space)
+  expect(space.textContent).toBe("second:1")
+  expect(state.factoryCalls).toBe(1)
+  expect(state.requestedFrame).not.toBeNull()
+  root.render(component(template, {label: "third", frameloop: "demand"}))
+  await inspectRoot(root).whenReady()
+  expect(space.textContent).toBe("third:1")
+  expect(errors).toEqual([])
+  root.unmount()
+  expect(document.querySelector("body")?.childNodes).toHaveLength(0)
+  expect(() => root.render(null)).toThrow("unmounted root")
+})
+
+test("Browser createRoot: unmount cancels pending startup and releases the Canvas", async () => {
+  let finish!: (font: TrueTypeFont) => void
+  const {root, canvas, seams, state, errors} = browserRootFixture(undefined, {
+    loadFont: () => new Promise(resolve => { finish = resolve }),
+  })
+  root.render(component(testApp, {}))
+  const readiness = inspectRoot(root).whenReady()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  root.unmount()
+  finish({} as TrueTypeFont)
+  await expect(readiness).rejects.toThrow("unmounted")
+  await new Promise(resolve => setTimeout(resolve, 0))
+  expect(state.factoryCalls).toBe(0)
+  expect(errors).toEqual([])
+  const replacement = createRootWithSeams(canvas, {}, seams)
+  replacement.unmount()
+})
+
+test("Browser createRoot: null clears content and render mounts again in the same Document", async () => {
+  const {root, state, errors, canvas, seams} = browserRootFixture()
+  root.render(component(testApp, {}))
+  const first = await inspectRoot(root).whenReady()
+  root.render(null)
+  await expect(inspectRoot(root).whenReady()).rejects.toThrow("no rendered application")
+  expect(() => createRootWithSeams(canvas, {}, seams)).toThrow("already owns")
+  root.render(component(testApp, {}))
+  const second = await inspectRoot(root).whenReady()
+  expect(second.document).toBe(first.document)
+  expect(second.space).not.toBe(first.space)
+  expect(state.factoryCalls).toBe(2)
+  expect(errors).toEqual([])
+  second.unmount()
+  expect(() => root.render(null)).toThrow("unmounted")
+})
+
+test("Browser createRoot: startup failure reaches the error handler and readiness", async () => {
+  const failure = new Error("font unavailable")
+  const {root, errors} = browserRootFixture(undefined, {loadFont: async () => { throw failure }})
+  root.render(component(testApp, {}))
+  await expect(inspectRoot(root).whenReady()).rejects.toThrow("font unavailable")
+  expect(errors).toEqual([failure])
+  root.unmount()
+})
+
+test("Browser createRoot: a cancelled GPU initialization cannot overlap a replacement host", async () => {
+  let finish!: () => void
+  const gate = new Promise<void>(resolve => { finish = resolve })
+  let entered = false
+  let oldRuntime: DocumentSpaceRuntime | null = null
+  const state = createFakeRuntimeState()
+  const fixture = browserRootFixture(state, {
+    createRuntime: async options => {
+      entered = true
+      await gate
+      oldRuntime = createFakeRuntime(options, state)
+      return oldRuntime
+    },
+  })
+  fixture.root.render(component(testApp, {}))
+  const waiting = inspectRoot(fixture.root).whenReady()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  expect(entered).toBe(true)
+  fixture.root.unmount()
+  await expect(waiting).rejects.toThrow("unmounted")
+  expect(() => createRootWithSeams(fixture.canvas, {}, fixture.seams)).toThrow("already owns")
+  finish()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  expect(oldRuntime!.disposed).toBe(true)
+  expect(state.beforeRender.size).toBe(0)
+  expect(fixture.errors).toEqual([])
+  const replacement = createRootWithSeams(fixture.canvas, {}, fixture.seams)
+  replacement.unmount()
+})
+
+test("Browser createRoot: renders queued during loading present the latest props", async () => {
+  let finish!: (font: TrueTypeFont) => void
+  const template = defineCompiledTemplate<{label: string}>({
+    displayName: "PendingLabel",
+    bindingCount: 1,
+    mount(document) {
+      const space = document.createElement("xr-space")
+      space.append(document.createElement("xr-view-point"))
+      const text = document.createTextNode("")
+      const hud = document.createElement("xr-hud")
+      hud.append(text)
+      space.append(hud)
+      return {nodes: [space], bindings: [bindText(text)]}
+    },
+    render(props, values) { writeBinding(values, 0, props.label) },
+  })
+  const {root, state} = browserRootFixture(undefined, {loadFont: () => new Promise(resolve => { finish = resolve })})
+  root.render(component(template, {label: "old"}))
+  const waiting = inspectRoot(root).whenReady()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  root.render(component(template, {label: "latest"}))
+  finish({} as TrueTypeFont)
+  const presentation = await waiting
+  expect(presentation.space.textContent).toBe("latest")
+  expect(state.factoryCalls).toBe(1)
+  root.unmount()
+})
+
+test("Browser createRoot: component effect cleanup runs before presentation resources are disposed", async () => {
+  const {root, state} = browserRootFixture()
+  const cleanupObservation: {disposed: boolean | null} = {disposed: null}
+  const template = defineCompiledTemplate({
+    displayName: "CleanupOrder",
+    bindingCount: 0,
+    mount: testApp.mount,
+    render() {
+      useLayoutEffect(() => () => { cleanupObservation.disposed = state.disposed }, [])
+    },
+  })
+  root.render(component(template, {}))
+  await inspectRoot(root).whenReady()
+  root.unmount()
+  expect(cleanupObservation.disposed).toBe(false)
+  expect(state.disposed).toBe(true)
+})
+
+
+test("Browser integration options do not acquire the stylesheet registry a second time", async () => {
+  const fixture = browserRootFixture()
+  fixture.root.unmount()
+  let released = false
+  const options = {
+    pixelRatio: 2,
+    stylesheets: [{id: "host-theme", link: {} as HTMLLinkElement}],
+    fontSources: [{family: "Host", weight: 400, style: "normal" as const, src: "/already-loaded.ttf"}],
+  }
+  const root = createRootWithSeams(fixture.canvas, options, {
+    ...fixture.seams,
+    createStyleSheets: (_canvas, document) => {
+      const owner = acquireDocumentAuthorStyleSheetOwner(document)
+      return {
+        refresh() {},
+        async whenReady() {},
+        dispose() {
+          released = true
+          owner.release()
+        },
+      }
+    },
+  })
+  root.render(component(testApp, {}))
+  const presentation = await inspectRoot(root).whenReady()
+  expect(presentation.presentedFrame).toBeGreaterThan(0)
+  expect(fixture.state.factoryCalls).toBe(1)
+  root.unmount()
+  expect(released).toBe(true)
 })

@@ -35,9 +35,14 @@ export type SpaceTree = Readonly<{
 
 /** Читает семантических владельцев по identity Element; DOM id не является ключом сцены. */
 export const readSpaceTree = (document: Document): SpaceTree => {
-  const space = document.documentElement
-  if (!(space instanceof XRSpaceElement)) {
-    throw new TypeError("Document must have one XRSpaceElement root")
+  const spaces = [...document.querySelectorAll("xr-space")]
+  const space = spaces[0]
+  if (spaces.length !== 1 || !(space instanceof XRSpaceElement)) {
+    throw new TypeError("Document must contain exactly one XRSpaceElement")
+  }
+  const container = space.parentNode
+  if (container !== document && container !== document.querySelector("body")) {
+    throw new TypeError("Space must be an application root in Document or body")
   }
 
   const viewPoints = space.children.filter(

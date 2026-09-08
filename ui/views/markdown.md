@@ -67,7 +67,7 @@ WebGPU texture loader через браузерный ImageDecoder с задер
 без разрешённых пробелов остаются неразрывными и могут переполнять область.
 
 Renderer и WebGPU выбирают один и тот же зарегистрированный font face для
-измерения и рисования. `attach` принимает готовые `fontFaces` либо
+измерения и рисования. API `browser/integration` принимает готовый базовый `font` и
 декларации `fontSources` для загрузки через общий font cache. Storybook объявляет
 Inter и JetBrains Mono из Engine-owned assets. Естественные размеры
 изображений поступают в Renderer из существующего WebGPU texture loader.

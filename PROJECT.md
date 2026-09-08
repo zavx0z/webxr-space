@@ -25,22 +25,25 @@ UI и Node.
 
 ```text
 Document
-└── Space
-    ├── ViewPoint
-    ├── Object
-    │   ├── Asset
-    │   ├── Group
-    │   ├── Mesh
-    │   │   ├── Geometry
-    │   │   └── Material
-    │   ├── Line и LineSegments
-    │   ├── Text
-    │   ├── Light
-    │   └── Animation
-    ├── Display
-    │   └── UI и Node-содержимое
-    └── HUD
-        └── Интерфейс приложения
+└── html
+    └── body
+        ├── link (ресурсы приложения)
+        └── Space
+            ├── ViewPoint
+            ├── Object
+            │   ├── Asset
+            │   ├── Group
+            │   ├── Mesh
+            │   │   ├── Geometry
+            │   │   └── Material
+            │   ├── Line и LineSegments
+            │   ├── Text
+            │   ├── Light
+            │   └── Animation
+            ├── Display
+            │   └── UI и Node-содержимое
+            └── HUD
+                └── Интерфейс приложения
 ```
 
 Engine и WebGPU хранят только производное представление элементов `Document`,
@@ -65,11 +68,20 @@ semantic capture и bubbling остаются у того же Document.
 
 ## Авторство и подключение приложения
 
-Единственный публичный запуск Browser — `attach({canvas, app: <App />})`.
-Template компилирует JSX этого аргумента в существующий ComponentValue.
-Component монтирует App непосредственно в semantic Document. Авторский App
-содержит один Space и ViewPoint, собственные Display, HUD и объекты сцены;
-Browser не добавляет вместо них скрытый каркас.
+Публичный запуск Browser следует привычной семантике React:
+`const root = createRoot(canvas)` и `root.render(<App />)`. Повторный render
+обновляет существующий component root, сохраняя состояние и identity по
+template/key; render(null) очищает содержимое, unmount завершает lifecycle.
+Автору и агенту не нужно изучать отдельный способ монтирования. Это контракт
+авторского API, а не зависимость от npm React или заявление полной поддержки
+всех React features.
+
+Template компилирует JSX аргумента render в ComponentValue. Browser создаёт один
+semantic Document с html/body; Component монтирует App в этот body. Fragment
+может объявлять соседние stylesheet links и единственный Space. Space содержит
+ViewPoint, Display, HUD и объекты сцены. Browser не создаёт скрытые Space/камеру.
+Space.frameloop задаёт общий режим demand/always и изменяется без пересоздания
+приложения; pixelRatio относится к native Canvas и остаётся в createRoot options.
 
 `ref` принимает callback или объект `useRef`: ссылка указывает на тот же
 смонтированный Element и очищается при unmount. Изменение пространственного prop
@@ -91,28 +103,30 @@ Native `window.document` и код подключения страницы не 
 объявление поддержки всех браузерных DOM API. Внутренний `useDocument` остаётся
 механизмом Component для сгенерированного кода; автору он не требуется.
 
-`attach` резервирует native Canvas/page до монтирования, ждёт styles/fonts,
-создаёт производные ресурсы и завершается после первого общего представленного
-кадра. Ошибка освобождает App и выделенные ресурсы. `unmount` освобождает
-component root, ввод, подписки, кадры и claim; затем тот же Canvas можно
-подключить снова. Пример и единая dev/production-сборка находятся в
+`createRoot` резервирует native Canvas/page, а render запускает подготовку
+ресурсов и общего кадра без Promise в авторском API. Диагностика
+`@zavx0z/browser/diagnostics` наблюдает готовность через inspectRoot(root).whenReady().
+Это технический рубеж отрисовки, не подтверждение визуальной корректности.
+Unmount отменяет подготовку и освобождает компоненты, links, ввод и кадры;
+завершившаяся позже асинхронная операция не восстанавливает приложение.
+Пример и единая dev/production-сборка находятся в
 [examples/application](examples/application/README.md).
 
-`Root` — управление этим подключением, доступное после `attach`. Его
-`input.pointerDown/pointerMove/pointerUp/pointerCancel/wheel` принимает client
-coordinates и проходит ту же маршрутизацию, что native Canvas input.
-`getProjection` предоставляет чтение кадров и преобразование точки в client
-coordinates, без отдельной отправки событий в выбранную проекцию. Browser
-составляет Component, DOM, Renderer, Space и WebGPU через их публичные контракты.
+Root предоставляет render и unmount. Внешние инструменты получают существующие
+проекции, общий ввод и кадры через диагностику. Специальный browser/integration
+принимает готовые шрифты и заимствованные native links и использует тот же
+createRoot/render lifecycle; эти ресурсы не входят в обычные RootOptions.
+Browser составляет Component, DOM, Renderer, Space и WebGPU через публичные контракты.
 
 ### Выделение и общий буфер обмена
 
-Публичный `attach` по умолчанию загружает отдельный `./theme.css` приложения
-настоящим native link в том же author stylesheet registry. Исходник выбирает
-сборка приложения; стандартная тема остаётся публичным `ui/themes/theme.css`.
-Browser не импортирует CSS, UI-компоненты или палитру. Приложению не нужна
-локальная CSS-обёртка. Явный `theme` задаёт другой URL либо готовый link и
-заменяет default slot.
+App объявляет стили обычными `<link rel="stylesheet" href="…" />` рядом со Space.
+Явные links полностью задают author stylesheets в порядке дерева. Только при их
+отсутствии Browser подключает отдельный `./theme.css` приложения. Сборка выбирает
+его исходник; стандартная тема остаётся публичным `ui/themes/theme.css`.
+Browser создаёт настоящие native links, читает загруженный CSSOM и освобождает
+свои links при удалении декларации или unmount. Смена href и порядка деклараций
+сохраняет identity остальных links и смонтированного приложения.
 
 Один Document владеет стандартным Selection с одним Range. Range хранит
 semantic Node и UTF-16 offset, не пиксели и не токены. Изменения дерева

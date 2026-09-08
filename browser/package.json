@@ -9,7 +9,9 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./src/index.ts",
-    "./clipboard": "./clipboard.ts"
+    "./clipboard": "./clipboard.ts",
+    "./diagnostics": "./diagnostics.ts",
+    "./integration": "./integration.ts"
   },
   "main": "./src/index.ts",
   "module": "./src/index.ts",

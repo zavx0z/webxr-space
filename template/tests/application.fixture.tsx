@@ -1,4 +1,6 @@
-import {attach, useFrame, useSpace} from "@zavx0z/browser"
+import type {} from "../../space/src/jsx.ts"
+import {createRoot, useFrame, useSpace} from "@zavx0z/browser"
+import {createRoot as createHostRoot} from "@zavx0z/browser/integration"
 import {useDocument, useLayoutEffect, useRef, useState} from "@zavx0z/component"
 import type {JsxSourceElement} from "../jsx-runtime.ts"
 
@@ -30,11 +32,31 @@ export function TestApp(props: {label: string}) {
 }
 
 export function connect(canvas: HTMLCanvasElement) {
-  return attach({canvas, app: <TestApp label="Первый" />})
+  const root = createRoot(canvas)
+  root.render(<TestApp label="Первый" />)
+  return root
 }
 
 export function BrowserHooks() {
   const size = useSpace(state => state.size)
   useFrame((_state, _delta) => {})
   return <div>{size.width}</div>
+}
+
+export function ResourcesApp(props: {href: string; frameloop: "demand" | "always"}) {
+  return (
+    <>
+      <link
+        rel="stylesheet"
+        href={props.href}
+      />
+      <xr-space frameloop={props.frameloop}>
+        <xr-view-point />
+      </xr-space>
+    </>
+  )
+}
+
+export function connectHost(canvas: HTMLCanvasElement) {
+  createHostRoot(canvas).render(<TestApp label="Host" />)
 }

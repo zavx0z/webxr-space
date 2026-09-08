@@ -77,17 +77,14 @@ import type {
 } from "./space-runtime.ts"
 import type {DocumentClipboardController} from "../clipboard.ts"
 import {readRenderedSelectionText} from "@zavx0z/renderer"
-import {withDefaultTheme} from "./default-theme.ts"
 
-export type AttachOptions = Readonly<{
+export type PresentationOptions = Readonly<{
   canvas: HTMLCanvasElement
   app: JsxSourceElement | ComponentValue
   font?: TrueTypeFont
   fontFaces?: readonly RendererFontFace[] | undefined
   fontSources?: readonly BrowserFontFaceSource[] | undefined
   stylesheets?: readonly (string | RootLinkedAuthorStyleSheet)[]
-  /** Omitted: the application's separate ./theme.css. A supplied URL/link replaces that default. */
-  theme?: string | RootLinkedAuthorStyleSheet
   onStyleSheetError?: RootLinkedAuthorStyleSheetErrorHandler
   frameloop?: FrameLoop
   pixelRatio?: number
@@ -177,7 +174,7 @@ export type RootInput = Readonly<{
 }>
 
 /**
-Управление готовым подключением после attach.
+Внутренняя презентация приложения; внешним инструментам доступна через diagnostics.
 
 Document, Space и ViewPoint — ссылки на уже смонтированное авторское дерево.
 invalidate запрашивает кадр, render/resize нужны для явного управления и диагностики.
@@ -213,12 +210,12 @@ export type Root = Readonly<{
   unmount(): void
 }>
 
-type RootRuntimeFactory = (
+export type RootRuntimeFactory = (
   options: CreateDocumentSpaceRuntimeOptions,
   claim: PresentationHostClaim,
 ) => Promise<DocumentSpaceRuntime>
 
-type RootSeams = Readonly<{
+export type RootSeams = Readonly<{
   createLinkedAuthorStyleSheetHost(options: Readonly<{
     canvas: HTMLCanvasElement
     document: Document
@@ -265,38 +262,9 @@ type AnimationProjection = {
   playing: boolean
 }
 
-/**
-Подключает авторский App к Canvas и возвращает управление готовым приложением.
-
-До монтирования создаёт контекст размера и общих кадров. Затем проверяет единственные
-Space и ViewPoint, загружает объявленные стили и шрифты и представляет первый кадр.
-Строки `stylesheets` — URL: Browser создаёт настоящие native links и удаляет их
-при `unmount`. Переданные готовые links заимствуются и не удаляются.
-Мировая система всегда правая Z-up, пространственные расстояния заданы в мм.
-
-@returns Root после первого представленного кадра. `unmount()` идемпотентен и
-освобождает компоненты, подписки, GPU runtime и право повторно подключить Canvas.
-@throws Error При занятом Canvas, неверном App, ошибке ресурсов или первого кадра.
-Созданные подключением ресурсы освобождаются и при ошибке.
-@example
-```tsx
-const root = await attach({canvas, app: <App />, stylesheets: [themeUrl]})
-// Когда приложение больше не нужно:
-root.unmount()
-```
-*/
-export async function attach(
-  options: AttachOptions,
-): Promise<Root> {
-  return attachWithRuntimeFactory(withDefaultTheme(options), async (runtimeOptions, claim) => {
-    const {createDocumentSpaceRuntime} = await import("./space-runtime.ts")
-    return createDocumentSpaceRuntime(runtimeOptions, claim)
-  })
-}
-
 /** Подмена GPU runtime для тестов владельца; из публичного Browser API не экспортируется. */
 export async function attachWithRuntimeFactory(
-  options: AttachOptions,
+  options: PresentationOptions,
   createRuntime: RootRuntimeFactory,
   seams: RootSeams = defaultRootSeams,
 ): Promise<Root> {
@@ -321,14 +289,15 @@ export async function attachWithRuntimeFactory(
   }
 }
 
-const createAttachedRoot = async (
-  options: AttachOptions & {font: TrueTypeFont},
+export const createAttachedRoot = async (
+  options: PresentationOptions & {font: TrueTypeFont},
   document: Document,
   appRoot: ComponentRoot,
   environment: RootEnvironment,
   claim: PresentationHostClaim,
   createRuntime: RootRuntimeFactory,
-  seams: RootSeams,
+  seams: RootSeams = defaultRootSeams,
+  lifecycle?: Readonly<{active(): boolean; updating(): boolean}>,
 ): Promise<Root> => {
   const {space, viewPoint} = readSpaceTree(document)
   const initialViewPoint = semanticViewPointSnapshot(viewPoint)
@@ -389,6 +358,10 @@ const createAttachedRoot = async (
       ...(options.pixelRatio === undefined ? {} : {pixelRatio: options.pixelRatio}),
 
     }, claim)
+    if (lifecycle && !lifecycle.active()) {
+      runtime.dispose()
+      throw new Error("Browser root was unmounted during initialization")
+    }
   } catch (error) {
     linkedAuthorStyleSheetHost?.dispose()
     for (const link of ownedLinks) link.remove()
@@ -457,7 +430,7 @@ const createAttachedRoot = async (
 
   const synchronize = (): void => {
     assertActive(disposed)
-    if (synchronizing || document.documentElement === null) return
+    if (synchronizing || lifecycle?.updating() || document.documentElement === null) return
     synchronizing = true
     try {
       const structural = structureDirty
@@ -466,6 +439,7 @@ const createAttachedRoot = async (
         structureDirty = false
         cameraDirty = displayDirty = hudDirty = backgroundDirty = animationDirty = true
       }
+      if (lifecycle) environment.setFrameloop(tree.space.frameloop)
       if (backgroundDirty) {
         runtime.space.background = new Color(tree.space.background)
         backgroundDirty = false
@@ -533,6 +507,10 @@ const createAttachedRoot = async (
 
   const unsubscribeMutations = document.subscribeMutations(batch => {
     if (disposed || writingPresentedViewPoint) return
+    if (lifecycle?.updating()) {
+      structureDirty = true
+      return
+    }
     synchronizeInputOwner()
     for (const record of batch.records) {
       const target = record.target
@@ -742,18 +720,18 @@ const createAttachedRoot = async (
       releaseObjects(runtime, objects)
       releaseProjectionBindings(projectionBindings)
       try {
-        appRoot.unmount()
+        if (!lifecycle) appRoot.unmount()
       } finally {
         try { runtime.dispose() } finally {
           try { linkedAuthorStyleSheetHost?.dispose() } finally {
-            environment.dispose()
+            if (!lifecycle) environment.dispose()
             guardedObjects.clear()
             dirtyObjects.clear()
             for (const link of ownedLinks) link.remove()
             projectionListeners = new WeakMap()
             projectionHandles = new WeakMap()
             presentedListeners.clear()
-            claim.release()
+            if (!lifecycle) claim.release()
           }
         }
       }
@@ -765,7 +743,7 @@ const createAttachedRoot = async (
     synchronizeInputOwner()
     const before = presentedFrame
     runtime.render()
-    if (presentedFrame <= before) throw new Error("attach did not present the application's first frame")
+    if (presentedFrame <= before) throw new Error("Browser did not present the application's first frame")
     return experience
   } catch (error) {
     experience.unmount()
@@ -1518,7 +1496,7 @@ const releaseObjects = (
 }
 
 const validateOptions = (
-  options: AttachOptions,
+  options: PresentationOptions,
   createRuntime: RootRuntimeFactory,
   seams: RootSeams,
 ): void => {
@@ -1567,7 +1545,7 @@ const assertActive = (disposed: boolean): void => {
 }
 
 
-const readRootSize = (options: AttachOptions): RootSize => {
+const readRootSize = (options: PresentationOptions): RootSize => {
   const rect = options.canvas.getBoundingClientRect()
   const dimension = (value: number) => Number.isFinite(value) && value > 0 ? Math.max(1, Math.round(value)) : 1
   return {

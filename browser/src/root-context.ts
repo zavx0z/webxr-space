@@ -35,7 +35,7 @@ export const rootContext = createContext<RootEnvironment | null>(null)
 нужно сохранять ссылку, пока его данные не изменились. Обычный контекст остаётся
 стабильным: изменение размера не вызывает повторное выполнение всего App.
 
-@throws Error При вызове вне App, смонтированного через `attach`.
+@throws Error При вызове вне App, смонтированного через Browser `createRoot`.
 @example
 ```tsx
 const size = useSpace(state => state.size)
@@ -55,7 +55,7 @@ export function useSpace<Selection>(selector: (state: RootState) => Selection): 
 Изменяйте нужные semantic Elements через refs; обновление состояния компонентов
 на каждом кадре не требуется. При размонтировании подписка снимается автоматически.
 
-@throws Error При вызове вне App, смонтированного через `attach`.
+@throws Error При вызове вне App, смонтированного через Browser `createRoot`.
 @example
 ```tsx
 useFrame((_state, delta) => {
@@ -72,7 +72,7 @@ export function useFrame(callback: FrameCallback): void {
 
 function useRootEnvironment(): RootEnvironment {
   const value = useContext(rootContext)
-  if (value === null) throw new Error("Browser hooks require an App mounted with attach")
+  if (value === null) throw new Error("Browser hooks require an App mounted with Browser createRoot")
   return value
 }
 
@@ -105,6 +105,12 @@ export function createRootEnvironment(document: Document, size: RootSize, framel
     connect(requestFrame: () => void) {
       request = requestFrame
       if (pending) request()
+    },
+    setFrameloop(frameloop: FrameLoop) {
+      if (disposed || state.frameloop === frameloop) return
+      state = Object.freeze({...state, frameloop})
+      for (const listener of listeners) listener()
+      invalidate()
     },
     resize(size: RootSize) {
       const previous = state.size

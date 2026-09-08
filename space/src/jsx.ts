@@ -30,6 +30,8 @@ type SpatialChildren<Target> = Readonly<{
 }>
 
 export type XRSpaceIntrinsicProperties = SpatialChildren<XRSpaceElement> & Readonly<{
+  /** По умолчанию demand; always включает непрерывный общий цикл кадров. */
+  frameloop?: "demand" | "always" | undefined
   background?: string | undefined
 }>
 

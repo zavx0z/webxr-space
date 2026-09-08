@@ -1,43 +1,65 @@
 # Подключение приложения
 
-Публичный browser entry — `attach`. Полный пример:
-[examples/application](../examples/application/README.md).
+Публичный запуск следует React-shaped контракту createRoot/render/unmount.
+Полный пример: [examples/application](../examples/application/README.md).
 
 ```tsx
-import {attach} from "@zavx0z/browser"
+import {createRoot} from "@zavx0z/browser"
 import {App} from "./app.tsx"
 
-const root = await attach({canvas, app: <App />, frameloop: "demand"})
+const root = createRoot(canvas)
+root.render(<App />)
 ```
 
-Обязателен Template compiler: JSX аргумента `app` компилируется в существующий
-ComponentValue. App объявляет один Space и ViewPoint, свои Display, HUD и
-компоненты. Component монтирует App непосредственно в semantic Document;
-Browser связывает это дерево с native Canvas и производными ресурсами.
-В компоненте можно обращаться к обычному `document` без импорта и hook.
-TypeScript проверяет стандартные DOM-типы, а Template привязывает свободное
-имя к semantic Document компонента. Эта ссылка сохраняется в callbacks и после
-`await`. Локальная переменная или параметр `document` не подменяется.
-В native коде страницы и в `window.document` остаётся браузерный Document.
+Повторный render обновляет существующее дерево и сохраняет состояние по template/key.
+render(null) очищает содержимое; после unmount нужен новый createRoot.
+Template compiler компилирует JSX в ComponentValue. Component монтирует App
+в body одного semantic Document. App объявляет единственные Space и ViewPoint.
 
-Сборка приложения предоставляет отдельный `theme.css`; Browser автоматически
-загружает его настоящим link. Исходную тему выбирает сборка, а не Browser.
-Явный `theme` задаёт другой адрес или готовый link; `stylesheets` добавляет другие
-авторские таблицы стилей. Подробный контракт: [тема по умолчанию](theme.md).
+В компоненте свободное имя `document` привязано Template к тому же semantic
+Document; window.document и код подключения страницы остаются native.
 
-`attach` резервирует native страницу и Canvas до монтирования App, загружает
-объявленные шрифты и стили и завершается после первого представленного кадра.
-По умолчанию шрифт берётся из `<meta name="engine-default-font">` native страницы;
-готовый шрифт можно передать через `font`. Ошибка освобождает созданные ресурсы.
-`unmount()` идемпотентен, освобождает App и browser lifecycle и разрешает повторный
-attach на том же Canvas. Компоненты не создают собственный Canvas или frame loop.
+App может вернуть Fragment со stylesheet links и единственным Space:
+
+```tsx
+function App() {
+  return (
+    <>
+      <link
+        rel="stylesheet"
+        href="/themes/dark.css"
+      />
+      <Space frameloop="demand">
+        <ViewPoint />
+        <HUD>
+          <Toolbar />
+        </HUD>
+      </Space>
+    </>
+  )
+}
+```
+
+Явные links задают все author stylesheets. Только без них Browser загружает
+`./theme.css`, предоставленный сборкой приложения. Подробности: [тема](theme.md).
+Default font читается из `<meta name="engine-default-font">` native страницы.
+CSS выбирает family/weight/style; готовые дополнительные font faces принадлежат
+специальному API внешнего окружения `@zavx0z/browser/integration`.
+
+createRoot резервирует native страницу/Canvas. render возвращает void и запускает
+подготовку ресурсов; `onUncaughtError` получает ошибки запуска. Unmount отменяет
+подготовку и освобождает ресурсы. Если GPU уже инициализируется, Canvas остаётся
+занят до завершения cleanup этой операции; старый запуск не может повредить новый.
+Для тестов и внешних инструментов `inspectRoot(root).whenReady()` из
+`@zavx0z/browser/diagnostics` ожидает кадр последнего render и возвращает
+диагностику существующего приложения. Обычному App ожидание не требуется.
 
 Координаты сцены — мм в правой системе Z-up. Размеры CSS и viewport — CSS px;
 `worldUnitsPerPixel` — мм на CSS px. Display можно ориентировать quaternion.
 Фиксированные соседние компоненты не требуют key; динамические списки требуют
 стабильных ключей для перестановки без потери состояния.
 
-`root.input` принимает координаты клиента browser window. Его pointer
+`presentation.input` принимает координаты клиента browser window. Его pointer
 и wheel операции проходят тот же выбор получателя, что native события Canvas.
 Для диагностики `getProjection(owner).readFrame()` читает существующий кадр,
 а `.projectPoint({x, y})` переводит logical point Display/HUD в client coordinates.
@@ -51,7 +73,7 @@ Semantic `setPointerCapture` имеет приоритет над ранее н�
 следующего pointermove. Отпускание, отмена, удаление проекции и unmount очищают
 состояние; прежний жест не восстанавливается после release capture.
 
-Root — возвращаемое управление подключённым приложением. В semantic-дереве нет отдельного
+Presentation — диагностика существующего приложения. Root предоставляет render/unmount. В semantic-дереве нет отдельного
 Root-компонента или второго Space. Правила владельцев заданы в
 [PROJECT.md](../PROJECT.md).
 
@@ -66,14 +88,14 @@ Mesh, Group, Geometry, Material, Asset и Animation также удержива�
 данных не выполняют компонент повторно. Размер публикуется до расчёта кадра.
 
 `useFrame((state, delta) => …)` вызывается перед общим кадром; delta задаётся
-в секундах. Подписка снимается при размонтировании. В режиме demand кадры
+в секундах. Подписка снимается при размонтировании. Режим задаётся prop Space.frameloop. В режиме demand кадры
 запрашиваются по изменениям или через `state.invalidate()`; always используется
 для непрерывной анимации. Все проекции обслуживает один планировщик.
 
 Ошибка кадра останавливает автоматические повторные попытки и сообщает причину
 один раз: поток данных и `invalidate()` не создают бесконечный цикл ошибок.
 Осознанный новый pointer-down или изменение размера viewport разрешают новую
-попытку. Начальная ошибка `attach` остаётся отклонением его Promise, а не
+попытку. Начальная ошибка запуска передаётся в onUncaughtError и отклоняет diagnostic whenReady, а не
 скрытым фоновым перезапуском.
 
 `ViewPoint.controls` декларативно разрешает жесты в свободной области сцены.
@@ -89,6 +111,5 @@ props сохраняют результат жестов и команд. Изм
 Параметров up и переключения системы координат нет. Импорт glTF меняет только
 саму модель: её внутренний корень переводит Y-up/метры в Z-up/миллиметры.
 
-`stylesheets` принимает URL или заимствованные пары `{id, link}`.
-Для URL Browser создаёт настоящие native links, ждёт загрузку и удаляет их при
-ошибке либо unmount. Заимствованные links остаются у создавшей их страницы.
+Специальный `browser/integration` принимает заимствованные native links для
+внешних инструментов. Они остаются у создавшего их окружения после unmount.

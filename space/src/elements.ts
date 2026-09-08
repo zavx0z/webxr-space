@@ -103,6 +103,17 @@ const stringAttribute = (
 ): string => element.getAttribute(name) ?? fallback
 
 export class XRSpaceElement extends XRElement {
+  /** Режим общего кадра; demand рисует по изменениям, always непрерывно. */
+  get frameloop(): "demand" | "always" {
+    const value = this.getAttribute("frameloop") ?? "demand"
+    if (value !== "demand" && value !== "always") throw new TypeError("Space frameloop must be demand or always")
+    return value
+  }
+  set frameloop(value: "demand" | "always") {
+    if (value !== "demand" && value !== "always") throw new TypeError("Space frameloop must be demand or always")
+    this.setAttribute("frameloop", value)
+  }
+
   constructor(ownerDocument: Document) {
     super(ownerDocument, "xr-space")
   }

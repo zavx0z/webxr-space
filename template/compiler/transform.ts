@@ -136,9 +136,9 @@ type ComponentExpressionContext = Readonly<{
 }>
 
 type RuntimeImportBindings = Readonly<{
-  attach: ReadonlySet<number>
   css: ReadonlySet<number>
   createRoot: ReadonlySet<number>
+  browserCreateRoot: ReadonlySet<number>
   hooks: ReadonlyMap<number, Readonly<{name: string; supported: boolean}>>
   memo: ReadonlySet<number>
 }>
@@ -404,38 +404,9 @@ export function transformJsxSourceFile(
     runtimeBindings.createRoot,
     symbols.byNode,
   )
+  const browserRoots = componentRootBindings(sourceFile, runtimeBindings.browserCreateRoot, symbols.byNode)
   visit(sourceFile, (node) => {
     if (!isCallExpression(node)) return
-    if (isIdentifier(node.expression) && runtimeBindings.attach.has(symbolId(symbols.byNode, node.expression) ?? -1)) {
-      if (node.arguments.length !== 1) throw compileError(sourcePath, "attach expects one options object")
-      const options = skipParentheses(node.arguments[0]!)
-      if (!isObjectLiteralExpression(options)) return
-      for (const property of options.properties) {
-        if (!isPropertyAssignment(property) || property.name.getText(sourceFile).replaceAll('"', '').replaceAll("'", '') !== "app") continue
-        const argument = skipParentheses(property.initializer)
-        if (!isJsxElement(argument) && !isJsxSelfClosingElement(argument)) continue
-        const compiled = componentExpression(argument, {
-          arrayExpressions: symbols.arrayExpressions,
-          childrenExpressionKinds: symbols.childrenExpressionKinds,
-          components: componentSymbols,
-          consumedJsx,
-          consumedCss,
-          cssTagSymbols: runtimeBindings.css,
-          cssTemplates,
-          cssTemplateReferences,
-          cssTemplateSites,
-          helper,
-          propsSymbol: null,
-          sourceFile,
-          sourcePath,
-          stylePrimitiveKinds: symbols.stylePrimitiveKinds,
-          symbols: symbols.byNode,
-        })
-        needsCompiledRuntime = true
-        edits.push({start: argument.getStart(sourceFile), end: argument.getEnd(), text: compiled.expression})
-      }
-      return
-    }
     if (!isPropertyAccessExpression(node.expression)) return
     if (node.expression.name.text !== "render" || node.arguments.length !== 1) return
     if (!isComponentRootExpression(
@@ -469,7 +440,9 @@ export function transformJsxSourceFile(
     edits.push({
       start,
       end: node.getEnd(),
-      text: `${node.expression.expression.getText(sourceFile)}.render(${compiled.template}, ${compiled.props}${compiled.key === "null" ? "" : `, {key: ${compiled.key}}`})`,
+      text: isComponentRootExpression(node.expression.expression, browserRoots, runtimeBindings.browserCreateRoot, symbols.byNode)
+        ? `${node.expression.expression.getText(sourceFile)}.render(${compiled.expression})`
+        : `${node.expression.expression.getText(sourceFile)}.render(${compiled.template}, ${compiled.props}${compiled.key === "null" ? "" : `, {key: ${compiled.key}}`})`,
     })
   })
 
@@ -478,7 +451,7 @@ export function transformJsxSourceFile(
     if (consumedJsx.has(node)) return
     throw compileError(
       sourcePath,
-      "JSX is outside a supported final-return function component, exact createRoot render or Browser attach app",
+      "JSX is outside a supported final-return function component, exact createRoot render",
     )
   })
 
@@ -1465,25 +1438,28 @@ function runtimeImportBindings(
   sourcePath: string,
 ): RuntimeImportBindings {
   const css = new Set<number>(cssIntrinsicSymbols)
-  const attach = new Set<number>()
   const createRoot = new Set<number>()
+  const browserCreateRoot = new Set<number>()
   const hooks = new Map<number, Readonly<{name: string; supported: boolean}>>()
   const memo = new Set<number>()
   for (const statement of sourceFile.statements) {
     if (!isImportDeclaration(statement) || !isStringLiteral(statement.moduleSpecifier)) continue
-    if (statement.moduleSpecifier.text === "@zavx0z/browser") {
+    if (statement.moduleSpecifier.text === "@zavx0z/browser" ||
+      statement.moduleSpecifier.text === "@zavx0z/browser/integration") {
       const named = statement.importClause?.namedBindings
       if (named && isNamedImports(named)) {
         for (const specifier of named.elements) {
           const imported = specifier.propertyName?.text ?? specifier.name.text
-          if (imported !== "attach" && imported !== "useSpace" && imported !== "useFrame") continue
+          if (imported !== "createRoot" && imported !== "useSpace" && imported !== "useFrame") continue
           if (statement.importClause?.phaseModifier === SyntaxKind.TypeKeyword || specifier.isTypeOnly) {
             throw compileError(sourcePath, `${imported} must be imported as a runtime value`)
           }
           const id = symbolId(symbols, specifier.name)
           if (id !== null) {
-            if (imported === "attach") attach.add(id)
-            else hooks.set(id, Object.freeze({name: imported, supported: true}))
+            if (imported === "createRoot") {
+              createRoot.add(id)
+              browserCreateRoot.add(id)
+            } else hooks.set(id, Object.freeze({name: imported, supported: true}))
           }
         }
       }
@@ -1530,7 +1506,7 @@ function runtimeImportBindings(
       }
     }
   }
-  return Object.freeze({attach, css, createRoot, hooks, memo})
+  return Object.freeze({css, createRoot, browserCreateRoot, hooks, memo})
 }
 
 function validateHookCalls(

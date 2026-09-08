@@ -94,6 +94,8 @@ export function createBrowserLinkedAuthorStyleSheetHostWithSeams(
     rejectReady = reject
   })
 
+  void ready.catch(() => {})
+
   const refresh = (): void => {
     assertActive(disposed)
     const next: DocumentAuthorStyleSheet[] = []
@@ -219,6 +221,10 @@ export function createBrowserLinkedAuthorStyleSheetHostWithSeams(
     dispose() {
       if (disposed) return
       disposed = true
+      if (!readySettled) {
+        readySettled = true
+        rejectReady(new Error("Stylesheet host was disposed before loading completed"))
+      }
       cleanup(owner, observer, listeners)
       observer = null
     }

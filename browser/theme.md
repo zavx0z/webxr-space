@@ -1,19 +1,24 @@
-# Тема по умолчанию
+# Стили приложения
 
-`attach({canvas, app})` автоматически подключает `./theme.css` относительно
-страницы приложения. Сборка приложения предоставляет этот отдельный CSS-файл.
-Browser не импортирует тему UI и не выбирает её исходник.
+Авторский App объявляет `<link rel="stylesheet" href="/themes/dark.css" />`
+во Fragment рядом со Space. Эти декларации принадлежат одному semantic Document
+и задают полную последовательность author stylesheets для всех его проекций.
 
-Владелец палитры — единственный публичный `@zavx0z/ui/themes/theme.css`.
-Сборка приложения может выбрать этот публичный CSS без локальной копии или
-CSS-обёртки. Native link создаётся, ожидается и освобождается
-обычным author stylesheet lifecycle Root. Математический Engine и WebGPU
-не получают DOM-зависимостей.
+Browser создаёт по настоящему native link для каждой декларации, ждёт загрузку
+CSSOM и регистрирует его в общем author stylesheet registry. Смена href,
+перестановка и удаление деклараций обновляют те же ресурсы без remount приложения.
+При unmount Browser снимает наблюдение, отменяет ожидания и удаляет созданные links.
 
-Явный `theme` задаёт другой URL либо готовую пару `{id, link}` и заменяет
-default slot. Дополнительные author stylesheets передаются через `stylesheets`.
-Browser создаёт собственный default link перед заимствованными stylesheets;
-порядок полностью заимствованных links остаётся порядком native Document.
+Если явных stylesheet links нет, используется отдельный `./theme.css` приложения.
+Его исходник выбирает сборка; стандартная тема принадлежит `ui/themes/theme.css`.
+При появлении явного link default удаляется; при удалении последнего возвращается.
+Browser не импортирует CSS в JavaScript и не копирует палитру.
 
-Проверки `tests/default-theme.test.ts`: default без page link, замена default
-slot и отсутствие CSS/UI-зависимости в browser JavaScript-сборке.
+Загруженный stylesheet должен иметь доступный origin-clean CSSOM. Текущий host
+принимает обычные style rules; @import, @font-face, conditional rules и nesting
+ещё не поддерживаются этим CSSOM transport и отклоняются явно. Выбор существующего
+шрифта через CSS поддерживается; дополнительные загруженные font faces могут
+предоставляться внешним окружением через browser/integration.
+
+Проверки lifecycle и порядка: `tests/application-stylesheets.test.ts`.
+Проверка отделения CSS от JavaScript: `tests/default-theme.test.ts`.

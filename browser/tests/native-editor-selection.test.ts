@@ -13,7 +13,8 @@ import {createDocumentNativeInputHostWithSeams} from "../src/native-input-host.t
 import {createDocumentSpaceRuntimeWithSeams} from "../src/space-runtime.ts"
 import {createDocumentPlaneRuntime} from "../src/plane-runtime.ts"
 import {createDocumentOverlayRuntime} from "../src/overlay-runtime.ts"
-import {attachWithRuntimeFactory} from "../src/attach.ts"
+import {createRootWithSeams} from "../create-root.ts"
+import {inspectRoot} from "../diagnostics.ts"
 import type {XRDisplayElement} from "@zavx0z/space"
 
 const workspace = resolve(import.meta.dir, "../..")
@@ -195,7 +196,7 @@ test.each([
   }
 })
 
-test("real attach App keeps two Editor projections isolated across every selection-composed frame", async () => {
+test("real createRoot App keeps two Editor projections isolated across every selection-composed frame", async () => {
   const alpha = createCodeEditorModel({value: 'const label = "Alpha"\nlet tick = 0\n'})
   const beta = createCodeEditorModel({value: 'const label = "Beta"\nlet tick = 0\n'})
   const font = new TrueTypeFont(await Bun.file(resolve(workspace, "engine/static/fonts/jetbrains-mono-bold.ttf")).arrayBuffer())
@@ -210,7 +211,10 @@ test("real attach App keeps two Editor projections isolated across every selecti
     setPointerCapture(id: number) { captures.add(id) }, releasePointerCapture(id: number) { captures.delete(id) }, hasPointerCapture: (id: number) => captures.has(id),
   } as unknown as HTMLCanvasElement
   const app = component(NativeEditorSelectionFixture as unknown as CompiledTemplate<{alpha: typeof alpha; beta: typeof beta}>, {alpha, beta})
-  const experience = await attachWithRuntimeFactory({canvas, font, app, pixelRatio: 2}, (options, claim) => createDocumentSpaceRuntimeWithSeams({...options, styleSheets: [theme]}, {
+  const root = createRootWithSeams(canvas, {pixelRatio: 2}, {
+    loadFont: async () => font,
+    createStyleSheets: () => ({refresh() {}, async whenReady() {}, dispose() {}}),
+    createRuntime: (options, claim) => createDocumentSpaceRuntimeWithSeams({...options, styleSheets: [theme]}, {
     createEngineRenderer: () => ({setPixelRatio() {}, setSize() {}, invalidateGeometry() {}, renderComposition(composition: Parameters<Renderer["renderComposition"]>[0]) {
       composition.space.updateWorldMatrix(true, {parents: true})
     }}) as unknown as Renderer,
@@ -229,7 +233,10 @@ test("real attach App keeps two Editor projections isolated across every selecti
       return id
     },
     cancelFrame(handle) { frames.delete(handle as number) }, setTimer: () => 1, clearTimer() {}, now: () => 0,
-  }, claim))
+    }, claim),
+  })
+  root.render(app)
+  const experience = await inspectRoot(root).whenReady()
   const first = experience.document.getElementById("alpha") as XRDisplayElement
   const second = experience.document.getElementById("beta") as XRDisplayElement
   const code = first.querySelector("code") as HTMLElement
