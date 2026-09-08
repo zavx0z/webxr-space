@@ -1,3 +1,15 @@
+/**
+Компиляция авторского TSX в шаблоны с адресованными DOM- и CSS-привязками.
+
+Первый параметр компонента может быть объектом props или его деструктуризацией.
+Прямые привязки children и style, включая переименование и значения по умолчанию,
+сохраняют тот же транспорт, что props.children и props.style. Связь определяется
+символами TypeScript; вложенные объекты и rest не заменяют эту привязку.
+
+Создание Document, состояние компонентов и кадр принадлежат runtime-владельцам.
+
+@packageDocumentation
+*/
 export {JsxCompileError} from "./errors.ts"
 export {JsxCompilerSession} from "./session.ts"
 export type {

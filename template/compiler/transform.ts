@@ -22,6 +22,7 @@ import {
   isBlock,
   isCallExpression,
   isObjectLiteralExpression,
+  isObjectBindingPattern,
   isPropertyAssignment,
   isClassDeclaration,
   isBinaryExpression,
@@ -82,6 +83,11 @@ import {parseCssTemplateShape} from "../css-shape.ts"
 
 type Edit = Readonly<{start: number; end: number; text: string}>
 
+type PropsBindings = Readonly<{
+  object: number | null
+  destructured: ReadonlyMap<number, string>
+}>
+
 type CompileContext = {
   readonly componentName: string
   readonly components: ReadonlySet<number>
@@ -93,7 +99,7 @@ type CompileContext = {
   readonly cssTemplateSites: Map<number, Set<Node>>
   readonly childrenExpressionKinds: ReadonlyMap<Node, JsxChildrenExpressionKind>
   readonly helper: string
-  readonly propsSymbol: number | null
+  readonly propsBindings: PropsBindings
   readonly source: string
   readonly sourceFile: SourceFile
   readonly sourcePath: string
@@ -128,7 +134,7 @@ type ComponentExpressionContext = Readonly<{
   cssTemplateReferences: Map<number, Set<Node>>
   cssTemplateSites: Map<number, Set<Node>>
   helper: string
-  propsSymbol: number | null
+  propsBindings: PropsBindings
   sourceFile: SourceFile
   sourcePath: string
   stylePrimitiveKinds: ReadonlyMap<Node, JsxStylePrimitiveKind>
@@ -164,6 +170,7 @@ const supportedHooks = Object.freeze([
 export const jsxAuthoringProfile = Object.freeze({
   componentChildren: Object.freeze({
     arbitraryArrays: false,
+    destructuredParameter: true,
     explicitChildrenAttribute: false,
     fragments: false,
     intrinsicElements: false,
@@ -184,6 +191,7 @@ export const jsxAuthoringProfile = Object.freeze({
     componentStyleProps: "base-only-inline" as const,
     dynamicBaseDeclarations: "inline-binding" as const,
     dynamicPseudos: false,
+    destructuredStyleProp: true,
     privateCssConstants: "reuse-only" as const,
     redundantBaseSelector: false,
     scopedCssSelectors: "owner-and-pseudos" as const,
@@ -430,7 +438,7 @@ export function transformJsxSourceFile(
       cssTemplateReferences,
       cssTemplateSites,
       helper,
-      propsSymbol: null,
+      propsBindings: {object: null, destructured: new Map()},
       sourceFile,
       sourcePath,
       stylePrimitiveKinds: symbols.stylePrimitiveKinds,
@@ -564,9 +572,7 @@ function compileComponent(
     cssTemplateReferences,
     cssTemplateSites,
     helper,
-    propsSymbol: declaration.parameters[0] && isIdentifier(declaration.parameters[0].name)
-      ? symbolId(symbols, declaration.parameters[0].name)
-      : null,
+    propsBindings: componentPropsBindings(declaration, symbols),
     source: sourceFile.text,
     sourceFile,
     sourcePath: sourceFile.fileName,
@@ -714,7 +720,7 @@ function compileStaticStyle(
       })
     },
     primitiveKinds: context.stylePrimitiveKinds,
-    isPassThrough: expression => isDirectPropsStyleExpression(expression, context),
+    isPassThrough: expression => isPropsFieldExpression(expression, "style", context),
     resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context, attribute),
     styleEncoder: `${context.helper}EncodeStyle`,
     sourceFile: context.sourceFile,
@@ -1038,7 +1044,7 @@ function compileChild(child: JsxChild, context: CompileContext): string[] {
   const expression = skipParentheses(child.expression)
   if (isJsxFragment(expression)) return compileJsx(expression, context)
   const childrenKind = context.childrenExpressionKinds.get(expression)
-  if (isDirectPropsChildrenExpression(expression, context)) {
+  if (isPropsFieldExpression(expression, "children", context)) {
     if (childrenKind === "component-children") {
       return compileValueRange(expression, "conditional", context, false, true)
     }
@@ -1054,7 +1060,7 @@ function compileChild(child: JsxChild, context: CompileContext): string[] {
     if (childrenKind !== "text") {
       throw compileError(
         context.sourcePath,
-        "props.children must be typed as authored JSX, authored JSX or null, keyed authored JSX, or primitive text",
+        "children props must be typed as authored JSX, authored JSX or null, keyed authored JSX, or primitive text",
       )
     }
   } else if (
@@ -1064,7 +1070,7 @@ function compileChild(child: JsxChild, context: CompileContext): string[] {
   ) {
     throw compileError(
       context.sourcePath,
-      "component-valued children must be rendered as direct props.children in the first compiler profile",
+      "component-valued children require props.children or its destructured parameter binding",
     )
   }
   if (isConditionalExpression(expression)) return compileConditional(expression, context)
@@ -1270,7 +1276,7 @@ function componentStyleAttributeExpression(
   }
   return extractComponentStyle(skipParentheses(initializer.expression), {
     primitiveKinds: context.stylePrimitiveKinds,
-    isPassThrough: expression => isDirectPropsStyleExpression(expression, context),
+    isPassThrough: expression => isPropsFieldExpression(expression, "style", context),
     resolveCssTemplate: expression => resolveCompiledCssTemplate(expression, context, attribute),
     styleEncoder: `${context.helper}EncodeStyle`,
     sourceFile: context.sourceFile,
@@ -1339,7 +1345,7 @@ function componentChildValue(child: JsxChild, context: ComponentExpressionContex
     return conditionalComponentValueExpression(asConditional(value), context)
   }
   if (context.arrayExpressions.has(value) || kind === "keyed-components") {
-    if (isDirectPropsChildrenExpression(value, context)) return value.getText(context.sourceFile)
+    if (isPropsFieldExpression(value, "children", context)) return value.getText(context.sourceFile)
     throw compileError(
       context.sourcePath,
       "component array children require compiler-owned keyed JSX map or explicit keyed components",
@@ -1348,11 +1354,11 @@ function componentChildValue(child: JsxChild, context: ComponentExpressionContex
   if (kind === "text") return value.getText(context.sourceFile)
   if (
     (kind === "component" || kind === "nullable-component") &&
-    isDirectPropsChildrenExpression(value, context)
+    isPropsFieldExpression(value, "children", context)
   ) return value.getText(context.sourceFile)
   throw compileError(
     context.sourcePath,
-    "component child expressions must be primitive text, direct props.children, governed JSX, or compiler-owned keyed JSX",
+    "component child expressions must be primitive text, children props, governed JSX, or compiler-owned keyed JSX",
   )
 }
 
@@ -1625,26 +1631,49 @@ function symbolId(symbols: ReadonlyMap<Node, number>, node: Node): number | null
   return symbols.get(node) ?? null
 }
 
-function isDirectPropsChildrenExpression(
-  expression: Expression,
-  context: Pick<CompileContext, "propsSymbol" | "symbols">,
-): boolean {
-  return context.propsSymbol !== null &&
-    isPropertyAccessExpression(expression) &&
-    expression.name.text === "children" &&
-    isIdentifier(expression.expression) &&
-    symbolId(context.symbols, expression.expression) === context.propsSymbol
+/**
+Связывает локальные имена первого параметра с исходными свойствами props.
+
+Учитываются только прямые привязки объектного параметра, включая переименование
+и значения по умолчанию. Вложенные объекты, rest и одноимённые переменные другого
+scope не получают право передавать authored children или caller style.
+*/
+function componentPropsBindings(
+  declaration: FunctionDeclaration,
+  symbols: ReadonlyMap<Node, number>,
+): PropsBindings {
+  const parameter = declaration.parameters[0]
+  const destructured = new Map<number, string>()
+  if (!parameter) return {object: null, destructured}
+  if (isIdentifier(parameter.name)) {
+    return {object: symbolId(symbols, parameter.name), destructured}
+  }
+  if (isObjectBindingPattern(parameter.name)) {
+    for (const binding of parameter.name.elements) {
+      if (binding.dotDotDotToken || !binding.name || !isIdentifier(binding.name)) continue
+      const property = binding.propertyName ?? binding.name
+      if (!isIdentifier(property) && !isStringLiteral(property)) continue
+      const id = symbolId(symbols, binding.name)
+      if (id !== null) destructured.set(id, property.text)
+    }
+  }
+  return {object: null, destructured}
 }
 
-function isDirectPropsStyleExpression(
+function isPropsFieldExpression(
   expression: Expression,
-  context: Pick<CompileContext, "propsSymbol" | "symbols">,
+  property: string,
+  context: Pick<CompileContext, "propsBindings" | "symbols">,
 ): boolean {
-  return context.propsSymbol !== null &&
+  if (isIdentifier(expression)) {
+    const id = symbolId(context.symbols, expression)
+    return id !== null && context.propsBindings.destructured.get(id) === property
+  }
+  return context.propsBindings.object !== null &&
     isPropertyAccessExpression(expression) &&
-    expression.name.text === "style" &&
+    expression.name.text === property &&
     isIdentifier(expression.expression) &&
-    symbolId(context.symbols, expression.expression) === context.propsSymbol
+    symbolId(context.symbols, expression.expression) === context.propsBindings.object
 }
 
 function isChildrenNamedExpression(expression: Expression): boolean {
