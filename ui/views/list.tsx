@@ -38,7 +38,6 @@ function ListRow(props: ListRowProps) {
     aria-disabled={String(props.disabled)}
     data-dense={props.dense ? "true" : undefined}
     data-embedded={props.embedded ? "true" : undefined}
-    title={props.item.detail ?? props.item.label}
     onClick={onClick}
     style={css`
       box-sizing: border-box;

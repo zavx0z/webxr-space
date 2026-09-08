@@ -50,7 +50,6 @@ export function ColorField(props: ColorFieldProps) {
   }
   return <div
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -110,6 +109,7 @@ export function ColorField(props: ColorFieldProps) {
     >
       <Button
         label={formatColorValue(value)}
+        title={props.title}
         disabled={props.disabled === true}
         selected={open}
         aria-expanded={String(open)}
@@ -139,7 +139,6 @@ export function ColorField(props: ColorFieldProps) {
           value={value}
           disabled={props.disabled}
           readOnly={props.readOnly}
-          title={props.title}
           style={css`
             width: 280px;
           `}

@@ -7,17 +7,17 @@ const base = Object.freeze([
   Object.freeze({key: "output", value: "output", label: "Output", iconSrc: uiIcons.run}),
   Object.freeze({key: "viewport", value: "viewport", label: "Viewport", iconSrc: uiIcons.visibilityOn}),
 ])
-const story = async (document: Document, route: string, options: typeof base) => {
+const story = async (document: Document, options: typeof base) => {
   const {createCompiledCycleFieldProductionStory} = await import("../compiled/compiled-field-production-stories.tsx")
-  const props = {label: "Mode", value: "output", options, title: route}
+  const props = {label: "Mode", value: "output", options}
   return withStoryProps(createCompiledCycleFieldProductionStory(document, props), props)
 }
 
 export const story_value_header_icons = defineOwnerStory("components/fields/cycle-field/value/header-icons", document =>
-  story(document, "components/fields/cycle-field/value/header-icons", base)
+  story(document, base)
 )
 export const story_value_mixed_icons = defineOwnerStory("components/fields/cycle-field/value/mixed-icons", document =>
-  story(document, "components/fields/cycle-field/value/mixed-icons", Object.freeze([
+  story(document, Object.freeze([
     base[0]!,
     Object.freeze({key: "output", value: "output", label: "Output"}),
     base[2]!,

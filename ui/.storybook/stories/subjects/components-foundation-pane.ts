@@ -4,8 +4,7 @@ export const story_variants_glass = defineOwnerStory("components/foundation/pane
   const {createCompiledPaneProductionStory} = await import("../compiled/compiled-foundation-production-stories.tsx")
   const props = {
     "content": "Area content",
-    "variant": "transparent",
-    "title": "Glass pane"
+    "variant": "transparent"
   } as const
   return withStoryProps(createCompiledPaneProductionStory(document, props), props)
 })
@@ -14,8 +13,7 @@ export const story_variants_outlined = defineOwnerStory("components/foundation/p
   const {createCompiledPaneProductionStory} = await import("../compiled/compiled-foundation-production-stories.tsx")
   const props = {
     "content": "Area content",
-    "variant": "outlined",
-    "title": "Outlined pane"
+    "variant": "outlined"
   } as const
   return withStoryProps(createCompiledPaneProductionStory(document, props), props)
 })
@@ -24,8 +22,7 @@ export const story_variants_filled = defineOwnerStory("components/foundation/pan
   const {createCompiledPaneProductionStory} = await import("../compiled/compiled-foundation-production-stories.tsx")
   const props = {
     "content": "Area content",
-    "variant": "filled",
-    "title": "Area"
+    "variant": "filled"
   } as const
   return withStoryProps(createCompiledPaneProductionStory(document, props), props)
 })

@@ -7,8 +7,7 @@ export const story_status_unavailable = defineOwnerStory("components/data/noti/s
     message: "Notification now renders through @zavx0z/ui/feedback/notification.",
     detail: "Delivery and queue policy remain caller-owned.",
     tone: "info",
-    dismissible: true,
-    title: "Notification"
+    dismissible: true
   } as const
   return withStoryProps(createCompiledNotificationProductionStory(document, props), props)
 })

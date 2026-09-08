@@ -25,8 +25,7 @@ export const story_basic_default = defineOwnerStory("components/data/list/basic/
       }
     ],
     "selectedKey": "output",
-    "dense": true,
-    "title": "List"
+    "dense": true
   } as const
   return withStoryProps(createCompiledListProductionStory(document, props), props)
 })

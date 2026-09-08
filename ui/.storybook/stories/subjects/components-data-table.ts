@@ -35,8 +35,7 @@ export const story_basic_default = defineOwnerStory("components/data/table/basic
         }
       }
     ],
-    "selectedKey": "output",
-    "title": "Table"
+    "selectedKey": "output"
   } as const
   return withStoryProps(createCompiledTableProductionStory(document, props), props)
 })

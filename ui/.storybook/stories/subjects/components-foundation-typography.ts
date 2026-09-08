@@ -4,8 +4,7 @@ export const story_variants_default = defineOwnerStory("components/foundation/ty
   const {createCompiledTypographyProductionStory} = await import("../compiled/compiled-foundation-production-stories.tsx")
   const props = {
     "text": "Interface text",
-    "variant": "body",
-    "title": "Typography"
+    "variant": "body"
   } as const
   return withStoryProps(createCompiledTypographyProductionStory(document, props), props)
 })

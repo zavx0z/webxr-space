@@ -4,8 +4,7 @@ export const story_basic_default = defineOwnerStory("components/foundation/badge
   const {createCompiledBadgeProductionStory} = await import("../compiled/compiled-foundation-production-stories.tsx")
   const props = {
     "label": "Ready",
-    "tone": "neutral",
-    "title": "Status"
+    "tone": "neutral"
   } as const
   return withStoryProps(createCompiledBadgeProductionStory(document, props), props)
 })

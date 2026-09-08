@@ -74,8 +74,10 @@ function CategoryButton(props: CategoryButtonProps) {
     iconSrc={props.category.iconSrc}
     iconOnly={props.category.iconSrc !== undefined}
     iconSize={16}
-    title={props.category.title ?? props.category.label}
-    aria-label={props.category.title ?? props.category.label}
+    title={props.category.title ?? (
+      props.category.iconSrc === undefined ? undefined : props.category.label
+    )}
+    aria-label={props.category.label}
     disabled={props.category.disabled === true}
     selected={props.selected}
     style={css`
@@ -109,7 +111,6 @@ function InspectorContextRowView(props: Readonly<{
 }>) {
   return <div
     data-secondary={props.secondary ? "true" : undefined}
-    title={props.context.title ?? props.context.label}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -145,6 +146,7 @@ function InspectorContextRowView(props: Readonly<{
       `}
     />
     <span
+      title={props.context.title ?? props.context.label}
       style={css`
         display: inline;
         min-width: 0;
@@ -169,7 +171,7 @@ function InspectorContextRowView(props: Readonly<{
         key={action.id}
         label={action.label}
         iconSrc={action.iconSrc}
-        title={action.title ?? action.label}
+        title={action.title}
         disabled={action.disabled === true}
         selected={action.selected}
         iconSize={14}
@@ -229,7 +231,7 @@ export function Inspector(props: InspectorProps) {
           key={action.id}
           label={action.label}
           iconSrc={action.iconSrc}
-          title={action.title ?? action.label}
+          title={action.title}
           disabled={action.disabled === true}
           selected={action.selected}
           iconSize={14}
@@ -293,7 +295,7 @@ export function Inspector(props: InspectorProps) {
           key={action.id}
           label={action.label}
           iconSrc={action.iconSrc}
-          title={action.title ?? action.label}
+          title={action.title}
           disabled={action.disabled === true}
           selected={action.selected}
           iconSize={14}

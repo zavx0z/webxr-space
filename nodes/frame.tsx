@@ -27,7 +27,6 @@ export function Frame(props: FrameProps) {
     data-frame-id={props.id}
     data-parent-frame-id={props.parentFrameId}
     hidden={props.hidden === true}
-    title={props.title ?? props.label}
     onClick={props.onActivate}
     style={css`
       box-sizing: border-box;
@@ -58,6 +57,7 @@ export function Frame(props: FrameProps) {
   >
     <header
       data-frame-label=""
+      title={props.title}
       style={css`
         box-sizing: border-box;
         position: relative;

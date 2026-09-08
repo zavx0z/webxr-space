@@ -48,6 +48,7 @@ test("Editor fills its structural parent, owns generic annotations and exposes s
     handle.setSelections([{anchor: 0, head: 5}, {anchor: 6, head: 12}], 1)
     expect(handle.isFocused()).toBe(true)
     expect(handle.getSelection().selections).toHaveLength(2)
+    expect(f.root.querySelector('section[role="region"]')?.hasAttribute("title")).toBe(false)
     const code = f.root.querySelector("code")!
     code.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, cancelable: true, key: "s", metaKey: true}))
     expect(saves).toEqual(["first\nsecond"])
@@ -195,6 +196,12 @@ test("Tree controls disclosure, lazy expansion, multiple selection and keyboard 
   render()
   try {
     const group = f.root.querySelector('[data-tree-id="group"]')!
+    const groupRow = group.querySelector('[data-tree-row]')!
+    const groupToggle = group.querySelector("button")!
+    expect(groupRow.hasAttribute("title")).toBe(false)
+    expect(groupRow.querySelector('[data-tree-label]')?.getAttribute("title")).toBe("Group")
+    expect(groupToggle.getAttribute("title")).toBe("Раскрыть")
+    expect(groupToggle.getAttribute("aria-label")).toBe("Раскрыть")
     group.querySelector("button")!.dispatchEvent(new MouseEvent("click", {bubbles: true}))
     expect(expanded).toEqual([["group"]])
     const first = f.root.querySelector('[data-tree-id="a"]')!

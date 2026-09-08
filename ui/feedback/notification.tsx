@@ -145,7 +145,6 @@ export function Notification(props: NotificationProps) {
       <IconButton
         label="Dismiss"
         iconSrc={closeIcon}
-        title="Dismiss"
         style={css`
           width: 20px;
           min-width: 20px;

@@ -10,8 +10,7 @@ export const story_basic_default = defineOwnerStory("components/data/status-bar/
       {id: "vertices", text: "Verts:8"},
       {id: "faces", text: "Faces:6"},
       {id: "version", text: "5.2.0"}
-    ],
-    title: "Status"
+    ]
   } as const
   return withStoryProps(createCompiledStatusBarProductionStory(document, props), props)
 })

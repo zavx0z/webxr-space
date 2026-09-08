@@ -57,7 +57,6 @@ export function Editor(props: EditorProps) {
       path={props.path}
       tokens={props.tokens}
       showLineNumbers={props.showLineNumbers}
-      title={props.title}
       lineDecorations={props.lineDecorations}
       onLineNumberClick={props.onLineNumberClick}
       onChange={props.onChange}

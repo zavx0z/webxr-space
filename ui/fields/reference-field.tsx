@@ -61,7 +61,6 @@ export function ReferenceField(props: ReferenceFieldProps) {
   const valueLabel = props.value?.label ?? props.placeholder ?? "Not selected"
   return <div
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title ?? props.value?.kind}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -142,7 +141,7 @@ export function ReferenceField(props: ReferenceFieldProps) {
         label={valueLabel}
         startIcon={resourceIcon}
         variant="text"
-        title={props.value?.kind ?? props.title}
+        title={props.title ?? props.value?.kind}
         disabled={props.disabled === true || props.onActivate === undefined}
         style={css`
           ${buttonStyle}
@@ -159,7 +158,6 @@ export function ReferenceField(props: ReferenceFieldProps) {
       <IconButton
         label="Choose reference"
         iconSrc={pickerIcon}
-        title="Choose reference"
         disabled={props.disabled === true || props.readOnly === true || pickUnavailable}
         style={css`
           ${buttonStyle}
@@ -175,7 +173,6 @@ export function ReferenceField(props: ReferenceFieldProps) {
       <IconButton
         label="Clear reference"
         iconSrc={closeIcon}
-        title="Clear reference"
         disabled={props.disabled === true || props.readOnly === true || clearUnavailable}
         style={css`
           ${buttonStyle}

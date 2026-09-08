@@ -31,7 +31,6 @@ export function Panel(props: PanelProps) {
   return <section
     data-panel=""
     hidden={props.hidden === true}
-    title={props.title}
     style={css`
       display: flex;
       flex-direction: column;
@@ -63,7 +62,7 @@ export function Panel(props: PanelProps) {
         label={props.label}
         startIcon={props.expanded ? chevronDownIcon : chevronRightIcon}
         iconSize={14}
-        title={props.title ?? props.label}
+        title={props.title}
         aria-expanded={String(props.expanded)}
         aria-controls={contentId}
         style={css`
@@ -98,7 +97,7 @@ export function Panel(props: PanelProps) {
           key={action.id}
           label={action.label}
           iconSrc={action.iconSrc}
-          title={action.title ?? action.label}
+          title={action.title}
           disabled={action.disabled === true}
           selected={action.selected}
           iconSize={14}

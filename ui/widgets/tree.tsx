@@ -48,6 +48,7 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
   const expandable = item.expandable ?? children.length > 0
   const expanded = props.context.expanded.has(item.id)
   const selected = props.context.selected.has(item.id)
+  const toggleLabel = expanded ? "Свернуть" : "Раскрыть"
   return <li
     ref={element => {
       if (element) props.context.refs.set(item.id, element)
@@ -78,7 +79,6 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
       data-disabled={String(item.disabled === true)}
       data-muted={String(item.muted === true)}
       data-tone={item.tone}
-      title={item.title ?? item.label}
       onClick={event => props.context.select(item.id, event)}
       onDoubleClick={event => props.context.activate(item.id, event)}
       style={css`
@@ -137,10 +137,12 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
         `}
       >
         {expandable ? <Button
-          label={expanded ? "Свернуть" : "Раскрыть"}
+          label={toggleLabel}
           startIcon={expanded ? chevronDownIcon : chevronRightIcon}
           iconOnly={true}
           iconSize={12}
+          title={toggleLabel}
+          aria-label={toggleLabel}
           disabled={item.disabled === true}
           onClick={event => { event.stopPropagation(); props.context.toggle(item.id, event) }}
           style={css`
@@ -172,6 +174,8 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
         `}
       />
       <span
+        data-tree-label=""
+        title={item.title ?? item.label}
         style={css`
           flex-grow: 1;
           min-width: 0;

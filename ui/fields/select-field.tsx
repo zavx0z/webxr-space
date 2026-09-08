@@ -75,7 +75,6 @@ export function SelectField(props: SelectFieldProps) {
   }
   return <label
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;

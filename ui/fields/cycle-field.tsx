@@ -125,7 +125,6 @@ export function CycleField(props: CycleFieldProps) {
   }
   return <div
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -216,7 +215,6 @@ export function CycleField(props: CycleFieldProps) {
         id={popupId}
         popover="auto"
         role="listbox"
-        title={props.title}
         onToggle={onPopoverToggle}
         style={css`
           box-sizing: border-box;

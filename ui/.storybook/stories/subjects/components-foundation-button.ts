@@ -7,8 +7,7 @@ export const story_basic_text = defineOwnerStory("components/foundation/button/b
     "label": "Output",
     "variant": "text",
     "tone": "neutral",
-    "size": "medium",
-    "title": "Text button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -19,8 +18,7 @@ export const story_basic_contained = defineOwnerStory("components/foundation/but
     "label": "Output",
     "variant": "contained",
     "tone": "neutral",
-    "size": "medium",
-    "title": "Output"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -31,8 +29,7 @@ export const story_basic_outlined = defineOwnerStory("components/foundation/butt
     "label": "Output",
     "variant": "outlined",
     "tone": "neutral",
-    "size": "medium",
-    "title": "Outlined button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -44,8 +41,7 @@ export const story_icon_svg = defineOwnerStory("components/foundation/button/ico
     iconSrc: uiIcons.settings,
     variant: "text",
     tone: "neutral",
-    size: "medium",
-    title: "Настройки"
+    size: "medium"
   } as const
   return withStoryProps(createCompiledIconButtonProductionStory(document, props), props)
 })
@@ -57,8 +53,7 @@ export const story_icon_label_left = defineOwnerStory("components/foundation/but
     variant: "contained",
     tone: "neutral",
     size: "medium",
-    startIcon: uiIcons.settings,
-    title: "Icon left"
+    startIcon: uiIcons.settings
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -70,8 +65,7 @@ export const story_icon_label_right = defineOwnerStory("components/foundation/bu
     variant: "contained",
     tone: "neutral",
     size: "medium",
-    endIcon: uiIcons.settings,
-    title: "Icon right"
+    endIcon: uiIcons.settings
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -82,8 +76,7 @@ export const story_sizes_small = defineOwnerStory("components/foundation/button/
     "label": "Output",
     "variant": "contained",
     "tone": "neutral",
-    "size": "small",
-    "title": "Small button"
+    "size": "small"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -94,8 +87,7 @@ export const story_sizes_medium = defineOwnerStory("components/foundation/button
     "label": "Output",
     "variant": "contained",
     "tone": "neutral",
-    "size": "medium",
-    "title": "Medium button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -106,8 +98,7 @@ export const story_sizes_large = defineOwnerStory("components/foundation/button/
     "label": "Output",
     "variant": "contained",
     "tone": "neutral",
-    "size": "large",
-    "title": "Large button"
+    "size": "large"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -118,8 +109,7 @@ export const story_color_primary = defineOwnerStory("components/foundation/butto
     "label": "Output",
     "variant": "contained",
     "tone": "primary",
-    "size": "medium",
-    "title": "primary button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -130,8 +120,7 @@ export const story_color_success = defineOwnerStory("components/foundation/butto
     "label": "Output",
     "variant": "contained",
     "tone": "success",
-    "size": "medium",
-    "title": "success button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -142,8 +131,7 @@ export const story_color_warning = defineOwnerStory("components/foundation/butto
     "label": "Output",
     "variant": "contained",
     "tone": "warning",
-    "size": "medium",
-    "title": "warning button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -154,8 +142,7 @@ export const story_color_error = defineOwnerStory("components/foundation/button/
     "label": "Output",
     "variant": "contained",
     "tone": "error",
-    "size": "medium",
-    "title": "error button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })
@@ -166,8 +153,7 @@ export const story_color_neutral = defineOwnerStory("components/foundation/butto
     "label": "Output",
     "variant": "contained",
     "tone": "neutral",
-    "size": "medium",
-    "title": "neutral button"
+    "size": "medium"
   } as const
   return withStoryProps(createCompiledButtonProductionStory(document, props), props)
 })

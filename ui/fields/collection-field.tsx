@@ -85,7 +85,6 @@ export function CollectionField(props: CollectionFieldProps) {
   }
   return <div
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -155,6 +154,7 @@ export function CollectionField(props: CollectionFieldProps) {
         dense={density === "compact"}
         variant="embedded"
         emptyLabel={props.emptyLabel ?? "No items"}
+        title={props.title}
         style={css`
           width: 0;
           flex-grow: 1;
@@ -173,7 +173,7 @@ export function CollectionField(props: CollectionFieldProps) {
         `}>
         <IconButton
           label="Add item"
-          iconSrc={plusIcon} title="Add item"
+          iconSrc={plusIcon}
           disabled={props.disabled === true || props.readOnly === true || props.onAdd === undefined}
           style={actionStyle}
           onClick={onAdd}
@@ -181,14 +181,12 @@ export function CollectionField(props: CollectionFieldProps) {
         <IconButton
           label="Remove selected item"
           iconSrc={minusIcon}
-          title="Remove selected item"
           disabled={props.disabled === true || props.readOnly === true || selected === undefined || selected.disabled === true || props.onRemove === undefined}
           style={actionStyle} onClick={onRemove}
         />
         <IconButton
           label="Move selected item up"
           iconSrc={arrowUpIcon}
-          title="Move selected item up"
           disabled={props.disabled === true || props.readOnly === true || selectedIndex <= 0 || selected?.disabled === true || props.onMove === undefined}
           style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}
           onClick={event => move("up", event)}
@@ -196,7 +194,6 @@ export function CollectionField(props: CollectionFieldProps) {
         <IconButton
           label="Move selected item down"
           iconSrc={arrowDownIcon}
-          title="Move selected item down"
           disabled={props.disabled === true || props.readOnly === true || selectedIndex < 0 || selectedIndex >= items.length - 1 || selected?.disabled === true || props.onMove === undefined}
           style={css`${actionStyle}${props.onMove === undefined && hiddenStyle}`}
           onClick={event => move("down", event)}

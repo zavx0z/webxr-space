@@ -29,7 +29,7 @@ export function WidgetActionButton(props: Readonly<{action: WidgetAction; stopPr
       label={action.label}
       iconSrc={action.iconSrc}
       iconOnly={action.iconSrc !== undefined}
-      title={action.label}
+      title={action.iconSrc === undefined ? undefined : action.label}
       disabled={action.disabled === true}
       selected={action.selected}
       tone={action.tone}

@@ -180,7 +180,6 @@ export function Node(props: NodeProps) {
     data-frame-id={props.frameId}
     data-category={props.category ?? ""}
     data-collapsed={props.collapsed === true ? "true" : undefined}
-    title={props.title ?? props.label}
     onClick={props.onActivate}
     style={css`
       box-sizing: border-box;
@@ -270,6 +269,7 @@ export function Node(props: NodeProps) {
         data-action="collapse-node"
         aria-label={collapseLabel}
         aria-expanded={String(props.collapsed !== true)}
+        title={collapseLabel}
         disabled={props.onCollapseChange === undefined}
         onClick={toggleCollapse}
         style={css`
@@ -304,6 +304,8 @@ export function Node(props: NodeProps) {
         />
       </button>
       <strong
+        data-node-label=""
+        title={props.title}
         style={css`
           display: block;
           min-width: 0;
@@ -339,6 +341,7 @@ export function Node(props: NodeProps) {
         data-action="toggle-preview"
         aria-label={previewLabel}
         aria-pressed={String(props.preview?.enabled === true)}
+        title={previewLabel}
         hidden={props.preview === undefined}
         disabled={props.onPreviewChange === undefined}
         onClick={togglePreview}

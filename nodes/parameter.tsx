@@ -298,7 +298,6 @@ export function Parameter(props: ParameterProps) {
     data-leading-checkbox={leadingCheckbox ? "true" : undefined}
     data-inset-number-row={insetNumberRow ? "true" : undefined}
     data-spacing-before={props.spacingBefore}
-    title={title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -351,6 +350,7 @@ export function Parameter(props: ParameterProps) {
       label={label}
       connected={connected}
       hidden={labelHidden || leadingCheckbox || numberOwnsLabel}
+      title={connected ? title : undefined}
     />
     <span
       data-parameter-field=""
@@ -374,7 +374,7 @@ export function Parameter(props: ParameterProps) {
         checked={booleanValue}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onChange={change}
       /> : null}
@@ -382,7 +382,7 @@ export function Parameter(props: ParameterProps) {
         checked={booleanValue}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={leadingCheckbox || connected ? undefined : title}
         onChange={change}
       /> : null}
       {kind === "slider" ? <SliderField
@@ -393,7 +393,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -407,7 +407,7 @@ export function Parameter(props: ParameterProps) {
         precision={precision}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         onInput={input}
         onChange={change}
       /> : null}
@@ -417,7 +417,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onChange={change}
       /> : null}
@@ -427,7 +427,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onChange={change}
       /> : null}
@@ -436,7 +436,7 @@ export function Parameter(props: ParameterProps) {
         options={options}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         onChange={change}
       /> : null}
       {kind === "path" ? <PathField
@@ -445,7 +445,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -455,7 +455,7 @@ export function Parameter(props: ParameterProps) {
         placeholder={placeholder}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -469,7 +469,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -480,7 +480,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -489,7 +489,7 @@ export function Parameter(props: ParameterProps) {
         value={color!}
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
         onInput={input}
         onChange={change}
@@ -499,7 +499,7 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
       /> : null}
       {kind === "collection" ? <CollectionField
@@ -509,15 +509,19 @@ export function Parameter(props: ParameterProps) {
         density="compact"
         disabled={disabled}
         readOnly={readOnly}
-        title={title}
+        title={connected ? undefined : title}
         style={compactFieldStyle}
       /> : null}
-      {kind === "output" ? <ParameterOutput value={snapshot.value} /> : null}
+      {kind === "output" ? <ParameterOutput
+        value={snapshot.value}
+        title={connected ? undefined : title}
+      /> : null}
     </span>
     {leadingCheckbox ? <ParameterLabel
       label={label}
       connected={false}
       expanded
+      title={title}
     /> : null}
     <ParameterEndpoints
       nodeId={props.nodeId}
@@ -541,7 +545,6 @@ function ParameterLayout(props: ParameterLayoutProps) {
     data-socket-count={(props.sockets ?? []).length}
     data-connected={props.connected === true ? "true" : undefined}
     hidden={props.hidden === true}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -569,6 +572,7 @@ function ParameterLayout(props: ParameterLayoutProps) {
       label={props.label}
       connected={props.connected === true}
       hidden={props.fieldOwnsLabel === true && props.connected !== true}
+      title={props.connected === true ? props.title : undefined}
     />
     <span
       data-parameter-field=""
@@ -636,12 +640,14 @@ function ParameterLabel(props: Readonly<{
   connected: boolean
   hidden?: boolean | undefined
   expanded?: boolean | undefined
+  title?: string | undefined
 }>) {
   return <span
     data-parameter-label=""
     data-connected={props.connected ? "true" : undefined}
     data-expanded={props.expanded === true ? "true" : undefined}
     hidden={props.hidden === true}
+    title={props.title}
     style={css`
       display: block;
       min-width: 0;
@@ -671,9 +677,13 @@ function ParameterLabel(props: Readonly<{
   </span>
 }
 
-function ParameterOutput(props: Readonly<{value: NodeJsonValue}>) {
+function ParameterOutput(props: Readonly<{
+  value: NodeJsonValue
+  title?: string | undefined
+}>) {
   return <output
     data-parameter-output=""
+    title={props.title}
     style={css`
       box-sizing: border-box;
       display: block;
@@ -956,7 +966,7 @@ export function TextParameter(props: TextParameterProps) {
       placeholder={props.placeholder}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onInput={props.onInput}
       onChange={props.onChange}
@@ -991,7 +1001,7 @@ export function NumberParameter(props: NumberParameterProps) {
       precision={props.precision}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       onInput={props.onInput}
       onChange={props.onChange}
     />
@@ -1021,7 +1031,7 @@ export function SliderParameter(props: SliderParameterProps) {
       density={props.density ?? "compact"}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onInput={props.onInput}
       onChange={props.onChange}
@@ -1049,7 +1059,7 @@ export function CheckboxParameter(props: CheckboxParameterProps) {
       indeterminate={props.indeterminate}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       onChange={props.onChange}
     />
   </ParameterLayout>
@@ -1074,7 +1084,7 @@ export function SwitchParameter(props: SwitchParameterProps) {
       checked={props.checked}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onChange={props.onChange}
     />
@@ -1102,7 +1112,7 @@ export function SelectParameter(props: SelectParameterProps) {
       state={props.state}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       onChange={props.onChange}
     />
   </ParameterLayout>
@@ -1130,7 +1140,7 @@ export function CycleParameter(props: CycleParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       open={props.open}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onChange={props.onChange}
       onOpenChange={props.onOpenChange}
@@ -1159,7 +1169,7 @@ export function OptionGroupParameter(props: OptionGroupParameterProps) {
       density="compact"
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onChange={props.onChange}
     />
@@ -1186,7 +1196,7 @@ export function ColorParameter(props: ColorParameterProps) {
       open={props.open}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onInput={props.onInput}
       onChange={props.onChange}
@@ -1219,7 +1229,7 @@ export function VectorParameter(props: VectorParameterProps) {
       density={props.density ?? "compact"}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onInput={props.onInput}
       onChange={props.onChange}
@@ -1248,7 +1258,7 @@ export function MatrixParameter(props: MatrixParameterProps) {
       density={props.density ?? "compact"}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onInput={props.onInput}
       onChange={props.onChange}
@@ -1277,7 +1287,7 @@ export function PathParameter(props: PathParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       density="compact"
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       browseTitle={props.browseTitle}
       style={compactFieldStyle}
       onInput={props.onInput}
@@ -1308,7 +1318,7 @@ export function ReferenceParameter(props: ReferenceParameterProps) {
       disabled={props.disabled}
       readOnly={props.readOnly}
       density="compact"
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onActivate={props.onActivate}
       onPick={props.onPick}
@@ -1340,7 +1350,7 @@ export function CollectionParameter(props: CollectionParameterProps) {
       density="compact"
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.title}
+      title={props.connected === true ? undefined : props.title}
       style={compactFieldStyle}
       onSelect={props.onSelect}
       onAdd={props.onAdd}
@@ -1365,6 +1375,9 @@ export function OutputParameter(props: OutputParameterProps) {
     style={props.style}
     onSocketActivate={props.onSocketActivate}
   >
-    <ParameterOutput value={props.value} />
+    <ParameterOutput
+      value={props.value}
+      title={props.connected === true ? undefined : props.title}
+    />
   </ParameterLayout>
 }

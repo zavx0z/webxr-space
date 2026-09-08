@@ -59,7 +59,7 @@ function WindowActionButton(props: WindowActionButtonProps) {
     iconSrc={props.action.iconSrc}
     iconOnly={props.action.iconSrc !== undefined}
     iconAction={props.action.iconSrc !== undefined}
-    title={props.action.label}
+    title={props.action.iconSrc === undefined ? undefined : props.action.label}
     ariaLabel={props.action.label}
     disabled={props.action.disabled}
     onClick={onClick}

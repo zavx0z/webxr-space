@@ -39,7 +39,6 @@ export function PathField(props: PathFieldProps) {
   const browseUnavailable = props.onBrowse === undefined
   return <div
     data-has-label={hasLabel ? "true" : undefined}
-    title={props.title}
     style={css`
       box-sizing: border-box;
       display: flex;
@@ -150,7 +149,7 @@ export function PathField(props: PathFieldProps) {
         label="Browse"
         iconSrc={folderIcon}
         variant="contained"
-        title={props.browseTitle ?? "Browse"}
+        title={props.browseTitle}
         disabled={props.disabled === true || props.readOnly === true || browseUnavailable}
         style={css`
           width: 30px;

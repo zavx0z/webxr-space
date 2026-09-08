@@ -51,7 +51,7 @@ function FrameHandleButton(props: FrameHandleButtonProps) {
     iconSrc={props.handle.iconSrc}
     iconOnly={props.handle.iconSrc !== undefined}
     iconAction={props.handle.iconSrc !== undefined}
-    title={props.handle.label}
+    title={props.handle.iconSrc === undefined ? undefined : props.handle.label}
     ariaLabel={props.handle.label}
     disabled={props.handle.disabled}
     onClick={onClick}

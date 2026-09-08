@@ -104,6 +104,9 @@ export function Socket(props: SocketProps) {
   const glyphWidth = shape === "volume-grid" ? 6 : SOCKET_GLYPH_SIZE
   const glyphHeight = shape === "line" ? 3 : shape === "volume-grid" ? 6 : SOCKET_GLYPH_SIZE
   const rowGlyphTop = (NODE_ROW_HEIGHT - glyphHeight) / 2
+  const title = presentation === "endpoint"
+    ? props.title ?? `${props.label} · ${preset.label}`
+    : props.title ?? (props.label === preset.label ? undefined : preset.label)
   return <button
     type="button"
     aria-label={`${props.label} · ${props.direction}`}
@@ -121,7 +124,7 @@ export function Socket(props: SocketProps) {
     data-volume-grid={shape === "volume-grid" ? "true" : undefined}
     data-presentation={presentation}
     data-connected={props.connected === true ? "true" : undefined}
-    title={props.title ?? `${props.label} · ${preset.label}`}
+    title={title}
     onClick={props.onActivate}
     style={css`
       box-sizing: border-box;
