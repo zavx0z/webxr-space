@@ -3,7 +3,6 @@
   "schemaVersion": 1,
   "kind": "project",
   "id": "webxr",
-  "label": "WebXR",
   "packages": [
     {"declaration": "../engine/.storybook/manifest.json"},
     {"declaration": "../dom/.storybook/manifest.json"},

@@ -3,6 +3,5 @@
   "schemaVersion": 1,
   "kind": "package",
   "id": "@zavx0z/renderer",
-  "label": "Рендерер",
   "packageJson": "../package.json"
 }

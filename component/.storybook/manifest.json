@@ -3,6 +3,5 @@
   "schemaVersion": 1,
   "kind": "package",
   "id": "@zavx0z/component",
-  "label": "Компоненты",
   "packageJson": "../package.json"
 }
