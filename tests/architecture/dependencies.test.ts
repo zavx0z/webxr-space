@@ -107,7 +107,8 @@ function internalPackageName(specifier: string): PackageName | null {
 }
 
 function isProductionSource(file: string): boolean {
-  return !file.split("/").some(segment => excludedSourceSegments.has(segment))
+  return !/\.(?:test|spec|fixture)\.[cm]?[jt]sx?$/u.test(file) &&
+    !file.split("/").some(segment => excludedSourceSegments.has(segment))
 }
 
 function loaderFor(file: string): "js" | "jsx" | "ts" | "tsx" {
