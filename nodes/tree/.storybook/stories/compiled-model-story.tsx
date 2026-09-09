@@ -1,4 +1,5 @@
 import {createRoot, useState} from "@zavx0z/component"
+import {Button} from "@zavx0z/ui/buttons/button"
 import type {Document, Element, HTMLElement} from "@zavx0z/dom"
 import {getScenario, type ModelScenario, type ScenarioResult} from "./scenarios.ts"
 
@@ -61,29 +62,15 @@ function ScenarioView(props: Readonly<{
       >
         {props.scenario.description}
       </p>
-      <button
-        type="button"
+      <Button
+        label={buttonLabel}
+        tone="primary"
         disabled={state.pending}
         onClick={rerun}
         style={css`
           align-self: flex-start;
-          padding: 8px 12px;
-          border: 1px solid #6484b6;
-          border-radius: 6px;
-          color: #ffffff;
-          background: #29476f;
-
-          &:hover {
-            background: #345987;
-          }
-
-          &:disabled {
-            opacity: 0.5;
-          }
         `}
-      >
-        {buttonLabel}
-      </button>
+      />
       <p
         role="status"
         style={css`

@@ -6,7 +6,7 @@ import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {runtime} from "../.storybook/runtime.ts"
 
 const workspace = resolve(import.meta.dir, "../../..")
-Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "nodes/tree")]}))
+Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "nodes/tree"), resolve(workspace, "ui")]}))
 const subjects = await import("../.storybook/stories/subjects.ts")
 await import("../.storybook/stories/compiled-model-story.tsx")
 

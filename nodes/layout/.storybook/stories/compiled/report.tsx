@@ -1,4 +1,5 @@
 import {createRoot, useState} from "@zavx0z/component"
+import {Button} from "@zavx0z/ui/buttons/button"
 import type {Document, Element, HTMLElement, Node} from "@zavx0z/dom"
 import {algorithmReport, type LayoutReport} from "../reports.ts"
 import {workerReport} from "../worker-reports.ts"
@@ -42,7 +43,9 @@ function ReportView(props: Readonly<{initial: LayoutReport; run: () => Promise<L
     >
       {report.description}
     </p>
-    <button
+    <Button
+      label={buttonLabel}
+      tone="primary"
       disabled={pending}
       onClick={async () => {
         setPending(true)
@@ -57,19 +60,8 @@ function ReportView(props: Readonly<{initial: LayoutReport; run: () => Promise<L
       }}
       style={css`
         align-self: flex-start;
-        padding: 8px 14px;
-        color: #ffffff;
-        background-color: #36516f;
-        border-radius: 5px;
-        border: 1px solid #607d9f;
-
-        &:disabled {
-          opacity: 0.5;
-        }
       `}
-    >
-      {buttonLabel}
-    </button>
+    />
     <p
       role="alert"
       hidden={error === ""}
