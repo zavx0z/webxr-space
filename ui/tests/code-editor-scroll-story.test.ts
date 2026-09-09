@@ -28,7 +28,7 @@ for (const [descriptor, height, tooltip] of [
       const neighbor = owner.querySelector("aside")!
       const lines = [...code.querySelectorAll("[data-line-index]")]
       expect(owner.ownerDocument).toBe(document)
-      for (const tag of ["canvas", "space", "viewpoint", "xr-hud", "display"]) {
+      for (const tag of ["canvas", "space", "viewpoint", "hud", "display"]) {
         expect(owner.querySelectorAll(tag)).toHaveLength(0)
       }
       expect(editor.getAttribute("aria-readonly")).toBe("true")

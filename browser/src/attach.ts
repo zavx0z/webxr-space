@@ -53,7 +53,6 @@ import {
   XRAssetElement,
   XRGeometryElement,
   XRGroupElement,
-  XRHUDElement,
   XRLightElement,
   XRLineElement,
   XRLineSegmentsElement,
@@ -63,6 +62,7 @@ import {
   XRTextElement,
   type SpaceTree,
 } from "@zavx0z/space"
+import {HUDElement} from "@zavx0z/dom/hud"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import {
@@ -150,7 +150,7 @@ export type RootKeyInput = Readonly<{
 /** Читает существующую проекцию того же Document, не создавая Renderer или отдельный ввод. */
 export type RootDocumentProjection = Readonly<{
   kind: "display" | "hud"
-  owner: DisplayElement | XRHUDElement
+  owner: DisplayElement | HUDElement
   readFrame(): RenderFrame | null
   subscribeFrames(listener: (frame: RenderFrame) => void): () => void
   projectPoint(point: Readonly<{x: number; y: number}>): Readonly<{x: number; y: number}> | null
@@ -191,15 +191,15 @@ export type Root = Readonly<{
   presentedFrame: number
   disposed: boolean
   getProjection(owner: SpaceElement): RootSpaceProjection
-  getProjection(owner: DisplayElement | XRHUDElement): RootDocumentProjection
+  getProjection(owner: DisplayElement | HUDElement): RootDocumentProjection
   subscribePresented(listener: (sequence: number) => void): () => void
   dispatchKey(
-    owner: DisplayElement | XRHUDElement,
+    owner: DisplayElement | HUDElement,
     target: SemanticHTMLElement,
     input: RootKeyInput,
   ): boolean
   dispatchText(
-    owner: DisplayElement | XRHUDElement,
+    owner: DisplayElement | HUDElement,
     target: SemanticHTMLElement,
     text: string,
   ): boolean
@@ -371,7 +371,7 @@ export const createAttachedRoot = async (
 
   const objects = new Map<XRObjectElement, ObjectProjection>()
   const animations = new Map<XRAnimationElement, AnimationProjection>()
-  const projectionBindings = new Map<DisplayElement | XRHUDElement, ProjectionBinding>()
+  const projectionBindings = new Map<DisplayElement | HUDElement, ProjectionBinding>()
   environment.read().clipboard.configure(
     () => readRenderedSelectionText([...projectionBindings.values()].map(binding => binding.runtime.frame), document.getSelection()),
     () => runtime.nativeInputHost.synchronize(),
@@ -391,11 +391,11 @@ export const createAttachedRoot = async (
     },
   )
   let projectionListeners = new WeakMap<
-    DisplayElement | XRHUDElement,
+    DisplayElement | HUDElement,
     Set<(frame: RenderFrame) => void>
   >()
   let projectionHandles = new WeakMap<
-    DisplayElement | XRHUDElement,
+    DisplayElement | HUDElement,
     RootDocumentProjection
   >()
   const presentedListeners = new Set<(sequence: number) => void>()
@@ -499,7 +499,7 @@ export const createAttachedRoot = async (
   const synchronizeInputOwner = (): void => {
     let owner: Element | null = document.activeElement
     while (owner !== null) {
-      if ((owner instanceof DisplayElement || owner instanceof XRHUDElement) && owner.parentElement === space) break
+      if ((owner instanceof DisplayElement || owner instanceof HUDElement) && owner.parentElement === space) break
       owner = owner.parentElement
     }
     if (runtime.nativeInputHost.owner !== owner) runtime.nativeInputHost.setActiveRoot(owner)
@@ -527,7 +527,7 @@ export const createAttachedRoot = async (
       else if (target instanceof ViewPointElement) cameraDirty = true
       else if (target instanceof DisplayElement) {
         displayDirty = true
-      } else if (target instanceof XRHUDElement) {
+      } else if (target instanceof HUDElement) {
         hudDirty = true
       } else if (target instanceof XRObjectElement) {
         dirtyObjects.add(target)
@@ -563,7 +563,7 @@ export const createAttachedRoot = async (
   environment.connect(runtime.requestRender)
 
   const requireDocumentProjectionRuntime = (
-    owner: DisplayElement | XRHUDElement,
+    owner: DisplayElement | HUDElement,
   ): ProjectionRuntime => {
     assertActive(disposed)
     if (owner.ownerDocument !== document) {
@@ -577,7 +577,7 @@ export const createAttachedRoot = async (
   }
 
   const createProjectionHandle = (
-    owner: DisplayElement | XRHUDElement,
+    owner: DisplayElement | HUDElement,
   ): RootDocumentProjection => {
     const kind = owner instanceof DisplayElement ? "display" : "hud"
     return Object.freeze({
@@ -627,10 +627,10 @@ export const createAttachedRoot = async (
 
   function getProjection(owner: SpaceElement): RootSpaceProjection
   function getProjection(
-    owner: DisplayElement | XRHUDElement,
+    owner: DisplayElement | HUDElement,
   ): RootDocumentProjection
   function getProjection(
-    owner: SpaceElement | DisplayElement | XRHUDElement,
+    owner: SpaceElement | DisplayElement | HUDElement,
   ): RootProjection {
     if (owner instanceof SpaceElement) {
       if (owner !== space) throw new Error("Space projection belongs to another Root")
@@ -937,13 +937,13 @@ const synchronizeHud = (
 const synchronizeProjectionBindings = (
   tree: SpaceTree,
   runtime: DocumentSpaceRuntime,
-  bindings: Map<DisplayElement | XRHUDElement, ProjectionBinding>,
+  bindings: Map<DisplayElement | HUDElement, ProjectionBinding>,
   listeners: WeakMap<
-    DisplayElement | XRHUDElement,
+    DisplayElement | HUDElement,
     ReadonlySet<(frame: RenderFrame) => void>
   >,
 ): void => {
-  const desired = new Map<DisplayElement | XRHUDElement, ProjectionRuntime>()
+  const desired = new Map<DisplayElement | HUDElement, ProjectionRuntime>()
   for (const element of tree.displays) {
     const plane = runtime.getPlane(element)
     if (plane && plane.root === element) desired.set(element, plane)
@@ -970,7 +970,7 @@ const synchronizeProjectionBindings = (
 }
 
 const releaseProjectionBindings = (
-  bindings: Map<DisplayElement | XRHUDElement, ProjectionBinding>,
+  bindings: Map<DisplayElement | HUDElement, ProjectionBinding>,
 ): void => {
   for (const binding of bindings.values()) binding.unsubscribe()
   bindings.clear()

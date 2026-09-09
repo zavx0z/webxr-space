@@ -1,3 +1,4 @@
+import type {HUDElement} from "@zavx0z/dom/hud"
 import type {SpaceElement} from "@zavx0z/dom/space"
 import type {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import type {JsxSourceElement} from "./jsx-runtime.ts"
@@ -106,6 +107,7 @@ export type StandardIntrinsicElements = Readonly<{
 }>
 
 export type TemplateIntrinsicElements = StandardIntrinsicElements & Readonly<{
+  hud: IntrinsicElementProperties<HUDElement>
   space: IntrinsicElementProperties<SpaceElement>
   viewpoint: IntrinsicElementProperties<ViewPointElement>
   display: IntrinsicElementProperties<DisplayElement>

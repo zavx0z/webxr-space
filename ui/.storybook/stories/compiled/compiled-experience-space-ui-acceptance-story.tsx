@@ -1,8 +1,8 @@
 import {DisplayElement} from "@zavx0z/dom/display"
 import {
   readSpaceTree,
-  XRHUDElement,
 } from "@zavx0z/space"
+import {HUDElement} from "@zavx0z/dom/hud"
 import {Button} from "@zavx0z/ui/buttons/button"
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {createRoot, useState} from "@zavx0z/component"
@@ -67,7 +67,7 @@ function createCompiledExperienceSpaceUiAcceptanceStory(
     throw new Error("UI display acceptance requires a host-owned @zavx0z/space Display")
   }
   if (projection === "hud" && tree.hud === null) {
-    throw new Error("UI HUD acceptance requires a host-owned @zavx0z/space HUD")
+    throw new Error("UI HUD acceptance requires a host-owned @zavx0z/dom/hud HUDElement")
   }
 
   const staging = document.createElement("div")
@@ -109,7 +109,7 @@ function assertProjectionOwner(
   let ancestor = owner.parentElement
   while (ancestor !== null) {
     if (projection === "display" && ancestor instanceof DisplayElement) return
-    if (projection === "hud" && ancestor instanceof XRHUDElement) return
+    if (projection === "hud" && ancestor instanceof HUDElement) return
     ancestor = ancestor.parentElement
   }
   throw new Error(`UI acceptance owner is not mounted inside the host ${projection}`)

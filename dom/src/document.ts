@@ -1,3 +1,4 @@
+import {HUDElement} from "../hud/index.ts"
 import {SpaceElement} from "../space/index.ts"
 import {ViewPointElement} from "../viewpoint/index.ts"
 import {DisplayElement} from "../display/index.ts"
@@ -136,6 +137,7 @@ export type DocumentOptions = Readonly<{
 }>
 
 export interface HTMLElementTagNameMap {
+  hud: HUDElement
   space: SpaceElement
   viewpoint: ViewPointElement
   display: DisplayElement
@@ -229,6 +231,7 @@ export class Document extends Node {
   createElement(localName: string): Element {
     const normalizedLocalName = String(localName).toLowerCase()
     switch (normalizedLocalName) {
+      case "hud": return new HUDElement(this)
       case "space": return new SpaceElement(this)
       case "viewpoint": return new ViewPointElement(this)
       case "display": return new DisplayElement(this)

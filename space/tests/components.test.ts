@@ -17,7 +17,6 @@ const owners = Object.freeze([
   ["abstractions/animation.tsx", "xr-animation"],
   ["shapes/geometry.tsx", "xr-geometry"],
   ["shaders/material.tsx", "xr-material"],
-  ["portals/hud.tsx", "xr-hud"],
 ] as const)
 
 describe("Публичные пространственные компоненты", () => {

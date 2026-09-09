@@ -23,9 +23,9 @@ test("Space и ViewPoint создаются без регистрации фаб
 test("Space принимает пространственные объекты и один HUD, сохраняя проверки структуры", () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
   const space = document.createElement("space")
-  space.append(document.createElement("xr-group"), document.createElement("xr-hud"))
+  space.append(document.createElement("xr-group"), document.createElement("hud"))
   expect(space.children.length, "Объект и HUD должны принадлежать той же сцене").toBe(2)
   expect(() => space.append(document.createElement("div")), "Обычный HTML должен находиться внутри Display или HUD").toThrow("only spatial elements")
   expect(() => space.append(document.createElement("xr-material")), "Ресурс материала не должен становиться корнем сцены").toThrow("does not accept")
-  expect(() => space.append(document.createElement("xr-hud")), "Второй HUD должен отклоняться").toThrow("at most one HUD")
+  expect(() => space.append(document.createElement("hud")), "Второй HUD должен отклоняться").toThrow("at most one HUD")
 })

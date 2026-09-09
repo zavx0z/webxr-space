@@ -4,7 +4,6 @@ import {
   XRAssetElement,
   XRGeometryElement,
   XRGroupElement,
-  XRHUDElement,
   XRLightElement,
   XRLineElement,
   XRLineSegmentsElement,
@@ -25,5 +24,4 @@ export const createSpaceElementFactories = (): Readonly<Record<string, DocumentE
     "xr-animation": document => new XRAnimationElement(document),
     "xr-geometry": document => new XRGeometryElement(document),
     "xr-material": document => new XRMaterialElement(document),
-    "xr-hud": document => new XRHUDElement(document),
   })

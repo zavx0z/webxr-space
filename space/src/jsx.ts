@@ -7,7 +7,6 @@ import type {
   XRGeometryElement,
   XRGeometryProjectionFactory,
   XRGroupElement,
-  XRHUDElement,
   XRLightElement,
   XRLineElement,
   XRLineSegmentsElement,
@@ -94,11 +93,6 @@ export type XRMaterialIntrinsicProperties = Readonly<{
   ref?: SpaceRef<XRMaterialElement> | null | undefined
 }>
 
-export type XRHUDIntrinsicProperties = SpatialChildren<XRHUDElement> & Readonly<{
-  id?: string | undefined
-  distance?: number | undefined
-}>
-
 declare module "@zavx0z/dom" {
   interface HTMLElementTagNameMap {
     "xr-asset": XRAssetElement
@@ -111,7 +105,6 @@ declare module "@zavx0z/dom" {
     "xr-animation": XRAnimationElement
     "xr-geometry": XRGeometryElement
     "xr-material": XRMaterialElement
-    "xr-hud": XRHUDElement
   }
 }
 
@@ -128,7 +121,6 @@ declare module "@zavx0z/template/jsx-runtime" {
       "xr-animation": XRAnimationIntrinsicProperties
       "xr-geometry": XRGeometryIntrinsicProperties
       "xr-material": XRMaterialIntrinsicProperties
-      "xr-hud": XRHUDIntrinsicProperties
     }
   }
 }

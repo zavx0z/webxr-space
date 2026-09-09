@@ -41,13 +41,13 @@ import {
   XRAssetElement,
   XRGeometryElement,
   XRGroupElement,
-  XRHUDElement,
   XRLightElement,
   XRLineElement,
   XRMaterialElement,
   XRMeshElement,
   XRTextElement,
 } from "@zavx0z/space"
+import {HUDElement} from "../../dom/hud/index.ts"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import * as publicApi from "../src/index.ts"
@@ -103,7 +103,7 @@ test("проекции без id сохраняют runtime, подписки и
   second.width = 254
   second.height = 680 * 25.4 / 96
   second.setAttribute("style", "width: 960px; height: 680px")
-  const hud = root.document.createElement("xr-hud") as XRHUDElement
+  const hud = root.document.createElement("hud") as HUDElement
   const button = root.document.createElement("button")
   first.append(button)
   root.document.transaction(() => root.space.append(first, second, hud))
@@ -169,7 +169,7 @@ test("[BRW-004] attach монтирует один Document и синхрони�
   display.width = 254
   display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
-  const hud = document.createElement("xr-hud") as XRHUDElement
+  const hud = document.createElement("hud") as HUDElement
   display.id = "display"
   hud.id = "hud"
   document.transaction(() => {
@@ -485,7 +485,7 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
   display.width = 254
   display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
-  const hud = experience.document.createElement("xr-hud") as XRHUDElement
+  const hud = experience.document.createElement("hud") as HUDElement
   const button = experience.document.createElement("button")
   display.id = "display-projection"
   display.setAttribute("style", "width: 320px; height: 180px")
@@ -572,7 +572,7 @@ test("[BRW-017] semantic key dispatch проверяет projection owner, targe
   display.width = 254
   display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
-  const hud = experience.document.createElement("xr-hud") as XRHUDElement
+  const hud = experience.document.createElement("hud") as HUDElement
   const button = experience.document.createElement("button")
   const other = experience.document.createElement("button")
   display.id = "key-display"
@@ -966,7 +966,7 @@ test("Browser createRoot: render preserves component state, Element identity and
       const space = document.createElement("space") as SpaceElement
       space.append(document.createElement("viewpoint"))
       const text = document.createTextNode("")
-      const hud = document.createElement("xr-hud")
+      const hud = document.createElement("hud")
       hud.append(text)
       space.append(hud)
       return {nodes: [link, space], bindings: [bindText(text), bindRef(space)]}
@@ -1085,7 +1085,7 @@ test("Browser createRoot: renders queued during loading present the latest props
       const space = document.createElement("space")
       space.append(document.createElement("viewpoint"))
       const text = document.createTextNode("")
-      const hud = document.createElement("xr-hud")
+      const hud = document.createElement("hud")
       hud.append(text)
       space.append(hud)
       return {nodes: [space], bindings: [bindText(text)]}

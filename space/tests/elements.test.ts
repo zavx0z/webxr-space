@@ -6,7 +6,8 @@ import {
   SphereGeometry,
   ThinFilmMaterial,
 } from "@zavx0z/engine"
-import {XRAnimationElement, XRAssetElement, XRGeometryElement, XRGroupElement, XRHUDElement, XRLightElement, XRLineElement, XRLineSegmentsElement, XRMaterialElement, XRMeshElement, XRObjectElement, XRTextElement, createSpaceElementFactories, readSpaceTree} from "../src/index.ts"
+import {XRAnimationElement, XRAssetElement, XRGeometryElement, XRGroupElement, XRLightElement, XRLineElement, XRLineSegmentsElement, XRMaterialElement, XRMeshElement, XRObjectElement, XRTextElement, createSpaceElementFactories, readSpaceTree} from "../src/index.ts"
+import {HUDElement} from "../../dom/hud/index.ts"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
@@ -30,7 +31,7 @@ describe("Пространственные элементы одного Documen
     const geometry = document.createElement("xr-geometry")
     const material = document.createElement("xr-material")
     const display = document.createElement("display")
-    const hud = document.createElement("xr-hud")
+    const hud = document.createElement("hud")
 
     expect(space).toBeInstanceOf(SpaceElement)
     expect((space as SpaceElement).background).toBe("#000000")
@@ -48,7 +49,7 @@ describe("Пространственные элементы одного Documen
     expect(geometry).toBeInstanceOf(XRGeometryElement)
     expect(material).toBeInstanceOf(XRMaterialElement)
     expect(display).toBeInstanceOf(DisplayElement)
-    expect(hud).toBeInstanceOf(XRHUDElement)
+    expect(hud).toBeInstanceOf(HUDElement)
     for (const element of [
       space,
       viewPoint,
@@ -132,7 +133,7 @@ describe("Пространственные элементы одного Documen
     const space = document.createElement("space") as SpaceElement
     const viewPoint = document.createElement("viewpoint") as ViewPointElement
     const display = document.createElement("display") as DisplayElement
-    const hud = document.createElement("xr-hud") as XRHUDElement
+    const hud = document.createElement("hud") as HUDElement
     display.id = "main"
     hud.id = "hud"
     space.append(viewPoint, display, hud)
@@ -171,7 +172,7 @@ describe("Пространственные элементы одного Documen
   test("[SPC-004] переносит один UI Element между Display и HUD без замены", () => {
     const document = createSpaceDocument()
     const display = document.createElement("display") as DisplayElement
-    const hud = document.createElement("xr-hud") as XRHUDElement
+    const hud = document.createElement("hud") as HUDElement
     const button = document.createElement("button")
     let clicks = 0
     button.textContent = "Состояние"

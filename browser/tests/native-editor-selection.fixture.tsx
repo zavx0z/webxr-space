@@ -1,4 +1,3 @@
-import {HUD} from "@zavx0z/space/portals/hud"
 import {useSpace} from "@zavx0z/browser"
 import {ClipboardMenu} from "@zavx0z/ui/menus/clipboard-menu"
 import {Editor} from "@zavx0z/ui/widgets/editor"
@@ -85,9 +84,9 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
           languageId="typescript"
         />
       </display>
-      <HUD>
+      <hud>
         <ClipboardHud />
-      </HUD>
+      </hud>
     </space>
   )
 }

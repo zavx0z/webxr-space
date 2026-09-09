@@ -9,6 +9,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./hud": "./hud/index.ts",
     "./space": "./space/index.ts",
     "./viewpoint": "./viewpoint/index.ts",
     "./display": "./display/index.ts",
@@ -65,8 +66,8 @@
     "./html/vector-path-element": "./src/html-vector-path-element.ts"
   },
   "scripts": {
-    "typecheck": "tsc --project tsconfig.json --pretty false && tsc --project display/tests/tsconfig.test.json --pretty false && tsc --project space/tests/tsconfig.test.json --pretty false && tsc --project viewpoint/tests/tsconfig.test.json --pretty false",
-    "test": "bun test --parallel tests display/tests space/tests viewpoint/tests",
+    "typecheck": "tsc --project tsconfig.json --pretty false && tsc --project display/tests/tsconfig.test.json --pretty false && tsc --project space/tests/tsconfig.test.json --pretty false && tsc --project viewpoint/tests/tsconfig.test.json --pretty false && tsc --project hud/tests/tsconfig.test.json --pretty false",
+    "test": "bun test --parallel tests display/tests space/tests viewpoint/tests hud/tests",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

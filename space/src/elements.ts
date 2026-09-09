@@ -397,13 +397,3 @@ export class XRMaterialElement extends XRElement {
     throw new TypeError("Material cannot contain children")
   }
 }
-
-export class XRHUDElement extends XRElement {
-  override get spaceChildKind(): "hud" { return "hud" }
-  constructor(ownerDocument: Document) {
-    super(ownerDocument, "xr-hud")
-  }
-
-  get distance(): number { return numberAttribute(this, "distance", 1000) }
-  set distance(value: number) { setNumberAttribute(this, "distance", value) }
-}

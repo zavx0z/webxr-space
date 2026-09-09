@@ -31,9 +31,9 @@ function App() {
       />
       <space frameloop="demand">
         <viewpoint />
-        <HUD>
+        <hud>
           <Toolbar />
-        </HUD>
+        </hud>
       </space>
     </>
   )
@@ -80,7 +80,7 @@ Presentation — диагностика существующего прилож�
 Root-компонента или второго Space. Правила владельцев заданы в
 [PROJECT.md](../PROJECT.md).
 
-`<display>` и `<HUD>` работают без `id`: регистрация, ввод и `getProjection(element)`
+`<display>` и `<hud>` работают без `id`: регистрация, ввод и `getProjection(element)`
 используют сам Element. Атрибут `id` можно задать для своих CSS-селекторов или
 поиска. Его изменение сохраняет Renderer, подписки и захват указателя.
 Mesh, Group, Geometry, Material, Asset и Animation также удерживаются по Element;

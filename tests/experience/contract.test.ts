@@ -6,7 +6,8 @@ import {
   Event,
   HTMLButtonElement,
 } from "../../dom/src/index.ts"
-import {createSpaceElementFactories, readSpaceTree, XRHUDElement} from "../../space/src/index.ts"
+import {createSpaceElementFactories, readSpaceTree} from "../../space/src/index.ts"
+import {HUDElement} from "../../dom/hud/index.ts"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
@@ -20,7 +21,7 @@ const createProjectionTree = () => {
   const space = document.createElement("space") as SpaceElement
   const viewPoint = document.createElement("viewpoint") as ViewPointElement
   const display = document.createElement("display") as DisplayElement
-  const hud = document.createElement("xr-hud") as XRHUDElement
+  const hud = document.createElement("hud") as HUDElement
   display.id = "main"
   hud.id = "hud"
   space.append(viewPoint, display, hud)

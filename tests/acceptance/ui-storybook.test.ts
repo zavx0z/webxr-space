@@ -9,7 +9,8 @@ import {
   type Document,
   type Node,
 } from "@zavx0z/dom"
-import {createSpaceElementFactories, readSpaceTree, XRGroupElement, XRHUDElement} from "@zavx0z/space"
+import {createSpaceElementFactories, readSpaceTree, XRGroupElement} from "@zavx0z/space"
+import {HUDElement} from "../../dom/hud/index.ts"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
@@ -51,7 +52,7 @@ const createSemanticExperience = () => {
   const space = document.createElement("space") as SpaceElement
   const viewPoint = document.createElement("viewpoint") as ViewPointElement
   const display = document.createElement("display") as DisplayElement
-  const hud = document.createElement("xr-hud") as XRHUDElement
+  const hud = document.createElement("hud") as HUDElement
   display.id = "storybook-display"
   hud.id = "storybook-workbench"
   space.append(viewPoint, display, hud)
@@ -72,7 +73,7 @@ const loadAcceptanceStories = async () => {
 
 const mountStory = async (
   document: Document,
-  host: DisplayElement | XRHUDElement,
+  host: DisplayElement | HUDElement,
   descriptor: OwnerStoryDescriptor,
 ) => {
   const abort = new AbortController()
@@ -189,7 +190,7 @@ test("[UI-ACCEPT-LOCAL-002] actual UI owner работает в Display и HUD, 
     assertRequirement(
       mountedHud.node.parentNode === hud,
       "UI-ACCEPT-LOCAL-002",
-      "actual HUD acceptance story должна пройти afterPresent внутри real XRHUDElement",
+      "actual HUD acceptance story должна пройти afterPresent внутри real HUDElement",
     )
   } finally {
     mountedHud.session.dispose()

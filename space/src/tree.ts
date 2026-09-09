@@ -1,11 +1,12 @@
 import type {Document} from "@zavx0z/dom"
 import {DisplayElement} from "@zavx0z/dom/display"
-import {XRHUDElement, XRMeshElement, XRObjectElement} from "./elements.ts"
+import {XRMeshElement, XRObjectElement} from "./elements.ts"
+import {HUDElement} from "@zavx0z/dom/hud"
 import {SpaceElement} from "@zavx0z/dom/space"
 import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
 export type SpaceHUDProjection = Readonly<{
-  element: XRHUDElement
+  element: HUDElement
   distance: number
 }>
 
@@ -38,7 +39,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
   }
 
   const hudElements = space.children.filter(
-    (child): child is XRHUDElement => child instanceof XRHUDElement,
+    (child): child is HUDElement => child instanceof HUDElement,
   )
   const hudElement = hudElements[0] ?? null
 

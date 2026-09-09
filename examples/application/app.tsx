@@ -1,5 +1,4 @@
 import {useRef, useState} from "@zavx0z/component"
-import {HUD} from "@zavx0z/space/portals/hud"
 import {Mesh} from "@zavx0z/space/shapes/mesh"
 import {Geometry} from "@zavx0z/space/shapes/geometry"
 import {Material} from "@zavx0z/space/shaders/material"
@@ -96,9 +95,9 @@ export function App() {
     >
       <DisplayContent />
     </display>
-    <HUD>
+    <hud>
       <HUDContent />
-    </HUD>
+    </hud>
   </space>
 }
 
