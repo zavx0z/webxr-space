@@ -83,12 +83,19 @@ export class DisplayElement extends HTMLElement {
     this.setAttribute("height", String(validPhysicalSize(value, "height")))
   }
 
-  get viewport(): Readonly<{width: number; height: number}> {
+  get viewport(): Readonly<{ width: number; height: number }> {
     const value = metrics.get(this)
     return Object.freeze({width: value?.width ?? 0, height: value?.height ?? 0})
   }
-  get pixelWidth(): number { return metrics.get(this)?.pixelWidth ?? 0 }
-  get pixelHeight(): number { return metrics.get(this)?.pixelHeight ?? 0 }
+
+  get pixelWidth(): number {
+    return metrics.get(this)?.pixelWidth ?? 0
+  }
+
+  get pixelHeight(): number {
+    return metrics.get(this)?.pixelHeight ?? 0
+  }
+
   get dpi(): DisplayMetrics["dpi"] {
     return metrics.get(this)?.dpi ?? emptyDpi
   }
