@@ -135,7 +135,7 @@ test("[NODES-STORYBOOK-002] каждый route вычисляет реальны
       expect(Array.from(owner.querySelectorAll("[data-frame-id]"))
         .filter(node => "localName" in node && node.localName === "section"))
         .toHaveLength(scenario.frames)
-      expect(owner.querySelector('button[data-action="fit-node-tree"]')).not.toBeNull()
+      expect(owner.querySelector('button[aria-label="Вписать"]')).not.toBeNull()
       expect(values).toMatchObject({
         route: scenario.route,
         direction: scenario.direction,

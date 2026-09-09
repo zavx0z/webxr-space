@@ -380,7 +380,7 @@ function pending(mounted: Mounted): boolean {
 }
 
 function fit(mounted: Mounted): Element {
-  const result = mounted.element.querySelector('[data-action="fit-node-tree"]')
+  const result = mounted.element.querySelector('button[aria-label="Вписать"]')
   if (result === null) throw new Error("Missing NodeEditor fit control")
   return result
 }

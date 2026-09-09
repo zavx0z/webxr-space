@@ -14,7 +14,8 @@ import type {
 } from "@nodes/tree"
 import {type FunctionComponent} from "@zavx0z/component"
 import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {chevronDownIcon, chevronRightIcon} from "@zavx0z/ui/themes/icons"
+import {Button, IconButton} from "@zavx0z/ui/buttons/button"
+import {chevronDownIcon, chevronRightIcon, visibilityOnIcon} from "@zavx0z/ui/themes/icons"
 import {
   nodeSocketLayoutPortId,
   type NodeRect,
@@ -157,7 +158,6 @@ export function Node(props: NodeProps) {
   const collapseLabel = props.collapsed === true ? `Развернуть ${props.label}` : `Свернуть ${props.label}`
   const collapseIcon = props.collapsed === true ? chevronRightIcon : chevronDownIcon
   const previewLabel = props.preview?.enabled === true ? "Скрыть preview" : "Показать preview"
-  const previewGlyph = props.preview?.enabled === true ? "◉" : "○"
   const toggleCollapse = (event: Event) => {
     event.stopPropagation()
     props.onCollapseChange?.(props.collapsed !== true, event)
@@ -260,45 +260,18 @@ export function Node(props: NodeProps) {
         }
       `}
     >
-      <button
-        type="button"
-        data-action="collapse-node"
+      <Button
+        label={collapseLabel}
+        iconSrc={collapseIcon}
+        iconOnly={true}
+        variant="text"
+        size="small"
         aria-label={collapseLabel}
         aria-expanded={String(props.collapsed !== true)}
         title={collapseLabel}
         disabled={props.onCollapseChange === undefined}
         onClick={toggleCollapse}
-        style={css`
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 12px;
-          min-width: 12px;
-          height: 20px;
-          min-height: 20px;
-          padding: 0;
-          border: 0;
-          background: transparent;
-          color: #dedede;
-          font-size: var(--font-size-sm);
-        `}
-      >
-        <img
-          src={collapseIcon}
-          alt=""
-          aria-hidden="true"
-          width={14}
-          height={14}
-          style={css`
-            position: relative;
-            top: 2px;
-            display: block;
-            width: 14px;
-            height: 14px;
-          `}
-        />
-      </button>
+      />
       <strong
         data-node-label=""
         title={props.title}
@@ -332,37 +305,14 @@ export function Node(props: NodeProps) {
       >
         {props.category ?? ""}
       </small>
-      <button
-        type="button"
-        data-action="toggle-preview"
-        aria-label={previewLabel}
-        aria-pressed={String(props.preview?.enabled === true)}
-        title={previewLabel}
-        hidden={props.preview === undefined}
+      {props.preview !== undefined ? <IconButton
+        label={previewLabel}
+        iconSrc={visibilityOnIcon}
+        size="small"
+        selected={props.preview.enabled === true}
         disabled={props.onPreviewChange === undefined}
         onClick={togglePreview}
-        style={css`
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 12px;
-          min-width: 12px;
-          height: 20px;
-          min-height: 20px;
-          padding: 0;
-          border: 0;
-          background: transparent;
-          color: #dedede;
-          font-size: var(--font-size-sm);
-
-          &[hidden] {
-            display: none;
-          }
-        `}
-      >
-        {previewGlyph}
-      </button>
+      /> : null}
     </header>
     <section
       aria-label={`${props.label} body`}

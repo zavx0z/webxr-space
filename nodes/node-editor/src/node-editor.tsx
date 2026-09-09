@@ -1,5 +1,6 @@
 import {GridPoint, type GridPointValue} from "./grid-point/src/grid-point.tsx"
 import {metadataBoolean} from "@nodes/parameters/shared"
+import {Button} from "@zavx0z/ui/buttons/button"
 import {
   Element as DomElement,
 } from "@zavx0z/dom"
@@ -267,24 +268,13 @@ export function NodeEditor(props: NodeEditorProps) {
       >
         {Math.round(transform.scale * 100)}%
       </span>
-      <button
-        type="button"
-        data-action="fit-node-tree"
+      <Button
+        label="Вписать"
+        aria-label="Вписать"
+        size="small"
         disabled={!interactive}
         onClick={fit}
-        style={css`
-          box-sizing: border-box;
-          height: 20px;
-          padding: 1px 6px;
-          border: 1px solid #4a4a4a;
-          border-radius: 3px;
-          background: #303030;
-          color: #d8d8d8;
-          font-size: 9px;
-        `}
-      >
-        Вписать
-      </button>
+      />
     </header>
     <div
       role="application"
