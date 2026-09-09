@@ -10,12 +10,12 @@ import {
   TextMaterial,
   TrueTypeFont,
   ViewPoint,
-} from "../../engine/src/index.ts"
-import {RendererWebGpuDisplayPlane} from "../../webgpu/src/display-plane.ts"
-import {Renderer, type RenderComposition} from "../../webgpu/src/renderer/index.ts"
-import type {RenderItem} from "../../webgpu/src/renderer/utils/render-list.ts"
+} from "../../../engine/src/index.ts"
+import {RendererWebGpuDisplayPlane} from "../../../webgpu/src/display-plane.ts"
+import {Renderer, type RenderComposition} from "../../../webgpu/src/renderer/index.ts"
+import type {RenderItem} from "../../../webgpu/src/renderer/utils/render-list.ts"
 
-const font = new TrueTypeFont(await Bun.file(new URL("../../engine/static/fonts/inter-regular.ttf", import.meta.url)).arrayBuffer())
+const font = new TrueTypeFont(await Bun.file(new URL("../../../engine/static/fonts/inter-regular.ttf", import.meta.url)).arrayBuffer())
 const viewport = {width: 1024, height: 512}
 
 type RasterTarget = {texture: GPUTexture; multisample: GPUTexture; depth: GPUTexture; width: number; height: number}

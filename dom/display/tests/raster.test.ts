@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
-import {Object3D, Vector3} from "../../engine/src/index.ts"
-import {RendererWebGpuDisplayPlane} from "../../webgpu/src/display-plane.ts"
-import {Renderer} from "../../webgpu/src/renderer/index.ts"
+import {Object3D, Vector3} from "../../../engine/src/index.ts"
+import {RendererWebGpuDisplayPlane} from "../../../webgpu/src/display-plane.ts"
+import {Renderer} from "../../../webgpu/src/renderer/index.ts"
 
 function surface() {
   return new RendererWebGpuDisplayPlane({content: new Object3D(), viewport: {width: 960, height: 480}, worldUnitsPerPixel: 25.4 / 96, rasterSize: {width: 100, height: 50}})

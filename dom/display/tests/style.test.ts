@@ -1,9 +1,9 @@
-import {createDocumentInteractionState} from "../../renderer/src/pseudo-state.ts"
+import {createDocumentInteractionState} from "../../../renderer/src/pseudo-state.ts"
 import {expect, test} from "bun:test"
-import {createDocument, acquireDocumentAuthorStyleSheetOwner} from "../src/index.ts"
-import {DisplayElement} from "./index.ts"
-import {readDisplayStyle} from "../../renderer/src/display-style.ts"
-import {createDocumentRenderer} from "../../renderer/src/renderer.ts"
+import {createDocument, acquireDocumentAuthorStyleSheetOwner} from "../../src/index.ts"
+import {DisplayElement} from "../index.ts"
+import {readDisplayStyle} from "../../../renderer/src/display-style.ts"
+import {createDocumentRenderer} from "../../../renderer/src/renderer.ts"
 
 function fixture(css: string, width = 320, height = 180) {
   const document = createDocument()

@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
-import {Object3D, ViewPoint} from "../../engine/src/index.ts"
-import {RendererWebGpuDisplayPlane} from "../../webgpu/src/display-plane.ts"
-import {selectDisplayRaster} from "../../webgpu/src/display-render-mode.ts"
+import {Object3D, ViewPoint} from "../../../engine/src/index.ts"
+import {RendererWebGpuDisplayPlane} from "../../../webgpu/src/display-plane.ts"
+import {selectDisplayRaster} from "../../../webgpu/src/display-render-mode.ts"
 
 const viewport = {width: 1024, height: 512}
 

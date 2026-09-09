@@ -1,10 +1,10 @@
 import {expect, test} from "bun:test"
-import {DisplayElement} from "./index.ts"
-import type {Node as SemanticNode} from "../src/index.ts"
-import {Quaternion, type TrueTypeFont} from "../../engine/src/index.ts"
-import type {DocumentPlaneRuntime} from "../../browser/src/plane-runtime.ts"
-import type {DocumentSpacePlaneRegistration, DocumentSpacePlaneUpdate} from "../../browser/src/space-runtime.ts"
-import {attachFixture, createFakeRuntime, createFakeRuntimeState} from "../../browser/tests/experience.fixture.ts"
+import {DisplayElement} from "../index.ts"
+import type {Node as SemanticNode} from "../../src/index.ts"
+import {Quaternion, type TrueTypeFont} from "../../../engine/src/index.ts"
+import type {DocumentPlaneRuntime} from "../../../browser/src/plane-runtime.ts"
+import type {DocumentSpacePlaneRegistration, DocumentSpacePlaneUpdate} from "../../../browser/src/space-runtime.ts"
+import {attachFixture, createFakeRuntime, createFakeRuntimeState} from "../../../browser/tests/experience.fixture.ts"
 
 test("[BRW-ATTACH-005] нормализация ориентации Display не создаёт бесконечную перерисовку", async () => {
   const state = createFakeRuntimeState()

@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test"
-import {createDocument, UIEvent} from "../src/index.ts"
-import {DisplayElement, publishDisplayMetrics, type DisplayMetrics} from "./index.ts"
+import {createDocument, UIEvent} from "../../src/index.ts"
+import {DisplayElement, publishDisplayMetrics, type DisplayMetrics} from "../index.ts"
 
 test("display создаётся без регистрации в Space и сообщает только об изменении опубликованных размеров", async () => {
   const document = createDocument()

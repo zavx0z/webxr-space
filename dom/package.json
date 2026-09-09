@@ -63,8 +63,8 @@
     "./html/vector-path-element": "./src/html-vector-path-element.ts"
   },
   "scripts": {
-    "typecheck": "tsc --project tsconfig.json --pretty false && tsc --project display/tsconfig.test.json --pretty false",
-    "test": "bun test --parallel tests display",
+    "typecheck": "tsc --project tsconfig.json --pretty false && tsc --project display/tests/tsconfig.test.json --pretty false",
+    "test": "bun test --parallel tests display/tests",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {
