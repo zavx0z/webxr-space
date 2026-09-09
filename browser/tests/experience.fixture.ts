@@ -215,6 +215,7 @@ export const createFakeRuntime = (
         root: registration.root,
         viewport: registration.viewport,
         worldUnitsPerPixel: registration.worldUnitsPerPixel,
+        worldUnitsPerPixelY: registration.worldUnitsPerPixelY ?? registration.worldUnitsPerPixel,
         rasterSize: registration.rasterSize,
         plane,
         frame,
@@ -242,6 +243,7 @@ export const createFakeRuntime = (
       const mutable = held as unknown as {
         viewport: {width: number; height: number}
         worldUnitsPerPixel: number
+        worldUnitsPerPixelY: number
         rasterSize?: {width: number; height: number}
         plane: {position: Vector3; scale: Vector3; visible: boolean; quaternion: {x: number; y: number; z: number; w: number}}
       }
@@ -249,7 +251,9 @@ export const createFakeRuntime = (
       if (update.viewport !== undefined) mutable.viewport = update.viewport
       if (update.worldUnitsPerPixel !== undefined) {
         mutable.worldUnitsPerPixel = update.worldUnitsPerPixel
+        if (update.worldUnitsPerPixelY === undefined) mutable.worldUnitsPerPixelY = update.worldUnitsPerPixel
       }
+      if (update.worldUnitsPerPixelY !== undefined) mutable.worldUnitsPerPixelY = update.worldUnitsPerPixelY
       const transform = update.transform
       if (transform?.scale !== undefined) mutable.plane.scale.set(transform.scale.x, transform.scale.y, transform.scale.z)
       if (transform?.quaternion !== undefined) Object.assign(mutable.plane.quaternion, transform.quaternion)

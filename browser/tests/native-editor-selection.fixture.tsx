@@ -55,7 +55,8 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
       />
       <display
         id="alpha"
-        dpi={96}
+        width={158.75}
+        height={280 * 25.4 / 96}
         style={css`
           display: block;
           width: 600px;
@@ -66,7 +67,8 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
       </display>
       <display
         id="beta"
-        dpi={96}
+        width={158.75}
+        height={280 * 25.4 / 96}
         style={css`
           translate: 652mm 0 0;
           display: block;

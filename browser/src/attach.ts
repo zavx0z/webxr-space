@@ -874,6 +874,7 @@ const synchronizeDisplays = (
         root: display.element,
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
+        worldUnitsPerPixelY: display.worldUnitsPerPixelY,
         rasterSize: display.rasterSize,
         transform,
       })
@@ -885,6 +886,7 @@ const synchronizeDisplays = (
       current.viewport.width !== viewport.width ||
       current.viewport.height !== viewport.height ||
       current.worldUnitsPerPixel !== display.worldUnitsPerPixel ||
+      current.worldUnitsPerPixelY !== display.worldUnitsPerPixelY ||
       current.plane.position.x !== transform.position.x ||
       current.plane.position.y !== transform.position.y ||
       current.plane.position.z !== transform.position.z ||
@@ -900,6 +902,7 @@ const synchronizeDisplays = (
       runtime.updatePlane(display.element, {
         viewport,
         worldUnitsPerPixel: display.worldUnitsPerPixel,
+        worldUnitsPerPixelY: display.worldUnitsPerPixelY,
         rasterSize: display.rasterSize,
         transform,
       })

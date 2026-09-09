@@ -1,6 +1,7 @@
 import {expect, test} from "bun:test"
 import {Object3D, Ray, Vector3} from "@zavx0z/engine"
 import {RendererWebGpuDocumentPlane} from "../src/document-plane.ts"
+import {RendererWebGpuDisplayPlane} from "../src/display-plane.ts"
 
 class CountedObject extends Object3D {
   updates = 0
@@ -85,4 +86,50 @@ test("projection rays keep parallel, behind, empty and singular cases fail close
   expect(() => f.plane.worldPointToDocument(new Vector3())).toThrow()
   expect(() => f.plane.intersectRay(new Ray(new Vector3(0, 0, 10), new Vector3(0, 0, -1)))).toThrow()
   expect([f.content.updates, f.sibling.updates]).toEqual([1, 0])
+})
+
+test("прямоугольные пиксели сохраняют физические координаты, обратную проекцию и лучевой ввод", () => {
+  const content = new Object3D()
+  const plane = new RendererWebGpuDisplayPlane({
+    content,
+    viewport: {width: 1200, height: 800},
+    worldUnitsPerPixel: 0.5,
+    worldUnitsPerPixelY: 0.25,
+    rasterSize: {width: 1200, height: 800},
+  })
+  plane.position.set(30, -120, 900)
+  plane.quaternion.setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2)
+  const point = {x: 100, y: 120}
+  const world = plane.documentPointToWorld(point)
+  expect(world.distanceTo(new Vector3(-220, -120, 970))).toBeCloseTo(0, 5)
+  const back = plane.worldPointToDocument(world)
+  expect(back.x).toBeCloseTo(point.x, 5)
+  expect(back.y).toBeCloseTo(point.y, 5)
+  expect(content.position).toEqual(new Vector3(-300, 100, 0))
+  expect(content.scale).toEqual(new Vector3(0.5, 0.25, 0.5))
+  expect(plane.scale).toEqual(new Vector3(1, 1, 1))
+
+  const inside = plane.intersectRay(new Ray(new Vector3(-220, -200, 970), new Vector3(0, 1, 0)))!
+  expect(inside.inside).toBe(true)
+  expect(inside.documentPoint.x).toBeCloseTo(100, 5)
+  expect(inside.documentPoint.y).toBeCloseTo(120, 5)
+  expect(inside.distance).toBeCloseTo(80, 5)
+
+  const outside = plane.intersectRay(new Ray(new Vector3(380, -200, 1025), new Vector3(0, 1, 0)))!
+  expect(outside.inside).toBe(false)
+  expect(outside.documentPoint.x).toBeCloseTo(1300, 5)
+  expect(outside.documentPoint.y).toBeCloseTo(-100, 5)
+  expect(outside.nearestDocumentPoint).toEqual({x: 1200, y: 0})
+  expect(outside.nearestWorldPoint.distanceTo(new Vector3(330, -120, 1000))).toBeCloseTo(0, 5)
+  expect(outside.nearestDistance).toBeCloseTo(Math.hypot(50, 25), 5)
+
+  const corner = plane.documentPointToWorld({x: 0, y: 0}).applyMatrix4(plane.rasterProjection())
+  expect(corner.x).toBeCloseTo(-1, 5)
+  expect(corner.y).toBeCloseTo(1, 5)
+  expect(plane.surface.scale).toEqual(new Vector3(600, 200, 1))
+  plane.resize({width: 600, height: 400})
+  expect(plane.worldUnitsPerPixel).toBe(0.5)
+  expect(plane.worldUnitsPerPixelY).toBe(0.25)
+  expect(plane.surface.scale).toEqual(new Vector3(300, 100, 1))
+  expect(plane.scale).toEqual(new Vector3(1, 1, 1))
 })

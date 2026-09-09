@@ -15,6 +15,7 @@ export type RendererWebGpuDocumentPlaneOptions = Readonly<{
   content: Object3D
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  worldUnitsPerPixelY?: number
   rasterSize?: RenderViewport
 }>
 
@@ -48,6 +49,7 @@ export class RendererWebGpuDocumentPlane extends Object3D {
   public readonly content: Object3D
   #viewport: RenderViewport
   #worldUnitsPerPixel: number
+  #worldUnitsPerPixelY: number
 
   constructor(options: RendererWebGpuDocumentPlaneOptions) {
     super()
@@ -59,10 +61,12 @@ export class RendererWebGpuDocumentPlane extends Object3D {
     }
     const viewport = validateViewport(options.viewport)
     const worldUnitsPerPixel = positive(options.worldUnitsPerPixel, "worldUnitsPerPixel")
-    validatePhysicalExtents(viewport, worldUnitsPerPixel)
+    const worldUnitsPerPixelY = positive(options.worldUnitsPerPixelY ?? worldUnitsPerPixel, "worldUnitsPerPixelY")
+    validatePhysicalExtents(viewport, worldUnitsPerPixel, worldUnitsPerPixelY)
     this.content = options.content
     this.#viewport = viewport
     this.#worldUnitsPerPixel = worldUnitsPerPixel
+    this.#worldUnitsPerPixelY = worldUnitsPerPixelY
     this.name = "@zavx0z/webgpu:document-plane"
     this.renderLayer = "world"
     this.frustumCulled = false
@@ -78,9 +82,13 @@ export class RendererWebGpuDocumentPlane extends Object3D {
     return this.#worldUnitsPerPixel
   }
 
+  public get worldUnitsPerPixelY(): number {
+    return this.#worldUnitsPerPixelY
+  }
+
   /** Resizes only the logical bounds while preserving every Engine owner. */
   public resize(viewport: RenderViewport): void {
-    this.configure(viewport, this.#worldUnitsPerPixel)
+    this.configure(viewport, this.#worldUnitsPerPixel, this.#worldUnitsPerPixelY)
   }
 
   /** Changes physical density without replacing the plane or content root. */
@@ -89,12 +97,18 @@ export class RendererWebGpuDocumentPlane extends Object3D {
   }
 
   /** Atomically changes logical bounds and physical density in place. */
-  public configure(viewport: RenderViewport, worldUnitsPerPixel: number): void {
+  public configure(
+    viewport: RenderViewport,
+    worldUnitsPerPixel: number,
+    worldUnitsPerPixelY: number = worldUnitsPerPixel,
+  ): void {
     const nextViewport = validateViewport(viewport)
     const nextScale = positive(worldUnitsPerPixel, "worldUnitsPerPixel")
-    validatePhysicalExtents(nextViewport, nextScale)
+    const nextScaleY = positive(worldUnitsPerPixelY, "worldUnitsPerPixelY")
+    validatePhysicalExtents(nextViewport, nextScale, nextScaleY)
     this.#viewport = nextViewport
     this.#worldUnitsPerPixel = nextScale
+    this.#worldUnitsPerPixelY = nextScaleY
     this.#syncContentTransform()
   }
 
@@ -108,7 +122,7 @@ export class RendererWebGpuDocumentPlane extends Object3D {
     const matrixWorld = this.#currentWorldMatrix()
     target.set(
       (documentPoint.x - this.#viewport.width / 2) * this.#worldUnitsPerPixel,
-      (this.#viewport.height / 2 - documentPoint.y) * this.#worldUnitsPerPixel,
+      (this.#viewport.height / 2 - documentPoint.y) * this.#worldUnitsPerPixelY,
       0,
     ).applyMatrix4(matrixWorld)
     validateVector(target, "converted world point")
@@ -124,7 +138,7 @@ export class RendererWebGpuDocumentPlane extends Object3D {
     const local = point.clone().applyMatrix4(this.#currentInverseWorldMatrix())
     return documentPoint(
       local.x / this.#worldUnitsPerPixel + this.#viewport.width / 2,
-      this.#viewport.height / 2 - local.y / this.#worldUnitsPerPixel,
+      this.#viewport.height / 2 - local.y / this.#worldUnitsPerPixelY,
     )
   }
 
@@ -189,12 +203,12 @@ export class RendererWebGpuDocumentPlane extends Object3D {
     validateVector(worldPoint, "Ray intersection")
     const documentAtIntersection = documentPoint(
       localPoint.x / this.#worldUnitsPerPixel + this.#viewport.width / 2,
-      this.#viewport.height / 2 - localPoint.y / this.#worldUnitsPerPixel,
+      this.#viewport.height / 2 - localPoint.y / this.#worldUnitsPerPixelY,
     )
     const nearestDocumentPoint = this.nearestDocumentPoint(documentAtIntersection)
     const nearestWorldPoint = new Vector3(
       (nearestDocumentPoint.x - this.#viewport.width / 2) * this.#worldUnitsPerPixel,
-      (this.#viewport.height / 2 - nearestDocumentPoint.y) * this.#worldUnitsPerPixel,
+      (this.#viewport.height / 2 - nearestDocumentPoint.y) * this.#worldUnitsPerPixelY,
       0,
     ).applyMatrix4(matrixWorld)
     validateVector(nearestWorldPoint, "converted world point")
@@ -218,8 +232,9 @@ export class RendererWebGpuDocumentPlane extends Object3D {
   #syncContentTransform(): void {
     const {width, height} = this.#viewport
     const scale = this.#worldUnitsPerPixel
-    this.content.position.set(-width * scale / 2, height * scale / 2, 0)
-    this.content.scale.set(scale, scale, scale)
+    const scaleY = this.#worldUnitsPerPixelY
+    this.content.position.set(-width * scale / 2, height * scaleY / 2, 0)
+    this.content.scale.set(scale, scaleY, scale)
     this.content.visible = width > 0 && height > 0
     this.content.updateMatrix()
   }
@@ -253,10 +268,11 @@ const validateViewport = (viewport: RenderViewport): RenderViewport => {
 const validatePhysicalExtents = (
   viewport: RenderViewport,
   worldUnitsPerPixel: number,
+  worldUnitsPerPixelY: number,
 ): void => {
   if (
     !Number.isFinite(viewport.width * worldUnitsPerPixel) ||
-    !Number.isFinite(viewport.height * worldUnitsPerPixel)
+    !Number.isFinite(viewport.height * worldUnitsPerPixelY)
   ) {
     throw new RangeError("Document plane physical extents must be finite")
   }

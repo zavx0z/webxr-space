@@ -96,8 +96,12 @@ test("проекции без id сохраняют runtime, подписки и
     })
   })
   const first = root.document.createElement("display") as DisplayElement
+  first.width = 254
+  first.height = 680 * 25.4 / 96
   first.setAttribute("style", "width: 960px; height: 680px")
   const second = root.document.createElement("display") as DisplayElement
+  second.width = 254
+  second.height = 680 * 25.4 / 96
   second.setAttribute("style", "width: 960px; height: 680px")
   const hud = root.document.createElement("xr-hud") as XRHUDElement
   const button = root.document.createElement("button")
@@ -162,6 +166,8 @@ test("[BRW-004] attach монтирует один Document и синхрони�
   const space = experience.space
   const viewPoint = experience.viewPoint
   const display = document.createElement("display") as DisplayElement
+  display.width = 254
+  display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "display"
@@ -476,6 +482,8 @@ test("[BRW-015] projection handles читают frames и bounded route input", 
     async options => createFakeRuntime(options, state),
   )
   const display = experience.document.createElement("display") as DisplayElement
+  display.width = 254
+  display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
   const hud = experience.document.createElement("xr-hud") as XRHUDElement
   const button = experience.document.createElement("button")
@@ -561,6 +569,8 @@ test("[BRW-017] semantic key dispatch проверяет projection owner, targe
     async options => createFakeRuntime(options, state),
   )
   const display = experience.document.createElement("display") as DisplayElement
+  display.width = 254
+  display.height = 680 * 25.4 / 96
   display.setAttribute("style", "width: 960px; height: 680px")
   const hud = experience.document.createElement("xr-hud") as XRHUDElement
   const button = experience.document.createElement("button")

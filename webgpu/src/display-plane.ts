@@ -8,37 +8,43 @@ export class DisplayRasterMaterial extends ImageMaterial {
 }
 
 /**
-One physical display and its finite pixel matrix. The existing content graph
-is rendered to a GPU attachment, then sampled on the surface. No extra semantic
-Document, Canvas, Space, Renderer or ViewPoint is created.
+Физический дисплей с прямым рисованием существующего графа содержимого.
+Поверхность для текстуры создаётся только при выборе растрового режима.
+Номинальная матрица сохраняется независимо от наличия GPU-текстуры.
 */
 export class RendererWebGpuDisplayPlane extends RendererWebGpuDocumentPlane {
-  readonly surface: Mesh
-  readonly rasterMaterial = new DisplayRasterMaterial()
+  #surface: Mesh | null = null
   #rasterSize: RenderViewport
 
   constructor(options: RendererWebGpuDocumentPlaneOptions & {rasterSize: RenderViewport}) {
     super(options)
     this.#rasterSize = validateRasterSize(options.rasterSize)
-    this.surface = new Mesh(new TexturedPlaneGeometry(), this.rasterMaterial)
-    this.surface.frustumCulled = false
-    this.surface.name = "display-pixel-matrix"
-    this.add(this.surface)
-    this.syncSurface()
   }
 
+  get rasterSurface(): Mesh | null { return this.#surface }
+  get surface(): Mesh {
+    if (this.#surface === null) {
+      this.#surface = new Mesh(new TexturedPlaneGeometry(), new DisplayRasterMaterial())
+      this.#surface.frustumCulled = false
+      this.#surface.name = "display-pixel-matrix"
+      this.add(this.#surface)
+      this.syncSurface()
+    }
+    return this.#surface
+  }
+  get rasterMaterial(): DisplayRasterMaterial { return this.surface.material as DisplayRasterMaterial }
   get rasterSize(): RenderViewport { return this.#rasterSize }
   setRasterSize(value: RenderViewport): void { this.#rasterSize = validateRasterSize(value) }
 
-  override configure(viewport: RenderViewport, units: number): void {
-    super.configure(viewport, units)
+  override configure(viewport: RenderViewport, units: number, unitsY: number = units): void {
+    super.configure(viewport, units, unitsY)
     this.syncSurface()
   }
 
   /** Derived orthographic raster projection of this plane, not an independently owned camera. */
   rasterProjection(): Matrix4 {
     const width = this.viewport.width * this.worldUnitsPerPixel
-    const height = this.viewport.height * this.worldUnitsPerPixel
+    const height = this.viewport.height * this.worldUnitsPerPixelY
     const inverse = new Matrix4().copy(this.matrixWorld).invert()
     return new Matrix4().set(
       2 / width, 0, 0, 0,
@@ -49,9 +55,14 @@ export class RendererWebGpuDisplayPlane extends RendererWebGpuDocumentPlane {
   }
 
   private syncSurface(): void {
-    this.surface.scale.set(this.viewport.width * this.worldUnitsPerPixel, this.viewport.height * this.worldUnitsPerPixel, 1)
-    this.rasterMaterial.boxAspect = this.viewport.width / this.viewport.height
-    this.surface.updateMatrix()
+    const surface = this.#surface
+    if (surface === null) return
+    const width = this.viewport.width * this.worldUnitsPerPixel
+    const height = this.viewport.height * this.worldUnitsPerPixelY
+    surface.scale.set(width, height, 1)
+    const material = surface.material as DisplayRasterMaterial
+    material.boxAspect = width / height
+    surface.updateMatrix()
   }
 }
 

@@ -30,21 +30,45 @@ function angle(value: string): number {
   return result
 }
 
-/** Spatial Display uses standard individual-transform syntax in the platform's Z-up basis. */
+/**
+CSS-разрешение и физические размеры дают независимую плотность по осям.
+Пространственные CSS-длины сохраняют канонический перевод 96 px на дюйм;
+проценты отсчитываются от физической поверхности, независимо от её разрешения.
+
+@param width - Положительная безопасная целая ширина матрицы в CSS px.
+@param height - Положительная безопасная целая высота матрицы в CSS px.
+@param physicalWidth - Конечная положительная ширина поверхности в миллиметрах.
+@param physicalHeight - Конечная положительная высота поверхности в миллиметрах.
+@throws RangeError Если размеры или вычисленная плотность недопустимы.
+@throws TypeError Если пространственный CSS не поддерживается или некорректен.
+*/
 export function displaySurfaceStyle(
   width: number,
   height: number,
-  dpi: number,
+  physicalWidth: number,
+  physicalHeight: number,
   read: (name: string) => string | undefined,
 ): DisplayStyle {
-  if ((read("box-sizing") ?? "border-box").trim() !== "border-box") throw new TypeError("Display currently requires border-box physical dimensions")
-  const pixelWidth = Math.max(1, Math.round(width * dpi / 96))
-  const pixelHeight = Math.max(1, Math.round(height * dpi / 96))
-  if (!Number.isSafeInteger(pixelWidth) || !Number.isSafeInteger(pixelHeight)) throw new RangeError("Display matrix exceeds safe integer dimensions")
+  if (!Number.isFinite(physicalWidth) || physicalWidth <= 0 || !Number.isFinite(physicalHeight) || physicalHeight <= 0) {
+    throw new RangeError("Display physical width and height attributes must be finite positive millimetres")
+  }
+  if (!Number.isSafeInteger(width) || width <= 0 || !Number.isSafeInteger(height) || height <= 0) {
+    throw new RangeError("Display CSS pixel resolution must use positive safe integer dimensions")
+  }
+  if ((read("box-sizing") ?? "border-box").trim() !== "border-box") throw new TypeError("Display currently requires border-box pixel resolution")
+  const worldUnitsPerPixel = physicalWidth / width
+  const worldUnitsPerPixelY = physicalHeight / height
+  const dpi = {x: width * 25.4 / physicalWidth, y: height * 25.4 / physicalHeight}
+  if (!Number.isFinite(dpi.x) || !Number.isFinite(dpi.y) || dpi.x <= 0 || dpi.y <= 0
+    || worldUnitsPerPixel <= 0 || worldUnitsPerPixelY <= 0) {
+    throw new RangeError("Display derived density and pixel dimensions must be finite positive numbers")
+  }
+  const physicalCssWidth = physicalWidth / MM_PER_PX
+  const physicalCssHeight = physicalHeight / MM_PER_PX
   const translated = (read("translate") ?? "none").trim()
   const t = translated === "none" ? ["0", "0", "0"] : translated.split(/\s+/)
   if (t.length < 1 || t.length > 3) throw new TypeError("Display translate requires one to three lengths")
-  const position = {x: length(t[0]!, width) * MM_PER_PX, y: length(t[1] ?? "0", height) * MM_PER_PX, z: length(t[2] ?? "0", 0, false) * MM_PER_PX}
+  const position = {x: length(t[0]!, physicalCssWidth) * MM_PER_PX, y: length(t[1] ?? "0", physicalCssHeight) * MM_PER_PX, z: length(t[2] ?? "0", 0, false) * MM_PER_PX}
   const scaled = (read("scale") ?? "none").trim()
   const s = scaled === "none" ? ["1"] : scaled.split(/\s+/)
   const scaleNumber = (value: string) => {
@@ -77,8 +101,8 @@ export function displaySurfaceStyle(
     throw new TypeError("Display transform-origin keywords must identify different axes")
   }
   const keyword = (v: string) => ({left: "0%", top: "0%", center: "50%", right: "100%", bottom: "100%"} as Record<string, string>)[v] ?? v
-  const pivot = {x: (length(keyword(origin[0]!), width) - width / 2) * MM_PER_PX,
-    y: (height / 2 - length(keyword(origin[1] ?? "50%"), height)) * MM_PER_PX,
+  const pivot = {x: (length(keyword(origin[0]!), physicalCssWidth) - physicalCssWidth / 2) * MM_PER_PX,
+    y: (physicalCssHeight / 2 - length(keyword(origin[1] ?? "50%"), physicalCssHeight)) * MM_PER_PX,
     z: length(origin[2] ?? "0", 0, false) * MM_PER_PX}
   const x = pivot.x * scale.x, y = pivot.y * scale.y, z = pivot.z * scale.z
   const q = quaternion
@@ -87,6 +111,6 @@ export function displaySurfaceStyle(
   position.y += pivot.y - (y + q.w * ty + q.z * tx - q.x * tz)
   position.z += pivot.z - (z + q.w * tz + q.x * ty - q.y * tx)
   if ((read("transform") ?? "none").trim() !== "none") throw new TypeError("Display currently uses individual translate, rotate and scale properties")
-  return {viewport: {width, height}, pixels: {width: pixelWidth, height: pixelHeight}, dpi,
-    worldUnitsPerPixel: MM_PER_PX, transform: {position, quaternion, scale, visible: true}}
+  return {viewport: {width, height}, pixels: {width, height}, dpi,
+    worldUnitsPerPixel, worldUnitsPerPixelY, transform: {position, quaternion, scale, visible: true}}
 }

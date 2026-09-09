@@ -78,6 +78,7 @@ export type DocumentSpacePlaneRegistration = Readonly<{
   root: Node
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  worldUnitsPerPixelY?: number
   rasterSize?: RenderViewport
   transform?: DocumentSpacePlaneTransform
   tooltipDelayMs?: number
@@ -86,6 +87,7 @@ export type DocumentSpacePlaneRegistration = Readonly<{
 export type DocumentSpacePlaneUpdate = Readonly<{
   viewport?: RenderViewport
   worldUnitsPerPixel?: number
+  worldUnitsPerPixelY?: number
   rasterSize?: RenderViewport
   transform?: DocumentSpacePlaneTransform
 }>
@@ -681,6 +683,7 @@ const createClaimedDocumentSpaceRuntime = async (
       ...(options.fontFaces === undefined ? {} : {fontFaces: options.fontFaces}),
       viewport: registration.viewport,
       worldUnitsPerPixel: registration.worldUnitsPerPixel,
+      ...(registration.worldUnitsPerPixelY === undefined ? {} : {worldUnitsPerPixelY: registration.worldUnitsPerPixelY}),
       ...(registration.rasterSize === undefined ? {} : {rasterSize: registration.rasterSize}),
       interactionState,
       tooltipDelayMs,
@@ -728,8 +731,9 @@ const createClaimedDocumentSpaceRuntime = async (
     const viewport = update.viewport ?? record.runtime.viewport
     if (update.rasterSize !== undefined) record.runtime.setRasterSize(update.rasterSize)
     const worldUnitsPerPixel = update.worldUnitsPerPixel ?? record.runtime.worldUnitsPerPixel
-    if (update.viewport !== undefined || update.worldUnitsPerPixel !== undefined) {
-      record.runtime.resize(viewport, worldUnitsPerPixel)
+    const worldUnitsPerPixelY = update.worldUnitsPerPixelY ?? (update.worldUnitsPerPixel === undefined ? record.runtime.worldUnitsPerPixelY : worldUnitsPerPixel)
+    if (update.viewport !== undefined || update.worldUnitsPerPixel !== undefined || update.worldUnitsPerPixelY !== undefined) {
+      record.runtime.resize(viewport, worldUnitsPerPixel, worldUnitsPerPixelY)
     }
     if (transform !== null) applyTransform(record.runtime, transform)
     if (record.runtime.plane.visible === false) {

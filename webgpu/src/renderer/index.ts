@@ -1,4 +1,5 @@
 import {RendererWebGpuDisplayPlane, DisplayRasterMaterial} from "../display-plane.ts"
+import {selectDisplayRaster} from "../display-render-mode.ts"
 import {Space} from "@zavx0z/engine"
 import {ViewPoint} from "@zavx0z/engine"
 import {Mesh} from "@zavx0z/engine"
@@ -256,6 +257,7 @@ export class Renderer {
   private textDepthCoverPipeline: GPURenderPipeline | null = null
   private readonly displayRasterTargets = new Map<RendererWebGpuDisplayPlane, DisplayRasterTarget>()
   private readonly displayRasterImages = new WeakMap<ImageMaterial, GPUTexture>()
+  private readonly displayRasterModes = new WeakMap<Object3D, WeakSet<RendererWebGpuDisplayPlane>>()
   private displaySampler: GPUSampler | null = null
 
   private imagePipeline: GPURenderPipeline | null = null
@@ -1676,28 +1678,24 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (!this.isReadyToRender()) return
     prepareCompositionWorldMatrices(planned)
 
-    const displayPlanes: RendererWebGpuDisplayPlane[] = []
-    const collectDisplays = (object: Object3D) => {
-      if (!object.visible) return
-      if (object instanceof RendererWebGpuDisplayPlane) displayPlanes.push(object)
-      for (const child of object.children) collectDisplays(child)
-    }
-    collectDisplays(planned.space)
-    const activeDisplays = new Set(displayPlanes)
-    for (const plane of this.displayRasterTargets.keys()) {
-      if (!activeDisplays.has(plane)) this.releaseDisplay(plane)
-    }
-    const excludedRoots = new Set(planned.excludedBaseRoots)
-    for (const plane of displayPlanes) excludedRoots.add(plane.content)
-    this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length + displayPlanes.length)
-    const baseResources = this.viewUniformResources[0]!
-    const baseFrustum = this.prepareCompositionView(0, planned.viewPoint)
     const fullViewport: RendererPhysicalViewport = {
       x: 0,
       y: 0,
       width: Math.max(1, Math.floor(canvas.width)),
       height: Math.max(1, Math.floor(canvas.height)),
     }
+    const rasterDisplays = new Set<RendererWebGpuDisplayPlane>()
+    const excludedRoots = this.prepareDisplayModes(planned.space, planned.viewPoint, fullViewport, rasterDisplays, planned.excludedBaseRoots)
+    const boundedExclusions = planned.boundedViews.map(view =>
+      this.prepareDisplayModes(view.space, view.viewPoint, view.viewport, rasterDisplays))
+    const overlayExclusions = planned.overlays.map(overlay =>
+      this.prepareDisplayModes(overlay, planned.viewPoint, fullViewport, rasterDisplays))
+    for (const plane of this.displayRasterTargets.keys()) {
+      if (!rasterDisplays.has(plane)) this.releaseDisplay(plane)
+    }
+    this.ensureViewUniformResourceCapacity(1 + planned.boundedViews.length + rasterDisplays.size)
+    const baseResources = this.viewUniformResources[0]!
+    const baseFrustum = this.prepareCompositionView(0, planned.viewPoint)
 
     this.updateTextures()
 
@@ -1729,13 +1727,13 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         frameRenderItems,
         lights,
         frustum,
-        undefined,
+        boundedExclusions[index],
         view.space.background,
       )
       this.updateSceneUniforms(resources.sceneUniformBuffer, lights, view.viewPoint.viewMatrix)
       return {root: view.space, layer, resources, viewport: view.viewport, paintBackground: true}
     })
-    const overlayLayers: PreparedCompositionLayer[] = planned.overlays.map((overlay) => {
+    const overlayLayers: PreparedCompositionLayer[] = planned.overlays.map((overlay, index) => {
       return {
         root: overlay,
         layer: this.prepareRenderLayer(
@@ -1743,13 +1741,14 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
           frameRenderItems,
           baseLights,
           baseFrustum,
+          overlayExclusions[index],
         ),
         resources: baseResources,
         viewport: fullViewport,
         paintBackground: false,
       }
     })
-    const rasterLayers = displayPlanes.map((plane, index) => {
+    const rasterLayers = [...rasterDisplays].map((plane, index) => {
       const resourceIndex = 1 + planned.boundedViews.length + index
       const resources = this.viewUniformResources[resourceIndex]!
       const matrix = plane.rasterProjection()
@@ -1875,6 +1874,41 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
       viewProjectionMatrix.elements,
     )
     return this.compositionFrustums[index]!.setFromProjectionMatrix(viewProjectionMatrix)
+  }
+
+  /** Выбирает путь отдельно для каждого вида, не меняя граф и видимость содержимого. */
+  private prepareDisplayModes(
+    root: Object3D,
+    viewPoint: ViewPoint,
+    viewport: RendererPhysicalViewport,
+    rasterDisplays: Set<RendererWebGpuDisplayPlane>,
+    initialExclusions?: ReadonlySet<Object3D>,
+  ): ReadonlySet<Object3D> {
+    const excluded = new Set(initialExclusions)
+    let modes = this.displayRasterModes.get(root)
+    const visit = (object: Object3D): void => {
+      if (!object.visible || excluded.has(object)) return
+      if (object instanceof RendererWebGpuDisplayPlane) {
+        if (selectDisplayRaster(object, viewPoint, viewport, modes?.has(object) ?? false)) {
+          if (!modes) {
+            modes = new WeakSet()
+            this.displayRasterModes.set(root, modes)
+          }
+          modes.add(object)
+          excluded.add(object.content)
+          rasterDisplays.add(object)
+          object.surface.updateWorldMatrix(true, {parents: true, children: false})
+        } else {
+          modes?.delete(object)
+          if (object.rasterSurface) excluded.add(object.rasterSurface)
+        }
+        // Display является границей представления; повторный обход UI здесь не нужен.
+        return
+      }
+      for (const child of object.children) visit(child)
+    }
+    visit(root)
+    return excluded
   }
 
   private pruneRenderBundleCaches(layers: readonly PreparedCompositionLayer[]): void {
@@ -3044,8 +3078,11 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     target?.multisample.destroy()
     target?.depth.destroy()
     this.displayRasterTargets.delete(plane)
-    this.displayRasterImages.delete(plane.rasterMaterial)
-    this.invalidateGeometry(plane.surface.geometry)
+    const surface = plane.rasterSurface
+    if (surface) {
+      this.displayRasterImages.delete(surface.material as DisplayRasterMaterial)
+      this.invalidateGeometry(surface.geometry)
+    }
   }
 
   private ensureDisplayRasterTarget(plane: RendererWebGpuDisplayPlane): DisplayRasterTarget {
@@ -3075,7 +3112,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     current?.multisample.destroy()
     current?.depth.destroy()
     const next = {texture, multisample, depth, width, height}
-    for (const cache of this.renderBundleCaches.values()) cache.clear()
     this.displayRasterTargets.set(plane, next)
     this.displayRasterImages.set(plane.rasterMaterial, texture)
     return next

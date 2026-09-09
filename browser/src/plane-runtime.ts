@@ -46,6 +46,7 @@ export type CreateDocumentPlaneRuntimeOptions = Readonly<{
   measureImage?: (src: string, changed: () => void) => RenderImageSize | null
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  worldUnitsPerPixelY?: number
   rasterSize?: RenderViewport | undefined
   invalidateGeometry(geometry: BufferGeometry): void
   requestFrame(): void
@@ -70,10 +71,11 @@ export type DocumentPlaneRuntime = Readonly<{
   frame: RenderFrame
   viewport: RenderViewport
   worldUnitsPerPixel: number
+  worldUnitsPerPixelY: number
   rasterSize?: RenderViewport | undefined
   disposed: boolean
   flush(): RenderFrame
-  resize(viewport: RenderViewport, worldUnitsPerPixel?: number): RenderFrame
+  resize(viewport: RenderViewport, worldUnitsPerPixel?: number, worldUnitsPerPixelY?: number): RenderFrame
   setRasterSize(size: RenderViewport): void
   pointerMove(input: PointerInput): Element | null
   pointerDown(input: PointerInput): Element | null
@@ -200,6 +202,7 @@ export function createDocumentPlaneRuntimeWithSeams(
       content: backend.root,
       viewport: options.viewport,
       worldUnitsPerPixel: options.worldUnitsPerPixel,
+      ...(options.worldUnitsPerPixelY === undefined ? {} : {worldUnitsPerPixelY: options.worldUnitsPerPixelY}),
       ...(options.rasterSize === undefined ? {} : {rasterSize: options.rasterSize}),
     })
     renderer = seams.createDocumentRenderer({
@@ -264,13 +267,15 @@ export function createDocumentPlaneRuntimeWithSeams(
 
   const resize = (
     viewport: RenderViewport,
-    worldUnitsPerPixel: number = requiredPlane.worldUnitsPerPixel,
+    worldUnitsPerPixel?: number,
+    worldUnitsPerPixelY?: number,
   ): RenderFrame => {
     assertActive(disposed)
     validateViewport(viewport)
-    const scale = finitePositive(worldUnitsPerPixel, "worldUnitsPerPixel")
-    validatePhysicalExtents(viewport, scale)
-    requiredPlane.configure(viewport, scale)
+    const scale = finitePositive(worldUnitsPerPixel ?? requiredPlane.worldUnitsPerPixel, "worldUnitsPerPixel")
+    const scaleY = finitePositive(worldUnitsPerPixelY ?? (worldUnitsPerPixel === undefined ? requiredPlane.worldUnitsPerPixelY : scale), "worldUnitsPerPixelY")
+    validatePhysicalExtents(viewport, scale, scaleY)
+    requiredPlane.configure(viewport, scale, scaleY)
     requiredRenderer.resize(viewport)
     return flush()
   }
@@ -300,6 +305,7 @@ export function createDocumentPlaneRuntimeWithSeams(
     },
     get viewport() { return requiredPlane.viewport },
     get worldUnitsPerPixel() { return requiredPlane.worldUnitsPerPixel },
+    get worldUnitsPerPixelY() { return requiredPlane.worldUnitsPerPixelY },
     get rasterSize() { return requiredPlane instanceof RendererWebGpuDisplayPlane ? requiredPlane.rasterSize : undefined },
     setRasterSize(size: RenderViewport) {
       if (!(requiredPlane instanceof RendererWebGpuDisplayPlane)) throw new TypeError("Only a CSS display has a raster matrix")
@@ -379,7 +385,8 @@ const validateOptions = (options: CreateDocumentPlaneRuntimeOptions): void => {
   }
   validateViewport(options.viewport)
   const scale = finitePositive(options.worldUnitsPerPixel, "worldUnitsPerPixel")
-  validatePhysicalExtents(options.viewport, scale)
+  const scaleY = finitePositive(options.worldUnitsPerPixelY ?? scale, "worldUnitsPerPixelY")
+  validatePhysicalExtents(options.viewport, scale, scaleY)
   if (typeof options.invalidateGeometry !== "function") throw new TypeError("invalidateGeometry must be a function")
   if (typeof options.requestFrame !== "function") throw new TypeError("requestFrame must be a function")
   if (typeof options.requestPresentation !== "function") throw new TypeError("requestPresentation must be a function")
@@ -422,10 +429,11 @@ const finitePositive = (value: number, label: string): number => {
 const validatePhysicalExtents = (
   viewport: RenderViewport,
   worldUnitsPerPixel: number,
+  worldUnitsPerPixelY: number,
 ): void => {
   if (
     !Number.isFinite(viewport.width * worldUnitsPerPixel) ||
-    !Number.isFinite(viewport.height * worldUnitsPerPixel)
+    !Number.isFinite(viewport.height * worldUnitsPerPixelY)
   ) throw new RangeError("document plane physical extents must be finite")
 }
 

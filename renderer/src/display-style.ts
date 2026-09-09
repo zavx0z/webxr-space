@@ -4,13 +4,15 @@ import {DisplayElement} from "@zavx0z/dom/display"
 import {computeStyle, type ComputedStyle} from "./css.ts"
 import {cachedDocumentStyleRules, prepareHostStyleSheets} from "./stylesheet-cache.ts"
 
+/** Канонический перевод CSS-длин в пространственных свойствах; плотность матрицы задаётся отдельно по осям. */
 export const MILLIMETRES_PER_CSS_PIXEL = 25.4 / 96
 
 export type DisplayStyle = Readonly<{
   viewport: Readonly<{width: number; height: number}>
   pixels: Readonly<{width: number; height: number}>
-  dpi: number
+  dpi: Readonly<{x: number; y: number}>
   worldUnitsPerPixel: number
+  worldUnitsPerPixelY: number
   transform: Readonly<{
     position: Readonly<{x: number; y: number; z: number}>
     quaternion: Readonly<{x: number; y: number; z: number; w: number}>
@@ -21,7 +23,7 @@ export type DisplayStyle = Readonly<{
 
 const emptyHost = prepareHostStyleSheets([])
 
-/** Uses the same cascade and stylesheet cache as document layout; never scans consumer CSS. */
+/** Вычисляет разрешение и преобразования через общий CSS-каскад, а физические размеры читает из DOM. */
 export function readDisplayStyle(document: Document, element: DisplayElement, interactionState?: DocumentInteractionState): DisplayStyle {
   const {rules} = cachedDocumentStyleRules(document, emptyHost)
   const ancestors: Element[] = []
@@ -33,6 +35,6 @@ export function readDisplayStyle(document: Document, element: DisplayElement, in
     visible &&= style.display !== "none"
   }
   const surface = style!.displaySurface
-  if (!surface) throw new TypeError("Display requires finite positive CSS width and height")
+  if (!surface) throw new TypeError("Display requires positive integer CSS pixel resolution and physical width and height attributes")
   return {...surface, transform: {...surface.transform, visible: visible && style!.visibility !== "hidden"}}
 }

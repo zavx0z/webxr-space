@@ -27,6 +27,8 @@ test("[BRW-ATTACH-005] нормализация ориентации Display н�
     })
   })
   const display = experience.document.createElement("display") as DisplayElement
+  display.width = 254
+  display.height = 680 * 25.4 / 96
   display.setAttribute("style", `
     width: 960px;
     height: 680px;
@@ -51,6 +53,8 @@ test("CSS-масштаб обновляет существующую проек�
   const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
   const root = await attachFixture({canvas, font: {} as TrueTypeFont}, options => Promise.resolve(createFakeRuntime(options, state)))
   const display = root.document.createElement("display") as DisplayElement
+  display.width = 600
+  display.height = 337.5
   display.setAttribute("style", `
     width: 960px;
     height: 680px;
@@ -92,14 +96,15 @@ test("Изменение CSS и dpi обновляет проекцию и ма�
   const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
   const root = await attachFixture({canvas, font: {} as TrueTypeFont}, options => Promise.resolve(createFakeRuntime(options, state)))
   const display = root.document.createElement("display")
+  display.width = 254
+  display.height = 127
   expect(display, "Созданный дисплей должен быть экземпляром DisplayElement").toBeInstanceOf(DisplayElement)
   display.setAttribute("style", `
-    width: 254mm;
-    height: 127mm;
+    width: 100px;
+    height: 50px;
     translate: 0 0 900mm;
     rotate: x 90deg;
   `)
-  display.dpi = 10
   let resized = 0
   display.addEventListener("resize", () => resized++)
   const button = root.document.createElement("button")
@@ -109,17 +114,17 @@ test("Изменение CSS и dpi обновляет проекцию и ма�
   expect(resized, "Первичная публикация размеров должна вызвать одно событие resize").toBe(1)
   expect(display.pixelWidth, "Начальная ширина матрицы должна составлять 100 пикселей").toBe(100)
   expect(display.pixelHeight, "Начальная высота матрицы должна составлять 50 пикселей").toBe(50)
-  expect(display.viewport.width, "Ширина поверхности 254 мм должна давать 960 CSS px").toBeCloseTo(960)
+  expect(display.viewport.width, "CSS-разрешение должно определять область раскладки шириной 100 пикселей").toBe(100)
+  expect(display.dpi, "Плотность должна вычисляться из разрешения и физических размеров").toEqual({x: 10, y: 10})
   const held = state.planes.get(display)!
   expect(held.rasterSize, "Проекция должна получать матрицу 100 × 50 пикселей").toEqual({width: 100, height: 50})
   const handle = root.getProjection(display)
   expect(handle.kind, "Browser должен предоставлять проекцию типа display").toBe("display")
   button.focus()
   expect(state.nativeOwner, "Сфокусированный дисплей должен становиться владельцем нативного ввода").toBe(display)
-  display.dpi = 192
   display.setAttribute("style", `
-    width: 254mm;
-    height: 127mm;
+    width: 1920px;
+    height: 960px;
     translate: 20mm 0 900mm;
     rotate: x 90deg;
   `)
@@ -130,5 +135,12 @@ test("Изменение CSS и dpi обновляет проекцию и ма�
   expect(held.rasterSize, "При новой плотности проекция должна получать матрицу 1920 × 960").toEqual({width: 1920, height: 960})
   expect(root.document.activeElement, "Изменение CSS и плотности должно сохранять фокус кнопки").toBe(button)
   expect(held.plane.position.x, "Проекция должна учитывать смещение поверхности на 20 мм по X").toBeCloseTo(20)
+  expect(display.dpi, "Новое разрешение должно давать 192 dpi по обеим осям").toEqual({x: 192, y: 192})
+  display.height = 63.5
+  await Promise.resolve()
+  expect(display.dpi, "Изменение физической высоты должно менять только вертикальную плотность").toEqual({x: 192, y: 384})
+  expect(state.planes.get(display), "Изменение физических размеров сохраняет проекцию").toBe(held)
+  expect(held.worldUnitsPerPixelY, "Вертикальный масштаб пикселя должен соответствовать физической высоте").toBeCloseTo(63.5 / 960)
+  expect([held.plane.scale.x, held.plane.scale.y, held.plane.scale.z], "Пересчёт разрешения не должен скалировать физический дисплей").toEqual([1, 1, 1])
   root.unmount()
 })

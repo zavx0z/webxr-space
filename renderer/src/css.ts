@@ -497,9 +497,8 @@ export const computeStyle = (
 
   const displayWidth = parseLength(readValue(values, "width"), fontSize)
   const displayHeight = parseLength(readValue(values, "height"), fontSize)
-  const displaySurface = element instanceof DisplayElement && displayWidth?.unit === "px" && displayHeight?.unit === "px" &&
-    displayWidth.value > 0 && displayHeight.value > 0
-    ? displaySurfaceStyle(displayWidth.value, displayHeight.value, element.dpi, name => readValue(values, name)) : null
+  const displaySurface = element instanceof DisplayElement && displayWidth?.unit === "px" && displayHeight?.unit === "px"
+    ? displaySurfaceStyle(displayWidth.value, displayHeight.value, element.width, element.height, name => readValue(values, name)) : null
 
   return Object.freeze({
     displaySurface,
@@ -2114,13 +2113,22 @@ const parseTransformOrigin = (
   if (value === undefined) return CENTER_ORIGIN
   const parts = splitCssComponents(value.trim().toLowerCase())
   if (parts.length < 1 || parts.length > 2) return null
-  const x = transformOriginAxis(parts[0])
-  const y = transformOriginAxis(parts[1] ?? "center")
+  let xValue = parts[0]
+  let yValue = parts[1] ?? "center"
+  if (xValue === "top" || xValue === "bottom" || yValue === "left" || yValue === "right") {
+    [xValue, yValue] = [yValue, xValue!]
+  }
+  const x = transformOriginAxis(xValue, "x")
+  const y = transformOriginAxis(yValue, "y")
   return x !== null && y !== null ? Object.freeze({x, y}) : null
 }
 
-const transformOriginAxis = (value: string | undefined): CSSLength | null =>
-  value === "center" ? CENTER_PERCENT : parseLength(value)
+const transformOriginAxis = (value: string | undefined, axis: "x" | "y"): CSSLength | null => {
+  if (value === "center") return CENTER_PERCENT
+  if (value === (axis === "x" ? "left" : "top")) return parseLength("0%")
+  if (value === (axis === "x" ? "right" : "bottom")) return parseLength("100%")
+  return parseLength(value)
+}
 
 const validBoxShadow = (value: string): boolean =>
   parseBoxShadow(value, "#000000") !== undefined
