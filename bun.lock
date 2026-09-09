@@ -68,6 +68,29 @@
       "name": "@zavx0z/engine",
       "version": "0.0.0",
     },
+    "markdown": {
+      "name": "@webxr/markdown",
+      "version": "0.0.0",
+      "dependencies": {
+        "markdown-it": "15.0.1",
+        "parse5": "8.0.1",
+      },
+      "devDependencies": {
+        "@zavx0z/highlighter": "link:@zavx0z/highlighter",
+      },
+      "peerDependencies": {
+        "@zavx0z/component": "*",
+        "@zavx0z/dom": "*",
+        "@zavx0z/template": "*",
+        "@zavx0z/ui": "*",
+      },
+      "optionalPeers": [
+        "@zavx0z/component",
+        "@zavx0z/dom",
+        "@zavx0z/template",
+        "@zavx0z/ui",
+      ],
+    },
     "nodes": {
       "name": "@webxr/nodes",
       "version": "0.0.0",
@@ -165,8 +188,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@zavx0z/highlighter": "link:@zavx0z/highlighter",
-        "markdown-it": "15.0.1",
-        "parse5": "8.0.1",
       },
       "devDependencies": {
         "@zavx0z/renderer": "*",
@@ -256,6 +277,8 @@
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
 
     "@webgpu/types": ["@webgpu/types@0.1.68", "", {}, "sha512-3ab1B59Ojb6RwjOspYLsTpCzbNB3ZaamIAxBMmvnNkiDoLTZUOBXZ9p5nAYVEkQlDdf6qAZWi1pqj9+ypiqznA=="],
+
+    "@webxr/markdown": ["@webxr/markdown@workspace:markdown"],
 
     "@webxr/nodes": ["@webxr/nodes@workspace:nodes"],
 

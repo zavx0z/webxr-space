@@ -1,12 +1,12 @@
 import type {Document} from "@zavx0z/dom"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import type {MarkdownProps} from "@zavx0z/ui/views/markdown"
+import type {MarkdownProps} from "@webxr/markdown"
 import {
   MarkdownFixture,
   MarkdownWrappingFixture,
   markdownExampleSource,
   markdownWrappingSource,
-} from "../../../views/markdown.fixture.tsx"
+} from "../../../markdown/tests/markdown.fixture.tsx"
 import {mountOwnerStory} from "../story-types.ts"
 
 export function createCompiledMarkdownProductionStory(document: Document) {
@@ -35,7 +35,7 @@ export function createCompiledMarkdownWrappingStory(document: Document, wrap = t
 
 function source(value: string, wrapping: boolean, wrap = true): string {
   return [
-    'import {Markdown} from "@zavx0z/ui/views/markdown"',
+    'import {Markdown} from "@webxr/markdown"',
     'import {createRoot} from "@zavx0z/component"',
     "",
     `const source = ${JSON.stringify(value)}`,

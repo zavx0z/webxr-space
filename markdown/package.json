@@ -1,0 +1,46 @@
+{
+  "name": "@webxr/markdown",
+  "label": "Markdown",
+  "version": "0.0.0",
+  "description": "Разбор и отображение Markdown через готовые UI-компоненты",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./markdown/src/markdown.tsx",
+    "./parser": "./parser/src/parser.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel markdown/tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.1",
+    "parse5": "8.0.1"
+  },
+  "peerDependencies": {
+    "@zavx0z/component": "*",
+    "@zavx0z/dom": "*",
+    "@zavx0z/template": "*",
+    "@zavx0z/ui": "*"
+  },
+  "devDependencies": {
+    "@zavx0z/highlighter": "link:@zavx0z/highlighter"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/component": {
+      "optional": true
+    },
+    "@zavx0z/dom": {
+      "optional": true
+    },
+    "@zavx0z/template": {
+      "optional": true
+    },
+    "@zavx0z/ui": {
+      "optional": true
+    }
+  }
+}

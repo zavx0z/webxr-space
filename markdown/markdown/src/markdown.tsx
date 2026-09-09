@@ -5,9 +5,9 @@ import {
   type MarkdownInline,
   type MarkdownTableRow,
   type MarkdownTableCell,
-} from "../markdown.ts"
-import {Divider} from "../divider.tsx"
-import {CodeEditor} from "./code-editor.tsx"
+} from "../../parser/src/parser.ts"
+import {Divider} from "@zavx0z/ui/divider"
+import {CodeEditor} from "@zavx0z/ui/views/code-editor"
 
 export type MarkdownProps = Readonly<{
   source: string

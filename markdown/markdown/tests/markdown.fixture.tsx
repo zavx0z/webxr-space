@@ -1,4 +1,4 @@
-import {Markdown, type MarkdownProps} from "./markdown.tsx"
+import {Markdown, type MarkdownProps} from "../src/markdown.tsx"
 
 /** Renderer reproduction: row height must contain text wrapped at the final cell width. */
 export const markdownTableWrappingSource = [
@@ -37,7 +37,7 @@ export const markdownExampleSource = [
   "## Код",
   "",
   "```typescript",
-  'import {Markdown} from "@zavx0z/ui/views/markdown"',
+  'import {Markdown} from "@webxr/markdown"',
   "",
   'const source = "# Документ"',
   "```",

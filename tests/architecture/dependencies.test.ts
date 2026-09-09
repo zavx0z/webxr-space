@@ -10,6 +10,7 @@ const packageDirectories = Object.freeze({
   "@zavx0z/template": "template",
   "@zavx0z/component": "component",
   "@zavx0z/renderer": "renderer",
+  "@webxr/markdown": "markdown",
   "@zavx0z/webgpu": "webgpu",
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",
@@ -33,6 +34,7 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
     "@zavx0z/template": ["@zavx0z/dom"],
     "@zavx0z/component": ["@zavx0z/dom", "@zavx0z/template"],
     "@zavx0z/renderer": ["@zavx0z/dom"],
+    "@webxr/markdown": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui"],
     "@zavx0z/devtools": ["@zavx0z/dom", "@zavx0z/renderer"],
     "@zavx0z/webgpu": ["@zavx0z/engine", "@zavx0z/renderer"],
     "@zavx0z/browser": [

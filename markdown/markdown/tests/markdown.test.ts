@@ -5,18 +5,18 @@ import {createDocument} from "@zavx0z/dom"
 import {registerLanguageHighlighter} from "@zavx0z/highlighter"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import {markdownDestinations, parseMarkdown} from "../markdown.ts"
-import type {MarkdownProps} from "../views/markdown.tsx"
-import {createDocumentRenderer} from "../../renderer/src/index.ts"
+import {markdownDestinations, parseMarkdown} from "../../parser/src/parser.ts"
+import type {MarkdownProps} from "../src/markdown.tsx"
+import {createDocumentRenderer} from "@zavx0z/renderer"
 
-const root = resolve(import.meta.dir, "../..")
+const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({
   cwd: root,
   persistent: true,
-  sourceRoots: [resolve(root, "ui")],
+  sourceRoots: [resolve(root, "markdown"), resolve(root, "ui")],
 }))
 
-const {Markdown} = await import("../views/markdown.tsx")
+const {Markdown} = await import("../src/markdown.tsx")
 const template = Markdown as unknown as CompiledTemplate<MarkdownProps>
 
 function mount(props: MarkdownProps) {
@@ -30,7 +30,7 @@ function mount(props: MarkdownProps) {
 
 describe("Markdown production owner", () => {
   test("algorithm table rows contain all wrapped text inside a flex overview", async () => {
-    const {markdownTableWrappingSource: source} = await import("../views/markdown.fixture.tsx")
+    const {markdownTableWrappingSource: source} = await import("./markdown.fixture.tsx")
     const {component, container, document} = mount({source})
     container.setAttribute("style", "display:flex;flex-direction:column;width:1152px;height:1024px")
     const renderer = createDocumentRenderer({document, root: container, viewport: {width: 1152, height: 1024}})
@@ -87,7 +87,7 @@ describe("Markdown production owner", () => {
     }
   })
   test("CodeEditor memoizes automatic syntax but observes replacement of its language definition", async () => {
-    const {CodeEditor} = await import("../views/code-editor.tsx")
+    const {CodeEditor} = await import("@zavx0z/ui/views/code-editor")
     const languageId = "code-editor-memo-test"
     let calls = 0
     const language = (increment: number) => ({id: languageId, name: languageId, tokenize(lines: readonly string[]) {
@@ -99,7 +99,7 @@ describe("Markdown production owner", () => {
     const host = document.createElement("div")
     document.append(host)
     const component = createRoot(host)
-    const editor = CodeEditor as unknown as CompiledTemplate<import("../views/code-editor.tsx").CodeEditorProps>
+    const editor = CodeEditor as unknown as CompiledTemplate<import("@zavx0z/ui/views/code-editor").CodeEditorProps>
     try {
       component.render(editor, {value: "code", readOnly: true, languageId, title: "First"})
       const line = host.querySelector('code [data-line-index="0"]')
@@ -289,13 +289,13 @@ describe("Markdown production owner", () => {
   })
 
   test("the shared editor retains fixed viewports and real overflow on both axes", async () => {
-    const {CodeEditor} = await import("../views/code-editor.tsx")
+    const {CodeEditor} = await import("@zavx0z/ui/views/code-editor")
     const document = createDocument()
     const container = document.createElement("div")
     document.append(container)
     const component = createRoot(container)
     const value = Array.from({length: 30}, () => "long line ".repeat(20)).join("\n")
-    component.render(CodeEditor as unknown as CompiledTemplate<import("../views/code-editor.tsx").CodeEditorProps>, {
+    component.render(CodeEditor as unknown as CompiledTemplate<import("@zavx0z/ui/views/code-editor").CodeEditorProps>, {
       value,
       readOnly: true,
     })
@@ -342,10 +342,10 @@ describe("Markdown production owner", () => {
 
   test("Markdown and CodeEditor stories reuse one compiled mounting and source lifecycle", async () => {
     const {createCompiledMarkdownProductionStory, createCompiledMarkdownWrappingStory} = await import(
-      "../.storybook/stories/compiled/compiled-markdown-production-story.tsx"
+      "../../.storybook/stories/compiled/compiled-markdown-production-story.tsx"
     )
     const {createCompiledCodeEditorProductionStory} = await import(
-      "../.storybook/stories/compiled/compiled-code-editor-production-story.tsx"
+      "../../../ui/.storybook/stories/compiled/compiled-code-editor-production-story.tsx"
     )
     const document = createDocument()
     const host = document.createElement("div")

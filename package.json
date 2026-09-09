@@ -15,6 +15,7 @@
     "template",
     "component",
     "renderer",
+    "markdown",
     "webgpu",
     "browser",
     "space",

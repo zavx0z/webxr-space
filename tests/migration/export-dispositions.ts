@@ -23,6 +23,7 @@ export const finalPackageDirectories = Object.freeze({
   "@zavx0z/template": "template",
   "@zavx0z/component": "component",
   "@zavx0z/renderer": "renderer",
+  "@webxr/markdown": "markdown",
   "@zavx0z/webgpu": "webgpu",
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",

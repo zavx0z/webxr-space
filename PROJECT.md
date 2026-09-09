@@ -193,6 +193,7 @@ Nodes.
 | `template` | `@zavx0z/template` | Компилятор TSX и формат готового шаблона |
 | `component` | `@zavx0z/component` | Состояние компонентов, хуки, контекст, эффекты и очистка |
 | `renderer` | `@zavx0z/renderer` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
+| `markdown` | `@webxr/markdown` | Разбор Markdown и компоненты документа |
 | `webgpu` | `@zavx0z/webgpu` | Шейдеры, буферы, текстуры, загрузка данных и рисование |
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
 | `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` |
@@ -255,12 +256,12 @@ ui/
 `Breadcrumbs` относится к `navigation`: он показывает иерархический путь и не
 становится внутренней строкой `StatusBar` или `Inspector`.
 
-`views/markdown.tsx` владеет самостоятельным Markdown с корневым `<article>`.
-Один общий parser находится в публичном `ui/markdown.ts` и использует markdown-it
+`markdown/markdown/src/markdown.tsx` владеет самостоятельным Markdown с корневым `<article>`.
+Один общий parser находится в публичном `@webxr/markdown/parser` и использует markdown-it
 и parse5; Storybook использует его также для списка разрешённых ресурсов,
 код отображается через существующий CodeEditor. Storybook использует этот
 публичный компонент и отдельно компонует свои действия. Поддерживаемый синтаксис
-и воспроизведения ограничений платформы описаны в [Markdown](ui/views/markdown.md).
+и воспроизведения ограничений платформы описаны в [Markdown](markdown/README.md).
 
 Указатели раскрытия, перемещения, подтверждения и другие служебные знаки в
 элементах управления являются SVG-иконками либо векторными `Path`, но не

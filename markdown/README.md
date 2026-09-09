@@ -1,6 +1,6 @@
 # Markdown
 
-Публичный компонент: `@zavx0z/ui/views/markdown`.
+Публичный компонент: `@webxr/markdown`.
 
 `Markdown` принимает `source`, необязательные `wrap`, `baseUrl`, `title` и `style`.
 Он создаёт один `<article>` в Document вызывающего приложения. Размер области
@@ -14,7 +14,7 @@ Renderer переносит текст и вложенные inline-элемен
 сохраняя семантические узлы, цвета и области попадания. Переключение `wrap`
 пересчитывает раскладку того же article.
 
-Общий парсер `@zavx0z/ui/markdown` использует markdown-it (CommonMark с правилом table) и parse5.
+Общий парсер `@webxr/markdown/parser` использует markdown-it (CommonMark с правилом table) и parse5.
 Storybook использует тот же разбор для списка разрешённых ресурсов README;
 UI не зависит от Storybook. Storybook импортирует публичный
 Markdown и отдельно компонует свою overview action. Блоки кода используют
@@ -29,7 +29,7 @@ Markdown и отдельно компонует свою overview action. Бло
 при переполнении. Для отдельного CodeEditor фиксированный viewport по-прежнему
 задаётся через `style`; отдельный параметр автоматической высоты не требуется.
 Подробности размеров и регрессионное воспроизведение flex minimum находятся
-в [CodeEditor](code-editor.md).
+в [CodeEditor](../ui/views/code-editor.md).
 
 ## Поддерживаемый синтаксис
 
@@ -58,7 +58,7 @@ WebGPU texture loader через браузерный ImageDecoder с задер
 
 ## Проверка и ограничения платформы
 
-`ui/tests/markdown.test.ts` проверяет разбор, семантику, обновление, cleanup и
+`markdown/tests/markdown.test.ts` проверяет разбор, семантику, обновление, cleanup и
 переиспользование CodeEditor. Storybook показывает основной пример по маршруту
 `components/data/markdown/basic/default`.
 
@@ -66,11 +66,11 @@ WebGPU texture loader через браузерный ImageDecoder с задер
 длинным текстом в третьей колонке. Renderer сначала распределяет ширину
 flex-ячеек, затем измеряет переносы и высоту строки. Проверка
 `algorithm table rows contain all wrapped text inside a flex overview` в
-`ui/tests/markdown.test.ts` требует, чтобы текст помещался внутри ячеек.
+`markdown/tests/markdown.test.ts` требует, чтобы текст помещался внутри ячеек.
 Фиксированные высоты и ручное измерение текста в Markdown не используются.
-Общий контракт: [размеры flex-строк Renderer](../../renderer/flex-layout.md).
+Общий контракт: [размеры flex-строк Renderer](../renderer/flex-layout.md).
 
-Сравнение режимов: `MarkdownWrappingFixture` в `ui/views/markdown.fixture.tsx`,
+Сравнение режимов: `MarkdownWrappingFixture` в `markdown/tests/markdown.fixture.tsx`,
 маршруты `components/data/markdown/rendering/wrapping` и
 `components/data/markdown/rendering/no-wrap`.
 
@@ -113,4 +113,4 @@ listeners. «Вставить» в readonly содержимом недосту�
 Проверяемый пример `components/data/markdown/selection/cross-block` содержит
 обычный абзац, настоящий Markdown со styled inline текстом и кодом, следующий
 обычный абзац и editable CodeEditor для проверки вставки. Его lifecycle и
-исключение gutter из copied text проверяет `ui/tests/selection-stories.test.ts`.
+исключение gutter из copied text проверяет `markdown/tests/selection.test.ts`.
