@@ -1,6 +1,6 @@
 # Согласованная модель и раскладка
 
-Исходная гонка исправлена 8 сентября 2026 в `@zavx0z/nodes`.
+Исходная гонка исправлена 8 сентября 2026 в `@webxr/nodes`.
 `NODES-CATALOG-006` проходит с прежними ожиданиями новой ноды и сохранения Element.
 
 ## Передача геометрии
@@ -28,7 +28,7 @@ NodeTree и NodeEditor используют одну принятую пару s
 
 ## Асинхронный расчёт
 
-`createNodeTreeLayout` из `@zavx0z/nodes/node-tree` захватывает snapshot
+`createNodeTreeLayout` из `@webxr/nodes/node-tree` захватывает snapshot
 до вызова владельца числовой раскладки:
 
 ```ts
@@ -80,8 +80,8 @@ pending при изменении исходного snapshot: геометри�
 
 ## Отдельное ограничение несвязанных портов
 
-[Fixed](../layout/src/fixed.ts) и [Adaptive](../layout/src/adaptive.ts) исключают
-порты, не участвующие ни в одном Link. [Nodes](src/projection/geometry.ts)
+[Fixed](layout/algorithms/fixed/src/index.ts) и [Adaptive](layout/algorithms/adaptive/src/index.ts) исключают
+порты, не участвующие ни в одном Link. [Nodes](shared/projection/geometry.ts)
 пока требует геометрию каждого объявленного Socket. Поэтому удаление
 **последнего** Link при сохранении Socket может дать
 `Layout Port geometry is missing: source/out`.

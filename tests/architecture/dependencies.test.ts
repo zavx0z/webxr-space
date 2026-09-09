@@ -14,9 +14,11 @@ const packageDirectories = Object.freeze({
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",
   "@zavx0z/ui": "ui",
-  "@zavx0z/nodetree": "nodetree",
-  "@zavx0z/layout": "layout",
-  "@zavx0z/nodes": "nodes",
+  "@nodes/parameters": "nodes/parameters",
+  "@nodes/sockets": "nodes/sockets",
+  "@nodes/tree": "nodes/tree",
+  "@nodes/layout": "nodes/layout",
+  "@webxr/nodes": "nodes",
   "@zavx0z/devtools": "devtools",
 } as const)
 
@@ -49,13 +51,17 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
       "@zavx0z/template",
     ],
     "@zavx0z/ui": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template"],
-    "@zavx0z/nodetree": [],
-    "@zavx0z/layout": [],
-    "@zavx0z/nodes": [
+    "@nodes/parameters": ["@nodes/tree", "@nodes/sockets", "@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui"],
+    "@nodes/sockets": ["@nodes/tree", "@zavx0z/component", "@zavx0z/template"],
+    "@nodes/tree": [],
+    "@nodes/layout": [],
+    "@webxr/nodes": [
+      "@nodes/parameters",
+      "@nodes/sockets",
       "@zavx0z/component",
       "@zavx0z/dom",
-      "@zavx0z/layout",
-      "@zavx0z/nodetree",
+      "@nodes/layout",
+      "@nodes/tree",
       "@zavx0z/template",
       "@zavx0z/ui",
     ],
@@ -135,6 +141,7 @@ async function scanPackageImportsUncached(
   const imports: SourceImport[] = []
   for await (const file of sourceGlob.scan({cwd: packageRoot, onlyFiles: true})) {
     if (!isProductionSource(file)) continue
+    if (Object.values(packageDirectories).some(directory => directory !== packageDirectories[packageName] && resolve(packageRoot, file).startsWith(resolve(root, directory) + sep))) continue
     const source = await Bun.file(join(packageRoot, file)).text()
     const transpiler = new Bun.Transpiler({loader: loaderFor(file)})
     for (const sourceImport of transpiler.scanImports(source)) {
@@ -226,8 +233,8 @@ describe("Направление производственных зависим
     for (const forbidden of [
       "@zavx0z/dom",
       "@zavx0z/ui",
-      "@zavx0z/nodetree",
-      "@zavx0z/nodes",
+      "@nodes/tree",
+      "@webxr/nodes",
       "@zavx0z/webgpu",
     ]) {
       assertRequirement(
@@ -244,7 +251,7 @@ describe("Направление производственных зависим
       "@zavx0z/engine",
       "@zavx0z/renderer",
       "@zavx0z/webgpu",
-      "@zavx0z/nodes",
+      "@webxr/nodes",
     ]) {
       assertRequirement(
         !dependencies.has(forbidden),
@@ -255,7 +262,7 @@ describe("Направление производственных зависим
   })
 
   test("[PKG-007] Nodes не создаёт Document, Canvas, Renderer и Space", async () => {
-    const nodesRoot = join(root, packageDirectories["@zavx0z/nodes"])
+    const nodesRoot = join(root, packageDirectories["@webxr/nodes"])
     const forbiddenConstructions = [
       ["Document", /\b(?:createDocument|new\s+Document)\s*\(/u],
       ["Canvas", /(?:<canvas(?:\s|>)|\bnew\s+(?:Offscreen)?Canvas\s*\(|\.createElement\s*\(\s*["'`]canvas["'`])/u],
@@ -270,7 +277,7 @@ describe("Направление производственных зависим
         assertRequirement(
           !pattern.test(source),
           "PKG-007",
-          `@zavx0z/nodes/${file} содержит создание владельца ${owner}`,
+          `@webxr/nodes/${file} содержит создание владельца ${owner}`,
         )
       }
     }
@@ -319,7 +326,7 @@ describe("Направление производственных зависим
         join(root, packageDirectories[packageName], "package.json"),
       ).json() as {scripts: Readonly<Record<string, string>>}
       assertRequirement(
-        /^bun test --parallel tests(?: [\w./-]+)*$/u.test(manifest.scripts.test ?? ""),
+        /^bun test --parallel(?: [\w./-]+)*$/u.test(manifest.scripts.test ?? ""),
         "PKG-008",
         `${packageName} должен запускать package tests нативным параллельным Bun test`,
       )

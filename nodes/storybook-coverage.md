@@ -1,5 +1,13 @@
 # Полнота Storybook нодовой системы
 
+Структурная миграция 2026-09-09 завершена: [новая проверка](structure-acceptance.json).
+Пакет `@webxr/nodes` содержит 27 вариантов, `@nodes/parameters` — 122,
+`@nodes/sockets` — 114, `@nodes/tree` — 25, `@nodes/layout` — 26.
+Всего сохранены 314 вариантов. Компоненты находятся в своих `src`, общий код —
+в пакетном `shared`; категории и принадлежность предметов определяются структурой.
+Далее сохранена подробная матрица предыдущего среза; её числа и результаты
+относятся к указанным историческим датам, а не к новой иерархии пакетов.
+
 Исторический обход начальных состояний 2026-09-07: [машиночитаемая приёмка](storybook-acceptance.json)
 содержит 403 успешно показанных начальных маршрута: корни пакетов, категории,
 предметы и 314 вариантов. Пять timeout открытия подтверждены последующим
@@ -16,14 +24,14 @@ Source-примеров настоящим Template compiler.
 [Договор и отдельное ограничение несвязанных портов](topology-layout-gap.md).
 
 Матрица текущего среза от 2026-09-07. Она сопоставляет публичные экспорты
-`@zavx0z/nodes`, `@zavx0z/nodetree` и `@zavx0z/layout` с реализацией,
+`@webxr/nodes`, `@nodes/tree` и `@nodes/layout` с реализацией,
 объявленными сценариями, выполненными проверками и оставшимися пробелами.
 Каталоги наполнены; NodeType остаётся проектом договора. Наличие маршрута,
 успешной компиляции или mount-теста не означает полной визуальной приёмки.
 
 Основание — [PROJECT](../PROJECT.md), публичные manifests
-[Nodes](package.json), [NodeTree](../nodetree/package.json),
-[Layout](../layout/package.json), package-owned каталоги и перечисленные ниже
+[Nodes](package.json), [NodeTree](tree/package.json),
+[Layout](layout/package.json), package-owned каталоги и перечисленные ниже
 исходники. Новые истории используют production API; headless-модель и алгоритмы
 показывают свои реальные входы и результаты через development-only TSX.
 
@@ -32,9 +40,9 @@ Source-примеров настоящим Template compiler.
 | Владелец | Объявлено сейчас | Подтверждённый пробел |
 | --- | --- | --- |
 | Nodes | [Каталог](.storybook/catalog.json): 4 категории, 41 предмет, 263 варианта; 19 видов Socket, 15 механизмов Parameter, 5 компонентов и 2 политики раскладки | `components/node-tree/topology` — рабочее добавление; `NODES-CATALOG-006` и проверки coherence проходят. Не все взаимодействия и визуальные состояния прошли browser-приёмку |
-| NodeTree | [Каталог](../nodetree/.storybook/catalog.json), runtime и README: 7 категорий, 20 предметов, 25 исполняемых вариантов модели | Полный package check и начальный browser-показ пройдены. NodeType не реализован |
-| Layout | [Каталог](../layout/.storybook/catalog.json), runtime и README: 3 категории, 11 предметов, 26 вариантов алгоритмов, protocol и Worker | Все начальные browser-сценарии показаны; числовые TopDown/Coffman–Graham не интегрированы в NodeEditor |
-| NodeType | Есть [проект договора](../nodetree/node-type.md); production API отсутствует | Нет декларации состава типа в коде, материализации defaults в новые Stores и подключения типа к NodeEditor |
+| NodeTree | [Каталог](tree/.storybook/catalog.json), runtime и README: 7 категорий, 20 предметов, 25 исполняемых вариантов модели | Полный package check и начальный browser-показ пройдены. NodeType не реализован |
+| Layout | [Каталог](layout/.storybook/catalog.json), runtime и README: 3 категории, 11 предметов, 26 вариантов алгоритмов, protocol и Worker | Все начальные browser-сценарии показаны; числовые TopDown/Coffman–Graham не интегрированы в NodeEditor |
+| NodeType | Есть [проект договора](tree/node-type.md); production API отсутствует | Нет декларации состава типа в коде, материализации defaults в новые Stores и подключения типа к NodeEditor |
 
 Первоначальная live-проверка общего обзора `nodes/layout` выявила ошибку
 `Пример нодовой раскладки смонтирован вне host-owned DisplayElement`.
@@ -68,7 +76,7 @@ Engine и Layout не менялись.
 
 ### Сохраняемые маршруты
 
-Все пути ниже уже существуют внутри пакета `@zavx0z/nodes`.
+Все пути ниже уже существуют внутри пакета `@webxr/nodes`.
 Объявления находятся в [catalog](.storybook/catalog.json),
 исполняемые descriptors — в [subjects/layout.ts](.storybook/stories/subjects/layout.ts).
 
@@ -94,7 +102,7 @@ Engine и Layout не менялись.
 - Категория → конкретный предмет → применимые варианты. В категории «Сокеты»
   перечисляются конкретные kinds, в «Параметры» — механизмы взаимодействия.
 - Пути относительны к пакету строки. Например, `sockets/boolean/states`
-  существует внутри `@zavx0z/nodes`. `<variant>` задаёт семейство объявленных
+  существует внутри `@webxr/nodes`. `<variant>` задаёт семейство объявленных
   вариантов, перечисленных ниже. Будущие маршруты NodeType и недостающие
   сценарии явно помечены как план.
 - Каждый предмет получает содержательный обзор, настоящую production-композицию,
@@ -196,17 +204,17 @@ kind; отдельные виды значения из сочетаний kind/
 
 | Публичная возможность | Реализация | Текущее evidence | Объявленный маршрут / оставшаяся приёмка |
 | --- | --- | --- | --- |
-| Node: шапка, категория, выбранное/скрытое/свёрнутое состояние | [Node](node.tsx), `NodeProps` | `NODES-001`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/node/{basic,empty,states,collapsed}`; mount пройден, полный browser-набор переключений ещё не принят |
-| Node: preview и авторские children | [Node](node.tsx), `NodePreview`, `NodePreviewImage` | Compiled production mount `NODES-CATALOG-005` | `components/node/preview`, `components/node/authored-content`; одновременно children и projected Parameters не передаются |
-| Числовая геометрия Node и порты | [planProjectedNodeGeometry](node.tsx), [metrics](src/projection/metrics.ts), `nodeSocketLayoutPortId` из [node-tree.tsx](node-tree.tsx) | `NODES-METRICS-001..003`, `NODES-PROJECTED-GEOMETRY-001..007` | `components/node/empty`, `…/basic` и Parameter geometry показывают часть состояний. Отдельный `components/node/geometry` остаётся планом для минимальной ширины, loose sockets и resolved sides |
-| Frame: оформление, вложенность, выбор, children | [Frame](frame.tsx) | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/frame/{basic,nested,states}` монтируются; полная проверка выбора/identity через взаимодействие ещё не зафиксирована |
-| Link: polyline/cubic, цвет kind, состояния, активация | [Link](link.tsx), `LinkRoute`, `createCubicLinkRoute`, `projectLinkRoute` | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/link/{orthogonal,cubic,states,disabled}` монтируются; browser-проверка границ и попадания по кривой ещё остаётся |
-| Link: внешний Store | `LinkProps.store` в [link.tsx](link.tsx) | Compiled mount `NODES-CATALOG-005` | `components/link/live-store` существует; отдельные assertions route-update и сохранения Element ещё не заявлены |
-| NodeTree: проекция единственного Store с LayoutResult | [NodeTree](node-tree.tsx), `NodeTreeStore`, `NodeTreeProps` | `NODES-004`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005..006`, `NODES-LAYOUT-COHERENCE-001..011` | `components/node-tree/live-store` показывает значения. `components/node-tree/topology` добавляет Node с сохранением identity; source-bound `createNodeTreeLayout` и pending описаны в [договоре](topology-layout-gap.md) |
-| NodeTree: viewport, отсечение, transform | `viewport`, `materializeCulled`, `transform` в [node-tree.tsx](node-tree.tsx) | Compiled mount `NODES-CATALOG-005` | `components/node-tree/viewport` существует; точные assertions отсечения, overscan и возврата ещё не заявлены |
-| NodeTree: выбор, collapse, preview, события Socket/Parameter | [NodeTreeProps](node-tree.tsx) | Compiled mount `NODES-CATALOG-005` | `components/node-tree/interaction` существует; полный набор callbacks по исходным сущностям требует приёмки |
-| NodeEditor: fit, панорамирование, zoom/pinch, сетка | [NodeEditor](node-editor.tsx) | `NODES-STORYBOOK-002`, `NODES-CATALOG-005`; browser fit/capture с console errors = 0 | `components/node-editor/navigation`, `…/readonly`; pointer/wheel/pinch и границы масштаба ещё не приняты полностью |
-| NodeEditor: собственное/управляемое состояние | [NodeEditorProps](node-editor.tsx): transform, selection, collapsedNodeIds, previewNodeIds | Compiled mount `NODES-CATALOG-005` | `components/node-editor/controlled` существует; полный договор изменения управляемых props/callbacks ещё требует приёмки |
+| Node: шапка, категория, выбранное/скрытое/свёрнутое состояние | [Node](node/src/node.tsx), `NodeProps` | `NODES-001`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/node/{basic,empty,states,collapsed}`; mount пройден, полный browser-набор переключений ещё не принят |
+| Node: preview и авторские children | [Node](node/src/node.tsx), `NodePreview`, `NodePreviewImage` | Compiled production mount `NODES-CATALOG-005` | `components/node/preview`, `components/node/authored-content`; одновременно children и projected Parameters не передаются |
+| Числовая геометрия Node и порты | [planProjectedNodeGeometry](node/src/node.tsx), [metrics](shared/projection/metrics.ts), `nodeSocketLayoutPortId` из [node-tree.tsx](node-tree/src/node-tree.tsx) | `NODES-METRICS-001..003`, `NODES-PROJECTED-GEOMETRY-001..007` | `components/node/empty`, `…/basic` и Parameter geometry показывают часть состояний. Отдельный `components/node/geometry` остаётся планом для минимальной ширины, loose sockets и resolved sides |
+| Frame: оформление, вложенность, выбор, children | [Frame](frame/src/frame.tsx) | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/frame/{basic,nested,states}` монтируются; полная проверка выбора/identity через взаимодействие ещё не зафиксирована |
+| Link: polyline/cubic, цвет kind, состояния, активация | [Link](link/src/link.tsx), `LinkRoute`, `createCubicLinkRoute`, `projectLinkRoute` | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/link/{orthogonal,cubic,states,disabled}` монтируются; browser-проверка границ и попадания по кривой ещё остаётся |
+| Link: внешний Store | `LinkProps.store` в [link.tsx](link/src/link.tsx) | Compiled mount `NODES-CATALOG-005` | `components/link/live-store` существует; отдельные assertions route-update и сохранения Element ещё не заявлены |
+| NodeTree: проекция единственного Store с LayoutResult | [NodeTree](node-tree/src/node-tree.tsx), `NodeTreeStore`, `NodeTreeProps` | `NODES-004`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005..006`, `NODES-LAYOUT-COHERENCE-001..011` | `components/node-tree/live-store` показывает значения. `components/node-tree/topology` добавляет Node с сохранением identity; source-bound `createNodeTreeLayout` и pending описаны в [договоре](topology-layout-gap.md) |
+| NodeTree: viewport, отсечение, transform | `viewport`, `materializeCulled`, `transform` в [node-tree.tsx](node-tree/src/node-tree.tsx) | Compiled mount `NODES-CATALOG-005` | `components/node-tree/viewport` существует; точные assertions отсечения, overscan и возврата ещё не заявлены |
+| NodeTree: выбор, collapse, preview, события Socket/Parameter | [NodeTreeProps](node-tree/src/node-tree.tsx) | Compiled mount `NODES-CATALOG-005` | `components/node-tree/interaction` существует; полный набор callbacks по исходным сущностям требует приёмки |
+| NodeEditor: fit, панорамирование, zoom/pinch, сетка | [NodeEditor](node-editor/src/node-editor.tsx) | `NODES-STORYBOOK-002`, `NODES-CATALOG-005`; browser fit/capture с console errors = 0 | `components/node-editor/navigation`, `…/readonly`; pointer/wheel/pinch и границы масштаба ещё не приняты полностью |
+| NodeEditor: собственное/управляемое состояние | [NodeEditorProps](node-editor/src/node-editor.tsx): transform, selection, collapsedNodeIds, previewNodeIds | Compiled mount `NODES-CATALOG-005` | `components/node-editor/controlled` существует; полный договор изменения управляемых props/callbacks ещё требует приёмки |
 | NodeEditor: выбор алгоритма во внешней композиции | [compiled-layout-story.tsx](.storybook/stories/compiled/compiled-layout-story.tsx) | Fixed/Adaptive и все шесть маршрутов | Сохранить `layout/*`; этот consumer не переносит алгоритмы из Layout в Nodes |
 
 Общие проверки [contract.test.ts](tests/contract.test.ts): `NODES-001` —
@@ -218,35 +226,35 @@ kind; отдельные виды значения из сочетаний kind/
 
 ## NodeTree: модель и состояние
 
-Все маршруты этой таблицы объявлены внутри `@zavx0z/nodetree`.
-Проверки основы — [contract.test.ts](../nodetree/tests/contract.test.ts) и
-[template-foundation.test.ts](../nodetree/tests/template-foundation.test.ts).
+Все маршруты этой таблицы объявлены внутри `@nodes/tree`.
+Проверки основы — [contract.test.ts](tree/tests/contract.test.ts) и
+[template-foundation.test.ts](tree/tests/template-foundation.test.ts).
 Содержимое результатов всех 25 сценариев проверяет
-[storybook-model.test.ts](../nodetree/tests/storybook-model.test.ts), а их
+[storybook-model.test.ts](tree/tests/storybook-model.test.ts), а их
 настоящую компиляцию, монтирование, повтор и cleanup —
-[storybook-mount.test.ts](../nodetree/tests/storybook-mount.test.ts).
+[storybook-mount.test.ts](tree/tests/storybook-mount.test.ts).
 `NODETREE-TEMPLATE-001`–`NODETREE-TEMPLATE-008` используют существующие production
 операции и вручную собранные fixtures; фабрика NodeType из декларации ими не реализована.
 
 | Публичная возможность | Реализация | Текущее evidence | Объявленные маршруты и сценарии |
 | --- | --- | --- | --- |
-| Node, Socket, Link, Frame и стабильные идентификаторы | [NodeTree](../nodetree/node-tree.ts), [createNodeTree](../nodetree/foundation.ts) | `NODETREE-001`, `NODETREE-STORYBOOK-002` | `model/topology/baseline`: один graph, адреса endpoint и identity Store |
-| GraphScope и NodeGroup, вложенные области и группы | [node-tree.ts](../nodetree/node-tree.ts), [валидация](../nodetree/foundation.ts) | `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-002`: nested Scope и две вложенные группы/Frame | `model/scopes/nested`, `model/groups/nested`: scope/group/frame имеют разный смысл; произвольно глубокая иерархия отдельно не принята |
-| Parameter Store: identity, set, revision, snapshot, subscribe | [Parameter](../nodetree/parameter.ts) | `NODETREE-001..002`, `NODETREE-TEMPLATE-001..004`, `NODETREE-STORYBOOK-003` | `parameters/store/updates`, `parameters/store/shared`: no-op/unsubscribe, отказ общего Store у двух нод и независимость отдельных Stores |
-| NodeJsonValue: владение неизменяемым JSON и сравнение | `ownNodeJsonValue`, `equalNodeJsonValue` в [parameter.ts](../nodetree/parameter.ts) | `NODETREE-STORYBOOK-003`: deep freeze, копия, structural equality, отказ NaN | `parameters/value/ownership`: мутация исходного объекта не изменяет Store |
-| NodeValueType и runtime-валидация значения | `ownNodeValueType`, [createValidatedParameter](../nodetree/foundation.ts) | `NODETREE-TEMPLATE-004`, `…-006`, `NODETREE-STORYBOOK-003`, `…-007` | `parameters/value-type/validation`: допустимый set и отказ без публикации; валидатор сохраняется после hydrate |
-| Типы Socket, направления, совместимость и циклы | `FoundationNodeTreeOptions`, `validateFoundationDefinition` в [foundation.ts](../nodetree/foundation.ts) | `NODETREE-TEMPLATE-005`, `NODETREE-STORYBOOK-008`: equality, Link policy, allow/acyclic, неверное направление и endpoints | `validation/links/types`, `validation/topology/cycles`, `validation/topology/references` |
-| Определение, снимок и ID-addressed document | `definition`, `snapshot`, `getSnapshot`, `document`, `toJSON` в [NodeTree](../nodetree/node-tree.ts) | `NODETREE-001..003`, `NODETREE-STORYBOOK-002` | `model/snapshots/identity`: стабильный snapshot до записи, сохранение старого значения, live Store и portable document |
-| External Store для дерева и отдельного Parameter | [createNodeTreeExternalStore](../nodetree/foundation.ts) | `NODETREE-002`, `NODETREE-STORYBOOK-003` | `parameters/subscriptions/scoped`: точные счётчики адресной/общей подписки и unsubscribe |
-| Topology Store: initial / append-node / full | `getTopologySnapshot`, `getTopologyUpdate`, `subscribeTopology` в [foundation.ts](../nodetree/foundation.ts) | `NODETREE-STORYBOOK-004`: initial → append-node → full, value write не уведомляет topology | `changes/topology/append`: delta и точная область обновления; это headless evidence, не закрытие Nodes Layout gap |
-| Reconcile, expectedRevision, сохранение Stores | `NodeTree.reconcile`, `NodeTreeRevisionConflictError` в [node-tree.ts](../nodetree/node-tree.ts) | `NODETREE-TEMPLATE-007..008`, `NODETREE-STORYBOOK-004`: append/remove/no-op, отказ замене Store и stale revision | `changes/reconcile/identity`, `changes/reconcile/conflict`: уцелевший Store сохраняется |
-| Delta и подписки на изменения | `subscribeDelta`, `NodeTreeDelta`, [diffNodeTreeDefinitions](../nodetree/foundation.ts) | `NODETREE-STORYBOOK-004`: точные added/removed/updated и Parameter event; no-op не публикуется | `changes/delta/entities`: добавление Node, изменение metadata, удаление Link и запись Parameter |
-| Проекции: generation, cache, previous, stale result | `NodeTree.project`, `clearProjectionCache`, `StaleNodeTreeProjectionError`; [типы](../nodetree/projection-types.ts) | `NODETREE-STORYBOOK-005`: cache/previous/clear, общий pending и stale rejection | `projections/cache/reuse`, `projections/generation/stale`: immutable generation и отказ старому async-результату |
-| NodeTemplate и ссылка экземпляра | [типы](../nodetree/node-tree.ts), [instantiateNodeTemplate](../nodetree/foundation.ts) | `NODETREE-TEMPLATE-001..003`, `NODETREE-STORYBOOK-006` | `templates/node/reference`: готовые ноды получают reference, отдельно переданные Stores сохраняются; defaults не материализуются |
-| Graph Template и экземпляр Scope | [instantiateGraphTemplate](../nodetree/foundation.ts) | `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-006` | `templates/graph/reference`: subgraph Scope получает reference; функция не создаёт внутренний граф |
-| Сохранение и восстановление текущего формата | [serializeNodeTreeDocument, hydrateNodeTree](../nodetree/serialization.ts), [формат документа](../nodetree/node-tree-document.ts) | `NODETREE-003`, `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-007` | `serialization/document/roundtrip`, `serialization/document/invalid`: v2, независимый Store, order/byId, неизвестный формат, scopes/groups/templates |
-| Ограниченный JSON Patch | [applyJsonPatch, encodeJsonPointerToken, JsonPatchError, JSON_PATCH_LIMITS](../nodetree/json-patch.ts) | `NODETREE-STORYBOOK-007`: четыре операции, escaping, immutable source, atomic test failure и operation limit | `serialization/json-patch/operations`, `serialization/json-patch/atomic-error`; move/copy не объявлены, все лимиты path/depth отдельно не покрыты |
-| Освобождение lifecycle | `NodeTree.dispose`, unsubscribe в [node-tree.ts](../nodetree/node-tree.ts) и [parameter.ts](../nodetree/parameter.ts) | `NODETREE-STORYBOOK-002`, `…-003`, `NODETREE-STORYBOOK-MOUNT` | `model/lifecycle/dispose`: прекращение уведомлений, idempotent dispose, caller-owned Parameter остаётся жив, reconcile отклоняется |
+| Node, Socket, Link, Frame и стабильные идентификаторы | [NodeTree](tree/model/node-tree/src/index.ts), [createNodeTree](tree/shared/foundation.ts) | `NODETREE-001`, `NODETREE-STORYBOOK-002` | `model/topology/baseline`: один graph, адреса endpoint и identity Store |
+| GraphScope и NodeGroup, вложенные области и группы | [node-tree.ts](tree/model/node-tree/src/index.ts), [валидация](tree/shared/foundation.ts) | `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-002`: nested Scope и две вложенные группы/Frame | `model/scopes/nested`, `model/groups/nested`: scope/group/frame имеют разный смысл; произвольно глубокая иерархия отдельно не принята |
+| Parameter Store: identity, set, revision, snapshot, subscribe | [Parameter](tree/model/parameter/src/index.ts) | `NODETREE-001..002`, `NODETREE-TEMPLATE-001..004`, `NODETREE-STORYBOOK-003` | `parameters/store/updates`, `parameters/store/shared`: no-op/unsubscribe, отказ общего Store у двух нод и независимость отдельных Stores |
+| NodeJsonValue: владение неизменяемым JSON и сравнение | `ownNodeJsonValue`, `equalNodeJsonValue` в [parameter.ts](tree/model/parameter/src/index.ts) | `NODETREE-STORYBOOK-003`: deep freeze, копия, structural equality, отказ NaN | `parameters/value/ownership`: мутация исходного объекта не изменяет Store |
+| NodeValueType и runtime-валидация значения | `ownNodeValueType`, [createValidatedParameter](tree/shared/foundation.ts) | `NODETREE-TEMPLATE-004`, `…-006`, `NODETREE-STORYBOOK-003`, `…-007` | `parameters/value-type/validation`: допустимый set и отказ без публикации; валидатор сохраняется после hydrate |
+| Типы Socket, направления, совместимость и циклы | `FoundationNodeTreeOptions`, `validateFoundationDefinition` в [foundation.ts](tree/shared/foundation.ts) | `NODETREE-TEMPLATE-005`, `NODETREE-STORYBOOK-008`: equality, Link policy, allow/acyclic, неверное направление и endpoints | `validation/links/types`, `validation/topology/cycles`, `validation/topology/references` |
+| Определение, снимок и ID-addressed document | `definition`, `snapshot`, `getSnapshot`, `document`, `toJSON` в [NodeTree](tree/model/node-tree/src/index.ts) | `NODETREE-001..003`, `NODETREE-STORYBOOK-002` | `model/snapshots/identity`: стабильный snapshot до записи, сохранение старого значения, live Store и portable document |
+| External Store для дерева и отдельного Parameter | [createNodeTreeExternalStore](tree/shared/foundation.ts) | `NODETREE-002`, `NODETREE-STORYBOOK-003` | `parameters/subscriptions/scoped`: точные счётчики адресной/общей подписки и unsubscribe |
+| Topology Store: initial / append-node / full | `getTopologySnapshot`, `getTopologyUpdate`, `subscribeTopology` в [foundation.ts](tree/shared/foundation.ts) | `NODETREE-STORYBOOK-004`: initial → append-node → full, value write не уведомляет topology | `changes/topology/append`: delta и точная область обновления; это headless evidence, не закрытие Nodes Layout gap |
+| Reconcile, expectedRevision, сохранение Stores | `NodeTree.reconcile`, `NodeTreeRevisionConflictError` в [node-tree.ts](tree/model/node-tree/src/index.ts) | `NODETREE-TEMPLATE-007..008`, `NODETREE-STORYBOOK-004`: append/remove/no-op, отказ замене Store и stale revision | `changes/reconcile/identity`, `changes/reconcile/conflict`: уцелевший Store сохраняется |
+| Delta и подписки на изменения | `subscribeDelta`, `NodeTreeDelta`, [diffNodeTreeDefinitions](tree/shared/foundation.ts) | `NODETREE-STORYBOOK-004`: точные added/removed/updated и Parameter event; no-op не публикуется | `changes/delta/entities`: добавление Node, изменение metadata, удаление Link и запись Parameter |
+| Проекции: generation, cache, previous, stale result | `NodeTree.project`, `clearProjectionCache`, `StaleNodeTreeProjectionError`; [типы](tree/model/projection/src/index.ts) | `NODETREE-STORYBOOK-005`: cache/previous/clear, общий pending и stale rejection | `projections/cache/reuse`, `projections/generation/stale`: immutable generation и отказ старому async-результату |
+| NodeTemplate и ссылка экземпляра | [типы](tree/model/node-tree/src/index.ts), [instantiateNodeTemplate](tree/shared/foundation.ts) | `NODETREE-TEMPLATE-001..003`, `NODETREE-STORYBOOK-006` | `templates/node/reference`: готовые ноды получают reference, отдельно переданные Stores сохраняются; defaults не материализуются |
+| Graph Template и экземпляр Scope | [instantiateGraphTemplate](tree/shared/foundation.ts) | `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-006` | `templates/graph/reference`: subgraph Scope получает reference; функция не создаёт внутренний граф |
+| Сохранение и восстановление текущего формата | [serializeNodeTreeDocument, hydrateNodeTree](tree/persistence/serialization/src/index.ts), [формат документа](tree/model/node-tree/src/document.ts) | `NODETREE-003`, `NODETREE-TEMPLATE-006`, `NODETREE-STORYBOOK-007` | `serialization/document/roundtrip`, `serialization/document/invalid`: v2, независимый Store, order/byId, неизвестный формат, scopes/groups/templates |
+| Ограниченный JSON Patch | [applyJsonPatch, encodeJsonPointerToken, JsonPatchError, JSON_PATCH_LIMITS](tree/persistence/json-patch/src/index.ts) | `NODETREE-STORYBOOK-007`: четыре операции, escaping, immutable source, atomic test failure и operation limit | `serialization/json-patch/operations`, `serialization/json-patch/atomic-error`; move/copy не объявлены, все лимиты path/depth отдельно не покрыты |
+| Освобождение lifecycle | `NodeTree.dispose`, unsubscribe в [node-tree.ts](tree/model/node-tree/src/index.ts) и [parameter.ts](tree/model/parameter/src/index.ts) | `NODETREE-STORYBOOK-002`, `…-003`, `NODETREE-STORYBOOK-MOUNT` | `model/lifecycle/dispose`: прекращение уведомлений, idempotent dispose, caller-owned Parameter остаётся жив, reconcile отклоняется |
 
 `NODETREE-004` сохраняет headless и предметно-нейтральную границу пакета.
 Документация модели не должна вводить зависимости на Nodes, Layout, UI или
@@ -261,33 +269,33 @@ Store, но canonical NodeTree запрещает использовать од�
 
 ## Layout: алгоритмы и Worker
 
-Все маршруты этой таблицы объявлены внутри `@zavx0z/layout`.
+Все маршруты этой таблицы объявлены внутри `@nodes/layout`.
 Существующие интеграционные примеры внутри Nodes остаются у Nodes.
 
 | Публичная возможность | Реализация | Текущее evidence | Объявленные маршруты и сценарии |
 | --- | --- | --- | --- |
-| Fixed: source EAST / target WEST | [layoutFixed, resolveFixedLayoutGraph](../layout/src/fixed.ts) | `LAYOUT-001..002`, `LAYOUT-STORYBOOK-002..003`; два Nodes baseline mount | `algorithms/fixed/{baseline,down,compound,invalid}`: RIGHT/DOWN, containment, повторяемость, immutable input и конфликт ролей порта |
-| Общий numeric protocol: compound nodes, порты, edges, options, bounds | [LayoutGraph, LayoutResult](../layout/types/protocol.ts) | `LAYOUT-STORYBOOK-002..003` | `protocol/graph/compound`, `protocol/result/geometry`: числовые размеры, стороны и sections; viewport принадлежит входу |
-| Adaptive: capability in/out/inout и allowedSides | [layoutAdaptive, layoutAdaptiveWithDiagnostics](../layout/src/adaptive.ts) | `LAYOUT-STORYBOOK-002..003`, четыре Nodes adaptive mount | `algorithms/adaptive/{shared,down,compound}`: один общий Socket, допустимые стороны и направление |
-| Adaptive: bounded search, диагностика и witness ошибки | `ADAPTIVE_CANDIDATE_BUDGET`, `AdaptiveLayoutError` в [adaptive.ts](../layout/src/adaptive.ts) | `LAYOUT-STORYBOOK-002..003`: candidate budget, выбранные стороны, `PORT_HAS_NO_ALLOWED_SIDE` | `algorithms/adaptive/diagnostics`, `algorithms/adaptive/no-assignment` |
-| TopDown: flat DAG, NORTH/SOUTH, цепочки cubic curves | [layoutTopDown](../layout/src/top-down.ts), [protocol](../layout/types/top-down.ts) | `LAYOUT-STORYBOOK-002`, `…-004`, `LAYOUT-STORYBOOK-MOUNT`; NodeEditor-интеграции нет | `algorithms/top-down/baseline`, `algorithms/top-down/cycle`: стороны, связность cubic curves и typed cycle witness |
-| Coffman–Graham: слои с ограничением ширины | [layoutCoffmanGraham](../layout/src/coffman-graham.ts), [protocol](../layout/types/coffman-graham.ts) | `LAYOUT-STORYBOOK-002`, `…-004`: NORTH/SOUTH, curves, ограничение размера слоя; NodeEditor-интеграции нет | `algorithms/coffman-graham/{baseline,narrow,cycle}`: числовой result, ширина слоя и witness |
-| Fixed Worker client/executor | [client](../layout/worker/fixed/client.ts), [executor](../layout/worker/fixed/executor.ts) | `LAYOUT-003..004`, `LAYOUT-STORYBOOK-WORKER` Fixed; browser equivalence ready/presented | `workers/fixed/{equivalence,failure}`: отдельный Worker, direct/result equality, generation и сериализованный отказ |
-| Adaptive Worker client/executor | [client](../layout/worker/adaptive/client.ts), [executor](../layout/worker/adaptive/executor.ts) | `LAYOUT-STORYBOOK-WORKER` Adaptive; browser equivalence ready/presented | `workers/adaptive/{equivalence,failure}`: result, diagnostics equality и serialized witness |
-| TopDown Worker client/executor | [client](../layout/worker/top-down/client.ts), [executor](../layout/worker/top-down/executor.ts) | `LAYOUT-STORYBOOK-WORKER` TopDown; browser equivalence ready/presented | `workers/top-down/{equivalence,failure}`: result и cycle error |
-| Coffman–Graham Worker client/executor | [client](../layout/worker/coffman-graham/client.ts), [executor](../layout/worker/coffman-graham/executor.ts) | `LAYOUT-STORYBOOK-WORKER` Coffman–Graham; browser equivalence ready/presented | `workers/coffman-graham/{equivalence,failure}`: result и cycle error |
-| Общий transport: pending requests, cancelBefore, dispose, ошибки | [WorkerTransportClient, WorkerRemoteError](../layout/worker/transport.ts), [envelope types](../layout/worker/types/worker.ts) | `LAYOUT-STORYBOOK-TRANSPORT`: generation, cancel/dispose настоящего Worker; fault injection явно обозначен test double | `workers/transport/lifecycle`, `…/faults`: request IDs, mismatch, remote/error events, postMessage failure, terminate и listener cleanup |
+| Fixed: source EAST / target WEST | [layoutFixed, resolveFixedLayoutGraph](layout/algorithms/fixed/src/index.ts) | `LAYOUT-001..002`, `LAYOUT-STORYBOOK-002..003`; два Nodes baseline mount | `algorithms/fixed/{baseline,down,compound,invalid}`: RIGHT/DOWN, containment, повторяемость, immutable input и конфликт ролей порта |
+| Общий numeric protocol: compound nodes, порты, edges, options, bounds | [LayoutGraph, LayoutResult](layout/protocol/types/src/protocol.ts) | `LAYOUT-STORYBOOK-002..003` | `protocol/graph/compound`, `protocol/result/geometry`: числовые размеры, стороны и sections; viewport принадлежит входу |
+| Adaptive: capability in/out/inout и allowedSides | [layoutAdaptive, layoutAdaptiveWithDiagnostics](layout/algorithms/adaptive/src/index.ts) | `LAYOUT-STORYBOOK-002..003`, четыре Nodes adaptive mount | `algorithms/adaptive/{shared,down,compound}`: один общий Socket, допустимые стороны и направление |
+| Adaptive: bounded search, диагностика и witness ошибки | `ADAPTIVE_CANDIDATE_BUDGET`, `AdaptiveLayoutError` в [adaptive.ts](layout/algorithms/adaptive/src/index.ts) | `LAYOUT-STORYBOOK-002..003`: candidate budget, выбранные стороны, `PORT_HAS_NO_ALLOWED_SIDE` | `algorithms/adaptive/diagnostics`, `algorithms/adaptive/no-assignment` |
+| TopDown: flat DAG, NORTH/SOUTH, цепочки cubic curves | [layoutTopDown](layout/algorithms/top-down/src/index.ts), [protocol](layout/protocol/types/src/top-down.ts) | `LAYOUT-STORYBOOK-002`, `…-004`, `LAYOUT-STORYBOOK-MOUNT`; NodeEditor-интеграции нет | `algorithms/top-down/baseline`, `algorithms/top-down/cycle`: стороны, связность cubic curves и typed cycle witness |
+| Coffman–Graham: слои с ограничением ширины | [layoutCoffmanGraham](layout/algorithms/coffman-graham/src/index.ts), [protocol](layout/protocol/types/src/coffman-graham.ts) | `LAYOUT-STORYBOOK-002`, `…-004`: NORTH/SOUTH, curves, ограничение размера слоя; NodeEditor-интеграции нет | `algorithms/coffman-graham/{baseline,narrow,cycle}`: числовой result, ширина слоя и witness |
+| Fixed Worker client/executor | [client](layout/algorithms/fixed/src/worker/client.ts), [executor](layout/algorithms/fixed/src/worker/executor.ts) | `LAYOUT-003..004`, `LAYOUT-STORYBOOK-WORKER` Fixed; browser equivalence ready/presented | `workers/fixed/{equivalence,failure}`: отдельный Worker, direct/result equality, generation и сериализованный отказ |
+| Adaptive Worker client/executor | [client](layout/algorithms/adaptive/src/worker/client.ts), [executor](layout/algorithms/adaptive/src/worker/executor.ts) | `LAYOUT-STORYBOOK-WORKER` Adaptive; browser equivalence ready/presented | `workers/adaptive/{equivalence,failure}`: result, diagnostics equality и serialized witness |
+| TopDown Worker client/executor | [client](layout/algorithms/top-down/src/worker/client.ts), [executor](layout/algorithms/top-down/src/worker/executor.ts) | `LAYOUT-STORYBOOK-WORKER` TopDown; browser equivalence ready/presented | `workers/top-down/{equivalence,failure}`: result и cycle error |
+| Coffman–Graham Worker client/executor | [client](layout/algorithms/coffman-graham/src/worker/client.ts), [executor](layout/algorithms/coffman-graham/src/worker/executor.ts) | `LAYOUT-STORYBOOK-WORKER` Coffman–Graham; browser equivalence ready/presented | `workers/coffman-graham/{equivalence,failure}`: result и cycle error |
+| Общий transport: pending requests, cancelBefore, dispose, ошибки | [WorkerTransportClient, WorkerRemoteError](layout/execution/worker/src/transport.ts), [envelope types](layout/execution/worker/src/types/worker.ts) | `LAYOUT-STORYBOOK-TRANSPORT`: generation, cancel/dispose настоящего Worker; fault injection явно обозначен test double | `workers/transport/lifecycle`, `…/faults`: request IDs, mismatch, remote/error events, postMessage failure, terminate и listener cleanup |
 
-Текущие tests: [contract.test.ts](../layout/tests/contract.test.ts),
-[package-boundary.test.ts](../layout/tests/package-boundary.test.ts),
-[storybook.test.ts](../layout/tests/storybook.test.ts),
-[storybook-mount.test.ts](../layout/tests/storybook-mount.test.ts).
+Текущие tests: [contract.test.ts](layout/tests/contract.test.ts),
+[package-boundary.test.ts](layout/tests/package-boundary.test.ts),
+[storybook.test.ts](layout/tests/storybook.test.ts),
+[storybook-mount.test.ts](layout/tests/storybook-mount.test.ts).
 Исторические `LAYOUT-001..004` относятся к Fixed; новое evidence остальных
 алгоритмов и Worker приведено отдельно. `LAYOUT-STATIC-001` запрещает старые
 dev-only CSS exports, поэтому новый каталог не восстанавливает их в production.
 
 TopDown и Coffman–Graham доступны как числовые алгоритмы, но текущий
-[NodeTreeProps.layout](node-tree.tsx) принимает `LayoutResult` с WEST/EAST.
+[NodeTreeProps.layout](node-tree/src/node-tree.tsx) принимает `LayoutResult` с WEST/EAST.
 Публичный [SocketSide](socket.tsx) содержит только `left`/`right`.
 Хотя отдельный Link уже умеет cubic routes, этого недостаточно для полной
 интеграции алгоритмов с NORTH/SOUTH: согласно [PROJECT](../PROJECT.md), нужен
@@ -298,7 +306,7 @@ TopDown и Coffman–Graham доступны как числовые алгор�
 ## NodeType: отсутствующее поведение отдельным блоком
 
 Минимальный проект API и два конкретных сценария описаны в
-[NodeType: договор типа и экземпляра](../nodetree/node-type.md).
+[NodeType: договор типа и экземпляра](tree/node-type.md).
 Это отдельный проект договора; каталог и production API он не добавляет.
 
 `NodeValueType` описывает тип значения, `SocketKind` — визуальный preset,
@@ -317,7 +325,7 @@ TopDown и Coffman–Graham доступны как числовые алгор�
 | Изменение состава типа/режима | NodeTree; отображение Nodes | Reconcile/no-op/conflict проверены `NODETREE-TEMPLATE-007`, `NODETREE-TEMPLATE-008`; декларации состава и правил смены режима нет | `nodetree: node-types/structure/change`, `nodes: node-types/structure/change`: уцелевшие Parameters и Links сохраняют identity |
 | Восстановление и версии типа | NodeTree | Template versions и typed v2 проверены `NODETREE-TEMPLATE-003`, `NODETREE-TEMPLATE-006`; type-aware resolver и миграции типа отсутствуют | `nodetree: node-types/serialization/roundtrip`, `…/unknown-type`, `…/version` |
 | Тип подграфа и интерфейс входов/выходов | NodeTree; отображение Nodes | GraphScope/reference проверены `NODETREE-TEMPLATE-006`; они не материализуют тело подграфа | `nodetree: node-types/subgraph/instances` после отдельного договора |
-| Конфигурация / Property / Parameter | Договор NodeType | [Первый срез](../nodetree/node-type.md) предлагает фиксированный состав; решение о динамической конфигурации ещё требуется | Сначала конкретный пример конфигурации, затем адресный сценарий изменения; второй Store не вводится |
+| Конфигурация / Property / Parameter | Договор NodeType | [Первый срез](tree/node-type.md) предлагает фиксированный состав; решение о динамической конфигурации ещё требуется | Сначала конкретный пример конфигурации, затем адресный сценарий изменения; второй Store не вводится |
 | Числовая геометрия нестандартного Field | Template; потребители UI/Nodes | [PROJECT](../PROJECT.md) фиксирует отсутствующий generic compiled numeric plan | Отдельный срез платформенного владельца; ручная парная реализация Field + Layout не закрывает расширяемость |
 
 Эта таблица фиксирует требования к покрытию и границы владельцев. Она не

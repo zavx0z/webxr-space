@@ -4,7 +4,7 @@ import {createDocument, InputEvent, MouseEvent, type Element, type HTMLInputElem
 import {createSpaceElementFactories} from "@zavx0z/space"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {runtime} from "../.storybook/runtime.ts"
-import {PARAMETER_EXAMPLES, parameterFixture} from "../.storybook/stories/fixtures/parameters.ts"
+import {PARAMETER_EXAMPLES, parameterFixture} from "../parameters/.storybook/stories/fixtures/parameters.ts"
 import type {OwnerStoryDescriptor} from "../.storybook/stories/story-types.ts"
 
 const root = resolve(import.meta.dir, "../..")
@@ -18,10 +18,11 @@ type Variant = Readonly<{
   resources: Readonly<{fixture: string; tests: readonly string[]}>
 }>
 type Category = Readonly<{id: string; subjects: readonly Readonly<{id: string; apiName: string; variants: readonly Variant[]}>[]}>
-const catalog = await Bun.file(resolve(packageRoot, ".storybook/catalog.json")).json() as {categories: readonly Category[]}
+const catalogs = await Promise.all(["", "parameters", "sockets"].map(owner => Bun.file(resolve(packageRoot, owner, ".storybook/catalog.json")).json()))
+const catalog = {categories: catalogs.flatMap(value => value.categories)} as {categories: readonly Category[]}
 
 test("[NODES-CATALOG-001] every public Socket kind and Parameter mechanism is discoverable with owner evidence", async () => {
-  const {SOCKET_KINDS} = await import("@zavx0z/nodes/socket")
+  const {SOCKET_KINDS} = await import("@nodes/sockets/presets")
   expect(category("sockets").subjects.map(subject => subject.id)).toEqual([...SOCKET_KINDS])
   expect(category("parameters").subjects.map(subject => subject.id)).toEqual(Object.keys(PARAMETER_EXAMPLES))
   expect(category("components").subjects.map(subject => subject.apiName)).toEqual(["Node", "Frame", "Link", "NodeTree", "NodeEditor"])
@@ -30,10 +31,10 @@ test("[NODES-CATALOG-001] every public Socket kind and Parameter mechanism is di
     expect(routes.has(variant.route)).toBe(false)
     routes.add(variant.route)
     if (item.id === "layout") continue
-    const exports = await import(resolve(packageRoot, ".storybook", variant.module.path)) as Record<string, OwnerStoryDescriptor>
+    const exports = await import(resolve(packageRoot, variant.route.startsWith("parameters/") ? "parameters" : variant.route.startsWith("sockets/") ? "sockets" : "", ".storybook", variant.module.path)) as Record<string, OwnerStoryDescriptor>
     expect(exports[variant.module.export]?.route).toBe(variant.route)
     for (const resource of [variant.resources.fixture, ...variant.resources.tests]) {
-      expect(await Bun.file(resolve(packageRoot, ".storybook", resource)).exists()).toBe(true)
+      expect(await Bun.file(resolve(packageRoot, variant.route.startsWith("parameters/") ? "parameters" : variant.route.startsWith("sockets/") ? "sockets" : "", ".storybook", resource)).exists()).toBe(true)
     }
   }
 })
@@ -52,7 +53,7 @@ test("[NODES-CATALOG-002] all Socket kinds, directions, shapes and states mount 
 })
 
 test("[NODES-CATALOG-003] all Parameter variants use their production mechanism and the real Store", async () => {
-  const {resolveProjectedParameterPresentation} = await import("@zavx0z/nodes/parameter")
+  const {resolveProjectedParameterPresentation} = await import("@nodes/parameters/shared")
   for (const [mechanism] of Object.entries(PARAMETER_EXAMPLES)) {
     const kind = mechanism as keyof typeof PARAMETER_EXAMPLES
     const value = parameterFixture(kind, "field")
@@ -147,7 +148,7 @@ async function mount(variant: Variant) {
     present(value) { display.append(value.node) },
     reportDiagnostic(value) { diagnostics.push(value) },
   })
-  const module = await import(resolve(packageRoot, ".storybook", variant.module.path)) as Record<string, OwnerStoryDescriptor>
+  const module = await import(resolve(packageRoot, variant.route.startsWith("parameters/") ? "parameters" : variant.route.startsWith("sockets/") ? "sockets" : "", ".storybook", variant.module.path)) as Record<string, OwnerStoryDescriptor>
   try {
     await session.mount({route: variant.route, story: module[variant.module.export], signal: controller.signal})
     expect(diagnostics).toEqual([])

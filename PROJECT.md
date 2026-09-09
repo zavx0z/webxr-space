@@ -158,7 +158,9 @@ transport, но не меняют стандартный Selection API. Interpre
 
 ## Пакеты
 
-Все пакеты находятся прямо в корне и используют Bun 1.4 и TypeScript 7.
+Пакеты используют Bun 1.4 и TypeScript 7. Самостоятельные владельцы могут
+составлять вложенное workspace: нодовая подсистема находится в `nodes`, её
+дочерние пакеты сохраняют собственные package.json, зависимости и lifecycle.
 
 Число пакетов не фиксировано. Отдельный пакет появляется, когда у него есть
 самостоятельная ответственность и реальный потребитель. Текущий согласованный
@@ -197,12 +199,16 @@ Nodes.
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
 | `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` |
 | `ui` | `@zavx0z/ui` | Универсальные UI-компоненты, тема и иконки |
-| `nodetree` | `@zavx0z/nodetree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
-| `layout` | `@zavx0z/layout` | Алгоритмы расположения нод и Worker |
-| `nodes` | `@zavx0z/nodes` | Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link |
+| `nodes` | `@webxr/nodes` | Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link |
+| `nodes/tree` | `@nodes/tree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
+| `nodes/layout` | `@nodes/layout` | Алгоритмы расположения нод и Worker |
+| `nodes/parameters` | `@nodes/parameters` | Представления параметров и проекция внешнего Parameter Store |
+| `nodes/sockets` | `@nodes/sockets` | Адресуемый Socket и его визуальные предустановки |
 | `devtools` | `@zavx0z/devtools` | Диагностика Document, состояния элементов и результатов Renderer |
 
-Состав Storybook и порядок пакетов задаются корневым `package.json#workspaces`.
+Состав Storybook и порядок пакетов задаются `package.json#workspaces` выбранного
+пакета и рекурсивно его workspace-пакетов. Корневой Bun workspace перечисляет
+также вложенные пакеты для установки и запуска общих проверок.
 Корневой `.storybook/manifest.json` не дублирует этот список в `packages`.
 Пакет может владеть собственной `.storybook/manifest.json`; без неё он также
 остаётся видимым. `catalog` и `runtime` появляются только вместе с настоящими
@@ -211,13 +217,22 @@ Nodes.
 
 ## Модули пакета
 
-Публичный модуль содержит настоящую реализацию владельца, а не переэкспорт
-скрытого файла.
+Реализация группируется по ответственности. В структурном каталоге пакет
+определяется собственным package.json, модуль — собственной директорией `src`,
+а промежуточные директории образуют категории. `exports` задаёт публичные
+импорты и не определяет роль директории; переэкспорт из `index.ts` также не
+превращает категорию в модуль.
 
-`src/` используется только для внутренней механики. Код группируется по
-назначению. `src/shared` допустим только для кода, который используют минимум
-два независимых владельца. `misc`, `common`, `utils`, общий `src/index.ts` и
-импорты чужого `src/**` запрещены.
+`index.ts` категории или предмета содержит ведущий `@packageDocumentation`
+с описанием ответственности. Реализация предмета находится в его `src`,
+локальные behavioral tests — в `tests` рядом с ним. Интеграционные проверки
+нескольких предметов принадлежат `tests` пакета.
+
+Общая и базовая механика находится в package-level `shared`, который не
+появляется в структурном каталоге. Он не создаёт дополнительный runtime owner.
+Импорты чужого private `src/**` и совместимые копии реализаций запрещены.
+Этот договор не требует переносить несвязанные платформенные пакеты вместе
+с изменением нодовой подсистемы.
 
 ### UI
 
@@ -267,20 +282,63 @@ Field. Конечный потребитель получает готовую �
 
 ```text
 nodes/
-├── node-tree.tsx
-├── node-editor.tsx
-├── frame.tsx
-├── node.tsx
-├── parameter.tsx
-├── socket.tsx
-├── link.tsx
-├── src/
+├── package.json               # @webxr/nodes и дочерние workspaces
+├── node-tree/src/
+├── node-editor/src/
+├── frame/src/
+├── node/src/
+├── link/src/
+├── shared/
+├── tree/                      # @nodes/tree
+│   ├── model/
+│   │   ├── node-tree/src/
+│   │   ├── parameter/src/
+│   │   └── projection/src/
+│   ├── persistence/
+│   │   ├── serialization/src/
+│   │   └── json-patch/src/
+│   ├── shared/
+│   └── tests/
+├── layout/                    # @nodes/layout
+│   ├── algorithms/
+│   │   ├── fixed/src/
+│   │   ├── adaptive/src/
+│   │   ├── top-down/src/
+│   │   └── coffman-graham/src/
+│   ├── protocol/types/src/
+│   ├── execution/worker/src/
+│   ├── shared/
+│   └── tests/
+├── parameters/                # @nodes/parameters
+│   ├── text/
+│   ├── numeric/
+│   ├── boolean/
+│   ├── choice/
+│   ├── composite/
+│   ├── references/
+│   ├── collections/
+│   ├── output/
+│   └── shared/
+├── sockets/                   # @nodes/sockets
+│   ├── socket/src/
+│   └── shared/
 ├── tests/
 └── .storybook/
 ```
 
-Каждый публичный TSX является настоящим владельцем. Скрытые `NodeCard`,
-`ParameterRow` и `SocketPort` не подменяют публичные Node, Parameter и Socket.
+Каждый пакет имеет собственные package.json и README. Категории Parameter
+содержат предметы с отдельными `src` и TSDoc, а общая проекция Store остаётся
+в `parameters/shared`. Client и executor конкретной политики лежат рядом с
+алгоритмом в `layout/algorithms/<policy>/src/worker`; транспорт поколений общий.
+Публичные Node, Parameter и Socket сохраняют production-реализации и не
+подменяются скрытыми `NodeCard`, `ParameterRow` или `SocketPort`.
+
+Путь `nodes` выражает принадлежность подсистеме и не переносит состояние
+между пакетами: `tree` владеет моделью, `layout` — числовой геометрией,
+`parameters` и `sockets` — представлениями, `@webxr/nodes` — их композицией.
+У NodeTree и NodeEditor сохраняется одна принятая пара snapshot/layout;
+pending блокирует старый ввод с сохранением Element и Parameter Store identity.
+NodeType остаётся отдельным проектом договора, без новой материализации типов.
 
 Геометрия Node строится из чисел до Layout и не измеряется после отрисовки:
 минимальная ширина `100px`, граница `1px`, шапка `22px`, верхний и нижний
@@ -363,7 +421,7 @@ Assertions и deadlines от этого не меняются.
 а трёхмерная история — непосредственно в единственном `Space`. На странице
 должны оставаться одни `Document`, Canvas, `Space`, `ViewPoint`, ввод и цикл кадров.
 
-Тот же проект Storybook показывает `@zavx0z/nodes` через настоящий `NodeEditor`
+Тот же проект Storybook показывает `@webxr/nodes` через настоящий `NodeEditor`
 в `Display`. Первый набор примеров покрывает фиксированную и адаптивную политики,
 альбомную и портретную форму области, общий двунаправленный сокет и составные
 `Frame`. `TopDown` и `Coffman–Graham` не подменяются плоской картинкой: для их

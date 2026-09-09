@@ -8,6 +8,7 @@ export type PublicModuleEntry = Readonly<{
   entrypoint: string
 }>
 
+/** Несколько точных модулей с одним id образуют объединённую публичную поверхность. */
 export async function readPublicExportSymbols(
   entries: readonly PublicModuleEntry[],
 ): Promise<ReadonlyMap<string, readonly string[]>> {
@@ -70,7 +71,10 @@ export async function readPublicExportSymbols(
       const exports = await project.checker.getExportsOfModule(moduleSymbol)
       result.set(
         id,
-        Object.freeze(exports.map(symbol => symbol.name).sort()),
+        Object.freeze([...new Set([
+          ...(result.get(id) ?? []),
+          ...exports.map(symbol => symbol.name),
+        ])].sort()),
       )
     }
 

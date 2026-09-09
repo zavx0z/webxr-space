@@ -47,7 +47,7 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   expect(manifest).toMatchObject({
     runtime: {module: "./runtime.ts", export: "runtime"},
   })
-  expect((await Bun.file(resolve(nodesRoot, "package.json")).json()).name).toBe("@zavx0z/nodes")
+  expect((await Bun.file(resolve(nodesRoot, "package.json")).json()).name).toBe("@webxr/nodes")
   for (const key of ["kind", "id", "packageJson"]) expect(manifest).not.toHaveProperty(key)
   expect(manifest.authorStyleSheets).toBeUndefined()
   expect(runtime.protocol).toBe("storybook-runtime/4")
@@ -70,9 +70,9 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
     nodesRoot,
     ".storybook/stories/compiled/compiled-layout-story.tsx",
   )).text()
-  expect(storySource).toContain('from "@zavx0z/nodes/node-editor"')
-  expect(storySource).toContain('from "@zavx0z/layout/fixed"')
-  expect(storySource).toContain('from "@zavx0z/layout/adaptive"')
+  expect(storySource).toContain('from "@webxr/nodes/node-editor"')
+  expect(storySource).toContain('from "@nodes/layout/fixed"')
+  expect(storySource).toContain('from "@nodes/layout/adaptive"')
   expect(storySource).not.toContain("layoutTopDown")
   expect(storySource).not.toContain("layoutCoffmanGraham")
   expect(storySource).not.toContain("renderLayoutSvg")

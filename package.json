@@ -19,9 +19,11 @@
     "browser",
     "space",
     "ui",
-    "nodetree",
-    "layout",
     "nodes",
+    "nodes/tree",
+    "nodes/layout",
+    "nodes/parameters",
+    "nodes/sockets",
     "devtools"
   ],
   "scripts": {

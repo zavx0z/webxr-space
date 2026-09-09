@@ -77,9 +77,9 @@ test("[UI-002] UI остаётся target-neutral production package", async () 
   const forbiddenPackages = [
     "@zavx0z/browser",
     "@zavx0z/engine",
-    "@zavx0z/layout",
-    "@zavx0z/nodes",
-    "@zavx0z/nodetree",
+    "@nodes/layout",
+    "@webxr/nodes",
+    "@nodes/tree",
     "@zavx0z/renderer",
     "@zavx0z/space",
     "@zavx0z/webgpu",

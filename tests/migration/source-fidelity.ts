@@ -42,16 +42,24 @@ export const publicModuleEntrypoints = Object.freeze({
   "new-browser": "browser/src/index.ts",
   "new-space": "space/src/index.ts",
   "old-nodes-core": "projects/node/packages/core/index.ts",
-  "new-nodetree": "nodetree/index.ts",
+  "new-nodetree": "nodes/tree/index.ts",
   "old-nodes-layout": "projects/node/packages/layout/src/index.ts",
-  "new-layout": "layout/src/index.ts",
+  "new-layout": "nodes/layout/index.ts",
   "old-nodes-worker": "projects/node/packages/worker/index.ts",
-  "new-layout-worker": "layout/worker/index.ts",
+  "new-layout-worker": "nodes/layout/execution/worker/index.ts",
   "old-nodes-ui": "projects/node/packages/ui/index.ts",
-  "new-nodes": "nodes/index.ts",
   "old-devtools": "../renderer/packages/devtools/src/index.ts",
   "new-devtools": "devtools/inspector.ts",
 } as const)
+
+/**
+Текущие публичные модули прежнего агрегированного API.
+Пакеты сменили физическое расположение и разделили exports; исходные списки
+символов и revision выше сохраняют историческое значение.
+*/
+export const publicPackageEntrypoints = Object.freeze({
+  "new-nodes": Object.freeze(["nodes", "nodes/parameters", "nodes/sockets"]),
+})
 
 export const publicSymbolComparisons: readonly PublicSymbolComparison[] = Object.freeze([
   {expectedSourceCount: 114, sourceId: "old-engine", targetIds: ["new-engine", "new-webgpu-for-engine"]},
@@ -169,7 +177,7 @@ export const requirementEvidenceFiles = Object.freeze({
   "EXP-002": "tests/experience/contract.test.ts",
   "EXP-003": "tests/experience/contract.test.ts",
   "EXP-004": "tests/experience/contract.test.ts",
-  "LAYOUT-STATIC-001": "layout/tests/package-boundary.test.ts",
+  "LAYOUT-STATIC-001": "nodes/layout/tests/package-boundary.test.ts",
   "REN-001": "renderer/tests/contract.test.ts",
   "REN-002": "renderer/tests/contract.test.ts",
 } as const)

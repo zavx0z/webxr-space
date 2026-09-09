@@ -80,7 +80,7 @@ test("[UI-BREADCRUMBS-001] путь является ordered navigation с те�
   document.append(container)
   const component = createRoot(container)
   const items = Object.freeze([
-    Object.freeze({id: "package", label: "@zavx0z/nodes"}),
+    Object.freeze({id: "package", label: "@webxr/nodes"}),
     Object.freeze({id: "layout", label: "Раскладка"}),
     Object.freeze({id: "adaptive", label: "Адаптивная"}),
   ])

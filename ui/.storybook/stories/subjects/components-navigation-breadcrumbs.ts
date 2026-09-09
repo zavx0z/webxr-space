@@ -3,7 +3,7 @@ import {homeIcon} from "../../../themes/icons.ts"
 
 const items = Object.freeze([
   Object.freeze({id: "home", label: "Главная", iconSrc: homeIcon}),
-  Object.freeze({id: "package", label: "@zavx0z/nodes"}),
+  Object.freeze({id: "package", label: "@webxr/nodes"}),
   Object.freeze({id: "layout", label: "Раскладка"}),
   Object.freeze({id: "adaptive", label: "Адаптивная"}),
   Object.freeze({id: "shared", label: "Общий сокет"}),

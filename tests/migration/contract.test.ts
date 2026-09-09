@@ -21,6 +21,7 @@ import type {
 import {readPublicExportSymbols} from "./public-export-symbols.ts"
 import {
   publicModuleEntrypoints,
+  publicPackageEntrypoints,
   publicSymbolComparisons,
   publicSymbolDispositions,
   requirementEvidenceFiles,
@@ -41,7 +42,6 @@ const forbiddenPackageNames = Object.freeze([
   "@engine/core",
   "@nodes/core",
   "@nodes/editor",
-  "@nodes/layout",
   "@nodes/ui",
   "@nodes/worker",
   "@ui/components",
@@ -49,6 +49,9 @@ const forbiddenPackageNames = Object.freeze([
   "@zavx0z/react",
   "@zavx0z/renderer-browser",
   "@zavx0z/renderer-webgpu",
+  "@zavx0z/nodetree",
+  "@zavx0z/layout",
+  "@zavx0z/nodes",
 ] as const)
 
 const forbiddenRootDirectories = Object.freeze([
@@ -286,12 +289,26 @@ describe("Граница конечного переноса", () => {
 
   test("[MIG-003] новая реализация не подменяет прежнее поведение упрощённым", async () => {
     const project = await Bun.file(join(root, "PROJECT.md")).text()
-    const symbols = await readPublicExportSymbols(
-      Object.entries(publicModuleEntrypoints).filter(([id]) => id.startsWith("new-")).map(([id, entrypoint]) => ({
+    const entries = Object.entries(publicModuleEntrypoints)
+      .filter(([id]) => id.startsWith("new-"))
+      .map(([id, entrypoint]) => ({
         id,
         entrypoint: resolve(root, entrypoint),
-      })),
-    )
+      }))
+    for (const [id, directories] of Object.entries(publicPackageEntrypoints)) {
+      for (const directory of directories) {
+        const manifest = await readManifest(join(root, directory, "package.json"))
+        for (const entrypoint of Object.values(manifest.exports ?? {})) {
+          assertRequirement(
+            typeof entrypoint === "string" && /\.[cm]?[jt]sx?$/u.test(entrypoint),
+            "MIG-003",
+            `${directory}: public symbol target должен быть точным модулем исходного API`,
+          )
+          entries.push({id, entrypoint: resolve(root, directory, entrypoint as string)})
+        }
+      }
+    }
+    const symbols = await readPublicExportSymbols(entries)
     const evidenceFiles = new Set<string>()
 
     for (const comparison of publicSymbolComparisons) {
@@ -399,9 +416,11 @@ describe("Граница конечного переноса", () => {
       )).filter(path => !path.split("/").some(segment => excludedSegments.has(segment)))
       assertSameStrings(
         manifests,
-        ["package.json"],
+        packageDirectories
+          .filter(directory => isInside(packageRoot, join(root, directory)))
+          .map(directory => relative(packageRoot, join(root, directory, "package.json"))),
         "MIG-004",
-        `${packageName} не должен содержать вложенный package owner`,
+        `${packageName} должен содержать только согласованных вложенных package owners`,
       )
     }
 

@@ -1,15 +1,15 @@
 import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"
 import type {Document} from "@zavx0z/dom"
-import {createNodeTree, createNodeTreeExternalStore, type NodeJsonValue, type NodeTreeSnapshot} from "@zavx0z/nodetree"
-import {layoutFixed} from "@zavx0z/layout/fixed"
-import {Node, planProjectedNodeGeometry} from "@zavx0z/nodes/node"
-import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodeTreeSelection, type NodeTreeTransform} from "@zavx0z/nodes/node-tree"
-import {NodeEditor} from "@zavx0z/nodes/node-editor"
-import {NumberParameter} from "@zavx0z/nodes/parameter"
-import {Frame} from "@zavx0z/nodes/frame"
-import {Link, createCubicLinkRoute, type LinkDefinition} from "@zavx0z/nodes/link"
+import {createNodeTree, createNodeTreeExternalStore, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"
+import {layoutFixed} from "@nodes/layout/fixed"
+import {Node, planProjectedNodeGeometry} from "@webxr/nodes/node"
+import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"
+import {NodeEditor} from "@webxr/nodes/node-editor"
+import {NumberParameter} from "@nodes/parameters/number"
+import {Frame} from "@webxr/nodes/frame"
+import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"
 import {Button} from "@zavx0z/ui/buttons/button"
-import {parameterFixture} from "../fixtures/parameters.ts"
+import {parameterFixture} from "../../../parameters/.storybook/stories/fixtures/parameters.ts"
 import {mountNodesStory} from "../mount.ts"
 
 export function createComponentStory(document: Document, route: string) {
@@ -368,7 +368,7 @@ function linkSource(variant: string): string {
   return [
     'import {createRoot, useMemo, useSyncExternalStore} from "@zavx0z/component"',
     'import type {HTMLElement} from "@zavx0z/dom"',
-    'import {Link, createCubicLinkRoute, type LinkDefinition} from "@zavx0z/nodes/link"',
+    'import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"',
     'import {Button} from "@zavx0z/ui/buttons/button"',
     "",
     'function routeFor(cubic: boolean): LinkDefinition["route"] {',
@@ -454,7 +454,7 @@ function frameSource(variant: string): string {
   return [
     'import {createRoot, useState} from "@zavx0z/component"',
     'import type {HTMLElement} from "@zavx0z/dom"',
-    'import {Frame} from "@zavx0z/nodes/frame"',
+    'import {Frame} from "@webxr/nodes/frame"',
     "",
     "function FrameContent() {",
     `  return <p>${variant === "nested" ? "Содержимое вложенной Frame" : "Нажмите на рамку, чтобы изменить выбор."}</p>`,
@@ -519,12 +519,12 @@ function graphSource(component: string, variant: string): string {
   return [
     'import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"',
     'import type {HTMLElement} from "@zavx0z/dom"',
-    'import {createNodeTree, createNodeTreeExternalStore, Parameter, type NodeJsonValue, type NodeTreeSnapshot} from "@zavx0z/nodetree"',
-    `import {${component === "node" ? "Node, planProjectedNodeGeometry" : "planProjectedNodeGeometry"}} from "@zavx0z/nodes/node"`,
-    `import {${component === "node-tree" ? "NodeTree, " : ""}${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodeTreeSelection, type NodeTreeTransform} from "@zavx0z/nodes/node-tree"`,
-    ...(component === "node-editor" ? ['import {NodeEditor} from "@zavx0z/nodes/node-editor"'] : []),
-    ...(component !== "node" ? ['import {layoutFixed} from "@zavx0z/layout/fixed"'] : []),
-    ...(authored ? ['import {NumberParameter} from "@zavx0z/nodes/parameter"'] : []),
+    'import {createNodeTree, createNodeTreeExternalStore, Parameter, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"',
+    `import {${component === "node" ? "Node, planProjectedNodeGeometry" : "planProjectedNodeGeometry"}} from "@webxr/nodes/node"`,
+    `import {${component === "node-tree" ? "NodeTree, " : ""}${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"`,
+    ...(component === "node-editor" ? ['import {NodeEditor} from "@webxr/nodes/node-editor"'] : []),
+    ...(component !== "node" ? ['import {layoutFixed} from "@nodes/layout/fixed"'] : []),
+    ...(authored ? ['import {NumberParameter} from "@nodes/parameters/number"'] : []),
     'import {Button} from "@zavx0z/ui/buttons/button"',
     "",
     "function numberParameter() {",

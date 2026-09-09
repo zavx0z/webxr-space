@@ -1,0 +1,38 @@
+{
+  "name": "@nodes/layout",
+  "label": "Раскладка",
+  "version": "0.0.0",
+  "description": "Алгоритмы расположения нод и Worker",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./index.ts",
+    "./fixed": "./algorithms/fixed/index.ts",
+    "./adaptive": "./algorithms/adaptive/index.ts",
+    "./top-down": "./algorithms/top-down/index.ts",
+    "./coffman-graham": "./algorithms/coffman-graham/index.ts",
+    "./types": "./protocol/types/index.ts",
+    "./worker": "./execution/worker/index.ts",
+    "./worker/types": "./execution/worker/src/types/worker.ts",
+    "./worker/transport": "./execution/worker/src/transport.ts",
+    "./worker/fixed/client": "./algorithms/fixed/src/worker/client.ts",
+    "./worker/fixed/executor": "./algorithms/fixed/src/worker/executor.ts",
+    "./worker/adaptive/client": "./algorithms/adaptive/src/worker/client.ts",
+    "./worker/adaptive/executor": "./algorithms/adaptive/src/worker/executor.ts",
+    "./worker/top-down/client": "./algorithms/top-down/src/worker/client.ts",
+    "./worker/top-down/executor": "./algorithms/top-down/src/worker/executor.ts",
+    "./worker/coffman-graham/client": "./algorithms/coffman-graham/src/worker/client.ts",
+    "./worker/coffman-graham/executor": "./algorithms/coffman-graham/src/worker/executor.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "d3-dag": "0.9.1"
+  }
+}

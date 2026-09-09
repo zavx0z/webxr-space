@@ -32,7 +32,7 @@ WebXR — единая визуальная платформа для прило
 - [Подключение приложения через Browser](browser/README.md).
 - [Пространственные элементы](space/README.md).
 - [Пример приложения](examples/application/README.md).
-- [Модель графа](nodetree/README.md) и [визуальный редактор](nodes/README.md).
+- [Модель графа](nodes/tree/README.md) и [визуальный редактор](nodes/README.md).
 
 ## Документация в Storybook
 

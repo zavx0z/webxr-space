@@ -1,9 +1,9 @@
 import {DisplayElement} from "@zavx0z/dom/display"
-import {layoutAdaptiveWithDiagnostics} from "@zavx0z/layout/adaptive"
-import {layoutFixed} from "@zavx0z/layout/fixed"
-import type {LayoutResult} from "@zavx0z/layout/types"
-import {createNodeTree, createNodeTreeExternalStore} from "@zavx0z/nodetree"
-import {NodeEditor} from "@zavx0z/nodes/node-editor"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutFixed} from "@nodes/layout/fixed"
+import type {LayoutResult} from "@nodes/layout/types"
+import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"
+import {NodeEditor} from "@webxr/nodes/node-editor"
 import {createRoot} from "@zavx0z/component"
 import type {
   Document as SemanticDocument,
@@ -140,9 +140,9 @@ function sourceFor(fixture: LayoutStoryFixture): string {
         "const diagnostics = outcome.diagnostics",
       ].join("\n")
   return [
-    `import {${fixture.policy === "fixed" ? "layoutFixed" : "layoutAdaptiveWithDiagnostics"}} from "@zavx0z/layout/${fixture.policy}"`,
-    'import {createNodeTree, createNodeTreeExternalStore} from "@zavx0z/nodetree"',
-    'import {NodeEditor} from "@zavx0z/nodes/node-editor"',
+    `import {${fixture.policy === "fixed" ? "layoutFixed" : "layoutAdaptiveWithDiagnostics"}} from "@nodes/layout/${fixture.policy}"`,
+    'import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"',
+    'import {NodeEditor} from "@webxr/nodes/node-editor"',
     'import {createRoot} from "@zavx0z/component"',
     "",
     "const tree = createNodeTree(definition)",

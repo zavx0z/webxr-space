@@ -6,18 +6,16 @@ const root = resolve(import.meta.dir, "../..")
 const packageRoot = resolve(root, "nodes")
 
 const publicOwners = Object.freeze({
-  "./node-tree": ["./node-tree.tsx", "NodeTree"],
-  "./node-editor": ["./node-editor.tsx", "NodeEditor"],
-  "./frame": ["./frame.tsx", "Frame"],
-  "./node": ["./node.tsx", "Node"],
-  "./parameter": ["./parameter.tsx", "Parameter"],
-  "./socket": ["./socket.tsx", "Socket"],
-  "./link": ["./link.tsx", "Link"],
+  "./node-tree": ["./node-tree/src/node-tree.tsx", "NodeTree"],
+  "./node-editor": ["./node-editor/src/node-editor.tsx", "NodeEditor"],
+  "./frame": ["./frame/src/frame.tsx", "Frame"],
+  "./node": ["./node/src/node.tsx", "Node"],
+  "./link": ["./link/src/link.tsx", "Link"],
 } as const)
 
 test("[NODES-001] каждый public TSX является compilable natural owner", async () => {
   const packageJson = await readPackageJson(packageRoot)
-  expect(packageJson.exports["."]).toBe("./index.ts")
+  expect(packageJson.exports["."]).toBe(undefined)
   expect(Object.keys(packageJson.exports).filter(key => key !== ".")).toEqual(Object.keys(publicOwners))
 
   const compiler = new JsxCompilerSession({
@@ -75,8 +73,8 @@ test("[NODES-003] Nodes не создаёт platform owners", async () => {
 })
 
 test("[NODES-004] aggregate NodeTree consumes only the supplied nodetree Store", async () => {
-  const nodeTreeSource = await Bun.file(resolve(packageRoot, "node-tree.tsx")).text()
-  const parameterSource = await Bun.file(resolve(packageRoot, "parameter.tsx")).text()
+  const nodeTreeSource = await Bun.file(resolve(packageRoot, "node-tree/src/node-tree.tsx")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/contracts.ts")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/view.ts")).text()
+  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/src/parameter.tsx")).text()
   const propsStart = nodeTreeSource.indexOf("export type NodeTreeProps")
   const propsEnd = nodeTreeSource.indexOf("\n}>", propsStart)
   const propsContract = nodeTreeSource.slice(propsStart, propsEnd)
@@ -95,8 +93,8 @@ test("[NODES-004] aggregate NodeTree consumes only the supplied nodetree Store",
 
 test("[NODES-005] domain imports resolve only through public package contracts", async () => {
   const manifests = new Map([
-    ["@zavx0z/nodetree", await readPackageJson(resolve(root, "nodetree"))],
-    ["@zavx0z/layout", await readPackageJson(resolve(root, "layout"))],
+    ["@nodes/tree", await readPackageJson(resolve(root, "nodes/tree"))],
+    ["@nodes/layout", await readPackageJson(resolve(root, "nodes/layout"))],
     ["@zavx0z/ui", await readPackageJson(resolve(root, "ui"))],
   ])
   const specifiers = importSpecifiers(await productionSource())
@@ -118,8 +116,8 @@ test("[NODES-005] domain imports resolve only through public package contracts",
 })
 
 test("[NODES-006] projected Parameter render и геометрия используют один resolver", async () => {
-  const parameterSource = await Bun.file(resolve(packageRoot, "parameter.tsx")).text()
-  const nodeSource = await Bun.file(resolve(packageRoot, "node.tsx")).text()
+  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/src/parameter.tsx")).text()
+  const nodeSource = await Bun.file(resolve(packageRoot, "node/src/node.tsx")).text()
 
   expect(parameterSource).toContain("const resolved = resolveProjectedParameterPresentation(snapshot)")
   expect(parameterSource).toContain("projectedParameterFieldHeight(")
@@ -139,7 +137,7 @@ async function readPackageJson(path: string): Promise<Readonly<{
 async function productionSource(): Promise<string> {
   const sources: string[] = []
   for await (const relativePath of new Bun.Glob("**/*.{ts,tsx}").scan({cwd: packageRoot})) {
-    if (relativePath.startsWith("tests/")) continue
+    if (relativePath.split("/").some(part => ["tests", ".storybook", "node_modules", "tree", "layout", "parameters", "sockets"].includes(part))) continue
     sources.push(await Bun.file(resolve(packageRoot, relativePath)).text())
   }
   return sources.join("\n")

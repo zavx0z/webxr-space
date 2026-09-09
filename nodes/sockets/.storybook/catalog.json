@@ -1,0 +1,2217 @@
+{
+  "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/catalog.schema.json",
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "sockets",
+      "label": "Сокеты",
+      "route": "sockets",
+      "subjects": [
+        {
+          "id": "boolean",
+          "kind": "component",
+          "label": "Boolean",
+          "apiName": "Socket",
+          "route": "sockets/boolean",
+          "tags": [
+            "Socket",
+            "boolean",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/boolean/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/boolean/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/boolean/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/boolean/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/boolean/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/boolean/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_boolean_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "float",
+          "kind": "component",
+          "label": "Float",
+          "apiName": "Socket",
+          "route": "sockets/float",
+          "tags": [
+            "Socket",
+            "float",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/float/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/float/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/float/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/float/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/float/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/float/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_float_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "integer",
+          "kind": "component",
+          "label": "Integer",
+          "apiName": "Socket",
+          "route": "sockets/integer",
+          "tags": [
+            "Socket",
+            "integer",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/integer/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/integer/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/integer/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/integer/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/integer/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/integer/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_integer_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "vector",
+          "kind": "component",
+          "label": "Vector",
+          "apiName": "Socket",
+          "route": "sockets/vector",
+          "tags": [
+            "Socket",
+            "vector",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/vector/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/vector/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/vector/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/vector/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/vector/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/vector/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_vector_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "rotation",
+          "kind": "component",
+          "label": "Rotation",
+          "apiName": "Socket",
+          "route": "sockets/rotation",
+          "tags": [
+            "Socket",
+            "rotation",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/rotation/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/rotation/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/rotation/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/rotation/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/rotation/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/rotation/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_rotation_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "color",
+          "kind": "component",
+          "label": "Color",
+          "apiName": "Socket",
+          "route": "sockets/color",
+          "tags": [
+            "Socket",
+            "color",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/color/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/color/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/color/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/color/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/color/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/color/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_color_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "string",
+          "kind": "component",
+          "label": "String",
+          "apiName": "Socket",
+          "route": "sockets/string",
+          "tags": [
+            "Socket",
+            "string",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/string/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/string/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/string/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/string/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/string/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/string/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_string_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "menu",
+          "kind": "component",
+          "label": "Menu",
+          "apiName": "Socket",
+          "route": "sockets/menu",
+          "tags": [
+            "Socket",
+            "menu",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/menu/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/menu/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/menu/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/menu/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/menu/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/menu/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_menu_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "object",
+          "kind": "component",
+          "label": "Object",
+          "apiName": "Socket",
+          "route": "sockets/object",
+          "tags": [
+            "Socket",
+            "object",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/object/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/object/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/object/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/object/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/object/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/object/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_object_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "collection",
+          "kind": "component",
+          "label": "Collection",
+          "apiName": "Socket",
+          "route": "sockets/collection",
+          "tags": [
+            "Socket",
+            "collection",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/collection/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/collection/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/collection/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/collection/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/collection/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/collection/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_collection_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "image",
+          "kind": "component",
+          "label": "Image",
+          "apiName": "Socket",
+          "route": "sockets/image",
+          "tags": [
+            "Socket",
+            "image",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/image/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/image/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/image/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/image/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/image/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/image/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_image_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "material",
+          "kind": "component",
+          "label": "Material",
+          "apiName": "Socket",
+          "route": "sockets/material",
+          "tags": [
+            "Socket",
+            "material",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/material/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/material/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/material/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/material/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/material/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/material/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_material_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "texture",
+          "kind": "component",
+          "label": "Texture",
+          "apiName": "Socket",
+          "route": "sockets/texture",
+          "tags": [
+            "Socket",
+            "texture",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/texture/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/texture/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/texture/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/texture/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/texture/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/texture/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_texture_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "geometry",
+          "kind": "component",
+          "label": "Geometry",
+          "apiName": "Socket",
+          "route": "sockets/geometry",
+          "tags": [
+            "Socket",
+            "geometry",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/geometry/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/geometry/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/geometry/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/geometry/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/geometry/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/geometry/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_geometry_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "matrix",
+          "kind": "component",
+          "label": "Matrix",
+          "apiName": "Socket",
+          "route": "sockets/matrix",
+          "tags": [
+            "Socket",
+            "matrix",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/matrix/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/matrix/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/matrix/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/matrix/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/matrix/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/matrix/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_matrix_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "shader",
+          "kind": "component",
+          "label": "Shader",
+          "apiName": "Socket",
+          "route": "sockets/shader",
+          "tags": [
+            "Socket",
+            "shader",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/shader/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/shader/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/shader/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/shader/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/shader/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/shader/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_shader_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "bundle",
+          "kind": "component",
+          "label": "Bundle",
+          "apiName": "Socket",
+          "route": "sockets/bundle",
+          "tags": [
+            "Socket",
+            "bundle",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/bundle/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/bundle/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/bundle/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/bundle/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/bundle/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/bundle/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_bundle_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "closure",
+          "kind": "component",
+          "label": "Closure",
+          "apiName": "Socket",
+          "route": "sockets/closure",
+          "tags": [
+            "Socket",
+            "closure",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/closure/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/closure/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/closure/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/closure/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/closure/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/closure/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_closure_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        },
+        {
+          "id": "custom",
+          "kind": "component",
+          "label": "Custom",
+          "apiName": "Socket",
+          "route": "sockets/custom",
+          "tags": [
+            "Socket",
+            "custom",
+            "сокет",
+            "формы",
+            "направления"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "input",
+              "label": "Вход",
+              "route": "sockets/custom/input",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_input"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "output",
+              "label": "Выход",
+              "route": "sockets/custom/output",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_output"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "bidirectional",
+              "label": "Двунаправленный",
+              "route": "sockets/custom/bidirectional",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_bidirectional"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "shapes",
+              "label": "Все формы",
+              "route": "sockets/custom/shapes",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_shapes"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "states",
+              "label": "Состояния",
+              "route": "sockets/custom/states",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_states"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "presentation",
+              "label": "Endpoint и строка",
+              "route": "sockets/custom/presentation",
+              "module": {
+                "path": "./stories/subjects/sockets.ts",
+                "export": "story_custom_presentation"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/socket-stories.tsx",
+                "tests": [
+                  "../socket/tests/contract.test.ts"
+                ]
+              }
+            }
+          ],
+          "directory": "socket"
+        }
+      ]
+    }
+  ]
+}

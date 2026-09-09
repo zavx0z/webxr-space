@@ -1,0 +1,47 @@
+{
+  "name": "@nodes/parameters",
+  "label": "Параметры",
+  "version": "0.0.0",
+  "description": "Представления параметров нод и проекция Parameter Store",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    "./text": "./text/text/src/text.tsx",
+    "./number": "./numeric/number/src/number.tsx",
+    "./slider": "./numeric/slider/src/slider.tsx",
+    "./checkbox": "./boolean/checkbox/src/checkbox.tsx",
+    "./switch": "./boolean/switch/src/switch.tsx",
+    "./select": "./choice/select/src/select.tsx",
+    "./cycle": "./choice/cycle/src/cycle.tsx",
+    "./option-group": "./choice/option-group/src/option-group.tsx",
+    "./color": "./composite/color/src/color.tsx",
+    "./vector": "./composite/vector/src/vector.tsx",
+    "./matrix": "./composite/matrix/src/matrix.tsx",
+    "./path": "./references/path/src/path.tsx",
+    "./reference": "./references/reference/src/reference.tsx",
+    "./collection": "./collections/collection/src/collection.tsx",
+    "./output": "./output/output/src/output.tsx",
+    "./shared": "./shared/parameter/src/parameter.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependenciesMeta": {
+    "@nodes/tree": {"optional": true},
+    "@nodes/sockets": {"optional": true},
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/template": {"optional": true},
+    "@zavx0z/ui": {"optional": true}
+  },
+  "peerDependencies": {
+    "@nodes/tree": "*",
+    "@nodes/sockets": "*",
+    "@zavx0z/component": "*",
+    "@zavx0z/template": "*",
+    "@zavx0z/ui": "*"
+  }
+}

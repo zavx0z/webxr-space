@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-09-09T07:20:11Z",
+  "scope": "Structural migration of the complete node subsystem; all declared variants retained; live checks cover representative interactions, not every visual variant",
+  "totalVariants": 314,
+  "packages": [
+    {
+      "packageId": "@webxr/nodes",
+      "variants": 27,
+      "tests": 38,
+      "activeRevision": "33500a93ee17d0448aed1f46"
+    },
+    {
+      "packageId": "@nodes/tree",
+      "variants": 25,
+      "tests": 21,
+      "activeRevision": "b19b0adfbf1d4264556f1007"
+    },
+    {
+      "packageId": "@nodes/layout",
+      "variants": 26,
+      "tests": 15,
+      "activeRevision": "c5074e85567e4bb33243a482"
+    },
+    {
+      "packageId": "@nodes/parameters",
+      "variants": 122,
+      "tests": 17,
+      "activeRevision": "a44b834574eab3bc6c6be3b8"
+    },
+    {
+      "packageId": "@nodes/sockets",
+      "variants": 114,
+      "tests": 2,
+      "activeRevision": "19e9dc2c1aa55031c178048e"
+    }
+  ],
+  "checks": {
+    "webxr": {
+      "passed": 763,
+      "failed": 0,
+      "typecheck": true
+    },
+    "storybook": {
+      "mainPassed": 397,
+      "mainFailed": 0,
+      "isolationPassed": 1,
+      "mcpPassed": 7,
+      "browserLifecyclePassed": 57,
+      "typecheck": true
+    },
+    "cosmosVisual": {
+      "typecheck": true,
+      "testsPassed": 2
+    }
+  },
+  "live": {
+    "parameterInput": "ПримерПроверка; revision: 1",
+    "socketActivation": "Активаций: 1",
+    "nodeTopology": "Нод: 3; revision: 1",
+    "layout": "algorithms/fixed/baseline ready/presented; compute button executed",
+    "tree": "parameters/store/updates ready/presented; repeat button executed",
+    "consoleErrors": []
+  },
+  "limitations": [
+    "Self Storybook page: package target creation is indeterminate; documentation candidate builds, but was not applied",
+    "NodeType and disconnected-port layout behavior were not changed",
+    "Application deployment/publication was not performed"
+  ]
+}

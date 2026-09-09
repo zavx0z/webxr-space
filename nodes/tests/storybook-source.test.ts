@@ -4,7 +4,7 @@ import {join, resolve} from "node:path"
 import {createDocument} from "@zavx0z/dom"
 import {createSpaceElementFactories} from "@zavx0z/space"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import {PARAMETER_EXAMPLES} from "../.storybook/stories/fixtures/parameters.ts"
+import {PARAMETER_EXAMPLES} from "../parameters/.storybook/stories/fixtures/parameters.ts"
 import type {OwnerStoryDescriptor} from "../.storybook/stories/story-types.ts"
 
 const workspace = resolve(import.meta.dir, "../..")
@@ -15,8 +15,8 @@ Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, sourceRoots, persistent: 
 
 test("[NODES-STORYBOOK-SOURCE] показанные TSX-примеры компилируются через публичный Template compiler", async () => {
   const [sockets, parameters, components] = await Promise.all([
-    import("../.storybook/stories/subjects/sockets.ts"),
-    import("../.storybook/stories/subjects/parameters.ts"),
+    import("../sockets/.storybook/stories/subjects/sockets.ts"),
+    import("../parameters/.storybook/stories/subjects/parameters.ts"),
     import("../.storybook/stories/subjects/components.ts"),
   ])
   const descriptors = new Map<string, OwnerStoryDescriptor>(

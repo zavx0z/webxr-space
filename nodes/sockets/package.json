@@ -1,0 +1,31 @@
+{
+  "name": "@nodes/sockets",
+  "label": "Сокеты",
+  "version": "0.0.0",
+  "description": "Адресуемый Socket и его визуальные предустановки",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    "./socket": "./socket/src/socket.tsx",
+    "./presets": "./shared/src/presets.ts",
+    "./shared": "./shared/src/keys.ts",
+    "./metrics": "./shared/src/metrics.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel socket/tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependenciesMeta": {
+    "@nodes/tree": {"optional": true},
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/template": {"optional": true}
+  },
+  "peerDependencies": {
+    "@nodes/tree": "*",
+    "@zavx0z/component": "*",
+    "@zavx0z/template": "*"
+  }
+}

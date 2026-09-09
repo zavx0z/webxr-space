@@ -1,14 +1,14 @@
-import type {AdaptiveLayoutGraph} from "@zavx0z/layout/adaptive"
-import type {LayoutDirection, LayoutGraph} from "@zavx0z/layout/types"
+import type {AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
+import type {LayoutDirection, LayoutGraph} from "@nodes/layout/types"
 import type {
   NodeTreeDefinition,
   Socket,
   SocketDirection,
-} from "@zavx0z/nodetree"
+} from "@nodes/tree"
 import {
   planNodeGeometry,
   type NodeGeometryPlan,
-} from "../../../src/projection/metrics.ts"
+} from "../../../shared/projection/metrics.ts"
 
 export type LayoutStoryRoute =
   | "layout/fixed/baseline/right"
