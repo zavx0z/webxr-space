@@ -28,7 +28,8 @@ Bun.plugin(createTemplateJsxBunPlugin({
 }))
 
 test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шесть исходных Display-примеров раскладки", async () => {
-  const project = await Bun.file(resolve(root, ".storybook/manifest.json")).json() as {
+  const rootDeclaration = Bun.file(resolve(root, ".storybook/manifest.json"))
+  const project = (await rootDeclaration.exists() ? await rootDeclaration.json() : {}) as {
     packages?: unknown
   }
   const manifest = await Bun.file(resolve(nodesRoot, ".storybook/manifest.json")).json() as {

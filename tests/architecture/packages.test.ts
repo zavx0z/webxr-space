@@ -96,7 +96,8 @@ describe("Конечный состав пакетов", () => {
       `корневой package.json должен объявлять рабочие пространства в принятом порядке: ${acceptedDirectories.join(", ")}`,
     )
 
-    const storybookManifest = await Bun.file(join(root, ".storybook/manifest.json")).json() as {
+    const rootDeclaration = Bun.file(join(root, ".storybook/manifest.json"))
+    const storybookManifest = (await rootDeclaration.exists() ? await rootDeclaration.json() : {}) as {
       packages?: unknown
     }
     assertRequirement(
