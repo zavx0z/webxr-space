@@ -27,8 +27,6 @@
     "devtools"
   ],
   "scripts": {
-    "application:dev": "bun examples/application/dev.ts",
-    "application:build": "bun examples/application/build.ts",
     "typecheck": "bun run --parallel typecheck:root typecheck:packages",
     "typecheck:root": "tsc --project tsconfig.json --pretty false",
     "typecheck:packages": "bun run --workspaces --parallel typecheck",

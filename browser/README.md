@@ -1,7 +1,6 @@
 # Подключение приложения
 
 Публичный запуск следует React-shaped контракту createRoot/render/unmount.
-Полный пример: [examples/application](../examples/application/README.md).
 
 ```tsx
 import {createRoot} from "@zavx0z/browser"
