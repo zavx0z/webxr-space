@@ -8,6 +8,5 @@
     "module": "./runtime.ts",
     "export": "runtime"
   },
-  "catalog": "./catalog.json",
-  "readme": "../README.md"
+  "catalog": "./catalog.json"
 }

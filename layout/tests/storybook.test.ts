@@ -12,7 +12,9 @@ const root = resolve(import.meta.dir, "..")
 
 test("[LAYOUT-STORYBOOK-001] все algorithms/protocol/workers имеют исполняемые маршруты и ресурсы", async () => {
   const manifest = await Bun.file(resolve(root, ".storybook/manifest.json")).json()
-  expect(manifest).toMatchObject({readme: "../README.md", runtime: {module: "./runtime.ts", export: "runtime"}, catalog: "./catalog.json"})
+  expect(manifest).toMatchObject({runtime: {module: "./runtime.ts", export: "runtime"}, catalog: "./catalog.json"})
+  expect(manifest.readme).toBeUndefined()
+  expect(await Bun.file(resolve(root, "README.md")).exists()).toBe(true)
   const catalog = await readCatalog()
   expect(catalog.categories.map(category => category.id)).toEqual(["algorithms", "protocol", "workers"])
   expect(catalog.categories[0]!.subjects.map(subject => subject.id)).toEqual(["fixed", "adaptive", "top-down", "coffman-graham"])
