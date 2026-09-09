@@ -152,4 +152,3 @@ export class ViewPointElement extends SpatialElement {
     throw new TypeError("ViewPoint cannot contain children")
   }
 }
-

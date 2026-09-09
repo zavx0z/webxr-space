@@ -68,4 +68,3 @@ export class SpaceElement extends SpatialElement {
     }
   }
 }
-
