@@ -58,13 +58,12 @@ function createCompiledExperienceSpaceUiAcceptanceStory(
   projection: ExperienceSpaceUiProjection,
 ): RoutedProductionComponentStory {
   const tree = readHostSpaceTree(document)
-  if (tree.space !== document.documentElement ||
-    tree.space.ownerDocument !== document ||
+  if (tree.space.ownerDocument !== document ||
     tree.viewPoint.ownerDocument !== document) {
     throw new Error("Storybook Experience must own one Space and one ViewPoint in the supplied Document")
   }
   if (projection === "display" && tree.displays.length === 0) {
-    throw new Error("UI display acceptance requires a host-owned @zavx0z/space Display")
+    throw new Error("UI display acceptance requires a host-owned @zavx0z/dom/display DisplayElement")
   }
   if (projection === "hud" && tree.hud === null) {
     throw new Error("UI HUD acceptance requires a host-owned @zavx0z/dom/hud HUDElement")
@@ -93,7 +92,7 @@ function createCompiledExperienceSpaceUiAcceptanceStory(
         })
       },
       afterPresent() {
-        assertProjectionOwner(owner, projection)
+        assertProjectionOwner(owner, projection, document, tree)
       },
       dispose() {
         root.unmount()
@@ -105,11 +104,18 @@ function createCompiledExperienceSpaceUiAcceptanceStory(
 function assertProjectionOwner(
   owner: SemanticHTMLElement,
   projection: ExperienceSpaceUiProjection,
+  document: SemanticDocument,
+  expectedTree: ReturnType<typeof readSpaceTree>,
 ): void {
+  const tree = readHostSpaceTree(document)
+  if (owner.ownerDocument !== document || !owner.isConnected ||
+    tree.space !== expectedTree.space || tree.viewPoint !== expectedTree.viewPoint) {
+    throw new Error("UI acceptance presentation must preserve the supplied Document, Space and ViewPoint")
+  }
   let ancestor = owner.parentElement
   while (ancestor !== null) {
-    if (projection === "display" && ancestor instanceof DisplayElement) return
-    if (projection === "hud" && ancestor instanceof HUDElement) return
+    if (projection === "display" && ancestor instanceof DisplayElement && tree.displays.includes(ancestor)) return
+    if (projection === "hud" && ancestor instanceof HUDElement && tree.hud?.element === ancestor) return
     ancestor = ancestor.parentElement
   }
   throw new Error(`UI acceptance owner is not mounted inside the host ${projection}`)
@@ -120,7 +126,7 @@ function readHostSpaceTree(document: SemanticDocument): ReturnType<typeof readSp
     return readSpaceTree(document)
   } catch (cause) {
     throw new Error(
-      "UI acceptance requires the Storybook host to use one @zavx0z/browser Experience with an @zavx0z/space root and ViewPoint",
+      "UI acceptance requires the Storybook host to use one @zavx0z/browser Experience with native Space and ViewPoint elements",
       {cause},
     )
   }
@@ -129,39 +135,51 @@ function readHostSpaceTree(document: SemanticDocument): ReturnType<typeof readSp
 function acceptanceSource(projection: ExperienceSpaceUiProjection): string {
   const projectionCheck = projection === "display"
     ? [
-        "if (tree.displays.length === 0) {",
-        '  throw new Error("Expected a host-owned Display")',
-        "}",
+        '  const projection = container.closest("display")',
+        "  if (!tree.displays.some(element => element === projection)) {",
+        '    throw new Error("Expected a host-owned Display")',
+        "  }",
       ]
     : [
-        "if (tree.hud === null) {",
-        '  throw new Error("Expected a host-owned HUD")',
-        "}",
+        '  const projection = container.closest("hud")',
+        "  if (tree.hud === null || tree.hud.element !== projection) {",
+        '    throw new Error("Expected a host-owned HUD")',
+        "  }",
       ]
   return [
+    'import type {HTMLElement} from "@zavx0z/dom"',
     'import {readSpaceTree} from "@zavx0z/space"',
     'import {Button} from "@zavx0z/ui/buttons/button"',
     'import {Pane} from "@zavx0z/ui/surfaces/pane"',
     'import {createRoot, useState} from "@zavx0z/component"',
     "",
-    "// Fails closed until the external Storybook host uses @zavx0z/browser createExperience.",
-    "const tree = readSpaceTree(document)",
-    "if (tree.space !== document.documentElement || tree.viewPoint.ownerDocument !== document) {",
-    '  throw new Error("Expected the host-owned Space and ViewPoint")',
-    "}",
-    ...projectionCheck,
-    "// After presentation the same exact element must have the declared spatial owner.",
-    "",
     "function Acceptance() {",
     "  const [selected, setSelected] = useState(false)",
-    "  return <Pane active={selected}>",
-    '    <Button label={selected ? "Выбрано" : "UI внутри общего Display"}',
-    "      selected={selected}",
-    "      onClick={() => setSelected(value => !value)}",
-    "    />",
-    "  </Pane>",
+    "  return (",
+    "    <Pane active={selected}>",
+    "      <Button",
+    '        label={selected ? "Выбрано" : "UI внутри общего Display"}',
+    "        selected={selected}",
+    "        onClick={() => setSelected(value => !value)}",
+    "      />",
+    "    </Pane>",
+    "  )",
     "}",
-    "createRoot(container).render(<Acceptance />)",
+    "",
+    "// Контейнер предоставляет host внутри существующей проекции своего Document.",
+    "export function mountAcceptance(container: HTMLElement) {",
+    "  const document = container.ownerDocument",
+    '  if (document === null) throw new Error("Expected the host Document")',
+    "  // readSpaceTree проверяет единственную сцену и камеру; Space может находиться в body.",
+    "  const tree = readSpaceTree(document)",
+    "  if (tree.space.ownerDocument !== document || tree.viewPoint.ownerDocument !== document) {",
+    '    throw new Error("Expected the host-owned Space and ViewPoint")',
+    "  }",
+    ...projectionCheck,
+    "  const root = createRoot(container)",
+    "  root.render(<Acceptance />)",
+    "  return root",
+    "}",
   ].join("\n")
 }
 
