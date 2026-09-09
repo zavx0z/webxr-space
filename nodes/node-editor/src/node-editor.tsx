@@ -1,3 +1,4 @@
+import {createNodeTreeLayout} from "../../shared/projection/layout.ts"
 import {GridPoint, type GridPointValue} from "./grid-point/src/grid-point.tsx"
 import {metadataBoolean} from "@nodes/parameters/shared"
 import {Button} from "@zavx0z/ui/buttons/button"
@@ -41,7 +42,11 @@ import {getNodeTreeLayoutStore, type NodeTreeLayoutState} from "../../shared/pro
 */
 export type NodeEditorProps = Readonly<{
   store: NodeTreeStore
-  layout: LayoutResult | NodeTreeLayout
+  layout: NodeTreeProps["layout"]
+  nodeKinds?: NodeTreeProps["nodeKinds"]
+  nodeShapes?: NodeTreeProps["nodeShapes"]
+  nodeContent?: NodeTreeProps["nodeContent"]
+  nodeViews?: NodeTreeProps["nodeViews"]
   label?: string | undefined
   title?: string | undefined
   width?: number | undefined
@@ -77,7 +82,18 @@ export function NodeEditor(props: NodeEditorProps) {
   if (maxScale < minScale) throw new RangeError("NodeEditor maxScale must be at least minScale")
   const padding = nonNegative(props.fitPadding ?? 24, "NodeEditor fitPadding")
   const gridSize = positive(props.gridSize ?? 24, "NodeEditor gridSize")
-  const layoutStore = useMemo(() => getNodeTreeLayoutStore(props.store, props.layout), [props.store, props.layout])
+  const [ownedCollapsed, setOwnedCollapsed] = useState<ReadonlySet<string>>(() => initialCollapsed(props.store))
+  const [ownedPreview, setOwnedPreview] = useState<ReadonlySet<string>>(() => initialPreviews(props.store, props.nodeKinds))
+  const collapsed = props.collapsedNodeIds ?? ownedCollapsed
+  const previews = props.previewNodeIds ?? ownedPreview
+  const snapshot = useSyncExternalStore(props.store.subscribe, props.store.getSnapshot)
+  const layout = useMemo(() => {
+    const compute = props.layout
+    return typeof compute === "function" ? createNodeTreeLayout(props.store, source => compute(source, {
+      collapsedNodeIds: collapsed, previewNodeIds: previews, nodeKinds: props.nodeKinds, nodeShapes: props.nodeShapes,
+    })) : compute
+  }, [props.store, props.layout, snapshot, collapsed, previews, props.nodeKinds, props.nodeShapes])
+  const layoutStore = useMemo(() => getNodeTreeLayoutStore(props.store, layout), [props.store, layout])
   const layoutState = useSyncExternalStore(layoutStore.subscribe, layoutStore.getSnapshot)
   const initialGeometry = useMemo(() => geometry(layoutState), [layoutState.snapshot, layoutState.layout])
   const activeLayout = useRef(layoutStore)
@@ -88,13 +104,9 @@ export function NodeEditor(props: NodeEditorProps) {
   )
   const [ownedTransform, setOwnedTransform] = useState(initialTransform)
   const [ownedSelection, setOwnedSelection] = useState<NodeTreeSelection>(null)
-  const [ownedCollapsed, setOwnedCollapsed] = useState<ReadonlySet<string>>(() => initialCollapsed(props.store))
-  const [ownedPreview, setOwnedPreview] = useState<ReadonlySet<string>>(() => initialPreviews(props.store))
   const pointers = useRef(new Map<number, Point>())
   const transform = props.transform ?? ownedTransform
   const selection = props.selection ?? ownedSelection
-  const collapsed = props.collapsedNodeIds ?? ownedCollapsed
-  const previews = props.previewNodeIds ?? ownedPreview
   const interactive = props.interactive !== false && !layoutState.pending
   const current = () => activeLayout.current === layoutStore && !layoutStore.getSnapshot().pending &&
     props.store.getTopologySnapshot() === layoutState.topology
@@ -321,7 +333,11 @@ export function NodeEditor(props: NodeEditorProps) {
       </div>
       <NodeTree
         store={props.store}
-        layout={props.layout}
+        layout={layout}
+        nodeKinds={props.nodeKinds}
+        nodeShapes={props.nodeShapes}
+        nodeContent={props.nodeContent}
+        nodeViews={props.nodeViews}
         label={props.label}
         viewport={viewport}
         transform={transform}
@@ -329,8 +345,8 @@ export function NodeEditor(props: NodeEditorProps) {
         collapsedNodeIds={collapsed}
         previewNodeIds={previews}
         onSelectionChange={publishSelection}
-        onNodeCollapseChange={publishCollapse}
-        onNodePreviewChange={publishPreview}
+        onNodeCollapseChange={typeof props.layout === "function" || props.onNodeCollapseChange !== undefined ? publishCollapse : undefined}
+        onNodePreviewChange={typeof props.layout === "function" || props.onNodePreviewChange !== undefined ? publishPreview : undefined}
         onParameterInput={props.onParameterInput}
         onParameterChange={props.onParameterChange}
         onSocketActivate={props.onSocketActivate}
@@ -352,13 +368,15 @@ function initialCollapsed(store: NodeTreeStore): ReadonlySet<string> {
     .map(node => node.id)))
 }
 
-function initialPreviews(store: NodeTreeStore): ReadonlySet<string> {
+function initialPreviews(store: NodeTreeStore, kinds?: NodeTreeProps["nodeKinds"]): ReadonlySet<string> {
   return Object.freeze(new Set(store.getTopologySnapshot().nodes.flatMap(node => {
     const preview = node.metadata !== undefined && typeof node.metadata === "object" && !Array.isArray(node.metadata)
       ? (node.metadata as Readonly<Record<string, unknown>>).preview
       : undefined
-    return preview !== null && typeof preview === "object" &&
-      (preview as Readonly<Record<string, unknown>>).enabled === true ? [node.id] : []
+    const explicit = preview !== null && typeof preview === "object"
+      ? (preview as Readonly<Record<string, unknown>>).enabled
+      : undefined
+    return explicit === true || explicit === undefined && kinds?.get(node.id) === "content" ? [node.id] : []
   })))
 }
 

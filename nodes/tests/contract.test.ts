@@ -9,7 +9,6 @@ const publicOwners = Object.freeze({
   "./node-tree": ["./node-tree/src/node-tree.tsx", "NodeTree"],
   "./node-editor": ["./node-editor/src/node-editor.tsx", "NodeEditor"],
   "./frame": ["./frame/src/frame.tsx", "Frame"],
-  "./node": ["./node/src/node.tsx", "Node"],
   "./link": ["./link/src/link.tsx", "Link"],
 } as const)
 
@@ -52,7 +51,7 @@ test("[NODES-003] Nodes не создаёт platform owners", async () => {
   for (const dependency of [
     "@zavx0z/browser",
     "@zavx0z/engine",
-    "@zavx0z/renderer",
+    "@renderer/html",
     "@zavx0z/space",
     "@zavx0z/webgpu",
   ]) {
@@ -117,7 +116,7 @@ test("[NODES-005] domain imports resolve only through public package contracts",
 
 test("[NODES-006] projected Parameter render и геометрия используют один resolver", async () => {
   const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/src/parameter.tsx")).text()
-  const nodeSource = await Bun.file(resolve(packageRoot, "node/src/node.tsx")).text()
+  const nodeSource = await Bun.file(resolve(packageRoot, "node/geometry/src/geometry.ts")).text()
 
   expect(parameterSource).toContain("const resolved = resolveProjectedParameterPresentation(snapshot)")
   expect(parameterSource).toContain("projectedParameterFieldHeight(")

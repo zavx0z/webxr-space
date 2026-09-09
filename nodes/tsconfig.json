@@ -4,6 +4,29 @@
     "jsx": "preserve",
     "jsxImportSource": "@zavx0z/template"
   },
-  "include": ["index.ts", "node/**/*.ts", "node/**/*.tsx", "frame/**/*.ts", "frame/**/*.tsx", "link/**/*.ts", "link/**/*.tsx", "node-tree/**/*.ts", "node-tree/**/*.tsx", "node-editor/**/*.ts", "node-editor/**/*.tsx", "shared/**/*.ts", "shared/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", ".storybook/**/*.ts", ".storybook/**/*.tsx"],
-  "exclude": ["tree", "layout", "parameters", "sockets", "node_modules"]
+  "include": [
+    "index.ts",
+    "frame/**/*.ts",
+    "frame/**/*.tsx",
+    "link/**/*.ts",
+    "link/**/*.tsx",
+    "node-tree/**/*.ts",
+    "node-tree/**/*.tsx",
+    "node-editor/**/*.ts",
+    "node-editor/**/*.tsx",
+    "shared/**/*.ts",
+    "shared/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx"
+  ],
+  "exclude": [
+    "tree",
+    "layout",
+    "parameters",
+    "sockets",
+    "node_modules",
+    "node"
+  ]
 }

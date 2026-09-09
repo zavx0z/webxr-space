@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {ImageMaterial, Mesh} from "@zavx0z/engine"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
 function fixture() {

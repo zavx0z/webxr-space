@@ -25,7 +25,7 @@ test("[NODES-CATALOG-001] every public Socket kind and Parameter mechanism is di
   const {SOCKET_KINDS} = await import("@nodes/sockets/presets")
   expect(category("sockets").subjects.map(subject => subject.id)).toEqual([...SOCKET_KINDS])
   expect(category("parameters").subjects.map(subject => subject.id)).toEqual(Object.keys(PARAMETER_EXAMPLES))
-  expect(category("components").subjects.map(subject => subject.apiName)).toEqual(["Node", "Frame", "Link", "NodeTree", "NodeEditor"])
+  expect(category("components").subjects.map(subject => subject.apiName)).toEqual(["Frame", "Link", "NodeTree", "NodeEditor"])
   const routes = new Set<string>()
   for (const item of catalog.categories) for (const subject of item.subjects) for (const variant of subject.variants) {
     expect(routes.has(variant.route)).toBe(false)

@@ -12,10 +12,10 @@ Bun.plugin(createTemplateJsxBunPlugin({
   sourceRoots: [resolve(root, "nodes"), resolve(root, "ui")],
 }))
 
-const {Node} = await import("@webxr/nodes/node")
+const {ParameterNode} = await import("@nodes/node/parameter")
 
-test("[NODES-TITLE-001-NODE] Node не распространяет tooltip на всю поверхность", () => {
-  const node = mount(Node, {
+test("[NODES-TITLE-001-NODE] ParameterNode не распространяет tooltip на всю поверхность", () => {
+  const node = mount(ParameterNode, {
     id: "node",
     label: "Видимая нода",
     title: "Описание ноды",

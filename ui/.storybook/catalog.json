@@ -17,7 +17,13 @@
           "route": "components/navigation/breadcrumbs",
           "apiName": "Breadcrumbs",
           "kind": "component",
-          "tags": ["навигация", "путь", "иерархия", "breadcrumbs", "mui"],
+          "tags": [
+            "навигация",
+            "путь",
+            "иерархия",
+            "breadcrumbs",
+            "mui"
+          ],
           "variants": [
             {
               "id": "basic-default",
@@ -36,7 +42,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-            "widgets": ["props", "source", "diagnostics"]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         }
       ]
@@ -99,7 +109,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-            "widgets": ["props", "source", "diagnostics"]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         },
         {
@@ -108,7 +122,13 @@
           "route": "components/foundation/button/icon",
           "kind": "component",
           "apiName": "IconButton",
-          "tags": ["кнопка", "кнопка-иконка", "иконка", "iconbutton", "svg"],
+          "tags": [
+            "кнопка",
+            "кнопка-иконка",
+            "иконка",
+            "iconbutton",
+            "svg"
+          ],
           "variants": [
             {
               "id": "icon-svg",
@@ -143,7 +163,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-            "widgets": ["props", "source", "diagnostics"]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         },
         {
@@ -151,7 +175,11 @@
           "label": "Иконка и подпись",
           "route": "components/foundation/button/icon-label",
           "kind": "section",
-          "tags": ["кнопка", "иконка", "подпись"],
+          "tags": [
+            "кнопка",
+            "иконка",
+            "подпись"
+          ],
           "variants": [
             {
               "id": "icon-label-left",
@@ -175,7 +203,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-            "widgets": ["props", "source", "diagnostics"]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         },
         {
@@ -183,7 +215,13 @@
           "label": "Размер",
           "route": "components/foundation/button/sizes",
           "kind": "section",
-          "tags": ["кнопка", "размер", "small", "medium", "large"],
+          "tags": [
+            "кнопка",
+            "размер",
+            "small",
+            "medium",
+            "large"
+          ],
           "variants": [
             {
               "id": "sizes-small",
@@ -216,7 +254,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-            "widgets": ["props", "source", "diagnostics"]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         },
         {
@@ -224,7 +266,11 @@
           "label": "Цвет",
           "route": "components/foundation/button/color",
           "kind": "section",
-          "tags": ["кнопка", "цвет", "tone"],
+          "tags": [
+            "кнопка",
+            "цвет",
+            "tone"
+          ],
           "variants": [
             {
               "id": "color-primary",
@@ -1545,7 +1591,10 @@
             {
               "id": "state-editable",
               "label": "Редактирование",
-              "group": {"id": "state", "label": "Состояние"},
+              "group": {
+                "id": "state",
+                "label": "Состояние"
+              },
               "route": "components/data/code-editor/state/editable",
               "module": {
                 "path": "./stories/subjects/components-data-code-editor.ts",
@@ -1553,13 +1602,19 @@
               },
               "resources": {
                 "fixture": "./stories/compiled/compiled-selection-production-stories.tsx",
-                "tests": ["../tests/code-editor-interaction.test.ts", "../tests/selection-stories.test.ts"]
+                "tests": [
+                  "../tests/code-editor-interaction.test.ts",
+                  "../tests/selection-stories.test.ts"
+                ]
               }
             },
             {
               "id": "selection-multiple",
               "label": "Несколько диапазонов",
-              "group": {"id": "selection", "label": "Выделение"},
+              "group": {
+                "id": "selection",
+                "label": "Выделение"
+              },
               "route": "components/data/code-editor/selection/multiple",
               "module": {
                 "path": "./stories/subjects/components-data-code-editor.ts",
@@ -1567,13 +1622,19 @@
               },
               "resources": {
                 "fixture": "./stories/compiled/compiled-selection-production-stories.tsx",
-                "tests": ["../tests/editor-transactions.test.ts", "../tests/selection-stories.test.ts"]
+                "tests": [
+                  "../tests/editor-transactions.test.ts",
+                  "../tests/selection-stories.test.ts"
+                ]
               }
             },
             {
               "id": "performance-large",
               "label": "420 строк",
-              "group": {"id": "performance", "label": "Производительность"},
+              "group": {
+                "id": "performance",
+                "label": "Производительность"
+              },
               "route": "components/data/code-editor/performance/large",
               "module": {
                 "path": "./stories/subjects/components-data-code-editor.ts",
@@ -1581,13 +1642,18 @@
               },
               "resources": {
                 "fixture": "./stories/compiled/compiled-code-editor-scroll-story.tsx",
-                "tests": ["../tests/code-editor-scroll-story.test.ts"]
+                "tests": [
+                  "../tests/code-editor-scroll-story.test.ts"
+                ]
               }
             },
             {
               "id": "performance-compact",
               "label": "Компактная область с подсказкой",
-              "group": {"id": "performance", "label": "Производительность"},
+              "group": {
+                "id": "performance",
+                "label": "Производительность"
+              },
               "route": "components/data/code-editor/performance/compact",
               "module": {
                 "path": "./stories/subjects/components-data-code-editor.ts",
@@ -1595,7 +1661,9 @@
               },
               "resources": {
                 "fixture": "./stories/compiled/compiled-code-editor-scroll-story.tsx",
-                "tests": ["../tests/code-editor-scroll-story.test.ts"]
+                "tests": [
+                  "../tests/code-editor-scroll-story.test.ts"
+                ]
               }
             }
           ],
@@ -1811,7 +1879,10 @@
       "id": "components-widgets",
       "label": "Виджеты",
       "route": "components/widgets",
-      "group": {"id": "components", "label": "Компоненты"},
+      "group": {
+        "id": "components",
+        "label": "Компоненты"
+      },
       "subjects": [
         {
           "id": "editor",
@@ -1820,16 +1891,43 @@
           "apiName": "Editor",
           "kind": "component",
           "readme": "../widgets/widgets.md",
-          "tags": ["виджет", "редактор", "текст", "выделение"],
-          "variants": [{
-            "id": "basic-default",
-            "label": "Общий редактор",
-            "group": {"id": "basic", "label": "Основное"},
-            "route": "components/widgets/editor/basic/default",
-            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_editor"},
-            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/widgets.test.ts", "../tests/widget-stories.test.ts"]}
-          }],
-          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
+          "tags": [
+            "виджет",
+            "редактор",
+            "текст",
+            "выделение"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Общий редактор",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/widgets/editor/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-widgets.ts",
+                "export": "story_editor"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-widget-production-stories.tsx",
+                "tests": [
+                  "../tests/widgets.test.ts",
+                  "../tests/widget-stories.test.ts"
+                ]
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "terminal",
@@ -1838,16 +1936,43 @@
           "apiName": "Terminal",
           "kind": "component",
           "readme": "../widgets/widgets.md",
-          "tags": ["виджет", "терминал", "вывод", "ANSI"],
-          "variants": [{
-            "id": "basic-default",
-            "label": "Общий терминал",
-            "group": {"id": "basic", "label": "Основное"},
-            "route": "components/widgets/terminal/basic/default",
-            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_terminal"},
-            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/terminal-model.test.ts", "../tests/widget-stories.test.ts"]}
-          }],
-          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
+          "tags": [
+            "виджет",
+            "терминал",
+            "вывод",
+            "ANSI"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Общий терминал",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/widgets/terminal/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-widgets.ts",
+                "export": "story_terminal"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-widget-production-stories.tsx",
+                "tests": [
+                  "../tests/terminal-model.test.ts",
+                  "../tests/widget-stories.test.ts"
+                ]
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         },
         {
           "id": "tree",
@@ -1856,16 +1981,43 @@
           "apiName": "Tree",
           "kind": "component",
           "readme": "../widgets/widgets.md",
-          "tags": ["виджет", "дерево", "иерархия", "выбор"],
-          "variants": [{
-            "id": "basic-default",
-            "label": "Иерархия данных",
-            "group": {"id": "basic", "label": "Основное"},
-            "route": "components/widgets/tree/basic/default",
-            "module": {"path": "./stories/subjects/components-widgets.ts", "export": "story_tree"},
-            "resources": {"fixture": "./stories/compiled/compiled-widget-production-stories.tsx", "tests": ["../tests/widgets.test.ts", "../tests/widget-stories.test.ts"]}
-          }],
-          "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["props", "source", "diagnostics"]}
+          "tags": [
+            "виджет",
+            "дерево",
+            "иерархия",
+            "выбор"
+          ],
+          "variants": [
+            {
+              "id": "basic-default",
+              "label": "Иерархия данных",
+              "group": {
+                "id": "basic",
+                "label": "Основное"
+              },
+              "route": "components/widgets/tree/basic/default",
+              "module": {
+                "path": "./stories/subjects/components-widgets.ts",
+                "export": "story_tree"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-widget-production-stories.tsx",
+                "tests": [
+                  "../tests/widgets.test.ts",
+                  "../tests/widget-stories.test.ts"
+                ]
+              }
+            }
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          }
         }
       ]
     },
@@ -2039,11 +2191,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "display",
-        "widgets": [
-          "props",
-          "source",
-          "diagnostics"
-        ]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         },
         {
@@ -2074,11 +2226,11 @@
           "presentation": {
             "protocol": "story-presentation/1",
             "projection": "hud",
-        "widgets": [
-          "props",
-          "source",
-          "diagnostics"
-        ]
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
           }
         }
       ]

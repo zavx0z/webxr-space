@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument, type HTMLElement} from "@zavx0z/dom"
 import {BufferGeometry, Mesh, RoundedRectMaterial} from "@zavx0z/engine"
-import {createDocumentRenderer, readCanonicalRenderFrameChanges, type RenderFrame} from "@zavx0z/renderer"
+import {createDocumentRenderer, readCanonicalRenderFrameChanges, type RenderFrame} from "@renderer/html"
 import {Renderer} from "../src/renderer/index.ts"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 

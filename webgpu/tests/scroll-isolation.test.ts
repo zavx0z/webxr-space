@@ -6,7 +6,7 @@ import {
   createDocumentRenderer,
   hitTestProjection,
   readCanonicalRenderFrameChanges,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
 const font = new TrueTypeFont(await Bun.file(new URL("../../engine/static/fonts/inter-regular.ttf", import.meta.url)).arrayBuffer())

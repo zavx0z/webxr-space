@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {Text, TrueTypeFont} from "@zavx0z/engine"
-import {createDocumentRenderer, readCanonicalRenderFrameChanges} from "@zavx0z/renderer"
+import {createDocumentRenderer, readCanonicalRenderFrameChanges} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 import {PaintVisibilityIndex} from "../src/paint-visibility-index.ts"
 

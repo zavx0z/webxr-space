@@ -3,7 +3,7 @@
 Структурная миграция 2026-09-09 завершена: [новая проверка](structure-acceptance.json).
 Пакет `@webxr/nodes` содержит 27 вариантов, `@nodes/parameters` — 122,
 `@nodes/sockets` — 114, `@nodes/tree` — 25, `@nodes/layout` — 26.
-Всего сохранены 314 вариантов. Компоненты находятся в своих `src`, общий код —
+В историческом обходе были проверены 314 вариантов. Текущий состав — 322. Компоненты находятся в своих `src`, общий код —
 в пакетном `shared`; категории и принадлежность предметов определяются структурой.
 Далее сохранена подробная матрица предыдущего среза; её числа и результаты
 относятся к указанным историческим датам, а не к новой иерархии пакетов.
@@ -37,12 +37,21 @@ Source-примеров настоящим Template compiler.
 
 ## Состояние каталога
 
-| Владелец | Объявлено сейчас | Подтверждённый пробел |
-| --- | --- | --- |
-| Nodes | [Каталог](.storybook/catalog.json): 4 категории, 41 предмет, 263 варианта; 19 видов Socket, 15 механизмов Parameter, 5 компонентов и 2 политики раскладки | `components/node-tree/topology` — рабочее добавление; `NODES-CATALOG-006` и проверки coherence проходят. Не все взаимодействия и визуальные состояния прошли browser-приёмку |
-| NodeTree | [Каталог](tree/.storybook/catalog.json), runtime и README: 7 категорий, 20 предметов, 25 исполняемых вариантов модели | Полный package check и начальный browser-показ пройдены. NodeType не реализован |
-| Layout | [Каталог](layout/.storybook/catalog.json), runtime и README: 3 категории, 11 предметов, 26 вариантов алгоритмов, protocol и Worker | Все начальные browser-сценарии показаны; числовые TopDown/Coffman–Graham не интегрированы в NodeEditor |
-| NodeType | Есть [проект договора](tree/node-type.md); production API отсутствует | Нет декларации состава типа в коде, материализации defaults в новые Stores и подключения типа к NodeEditor |
+Состав после перехода 2026-09-09: 322 варианта. Приведённая ниже историческая
+browser-приёмка 314 вариантов относится к состоянию 2026-09-07; она не заменяет
+проверку изменённых компонентов.
+
+| Пакет | Категории | Компоненты / предметы | Варианты |
+| --- | ---: | ---: | ---: |
+| @webxr/nodes | 2 | 6 | 21 |
+| @nodes/node | 2 | 4 | 14 |
+| @nodes/sockets | 1 | 19 | 114 |
+| @nodes/parameters | 1 | 15 | 122 |
+| @nodes/tree | 7 | 20 | 25 |
+| @nodes/layout | 3 | 11 | 26 |
+
+NodeType как декларация состава и defaults остаётся проектом. Для выбора
+импортированного TSX-компонента теперь есть `NodeTreeProps.nodeViews`.
 
 Первоначальная live-проверка общего обзора `nodes/layout` выявила ошибку
 `Пример нодовой раскладки смонтирован вне host-owned DisplayElement`.
@@ -69,7 +78,7 @@ Source-примеров настоящим Template compiler.
 | Browser: Nodes | Layout fit/capture успешны, console errors = 0; ввод текста сохранил semantic `node:110`, изменил canonical value и revision до 1, console errors = 0 | Полная матрица клавиш/жестов и пользовательских состояний отдельно не принята |
 | Browser: Layout Worker | Все четыре exact Worker и transport lifecycle отработали; error/fault сценарии также прошли начальный показ | Не является нагрузочной приёмкой Worker |
 
-Счётчики каталога дают 314 вариантов суммарно. Browser-обход начального показа
+Исторические счётчики каталога давали 314 вариантов суммарно. Browser-обход начального показа
 завершён и записан по точным route/revision. Исправление исходной гонки и отдельное ограничение несвязанных портов описаны в
 [topology-layout-gap.md](topology-layout-gap.md). Исправлен production-владелец Nodes; Component, Renderer, DOM, Template,
 Engine и Layout не менялись.
@@ -204,9 +213,9 @@ kind; отдельные виды значения из сочетаний kind/
 
 | Публичная возможность | Реализация | Текущее evidence | Объявленный маршрут / оставшаяся приёмка |
 | --- | --- | --- | --- |
-| Node: шапка, категория, выбранное/скрытое/свёрнутое состояние | [Node](node/src/node.tsx), `NodeProps` | `NODES-001`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/node/{basic,empty,states,collapsed}`; mount пройден, полный browser-набор переключений ещё не принят |
-| Node: preview и авторские children | [Node](node/src/node.tsx), `NodePreview`, `NodePreviewImage` | Compiled production mount `NODES-CATALOG-005` | `components/node/preview`, `components/node/authored-content`; одновременно children и projected Parameters не передаются |
-| Числовая геометрия Node и порты | [planProjectedNodeGeometry](node/src/node.tsx), [metrics](shared/projection/metrics.ts), `nodeSocketLayoutPortId` из [node-tree.tsx](node-tree/src/node-tree.tsx) | `NODES-METRICS-001..003`, `NODES-PROJECTED-GEOMETRY-001..007` | `components/node/empty`, `…/basic` и Parameter geometry показывают часть состояний. Отдельный `components/node/geometry` остаётся планом для минимальной ширины, loose sockets и resolved sides |
+| Node: шапка, категория, выбранное/скрытое/свёрнутое состояние | [ParameterNode](node/parameter/src/parameter.tsx), `ParameterNodeProps` | `NODES-001`, `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/node/{basic,empty,states,collapsed}`; mount пройден, полный browser-набор переключений ещё не принят |
+| Node: preview и авторские children | [ContentNode](node/content/src/content.tsx), `ContentNodeProps` | Compiled production mount `NODES-CATALOG-005` | `components/node/preview`, `components/node/authored-content`; одновременно children и projected Parameters не передаются |
+| Числовая геометрия Node и порты | [planProjectedNodeGeometry](node/geometry/src/geometry.ts), [metrics](node/geometry/src/metrics.ts), `nodeSocketLayoutPortId` из [node-tree.tsx](node-tree/src/node-tree.tsx) | `NODES-METRICS-001..003`, `NODES-PROJECTED-GEOMETRY-001..007` | `components/node/empty`, `…/basic` и Parameter geometry показывают часть состояний. Отдельный `components/node/geometry` остаётся планом для минимальной ширины, loose sockets и resolved sides |
 | Frame: оформление, вложенность, выбор, children | [Frame](frame/src/frame.tsx) | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/frame/{basic,nested,states}` монтируются; полная проверка выбора/identity через взаимодействие ещё не зафиксирована |
 | Link: polyline/cubic, цвет kind, состояния, активация | [Link](link/src/link.tsx), `LinkRoute`, `createCubicLinkRoute`, `projectLinkRoute` | `NODES-STORYBOOK-002`, `NODES-CATALOG-005` | `components/link/{orthogonal,cubic,states,disabled}` монтируются; browser-проверка границ и попадания по кривой ещё остаётся |
 | Link: внешний Store | `LinkProps.store` в [link.tsx](link/src/link.tsx) | Compiled mount `NODES-CATALOG-005` | `components/link/live-store` существует; отдельные assertions route-update и сохранения Element ещё не заявлены |
@@ -321,7 +330,7 @@ TopDown и Coffman–Graham доступны как числовые алгор�
 | Необходимое поведение | Предлагаемый владелец | Текущая опора / пробел | План сценария после реализации |
 | --- | --- | --- | --- |
 | Декларация типа и defaults → экземпляр | NodeTree | Основа проверена `NODETREE-TEMPLATE-001`, `NODETREE-TEMPLATE-002`; материализации из декларации нет | `nodetree: node-types/instances/independent`: один тип, два экземпляра, независимые Stores |
-| Тип → production TSX-представление | Nodes | Есть authored Node children; NodeTree/NodeEditor не предоставляют договор выбора компонента по типу | `nodes: node-types/presentation/extension`: второй тип с другой композицией через публичное расширение |
+| Тип → production TSX-представление | Nodes | `nodeViews` принимает импортированный компонент по ID ноды; выбор из предметного типа делает приложение | `nodes: node-types/presentation/extension`: второй тип с другой композицией через публичное расширение |
 | Изменение состава типа/режима | NodeTree; отображение Nodes | Reconcile/no-op/conflict проверены `NODETREE-TEMPLATE-007`, `NODETREE-TEMPLATE-008`; декларации состава и правил смены режима нет | `nodetree: node-types/structure/change`, `nodes: node-types/structure/change`: уцелевшие Parameters и Links сохраняют identity |
 | Восстановление и версии типа | NodeTree | Template versions и typed v2 проверены `NODETREE-TEMPLATE-003`, `NODETREE-TEMPLATE-006`; type-aware resolver и миграции типа отсутствуют | `nodetree: node-types/serialization/roundtrip`, `…/unknown-type`, `…/version` |
 | Тип подграфа и интерфейс входов/выходов | NodeTree; отображение Nodes | GraphScope/reference проверены `NODETREE-TEMPLATE-006`; они не материализуют тело подграфа | `nodetree: node-types/subgraph/instances` после отдельного договора |
@@ -351,3 +360,17 @@ NodeType и интеграция вертикальных Layout требуют 
 5. Coverage пересмотрено по публичным exports и фактическим assertions:
    новые возможности не скрыты в одном layout-примере и не обозначены готовыми
    на основании одной компиляции.
+
+
+Пакет `@nodes/node` владеет DiagramNode, ParameterNode и ContentNode и их каталогом.
+Новые проверки `NODE-COMPOSITION-001..004` и `NODES-COMPOSITION-GRAPH` подтверждают
+независимое сворачивание, сохранение содержимого и сокетов, совпадение их геометрии
+и смешанный граф. Прежние маршруты `components/node/*` перенесены в этот пакет.
+
+
+Схемы `@nodes/node/composition/dependencies` и `composition/parameter` показывают
+композицию реальных компонентов через DiagramNode, NodeTree и существующий Layout.
+`NODE-DEPENDENCIES-SOURCE` сверяет каждую показанную связь с JSX исходного компонента;
+`NODE-DEPENDENCIES-VIEW` проверяет выбор, геометрию и cleanup. Пояснения используют
+текущий пакет `@webxr/markdown`. Это две схемы состава компонентов; зависимости
+модели, компилятора и Renderer в линии этого графа не включены.

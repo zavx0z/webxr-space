@@ -1,6 +1,6 @@
 import {subscribeDocumentAuthorStyleSheets, subscribeDocumentCompiledStyleSheets} from "@zavx0z/dom"
 import {DisplayElement, publishDisplayMetrics} from "@zavx0z/dom/display"
-import {readDisplayStyle} from "@zavx0z/renderer"
+import {readDisplayStyle} from "@renderer/html"
 import type {RendererFontFace} from "@zavx0z/webgpu"
 import {loadFontFaces, type BrowserFontFaceSource} from "../font-faces.ts"
 import {
@@ -45,7 +45,7 @@ import type {
   PointerInput,
   RenderFrame,
   WheelInput,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {
   createSpaceElementFactories,
   readSpaceTree,
@@ -77,7 +77,7 @@ import type {
   DocumentSpaceViewPointSnapshot,
 } from "./space-runtime.ts"
 import type {DocumentClipboardController} from "../clipboard.ts"
-import {readRenderedSelectionText} from "@zavx0z/renderer"
+import {readRenderedSelectionText} from "@renderer/html"
 
 export type PresentationOptions = Readonly<{
   canvas: HTMLCanvasElement

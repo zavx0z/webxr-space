@@ -1,3 +1,4 @@
+import {createNodeTreeLayout} from "../../shared/projection/layout.ts"
 import {useMemo, useRef, useLayoutEffect, useSyncExternalStore, type FunctionComponent} from "@zavx0z/component"
 import {DEFAULT_NODE_TREE_TRANSFORM} from "../../shared/projection/geometry.ts"
 import {getNodeTreeLayoutStore} from "../../shared/projection/layout-state.ts"
@@ -9,12 +10,17 @@ export type {NodeRect, NodeTreeTransform, NodeTreeViewport} from "../../shared/p
 export {nodeSocketLayoutPortId} from "../../shared/projection/geometry.ts"
 export {socketKey} from "@nodes/sockets/shared"
 export {createNodeTreeLayout, StaleNodeTreeLayoutError} from "../../shared/projection/layout.ts"
-export type {NodeTreeLayout, NodeTreeProps, NodeTreeSelection, NodeTreeStore} from "../../shared/node-tree/contracts.ts"
+export type {NodeView, NodeViewProps, NodeTreeLayoutComputer, NodePresentationState, NodeTreeLayout, NodeTreeProps, NodeTreeSelection, NodeTreeStore} from "../../shared/node-tree/contracts.ts"
 
 export function NodeTree(props: NodeTreeProps) {
+  const snapshot = useSyncExternalStore(props.store.subscribe, props.store.getSnapshot)
+  const layout = useMemo(() => {
+    const compute = props.layout
+    return typeof compute === "function" ? createNodeTreeLayout(props.store, source => compute(source, props)) : compute
+  }, [props.store, props.layout, snapshot, props.collapsedNodeIds, props.previewNodeIds, props.nodeKinds, props.nodeShapes])
   const layoutStore = useMemo(
-    () => getNodeTreeLayoutStore(props.store, props.layout),
-    [props.store, props.layout],
+    () => getNodeTreeLayoutStore(props.store, layout),
+    [props.store, layout],
   )
   const layoutState = useSyncExternalStore(layoutStore.subscribe, layoutStore.getSnapshot)
   const activeLayout = useRef(layoutStore)

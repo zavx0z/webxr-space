@@ -63,7 +63,8 @@
     "./html/table-section-element": "./src/html-table-section-element.ts",
     "./html/text-area-element": "./src/html-text-area-element.ts",
     "./html/u-list-element": "./src/html-u-list-element.ts",
-    "./html/vector-path-element": "./src/html-vector-path-element.ts"
+    "./html/vector-path-element": "./src/html-vector-path-element.ts",
+    "./geometry": "./geometry.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false && tsc --project display/tests/tsconfig.test.json --pretty false && tsc --project space/tests/tsconfig.test.json --pretty false && tsc --project viewpoint/tests/tsconfig.test.json --pretty false && tsc --project hud/tests/tsconfig.test.json --pretty false",

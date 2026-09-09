@@ -1,4 +1,4 @@
-import type {RenderImageSize} from "@zavx0z/renderer"
+import type {RenderImageSize} from "@renderer/html"
 import type {RendererFontFace} from "@zavx0z/webgpu"
 import type {
   BufferGeometry,
@@ -29,7 +29,7 @@ import {
   type RenderFrame,
   type RenderViewport,
   type WheelInput,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {
   RendererWebGpuBackend,
   RendererWebGpuScreenOverlay,
@@ -38,6 +38,7 @@ import {
 } from "@zavx0z/webgpu"
 
 export type CreateDocumentOverlayRuntimeOptions = Readonly<{
+  projectClientPoint?: CreateDocumentRendererOptions["projectClientPoint"]
   document: Document
   root: Node
   styleSheets: readonly string[]
@@ -191,6 +192,7 @@ export function createDocumentOverlayRuntimeWithSeams(
       ...(options.distance === undefined ? {} : {distance: options.distance}),
     })
     renderer = seams.createDocumentRenderer({
+      projectClientPoint: options.projectClientPoint,
       document: options.document,
       root: options.root,
       viewport: options.viewport,

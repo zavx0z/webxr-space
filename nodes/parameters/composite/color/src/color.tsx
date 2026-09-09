@@ -24,6 +24,8 @@ export function ColorParameter(props: ColorParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="color"
     sockets={props.sockets}
     connected={props.connected}

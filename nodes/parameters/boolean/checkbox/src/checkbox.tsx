@@ -22,7 +22,10 @@ export function CheckboxParameter(props: CheckboxParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="checkbox"
+    fieldBeforeLabel
     sockets={props.sockets}
     connected={props.connected}
     hidden={props.hidden}
@@ -37,7 +40,7 @@ export function CheckboxParameter(props: CheckboxParameterProps) {
       indeterminate={props.indeterminate}
       disabled={props.disabled}
       readOnly={props.readOnly}
-      title={props.connected === true ? undefined : props.title}
+      title={props.labelHidden === true && props.connected !== true ? props.title : undefined}
       onChange={props.onChange}
     />
   </ParameterLayout>

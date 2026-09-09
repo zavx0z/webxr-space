@@ -24,6 +24,8 @@ export function NumberParameter(props: NumberParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="number"
     fieldOwnsLabel
     sockets={props.sockets}
@@ -36,7 +38,7 @@ export function NumberParameter(props: NumberParameterProps) {
     onSocketActivate={props.onSocketActivate}
   >
     <NumberField
-      label={props.label}
+      label={props.labelHidden === true ? undefined : props.label}
       value={props.value}
       min={props.min}
       max={props.max}

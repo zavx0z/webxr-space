@@ -22,6 +22,8 @@ export function CycleParameter(props: CycleParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="cycle"
     sockets={props.sockets}
     connected={props.connected}

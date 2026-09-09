@@ -2,7 +2,7 @@ import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
 import {createDocument} from "@zavx0z/dom"
-import {createDocumentInteractionState, createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentInteractionState, createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {chevronRightIcon, homeIcon} from "../themes/icons.ts"
 

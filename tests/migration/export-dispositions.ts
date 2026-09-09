@@ -22,13 +22,15 @@ export const finalPackageDirectories = Object.freeze({
   "@zavx0z/dom": "dom",
   "@zavx0z/template": "template",
   "@zavx0z/component": "component",
-  "@zavx0z/renderer": "renderer",
+  "@webxr/renderer": "renderer",
+  "@renderer/html": "renderer/html",
   "@webxr/markdown": "markdown",
   "@zavx0z/webgpu": "webgpu",
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",
   "@zavx0z/ui": "ui",
   "@webxr/nodes": "nodes",
+  "@nodes/node": "nodes/node",
   "@nodes/tree": "nodes/tree",
   "@nodes/layout": "nodes/layout",
   "@nodes/parameters": "nodes/parameters",
@@ -181,7 +183,7 @@ export const exportDispositions: readonly ExportDisposition[] = Object.freeze([
     "./compatibility",
     "./compatibility.json",
   ]),
-  ...sameSubpaths("@zavx0z/renderer", "@zavx0z/renderer", [
+  ...sameSubpaths("@zavx0z/renderer", "@renderer/html", [
     ".",
     "./frame-changes",
   ]),
@@ -292,21 +294,24 @@ export const exportDispositions: readonly ExportDisposition[] = Object.freeze([
     sourcePackage: "@nodes/ui" as const,
     sourceSubpath: ".",
     targets: Object.freeze([
-      ...["./frame", "./link", "./node", "./node-editor", "./node-tree"]
+      ...["./frame", "./link", "./node-editor", "./node-tree"]
         .map(subpath => target("@webxr/nodes", subpath)),
       ...[
         "./text", "./number", "./slider", "./checkbox", "./switch", "./select",
         "./cycle", "./option-group", "./color", "./vector", "./matrix", "./path",
         "./reference", "./collection", "./output", "./shared",
       ].map(subpath => target("@nodes/parameters", subpath)),
+      target("@nodes/node", "./parameter"),
+      target("@nodes/node", "./content"),
+      target("@nodes/node", "./diagram"),
       target("@nodes/sockets", "./socket"),
       target("@nodes/sockets", "./presets"),
     ]),
   }),
+  moved("@nodes/ui", "./node", "@nodes/node", "./parameter"),
   ...sameSubpaths("@nodes/ui", "@webxr/nodes", [
     "./frame",
     "./link",
-    "./node",
     "./node-editor",
     "./node-tree",
   ]),

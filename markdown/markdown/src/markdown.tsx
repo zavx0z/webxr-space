@@ -1,3 +1,4 @@
+import {Mermaid} from "../../mermaid/src/mermaid.tsx"
 import {useMemo} from "@zavx0z/component"
 import {
   parseMarkdown,
@@ -449,7 +450,10 @@ function Block(props: Readonly<{block: MarkdownBlock}>) {
       start={block.start}
     /> : null}
     {block.kind === "list" && !block.ordered ? <UnorderedList items={block.items} /> : null}
-    {block.kind === "code" ? <CodeBlock
+    {block.kind === "code" && block.languageId.toLowerCase() === "mermaid" ? <Mermaid
+      source={block.value}
+    /> : null}
+    {block.kind === "code" && block.languageId.toLowerCase() !== "mermaid" ? <CodeBlock
       languageId={block.languageId}
       value={block.value}
     /> : null}

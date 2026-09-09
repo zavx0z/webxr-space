@@ -29,6 +29,43 @@ Display является элементом этого документа. Ег�
 Подробное описание находится в TSDoc модуля `display/index.ts` и документации
 его публичных объявлений.
 
+## Размер и положение элемента
+
+`element.getBoundingClientRect()` возвращает новый `DOMRect`: `x`, `y`,
+`width`, `height`, `top`, `right`, `bottom`, `left`. Это рамка элемента в
+CSS-пикселях относительно viewport; она включает padding и border, учитывает
+прокрутку и поддерживаемые преобразования. Margin и тень в размер не входят.
+Изменение полученного прямоугольника не меняет элемент.
+
+```ts
+const rect = element.getBoundingClientRect()
+const width = rect.width
+const height = rect.height
+```
+
+Метод определён на Element, поэтому доступен и у HTMLElement. Геометрию
+вычисляет HTML Renderer; Browser переводит её в координаты viewport Canvas.
+Чтение синхронно обновляет грязную раскладку, но не запускает GPU-рисование.
+После изменения текста, CSS или переноса между HUD и Display следующий вызов
+получает актуальную геометрию того же элемента. Отсоединённый элемент, элемент
+без Renderer или без layout-бокса (`display:none`) возвращает нулевой прямоугольник.
+`visibility:hidden` сохраняет геометрию. Clipping не обрезает возвращаемую рамку.
+
+`DOMRect`, `DOMRectReadOnly` и `DOMRectInit` доступны из основного импорта.
+`@zavx0z/dom/geometry` содержит также подключение поставщика геометрии для
+Renderer: один активный поставщик на projection root, освобождаемый при dispose.
+При вложенных регистрациях используется ближайший предок.
+
+Контракт соответствует [алгоритму CSSOM View](https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect)
+в пределах поддерживаемой CSS-раскладки Renderer. Он не добавляет новые виды
+CSS transforms, SVG-геометрию или методы `getClientRects`/`offsetWidth`/`clientWidth`.
+Экранный размер после масштабирования нельзя напрямую считать исходным размером
+ноды для раскладки графа.
+
+Поведенческие примеры: [DOM](tests/geometry.test.ts),
+[HTML Renderer](../renderer/html/tests/bounding-client-rect.test.ts),
+[перенос HUD ↔ Display](../browser/tests/projection-input.test.ts).
+
 ## Документация и проверки
 
 Этот README описывает пакет целиком. В Storybook выбор директории `display`

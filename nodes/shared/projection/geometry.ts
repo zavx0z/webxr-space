@@ -13,7 +13,9 @@ import {
 } from "../routing/link-path.ts"
 
 export type NodePoint = Readonly<{x: number; y: number}>
-export type NodeRect = Readonly<{x: number; y: number; width: number; height: number}>
+import {nodeSocketLayoutPortId, type NodeRect} from "@nodes/node/geometry"
+export {nodeSocketLayoutPortId} from "@nodes/node/geometry"
+export type {NodeRect} from "@nodes/node/geometry"
 
 export type NodeTreeTransform = Readonly<{
   x: number
@@ -58,13 +60,6 @@ type RetainedNodeGeometryIndex = Readonly<{
 }>
 
 const retainedNodeGeometryIndexes = new WeakMap<NodeGeometryIndex, RetainedNodeGeometryIndex>()
-
-/** Canonical Layout port id for one Core Socket endpoint. */
-export function nodeSocketLayoutPortId(nodeId: string, socketId: string): string {
-  requireId(nodeId, "Layout port Node")
-  requireId(socketId, "Layout port Socket")
-  return `${nodeId}/${socketId}`
-}
 
 /**
  * Consumes completed owner geometry without placing, measuring or routing.

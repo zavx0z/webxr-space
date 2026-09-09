@@ -22,6 +22,8 @@ export function PathParameter(props: PathParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="path"
     sockets={props.sockets}
     connected={props.connected}

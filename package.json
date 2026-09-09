@@ -15,6 +15,7 @@
     "template",
     "component",
     "renderer",
+    "renderer/html",
     "markdown",
     "webgpu",
     "browser",
@@ -25,6 +26,7 @@
     "nodes/layout",
     "nodes/parameters",
     "nodes/sockets",
+    "nodes/node",
     "devtools"
   ],
   "scripts": {

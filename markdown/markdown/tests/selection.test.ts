@@ -2,7 +2,7 @@ import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createDocument, type HTMLElement} from "@zavx0z/dom"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import {createDocumentRenderer, readRenderedSelectionText} from "@zavx0z/renderer"
+import {createDocumentRenderer, readRenderedSelectionText} from "@renderer/html"
 
 const workspace = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "markdown"), resolve(workspace, "ui")]}))

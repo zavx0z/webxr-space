@@ -1,0 +1,51 @@
+{
+  "name": "@nodes/node",
+  "label": "Ноды",
+  "version": "0.0.0",
+  "description": "DiagramNode, ParameterNode и ContentNode на основе Pane",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    "./diagram": "./diagram/src/diagram.tsx",
+    "./parameter": "./parameter/src/parameter.tsx",
+    "./content": "./content/src/content.tsx",
+    "./geometry": "./geometry/src/geometry.ts",
+    "./contracts": "./shared/contracts.ts",
+    "./metrics": "./geometry/src/metrics.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "peerDependencies": {
+    "@nodes/tree": "*",
+    "@nodes/parameters": "*",
+    "@nodes/sockets": "*",
+    "@zavx0z/component": "*",
+    "@zavx0z/template": "*",
+    "@zavx0z/ui": "*"
+  },
+  "peerDependenciesMeta": {
+    "@nodes/tree": {
+      "optional": true
+    },
+    "@nodes/parameters": {
+      "optional": true
+    },
+    "@nodes/sockets": {
+      "optional": true
+    },
+    "@zavx0z/component": {
+      "optional": true
+    },
+    "@zavx0z/template": {
+      "optional": true
+    },
+    "@zavx0z/ui": {
+      "optional": true
+    }
+  }
+}

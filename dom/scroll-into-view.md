@@ -39,4 +39,4 @@ Fixed-position границы исключают предков, которые 
 Порядок и nearest-выравнивание опираются на
 [CSSOM View](https://drafts.csswg.org/cssom-view/#determine-the-scroll-into-view-position).
 Проверки находятся в `dom/tests/scroll-into-view.test.ts`,
-`renderer/tests/scroll-into-view.test.ts` и `browser/tests/scroll-into-view.test.ts`.
+`renderer/html/tests/scroll-into-view.test.ts` и `browser/tests/scroll-into-view.test.ts`.

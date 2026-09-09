@@ -22,7 +22,7 @@ import {
   type RenderFrame,
   type RenderViewport,
   type WheelInput,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {
   Renderer as EngineRenderer,
   RendererWebGpuBackend,
@@ -234,6 +234,10 @@ const createClaimedDocumentCanvasRuntime = async (
     requestRender()
   }
   const documentRenderer = seams.createDocumentRenderer({
+    projectClientPoint: point => {
+      const rect = seams.readCanvasRect(options.canvas)
+      return {x: rect.left + point.x * rect.width / viewport.width, y: rect.top + point.y * rect.height / viewport.height}
+    },
     document: options.document,
     root: options.root,
     viewport,

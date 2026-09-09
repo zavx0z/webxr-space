@@ -10,7 +10,7 @@ import type {
   PointerInput,
   RenderFrame,
   WheelInput,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {
   AnimationClip,
   BoxGeometry,

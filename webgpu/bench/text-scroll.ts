@@ -1,6 +1,6 @@
 import {createDocument, type HTMLElement} from "@zavx0z/dom"
 import {Text, TrueTypeFont} from "@zavx0z/engine"
-import {createDocumentInteractionController, createDocumentInteractionState, createDocumentRenderer, hitTestProjection} from "@zavx0z/renderer"
+import {createDocumentInteractionController, createDocumentInteractionState, createDocumentRenderer, hitTestProjection} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 import {collectSpaceObjects, type RenderItem} from "../src/renderer/utils/render-list.ts"
 

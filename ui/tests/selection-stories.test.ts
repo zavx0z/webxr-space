@@ -2,7 +2,7 @@ import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createDocument, MouseEvent, readDocumentTextHighlights, type HTMLElement} from "@zavx0z/dom"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import {createDocumentRenderer, readRenderedSelectionText} from "@zavx0z/renderer"
+import {createDocumentRenderer, readRenderedSelectionText} from "@renderer/html"
 import {createDocumentClipboardController} from "../../browser/clipboard.ts"
 import type {OwnerStoryDescriptor} from "../.storybook/stories/story-types.ts"
 

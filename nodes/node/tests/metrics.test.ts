@@ -2,7 +2,7 @@ import {expect, test} from "bun:test"
 import {
   NODE_MINIMUM_WIDTH,
   planNodeGeometry,
-} from "../../shared/projection/metrics.ts"
+} from "@nodes/node/metrics"
 
 test("[NODES-METRICS-001] пустая Node имеет фиксированную высоту и минимальную ширину", () => {
   const geometry = planNodeGeometry({width: 72, rows: []})

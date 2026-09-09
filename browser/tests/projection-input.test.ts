@@ -14,7 +14,7 @@ afterEach(() => {
 
 // Only GPU submission, native text proxies and scheduling are substituted.
 // CPU layout, hit testing, projection geometry, dispatch and scrolling are real.
-const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: readonly string[] = []) => {
+const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: readonly string[] = [], clientRect = {left: 0, top: 0, width: 200, height: 200}) => {
   const document = createDocument()
   const root = document.createElement("div")
   document.append(root)
@@ -24,7 +24,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: r
     width: 200,
     height: 200,
     style: {touchAction: "auto"},
-    getBoundingClientRect: () => ({left: 0, top: 0, width: 200, height: 200}),
+    getBoundingClientRect: () => clientRect,
     addEventListener(type: string, listener: EventListenerOrEventListenerObject) { listeners.set(type, listener) },
     removeEventListener(type: string) { listeners.delete(type) },
     setPointerCapture(id: number) { captured.add(id) },
@@ -82,7 +82,7 @@ const fixture = async (readImageSize?: Renderer["readImageSize"], styleSheets: r
     createPlaneRuntime: createDocumentPlaneRuntime,
     createOverlayRuntime: createDocumentOverlayRuntime,
     createResizeObserver: () => ({observe() {}, disconnect() {}}),
-    readCanvasRect: () => ({left: 0, top: 0, width: 200, height: 200}),
+    readCanvasRect: () => clientRect,
     devicePixelRatio: () => 1,
     requestFrame: () => 1,
     cancelFrame() {},
@@ -488,4 +488,33 @@ test("Browser delegates projection matrix traversal to the composition renderer 
     expect(overlayMarker.modelMatrix.elements[12]).toBe(index * 20)
   }
   expect(presentations).toBe(2)
+})
+
+
+test("[BRW-CLIENT-RECT] Element rectangles use native client coordinates for HUD and Display without remounting", async () => {
+  const f = await fixture(undefined, [], {left: 50, top: 75, width: 400, height: 200})
+  const hud = f.projection("overlay", "hud-bounds")
+  const display = f.projection("plane", "display-bounds")
+  const node = f.element("position:absolute;left:20px;top:30px;width:40px;height:25px;padding:3px;border:2px solid red", hud, "button")
+  f.runtime.render()
+  const initial = node.getBoundingClientRect()
+  expect(initial.x).toBeCloseTo(70)
+  expect(initial.y).toBeCloseTo(105)
+  expect(initial.width).toBeCloseTo(50)
+  expect(initial.height).toBeCloseTo(35)
+  f.runtime.updatePlane(display, {worldUnitsPerPixel: 0.5})
+  display.append(node)
+  const spatial = node.getBoundingClientRect()
+  expect(spatial.x).toBeCloseTo(210)
+  expect(spatial.y).toBeCloseTo(140)
+  expect(spatial.width).toBeCloseTo(25)
+  expect(spatial.height).toBeCloseTo(17.5)
+  expect(initial.width).toBe(50)
+  node.setAttribute("style", "position:absolute;left:20px;top:30px;width:60px;height:25px;padding:0;border:0")
+  expect(node.getBoundingClientRect().width).toBeCloseTo(30)
+  hud.append(node)
+  expect(node.getBoundingClientRect().x).toBeCloseTo(70)
+  expect(node.getBoundingClientRect().width).toBeCloseTo(60)
+  f.runtime.dispose()
+  expect(node.getBoundingClientRect().width).toBe(0)
 })

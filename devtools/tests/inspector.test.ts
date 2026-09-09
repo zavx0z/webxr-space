@@ -1,6 +1,6 @@
 import {describe, expect, it} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer} from "@renderer/html"
 import {createDomInspector, type DomInspectorSnapshot} from "@zavx0z/devtools"
 
 describe("DOM inspector identity and snapshots", () => {

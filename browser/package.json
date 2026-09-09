@@ -26,7 +26,7 @@
     "@zavx0z/template": "*",
     "@zavx0z/dom": "*",
     "@zavx0z/engine": "*",
-    "@zavx0z/renderer": "*",
+    "@renderer/html": "*",
     "@zavx0z/space": "*",
     "@zavx0z/webgpu": "*"
   },
@@ -35,7 +35,7 @@
     "@zavx0z/template": {"optional": true},
     "@zavx0z/dom": {"optional": true},
     "@zavx0z/engine": {"optional": true},
-    "@zavx0z/renderer": {"optional": true},
+    "@renderer/html": {"optional": true},
     "@zavx0z/space": {"optional": true},
     "@zavx0z/webgpu": {"optional": true}
   },

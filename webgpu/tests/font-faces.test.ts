@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {TrueTypeFont, Text} from "../../engine/src/index.ts"
 import {createDocument} from "../../dom/src/index.ts"
-import {createDocumentRenderer} from "../../renderer/src/index.ts"
+import {createDocumentRenderer} from "../../renderer/html/src/index.ts"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
 test("measurement and retained paint resolve the same real font face", async () => {

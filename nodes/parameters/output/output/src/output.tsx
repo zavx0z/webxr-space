@@ -1,6 +1,7 @@
 /**
 OutputParameter соединяет публичный текстовый вывод с endpoint-композицией ноды.
 Подключённый параметр сохраняет подпись и Socket, скрывая собственное поле.
+Показывает значение только для чтения; направление соединения задаётся у Socket.
 
 @packageDocumentation
 */
@@ -23,6 +24,8 @@ export function OutputParameter(props: OutputParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="output"
     sockets={props.sockets}
     connected={props.connected}

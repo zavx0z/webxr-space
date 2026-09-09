@@ -8,7 +8,7 @@ import type {
 import {
   planNodeGeometry,
   type NodeGeometryPlan,
-} from "../../../shared/projection/metrics.ts"
+} from "@nodes/node/metrics"
 
 export type LayoutStoryRoute =
   | "layout/fixed/baseline/right"

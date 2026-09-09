@@ -4,7 +4,7 @@ import {
   Ray,
   Vector3,
 } from "@zavx0z/engine"
-import type {RenderViewport} from "@zavx0z/renderer"
+import type {RenderViewport} from "@renderer/html"
 
 export type RendererWebGpuDocumentPoint = Readonly<{
   x: number

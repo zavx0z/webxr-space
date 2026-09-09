@@ -89,6 +89,21 @@
                   "../markdown/tests/selection.test.ts"
                 ]
               }
+            },
+            {
+              "id": "mermaid-flowchart",
+              "label": "Mermaid",
+              "route": "components/data/markdown/mermaid/flowchart",
+              "module": {
+                "path": "./stories/subjects/components-data-markdown.ts",
+                "export": "story_mermaid_flowchart"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/compiled-mermaid-story.tsx",
+                "tests": [
+                  "../markdown/tests/mermaid.test.ts"
+                ]
+              }
             }
           ],
           "presentation": {

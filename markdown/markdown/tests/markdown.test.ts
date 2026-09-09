@@ -7,13 +7,13 @@ import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {markdownDestinations, parseMarkdown} from "../../parser/src/parser.ts"
 import type {MarkdownProps} from "../src/markdown.tsx"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer} from "@renderer/html"
 
 const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({
   cwd: root,
   persistent: true,
-  sourceRoots: [resolve(root, "markdown"), resolve(root, "ui")],
+  sourceRoots: [resolve(root, "markdown"), resolve(root, "ui"), resolve(root, "nodes")],
 }))
 
 const {Markdown} = await import("../src/markdown.tsx")

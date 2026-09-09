@@ -4,10 +4,10 @@ import {resolve} from "node:path"
 const root = resolve(import.meta.dir, "../..")
 const revision = Bun.argv[2] ?? "158f27a"
 const paths = [
-  "renderer/src/renderer.ts",
-  "renderer/src/interaction.ts",
-  "renderer/src/projection-hit.ts",
-  "renderer/src/immutable-array.ts",
+  "renderer/html/src/renderer.ts",
+  "renderer/html/src/interaction.ts",
+  "renderer/html/src/projection-hit.ts",
+  "renderer/html/src/immutable-array.ts",
   "webgpu/src/webgpu-backend.ts",
 ]
 const sources = new Map<string, string>()

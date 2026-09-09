@@ -44,6 +44,8 @@ type PlannedSegment =
     to: LinkPathPoint
   }>
 
+const terminals = new WeakMap<LinkPathProjection, Readonly<{start: LinkPathPoint; startNext: LinkPathPoint; end: LinkPathPoint; endPrevious: LinkPathPoint}>>()
+
 const pathProjections = new WeakMap<object, LinkPathProjection | null>()
 const projectedRoutes = new WeakSet<object>()
 const LINK_PATH_SEGMENT_LIMIT = 256
@@ -126,11 +128,13 @@ function projectOrthogonalRoute(route: Extract<LinkRoute, {kind: "orthogonal"}>)
       ? `L ${coordinate(segment.to.x)} ${coordinate(segment.to.y)}`
       : `C ${coordinate(segment.control1.x)} ${coordinate(segment.control1.y)} ${coordinate(segment.control2.x)} ${coordinate(segment.control2.y)} ${coordinate(segment.to.x)} ${coordinate(segment.to.y)}`)
   }
-  return Object.freeze({
+  const projection = Object.freeze({
     d: commands.join(" "),
     bounds: pointBounds(route.points),
     segmentCount: segments.length,
   })
+  terminals.set(projection, {start: route.points[0]!, startNext: route.points[1]!, end: route.points.at(-1)!, endPrevious: route.points.at(-2)!})
+  return projection
 }
 
 function projectCubicRoute(route: Readonly<{kind: "cubic"; curves: readonly LinkCubicCurve[]}>): LinkPathProjection {
@@ -145,7 +149,15 @@ function projectCubicRoute(route: Readonly<{kind: "cubic"; curves: readonly Link
     ...controlPoints,
     endPoint,
   ]))
-  return Object.freeze({d: commands.join(" "), bounds, segmentCount: route.curves.length})
+  const projection = Object.freeze({d: commands.join(" "), bounds, segmentCount: route.curves.length})
+  const last = route.curves.at(-1)!
+  terminals.set(projection, {
+    start: first.startPoint,
+    startNext: [...first.controlPoints, first.endPoint].find(point => !samePoint(point, first.startPoint))!,
+    end: last.endPoint,
+    endPrevious: [last.controlPoints[1], last.controlPoints[0], last.startPoint].find(point => !samePoint(point, last.endPoint))!,
+  })
+  return projection
 }
 
 function assertSegmentLimit(segmentCount: number): void {
@@ -241,4 +253,23 @@ function collinear(previous: LinkPathPoint, corner: LinkPathPoint, next: LinkPat
 
 function coordinate(value: number): string {
   return String(value === 0 ? 0 : value)
+}
+
+/** Arrowheads follow the route's terminal tangents, including degenerate cubic controls. */
+export function projectLinkArrowheads(route: LinkRoute, start = false, end = false): readonly Readonly<{side: "start" | "end"; d: string}>[] {
+  if (!start && !end) return []
+  const geometry = terminals.get(projectLinkRoute(route))!
+  return [
+    ...(start ? [{side: "start" as const, d: arrowhead(geometry.start, geometry.startNext)}] : []),
+    ...(end ? [{side: "end" as const, d: arrowhead(geometry.end, geometry.endPrevious)}] : []),
+  ]
+}
+
+function arrowhead(tip: LinkPathPoint, previous: LinkPathPoint): string {
+  const length = Math.hypot(tip.x - previous.x, tip.y - previous.y)
+  const dx = (tip.x - previous.x) / length
+  const dy = (tip.y - previous.y) / length
+  const left = {x: tip.x - dx * 9 - dy * 4, y: tip.y - dy * 9 + dx * 4}
+  const right = {x: tip.x - dx * 9 + dy * 4, y: tip.y - dy * 9 - dx * 4}
+  return `M ${coordinate(left.x)} ${coordinate(left.y)} L ${coordinate(tip.x)} ${coordinate(tip.y)} L ${coordinate(right.x)} ${coordinate(right.y)}`
 }

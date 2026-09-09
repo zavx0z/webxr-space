@@ -109,7 +109,7 @@ test("[NODETREE-004] NodeTree остаётся headless и предметно-н
     "@webxr/nodes",
     "@nodes/parameters",
     "@nodes/sockets",
-    "@zavx0z/renderer",
+    "@renderer/html",
     "@zavx0z/space",
     "@zavx0z/ui",
     "@zavx0z/webgpu",

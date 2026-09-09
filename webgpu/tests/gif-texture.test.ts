@@ -3,7 +3,7 @@ import {TextureLoader} from "../src/texture-loader.ts"
 import type {GifDecoderConstructor} from "../src/gif-animation.ts"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 import {createDocument} from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer} from "@renderer/html"
 import {ImageMaterial, Mesh} from "@zavx0z/engine"
 
 test("GIF reuses one texture, resumes after dimension discovery and stops with its last material", async () => {

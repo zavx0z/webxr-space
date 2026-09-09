@@ -9,7 +9,8 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./markdown/src/markdown.tsx",
-    "./parser": "./parser/src/parser.ts"
+    "./parser": "./parser/src/parser.ts",
+    "./mermaid": "./mermaid/src/mermaid.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
@@ -18,13 +19,17 @@
   },
   "dependencies": {
     "markdown-it": "15.0.1",
+    "mermaid": "11.17.2",
     "parse5": "8.0.1"
   },
   "peerDependencies": {
     "@zavx0z/component": "*",
     "@zavx0z/dom": "*",
     "@zavx0z/template": "*",
-    "@zavx0z/ui": "*"
+    "@zavx0z/ui": "*",
+    "@nodes/node": "*",
+    "@nodes/layout": "*",
+    "@webxr/nodes": "*"
   },
   "devDependencies": {
     "@zavx0z/highlighter": "link:@zavx0z/highlighter"
@@ -40,6 +45,15 @@
       "optional": true
     },
     "@zavx0z/ui": {
+      "optional": true
+    },
+    "@nodes/node": {
+      "optional": true
+    },
+    "@nodes/layout": {
+      "optional": true
+    },
+    "@webxr/nodes": {
       "optional": true
     }
   }

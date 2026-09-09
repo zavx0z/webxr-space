@@ -9,12 +9,14 @@ const packageDirectories = Object.freeze({
   "@zavx0z/dom": "dom",
   "@zavx0z/template": "template",
   "@zavx0z/component": "component",
-  "@zavx0z/renderer": "renderer",
+  "@webxr/renderer": "renderer",
+  "@renderer/html": "renderer/html",
   "@webxr/markdown": "markdown",
   "@zavx0z/webgpu": "webgpu",
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",
   "@zavx0z/ui": "ui",
+  "@nodes/node": "nodes/node",
   "@nodes/parameters": "nodes/parameters",
   "@nodes/sockets": "nodes/sockets",
   "@nodes/tree": "nodes/tree",
@@ -33,16 +35,17 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
     "@zavx0z/dom": [],
     "@zavx0z/template": ["@zavx0z/dom"],
     "@zavx0z/component": ["@zavx0z/dom", "@zavx0z/template"],
-    "@zavx0z/renderer": ["@zavx0z/dom"],
-    "@webxr/markdown": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui"],
-    "@zavx0z/devtools": ["@zavx0z/dom", "@zavx0z/renderer"],
-    "@zavx0z/webgpu": ["@zavx0z/engine", "@zavx0z/renderer"],
+    "@webxr/renderer": [],
+    "@renderer/html": ["@zavx0z/dom"],
+    "@webxr/markdown": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui", "@nodes/node", "@nodes/layout", "@webxr/nodes"],
+    "@zavx0z/devtools": ["@zavx0z/dom", "@renderer/html"],
+    "@zavx0z/webgpu": ["@zavx0z/engine", "@renderer/html"],
     "@zavx0z/browser": [
       "@zavx0z/component",
       "@zavx0z/template",
       "@zavx0z/dom",
       "@zavx0z/engine",
-      "@zavx0z/renderer",
+      "@renderer/html",
       "@zavx0z/space",
       "@zavx0z/webgpu",
     ],
@@ -53,11 +56,13 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
       "@zavx0z/template",
     ],
     "@zavx0z/ui": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template"],
+    "@nodes/node": ["@nodes/tree", "@nodes/parameters", "@nodes/sockets", "@zavx0z/component", "@zavx0z/template", "@zavx0z/ui"],
     "@nodes/parameters": ["@nodes/tree", "@nodes/sockets", "@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui"],
     "@nodes/sockets": ["@nodes/tree", "@zavx0z/component", "@zavx0z/template"],
     "@nodes/tree": [],
     "@nodes/layout": [],
     "@webxr/nodes": [
+      "@nodes/node",
       "@nodes/parameters",
       "@nodes/sockets",
       "@zavx0z/component",
@@ -251,7 +256,7 @@ describe("Направление производственных зависим
     const dependencies = declaredDependencies(await readManifest("@zavx0z/ui"))
     for (const forbidden of [
       "@zavx0z/engine",
-      "@zavx0z/renderer",
+      "@renderer/html",
       "@zavx0z/webgpu",
       "@webxr/nodes",
     ]) {
@@ -326,7 +331,11 @@ describe("Направление производственных зависим
     for (const packageName of packageNames) {
       const manifest = await Bun.file(
         join(root, packageDirectories[packageName], "package.json"),
-      ).json() as {scripts: Readonly<Record<string, string>>}
+      ).json() as {scripts?: Readonly<Record<string, string>>; workspaces?: readonly string[]}
+      if (manifest.scripts === undefined) {
+        assertRequirement((manifest.workspaces?.length ?? 0) > 0, "PKG-008", `${packageName} без scripts должен перечислять дочерние пакеты`)
+        continue
+      }
       assertRequirement(
         /^bun test --parallel(?: [\w./-]+)*$/u.test(manifest.scripts.test ?? ""),
         "PKG-008",

@@ -24,6 +24,8 @@ export function VectorParameter(props: VectorParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="vector"
     sockets={props.sockets}
     connected={props.connected}

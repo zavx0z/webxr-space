@@ -36,6 +36,7 @@ export const MemoNodeLayer = memo(NodeLayer, (previous, next) => {
   const right = next.treeProps
   return previous.entries === next.entries && previous.actions === next.actions &&
     sameSelection(left.selection, right.selection) &&
+    left.nodeKinds === right.nodeKinds && left.nodeShapes === right.nodeShapes && left.nodeContent === right.nodeContent && left.nodeViews === right.nodeViews &&
     left.collapsedNodeIds === right.collapsedNodeIds && left.previewNodeIds === right.previewNodeIds &&
     left.onParameterInput === right.onParameterInput && left.onParameterChange === right.onParameterChange &&
     previous.view.connectedSocketKeys === next.view.connectedSocketKeys &&

@@ -4,7 +4,7 @@ import {layoutFixed} from "@nodes/layout/fixed"
 import type {LayoutResult} from "@nodes/layout/types"
 import {Parameter, createNodeTree, createNodeTreeExternalStore, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"
 import {NodeEditor} from "@webxr/nodes/node-editor"
-import {planProjectedNodeGeometry} from "@webxr/nodes/node"
+import {planProjectedNodeGeometry} from "@nodes/node/geometry"
 import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodeTreeLayout, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"
 import type {ParameterInput} from "@nodes/parameters/shared"
 

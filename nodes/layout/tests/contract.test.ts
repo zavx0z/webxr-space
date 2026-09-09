@@ -19,7 +19,7 @@ test("[LAYOUT-001] layout остаётся чистым numeric owner без UI/
       "@nodes/parameters",
       "@nodes/sockets",
       "@nodes/tree",
-      "@zavx0z/renderer",
+      "@renderer/html",
       "@zavx0z/space",
       "@zavx0z/ui",
       "@zavx0z/webgpu",

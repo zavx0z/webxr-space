@@ -1,3 +1,6 @@
+import type {FunctionComponent} from "@zavx0z/component"
+import type {ParameterNodeProps} from "@nodes/node/contracts"
+import type {NodeChildren, NodeKind, NodeShape} from "@nodes/node/contracts"
 import type {NodeTreeExternalStore, NodeTreeSnapshot, ParameterSnapshot} from "@nodes/tree"
 import type {LayoutResult} from "@nodes/layout/types"
 import type {ParameterInput} from "@nodes/parameters/shared"
@@ -29,10 +32,31 @@ export type NodeTreeSelection =
 
 @property [viewport] - Область видимости в координатах дерева; не выполняет раскладку.
 */
+export type NodePresentationState = Readonly<{
+  collapsedNodeIds?: ReadonlySet<string> | undefined
+  previewNodeIds?: ReadonlySet<string> | undefined
+  nodeKinds?: ReadonlyMap<string, NodeKind> | undefined
+  nodeShapes?: ReadonlyMap<string, NodeShape> | undefined
+}>
+export type NodeTreeLayoutComputer = (snapshot: NodeTreeSnapshot, presentation: NodePresentationState) => LayoutResult
+
+/** A supplied compiled node receives the same accepted snapshot, geometry and guarded actions as built-in nodes. */
+export type NodeViewProps = ParameterNodeProps & Readonly<{
+  snapshot: NodeTreeSnapshot["nodes"][number]
+  contentVisible: boolean
+  shape?: NodeShape | undefined
+  onContentVisibleChange?: ((visible: boolean, event: Event) => void) | undefined
+}>
+export type NodeView = FunctionComponent<NodeViewProps>
+
 export type NodeTreeProps = Readonly<{
   store: NodeTreeStore
+  nodeKinds?: ReadonlyMap<string, NodeKind> | undefined
+  nodeShapes?: ReadonlyMap<string, NodeShape> | undefined
+  nodeContent?: ReadonlyMap<string, NodeChildren> | undefined
+  nodeViews?: ReadonlyMap<string, NodeView> | undefined
   label?: string | undefined
-  layout: LayoutResult | NodeTreeLayout
+  layout: LayoutResult | NodeTreeLayout | NodeTreeLayoutComputer
   viewport?: NodeTreeViewport | undefined
   materializeCulled?: boolean | undefined
   transform?: NodeTreeTransform | undefined

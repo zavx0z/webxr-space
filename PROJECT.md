@@ -151,7 +151,7 @@ IME и история. Дополнительные диапазоны испо�
 transport, но не меняют стандартный Selection API. Interpreter владеет
 только связью с файлами, Git, debugger и жизненным циклом процессов.
 
-Договоры: [DOM](dom/selection.md), [Renderer](renderer/text-selection.md),
+Договоры: [DOM](dom/selection.md), [Renderer](renderer/html/text-selection.md),
 [Browser](browser/clipboard.md), [редакторская модель](ui/code-editor-model.md).
 
 ## Пакеты
@@ -192,17 +192,19 @@ Nodes.
 | `dom` | `@zavx0z/dom` | `Document`, `SpaceElement`, `ViewPointElement`, `DisplayElement`, `HUDElement`, остальные элементы, атрибуты, события, фокус и состояние полей |
 | `template` | `@zavx0z/template` | Компилятор TSX и формат готового шаблона |
 | `component` | `@zavx0z/component` | Состояние компонентов, хуки, контекст, эффекты и очистка |
-| `renderer` | `@zavx0z/renderer` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
+| `renderer` | `@webxr/renderer` | Семейство рендереров документов |
+| `renderer/html` | `@renderer/html` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
 | `markdown` | `@webxr/markdown` | Разбор Markdown и компоненты документа |
 | `webgpu` | `@zavx0z/webgpu` | Шейдеры, буферы, текстуры, загрузка данных и рисование |
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
 | `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` |
 | `ui` | `@zavx0z/ui` | Универсальные UI-компоненты, тема и иконки |
-| `nodes` | `@webxr/nodes` | Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link |
+| `nodes` | `@webxr/nodes` | Композиция графа: NodeTree, NodeEditor, Frame и Link |
 | `nodes/tree` | `@nodes/tree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
 | `nodes/layout` | `@nodes/layout` | Алгоритмы расположения нод и Worker |
 | `nodes/parameters` | `@nodes/parameters` | Представления параметров и проекция внешнего Parameter Store |
 | `nodes/sockets` | `@nodes/sockets` | Адресуемый Socket и его визуальные предустановки |
+| `nodes/node` | `@nodes/node` | DiagramNode, ParameterNode и ContentNode на основе Pane |
 | `devtools` | `@zavx0z/devtools` | Диагностика Document, состояния элементов и результатов Renderer |
 
 Состав Storybook и порядок пакетов задаются `package.json#workspaces` выбранного
@@ -285,7 +287,12 @@ nodes/
 ├── node-tree/src/
 ├── node-editor/src/
 ├── frame/src/
-├── node/src/
+├── node/                      # @nodes/node
+│   ├── diagram/src/
+│   ├── parameter/src/
+│   ├── content/src/
+│   ├── geometry/src/
+│   └── shared/
 ├── link/src/
 ├── shared/
 ├── tree/                      # @nodes/tree
@@ -329,23 +336,28 @@ nodes/
 содержат предметы с отдельными `src` и TSDoc, а общая проекция Store остаётся
 в `parameters/shared`. Client и executor конкретной политики лежат рядом с
 алгоритмом в `layout/algorithms/<policy>/src/worker`; транспорт поколений общий.
-Публичные Node, Parameter и Socket сохраняют production-реализации и не
-подменяются скрытыми `NodeCard`, `ParameterRow` или `SocketPort`.
+Пакет `node` предоставляет конкретные DiagramNode, ParameterNode и ContentNode.
+ParameterNode использует Pane и готовые Parameters; ContentNode составляет его
+с независимой областью содержимого. Универсальной визуальной Node нет.
 
 Путь `nodes` выражает принадлежность подсистеме и не переносит состояние
 между пакетами: `tree` владеет моделью, `layout` — числовой геометрией,
-`parameters` и `sockets` — представлениями, `@webxr/nodes` — их композицией.
+`parameters` и `sockets` — готовыми компонентами, `node` — конкретными нодами,
+`@webxr/nodes` — отображением и взаимодействием всего графа.
 У NodeTree и NodeEditor сохраняется одна принятая пара snapshot/layout;
 pending блокирует старый ввод с сохранением Element и Parameter Store identity.
 NodeType остаётся отдельным проектом договора, без новой материализации типов.
 
-Геометрия Node строится из чисел до Layout и не измеряется после отрисовки:
+Геометрия конкретных нод строится из чисел до Layout. Для развёрнутой ParameterNode:
 минимальная ширина `100px`, граница `1px`, шапка `22px`, верхний и нижний
 отступы тела `8px` и `6px`, строка `22px`, промежуток `3px`. Поэтому пустая
-Node имеет высоту `38px`, а для одинаковых строк высота равна `35 + 25n` и
+ParameterNode имеет высоту `38px`, а для одинаковых строк высота равна `35 + 25n` и
 центры Socket идут `42 + 25i`. Многорядный Parameter сообщает плану свою
 числовую высоту от своего публичного UI-владельца; Layout и TSX используют один
-и тот же выбор представления и один план.
+и тот же выбор представления и один план. Скрытие параметров оставляет сокеты
+в компактной шапке. ContentNode независимо добавляет квадрат со стороной в ширину
+ноды; все четыре состояния передаются в тот же расчёт геометрии. DiagramNode
+имеет собственную высоту, а круг — высоту, равную ширине.
 
 ### Space
 
@@ -486,3 +498,24 @@ Devtools переносился из Renderer на базе `e428e64` с пят�
 - добавлять обходы в UI и Node вместо исправления платформы;
 - считать одни зелёные тесты полной приёмкой;
 - выполнять push без отдельного указания.
+
+
+### node-composition
+
+Пакет `@nodes/node` содержит конкретные DiagramNode, ParameterNode и ContentNode.
+ParameterNode использует Pane и готовые параметры. ContentNode составляет его
+с произвольным содержимым: обе части сворачиваются независимо, сохраняя Stores,
+элементы сокетов и подключения. Квадрат содержимого имеет сторону, равную ширине
+ноды. DiagramNode показывает описание в прямоугольной, овальной или круглой Pane.
+Прежние универсальные Node/NodeProps/NodeComponent и image-only NodePreview
+заменены этими конкретными компонентами; отдельной базовой визуальной ноды нет.
+
+Расчёт размеров использует существующий числовой договор; состояния входят во
+вход layout callback. Переход не объявляет реализованным общий вывод геометрии
+произвольного TSX/CSS и не меняет владельцев этой будущей возможности.
+
+
+Markdown распознаёт fenced Mermaid flowchart и загружает официальный parser
+по требованию. Владелец композиции — `@webxr/markdown`; он использует DiagramNode,
+Link и Layout, не создавая отдельный Canvas/Document и не преобразуя диаграмму
+в SVG-картинку. Mermaid-поддержка не переносится в UI.

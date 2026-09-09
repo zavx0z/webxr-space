@@ -40,13 +40,17 @@ export type ParameterEndpoint = Readonly<{
 }>
 
 /**
-Общая строка параметра использует значение и endpoint, предоставленные вызывающей стороной.
+Компонент параметра использует значение и сокеты, предоставленные вызывающей стороной.
 
 @property id - Идентификатор параметра внутри ноды; не создаёт новый Parameter Store.
 
 @property nodeId - Адрес ноды для всех Socket этой строки.
 
-@property [sockets] - Не более одного endpoint каждой стороны; повтор id или стороны вызывает ошибку.
+@property [sockets] - Адресуемые сокеты любой стороны; их ID уникальны внутри параметра.
+
+@property [labelHidden] - Скрывает видимую подпись, сохраняя доступное имя параметра.
+
+@property [spacingBefore] - Интервал перед параметром, общий с числовой геометрией ноды.
 
 @property [connected] - Скрывает поле, сохраняя строку, подпись и Socket.
 
@@ -56,6 +60,8 @@ export type ParameterBaseProps = Readonly<{
   id: string
   nodeId: string
   label: string
+  labelHidden?: boolean | undefined
+  spacingBefore?: "small" | "medium" | undefined
   sockets?: readonly ParameterEndpoint[] | undefined
   connected?: boolean | undefined
   hidden?: boolean | undefined

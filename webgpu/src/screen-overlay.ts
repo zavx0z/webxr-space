@@ -4,7 +4,7 @@ import {
   Vector3,
   type ViewPoint,
 } from "@zavx0z/engine"
-import type {RenderViewport} from "@zavx0z/renderer"
+import type {RenderViewport} from "@renderer/html"
 
 export type RendererWebGpuScreenOverlayOptions = Readonly<{
   content: Object3D

@@ -1,7 +1,7 @@
 # GPU-ресурсы при прокрутке
 
 Прокрутка использует общий retained backend и тот же Document, Canvas и Renderer.
-Подготовка видимого окна описана в [Renderer](../renderer/scrolling.md).
+Подготовка видимого окна описана в [Renderer](../renderer/html/scrolling.md).
 Следующие механизмы не зависят от CodeEditor, Markdown или Storybook.
 
 ## Общая геометрия прямоугольников

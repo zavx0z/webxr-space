@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createDocument, MouseEvent, type HTMLElement} from "@zavx0z/dom"
-import {createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 
 const workspace = resolve(import.meta.dir, "../..")

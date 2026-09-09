@@ -53,6 +53,7 @@ function sameNodeTreeContentProps(previous: NodeTreeContentProps, next: NodeTree
   const right = next.treeProps
   return previous.view === next.view && previous.actions === next.actions &&
     sameSelection(left.selection, right.selection) &&
+    left.nodeKinds === right.nodeKinds && left.nodeShapes === right.nodeShapes && left.nodeContent === right.nodeContent && left.nodeViews === right.nodeViews &&
     left.collapsedNodeIds === right.collapsedNodeIds && left.previewNodeIds === right.previewNodeIds &&
     left.onParameterInput === right.onParameterInput && left.onParameterChange === right.onParameterChange
 }

@@ -49,7 +49,6 @@ export function Socket(props: SocketProps) {
   const presentation = props.presentation ?? "endpoint"
   const glyphWidth = shape === "volume-grid" ? 6 : SOCKET_GLYPH_SIZE
   const glyphHeight = shape === "line" ? 3 : shape === "volume-grid" ? 6 : SOCKET_GLYPH_SIZE
-  const rowGlyphTop = (NODE_ROW_HEIGHT - glyphHeight) / 2
   const title = presentation === "endpoint"
     ? props.title ?? `${props.label} · ${preset.label}`
     : props.title ?? (props.label === preset.label ? undefined : preset.label)
@@ -146,7 +145,8 @@ export function Socket(props: SocketProps) {
         position: ${presentation === "row" ? "absolute" : "static"};
         display: block;
         left: ${presentation === "row" && props.side === "left" ? "0" : "auto"};
-        top: ${presentation === "row" ? `${rowGlyphTop}px` : "auto"};
+        top: ${presentation === "row" ? "50%" : "auto"};
+        margin-top: ${presentation === "row" ? `${-glyphHeight / 2}px` : "0"};
         right: ${presentation === "row" && props.side === "right" ? "0" : "auto"};
         width: ${glyphWidth}px;
         min-width: ${glyphWidth}px;

@@ -6,7 +6,7 @@ import type {
   RenderClip,
   RenderEdges,
   RenderTransform,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 
 export type DomInspectorAttribute = Readonly<{
   name: string

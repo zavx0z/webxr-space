@@ -4,7 +4,7 @@ import {createDocument, type HTMLElement} from "@zavx0z/dom"
 import {Text, TrueTypeFont} from "@zavx0z/engine"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import {createDocumentInteractionController, createDocumentRenderer, hitTestProjection, readCanonicalRenderFrameChanges} from "@zavx0z/renderer"
+import {createDocumentInteractionController, createDocumentRenderer, hitTestProjection, readCanonicalRenderFrameChanges} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 import type {CodeEditorProps} from "@zavx0z/ui/views/code-editor"
 

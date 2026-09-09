@@ -22,7 +22,7 @@ import {
   type RenderFrame,
   type RenderViewport,
   type WheelInput,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import {
   Renderer as EngineRenderer,
   RendererWebGpuDisplayPlane,
@@ -654,6 +654,29 @@ const createClaimedDocumentSpaceRuntime = async (
     }
   }
 
+  function projectPoint(owner: Node, point: Readonly<{x: number; y: number}>, geometry = false): Readonly<{x: number; y: number}> | null {
+    assertActive(disposed)
+    const rect = seams.readCanvasRect(options.canvas)
+    const overlay = overlays.get(owner)?.runtime
+    if (overlay !== undefined) {
+      if (!geometry && (!overlay.overlay.visible || !overlay.overlay.content.visible)) return null
+      return {
+        x: rect.left + point.x * rect.width / canvasViewport.width,
+        y: rect.top + point.y * rect.height / canvasViewport.height,
+      }
+    }
+    const plane = records.get(owner)?.runtime.plane
+    if (plane === undefined || !geometry && (!plane.visible || !plane.content.visible)) return null
+    viewPoint.update()
+    const view = plane.documentPointToWorld(point).applyMatrix4(viewPoint.viewMatrix)
+    if (view.z === 0 || !geometry && (-view.z < viewPoint.near || -view.z > viewPoint.far)) return null
+    const projected = view.applyMatrix4(viewPoint.projectionMatrix)
+    return {
+      x: rect.left + (projected.x + 1) * rect.width / 2,
+      y: rect.top + (1 - projected.y) * rect.height / 2,
+    }
+  }
+
   const planeRoots = (): Iterable<Node> => records.keys()
   const overlayRoots = (): Iterable<Node> => overlays.keys()
 
@@ -673,6 +696,7 @@ const createClaimedDocumentSpaceRuntime = async (
     let record: PlaneRecord | null = null
     let requestedBeforeRegistration = false
     const runtime = seams.createPlaneRuntime({
+      projectClientPoint: point => projectPoint(owner, point, true),
       document: options.document,
       root: registration.root,
       ...(typeof engineRenderer.readImageSize !== "function" ? {} : {
@@ -779,6 +803,7 @@ const createClaimedDocumentSpaceRuntime = async (
     let record: OverlayRecord | null = null
     let requestedBeforeRegistration = false
     const runtime = seams.createOverlayRuntime({
+      projectClientPoint: point => projectPoint(owner, point, true),
       document: options.document,
       root: registration.root,
       ...(typeof engineRenderer.readImageSize !== "function" ? {} : {
@@ -1883,28 +1908,7 @@ const createClaimedDocumentSpaceRuntime = async (
         preventDefault() {},
       } as WheelEvent)
     },
-    projectPoint(owner, point) {
-      assertActive(disposed)
-      const rect = seams.readCanvasRect(options.canvas)
-      const overlay = overlays.get(owner)?.runtime
-      if (overlay !== undefined) {
-        if (!overlay.overlay.visible || !overlay.overlay.content.visible) return null
-        return {
-          x: rect.left + point.x * rect.width / canvasViewport.width,
-          y: rect.top + point.y * rect.height / canvasViewport.height,
-        }
-      }
-      const plane = records.get(owner)?.runtime.plane
-      if (plane === undefined || !plane.visible || !plane.content.visible) return null
-      viewPoint.update()
-      const view = plane.documentPointToWorld(point).applyMatrix4(viewPoint.viewMatrix)
-      if (-view.z < viewPoint.near || -view.z > viewPoint.far) return null
-      const projected = view.applyMatrix4(viewPoint.projectionMatrix)
-      return {
-        x: rect.left + (projected.x + 1) * rect.width / 2,
-        y: rect.top + (1 - projected.y) * rect.height / 2,
-      }
-    },
+    projectPoint,
     subscribeBeforeRender,
     subscribePresented,
     dispose() {

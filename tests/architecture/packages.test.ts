@@ -9,7 +9,8 @@ const packages = Object.freeze([
   ["dom", "@zavx0z/dom", "Document, элементы, атрибуты, события, focus и состояние полей"],
   ["template", "@zavx0z/template", "Компилятор TSX и формат готового шаблона"],
   ["component", "@zavx0z/component", "Состояние компонентов, hooks, context, эффекты и очистка"],
-  ["renderer", "@zavx0z/renderer", "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU"],
+  ["renderer", "@webxr/renderer", "Независимые пакеты рендеринга документов"],
+  ["renderer/html", "@renderer/html", "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU"],
   ["markdown", "@webxr/markdown", "Разбор и отображение Markdown через готовые UI-компоненты"],
   ["webgpu", "@zavx0z/webgpu", "Shaders, buffers, textures, uploads и рисование"],
   ["browser", "@zavx0z/browser", "Canvas, resize, input, RAF и общий цикл кадров"],
@@ -20,6 +21,7 @@ const packages = Object.freeze([
   ["nodes/layout", "@nodes/layout", "Алгоритмы расположения нод и Worker"],
   ["nodes/parameters", "@nodes/parameters", "Представления параметров нод и проекция Parameter Store"],
   ["nodes/sockets", "@nodes/sockets", "Адресуемый Socket и его визуальные предустановки"],
+  ["nodes/node", "@nodes/node", "DiagramNode, ParameterNode и ContentNode на основе Pane"],
   ["devtools", "@zavx0z/devtools", "Диагностика Document, состояния элементов и результатов Renderer"],
 ] as const)
 
@@ -73,7 +75,7 @@ describe("Конечный состав пакетов", () => {
 
   test("[PKG-002] состав пакетов совпадает с принятыми владельцами без ограничения их числа", async () => {
     const actual: string[] = []
-    for (const pattern of ["*", "nodes/*"]) for await (const entry of new Bun.Glob(pattern).scan({cwd: root, onlyFiles: false})) {
+    for (const pattern of ["*", "nodes/*", "renderer/*"]) for await (const entry of new Bun.Glob(pattern).scan({cwd: root, onlyFiles: false})) {
       if (entry === "projects" || entry === "tests") continue
       if (await Bun.file(join(root, entry, "package.json")).exists()) actual.push(entry)
     }

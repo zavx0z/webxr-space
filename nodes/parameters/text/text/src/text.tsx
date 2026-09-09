@@ -22,6 +22,8 @@ export function TextParameter(props: TextParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="text"
     sockets={props.sockets}
     connected={props.connected}

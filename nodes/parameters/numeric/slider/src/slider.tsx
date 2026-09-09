@@ -24,6 +24,8 @@ export function SliderParameter(props: SliderParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="slider"
     sockets={props.sockets}
     connected={props.connected}

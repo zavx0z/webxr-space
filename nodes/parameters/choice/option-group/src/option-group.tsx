@@ -22,6 +22,8 @@ export function OptionGroupParameter(props: OptionGroupParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="option-group"
     sockets={props.sockets}
     connected={props.connected}

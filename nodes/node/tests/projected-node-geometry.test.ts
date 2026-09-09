@@ -6,7 +6,7 @@ import type {
   Socket,
 } from "@nodes/tree"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import type {ProjectedNodeSnapshot} from "../src/node.tsx"
+import type {ProjectedNodeSnapshot} from "@nodes/node/geometry"
 
 const root = resolve(import.meta.dir, "../../..")
 
@@ -20,7 +20,7 @@ const [
   {planProjectedNodeGeometry},
   {resolveProjectedParameterPresentation},
 ] = await Promise.all([
-  import("../src/node.tsx"),
+  import("@nodes/node/geometry"),
   import("@nodes/parameters/shared"),
 ])
 

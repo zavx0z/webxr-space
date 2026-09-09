@@ -22,6 +22,8 @@ export function SelectParameter(props: SelectParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="select"
     sockets={props.sockets}
     connected={props.connected}

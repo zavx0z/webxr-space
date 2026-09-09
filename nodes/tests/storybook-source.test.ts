@@ -9,18 +9,19 @@ import type {OwnerStoryDescriptor} from "../.storybook/stories/story-types.ts"
 
 const workspace = resolve(import.meta.dir, "../..")
 const nodesRoot = resolve(workspace, "nodes")
-const sourceRoots = [nodesRoot, resolve(workspace, "ui")]
+const sourceRoots = [nodesRoot, resolve(workspace, "ui"), resolve(workspace, "markdown")]
 
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, sourceRoots, persistent: true}))
 
 test("[NODES-STORYBOOK-SOURCE] показанные TSX-примеры компилируются через публичный Template compiler", async () => {
-  const [sockets, parameters, components] = await Promise.all([
+  const [sockets, parameters, components, concreteNodes] = await Promise.all([
     import("../sockets/.storybook/stories/subjects/sockets.ts"),
     import("../parameters/.storybook/stories/subjects/parameters.ts"),
     import("../.storybook/stories/subjects/components.ts"),
+    import("../node/.storybook/stories/subjects.ts"),
   ])
   const descriptors = new Map<string, OwnerStoryDescriptor>(
-    Object.values({...sockets, ...parameters, ...components}).map(story => [story.route, story]),
+    Object.values({...sockets, ...parameters, ...components, ...concreteNodes}).map(story => [story.route, story]),
   )
   const routes = [
     ...["input", "output", "bidirectional", "shapes", "states", "presentation"].map(variant => `sockets/boolean/${variant}`),
@@ -30,6 +31,7 @@ test("[NODES-STORYBOOK-SOURCE] показанные TSX-примеры комп�
     ]),
     ...["vector", "matrix", "collection"].map(mechanism => `parameters/${mechanism}/geometry`),
     ...Object.values(components).map(story => story.route),
+    ...Object.values(concreteNodes).map(story => story.route),
   ]
 
   // The root .gitignore excludes .codex/ at any depth; each run owns only its

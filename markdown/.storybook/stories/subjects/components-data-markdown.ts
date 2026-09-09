@@ -34,3 +34,8 @@ export const story_selection_cross_block = defineOwnerStory("components/data/mar
   const {createCompiledCrossBlockSelectionStory} = await import("../compiled/compiled-selection-production-stories.tsx")
   return createCompiledCrossBlockSelectionStory(document)
 })
+
+export const story_mermaid_flowchart = defineOwnerStory("components/data/markdown/mermaid/flowchart", async document => {
+  const {createMermaidStory} = await import("../compiled/compiled-mermaid-story.tsx")
+  return createMermaidStory(document)
+})

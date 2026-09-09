@@ -10,7 +10,7 @@ browser's native DOM.
 `createDomInspector({document, renderer?, readFrame?})` receives one exact
 `@zavx0z/dom` `Document`. Every inspected Node must be that Document or have it
 as `ownerDocument`; foreign DOM realms and Documents fail closed. The optional
-`@zavx0z/renderer` peer must project the same Document. A caller that keeps its
+`@renderer/html` peer must project the same Document. A caller that keeps its
 Renderer private may instead provide one `readFrame(node)` function owned by the
 same Experience; `renderer` and `readFrame` are mutually exclusive. The package has no
 Engine, UI, browser DOM, CDP or GPU dependency.

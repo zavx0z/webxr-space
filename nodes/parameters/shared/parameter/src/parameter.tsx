@@ -1,69 +1,56 @@
 /**
 Проецирует supplied Parameter Store без копирования значения.
-Один resolver выбирает UI Field и его числовую высоту; Node использует этот же
-выбор перед Layout. Adapter не создаёт Store и не владеет доменными действиями.
+Один resolver выбирает готовый компонент параметра и его числовую высоту;
+Node использует тот же выбор перед Layout. Адаптер передаёт данные и callbacks,
+а разметка и UI-поля принадлежат конкретным компонентам параметров.
 
 @packageDocumentation
 */
 
 import {
-  CheckboxField,
   checkboxFieldLayout,
 } from "@zavx0z/ui/fields/checkbox-field"
 import {
-  CollectionField,
   collectionFieldLayout,
   type CollectionFieldProps,
 } from "@zavx0z/ui/fields/collection-field"
 import {
-  ColorField,
   colorFieldLayout,
   type ColorFieldValue,
 } from "@zavx0z/ui/fields/color-field"
 import {
-  CycleField,
   cycleFieldLayout,
 } from "@zavx0z/ui/fields/cycle-field"
 import {
-  MatrixField,
   matrixFieldLayout,
 } from "@zavx0z/ui/fields/matrix-field"
 import {
-  NumberField,
   numberFieldLayout,
 } from "@zavx0z/ui/fields/number-field"
 import {
-  ToggleButtonGroup,
   toggleButtonGroupLayout,
 } from "@zavx0z/ui/buttons/toggle-button-group"
 import {
-  PathField,
   pathFieldLayout,
 } from "@zavx0z/ui/fields/path-field"
 import {
-  ReferenceField,
   referenceFieldLayout,
   type ReferenceFieldValue,
 } from "@zavx0z/ui/fields/reference-field"
 import {
-  SelectField,
   selectFieldLayout,
   type SelectFieldOption,
 } from "@zavx0z/ui/fields/select-field"
 import {
-  SliderField,
   sliderFieldLayout,
 } from "@zavx0z/ui/fields/slider-field"
 import {
-  SwitchField,
   switchFieldLayout,
 } from "@zavx0z/ui/fields/switch-field"
 import {
-  TextField,
   textFieldLayout,
 } from "@zavx0z/ui/fields/text-field"
 import {
-  VectorField,
   vectorFieldLayout,
 } from "@zavx0z/ui/fields/vector-field"
 import type {
@@ -79,19 +66,24 @@ import {
 } from "@zavx0z/component"
 import {metadata, metadataBoolean, metadataNumber, metadataObjectArray, metadataString, metadataStringArray} from "../../src/metadata.ts"
 import {socketKey, socketSide} from "@nodes/sockets/shared"
-import {NODE_ROW_HEIGHT} from "@nodes/sockets/metrics"
 import {NODE_PARAMETER_SPACING_MEDIUM, NODE_PARAMETER_SPACING_SMALL, PARAMETER_OUTPUT_HEIGHT} from "../../src/metrics.ts"
 import {SOCKET_KINDS, type SocketKind, type SocketShape} from "@nodes/sockets/presets"
 import type {ParameterProps, ParameterEndpoint} from "../../src/contracts.ts"
-const compactFieldStyle: CssStyle = css`
-  width: 0;
-  min-width: 0;
-  flex-grow: 1;
-  --field-label-width: 18px;
-`
-import {ParameterEndpoints} from "../../endpoints/src/endpoints.tsx"
-import {ParameterLabel} from "../../label/src/label.tsx"
-import {ParameterOutput} from "../../output/src/output.tsx"
+import {CheckboxParameter} from "../../../boolean/checkbox/src/checkbox.tsx"
+import {CollectionParameter} from "../../../collections/collection/src/collection.tsx"
+import {ColorParameter} from "../../../composite/color/src/color.tsx"
+import {CycleParameter} from "../../../choice/cycle/src/cycle.tsx"
+import {MatrixParameter} from "../../../composite/matrix/src/matrix.tsx"
+import {NumberParameter} from "../../../numeric/number/src/number.tsx"
+import {OptionGroupParameter} from "../../../choice/option-group/src/option-group.tsx"
+import {OutputParameter} from "../../../output/output/src/output.tsx"
+import {PathParameter} from "../../../references/path/src/path.tsx"
+import {ReferenceParameter} from "../../../references/reference/src/reference.tsx"
+import {SelectParameter} from "../../../choice/select/src/select.tsx"
+import {SliderParameter} from "../../../numeric/slider/src/slider.tsx"
+import {SwitchParameter} from "../../../boolean/switch/src/switch.tsx"
+import {TextParameter} from "../../../text/text/src/text.tsx"
+import {VectorParameter} from "../../../composite/vector/src/vector.tsx"
 
 export type {ParameterProps, ParameterInput, ParameterEndpoint, ParameterBaseProps} from "../../src/contracts.ts"
 export {metadata, metadataBoolean, metadataNumber, metadataObjectArray, metadataString, metadataStringArray} from "../../src/metadata.ts"
@@ -183,8 +175,6 @@ export function Parameter(props: ParameterProps) {
     props.resolvedSocketSides,
   ))
   const connected = sockets.some(socket => socket.connected === true)
-  const left = sockets.filter(socket => socket.side === "left")
-  const right = sockets.filter(socket => socket.side === "right")
   const input = (value: NodeJsonValue, event: Event) => props.onInput?.(Object.freeze({
     nodeId: props.nodeId,
     parameterId: snapshot.id,
@@ -195,252 +185,271 @@ export function Parameter(props: ParameterProps) {
     parameterId: snapshot.id,
     value,
   }), event)
-  const leadingCheckbox = kind === "checkbox" && !connected
-  const numberOwnsLabel = kind === "number" && !connected
-  const insetNumberRow = numberOwnsLabel && left.length > 0 && right.length === 0
-  return <div
-    role="group"
-    aria-label={label}
-    data-parameter-id={snapshot.id}
-    data-field-kind={kind}
-    data-socket-count={sockets.length}
-    data-connected={connected ? "true" : undefined}
-    data-label-hidden={labelHidden ? "true" : undefined}
-    data-leading-checkbox={leadingCheckbox ? "true" : undefined}
-    data-inset-number-row={insetNumberRow ? "true" : undefined}
-    data-spacing-before={props.spacingBefore}
-    style={css`
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      width: 100%;
-      min-width: 0;
-      min-height: ${NODE_ROW_HEIGHT}px;
-      gap: 3px;
-
-      &[data-spacing-before="small"] {
-        margin-top: ${NODE_PARAMETER_SPACING_SMALL}px;
-      }
-
-      &[data-spacing-before="medium"] {
-        margin-top: ${NODE_PARAMETER_SPACING_MEDIUM}px;
-      }
-
-      &[data-label-hidden="true"] {
-        gap: 0;
-        padding-right: 11px;
-        padding-left: 12px;
-      }
-
-      &[data-leading-checkbox="true"] {
-        gap: 4px;
-        padding-right: 8px;
-        padding-left: 8px;
-      }
-
-      &[data-inset-number-row="true"] {
-        gap: 0;
-        padding-right: 11px;
-      }
-
-      &[hidden] {
-        display: none;
-      }
-
-      ${props.style}
-    `}
-  >
-    <ParameterEndpoints
+  return <>
+    {kind === "checkbox" ? <CheckboxParameter
+      id={snapshot.id}
       nodeId={props.nodeId}
-      side="left"
-      sockets={left}
-      onActivate={props.onSocketActivate}
-    />
-    <ParameterLabel
       label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
       connected={connected}
-      hidden={labelHidden || leadingCheckbox || numberOwnsLabel}
-      title={connected ? title : undefined}
-    />
-    <span
-      data-parameter-field=""
-      data-leading={leadingCheckbox ? "true" : undefined}
-      hidden={connected}
-      style={css`
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        width: ${leadingCheckbox ? "18px" : "0"};
-        min-width: 0;
-        min-height: ${NODE_ROW_HEIGHT}px;
-        flex-grow: ${leadingCheckbox ? 0 : 1};
-
-        &[hidden] {
-          display: none;
-        }
-      `}
-    >
-      {kind === "switch" ? <SwitchField
-        checked={booleanValue}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onChange={change}
-      /> : null}
-      {kind === "checkbox" ? <CheckboxField
-        checked={booleanValue}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={leadingCheckbox || connected ? undefined : title}
-        onChange={change}
-      /> : null}
-      {kind === "slider" ? <SliderField
-        value={numberValue}
-        min={min!}
-        max={max!}
-        step={step}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "number" ? <NumberField
-        label={numberOwnsLabel ? label : undefined}
-        value={numberValue}
-        min={min}
-        max={max}
-        step={step}
-        precision={precision}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "cycle" ? <CycleField
-        value={stringValue}
-        options={options ?? []}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onChange={change}
-      /> : null}
-      {kind === "option-group" ? <ToggleButtonGroup
-        value={stringValue}
-        options={options ?? []}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onChange={change}
-      /> : null}
-      {kind === "select" ? <SelectField
-        value={stringValue}
-        options={options}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        onChange={change}
-      /> : null}
-      {kind === "path" ? <PathField
-        value={stringValue}
-        placeholder={placeholder}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "text" ? <TextField
-        value={stringValue}
-        placeholder={placeholder}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "vector" ? <VectorField
-        value={vector!}
-        axes={axes}
-        min={min}
-        max={max}
-        step={rawStep}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "matrix" ? <MatrixField
-        value={matrix!}
-        step={rawStep}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "color" ? <ColorField
-        value={color!}
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-        onInput={input}
-        onChange={change}
-      /> : null}
-      {kind === "reference" ? <ReferenceField
-        value={reference ?? null}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-      /> : null}
-      {kind === "collection" ? <CollectionField
-        items={collection?.items ?? []}
-        selectedId={collection?.selectedId ?? null}
-        visibleRows={collection?.visibleRows}
-        density="compact"
-        disabled={disabled}
-        readOnly={readOnly}
-        title={connected ? undefined : title}
-        style={compactFieldStyle}
-      /> : null}
-      {kind === "output" ? <ParameterOutput
-        value={snapshot.value}
-        title={connected ? undefined : title}
-      /> : null}
-    </span>
-    {leadingCheckbox ? <ParameterLabel
-      label={label}
-      connected={false}
-      expanded
+      disabled={disabled}
+      readOnly={readOnly}
       title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      checked={booleanValue}
+      onChange={change}
     /> : null}
-    <ParameterEndpoints
+    {kind === "collection" ? <CollectionParameter
+      id={snapshot.id}
       nodeId={props.nodeId}
-      side="right"
-      sockets={right}
-      onActivate={props.onSocketActivate}
-    />
-  </div>
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      items={collection?.items ?? []}
+      selectedId={collection?.selectedId ?? null}
+      visibleRows={collection?.visibleRows}
+    /> : null}
+    {kind === "color" ? <ColorParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={color!}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "cycle" ? <CycleParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={stringValue}
+      options={options ?? []}
+      onChange={change}
+    /> : null}
+    {kind === "matrix" ? <MatrixParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={matrix!}
+      step={rawStep}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "number" ? <NumberParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={numberValue}
+      min={min}
+      max={max}
+      step={step}
+      precision={precision}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "option-group" ? <OptionGroupParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={stringValue}
+      options={options ?? []}
+      onChange={change}
+    /> : null}
+    {kind === "output" ? <OutputParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={snapshot.value}
+    /> : null}
+    {kind === "path" ? <PathParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={stringValue}
+      placeholder={placeholder}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "reference" ? <ReferenceParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={reference ?? null}
+    /> : null}
+    {kind === "select" ? <SelectParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={stringValue}
+      options={options}
+      onChange={change}
+    /> : null}
+    {kind === "slider" ? <SliderParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={numberValue}
+      min={min!}
+      max={max!}
+      step={step}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "switch" ? <SwitchParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      checked={booleanValue}
+      onChange={change}
+    /> : null}
+    {kind === "text" ? <TextParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={stringValue}
+      placeholder={placeholder}
+      onInput={input}
+      onChange={change}
+    /> : null}
+    {kind === "vector" ? <VectorParameter
+      id={snapshot.id}
+      nodeId={props.nodeId}
+      label={label}
+      labelHidden={labelHidden}
+      sockets={sockets}
+      connected={connected}
+      disabled={disabled}
+      readOnly={readOnly}
+      title={title}
+      spacingBefore={props.spacingBefore}
+      style={props.style}
+      onSocketActivate={props.onSocketActivate}
+      value={vector!}
+      axes={axes}
+      min={min}
+      max={max}
+      step={rawStep}
+      onInput={input}
+      onChange={change}
+    /> : null}
+  </>
 }
 
 export type ParameterComponent = FunctionComponent<ParameterProps>
@@ -552,7 +561,7 @@ function collectionValue(
 }
 
 /**
- * Одним чистым проходом выбирает UI-владельца projected Parameter и готовит
+ * Одним чистым проходом выбирает готовый компонент параметра и готовит
  * те же данные, которые затем использует и отрисовка, и числовая геометрия.
  */
 export function resolveProjectedParameterPresentation(

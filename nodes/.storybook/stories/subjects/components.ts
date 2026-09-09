@@ -7,12 +7,6 @@ function story(route: string) {
   })
 }
 
-export const story_node_basic = story("components/node/basic")
-export const story_node_empty = story("components/node/empty")
-export const story_node_states = story("components/node/states")
-export const story_node_collapsed = story("components/node/collapsed")
-export const story_node_preview = story("components/node/preview")
-export const story_node_authored_content = story("components/node/authored-content")
 export const story_frame_basic = story("components/frame/basic")
 export const story_frame_nested = story("components/frame/nested")
 export const story_frame_states = story("components/frame/states")

@@ -1,3 +1,4 @@
+import {readElementBoundingClientRect, type DOMRect} from "../geometry.ts"
 import type {Document} from "./document.ts"
 import {getClassList} from "./dom-token-list.ts"
 import type {DOMTokenList} from "./dom-token-list.ts"
@@ -72,6 +73,16 @@ export class Element extends Node {
 
   scrollIntoView(options?: boolean | ScrollIntoViewOptions): void {
     requestElementScrollIntoView(this, options)
+  }
+
+  /**
+  Returns a fresh viewport-relative border-box snapshot, including transforms
+  and scrolling. Elements without a rendered CSS box return an empty rectangle.
+  Geometry is resolved by the attached Renderer; this method does not parse CSS.
+  */
+  getBoundingClientRect(): DOMRect {
+    if (!(this instanceof Element)) throw new TypeError("Illegal Element invocation")
+    return readElementBoundingClientRect(this)
   }
 
   hasAttributes(): boolean {

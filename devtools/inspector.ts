@@ -14,7 +14,7 @@ import type {
   RenderBorder,
   RenderBox,
   RenderClip,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 import type {
   CreateDomInspectorOptions,
   DomInspector,

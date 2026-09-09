@@ -31,6 +31,28 @@ Markdown и отдельно компонует свою overview action. Бло
 Подробности размеров и регрессионное воспроизведение flex minimum находятся
 в [CodeEditor](../ui/views/code-editor.md).
 
+## Mermaid
+
+Fenced-блок с языком `mermaid` отображается как диаграмма прямо внутри Markdown.
+Синтаксис разбирает Mermaid 11.17.2. Пакет не вызывает SVG-рендерер Mermaid:
+узлы — реальные `DiagramNode`, связи — `Link`, размеры и маршруты рассчитывает
+`@nodes/layout`. Все элементы остаются в Document текущего Experience.
+
+Библиотека Mermaid загружается при появлении такого блока. Обычные блоки кода
+сохраняют прежний CodeEditor. Обновление исходного текста изменяет граф,
+сохраняя уцелевшие ноды; устаревший async-результат не применяется.
+При ошибке показаны сообщение и исходный Mermaid-код.
+
+Поддержан первый срез flowchart: LR/RL/TB/TD/BT, прямоугольники, круги и овалы,
+обычные связи без подписей, стрелки в конце или с обеих сторон. Subgraph,
+другие семейства диаграмм, ромбы, подписи и дополнительные стили связей пока
+дают явное сообщение. Числовые ограничения Layout сохраняются.
+
+[Рабочий пример](.storybook/stories/compiled/compiled-mermaid-story.tsx) содержит
+подписи, разные формы и изменение направления. Проверки:
+[mermaid.test.ts](markdown/tests/mermaid.test.ts). В `nodes/node/README.md`
+находится Mermaid-схема реальных зависимостей компонентов нод.
+
 ## Поддерживаемый синтаксис
 
 - ATX-заголовки `#`–`######` с настоящими `<h1>`–`<h6>`.
@@ -68,7 +90,7 @@ flex-ячеек, затем измеряет переносы и высоту с
 `algorithm table rows contain all wrapped text inside a flex overview` в
 `markdown/tests/markdown.test.ts` требует, чтобы текст помещался внутри ячеек.
 Фиксированные высоты и ручное измерение текста в Markdown не используются.
-Общий контракт: [размеры flex-строк Renderer](../renderer/flex-layout.md).
+Общий контракт: [размеры flex-строк Renderer](../renderer/html/flex-layout.md).
 
 Сравнение режимов: `MarkdownWrappingFixture` в `markdown/tests/markdown.fixture.tsx`,
 маршруты `components/data/markdown/rendering/wrapping` и
@@ -76,7 +98,7 @@ flex-ячеек, затем измеряет переносы и высоту с
 
 Абзац с inline code переносится по словам внутри ширины 180 px. При `wrap=false`
 он остаётся одной строкой с горизонтальным переполнением. Общие поведенческие
-проверки принадлежат Renderer: `renderer/tests/inline-flow.test.ts`. Длинные слова
+проверки принадлежат Renderer: `renderer/html/tests/inline-flow.test.ts`. Длинные слова
 без разрешённых пробелов остаются неразрывными и могут переполнять область.
 
 Renderer и WebGPU выбирают один и тот же зарегистрированный font face для

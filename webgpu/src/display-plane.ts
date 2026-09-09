@@ -1,5 +1,5 @@
 import {ImageMaterial, Matrix4, Mesh, TexturedPlaneGeometry} from "@zavx0z/engine"
-import type {RenderViewport} from "@zavx0z/renderer"
+import type {RenderViewport} from "@renderer/html"
 import {RendererWebGpuDocumentPlane, type RendererWebGpuDocumentPlaneOptions} from "./document-plane.ts"
 
 /** Internal texture source, resolved by the owning Renderer without a URL or image loader. */

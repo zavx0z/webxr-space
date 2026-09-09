@@ -1,9 +1,11 @@
+import {ContentNode} from "@nodes/node/content"
 import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"
 import type {Document} from "@zavx0z/dom"
 import {createNodeTree, createNodeTreeExternalStore, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"
 import {layoutFixed} from "@nodes/layout/fixed"
-import {Node, planProjectedNodeGeometry} from "@webxr/nodes/node"
-import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"
+import {ParameterNode} from "@nodes/node/parameter"
+import {planProjectedNodeGeometry} from "@nodes/node/geometry"
+import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"
 import {NodeEditor} from "@webxr/nodes/node-editor"
 import {NumberParameter} from "@nodes/parameters/number"
 import {Frame} from "@webxr/nodes/frame"
@@ -159,7 +161,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
       min-height: 480px;
       overflow: hidden;
     `}>
-      {props.component === "node" && props.variant === "authored-content" ? <Node
+      {props.component === "node" && props.variant === "authored-content" ? <ParameterNode
         id={node.id}
         label="Авторская нода"
         rect={{x: 24, y: 24, width: 320, height: geometry.height}}
@@ -174,21 +176,38 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
           onInput={value => source.set(value)}
           onChange={value => source.set(value)}
         />
-      </Node> : null}
-      {props.component === "node" && props.variant !== "authored-content" ? <Node
+      </ParameterNode> : null}
+      {props.component === "node" && props.variant !== "authored-content" && props.variant !== "preview" ? <ParameterNode
         id={node.id}
         label={props.variant === "empty" ? "Пустая нода" : "Источник"}
         category="Компоненты"
         rect={{x: 24, y: preview ? 132 : 24, width: 320, height: geometry.height}}
         selected={selected?.id === node.id}
         collapsed={collapsed}
-        preview={{enabled: preview, image: {src: previewImage(), width: 160, height: 90, alt: "Градиент примера"}}}
         parameters={node.parameters}
         sockets={node.sockets}
         parameterStore={id => store.parameter(node.id, id)}
         onActivate={() => setSelected({kind: "node", id: node.id})}
         onCollapseChange={setCollapsed}
-        onPreviewChange={setPreview}
+        onParameterInput={change}
+        onParameterChange={change}
+        onSocketActivate={id => setLastAction(`Сокет ${id}`)}
+      /> : null}
+      {props.component === "node" && props.variant === "preview" ? <ContentNode
+        id={node.id}
+        label="Источник"
+        category="Компоненты"
+        rect={{x: 24, y: preview ? 132 : 24, width: 320, height: geometry.height}}
+        selected={selected?.id === node.id}
+        collapsed={collapsed}
+        contentVisible={preview}
+        image={{src: previewImage(), width: 160, height: 90, alt: "Градиент примера"}}
+        parameters={node.parameters}
+        sockets={node.sockets}
+        parameterStore={id => store.parameter(node.id, id)}
+        onActivate={() => setSelected({kind: "node", id: node.id})}
+        onCollapseChange={setCollapsed}
+        onContentVisibleChange={setPreview}
         onParameterInput={change}
         onParameterChange={change}
         onSocketActivate={id => setLastAction(`Сокет ${id}`)}
@@ -207,7 +226,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
       /> : null}
       {props.component === "node-editor" ? <NodeEditor
         store={store}
-        layout={layout}
+        layout={graphLayout}
         title="Живой редактор нод"
         label="Живой редактор нод"
         width={760}
@@ -233,12 +252,12 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
   </section>
 }
 
-function graphLayout(snapshot: NodeTreeSnapshot) {
+function graphLayout(snapshot: NodeTreeSnapshot, state: NodePresentationState = {}) {
   const connected = new Set(snapshot.links.flatMap(link => [
     socketKey(link.from.nodeId, link.from.socketId),
     socketKey(link.to.nodeId, link.to.socketId),
   ]))
-  const plans = snapshot.nodes.map(node => ({node, geometry: planProjectedNodeGeometry(node, 280, connected)}))
+  const plans = snapshot.nodes.map(node => ({node, geometry: planProjectedNodeGeometry(node, 280, connected, undefined, {collapsed: state.collapsedNodeIds?.has(node.id), contentVisible: state.nodeKinds?.get(node.id) === "content" && state.previewNodeIds?.has(node.id) === true, kind: state.nodeKinds?.get(node.id), shape: state.nodeShapes?.get(node.id)})}))
   return layoutFixed({
     viewport: {width: 900, height: 600},
     nodes: plans.map(({node, geometry}) => ({id: node.id, width: geometry.width, height: geometry.height})),
@@ -511,7 +530,7 @@ function frameSource(variant: string): string {
 }
 
 function graphSource(component: string, variant: string): string {
-  const api = component === "node" ? "Node" : component === "node-tree" ? "NodeTree" : "NodeEditor"
+  const api = component === "node" ? "ParameterNode" : component === "node-tree" ? "NodeTree" : "NodeEditor"
   const authored = component === "node" && variant === "authored-content"
   const number = parameterFixture("number", "field")
   const message = parameterFixture("text", "field", "message")
@@ -520,8 +539,9 @@ function graphSource(component: string, variant: string): string {
     'import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"',
     'import type {HTMLElement} from "@zavx0z/dom"',
     'import {createNodeTree, createNodeTreeExternalStore, Parameter, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"',
-    `import {${component === "node" ? "Node, planProjectedNodeGeometry" : "planProjectedNodeGeometry"}} from "@webxr/nodes/node"`,
-    `import {${component === "node-tree" ? "NodeTree, " : ""}${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"`,
+    'import {planProjectedNodeGeometry} from "@nodes/node/geometry"',
+    ...(component === "node" ? ['import {ParameterNode} from "@nodes/node/parameter"'] : []),
+    `import {${component === "node-tree" ? "NodeTree, " : ""}${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"`,
     ...(component === "node-editor" ? ['import {NodeEditor} from "@webxr/nodes/node-editor"'] : []),
     ...(component !== "node" ? ['import {layoutFixed} from "@nodes/layout/fixed"'] : []),
     ...(authored ? ['import {NumberParameter} from "@nodes/parameters/number"'] : []),
@@ -643,7 +663,7 @@ function graphSource(component: string, variant: string): string {
     "        overflow: hidden;",
     "      `}>",
     ...(component === "node" ? [
-      "        <Node",
+      "        <ParameterNode",
       "          id={node.id}",
       `          label="${authored ? "Авторская нода" : empty ? "Пустая нода" : "Источник"}"`,
       ...(!authored ? ['          category="Компоненты"'] : []),
@@ -674,7 +694,7 @@ function graphSource(component: string, variant: string): string {
         "            onInput={value => source.set(value)}",
         "            onChange={value => source.set(value)}",
         "          />",
-        "        </Node>",
+        "        </ParameterNode>",
       ]),
     ] : [
       `        <${api}`,
@@ -730,7 +750,7 @@ function graphSource(component: string, variant: string): string {
     "}",
     ...(component === "node" ? [] : [
       "",
-      "function graphLayout(snapshot: NodeTreeSnapshot) {",
+      "function graphLayout(snapshot: NodeTreeSnapshot, state: NodePresentationState = {}) {",
       "  const connected = new Set(snapshot.links.flatMap(link => [",
       "    socketKey(link.from.nodeId, link.from.socketId),",
       "    socketKey(link.to.nodeId, link.to.socketId),",

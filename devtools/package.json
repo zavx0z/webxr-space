@@ -20,13 +20,13 @@
   },
   "peerDependencies": {
     "@zavx0z/dom": "*",
-    "@zavx0z/renderer": "*"
+    "@renderer/html": "*"
   },
   "peerDependenciesMeta": {
     "@zavx0z/dom": {
       "optional": true
     },
-    "@zavx0z/renderer": {
+    "@renderer/html": {
       "optional": true
     }
   },

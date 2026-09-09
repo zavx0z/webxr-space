@@ -1,3 +1,6 @@
+import {planProjectedNodeGeometry} from "@nodes/node/geometry"
+import {socketKey, type NodePresentationState} from "@webxr/nodes/node-tree"
+import type {NodeTreeSnapshot} from "@nodes/tree"
 import {DisplayElement} from "@zavx0z/dom/display"
 import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
 import {layoutFixed} from "@nodes/layout/fixed"
@@ -36,11 +39,35 @@ export function createCompiledLayoutStory(
 
   const tree = createNodeTree(fixture.tree)
   const store = createNodeTreeExternalStore(tree)
+  const layoutForState = (snapshot: NodeTreeSnapshot, state: NodePresentationState): LayoutResult => {
+    if ((state.collapsedNodeIds?.size ?? 0) === 0) return computed.layout
+    const connected = new Set(snapshot.links.flatMap(link => [socketKey(link.from.nodeId, link.from.socketId), socketKey(link.to.nodeId, link.to.socketId)]))
+    const plans = new Map(snapshot.nodes.map(node => {
+      const width = fixture.graph.nodes.find(entry => entry.id === node.id)!.width
+      return [node.id, planProjectedNodeGeometry(node, width, connected, undefined, {collapsed: state.collapsedNodeIds?.has(node.id)})]
+    }))
+    const nodes = fixture.graph.nodes.map(node => {
+      const plan = plans.get(node.id)
+      return plan === undefined ? node : {...node, width: plan.width, height: plan.height, contentHeight: plan.height}
+    })
+    const portY = (port: Readonly<{id: string; nodeId: string; y: number}>) =>
+      plans.get(port.nodeId)?.sockets.find(socket => socket.id === port.id)?.y ?? port.y
+    if (fixture.policy === "fixed") return layoutFixed({
+      ...fixture.graph,
+      nodes,
+      ports: fixture.graph.ports.map(port => ({...port, y: portY(port)})),
+    })
+    return layoutAdaptiveWithDiagnostics({
+      ...fixture.graph,
+      nodes,
+      ports: fixture.graph.ports.map(port => ({...port, y: portY(port)})),
+    }).result
+  }
   const staging = document.createElement("div")
   const root = createRoot(staging)
   root.render(<NodeEditor
     store={store}
-    layout={computed.layout}
+    layout={layoutForState}
     label={fixture.label}
     title={`${fixture.label} · ${computed.layout.direction}`}
     width={900}

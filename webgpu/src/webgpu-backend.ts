@@ -26,7 +26,7 @@ import {
   type PresentationClipShape,
   type TrueTypeFont,
 } from "@zavx0z/engine"
-import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
+import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@renderer/html/frame-changes"
 import {TextureLoader} from "./texture-loader.ts"
 import {PaintVisibilityIndex, type IndexedPaintBounds} from "./paint-visibility-index.ts"
 import {RetainedPlaneGeometryPool} from "./retained-plane-geometry-pool.ts"
@@ -41,7 +41,7 @@ import type {
   RenderTextMeasurer,
   RenderTransform,
   TextDisplayItem,
-} from "@zavx0z/renderer"
+} from "@renderer/html"
 
 export type RendererFontFace = Readonly<{
   family: string

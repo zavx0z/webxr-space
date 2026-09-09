@@ -62,9 +62,6 @@
   "dependencies": {
     "@zavx0z/highlighter": "link:@zavx0z/highlighter"
   },
-  "devDependencies": {
-    "@zavx0z/renderer": "*"
-  },
   "peerDependencies": {
     "@zavx0z/component": "*",
     "@zavx0z/dom": "*",

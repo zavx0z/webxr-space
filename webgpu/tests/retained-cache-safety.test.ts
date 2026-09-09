@@ -1,8 +1,8 @@
 import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {TrueTypeFont} from "@zavx0z/engine"
-import {createDocumentInteractionController, createDocumentRenderer, hitTestProjection, type RectDisplayItem, type RenderClip, type RenderFrame} from "@zavx0z/renderer"
-import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@zavx0z/renderer/frame-changes"
+import {createDocumentInteractionController, createDocumentRenderer, hitTestProjection, type RectDisplayItem, type RenderClip, type RenderFrame} from "@renderer/html"
+import {isRendererOwnedFrame, readCanonicalRenderFrameChanges} from "@renderer/html/frame-changes"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
 const fixture = (clipped = true) => {
@@ -100,7 +100,7 @@ test("tooltip composition propagates provenance only from actual Renderer frames
     const invalid = callerInteraction.composeFrame(callerFrame, 30)
     expect(isRendererOwnedFrame(invalid)).toBe(false)
     expect(() => backend.applyFrame(invalid)).toThrow()
-    const publicApi = await import("@zavx0z/renderer/frame-changes")
+    const publicApi = await import("@renderer/html/frame-changes")
     expect("markRendererOwnedFrame" in publicApi).toBe(false)
     expect("recordRendererOwnedFrameChanges" in publicApi).toBe(false)
   } finally {

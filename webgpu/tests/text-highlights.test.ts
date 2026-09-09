@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument, setDocumentTextHighlights, clearDocumentTextHighlights, type HTMLElement} from "@zavx0z/dom"
 import {Text, TrueTypeFont} from "@zavx0z/engine"
-import {createDocumentInteractionController, createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentInteractionController, createDocumentRenderer} from "@renderer/html"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
 test("selection side channel preserves retained text and geometry while adding moving and clearing clipped highlights", async () => {

@@ -24,6 +24,8 @@ export function ReferenceParameter(props: ReferenceParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="reference"
     sockets={props.sockets}
     connected={props.connected}

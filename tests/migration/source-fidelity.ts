@@ -35,7 +35,7 @@ export const publicModuleEntrypoints = Object.freeze({
   "old-react": "../renderer/packages/react/src/index.ts",
   "new-component": "component/src/index.ts",
   "old-renderer": "../renderer/packages/core/src/index.ts",
-  "new-renderer": "renderer/src/index.ts",
+  "new-renderer": "renderer/html/src/index.ts",
   "old-renderer-webgpu": "../renderer/packages/webgpu/src/index.ts",
   "new-webgpu": "webgpu/src/index.ts",
   "old-renderer-browser": "../renderer/packages/browser/src/index.ts",
@@ -58,7 +58,7 @@ export const publicModuleEntrypoints = Object.freeze({
 символов и revision выше сохраняют историческое значение.
 */
 export const publicPackageEntrypoints = Object.freeze({
-  "new-nodes": Object.freeze(["nodes", "nodes/parameters", "nodes/sockets"]),
+  "new-nodes": Object.freeze(["nodes", "nodes/node", "nodes/parameters", "nodes/sockets"]),
 })
 
 export const publicSymbolComparisons: readonly PublicSymbolComparison[] = Object.freeze([
@@ -121,6 +121,14 @@ const oldBrowserInternalizedSymbols = Object.freeze([
 
 export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Object.freeze([
   Object.freeze({
+    decisionMarker: "node-composition",
+    kind: "retired" as const,
+    ownerPackages: Object.freeze(["@nodes/node"]),
+    requirementIds: Object.freeze(["NODE-COMPOSITION-001", "NODE-COMPOSITION-002", "NODE-COMPOSITION-003"]),
+    sourceId: "old-nodes-ui",
+    symbols: Object.freeze(["Node", "NodeComponent", "NodeProps", "NodePreview"]),
+  }),
+  Object.freeze({
     decisionMarker: "GLTFLoaderOptions",
     kind: "retired" as const,
     ownerPackages: Object.freeze(["@zavx0z/engine"]),
@@ -131,7 +139,7 @@ export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Obje
   Object.freeze({
     decisionMarker: "LayoutProps",
     kind: "retired" as const,
-    ownerPackages: Object.freeze(["@zavx0z/dom", "@zavx0z/renderer"]),
+    ownerPackages: Object.freeze(["@zavx0z/dom", "@renderer/html"]),
     requirementIds: Object.freeze(["DOM-004", "REN-001", "REN-002"]),
     sourceId: "old-engine",
     symbols: Object.freeze(["ComputedLayout", "LayoutProps"]),
@@ -164,6 +172,9 @@ export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Obje
 ])
 
 export const requirementEvidenceFiles = Object.freeze({
+  "NODE-COMPOSITION-001": "nodes/node/tests/composition.test.ts",
+  "NODE-COMPOSITION-002": "nodes/node/tests/composition.test.ts",
+  "NODE-COMPOSITION-003": "nodes/node/tests/composition.test.ts",
   "BRW-002": "browser/tests/contract.test.ts",
   "BRW-003": "browser/tests/contract.test.ts",
   "BRW-004": "browser/tests/experience.test.ts",
@@ -178,8 +189,8 @@ export const requirementEvidenceFiles = Object.freeze({
   "EXP-003": "tests/experience/contract.test.ts",
   "EXP-004": "tests/experience/contract.test.ts",
   "LAYOUT-STATIC-001": "nodes/layout/tests/package-boundary.test.ts",
-  "REN-001": "renderer/tests/contract.test.ts",
-  "REN-002": "renderer/tests/contract.test.ts",
+  "REN-001": "renderer/html/tests/contract.test.ts",
+  "REN-002": "renderer/html/tests/contract.test.ts",
 } as const)
 
 export type RequirementId = keyof typeof requirementEvidenceFiles

@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {Space, TrueTypeFont, ViewPoint} from "@zavx0z/engine"
-import {createDocumentInteractionController, createDocumentRenderer} from "@zavx0z/renderer"
+import {createDocumentInteractionController, createDocumentRenderer} from "@renderer/html"
 import {RendererWebGpuBackend, RendererWebGpuScreenOverlay, type Renderer} from "@zavx0z/webgpu"
 import type {DocumentNativeInputHost} from "../src/native-input-host.ts"
 import {createDocumentCanvasRuntimeWithSeams} from "../src/runtime.ts"

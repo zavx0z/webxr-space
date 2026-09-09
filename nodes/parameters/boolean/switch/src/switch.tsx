@@ -22,6 +22,8 @@ export function SwitchParameter(props: SwitchParameterProps) {
     id={props.id}
     nodeId={props.nodeId}
     label={props.label}
+    labelHidden={props.labelHidden}
+    spacingBefore={props.spacingBefore}
     kind="switch"
     sockets={props.sockets}
     connected={props.connected}
