@@ -122,12 +122,12 @@ describe("Конечный состав пакетов", () => {
 
       assertRequirement(
         storybookPackageManifest.schemaVersion === 1 &&
-          storybookPackageManifest.kind === "package" &&
-          storybookPackageManifest.id === packageManifest.name &&
-          storybookPackageManifest.id === packageName &&
-          storybookPackageManifest.packageJson === "../package.json",
+          packageManifest.name === packageName &&
+          !Object.hasOwn(storybookPackageManifest, "kind") &&
+          !Object.hasOwn(storybookPackageManifest, "id") &&
+          !Object.hasOwn(storybookPackageManifest, "packageJson"),
         "PKG-003",
-        `${directory}/.storybook/manifest.json должен быть декларацией пакета ${packageName} и ссылаться на ${directory}/package.json`,
+        `${directory}/.storybook/manifest.json не должен дублировать kind, id и путь package.json владельца ${packageName}`,
       )
     }
   })

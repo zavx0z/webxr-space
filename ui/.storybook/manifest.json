@@ -1,9 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/zavx0z/storybook/main/schemas/manifest.schema.json",
   "schemaVersion": 1,
-  "kind": "package",
-  "id": "@zavx0z/ui",
-  "packageJson": "../package.json",
   "runtime": {"module": "./runtime.ts", "export": "runtime"},
   "authorStyleSheets": [
     {"specifier": "@zavx0z/ui/themes/theme.css"}
