@@ -37,13 +37,13 @@ test("compiles an externally augmented sibling Element intrinsic", async () => {
     'declare module "@zavx0z/template/jsx-runtime" {',
     "  namespace JSX {",
     "    interface IntrinsicElements {",
-    '      "xr-space": IntrinsicElementProperties<XRElement>',
+    '      "test-scene": IntrinsicElementProperties<XRElement>',
     "    }",
     "  }",
     "}",
     "",
     "export function Scene() {",
-    "  return <xr-space",
+    "  return <test-scene",
     "    exposure={2}",
     "    onClick={event => {",
     "      const target: XRElement = event.currentTarget",
@@ -61,12 +61,12 @@ test("compiles an externally augmented sibling Element intrinsic", async () => {
   const compiler = new JsxCompilerSession({cwd: root, sourceRoots: [root]})
   try {
     const result = await compiler.compileFile(sourcePath)
-    expect(result.code).toContain('document.createElement("xr-space")')
+    expect(result.code).toContain('document.createElement("test-scene")')
     expect(result.code).toContain('from "@zavx0z/component"')
     expect(result.capabilityUsages).toContainEqual(expect.objectContaining({
       kind: "intrinsic-element",
       profile: "template-extension",
-      tagName: "xr-space",
+      tagName: "test-scene",
     }))
   } finally {
     await compiler.close()

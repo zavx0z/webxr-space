@@ -1,5 +1,4 @@
 import {useRef, useState} from "@zavx0z/component"
-import {ViewPoint} from "@zavx0z/space/cameras/view-point"
 import {HUD} from "@zavx0z/space/portals/hud"
 import {Mesh} from "@zavx0z/space/shapes/mesh"
 import {Geometry} from "@zavx0z/space/shapes/geometry"
@@ -72,10 +71,14 @@ export function Counter() {
 
 /** The application owns its complete semantic root, camera and projection roots. */
 export function App() {
-  return <xr-space background="#101722">
-    <ViewPoint
-      position={{x: 0, y: -800, z: 0}}
-      target={{x: 0, y: 0, z: 0}}
+  return <space background="#101722">
+    <viewpoint
+      x={0}
+      y={-800}
+      z={0}
+      targetX={0}
+      targetY={0}
+      targetZ={0}
       far={3000}
     />
     <Mesh position={{x: 280, y: 200, z: -60}}>
@@ -96,7 +99,7 @@ export function App() {
     <HUD>
       <HUDContent />
     </HUD>
-  </xr-space>
+  </space>
 }
 
 export function DisplayContent() {

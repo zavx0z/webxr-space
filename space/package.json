@@ -2,7 +2,7 @@
   "name": "@zavx0z/space",
   "label": "Пространство",
   "version": "0.0.0",
-  "description": "Space, ViewPoint, Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material и HUD",
+  "description": "Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material и HUD",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
@@ -12,7 +12,6 @@
     "./abstractions/asset": "./abstractions/asset.tsx",
     "./abstractions/group": "./abstractions/group.tsx",
     "./abstractions/text": "./abstractions/text.tsx",
-    "./cameras/view-point": "./cameras/view-point.tsx",
     "./gizmos/grid": "./gizmos/grid.tsx",
     "./portals/hud": "./portals/hud.tsx",
     "./shaders/material": "./shaders/material.tsx",
@@ -20,8 +19,7 @@
     "./shapes/line": "./shapes/line.tsx",
     "./shapes/line-segments": "./shapes/line-segments.tsx",
     "./shapes/mesh": "./shapes/mesh.tsx",
-    "./staging/light": "./staging/light.tsx",
-    "./staging/space": "./staging/space.tsx"
+    "./staging/light": "./staging/light.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

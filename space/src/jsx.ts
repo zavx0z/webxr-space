@@ -16,9 +16,7 @@ import type {
   XRMeshElement,
   XRObjectElement,
   XRObjectProjectionFactory,
-  XRSpaceElement,
   XRTextElement,
-  XRViewPointElement,
 } from "./elements.ts"
 
 export type SpaceRef<Target> = Ref<Target>
@@ -26,26 +24,6 @@ export type SpaceRef<Target> = Ref<Target>
 type SpatialChildren<Target> = Readonly<{
   children?: JsxChild | undefined
   ref?: SpaceRef<Target> | null | undefined
-}>
-
-export type XRSpaceIntrinsicProperties = SpatialChildren<XRSpaceElement> & Readonly<{
-  /** По умолчанию demand; always включает непрерывный общий цикл кадров. */
-  frameloop?: "demand" | "always" | undefined
-  background?: string | undefined
-}>
-
-export type XRViewPointIntrinsicProperties = Readonly<{
-  x?: number | undefined
-  y?: number | undefined
-  z?: number | undefined
-  targetX?: number | undefined
-  targetY?: number | undefined
-  targetZ?: number | undefined
-  controls?: boolean | undefined
-  fov?: number | undefined
-  near?: number | undefined
-  far?: number | undefined
-  ref?: SpaceRef<XRViewPointElement> | null | undefined
 }>
 
 export type XRObjectIntrinsicProperties<Target extends XRObjectElement> = SpatialChildren<Target> & Readonly<{
@@ -123,8 +101,6 @@ export type XRHUDIntrinsicProperties = SpatialChildren<XRHUDElement> & Readonly<
 
 declare module "@zavx0z/dom" {
   interface HTMLElementTagNameMap {
-    "xr-space": XRSpaceElement
-    "xr-view-point": XRViewPointElement
     "xr-asset": XRAssetElement
     "xr-group": XRGroupElement
     "xr-mesh": XRMeshElement
@@ -142,8 +118,6 @@ declare module "@zavx0z/dom" {
 declare module "@zavx0z/template/jsx-runtime" {
   namespace JSX {
     interface IntrinsicElements {
-      "xr-space": XRSpaceIntrinsicProperties
-      "xr-view-point": XRViewPointIntrinsicProperties
       "xr-asset": XRAssetIntrinsicProperties
       "xr-group": XRGroupIntrinsicProperties
       "xr-mesh": XRMeshIntrinsicProperties

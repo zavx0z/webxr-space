@@ -1,3 +1,5 @@
+import type {SpaceElement} from "@zavx0z/dom/space"
+import type {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import type {JsxSourceElement} from "./jsx-runtime.ts"
 import type {jsxEventNames} from "./jsx-events.ts"
 import type {Element as SemanticElement, EventTarget as SemanticEventTarget} from "@zavx0z/dom"
@@ -104,6 +106,8 @@ export type StandardIntrinsicElements = Readonly<{
 }>
 
 export type TemplateIntrinsicElements = StandardIntrinsicElements & Readonly<{
+  space: IntrinsicElementProperties<SpaceElement>
+  viewpoint: IntrinsicElementProperties<ViewPointElement>
   display: IntrinsicElementProperties<DisplayElement>
   "vector-path": IntrinsicElementProperties<HTMLElement> & Readonly<{
     d?: string | null | undefined

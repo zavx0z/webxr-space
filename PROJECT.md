@@ -189,13 +189,13 @@ Nodes.
 | Каталог | Пакет | Ответственность |
 | --- | --- | --- |
 | `engine` | `@zavx0z/engine` | Объекты сцены, геометрия, материалы, математика и анимация без WebGPU |
-| `dom` | `@zavx0z/dom` | `Document`, элементы, атрибуты, события, фокус и состояние полей |
+| `dom` | `@zavx0z/dom` | `Document`, `SpaceElement`, `ViewPointElement`, `DisplayElement`, остальные элементы, атрибуты, события, фокус и состояние полей |
 | `template` | `@zavx0z/template` | Компилятор TSX и формат готового шаблона |
 | `component` | `@zavx0z/component` | Состояние компонентов, хуки, контекст, эффекты и очистка |
 | `renderer` | `@zavx0z/renderer` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
 | `webgpu` | `@zavx0z/webgpu` | Шейдеры, буферы, текстуры, загрузка данных и рисование |
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
-| `space` | `@zavx0z/space` | `Space`, `ViewPoint`, `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` и `HUD` |
+| `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` и `HUD` |
 | `ui` | `@zavx0z/ui` | Универсальные UI-компоненты, тема и иконки |
 | `nodetree` | `@zavx0z/nodetree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
 | `layout` | `@zavx0z/layout` | Алгоритмы расположения нод и Worker |
@@ -301,12 +301,11 @@ Grid принадлежит `gizmos`. Новые разделы появляют
 ```text
 space/
 ├── abstractions/   # Asset, Group, Text, Animation
-├── cameras/        # ViewPoint
 ├── gizmos/         # Grid
 ├── portals/        # HUD того же Document
 ├── shaders/        # Material
 ├── shapes/         # Mesh, Line, LineSegments, Geometry
-├── staging/        # Space, Light
+├── staging/        # Light
 ├── src/
 └── tests/
 ```

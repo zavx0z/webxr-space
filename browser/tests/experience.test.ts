@@ -46,10 +46,10 @@ import {
   XRLineElement,
   XRMaterialElement,
   XRMeshElement,
-  XRSpaceElement,
   XRTextElement,
-  XRViewPointElement,
 } from "@zavx0z/space"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import * as publicApi from "../src/index.ts"
 import {
   attachWithRuntimeFactory,
@@ -66,12 +66,12 @@ import type {
 import type {DocumentOverlayRuntime} from "../src/overlay-runtime.ts"
 import type {DocumentPlaneRuntime} from "../src/plane-runtime.ts"
 
-const authoredApplication = (onMount: (space: XRSpaceElement) => () => void) => component(defineCompiledTemplate({
+const authoredApplication = (onMount: (space: SpaceElement) => () => void) => component(defineCompiledTemplate({
   displayName: "AuthoredApplication",
   bindingCount: 1,
   mount(document) {
-    const space = document.createElement("xr-space") as XRSpaceElement
-    const camera = document.createElement("xr-view-point") as XRViewPointElement
+    const space = document.createElement("space") as SpaceElement
+    const camera = document.createElement("viewpoint") as ViewPointElement
     space.id = "authored-space"
     camera.x = 42
     camera.z = 300
@@ -675,7 +675,7 @@ test("[BRW-019] linked stylesheet readiness fail closed до runtime", async () 
 
 test("[BRW-ATTACH-001] авторский корень сохраняется, attach готов после кадра, dispose очищает App", async () => {
   const state = createFakeRuntimeState()
-  let authored: XRSpaceElement | null = null
+  let authored: SpaceElement | null = null
   let cleaned = 0
   const canvas = {getContext: () => null, getBoundingClientRect: () => ({width: 800, height: 600, left: 0, top: 0})} as unknown as HTMLCanvasElement
   const app = authoredApplication(space => {
@@ -738,7 +738,7 @@ test("[BRW-ATTACH-004] невалидный App не создаёт GPU runtime 
   const invalid = component(defineCompiledTemplate({
     displayName: "MissingCamera",
     bindingCount: 0,
-    mount(document) { return {nodes: [document.createElement("xr-space")], bindings: []} },
+    mount(document) { return {nodes: [document.createElement("space")], bindings: []} },
     render() {},
   }), {})
   await expect(attachWithRuntimeFactory({canvas, font: {} as TrueTypeFont, app: invalid}, async options => {
@@ -759,8 +759,8 @@ test("[BRW-ROOT-001] контекст доступен при монтирова
     displayName: "ResizeApp",
     bindingCount: 0,
     mount(document) {
-      const space = document.createElement("xr-space") as XRSpaceElement
-      space.append(document.createElement("xr-view-point"))
+      const space = document.createElement("space") as SpaceElement
+      space.append(document.createElement("viewpoint"))
       return {nodes: [space], bindings: []}
     },
     render() {
@@ -802,8 +802,8 @@ test("[BRW-ROOT-002] selector без изменения результата н�
     displayName: "StableSelection",
     bindingCount: 0,
     mount(document) {
-      const space = document.createElement("xr-space")
-      space.append(document.createElement("xr-view-point"))
+      const space = document.createElement("space")
+      space.append(document.createElement("viewpoint"))
       return {nodes: [space], bindings: []}
     },
     render() { useSpace(state => state.frameloop); renders++ },
@@ -963,8 +963,8 @@ test("Browser createRoot: render preserves component state, Element identity and
       const link = document.createElement("link")
       link.setAttribute("rel", "stylesheet")
       link.setAttribute("href", "/dark.css")
-      const space = document.createElement("xr-space") as XRSpaceElement
-      space.append(document.createElement("xr-view-point"))
+      const space = document.createElement("space") as SpaceElement
+      space.append(document.createElement("viewpoint"))
       const text = document.createTextNode("")
       const hud = document.createElement("xr-hud")
       hud.append(text)
@@ -975,7 +975,7 @@ test("Browser createRoot: render preserves component state, Element identity and
       const [count, setCount] = useState(0)
       increment = () => setCount(count + 1)
       writeBinding(values, 0, `${props.label}:${count}`)
-      writeBinding(values, 1, (element: XRSpaceElement) => { if (element) element.frameloop = props.frameloop })
+      writeBinding(values, 1, (element: SpaceElement) => { if (element) element.frameloop = props.frameloop })
     },
   })
   const {root, state, errors} = browserRootFixture()
@@ -1082,8 +1082,8 @@ test("Browser createRoot: renders queued during loading present the latest props
     displayName: "PendingLabel",
     bindingCount: 1,
     mount(document) {
-      const space = document.createElement("xr-space")
-      space.append(document.createElement("xr-view-point"))
+      const space = document.createElement("space")
+      space.append(document.createElement("viewpoint"))
       const text = document.createTextNode("")
       const hud = document.createElement("xr-hud")
       hud.append(text)

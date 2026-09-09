@@ -1,3 +1,5 @@
+import {SpaceElement} from "../space/index.ts"
+import {ViewPointElement} from "../viewpoint/index.ts"
 import {DisplayElement} from "../display/index.ts"
 import {Comment} from "./comment.ts"
 import {
@@ -134,6 +136,8 @@ export type DocumentOptions = Readonly<{
 }>
 
 export interface HTMLElementTagNameMap {
+  space: SpaceElement
+  viewpoint: ViewPointElement
   display: DisplayElement
   button: HTMLButtonElement
   div: HTMLDivElement
@@ -225,6 +229,8 @@ export class Document extends Node {
   createElement(localName: string): Element {
     const normalizedLocalName = String(localName).toLowerCase()
     switch (normalizedLocalName) {
+      case "space": return new SpaceElement(this)
+      case "viewpoint": return new ViewPointElement(this)
       case "display": return new DisplayElement(this)
       case "button": return new HTMLButtonElement(this)
       case "div": return new HTMLDivElement(this)

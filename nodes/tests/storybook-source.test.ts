@@ -44,9 +44,9 @@ test("[NODES-STORYBOOK-SOURCE] показанные TSX-примеры комп�
       const descriptor = descriptors.get(route)
       if (descriptor === undefined) throw new Error(`Нет Source descriptor: ${route}`)
       const document = createDocument({elementFactories: createSpaceElementFactories()})
-      const space = document.createElement("xr-space")
+      const space = document.createElement("space")
       const display = document.createElement("display")
-      space.append(document.createElement("xr-view-point"), display)
+      space.append(document.createElement("viewpoint"), display)
       document.append(space)
       const {story} = await descriptor.create(document)
       try {

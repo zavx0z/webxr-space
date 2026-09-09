@@ -6,8 +6,6 @@ const root = resolve(import.meta.dir, "../..")
 const spaceRoot = resolve(root, "space")
 
 const owners = Object.freeze([
-  ["staging/space.tsx", "xr-space"],
-  ["cameras/view-point.tsx", "xr-view-point"],
   ["gizmos/grid.tsx", "xr-line-segments"],
   ["abstractions/asset.tsx", "xr-asset"],
   ["abstractions/group.tsx", "xr-group"],

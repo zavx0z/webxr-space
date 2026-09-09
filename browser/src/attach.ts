@@ -60,11 +60,11 @@ import {
   XRMaterialElement,
   XRMeshElement,
   XRObjectElement,
-  XRSpaceElement,
   XRTextElement,
-  XRViewPointElement,
   type SpaceTree,
 } from "@zavx0z/space"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import {
   createBrowserLinkedAuthorStyleSheetHost,
   type BrowserLinkedAuthorStyleSheetHost,
@@ -158,7 +158,7 @@ export type RootDocumentProjection = Readonly<{
 
 export type RootSpaceProjection = Readonly<{
   kind: "space"
-  owner: XRSpaceElement
+  owner: SpaceElement
   orbit(deltaX: number, deltaY: number): void
   pan(deltaX: number, deltaY: number): void
   zoom(delta: number, anchor?: Readonly<{clientX: number; clientY: number}>): void
@@ -186,11 +186,11 @@ export type Root = Readonly<{
   clipboard: DocumentClipboardController
   canvas: HTMLCanvasElement
   document: Document
-  space: XRSpaceElement
-  viewPoint: XRViewPointElement
+  space: SpaceElement
+  viewPoint: ViewPointElement
   presentedFrame: number
   disposed: boolean
-  getProjection(owner: XRSpaceElement): RootSpaceProjection
+  getProjection(owner: SpaceElement): RootSpaceProjection
   getProjection(owner: DisplayElement | XRHUDElement): RootDocumentProjection
   subscribePresented(listener: (sequence: number) => void): () => void
   dispatchKey(
@@ -517,14 +517,14 @@ export const createAttachedRoot = async (
       const target = record.target
       if (target !== document && !space.contains(target)) continue
       if (record.type === "childList") {
-        if (target === document || target instanceof XRSpaceElement || target instanceof XRObjectElement) structureDirty = true
+        if (target === document || target instanceof SpaceElement || target instanceof XRObjectElement) structureDirty = true
         continue
       }
       if (record.type !== "attributes") continue
       if (tree.displays.length > 0) displayDirty = true
       if (record.attributeName === "id") continue
-      if (target instanceof XRSpaceElement) backgroundDirty = true
-      else if (target instanceof XRViewPointElement) cameraDirty = true
+      if (target instanceof SpaceElement) backgroundDirty = true
+      else if (target instanceof ViewPointElement) cameraDirty = true
       else if (target instanceof DisplayElement) {
         displayDirty = true
       } else if (target instanceof XRHUDElement) {
@@ -625,14 +625,14 @@ export const createAttachedRoot = async (
     },
   })
 
-  function getProjection(owner: XRSpaceElement): RootSpaceProjection
+  function getProjection(owner: SpaceElement): RootSpaceProjection
   function getProjection(
     owner: DisplayElement | XRHUDElement,
   ): RootDocumentProjection
   function getProjection(
-    owner: XRSpaceElement | DisplayElement | XRHUDElement,
+    owner: SpaceElement | DisplayElement | XRHUDElement,
   ): RootProjection {
-    if (owner instanceof XRSpaceElement) {
+    if (owner instanceof SpaceElement) {
       if (owner !== space) throw new Error("Space projection belongs to another Root")
       return spaceProjection
     }
@@ -779,7 +779,7 @@ const synchronizeViewPoint = (
 }
 
 const semanticViewPointSnapshot = (
-  element: XRViewPointElement,
+  element: ViewPointElement,
 ): DocumentSpaceViewPointSnapshot => Object.freeze({
     position: Object.freeze({x: element.x, y: element.y, z: element.z}),
     target: Object.freeze({
@@ -802,7 +802,7 @@ const writeViewPointSnapshot = (
 ): void => writeViewPointElement(tree.viewPoint, snapshot)
 
 const writeViewPointElement = (
-  element: XRViewPointElement,
+  element: ViewPointElement,
   snapshot: DocumentSpaceViewPointSnapshot,
 ): void => {
   assignNumber(element.x, snapshot.position.x, value => {

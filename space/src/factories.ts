@@ -10,15 +10,11 @@ import {
   XRLineSegmentsElement,
   XRMaterialElement,
   XRMeshElement,
-  XRSpaceElement,
   XRTextElement,
-  XRViewPointElement,
 } from "./elements.ts"
 
 export const createSpaceElementFactories = (): Readonly<Record<string, DocumentElementFactory>> =>
   Object.freeze({
-    "xr-space": document => new XRSpaceElement(document),
-    "xr-view-point": document => new XRViewPointElement(document),
     "xr-asset": document => new XRAssetElement(document),
     "xr-group": document => new XRGroupElement(document),
     "xr-mesh": document => new XRMeshElement(document),

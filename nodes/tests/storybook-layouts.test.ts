@@ -33,7 +33,6 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
     packages?: unknown
   }
   const manifest = await Bun.file(resolve(nodesRoot, ".storybook/manifest.json")).json() as {
-    id: string
     runtime: Readonly<{module: string; export: string}>
     authorStyleSheets?: unknown
   }
@@ -46,9 +45,10 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   expect(workspace.workspaces).toContain("ui")
   expect(workspace.workspaces).toContain("nodes")
   expect(manifest).toMatchObject({
-    id: "@zavx0z/nodes",
     runtime: {module: "./runtime.ts", export: "runtime"},
   })
+  expect((await Bun.file(resolve(nodesRoot, "package.json")).json()).name).toBe("@zavx0z/nodes")
+  for (const key of ["kind", "id", "packageJson"]) expect(manifest).not.toHaveProperty(key)
   expect(manifest.authorStyleSheets).toBeUndefined()
   expect(runtime.protocol).toBe("storybook-runtime/4")
 
@@ -87,8 +87,8 @@ test("[NODES-STORYBOOK-002] каждый route вычисляет реальны
     const descriptor = descriptors.find(({route}) => route === scenario.route)
     if (descriptor === undefined) throw new Error(`Нет story descriptor: ${scenario.route}`)
     const document = createDocument({elementFactories: createSpaceElementFactories()})
-    const space = document.createElement("xr-space")
-    const viewPoint = document.createElement("xr-view-point")
+    const space = document.createElement("space")
+    const viewPoint = document.createElement("viewpoint")
     const display = document.createElement("display")
     document.transaction(() => {
       space.append(viewPoint, display)

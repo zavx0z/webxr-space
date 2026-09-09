@@ -9,14 +9,9 @@ import {
   type Document,
   type Node,
 } from "@zavx0z/dom"
-import {
-  createSpaceElementFactories,
-  readSpaceTree,
-  XRGroupElement,
-  XRHUDElement,
-  XRSpaceElement,
-  XRViewPointElement,
-} from "@zavx0z/space"
+import {createSpaceElementFactories, readSpaceTree, XRGroupElement, XRHUDElement} from "@zavx0z/space"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {runtime} from "../../ui/.storybook/runtime.ts"
 import type {OwnerStoryDescriptor} from "../../ui/.storybook/stories/story-types.ts"
@@ -53,8 +48,8 @@ type Catalog = Readonly<{
 
 const createSemanticExperience = () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const space = document.createElement("xr-space") as XRSpaceElement
-  const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
+  const space = document.createElement("space") as SpaceElement
+  const viewPoint = document.createElement("viewpoint") as ViewPointElement
   const display = document.createElement("display") as DisplayElement
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "storybook-display"

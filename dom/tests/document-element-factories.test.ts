@@ -17,19 +17,19 @@ describe("Document-local element factories", () => {
   test("creates a sibling Element extension only in its owning Document", () => {
     const document = createDocument({
       elementFactories: {
-        "xr-space": (ownerDocument, localName) =>
+        "test-scene": (ownerDocument, localName) =>
           new XRElement(ownerDocument, localName),
       },
     })
 
-    const element = document.createElement("XR-SPACE")
+    const element = document.createElement("TEST-SCENE")
     const unrelatedDocument = createDocument()
-    const genericElement = unrelatedDocument.createElement("xr-space")
+    const genericElement = unrelatedDocument.createElement("test-scene")
 
     expect(element).toBeInstanceOf(XRElement)
     expect(element).not.toBeInstanceOf(HTMLElement)
     expect(element.ownerDocument).toBe(document)
-    expect(element.localName).toBe("xr-space")
+    expect(element.localName).toBe("test-scene")
     expect(genericElement).toBeInstanceOf(HTMLElement)
     expect(genericElement).not.toBeInstanceOf(XRElement)
   })
@@ -53,21 +53,21 @@ describe("Document-local element factories", () => {
     const otherDocument = createDocument()
     const document = createDocument({
       elementFactories: {
-        "xr-space": (_, localName) => new XRElement(otherDocument, localName),
+        "test-scene": (_, localName) => new XRElement(otherDocument, localName),
       },
     })
 
-    expect(() => document.createElement("xr-space")).toThrow("another Document")
+    expect(() => document.createElement("test-scene")).toThrow("another Document")
   })
 
   test("rejects an extension Element with a different localName", () => {
     const document = createDocument({
       elementFactories: {
-        "xr-space": ownerDocument => new XRElement(ownerDocument, "xr-panel"),
+        "test-scene": ownerDocument => new XRElement(ownerDocument, "xr-panel"),
       },
     })
 
-    expect(() => document.createElement("xr-space")).toThrow(
+    expect(() => document.createElement("test-scene")).toThrow(
       "returned localName xr-panel",
     )
   })
@@ -75,10 +75,10 @@ describe("Document-local element factories", () => {
   test("rejects a non-Element factory result", () => {
     const document = createDocument({
       elementFactories: {
-        "xr-space": (() => ({})) as never,
+        "test-scene": (() => ({})) as never,
       },
     })
 
-    expect(() => document.createElement("xr-space")).toThrow("must return an Element")
+    expect(() => document.createElement("test-scene")).toThrow("must return an Element")
   })
 })

@@ -6,24 +6,9 @@ import {
   SphereGeometry,
   ThinFilmMaterial,
 } from "@zavx0z/engine"
-import {
-  XRAnimationElement,
-  XRAssetElement,
-  XRGeometryElement,
-  XRGroupElement,
-  XRHUDElement,
-  XRLightElement,
-  XRLineElement,
-  XRLineSegmentsElement,
-  XRMaterialElement,
-  XRMeshElement,
-  XRObjectElement,
-  XRSpaceElement,
-  XRTextElement,
-  XRViewPointElement,
-  createSpaceElementFactories,
-  readSpaceTree,
-} from "../src/index.ts"
+import {XRAnimationElement, XRAssetElement, XRGeometryElement, XRGroupElement, XRHUDElement, XRLightElement, XRLineElement, XRLineSegmentsElement, XRMaterialElement, XRMeshElement, XRObjectElement, XRTextElement, createSpaceElementFactories, readSpaceTree} from "../src/index.ts"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
 const createSpaceDocument = () => createDocument({
   elementFactories: createSpaceElementFactories(),
@@ -32,8 +17,8 @@ const createSpaceDocument = () => createDocument({
 describe("Пространственные элементы одного Document", () => {
   test("[SPC-001] создаёт точные пространственные типы в одном Document", () => {
     const document = createSpaceDocument()
-    const space = document.createElement("xr-space")
-    const viewPoint = document.createElement("xr-view-point")
+    const space = document.createElement("space")
+    const viewPoint = document.createElement("viewpoint")
     const mesh = document.createElement("xr-mesh")
     const group = document.createElement("xr-group")
     const line = document.createElement("xr-line")
@@ -47,11 +32,11 @@ describe("Пространственные элементы одного Documen
     const display = document.createElement("display")
     const hud = document.createElement("xr-hud")
 
-    expect(space).toBeInstanceOf(XRSpaceElement)
-    expect((space as XRSpaceElement).background).toBe("#000000")
-    ;(space as XRSpaceElement).background = "#123456"
-    expect((space as XRSpaceElement).background).toBe("#123456")
-    expect(viewPoint).toBeInstanceOf(XRViewPointElement)
+    expect(space).toBeInstanceOf(SpaceElement)
+    expect((space as SpaceElement).background).toBe("#000000")
+    ;(space as SpaceElement).background = "#123456"
+    expect((space as SpaceElement).background).toBe("#123456")
+    expect(viewPoint).toBeInstanceOf(ViewPointElement)
     expect(mesh).toBeInstanceOf(XRMeshElement)
     expect(group).toBeInstanceOf(XRGroupElement)
     expect(line).toBeInstanceOf(XRLineElement)
@@ -144,8 +129,8 @@ describe("Пространственные элементы одного Documen
 
   test("[SPC-004] читает один Space с ViewPoint, Display и HUD", () => {
     const document = createSpaceDocument()
-    const space = document.createElement("xr-space") as XRSpaceElement
-    const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
+    const space = document.createElement("space") as SpaceElement
+    const viewPoint = document.createElement("viewpoint") as ViewPointElement
     const display = document.createElement("display") as DisplayElement
     const hud = document.createElement("xr-hud") as XRHUDElement
     display.id = "main"
@@ -162,8 +147,8 @@ describe("Пространственные элементы одного Documen
 
   test("[SPC-007] Display identity не зависит от совпадающих DOM id", () => {
     const document = createSpaceDocument()
-    const space = document.createElement("xr-space") as XRSpaceElement
-    const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
+    const space = document.createElement("space") as SpaceElement
+    const viewPoint = document.createElement("viewpoint") as ViewPointElement
     const first = document.createElement("display") as DisplayElement
     const second = document.createElement("display") as DisplayElement
     first.id = "duplicate"
@@ -176,7 +161,7 @@ describe("Пространственные элементы одного Documen
 
   test("[SPC-002] отклоняет не пространственного ребёнка Space", () => {
     const document = createSpaceDocument()
-    const space = document.createElement("xr-space") as XRSpaceElement
+    const space = document.createElement("space") as SpaceElement
     const div = document.createElement("div")
 
     expect(() => space.append(div)).toThrow("only spatial elements")

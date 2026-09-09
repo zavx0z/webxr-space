@@ -6,13 +6,9 @@ import {
   Event,
   HTMLButtonElement,
 } from "../../dom/src/index.ts"
-import {
-  createSpaceElementFactories,
-  readSpaceTree,
-  XRHUDElement,
-  XRSpaceElement,
-  XRViewPointElement,
-} from "../../space/src/index.ts"
+import {createSpaceElementFactories, readSpaceTree, XRHUDElement} from "../../space/src/index.ts"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
 const root = join(import.meta.dir, "../..")
 
@@ -21,8 +17,8 @@ const source = async (path: string): Promise<string> =>
 
 const createProjectionTree = () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const space = document.createElement("xr-space") as XRSpaceElement
-  const viewPoint = document.createElement("xr-view-point") as XRViewPointElement
+  const space = document.createElement("space") as SpaceElement
+  const viewPoint = document.createElement("viewpoint") as ViewPointElement
   const display = document.createElement("display") as DisplayElement
   const hud = document.createElement("xr-hud") as XRHUDElement
   display.id = "main"

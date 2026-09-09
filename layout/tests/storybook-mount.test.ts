@@ -12,9 +12,9 @@ await import("../.storybook/stories/compiled/report.tsx")
 
 test("[LAYOUT-STORYBOOK-MOUNT] числовой сценарий использует Document и Display host, повторный расчёт и cleanup", async () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const space = document.createElement("xr-space")
+  const space = document.createElement("space")
   const display = document.createElement("display")
-  space.append(document.createElement("xr-view-point"), display)
+  space.append(document.createElement("viewpoint"), display)
   document.append(space)
   const abort = new AbortController()
   const diagnostics: unknown[] = []
@@ -51,6 +51,6 @@ test("[LAYOUT-STORYBOOK-MOUNT] числовой сценарий использ�
     abort.abort()
   }
   expect(display.childNodes).toHaveLength(0)
-  expect(document.querySelectorAll("xr-space")).toHaveLength(1)
-  expect(document.querySelectorAll("xr-view-point")).toHaveLength(1)
+  expect(document.querySelectorAll("space")).toHaveLength(1)
+  expect(document.querySelectorAll("viewpoint")).toHaveLength(1)
 })

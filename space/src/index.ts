@@ -11,9 +11,7 @@ export {
   XRMaterialElement,
   XRMeshElement,
   XRObjectElement,
-  XRSpaceElement,
   XRTextElement,
-  XRViewPointElement,
 } from "./elements.ts"
 export type {
   XRAnimationProjectionFactory,
@@ -41,9 +39,7 @@ export type {
   XRMaterialIntrinsicProperties,
   XRMeshIntrinsicProperties,
   XRObjectIntrinsicProperties,
-  XRSpaceIntrinsicProperties,
   XRTextIntrinsicProperties,
-  XRViewPointIntrinsicProperties,
 } from "./jsx.ts"
 
 export type {SpatialVector, SpatialQuaternion, OrientationProps, TransformProps} from "./props.ts"

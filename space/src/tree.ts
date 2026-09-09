@@ -1,12 +1,8 @@
 import type {Document} from "@zavx0z/dom"
 import {DisplayElement} from "@zavx0z/dom/display"
-import {
-  XRHUDElement,
-  XRMeshElement,
-  XRObjectElement,
-  XRSpaceElement,
-  XRViewPointElement,
-} from "./elements.ts"
+import {XRHUDElement, XRMeshElement, XRObjectElement} from "./elements.ts"
+import {SpaceElement} from "@zavx0z/dom/space"
+import {ViewPointElement} from "@zavx0z/dom/viewpoint"
 
 export type SpaceHUDProjection = Readonly<{
   element: XRHUDElement
@@ -14,8 +10,8 @@ export type SpaceHUDProjection = Readonly<{
 }>
 
 export type SpaceTree = Readonly<{
-  space: XRSpaceElement
-  viewPoint: XRViewPointElement
+  space: SpaceElement
+  viewPoint: ViewPointElement
   objects: readonly XRObjectElement[]
   meshes: readonly XRMeshElement[]
   displays: readonly DisplayElement[]
@@ -24,10 +20,10 @@ export type SpaceTree = Readonly<{
 
 /** Читает семантических владельцев по identity Element; DOM id не является ключом сцены. */
 export const readSpaceTree = (document: Document): SpaceTree => {
-  const spaces = [...document.querySelectorAll("xr-space")]
+  const spaces = [...document.querySelectorAll("space")]
   const space = spaces[0]
-  if (spaces.length !== 1 || !(space instanceof XRSpaceElement)) {
-    throw new TypeError("Document must contain exactly one XRSpaceElement")
+  if (spaces.length !== 1 || !(space instanceof SpaceElement)) {
+    throw new TypeError("Document must contain exactly one SpaceElement")
   }
   const container = space.parentNode
   if (container !== document && container !== document.querySelector("body")) {
@@ -35,7 +31,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
   }
 
   const viewPoints = space.children.filter(
-    (child): child is XRViewPointElement => child instanceof XRViewPointElement,
+    (child): child is ViewPointElement => child instanceof ViewPointElement,
   )
   if (viewPoints.length !== 1) {
     throw new TypeError("Space must contain exactly one ViewPoint")
@@ -62,7 +58,7 @@ export const readSpaceTree = (document: Document): SpaceTree => {
   })
 }
 
-const collectObjects = (root: XRSpaceElement): XRObjectElement[] => {
+const collectObjects = (root: SpaceElement): XRObjectElement[] => {
   const objects: XRObjectElement[] = []
   const visit = (element: XRObjectElement): void => {
     objects.push(element)

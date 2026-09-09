@@ -99,7 +99,7 @@ test("[NODES-CATALOG-005] Node, Frame, Link, NodeTree and NodeEditor variants mo
     const mounted = await mount(variant)
     try {
       expect(mounted.owner.querySelector(selectors[subject.id]!)).not.toBeNull()
-      expect(mounted.document.querySelectorAll("xr-space")).toHaveLength(1)
+      expect(mounted.document.querySelectorAll("space")).toHaveLength(1)
       expect(mounted.document.querySelectorAll("display")).toHaveLength(1)
       expect(mounted.document.querySelectorAll("canvas")).toHaveLength(0)
     } finally { mounted.dispose() }
@@ -135,10 +135,10 @@ function find(route: string): Variant {
 
 async function mount(variant: Variant) {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const space = document.createElement("xr-space")
+  const space = document.createElement("space")
   const display = document.createElement("display")
   document.append(space)
-  space.append(document.createElement("xr-view-point"), display)
+  space.append(document.createElement("viewpoint"), display)
   const controller = new AbortController()
   const diagnostics: unknown[] = []
   const session = runtime.create({

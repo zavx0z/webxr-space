@@ -12,8 +12,8 @@ export const testApp = defineCompiledTemplate({
   displayName: "TestApp",
   bindingCount: 0,
   mount(document) {
-    const space = document.createElement("xr-space")
-    space.append(document.createElement("xr-view-point"))
+    const space = document.createElement("space")
+    space.append(document.createElement("viewpoint"))
     return {nodes: [space], bindings: []}
   },
   render() {},

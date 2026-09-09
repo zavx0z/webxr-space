@@ -1,6 +1,7 @@
 import {createContext, useContext, useLayoutEffect, useRef, useSyncExternalStore} from "@zavx0z/component"
 import type {Document} from "@zavx0z/dom"
-import type {XRSpaceElement, XRViewPointElement} from "@zavx0z/space"
+import type {SpaceElement} from "@zavx0z/dom/space"
+import type {ViewPointElement} from "@zavx0z/dom/viewpoint"
 import {createDocumentClipboardController, type DocumentClipboardController} from "../clipboard.ts"
 
 /** Размер и положение Canvas в CSS px; `dpr` переводит их в пиксели буфера. */
@@ -23,7 +24,7 @@ export type RootState = Readonly<{
 }>
 
 /** К началу кадра авторские Space и ViewPoint уже смонтированы и проверены. */
-export type FrameState = RootState & Readonly<{space: XRSpaceElement; viewPoint: XRViewPointElement}>
+export type FrameState = RootState & Readonly<{space: SpaceElement; viewPoint: ViewPointElement}>
 export type FrameCallback = (state: FrameState, delta: number) => void
 
 export const rootContext = createContext<RootEnvironment | null>(null)
@@ -119,7 +120,7 @@ export function createRootEnvironment(document: Document, size: RootSize, framel
       state = Object.freeze({...state, size: Object.freeze({...size})})
       for (const listener of listeners) listener()
     },
-    frame(space: XRSpaceElement, viewPoint: XRViewPointElement, now: number) {
+    frame(space: SpaceElement, viewPoint: ViewPointElement, now: number) {
       pending = false
       const delta = previousTime === null ? 0 : Math.max(0, (now - previousTime) / 1000)
       previousTime = now

@@ -260,7 +260,7 @@ describe("Направление производственных зависим
       ["Document", /\b(?:createDocument|new\s+Document)\s*\(/u],
       ["Canvas", /(?:<canvas(?:\s|>)|\bnew\s+(?:Offscreen)?Canvas\s*\(|\.createElement\s*\(\s*["'`]canvas["'`])/u],
       ["Renderer", /\b(?:createDocumentRenderer|createRenderer|new\s+[A-Za-z]*Renderer)\s*\(/u],
-      ["Space", /(?:<xr-space(?:\s|>)|\b(?:createSpace|new\s+Space)\s*\()/u],
+      ["Space", /(?:<space(?:\s|>)|\b(?:createSpace|new\s+Space)\s*\()/u],
     ] as const
 
     for await (const file of sourceGlob.scan({cwd: nodesRoot, onlyFiles: true})) {

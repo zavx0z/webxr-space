@@ -1,4 +1,3 @@
-import {ViewPoint} from "@zavx0z/space/cameras/view-point"
 import {HUD} from "@zavx0z/space/portals/hud"
 import {useSpace} from "@zavx0z/browser"
 import {ClipboardMenu} from "@zavx0z/ui/menus/clipboard-menu"
@@ -47,9 +46,11 @@ function AlphaRegion(props: Readonly<{model: CodeEditorModel}>) {
 
 export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorModel; beta: CodeEditorModel}>) {
   return (
-    <xr-space>
-      <ViewPoint
-        position={{x: 10, y: -140, z: 10}}
+    <space>
+      <viewpoint
+        x={10}
+      y={-140}
+      z={10}
         fov={Math.PI / 2}
         controls={false}
       />
@@ -87,6 +88,6 @@ export function NativeEditorSelectionFixture(props: Readonly<{alpha: CodeEditorM
       <HUD>
         <ClipboardHud />
       </HUD>
-    </xr-space>
+    </space>
   )
 }

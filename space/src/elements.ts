@@ -1,5 +1,5 @@
 import {Comment, Element, type Document, type Node} from "@zavx0z/dom"
-import {DisplayElement} from "@zavx0z/dom/display"
+import {SpatialElement} from "@zavx0z/dom/space"
 import type {
   AnimationClip,
   BufferGeometry,
@@ -38,7 +38,7 @@ const booleanAttribute = (
   return value !== "false"
 }
 
-export class XRElement extends Element {
+export class XRElement extends SpatialElement {
   constructor(ownerDocument: Document, localName: string) {
     super(ownerDocument, localName)
   }
@@ -98,172 +98,8 @@ const stringAttribute = (
   fallback: string,
 ): string => element.getAttribute(name) ?? fallback
 
-export class XRSpaceElement extends XRElement {
-  /** Режим общего кадра; demand рисует по изменениям, always непрерывно. */
-  get frameloop(): "demand" | "always" {
-    const value = this.getAttribute("frameloop") ?? "demand"
-    if (value !== "demand" && value !== "always") throw new TypeError("Space frameloop must be demand or always")
-    return value
-  }
-  set frameloop(value: "demand" | "always") {
-    if (value !== "demand" && value !== "always") throw new TypeError("Space frameloop must be demand or always")
-    this.setAttribute("frameloop", value)
-  }
-
-  constructor(ownerDocument: Document) {
-    super(ownerDocument, "xr-space")
-  }
-
-  get background(): string { return stringAttribute(this, "background", "#000000") }
-  set background(value: string) { this.setAttribute("background", value) }
-
-  protected override validateChildInsertion(
-    nodes: readonly Node[],
-    replacing: readonly Node[],
-  ): void {
-    const retained = new Set(replacing)
-    const moving = new Set(nodes.filter(node => node.parentNode === this))
-    const children = [
-      ...this.childNodes.filter(node => !retained.has(node) && !moving.has(node)),
-      ...nodes,
-    ]
-
-    for (const child of children) {
-      if (child instanceof Comment || child instanceof DisplayElement) continue
-      if (!(child instanceof XRElement)) {
-        throw new TypeError("Space accepts only spatial elements")
-      }
-      if (!(child instanceof XRViewPointElement) &&
-        !(child instanceof XRObjectElement) &&
-        !(child instanceof XRHUDElement)) {
-        throw new TypeError(`Space does not accept ${child.localName}`)
-      }
-    }
-
-    if (children.filter(child => child instanceof XRViewPointElement).length > 1) {
-      throw new TypeError("Space accepts exactly one ViewPoint")
-    }
-    if (children.filter(child => child instanceof XRHUDElement).length > 1) {
-      throw new TypeError("Space accepts at most one HUD")
-    }
-  }
-}
-
-const viewPointPoseProperties = ["x", "y", "z", "targetX", "targetY", "targetZ", "fov", "near", "far"] as const
-
-/**
-Единственная камера semantic Space. Координаты и расстояния заданы в мм, ось вверх — Z.
-Команды меняют этот же Element одной transaction; подключённый Browser сам запрашивает кадр.
-Сохранённый обзор принадлежит элементу и не создаёт подписок или отдельного цикла кадров.
-*/
-export class XRViewPointElement extends XRElement {
-  #savedState: Float64Array | null = null
-
-  constructor(ownerDocument: Document) {
-    super(ownerDocument, "xr-view-point")
-  }
-
-  get x(): number { return numberAttribute(this, "x", 10) }
-  set x(value: number) { setNumberAttribute(this, "x", value) }
-  get y(): number { return numberAttribute(this, "y", -10) }
-  set y(value: number) { setNumberAttribute(this, "y", value) }
-  get z(): number { return numberAttribute(this, "z", 10) }
-  set z(value: number) { setNumberAttribute(this, "z", value) }
-  get targetX(): number { return numberAttribute(this, "target-x", 0) }
-  set targetX(value: number) { setNumberAttribute(this, "target-x", value) }
-  get targetY(): number { return numberAttribute(this, "target-y", 0) }
-  set targetY(value: number) { setNumberAttribute(this, "target-y", value) }
-  get targetZ(): number { return numberAttribute(this, "target-z", 0) }
-  set targetZ(value: number) { setNumberAttribute(this, "target-z", value) }
-  get controls(): boolean { return booleanAttribute(this, "controls", false) }
-  set controls(value: boolean) { this.setAttribute("controls", String(value)) }
-  get fov(): number { return numberAttribute(this, "fov", 1) }
-  set fov(value: number) { setNumberAttribute(this, "fov", value) }
-  get near(): number { return numberAttribute(this, "near", 0.1) }
-  set near(value: number) { setNumberAttribute(this, "near", value) }
-  get far(): number { return numberAttribute(this, "far", 1000) }
-  set far(value: number) { setNumberAttribute(this, "far", value) }
-
-  /**
-  Запоминает положение, цель, fov и near/far для {@link XRViewPointElement.reset}.
-  Повторный вызов заменяет прежний обзор без нового выделения памяти.
-  Разрешение жестов `controls` остаётся состоянием приложения.
-  */
-  saveState(): void {
-    const state = this.#savedState ??= new Float64Array(viewPointPoseProperties.length)
-    for (let index = 0; index < viewPointPoseProperties.length; index++) {
-      state[index] = this[viewPointPoseProperties[index]!]
-    }
-  }
-
-  /**
-  Возвращает последний сохранённый обзор без замены камеры и без изменения `controls`.
-
-  @returns `true`, если обзор был сохранён; иначе ничего не меняет и возвращает `false`.
-  */
-  reset(): boolean {
-    const state = this.#savedState
-    if (state === null) return false
-    this.ownerDocument!.transaction(() => {
-      for (let index = 0; index < viewPointPoseProperties.length; index++) {
-        this[viewPointPoseProperties[index]!] = state[index]!
-      }
-    })
-    return true
-  }
-
-  /**
-  Мгновенно устанавливает расстояние до цели, сохраняя направление от цели к камере.
-  При новой цели камера поворачивается к ней; fov и near/far сохраняются.
-
-  @param distance - Конечное расстояние в мм, строго больше нуля.
-  @param target - Точка в мировых координатах Z-up, мм. Без аргумента сохраняется текущая цель.
-  @throws RangeError При недопустимом расстоянии, нечисловых координатах или совпадении камеры с целью.
-    Проверка выполняется до изменения Element.
-  @example
-  ```ts
-  camera.saveState()
-  camera.dollyTo(600, {x: 0, y: 0, z: 900})
-  camera.reset()
-  ```
-  */
-  dollyTo(distance: number, target?: Readonly<{x: number; y: number; z: number}>): void {
-    const targetX = target?.x ?? this.targetX
-    const targetY = target?.y ?? this.targetY
-    const targetZ = target?.z ?? this.targetZ
-    if (!Number.isFinite(distance) || distance <= 0 ||
-      !Number.isFinite(targetX) || !Number.isFinite(targetY) || !Number.isFinite(targetZ)) {
-      throw new RangeError("ViewPoint.dollyTo requires a positive finite distance and finite target coordinates")
-    }
-    const offsetX = this.x - targetX
-    const offsetY = this.y - targetY
-    const offsetZ = this.z - targetZ
-    const length = Math.hypot(offsetX, offsetY, offsetZ)
-    if (!Number.isFinite(length) || length === 0) {
-      throw new RangeError("ViewPoint.dollyTo requires a finite direction from target to camera")
-    }
-    const x = targetX + offsetX / length * distance
-    const y = targetY + offsetY / length * distance
-    const z = targetZ + offsetZ / length * distance
-    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
-      throw new RangeError("ViewPoint.dollyTo position exceeds finite coordinates")
-    }
-    this.ownerDocument!.transaction(() => {
-      this.x = x
-      this.y = y
-      this.z = z
-      this.targetX = targetX
-      this.targetY = targetY
-      this.targetZ = targetZ
-    })
-  }
-
-  protected override validateChildInsertion(): void {
-    throw new TypeError("ViewPoint cannot contain children")
-  }
-}
-
 export abstract class XRObjectElement extends XRElement {
+  override get spaceChildKind(): "object" { return "object" }
   get x(): number { return numberAttribute(this, "x", 0) }
   set x(value: number) { setNumberAttribute(this, "x", value) }
   get y(): number { return numberAttribute(this, "y", 0) }
@@ -563,6 +399,7 @@ export class XRMaterialElement extends XRElement {
 }
 
 export class XRHUDElement extends XRElement {
+  override get spaceChildKind(): "hud" { return "hud" }
   constructor(ownerDocument: Document) {
     super(ownerDocument, "xr-hud")
   }

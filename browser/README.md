@@ -29,12 +29,12 @@ function App() {
         rel="stylesheet"
         href="/themes/dark.css"
       />
-      <Space frameloop="demand">
-        <ViewPoint />
+      <space frameloop="demand">
+        <viewpoint />
         <HUD>
           <Toolbar />
         </HUD>
-      </Space>
+      </space>
     </>
   )
 }

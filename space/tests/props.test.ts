@@ -7,7 +7,7 @@ import {createDocument} from "@zavx0z/dom"
 import {Object3D, Quaternion, Vector3} from "@zavx0z/engine"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import {createSpaceElementFactories, type XRObjectElement, type XRViewPointElement} from "../src/index.ts"
+import {createSpaceElementFactories, type XRObjectElement} from "../src/index.ts"
 import type {GroupProps} from "../abstractions/group.tsx"
 
 let directory = ""
@@ -17,7 +17,6 @@ const entries = [
   ["abstractions/text", "Text"], ["shapes/mesh", "Mesh"],
   ["shapes/line", "Line"], ["shapes/line-segments", "LineSegments"],
   ["staging/light", "Light"], ["gizmos/grid", "Grid"],
-  ["cameras/view-point", "ViewPoint"],
 ] as const
 
 beforeAll(async () => {
@@ -44,7 +43,7 @@ afterAll(async () => {
 const factory = () => new Object3D()
 
 test("every spatial object uses the same position, Blender XYZ degrees, quaternion and scale contract", () => {
-  for (const [, name] of entries.filter(([, name]) => name !== "ViewPoint")) {
+  for (const [, name] of entries) {
     const document = createDocument({elementFactories: createSpaceElementFactories()})
     const root = createRoot(document)
     const ref = {current: null as XRObjectElement | null}
@@ -72,25 +71,6 @@ test("every spatial object uses the same position, Blender XYZ degrees, quaterni
     root.unmount()
     expect(ref.current).toBeNull()
   }
-})
-
-test("camera target is a whole vector; fresh equal props preserve dolly state and ref identity", () => {
-  const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const root = createRoot(document)
-  const ref = {current: null as XRViewPointElement | null}
-  const props = {position: {x: 0, y: -1600, z: 900}, target: {x: 0, y: 0, z: 900}, ref}
-  root.render(templates.get("ViewPoint")!, props)
-  const camera = ref.current!
-  camera.saveState()
-  camera.dollyTo(600)
-  root.render(templates.get("ViewPoint")!, {...props, position: {...props.position}, target: {...props.target}})
-  expect(ref.current).toBe(camera)
-  expect(camera.y).toBe(-600)
-  camera.reset()
-  expect(camera.y).toBe(-1600)
-  root.render(templates.get("ViewPoint")!, {...props, target: {x: 100, y: 200, z: 300}})
-  expect([camera.targetX, camera.targetY, camera.targetZ]).toEqual([100, 200, 300])
-  root.unmount()
 })
 
 test("invalid transforms leave the mounted spatial object unchanged", () => {

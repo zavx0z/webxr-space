@@ -50,9 +50,9 @@ export function ResourcesApp(props: {href: string; frameloop: "demand" | "always
         rel="stylesheet"
         href={props.href}
       />
-      <xr-space frameloop={props.frameloop}>
-        <xr-view-point />
-      </xr-space>
+      <space frameloop={props.frameloop}>
+        <viewpoint />
+      </space>
     </>
   )
 }

@@ -12,9 +12,9 @@ await import("../.storybook/stories/compiled-model-story.tsx")
 
 test("[NODETREE-STORYBOOK-MOUNT] все compiled истории используют Document host, повторяют сценарии и освобождают lifecycle", async () => {
   const document = createDocument({elementFactories: createSpaceElementFactories()})
-  const space = document.createElement("xr-space")
+  const space = document.createElement("space")
   const display = document.createElement("display")
-  space.append(document.createElement("xr-view-point"), display)
+  space.append(document.createElement("viewpoint"), display)
   document.append(space)
   const abort = new AbortController()
   const diagnostics: unknown[] = []
@@ -58,6 +58,6 @@ test("[NODETREE-STORYBOOK-MOUNT] все compiled истории использу
     abort.abort()
   }
   expect(display.childNodes).toHaveLength(0)
-  expect(document.querySelectorAll("xr-space")).toHaveLength(1)
-  expect(document.querySelectorAll("xr-view-point")).toHaveLength(1)
+  expect(document.querySelectorAll("space")).toHaveLength(1)
+  expect(document.querySelectorAll("viewpoint")).toHaveLength(1)
 })
