@@ -5,7 +5,7 @@ import {createDocument} from "@zavx0z/dom"
 import {registerLanguageHighlighter} from "@zavx0z/highlighter"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
-import {parseMarkdown} from "../markdown.ts"
+import {markdownDestinations, parseMarkdown} from "../markdown.ts"
 import type {MarkdownProps} from "../views/markdown.tsx"
 import {createDocumentRenderer} from "../../renderer/src/index.ts"
 
@@ -29,6 +29,63 @@ function mount(props: MarkdownProps) {
 }
 
 describe("Markdown production owner", () => {
+  test("algorithm table rows contain all wrapped text inside a flex overview", async () => {
+    const {markdownTableWrappingSource: source} = await import("../views/markdown.fixture.tsx")
+    const {component, container, document} = mount({source})
+    container.setAttribute("style", "display:flex;flex-direction:column;width:1152px;height:1024px")
+    const renderer = createDocumentRenderer({document, root: container, viewport: {width: 1152, height: 1024}})
+    try {
+      const frame = renderer.flush()
+      const cells = [...container.querySelectorAll("td")]
+      expect(cells).toHaveLength(12)
+      for (const cell of cells) {
+        const bounds = frame.boxByNode.get(cell)!
+        const text = frame.displayList.filter(item => item.kind === "text" && cell.contains(item.node))
+        expect(text.length).toBeGreaterThan(0)
+        for (const item of text) {
+          if (item.kind === "text") expect(item.y + item.lineHeight).toBeLessThanOrEqual(bounds.y + bounds.height)
+        }
+      }
+    } finally {
+      renderer.dispose()
+      component.unmount()
+    }
+  })
+  test("table columns align across rows, wrap and resize without replacing the article", () => {
+    const source = "| Name | Description |\n| :--- | ---: |\n| **Fixed** | A long description with `code` that wraps across multiple lines in a narrow column |\n| [Adaptive](./adaptive) | Short |"
+    const {component, container, document} = mount({source, baseUrl: "/docs/"})
+    container.setAttribute("style", "width:360px")
+    const renderer = createDocumentRenderer({document, root: container, viewport: {width: 600, height: 800}})
+    try {
+      const article = container.querySelector("article")!
+      const table = article.querySelector("table")!
+      const headers = [...table.querySelectorAll("th")]
+      const cells = [...table.querySelectorAll("td")]
+      expect(headers).toHaveLength(2)
+      expect(cells).toHaveLength(4)
+      expect(headers[0]?.getAttribute("scope")).toBe("col")
+      expect(cells[0]?.querySelector("strong")?.textContent).toBe("Fixed")
+      expect(cells[2]?.querySelector("a")?.getAttribute("href")).toBe("/docs/adaptive")
+      const frame = renderer.flush()
+      const box = (node: typeof table) => frame.boxByNode.get(node)!
+      expect(box(headers[0]!).width).toBeGreaterThan(100)
+      expect(box(headers[0]!).width).toBeCloseTo(box(cells[0]!).width)
+      expect(box(headers[1]!).x).toBeCloseTo(box(cells[1]!).x)
+      expect(box(cells[1]!).height).toBeGreaterThan(40)
+      expect(box(cells[2]!).y).toBeGreaterThanOrEqual(box(cells[1]!).y + box(cells[1]!).height)
+      container.setAttribute("style", "width:600px")
+      const wide = renderer.flush()
+      expect(wide.boxByNode.get(cells[1]!)!.width).toBeGreaterThan(box(cells[1]!).width)
+      expect(wide.boxByNode.get(cells[1]!)!.height).toBeLessThan(box(cells[1]!).height)
+      component.render(template, {source: source.replace("Short", "Updated"), baseUrl: "/docs/"})
+      expect(container.querySelector("article")).toBe(article)
+      expect(container.querySelector("table")).toBe(table)
+      expect(container.textContent).toContain("Updated")
+    } finally {
+      renderer.dispose()
+      component.unmount()
+    }
+  })
   test("CodeEditor memoizes automatic syntax but observes replacement of its language definition", async () => {
     const {CodeEditor} = await import("../views/code-editor.tsx")
     const languageId = "code-editor-memo-test"
@@ -311,6 +368,20 @@ describe("Markdown production owner", () => {
 })
 
 describe("shared Markdown parser", () => {
+  test("parses GFM tables with inline content, escaped pipes, alignment and resource discovery", () => {
+    const source = "| Left | Center | Right |\r\n| :--- | :---: | ---: |\r\n| a\\|b | [`code`](./doc.md) | ![image](./image.png) |\r\n| short |\r\n"
+    const table = parseMarkdown({source}).blocks[0]
+    if (table?.kind !== "table") throw new Error("Expected table")
+    expect(table.head[0]?.cells.map(cell => cell.align)).toEqual(["left", "center", "right"])
+    expect(table.body).toHaveLength(2)
+    expect(table.body[0]?.cells[0]?.content[0]).toMatchObject({kind: "text", value: "a|b"})
+    expect(table.body[1]?.cells).toHaveLength(3)
+    expect(table.body[1]?.cells[2]?.content).toEqual([])
+    expect(markdownDestinations(source)).toEqual(["./doc.md", "./image.png"])
+    expect(Object.isFrozen(table.body[0]?.cells)).toBe(true)
+    expect(parseMarkdown({source: "| just | text |\n| no delimiter | here |"}).blocks[0]?.kind).toBe("paragraph")
+    expect(parseMarkdown({source: "```\n" + source + "\n```"}).blocks[0]?.kind).toBe("code")
+  })
   test("recognizes code inside link labels, emphasis and safe raw HTML images", () => {
     const parsed = parseMarkdown({source: [
       '<div align="center"><img src="docs/img/metafor.gif" alt="Обзор" width="444" onerror="alert(1)"></div>',

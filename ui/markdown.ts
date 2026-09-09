@@ -4,6 +4,13 @@ import {parseFragment, serializeOuter, type DefaultTreeAdapterTypes} from "parse
 type HtmlNode = DefaultTreeAdapterTypes.ChildNode
 type HtmlElement = DefaultTreeAdapterTypes.Element
 
+export type MarkdownTableCell = Readonly<{
+  key: string
+  align: "left" | "center" | "right"
+  content: readonly MarkdownInline[]
+}>
+export type MarkdownTableRow = Readonly<{key: string; cells: readonly MarkdownTableCell[]}>
+
 export type MarkdownInline = Readonly<{key: string; kind: "text" | "code"; value: string}>
   | Readonly<{key: string; kind: "strong" | "em" | "strike"; content: readonly MarkdownInline[]}>
   | Readonly<{key: string; kind: "break"}>
@@ -16,11 +23,12 @@ export type MarkdownBlock = Readonly<{key: string; kind: "heading"; level: numbe
   | Readonly<{key: string; kind: "code"; languageId: string; value: string}>
   | Readonly<{key: string; kind: "quote" | "group"; blocks: readonly MarkdownBlock[]; align?: "left" | "center" | "right"}>
   | Readonly<{key: string; kind: "rule"}>
+  | Readonly<{key: string; kind: "table"; head: readonly MarkdownTableRow[]; body: readonly MarkdownTableRow[]}>
 
 export type MarkdownDocument = Readonly<{blocks: readonly MarkdownBlock[]}>
 export type ParseMarkdownOptions = Readonly<{source: string; baseUrl?: string}>
 
-const parser = new MarkdownIt("commonmark", {html: true})
+const parser = new MarkdownIt("commonmark", {html: true}).enable("table")
 const inlineTags = new Set(["a", "code", "strong", "b", "em", "i", "s", "del", "span", "img", "br"])
 
 /** One browser-safe parser and inert HTML projection shared by UI and resource discovery. */
@@ -44,6 +52,9 @@ export function markdownDestinations(source: string): readonly string[] {
     for (const item of items) {
       if ("content" in item) visitInline(item.content)
       if ("blocks" in item) visitBlocks(item.blocks)
+      if (item.kind === "table") for (const row of [...item.head, ...item.body]) {
+        for (const cell of row.cells) visitInline(cell.content)
+      }
       if (item.kind === "list") for (const entry of item.items) {
         visitInline(entry.content)
         visitBlocks(entry.blocks)
@@ -93,6 +104,23 @@ function blocks(nodes: readonly HtmlNode[], baseUrl: string | undefined, prefix:
         })
       })
       result.push(Object.freeze({key, kind: "list", ordered: tag === "ol", start: dimension(attribute(node, "start")) ?? 1, items: Object.freeze(items)}))
+    } else if (tag === "table") {
+      const sections = node.childNodes.filter(isElement)
+      const rows = (section: string): readonly MarkdownTableRow[] => Object.freeze(sections
+        .filter(child => child.tagName === section)
+        .flatMap(child => child.childNodes.filter(isElement).filter(row => row.tagName === "tr"))
+        .map((row, rowIndex) => {
+          const rowKey = `${key}:${section}:${rowIndex}`
+          const cells = row.childNodes.filter(isElement).filter(cell => cell.tagName === "th" || cell.tagName === "td")
+          return Object.freeze({key: rowKey, cells: Object.freeze(cells.map((cell, index) => {
+            const cellKey = `${rowKey}:${index}`
+            // Only the exact alignment emitted by markdown-it is admitted, never arbitrary CSS.
+            const style = attribute(cell, "style")
+            const align = style === "text-align:center" ? "center" : style === "text-align:right" ? "right" : "left"
+            return Object.freeze({key: cellKey, align, content: inlines(cell.childNodes, baseUrl, cellKey, depth + 1)})
+          }))})
+        }))
+      result.push(Object.freeze({key, kind: "table", head: rows("thead"), body: rows("tbody")}))
     } else if (tag === "blockquote" || tag === "div") {
       const align = attribute(node, "align")
       result.push(Object.freeze({

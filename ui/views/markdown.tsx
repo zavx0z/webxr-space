@@ -3,6 +3,8 @@ import {
   parseMarkdown,
   type MarkdownBlock,
   type MarkdownInline,
+  type MarkdownTableRow,
+  type MarkdownTableCell,
 } from "../markdown.ts"
 import {Divider} from "../divider.tsx"
 import {CodeEditor} from "./code-editor.tsx"
@@ -306,6 +308,114 @@ function HtmlGroup(props: Readonly<{blocks: readonly MarkdownBlock[]; align?: "l
   </div>
 }
 
+const tableCellStyle = css`
+  box-sizing: border-box;
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--widget-regular-outline);
+  text-align: left;
+
+  &[data-align="center"] {
+    text-align: center;
+  }
+
+  &[data-align="right"] {
+    text-align: right;
+  }
+`
+
+function TableHeaderCell(props: Readonly<{cell: MarkdownTableCell}>) {
+  return <th
+    scope="col"
+    data-align={props.cell.align}
+    style={css`
+      ${tableCellStyle}
+
+      font-weight: 700;
+      background: var(--widget-regular-background);
+    `}
+  >
+    <InlineList content={props.cell.content} />
+  </th>
+}
+
+function TableDataCell(props: Readonly<{cell: MarkdownTableCell}>) {
+  return <td
+    data-align={props.cell.align}
+    style={css`${tableCellStyle}`}
+  >
+    <InlineList content={props.cell.content} />
+  </td>
+}
+
+function TableCell(props: Readonly<{cell: MarkdownTableCell; header?: boolean | undefined}>) {
+  return <>
+    {props.header ? <TableHeaderCell cell={props.cell} /> : <TableDataCell cell={props.cell} />}
+  </>
+}
+
+function TableRow(props: Readonly<{row: MarkdownTableRow; header?: boolean | undefined}>) {
+  return <tr
+    style={css`
+      display: flex;
+      flex-direction: row;
+      flex-shrink: 0;
+    `}
+  >
+    {props.row.cells.map(cell => <TableCell
+      key={cell.key}
+      cell={cell}
+      header={props.header}
+    />)}
+  </tr>
+}
+
+function TableRows(props: Readonly<{rows: readonly MarkdownTableRow[]; header?: boolean}>) {
+  return <>
+    {props.rows.map(row => <TableRow
+      key={row.key}
+      row={row}
+      header={props.header}
+    />)}
+  </>
+}
+
+function MarkdownTable(props: Readonly<{table: Extract<MarkdownBlock, {kind: "table"}>}>) {
+  return <table
+    style={css`
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      width: 100%;
+      margin: 0 0 8px;
+    `}
+  >
+    <thead
+      style={css`
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      `}
+    >
+      <TableRows
+        rows={props.table.head}
+        header={true}
+      />
+    </thead>
+    <tbody
+      style={css`
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      `}
+    >
+      <TableRows rows={props.table.body} />
+    </tbody>
+  </table>
+}
+
 function Block(props: Readonly<{block: MarkdownBlock}>) {
   const block = props.block
   return <div
@@ -349,6 +459,7 @@ function Block(props: Readonly<{block: MarkdownBlock}>) {
       align={block.align}
     /> : null}
     {block.kind === "rule" ? <Divider /> : null}
+    {block.kind === "table" ? <MarkdownTable table={block} /> : null}
   </div>
 }
 

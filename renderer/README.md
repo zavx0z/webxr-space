@@ -27,6 +27,7 @@ Renderer не выделяет GPU-текстуры и не создаёт от�
 
 - [Прокрутка и обновления кадра](scrolling.md).
 - [Inline-раскладка](inline-flow.md).
+- [Размеры flex-строк и кэш измерений](flex-layout.md).
 - [Выделение текста](text-selection.md).
 - [Шрифты и изображения](font-images.md).
 - [Область просмотра](viewport.md) и [фиксированное позиционирование](fixed-position.md).

@@ -115,6 +115,12 @@ type FlexLine = Readonly<{
   crossSize: number
 }>
 
+type ResolvedFlexLine = FlexLine & Readonly<{
+  mainSizes: readonly number[]
+  crossSizes: readonly number[]
+  usedMain: number
+}>
+
 type ContainingBlock = Readonly<{
   x: number
   y: number
@@ -148,6 +154,7 @@ type BuildState = {
   readonly transforms: Map<Node, RenderTransform>
   readonly presentationTransforms: Map<Element, RenderTransform>
   readonly measured: WeakMap<LayoutNode, Map<string, Size>>
+  readonly flexPlans: WeakMap<LayoutNode, Map<string, readonly ResolvedFlexLine[]>>
   readonly inlinePlans: WeakMap<LayoutNode, Map<string, InlineLayout | null>>
   readonly textPaint: WeakMap<LayoutNode, RetainedTextPaint>
   readonly textOverflow: Map<LayoutNode, RetainedTextPaint>
@@ -429,6 +436,7 @@ export const createDocumentRenderer = (
   const layoutCache = new WeakMap<Node, LayoutNode>()
   const popovers = createPopoverIndex(options.root)
   let measured = new WeakMap<LayoutNode, Map<string, Size>>()
+  let flexPlans = new WeakMap<LayoutNode, Map<string, readonly ResolvedFlexLine[]>>()
   let inlinePlans = new WeakMap<LayoutNode, Map<string, InlineLayout | null>>()
   let textPaint = new WeakMap<LayoutNode, RetainedTextPaint>()
   const streamReuse: {value: StreamReuse | null} = {value: null}
@@ -677,6 +685,8 @@ export const createDocumentRenderer = (
       true,
       popovers.read(),
       streamReuse,
+      true,
+      flexPlans,
     )
     markRendererOwnedFrame(next)
     if (frame !== null) {
@@ -694,6 +704,7 @@ export const createDocumentRenderer = (
 
   function resetMeasurements(): void {
     measured = new WeakMap()
+    flexPlans = new WeakMap()
     inlinePlans = new WeakMap()
     textPaint = new WeakMap()
     streamReuse.value = null
@@ -2131,6 +2142,7 @@ const buildFrame = (
   popovers: readonly HTMLElement[] = [],
   streamReuse: {value: StreamReuse | null} = {value: null},
   allowTextStream = true,
+  flexPlans = new WeakMap<LayoutNode, Map<string, readonly ResolvedFlexLine[]>>(),
 ): RenderFrame => {
   const selectedPicker = document.readOpenSelectPicker()
   const openSelect = selectedPicker !== null && (root === selectedPicker || root.contains(selectedPicker)) ? selectedPicker : null
@@ -2161,6 +2173,7 @@ const buildFrame = (
     transforms: new Map(),
     presentationTransforms: new Map(),
     measured,
+    flexPlans,
     inlinePlans,
     textPaint,
     textOverflow: new Map(),
@@ -2328,7 +2341,7 @@ const buildFrame = (
     const scrolled = tryBuildLazyScrollFrame(frame, state.deferredTextScroll, state.scrollProjections, revision)
     if (scrolled !== null) return scrolled
     return buildFrame(document, root, viewport, rules, revision, dirtyNodes, subtreeDirty,
-      layoutCache, interactionState, textMeasurer, imageMeasurer, measured, inlinePlans, textPaint, false, popovers, streamReuse, false)
+      layoutCache, interactionState, textMeasurer, imageMeasurer, measured, inlinePlans, textPaint, false, popovers, streamReuse, false, flexPlans)
   }
   return frame
 }
@@ -2767,15 +2780,16 @@ const measure = (
   availableWidth: number,
   availableHeight: number,
   state: BuildState,
+  usedWidth?: number,
 ): Size => {
-  const cached = measuredSize(layoutNode, availableWidth, availableHeight, state)
+  const cached = measuredSize(layoutNode, availableWidth, availableHeight, state, usedWidth)
   if (cached) return cached
 
   if (layoutNode.style.display === "none")
-    return rememberSize(layoutNode, availableWidth, availableHeight, 0, 0, state)
+    return rememberSize(layoutNode, availableWidth, availableHeight, 0, 0, state, usedWidth)
 
   if (layoutNode.node instanceof HTMLVectorPathElement)
-    return rememberSize(layoutNode, availableWidth, availableHeight, 0, 0, state)
+    return rememberSize(layoutNode, availableWidth, availableHeight, 0, 0, state, usedWidth)
 
   if (layoutNode.text !== null) {
     const {width, height} = measureText(layoutNode.text, layoutNode.style, state.textMeasurer)
@@ -2785,7 +2799,7 @@ const measure = (
       availableHeight,
       width,
       height,
-      state,
+      state, usedWidth,
     )
   }
 
@@ -2798,13 +2812,13 @@ const measure = (
       const declaredWidth = resolveLength(style.width, availableWidth)
       const declaredHeight = resolveLength(style.height, availableHeight)
       const contentHeight = declaredHeight === null ? null : Math.max(0, declaredHeight - (style.boxSizing === "border-box" ? edgeHeight : 0))
-      const contentWidth = declaredWidth === null
+      const contentWidth = usedWidth !== undefined ? Math.max(0, usedWidth - edgeWidth) : declaredWidth === null
         ? contentHeight === null ? natural.width : contentHeight * natural.width / natural.height
         : Math.max(0, declaredWidth - (style.boxSizing === "border-box" ? edgeWidth : 0))
-      const width = clampAxis(contentWidth + edgeWidth, style.minWidth, style.maxWidth, availableWidth, edgeWidth, style.boxSizing)
+      const width = usedWidth ?? clampAxis(contentWidth + edgeWidth, style.minWidth, style.maxWidth, availableWidth, edgeWidth, style.boxSizing)
       const height = clampAxis((contentHeight ?? Math.max(0, width - edgeWidth) * natural.height / natural.width) + edgeHeight,
         style.minHeight, style.maxHeight, availableHeight, edgeHeight, style.boxSizing)
-      return rememberSize(layoutNode, availableWidth, availableHeight, width, height, state)
+      return rememberSize(layoutNode, availableWidth, availableHeight, width, height, state, usedWidth)
     }
   }
 
@@ -2828,7 +2842,7 @@ const measure = (
       availableHeight,
       width,
       height,
-      state,
+      state, usedWidth,
     )
   }
 
@@ -2840,7 +2854,7 @@ const measure = (
   const explicitHeight = resolveLength(layoutNode.style.height, availableHeight)
   const contentConstraintWidth = Math.max(
     0,
-    explicitWidth === null
+    usedWidth !== undefined ? usedWidth - edgeWidth : explicitWidth === null
       ? availableWidth - edgeWidth
       : layoutNode.style.boxSizing === "content-box"
         ? explicitWidth
@@ -2854,14 +2868,14 @@ const measure = (
         ? explicitHeight
         : explicitHeight - edgeHeight,
   )
-  const inlineWidth = Math.max(0, clampAxis(
+  const inlineWidth = Math.max(0, (usedWidth ?? clampAxis(
     contentConstraintWidth + edgeWidth,
     layoutNode.style.minWidth,
     layoutNode.style.maxWidth,
     availableWidth,
     edgeWidth,
     layoutNode.style.boxSizing,
-  ) - edgeWidth)
+  )) - edgeWidth)
   const inline = inlineLayout(layoutNode, inlineWidth, contentConstraintHeight, state)
   const children = layoutNode.style.display === "flex"
     ? flexFlowChildren(layoutNode)
@@ -2881,9 +2895,7 @@ const measure = (
         edgeHeight,
       )
     : null
-  const childConstraintWidth = rowFlex && wrappingMainAvailable !== null
-    ? wrappingMainAvailable
-    : contentConstraintWidth
+  const childConstraintWidth = rowFlex ? inlineWidth : contentConstraintWidth
   const childConstraintHeight = !rowFlex && wrappingMainAvailable !== null
     ? wrappingMainAvailable
     : contentConstraintHeight
@@ -2907,7 +2919,11 @@ const measure = (
     : 0
   const gaps = Math.max(0, childSizes.length - 1) * mainGap
 
-  if (inline !== null) {
+  if (rowFlex) {
+    const lines = resolvedFlexLines(layoutNode, children, childSizes, true, inlineWidth, contentConstraintHeight, state)
+    naturalContentWidth = lines.reduce((maximum, line) => Math.max(maximum, line.usedMain), 0)
+    naturalContentHeight = lines.reduce((sum, line, index) => sum + line.crossSize + (index === 0 ? 0 : crossGap), 0)
+  } else if (inline !== null) {
     naturalContentWidth = inline.plan.width
     naturalContentHeight = inline.plan.height
   } else if (
@@ -2973,7 +2989,7 @@ const measure = (
     edgeHeight,
     layoutNode.style.boxSizing,
   )
-  const width = clampAxis(
+  const width = usedWidth ?? clampAxis(
     naturalBorderWidth,
     layoutNode.style.minWidth,
     layoutNode.style.maxWidth,
@@ -2996,7 +3012,7 @@ const measure = (
     availableHeight,
     width,
     height,
-    state,
+    state, usedWidth,
   )
 }
 
@@ -3092,6 +3108,58 @@ const createFlexLines = (
   }
   commit()
   return Object.freeze(lines)
+}
+
+/** Resolve main sizes before measuring cross sizes. Measurement and placement
+ * share this plan; paint, hit and scroll consume the resulting boxes unchanged.
+ * CSS Flexbox 9.4: https://www.w3.org/TR/css-flexbox-1/#cross-sizing
+ */
+const resolvedFlexLines = (
+  owner: LayoutNode,
+  children: readonly LayoutNode[],
+  childSizes: readonly Size[],
+  row: boolean,
+  width: number,
+  height: number,
+  state: BuildState,
+): readonly ResolvedFlexLine[] => {
+  const key = measureKey(width, height)
+  let cached = state.flexPlans.get(owner)
+  const previous = cached?.get(key)
+  if (previous !== undefined) return previous
+  const mainAvailable = row ? width : height
+  const mainGap = flexMainGap(owner.style, row)
+  const bases = children.map((child, index) =>
+    flexBaseSize(child, row, mainAvailable, width, height, childSizes[index]!, state))
+  const lines = createFlexLines(children, childSizes, bases, row, mainAvailable, mainGap, owner.style.flexWrap !== "nowrap")
+  const resolved = Object.freeze(lines.map(line => {
+    const lineChildren = line.indices.map(index => children[index]!)
+    const lineBases = line.indices.map(index => bases[index]!)
+    const margins = lineChildren.reduce((sum, child) =>
+      sum + (row ? horizontal(child.style.margin) : vertical(child.style.margin)), 0)
+    const gap = Math.max(0, lineChildren.length - 1) * mainGap
+    const free = mainAvailable - margins - gap - lineBases.reduce((sum, size) => sum + size, 0)
+    const mainSizes = distributeFlexSpace(lineChildren, lineBases, free, row, mainAvailable, width, height, state)
+    const crossSizes = Object.freeze(line.indices.map((index, lineIndex) => {
+      const child = children[index]!
+      if (!row) return childSizes[index]!.width
+      // Keep the containing block basis distinct from the used border-box width:
+      // a percentage/declared width must not override flex shrink or growth here.
+      return measure(child, Math.max(0, width - horizontal(child.style.margin)),
+        Math.max(0, height - vertical(child.style.margin)), state, mainSizes[lineIndex]).height
+    }))
+    const crossSize = crossSizes.reduce((maximum, size, index) => Math.max(maximum,
+      size + (row ? vertical(lineChildren[index]!.style.margin) : horizontal(lineChildren[index]!.style.margin))), 0)
+    return Object.freeze({indices: line.indices, mainSizes, crossSizes, crossSize,
+      usedMain: mainSizes.reduce((sum, size) => sum + size, 0) + margins + gap})
+  }))
+  if (cached === undefined) {
+    cached = new Map()
+    state.flexPlans.set(owner, cached)
+  }
+  if (cached.size >= 8) cached.clear()
+  cached.set(key, resolved)
+  return resolved
 }
 
 const wrappedFlexContentSize = (
@@ -4017,26 +4085,7 @@ const placeFlexChildren = (
       state,
     )
   })
-  const baseSizes = children.map((child, index) =>
-    flexBaseSize(
-      child,
-      row,
-      mainAvailable,
-      width,
-      height,
-      childSizes[index] ?? Object.freeze({ width: 0, height: 0 }),
-      state,
-    ),
-  )
-  const lines = createFlexLines(
-    children,
-    childSizes,
-    baseSizes,
-    row,
-    mainAvailable,
-    mainGap,
-    wrap,
-  )
+  const lines = resolvedFlexLines(layoutNode, children, childSizes, row, width, height, state)
   const lineAlignment = wrap
     ? alignFlexLines(
         layoutNode.style.alignContent,
@@ -4056,30 +4105,8 @@ const placeFlexChildren = (
     const line = lines[flexLineIndex]
     if (!line) continue
     const lineChildren = line.indices.map((index) => children[index]!)
-    const lineBases = line.indices.map((index) => baseSizes[index] ?? 0)
-    const lineMainMargins = lineChildren.map((child) =>
-      row ? horizontal(child.style.margin) : vertical(child.style.margin),
-    )
-    const baseOuter = lineBases.reduce(
-      (sum, size, index) => sum + size + (lineMainMargins[index] ?? 0),
-      0,
-    )
-    const gapTotal = Math.max(0, lineChildren.length - 1) * mainGap
-    const freeSpace = mainAvailable - baseOuter - gapTotal
-    const mainSizes = distributeFlexSpace(
-      lineChildren,
-      lineBases,
-      freeSpace,
-      row,
-      mainAvailable,
-      width,
-      height,
-      state,
-    )
-    const usedOuter = mainSizes.reduce(
-      (sum, size, index) => sum + size + (lineMainMargins[index] ?? 0),
-      0,
-    ) + gapTotal
+    const mainSizes = line.mainSizes
+    const usedOuter = line.usedMain
     const justify = justifyOffsets(
       layoutNode.style.justifyContent,
       Math.max(0, mainAvailable - usedOuter),
@@ -4102,7 +4129,7 @@ const placeFlexChildren = (
       const crossMargins = row
         ? margin.top + margin.bottom
         : margin.left + margin.right
-      const measuredCross = row ? measured.height : measured.width
+      const measuredCross = line.crossSizes[lineIndex]!
       const stretch = layoutNode.style.alignItems === "stretch" &&
         crossSizeIsAuto(child, row)
       const crossSize = stretch
@@ -4539,6 +4566,10 @@ const intrinsicHeight = (
       edge,
       node.style.boxSizing,
     )
+  }
+
+  if (node.style.display === "flex" && node.style.flexDirection === "row") {
+    return measure(node, availableWidth, availableHeight, state).height
   }
 
   const widthEdge = horizontalBoxEdges(node.style)
@@ -6599,8 +6630,9 @@ const measuredSize = (
   availableWidth: number,
   availableHeight: number,
   state: BuildState,
+  usedWidth?: number,
 ): Size | undefined =>
-  state.measured.get(node)?.get(measureKey(availableWidth, availableHeight))
+  state.measured.get(node)?.get(measureKey(availableWidth, availableHeight, usedWidth))
 
 const rememberSize = (
   node: LayoutNode,
@@ -6609,6 +6641,7 @@ const rememberSize = (
   width: number,
   height: number,
   state: BuildState,
+  usedWidth?: number,
 ): Size => {
   const size = Object.freeze({
     width: Math.max(0, width),
@@ -6620,12 +6653,12 @@ const rememberSize = (
     state.measured.set(node, values)
   }
   if (values.size >= 8) values.clear()
-  values.set(measureKey(availableWidth, availableHeight), size)
+  values.set(measureKey(availableWidth, availableHeight, usedWidth), size)
   return size
 }
 
-const measureKey = (width: number, height: number): string =>
-  `${width}\u0000${height}`
+const measureKey = (width: number, height: number, usedWidth?: number): string =>
+  `${width}\u0000${height}\u0000${usedWidth ?? "auto"}`
 
 const horizontal = (edges: RenderEdges): number => edges.left + edges.right
 const vertical = (edges: RenderEdges): number => edges.top + edges.bottom

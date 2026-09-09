@@ -14,7 +14,7 @@ Renderer переносит текст и вложенные inline-элемен
 сохраняя семантические узлы, цвета и области попадания. Переключение `wrap`
 пересчитывает раскладку того же article.
 
-Общий парсер `@zavx0z/ui/markdown` использует markdown-it (CommonMark) и parse5.
+Общий парсер `@zavx0z/ui/markdown` использует markdown-it (CommonMark с правилом table) и parse5.
 Storybook использует тот же разбор для списка разрешённых ресурсов README;
 UI не зависит от Storybook. Storybook импортирует публичный
 Markdown и отдельно компонует свою overview action. Блоки кода используют
@@ -37,12 +37,17 @@ Markdown и отдельно компонует свою overview action. Бло
 - Абзацы, вложенные списки и цитаты, горизонтальные разделители.
 - Жирное и курсивное выделение, вложенный inline-код, в том числе внутри ссылок.
 - CommonMark-ссылки и изображения, fenced и indented code blocks.
+- GFM-таблицы с заголовком, строками и выравниванием `:---`, `:---:` и `---:`.
+  Семантические `table/thead/tbody/tr/th/td` используют равные по ширине колонки
+  и общий CSS-перенос текста. В ячейках сохраняются inline-код, выделение,
+  безопасные ссылки и изображения; их адреса входят в общий список ресурсов.
+  Экранированный `\|` остаётся текстом ячейки. Объединение ячеек не поддерживается.
 - Безопасные HTML div/span, выделение, ссылки, img и br преобразуются в semantic
   элементы. Учитываются src, alt, title, width/height и align для div.
 - Script, iframe и неизвестные HTML-элементы остаются текстом; обработчики событий
   и произвольные HTML styles не переносятся. Исполняемые URL не становятся ссылками.
 
-GFM-таблицы и task lists не включены. Компонент сам не выполняет переходы по
+Task lists не включены. Компонент сам не выполняет переходы по
 ссылкам и не реализует собственный механизм выделения: он использует общее
 выделение Document и Renderer. GIF воспроизводится общим
 WebGPU texture loader через браузерный ImageDecoder с задержками и повторениями
@@ -56,6 +61,14 @@ WebGPU texture loader через браузерный ImageDecoder с задер
 `ui/tests/markdown.test.ts` проверяет разбор, семантику, обновление, cleanup и
 переиспользование CodeEditor. Storybook показывает основной пример по маршруту
 `components/data/markdown/basic/default`.
+
+Тот же пример содержит `markdownTableWrappingSource` — таблицу алгоритмов с
+длинным текстом в третьей колонке. Renderer сначала распределяет ширину
+flex-ячеек, затем измеряет переносы и высоту строки. Проверка
+`algorithm table rows contain all wrapped text inside a flex overview` в
+`ui/tests/markdown.test.ts` требует, чтобы текст помещался внутри ячеек.
+Фиксированные высоты и ручное измерение текста в Markdown не используются.
+Общий контракт: [размеры flex-строк Renderer](../../renderer/flex-layout.md).
 
 Сравнение режимов: `MarkdownWrappingFixture` в `ui/views/markdown.fixture.tsx`,
 маршруты `components/data/markdown/rendering/wrapping` и
