@@ -35,22 +35,6 @@ async function settled(owner: Element, renderer: ReturnType<typeof createDocumen
   if (error) throw new Error(error.textContent)
 }
 
-test("[MARKDOWN-MERMAID-SOURCE] the actual README Mermaid fence is parsed by Mermaid into its documented relationships", async () => {
-  const readme = await Bun.file(resolve(root, "nodes/node/README.md")).text()
-  const source = /```mermaid\n([\s\S]*?)```/u.exec(readme)![1]!
-  const graph = await parseMermaidFlowchart(source)
-  expect(graph.direction).toBe("LR")
-  expect(graph.nodes.map(node => node.id).sort()).toEqual(["ContentNode", "ContentSurface", "DiagramNode", "Pane", "ParameterNode", "ParameterNodeContents", "Typography"].sort())
-  expect(graph.edges.map(edge => `${edge.from}->${edge.to}`).sort()).toEqual([
-    "ContentNode->Pane", "ContentNode->ContentSurface", "ContentNode->ParameterNode", "ParameterNode->Pane", "ParameterNode->ParameterNodeContents", "DiagramNode->Pane", "DiagramNode->Typography",
-  ].sort())
-  expect(readme).not.toContain("dependencies.svg")
-  expect(graph.edges.every(edge => edge.endArrow)).toBe(true)
-  const plan = layoutMermaidGraph(graph, graph.nodes.map(node => ({id: node.id, width: 180, height: 60, anchors: []})))
-  expect(plan.nodes).toHaveLength(7)
-  expect(plan.edges).toHaveLength(7)
-})
-
 test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows and retains node identity on source update", async () => {
   const document = createDocument()
   const owner = document.createElement("div")

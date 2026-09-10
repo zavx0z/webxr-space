@@ -298,11 +298,13 @@ nodes/
 ├── node-editor/src/
 ├── frame/src/
 ├── node/                      # @nodes/node
-│   ├── diagram/src/
-│   ├── parameter/src/
-│   ├── content/src/
-│   ├── geometry/src/
-│   └── shared/
+│   ├── diagram/index.tsx
+│   ├── parameter/index.tsx
+│   ├── content/index.tsx
+│   ├── image/index.tsx
+│   ├── surface/index.tsx
+│   ├── contents/index.tsx
+│   └── shared/                # Общие типы, геометрия и правила представления
 ├── link/src/
 ├── shared/
 ├── tree/                      # @nodes/tree

@@ -10,6 +10,17 @@
 | DiagramNode | Описание на всю ноду; прямоугольник, овал или круг | `@nodes/node/diagram` |
 | ParameterNode | Шапка, готовые параметры и сокеты на основе Pane | `@nodes/node/parameter` |
 | ContentNode | ParameterNode плюс произвольный компонент содержимого | `@nodes/node/content` |
+| ContentImage | Изображение с сохранением исходных пропорций | `@nodes/node/image` |
+| ContentSurface | Произвольное содержимое или изображение квадратной области | `@nodes/node/surface` |
+| ParameterNodeContents | Шапка, действия, параметры и сокеты внутри ParameterNode | `@nodes/node/contents` |
+
+Все шесть каталогов находятся непосредственно в корне `@nodes/node`.
+Каждый содержит `index.tsx` и `spec/deps.spec.ts`: тест сравнивает полный
+статический граф компонентов и нативных JSX-тегов через общий
+[dependency fixture](../../fixtures/dependency-graph.ts). Он включает все ветви
+исходников и транзитивные зависимости UI, а не только ближайших соседей.
+`src` нужен только для крупных приватных вычислений конкретного компонента;
+эти компоненты не требуют такого каталога.
 
 Универсальной визуальной Node нет. DiagramNode подходит разным диаграммам,
 его название и реализация не привязаны к Mermaid. ContentNode принимает JSX:
@@ -28,6 +39,14 @@
 числовой расчёт с учётом обоих состояний. Низкоуровневый `@nodes/node/metrics`
 не импортирует TSX. Для графа передайте вычисление в `GraphEditor.layout` либо
 обновляйте готовую раскладку и состояния снаружи вместе.
+
+Геометрия не является визуальным компонентом. Общий план находится в
+[shared/geometry.ts](shared/geometry.ts), числовые метрики — в
+[shared/metrics.ts](shared/metrics.ts). Публичные импорты `./geometry` и `./metrics`
+сохранены. Общие `NodeRect`, `NodePreviewImage` и договоры props принадлежат
+[shared/contracts.ts](shared/contracts.ts); прежний экспорт `NodePreviewImage`
+из `@nodes/node/content` также сохранён. Числовой план и ParameterNodeContents
+используют одни [правила отступов и сторон сокетов](shared/parameter-presentation.ts).
 
 Компоненты используют общую UI-тему текущего Experience. Подключение темы
 принадлежит приложению; пакет не создаёт отдельные Document, Canvas или Renderer.

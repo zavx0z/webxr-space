@@ -118,7 +118,7 @@ test("[NODES-005] domain imports resolve only through public package contracts",
 
 test("[NODES-006] projected Parameter render и геометрия используют один resolver", async () => {
   const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/index.tsx")).text()
-  const nodeSource = await Bun.file(resolve(packageRoot, "node/geometry/src/geometry.ts")).text()
+  const nodeSource = await Bun.file(resolve(packageRoot, "node/shared/geometry.ts")).text()
 
   expect(parameterSource).toContain("const resolved = resolveProjectedParameterPresentation(snapshot)")
   expect(parameterSource).toContain("projectedParameterFieldHeight(")

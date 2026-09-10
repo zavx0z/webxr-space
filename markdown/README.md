@@ -50,8 +50,7 @@ Fenced-блок с языком `mermaid` отображается как диа
 
 [Рабочий пример](.storybook/stories/compiled/compiled-mermaid-story.tsx) содержит
 подписи, разные формы и изменение направления. Проверки:
-[mermaid.test.ts](markdown/tests/mermaid.test.ts). В `nodes/node/README.md`
-находится Mermaid-схема реальных зависимостей компонентов нод.
+[mermaid.test.ts](markdown/tests/mermaid.test.ts).
 
 ## Поддерживаемый синтаксис
 

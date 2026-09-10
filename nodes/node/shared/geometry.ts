@@ -1,9 +1,10 @@
 import type {NodeJsonValue, NodeTreeNodeSnapshot, ParameterReference, Socket as CoreSocket} from "@nodes/tree"
-import {metadataString, NODE_PARAMETER_SPACING_SMALL, NODE_PARAMETER_SPACING_MEDIUM, projectedParameterFieldHeight, resolveProjectedParameterPresentation} from "@nodes/parameters/shared"
-import {socketKey, socketSide} from "@nodes/sockets/shared"
-import type {NodeKind, NodeShape} from "../../shared/contracts.ts"
+import {NODE_PARAMETER_SPACING_SMALL, NODE_PARAMETER_SPACING_MEDIUM, projectedParameterFieldHeight, resolveProjectedParameterPresentation} from "@nodes/parameters/shared"
+import {socketKey} from "@nodes/sockets/shared"
+import {parameterSpacingBefore, projectedSocketSide} from "./parameter-presentation.ts"
+import type {NodeKind, NodeShape} from "./contracts.ts"
 
-export type NodeRect = Readonly<{x: number; y: number; width: number; height: number}>
+export type {NodeRect} from "./contracts.ts"
 export type ProjectedNodeSnapshot = NodeTreeNodeSnapshot<ParameterReference, NodeJsonValue, NodeJsonValue>
 export type NodeGeometryPresentation = Readonly<{kind?: NodeKind | undefined; collapsed?: boolean | undefined; contentVisible?: boolean | undefined; shape?: NodeShape | undefined; height?: number | undefined}>
 export function nodeSocketLayoutPortId(nodeId: string, socketId: string): string {
@@ -73,16 +74,6 @@ export function planProjectedNodeGeometry(
 }
 
 
-function parameterSpacingBefore(
-  parameter: ProjectedNodeSnapshot["parameters"][number],
-): "small" | "medium" | undefined {
-  const spacing = metadataString(parameter.presentation, "spacingBefore", "")
-  if (spacing === "") return undefined
-  if (spacing !== "small" && spacing !== "medium") {
-    throw new TypeError(`Parameter ${parameter.id} spacingBefore must be small or medium`)
-  }
-  return spacing
-}
 
 function parameterSpacingBeforePixels(
   parameter: ProjectedNodeSnapshot["parameters"][number],
@@ -93,13 +84,6 @@ function parameterSpacingBeforePixels(
   return 0
 }
 
-function projectedSocketSide(
-  nodeId: string,
-  socket: CoreSocket,
-  resolvedSocketSides?: ReadonlyMap<string, "left" | "right">,
-): "left" | "right" {
-  return resolvedSocketSides?.get(socketKey(nodeId, socket.id)) ?? socketSide(socket)
-}
 
 function projectedSocketRow(nodeId: string, socket: CoreSocket): NodeGeometryRowInput {
   return Object.freeze({

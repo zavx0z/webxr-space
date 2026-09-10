@@ -11,13 +11,16 @@
     "./diagram": "./diagram/index.tsx",
     "./parameter": "./parameter/index.tsx",
     "./content": "./content/index.tsx",
-    "./geometry": "./geometry/src/geometry.ts",
+    "./image": "./image/index.tsx",
+    "./surface": "./surface/index.tsx",
+    "./contents": "./contents/index.tsx",
+    "./geometry": "./shared/geometry.ts",
     "./contracts": "./shared/contracts.ts",
-    "./metrics": "./geometry/src/metrics.ts"
+    "./metrics": "./shared/metrics.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel tests diagram/spec diagram/tests",
+    "test": "bun test --parallel tests diagram/spec diagram/tests content/spec parameter/spec image/spec surface/spec contents/spec",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

@@ -5,7 +5,7 @@
  */
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {Typography} from "@zavx0z/ui/typography"
-import type {NodeRect} from "../geometry/src/geometry.ts"
+import type {NodeRect} from "../shared/contracts.ts"
 import type {NodeShape} from "../shared/contracts.ts"
 import type {CallbackRef} from "@zavx0z/template/jsx-runtime"
 

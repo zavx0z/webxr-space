@@ -4,14 +4,14 @@
 @packageDocumentation
 */
 
-import type {ParameterNodeProps} from "../../shared/contracts.ts"
+import type {ParameterNodeProps} from "../shared/contracts.ts"
 import {Button, IconButton} from "@zavx0z/ui/buttons/button"
 import {chevronDownIcon, chevronRightIcon} from "@zavx0z/ui/themes/icons"
 import {metadataBoolean, metadataString, Parameter, type ParameterInput} from "@nodes/parameters/shared"
-import {socketKey, socketSide} from "@nodes/sockets/shared"
+import {parameterSpacingBefore, projectedSocketSide} from "../shared/parameter-presentation.ts"
 import {Socket} from "@nodes/sockets/socket"
 import {SOCKET_KINDS, type SocketKind, type SocketShape} from "@nodes/sockets/presets"
-import {NODE_BODY_PADDING_TOP, NODE_BODY_PADDING_BOTTOM, NODE_ROW_GAP} from "../../geometry/src/geometry.ts"
+import {NODE_BODY_PADDING_TOP, NODE_BODY_PADDING_BOTTOM, NODE_ROW_GAP} from "../shared/metrics.ts"
 import {NODE_BORDER_WIDTH} from "@nodes/sockets/metrics"
 import type {Socket as CoreSocket} from "@nodes/tree"
 
@@ -204,28 +204,11 @@ export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{head
   </>
 }
 
-function parameterSpacingBefore(
-  parameter: NonNullable<ParameterNodeProps["parameters"]>[number],
-): "small" | "medium" | undefined {
-  const spacing = metadataString(parameter.presentation, "spacingBefore", "")
-  if (spacing === "") return undefined
-  if (spacing !== "small" && spacing !== "medium") {
-    throw new TypeError(`Parameter ${parameter.id} spacingBefore must be small or medium`)
-  }
-  return spacing
-}
 
 function resolvedSocketSide(props: ParameterNodeProps, socket: CoreSocket): "left" | "right" {
   return projectedSocketSide(props.id, socket, props.resolvedSocketSides)
 }
 
-function projectedSocketSide(
-  nodeId: string,
-  socket: CoreSocket,
-  resolvedSocketSides?: ReadonlyMap<string, "left" | "right">,
-): "left" | "right" {
-  return resolvedSocketSides?.get(socketKey(nodeId, socket.id)) ?? socketSide(socket)
-}
 
 function socketKind(value: string): SocketKind {
   return SOCKET_KINDS.includes(value as SocketKind) ? value as SocketKind : "custom"

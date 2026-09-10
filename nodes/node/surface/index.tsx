@@ -4,8 +4,8 @@
 @packageDocumentation
 */
 
-import type {NodeChildren} from "../../shared/contracts.ts"
-import type {NodePreviewImage} from "../image/index.tsx"
+import type {NodeChildren} from "../shared/contracts.ts"
+import type {NodePreviewImage} from "../shared/contracts.ts"
 import {ContentImage} from "../image/index.tsx"
 
 export type ContentSurfaceProps = Readonly<{

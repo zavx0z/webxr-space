@@ -7,12 +7,12 @@
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {visibilityOnIcon} from "@zavx0z/ui/themes/icons"
 import {ParameterNode} from "../parameter/index.tsx"
-import {ContentSurface} from "./surface/index.tsx"
-import type {NodePreviewImage} from "./image/index.tsx"
+import {ContentSurface} from "../surface/index.tsx"
+import type {NodePreviewImage} from "../shared/contracts.ts"
 import type {NodeChildren, ParameterNodeProps} from "../shared/contracts.ts"
-import {planProjectedNodeGeometry} from "../geometry/src/geometry.ts"
+import {planProjectedNodeGeometry} from "../shared/geometry.ts"
 
-export type {NodePreviewImage} from "./image/index.tsx"
+export type {NodePreviewImage} from "../shared/contracts.ts"
 /**
 Содержимое и параметры одной ноды с независимой видимостью.
 
