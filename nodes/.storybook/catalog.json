@@ -179,7 +179,7 @@
           "id": "node-tree",
           "kind": "component",
           "label": "Дерево нодов",
-          "apiName": "NodeTree",
+          "apiName": "GraphView",
           "route": "components/node-tree",
           "tags": [
             "node-tree",
@@ -260,17 +260,17 @@
               }
             }
           ],
-          "directory": "node-tree"
+          "directory": "view"
         },
         {
           "id": "node-editor",
           "kind": "component",
           "label": "Редактор нод",
-          "apiName": "NodeEditor",
+          "apiName": "GraphEditor",
           "route": "components/node-editor",
           "tags": [
             "node-editor",
-            "NodeEditor",
+            "GraphEditor",
             "Редактор нод"
           ],
           "presentation": {
@@ -329,7 +329,7 @@
               }
             }
           ],
-          "directory": "node-editor"
+          "directory": "editor"
         }
       ]
     },

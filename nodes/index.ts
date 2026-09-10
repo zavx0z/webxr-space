@@ -1,6 +1,7 @@
 /**
- * One compiled component projection for the canonical Nodes graph.
- * Built for [MetaFor](https://github.com/zavx0z/metafor).
+ * GraphView показывает принятую сцену и обслуживает навигацию.
+ * GraphEditor использует тот же просмотр и передаёт изменения модели приложению.
+ * Модель @nodes/tree и числовые алгоритмы @nodes/layout остаются самостоятельными.
  * @packageDocumentation
  */
 export {}

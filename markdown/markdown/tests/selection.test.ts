@@ -5,7 +5,7 @@ import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {createDocumentRenderer, readRenderedSelectionText} from "@renderer/html"
 
 const workspace = resolve(import.meta.dir, "../../..")
-Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "markdown"), resolve(workspace, "ui")]}))
+Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "markdown"), resolve(workspace, "ui"), resolve(workspace, "nodes")]}))
 const markdown = await import("../../.storybook/stories/subjects/components-data-markdown.ts")
 
 test("cross-block story copies ordinary paragraphs, Markdown and code while excluding gutter numbers", async () => {

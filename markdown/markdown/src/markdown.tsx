@@ -1,4 +1,4 @@
-import {Mermaid} from "../../mermaid/src/mermaid.tsx"
+import {Mermaid} from "../../mermaid/index.tsx"
 import {useMemo} from "@zavx0z/component"
 import {
   parseMarkdown,

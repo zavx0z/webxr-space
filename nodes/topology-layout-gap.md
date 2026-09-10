@@ -5,7 +5,7 @@
 
 ## Передача геометрии
 
-NodeTree и NodeEditor используют одну принятую пару snapshot/layout.
+GraphView и GraphEditor используют одну принятую пару snapshot/layout.
 Подписки читают её состояние, а геометрия строится во время render из этой пары.
 Начальный Fit и кнопка «Вписать» используют ту же геометрию.
 
@@ -28,7 +28,7 @@ NodeTree и NodeEditor используют одну принятую пару s
 
 ## Асинхронный расчёт
 
-`createNodeTreeLayout` из `@webxr/nodes/node-tree` захватывает snapshot
+`createNodeTreeLayout` из `@webxr/nodes/view/tree` захватывает snapshot
 до вызова владельца числовой раскладки:
 
 ```ts
@@ -67,7 +67,7 @@ pending при изменении исходного snapshot: геометри�
 
 [layout-coherence.test.ts](tests/layout-coherence.test.ts) покрывает:
 
-- append/remove в NodeTree и NodeEditor, Element/input/Parameter identity и Fit;
+- append/remove в GraphView и GraphEditor, Element/input/Parameter identity и Fit;
 - async B→A с отбрасыванием A, смену value revision;
 - pending input/selection/Fit, remove+add адреса с новым Parameter;
 - позднюю доставку уже готового старого результата и возобновление нового;

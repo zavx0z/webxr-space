@@ -70,7 +70,7 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
     nodesRoot,
     ".storybook/stories/compiled/compiled-layout-story.tsx",
   )).text()
-  expect(storySource).toContain('from "@webxr/nodes/node-editor"')
+  expect(storySource).toContain('from "@webxr/nodes/editor"')
   expect(storySource).toContain('from "@nodes/layout/fixed"')
   expect(storySource).toContain('from "@nodes/layout/adaptive"')
   expect(storySource).not.toContain("layoutTopDown")
@@ -78,7 +78,7 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   expect(storySource).not.toContain("renderLayoutSvg")
 })
 
-test("[NODES-STORYBOOK-002] каждый route вычисляет реальный Layout и монтирует production NodeEditor", async () => {
+test("[NODES-STORYBOOK-002] каждый route вычисляет реальный Layout и монтирует production GraphEditor", async () => {
   const subjects = await import("../.storybook/stories/subjects/layout.ts") as Record<string, unknown>
   const descriptors = Object.values(subjects).filter(isOwnerStoryDescriptor)
   expect(descriptors.map(({route}) => route).sort()).toEqual(expected.map(({route}) => route).sort())
@@ -118,14 +118,14 @@ test("[NODES-STORYBOOK-002] каждый route вычисляет реальны
 
     try {
       await session.mount({route: scenario.route, story: descriptor, signal: abort.signal})
-      if (presented === null) throw new Error(`Story не представила NodeEditor: ${scenario.route}`)
+      if (presented === null) throw new Error(`Story не представила GraphEditor: ${scenario.route}`)
       const owner = presented as SemanticNode & {
         getAttribute(name: string): string | null
         querySelector(selector: string): SemanticNode | null
         querySelectorAll(selector: string): readonly SemanticNode[]
       }
       expect(owner.parentNode).toBe(display)
-      expect(owner.getAttribute("data-node-editor")).toBe("")
+      expect(owner.getAttribute("data-graph-editor")).toBe("")
       expect(owner.getAttribute("data-layout-policy")).toBe(scenario.policy)
       expect(owner.getAttribute("data-layout-direction")).toBe(scenario.direction)
       expect(Array.from(owner.querySelectorAll("[data-node-id]"))

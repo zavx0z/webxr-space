@@ -121,6 +121,14 @@ const oldBrowserInternalizedSymbols = Object.freeze([
 
 export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Object.freeze([
   Object.freeze({
+    decisionMarker: "graph-view-composition",
+    kind: "retired" as const,
+    ownerPackages: Object.freeze(["@webxr/nodes"]),
+    requirementIds: Object.freeze(["GRAPH-VIEW-001", "NODES-LAYOUT-COHERENCE-001", "NODES-LAYOUT-COHERENCE-002"]),
+    sourceId: "old-nodes-ui",
+    symbols: Object.freeze(["NodeTree", "NodeTreeComponent", "NodeEditor", "NodeEditorComponent", "NodeEditorProps"]),
+  }),
+  Object.freeze({
     decisionMarker: "node-composition",
     kind: "retired" as const,
     ownerPackages: Object.freeze(["@nodes/node"]),

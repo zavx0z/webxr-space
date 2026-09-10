@@ -2,7 +2,7 @@
   "name": "@webxr/nodes",
   "label": "Нодовая система",
   "version": "0.0.0",
-  "description": "Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link",
+  "description": "Общее представление GraphView, GraphEditor, Frame и Link",
   "private": true,
   "type": "module",
   "sideEffects": false,
@@ -15,14 +15,15 @@
     "node"
   ],
   "exports": {
-    "./node-tree": "./node-tree/src/node-tree.tsx",
-    "./node-editor": "./node-editor/src/node-editor.tsx",
-    "./frame": "./frame/src/frame.tsx",
-    "./link": "./link/src/link.tsx"
+    "./view": "./view/index.tsx",
+    "./view/tree": "./view/tree.ts",
+    "./editor": "./editor/index.tsx",
+    "./frame": "./frame/index.tsx",
+    "./link": "./link/index.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel ./tests ./frame/tests ./node-tree/tests",
+    "test": "bun test --parallel ./tests ./frame/tests ./view/tests",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

@@ -294,7 +294,7 @@ export const exportDispositions: readonly ExportDisposition[] = Object.freeze([
     sourcePackage: "@nodes/ui" as const,
     sourceSubpath: ".",
     targets: Object.freeze([
-      ...["./frame", "./link", "./node-editor", "./node-tree"]
+      ...["./frame", "./link", "./editor", "./view", "./view/tree"]
         .map(subpath => target("@webxr/nodes", subpath)),
       ...[
         "./text", "./number", "./slider", "./checkbox", "./switch", "./select",
@@ -312,9 +312,9 @@ export const exportDispositions: readonly ExportDisposition[] = Object.freeze([
   ...sameSubpaths("@nodes/ui", "@webxr/nodes", [
     "./frame",
     "./link",
-    "./node-editor",
-    "./node-tree",
   ]),
+  moved("@nodes/ui", "./node-editor", "@webxr/nodes", "./editor"),
+  moved("@nodes/ui", "./node-tree", "@webxr/nodes", "./view"),
   moved("@nodes/ui", "./parameter", "@nodes/parameters", "./shared"),
   moved("@nodes/ui", "./socket", "@nodes/sockets", "./socket"),
   deferred(

@@ -1,7 +1,7 @@
 # Нодовая система
 
-Production-компоненты показывают один живой NodeTree: параметры, сокеты, связи,
-рамки и редактор. Состояние значений принадлежит `@nodes/tree`, числовая
+GraphView показывает согласованную числовую сцену: ноды, связи и рамки.
+GraphEditor использует тот же GraphView и добавляет управление изменениями. Состояние значений принадлежит `@nodes/tree`, числовая
 раскладка — `@nodes/layout`, универсальные поля — `@zavx0z/ui`.
 
 ## Каталог
@@ -13,7 +13,7 @@ Production-компоненты показывают один живой NodeTre
   из реального Parameter Store. Matrix, Vector и Collection отдельно показывают
   размеры. Значение и revision видны под примером.
 - **Ноды** — DiagramNode, ParameterNode и ContentNode в пакете `@nodes/node`.
-- **Компоненты графа** — Frame, Link, NodeTree и NodeEditor. Примеры показывают
+- **Компоненты графа** — Frame, Link, GraphView и GraphEditor. Примеры показывают
   composition, selection/collapse/preview, внешнее состояние, изменения Store,
   отсечение и управляемую навигацию. Вариант добавления ноды проверяет
   согласованное обновление topology и Layout с сохранением identity.
@@ -30,9 +30,9 @@ Storybook. Её source и стили относятся к тем же productio
 
 ## Границы
 
-Перетаскивание ноды и создание связей жестом ещё не входят в текущий NodeEditor.
+Перетаскивание ноды и создание связей жестом ещё не входят в текущий GraphEditor.
 TopDown/Coffman–Graham показаны как числовые алгоритмы у Layout; их полная
-интеграция с NodeEditor требует договора верхних/нижних сокетов.
+интеграция с GraphEditor требует договора верхних/нижних сокетов.
 
 NodeType остаётся отдельным будущим production-срезом. Нынешний NodeTemplate
 содержит сохраняемую идентичность; каталог не выдаёт его за готовую декларацию
@@ -56,7 +56,7 @@ cleanup. Успех unit tests дополняется живой проверк�
 ## Конкретные ноды
 
 Пакет [@nodes/node](node/README.md) владеет DiagramNode, ParameterNode и ContentNode.
-NodeTree и NodeEditor принимают `nodeKinds`, `nodeShapes` и `nodeContent` как
+Адаптер модели и GraphEditor принимают `nodeKinds`, `nodeShapes` и `nodeContent` как
 настройки представления существующего Store. `nodeViews` позволяет передать
 импортированный TSX-компонент для конкретной ноды. Он получает NodeViewProps: принятый
 снимок, прямоугольник, исходные Parameter Stores и защищённые callbacks; общий граф
@@ -67,9 +67,41 @@ NodeTree и NodeEditor принимают `nodeKinds`, `nodeShapes` и `nodeCont
 параметров и видимого содержимого, виды и формы нод. Результат проходит обычную
 проверку пары snapshot/layout. Существующая готовая геометрия остаётся допустимой;
 её обновлением и состояниями представления управляет вызывающая сторона.
-NodeEditor не включает самостоятельное сворачивание на неподвижной геометрии
+GraphEditor не включает самостоятельное сворачивание на неподвижной геометрии
 без layout-функции или внешнего обработчика изменения.
 
-[Смешанный граф](node-tree/tests/composition.fixture.tsx) показывает произвольный
+[Смешанный граф](view/tests/composition.fixture.tsx) показывает произвольный
 компонент внутри ContentNode рядом с DiagramNode, сохраняя единственный граф,
 Store параметра и соединение при изменении обеих частей.
+
+## Публичный просмотр и редактор
+
+Авторская реализация расположена в `view/index.tsx` и `editor/index.tsx`.
+Пакет `@nodes/tree` и имена его модели не переименованы.
+
+| Импорт | Договор |
+| --- | --- |
+| `@webxr/nodes/view` | GraphView, GraphScene, GraphNodeProps; общий показ нод/связей/рамок и навигация |
+| `@webxr/nodes/view/tree` | useNodeTreePresentation, createNodeTreeLayout и типы адаптации существующего Store |
+| `@webxr/nodes/editor` | GraphEditor; использует тот же просмотр, передаёт Parameter/Socket callbacks приложению |
+
+GraphView не импортирует GraphEditor, адаптер модели или набор параметризованных
+нод. Вариант `navigation="scroll"` не монтирует toolbar и сетку. `pan-zoom`
+предоставляет навигацию и Fit независимо от права менять данные.
+Конкретный компонент ноды передаётся в GraphScene вместе с данными и геометрией;
+GraphView монтирует его с ключом id и общими selected/hidden/onActivate.
+
+Для существующей модели `useNodeTreePresentation(props)` возвращает
+`{scene, pending, isCurrent}`. Эти значения передаются GraphView. Адаптер
+заимствует Store, сохраняет принятый snapshot/layout и адресные Parameter Stores.
+GraphEditor составляет этот адаптер и GraphView, не повторяя отображение.
+Unmount просмотра снимает его подписки; модель освобождает создавшее её приложение.
+
+Публичные `./node-tree` и `./node-editor` заменены на `./view` и `./editor`.
+Исторические маршруты примеров сохранены, но `subject.directory` привязан к
+физическим `view` и `editor`. Manifest не содержит копии этой иерархии.
+
+[Ограничение автоматического измерения](measurement-gap.md) содержит expected,
+actual и исполняемое воспроизведение. Готовая геометрия поддерживается; полноценный
+measured Mermaid пока не завершён. Перетаскивание нод и создание связей жестом
+не добавлялись этой миграцией.

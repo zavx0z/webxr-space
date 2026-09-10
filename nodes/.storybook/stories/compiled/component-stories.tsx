@@ -1,3 +1,4 @@
+import {ModelGraphView, modelGraphViewSource} from "./model-view.tsx"
 import {ContentNode} from "@nodes/node/content"
 import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"
 import type {Document} from "@zavx0z/dom"
@@ -5,8 +6,8 @@ import {createNodeTree, createNodeTreeExternalStore, type NodeJsonValue, type No
 import {layoutFixed} from "@nodes/layout/fixed"
 import {ParameterNode} from "@nodes/node/parameter"
 import {planProjectedNodeGeometry} from "@nodes/node/geometry"
-import {NodeTree, nodeSocketLayoutPortId, socketKey, type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"
-import {NodeEditor} from "@webxr/nodes/node-editor"
+import {nodeSocketLayoutPortId, socketKey, type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/view/tree"
+import {GraphEditor} from "@webxr/nodes/editor"
 import {NumberParameter} from "@nodes/parameters/number"
 import {Frame} from "@webxr/nodes/frame"
 import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"
@@ -212,7 +213,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
         onParameterChange={change}
         onSocketActivate={id => setLastAction(`Сокет ${id}`)}
       /> : null}
-      {props.component === "node-tree" ? <NodeTree
+      {props.component === "node-tree" ? <ModelGraphView
         store={store}
         layout={layout}
         label="Живая проекция"
@@ -224,7 +225,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
         onParameterChange={change}
         onSocketActivate={(nodeId, socketId) => setLastAction(`${nodeId}/${socketId}`)}
       /> : null}
-      {props.component === "node-editor" ? <NodeEditor
+      {props.component === "node-editor" ? <GraphEditor
         store={store}
         layout={graphLayout}
         title="Живой редактор нод"
@@ -530,7 +531,7 @@ function frameSource(variant: string): string {
 }
 
 function graphSource(component: string, variant: string): string {
-  const api = component === "node" ? "ParameterNode" : component === "node-tree" ? "NodeTree" : "NodeEditor"
+  const api = component === "node" ? "ParameterNode" : component === "node-tree" ? "ModelGraphView" : "GraphEditor"
   const authored = component === "node" && variant === "authored-content"
   const number = parameterFixture("number", "field")
   const message = parameterFixture("text", "field", "message")
@@ -541,9 +542,10 @@ function graphSource(component: string, variant: string): string {
     'import {createNodeTree, createNodeTreeExternalStore, Parameter, type NodeJsonValue, type NodeTreeSnapshot} from "@nodes/tree"',
     'import {planProjectedNodeGeometry} from "@nodes/node/geometry"',
     ...(component === "node" ? ['import {ParameterNode} from "@nodes/node/parameter"'] : []),
-    `import {${component === "node-tree" ? "NodeTree, " : ""}${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/node-tree"`,
-    ...(component === "node-editor" ? ['import {NodeEditor} from "@webxr/nodes/node-editor"'] : []),
+    `import {${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/view/tree"`,
+    ...(component === "node-editor" ? ['import {GraphEditor} from "@webxr/nodes/editor"'] : []),
     ...(component !== "node" ? ['import {layoutFixed} from "@nodes/layout/fixed"'] : []),
+    ...(component === "node-tree" ? [modelGraphViewSource] : []),
     ...(authored ? ['import {NumberParameter} from "@nodes/parameters/number"'] : []),
     'import {Button} from "@zavx0z/ui/buttons/button"',
     "",

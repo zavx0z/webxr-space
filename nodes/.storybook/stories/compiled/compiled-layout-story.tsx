@@ -1,12 +1,12 @@
 import {planProjectedNodeGeometry} from "@nodes/node/geometry"
-import {socketKey, type NodePresentationState} from "@webxr/nodes/node-tree"
+import {socketKey, type NodePresentationState} from "@webxr/nodes/view/tree"
 import type {NodeTreeSnapshot} from "@nodes/tree"
 import {DisplayElement} from "@zavx0z/dom/display"
 import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
 import {layoutFixed} from "@nodes/layout/fixed"
 import type {LayoutResult} from "@nodes/layout/types"
 import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"
-import {NodeEditor} from "@webxr/nodes/node-editor"
+import {GraphEditor} from "@webxr/nodes/editor"
 import {createRoot} from "@zavx0z/component"
 import type {
   Document as SemanticDocument,
@@ -65,7 +65,7 @@ export function createCompiledLayoutStory(
   }
   const staging = document.createElement("div")
   const root = createRoot(staging)
-  root.render(<NodeEditor
+  root.render(<GraphEditor
     store={store}
     layout={layoutForState}
     label={fixture.label}
@@ -79,7 +79,7 @@ export function createCompiledLayoutStory(
   if (owner === null) {
     root.unmount()
     tree.dispose()
-    throw new Error(`NodeEditor не создал корневой элемент: ${route}`)
+    throw new Error(`GraphEditor не создал корневой элемент: ${route}`)
   }
   staging.removeChild(owner)
   owner.setAttribute("data-story-component", "node-editor-layout")
@@ -169,14 +169,14 @@ function sourceFor(fixture: LayoutStoryFixture): string {
   return [
     `import {${fixture.policy === "fixed" ? "layoutFixed" : "layoutAdaptiveWithDiagnostics"}} from "@nodes/layout/${fixture.policy}"`,
     'import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"',
-    'import {NodeEditor} from "@webxr/nodes/node-editor"',
+    'import {GraphEditor} from "@webxr/nodes/editor"',
     'import {createRoot} from "@zavx0z/component"',
     "",
     "const tree = createNodeTree(definition)",
     "const store = createNodeTreeExternalStore(tree)",
     compute,
     "",
-    "createRoot(container).render(<NodeEditor",
+    "createRoot(container).render(<GraphEditor",
     "  store={store}",
     "  layout={layout}",
     `  title=${JSON.stringify(fixture.label)}`,

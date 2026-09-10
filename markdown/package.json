@@ -10,7 +10,7 @@
   "exports": {
     ".": "./markdown/src/markdown.tsx",
     "./parser": "./parser/src/parser.ts",
-    "./mermaid": "./mermaid/src/mermaid.tsx"
+    "./mermaid": "./mermaid/index.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

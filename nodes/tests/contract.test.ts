@@ -6,16 +6,17 @@ const root = resolve(import.meta.dir, "../..")
 const packageRoot = resolve(root, "nodes")
 
 const publicOwners = Object.freeze({
-  "./node-tree": ["./node-tree/src/node-tree.tsx", "NodeTree"],
-  "./node-editor": ["./node-editor/src/node-editor.tsx", "NodeEditor"],
-  "./frame": ["./frame/src/frame.tsx", "Frame"],
-  "./link": ["./link/src/link.tsx", "Link"],
+  "./view": ["./view/index.tsx", "GraphView"],
+  "./editor": ["./editor/index.tsx", "GraphEditor"],
+  "./frame": ["./frame/index.tsx", "Frame"],
+  "./link": ["./link/index.tsx", "Link"],
 } as const)
 
 test("[NODES-001] каждый public TSX является compilable natural owner", async () => {
   const packageJson = await readPackageJson(packageRoot)
   expect(packageJson.exports["."]).toBe(undefined)
-  expect(Object.keys(packageJson.exports).filter(key => key !== ".")).toEqual(Object.keys(publicOwners))
+  expect(Object.keys(packageJson.exports).filter(key => key !== "./view/tree")).toEqual(Object.keys(publicOwners))
+  expect(packageJson.exports["./view/tree"]).toBe("./view/tree.ts")
 
   const compiler = new JsxCompilerSession({
     cwd: root,
@@ -71,9 +72,9 @@ test("[NODES-003] Nodes не создаёт platform owners", async () => {
   }
 })
 
-test("[NODES-004] aggregate NodeTree consumes only the supplied nodetree Store", async () => {
-  const nodeTreeSource = await Bun.file(resolve(packageRoot, "node-tree/src/node-tree.tsx")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/contracts.ts")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/view.ts")).text()
-  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/src/parameter.tsx")).text()
+test("[NODES-004] адаптер GraphView читает исходный Store без второй модели", async () => {
+  const nodeTreeSource = await Bun.file(resolve(packageRoot, "view/tree.ts")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/contracts.ts")).text() + await Bun.file(resolve(packageRoot, "shared/node-tree/view.ts")).text()
+  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/index.tsx")).text()
   const propsStart = nodeTreeSource.indexOf("export type NodeTreeProps")
   const propsEnd = nodeTreeSource.indexOf("\n}>", propsStart)
   const propsContract = nodeTreeSource.slice(propsStart, propsEnd)
@@ -115,7 +116,7 @@ test("[NODES-005] domain imports resolve only through public package contracts",
 })
 
 test("[NODES-006] projected Parameter render и геометрия используют один resolver", async () => {
-  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/src/parameter.tsx")).text()
+  const parameterSource = await Bun.file(resolve(packageRoot, "parameters/shared/parameter/index.tsx")).text()
   const nodeSource = await Bun.file(resolve(packageRoot, "node/geometry/src/geometry.ts")).text()
 
   expect(parameterSource).toContain("const resolved = resolveProjectedParameterPresentation(snapshot)")

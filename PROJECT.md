@@ -199,7 +199,7 @@ Nodes.
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
 | `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` |
 | `ui` | `@zavx0z/ui` | Универсальные UI-компоненты, тема и иконки |
-| `nodes` | `@webxr/nodes` | Композиция графа: NodeTree, NodeEditor, Frame и Link |
+| `nodes` | `@webxr/nodes` | Композиция графа: GraphView, GraphEditor, Frame и Link |
 | `nodes/tree` | `@nodes/tree` | Живая модель `NodeTree`, хранилища Parameter, снимки и сохранение |
 | `nodes/layout` | `@nodes/layout` | Алгоритмы расположения нод и Worker |
 | `nodes/parameters` | `@nodes/parameters` | Представления параметров и проекция внешнего Parameter Store |
@@ -519,3 +519,13 @@ Markdown распознаёт fenced Mermaid flowchart и загружает о�
 по требованию. Владелец композиции — `@webxr/markdown`; он использует DiagramNode,
 Link и Layout, не создавая отдельный Canvas/Document и не преобразуя диаграмму
 в SVG-картинку. Mermaid-поддержка не переносится в UI.
+
+
+### Общий просмотр графа
+
+`graph-view-composition`: визуальные NodeTree/NodeEditor заменены на
+GraphView/GraphEditor в `nodes/view/index.tsx` и `nodes/editor/index.tsx`.
+Модель @nodes/tree остаётся прежней. GraphEditor использует общий GraphView;
+Mermaid использует тот же просмотр без редакторского набора нод.
+Существующие числовые планы сохранены. Автоматическое измерение до показа
+ограничено публичной локальной геометрией: [reproduction](nodes/measurement-gap.md).

@@ -16,7 +16,7 @@ const packages = Object.freeze([
   ["browser", "@zavx0z/browser", "Canvas, resize, input, RAF и общий цикл кадров"],
   ["space", "@zavx0z/space", "Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material"],
   ["ui", "@zavx0z/ui", "Универсальные UI-компоненты, тема и иконки"],
-  ["nodes", "@webxr/nodes", "Визуальные NodeTree, NodeEditor, Frame, Node, Parameter, Socket и Link"],
+  ["nodes", "@webxr/nodes", "Общее представление GraphView, GraphEditor, Frame и Link"],
   ["nodes/tree", "@nodes/tree", "Живая модель NodeTree, Parameter stores, снимки и сохранение"],
   ["nodes/layout", "@nodes/layout", "Алгоритмы расположения нод и Worker"],
   ["nodes/parameters", "@nodes/parameters", "Представления параметров нод и проекция Parameter Store"],

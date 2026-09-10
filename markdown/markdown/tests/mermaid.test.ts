@@ -11,7 +11,7 @@ import type {MarkdownProps} from "../src/markdown.tsx"
 const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["markdown", "nodes", "ui"].map(path => resolve(root, path))}))
 const {Markdown} = await import("../src/markdown.tsx")
-const {layoutMermaidGraph} = await import("../../mermaid/src/view/src/view.tsx")
+const {layoutMermaidGraph} = await import("../../mermaid/src/layout.ts")
 const {projectLinkArrowheads} = await import("@webxr/nodes/link")
 
 async function settled(owner: Element) {
