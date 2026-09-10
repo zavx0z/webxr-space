@@ -45,25 +45,40 @@ pixel-perfect. Source/provenance находятся в tests/references; synthet
 
 ## Storybook MCP
 
-`storybook_check(live:false, scope:@nodes/layout)` собрал e7d7bbf320bd38f93ec009fc.
-Exact search подтвердил physical directory algorithms/top-down и contour variant.
-`storybook_open(algorithms/top-down/contour)` вернул ready/presented frame3;
-inspect показал diagnostics/consoleErrors=[], nativePage hidden.
-Это проверка candidate, не first-visible-frame evidence.
+Первоначально candidate Layout e7d7bbf320bd38f93ec009fc открылся ready/presented,
+но activation завершилась `The connection was closed.` У Markdown ca62bcf...
+open завершился timeout, прежний view handle стал unknown. Storybook owner
+подтвердил и исправил atomic/scoped inventory bug отдельным commit3d1b0f6.
 
-`storybook_check(live:true)` завершился TimeoutError. `storybook_wait(active)`
-вернул failed activation: `The connection was closed.` Старый active
-136b79ac39dc657bc30066c3 сохранён. Успешное опубликование не заявлено.
+После одного coordinated ensure сервер получил instance
+4b44889f-4b99-48e5-bd1d-a5875dd96acf. Старый загруженный MCP client сохраняет
+прежний status(includeViews:true), поэтому даже scope Layout вернул ошибку
+про @renderer/html. Повторных ensure/globalinventory loops не выполнялось.
+Owner source triage показал, что check(scope,live) передаёт scope новому daemon
+корректно; дальнейший status использовал includeViews:false.
 
-`storybook_check(live:false, scope:@webxr/markdown)` успешно собрал
-ca62bcf70c3421031811444d. Exact open route
-components/data/markdown/mermaid/flowchart завершился `The operation timed out.`
-Одна read-only проверка ранее выданного handle вернула `Unknown Storybook view`.
-Глобальный status с includeViews также завершался TimeoutError.
+**Layout live gate закрыт.** Candidate632061498367853997c4e418:
+- exact open algorithms/top-down/contour:reused=true, ready/presented, frame3;
+- inspect:diagnostics=[], consoleErrors=[], nativePage hidden;
+- один check(live:true):success, applied=true;
+- wait(active):success, currentRevision632061498367853997c4e418.
 
-На этом новые open/live/ensure приостановлены по координации с Storybook owner.
-Никакого browser/CDP/REST/reload обхода, runtime patch или подмены package нет.
+Physical binding подтверждён search: directory algorithms/top-down → subject
+TopDown → contour variant. Это готовность опубликованной числовой истории;
+скрытая страница и capture не выдаются за first-visible-frame evidence.
+
+**Markdown visual gate остаётся заблокирован.** На том же сервере scoped
+nonlivecheck успешно собрал b2dc04da17f7bf51e05a0787 без diagnostics.
+Единственный exact open components/data/markdown/mermaid/flowchart вернул:
+`Storybook package target creation is indeterminate: @webxr/markdown`.
+ViewId и подтверждения создания tool не выдал. Повторное создание вслепую
+не выполнялось. Ошибка передана координатору и Storybook owner; отдельный
+reservation gap был найден ими до этой попытки, но единственная live причина
+не объявлена доказанной без дополнительного owner evidence.
+
 Не выполнены: новый7-node interact/capture, сравнение итогового изображения,
-успешный live apply и active wait для обоих packages. Для возобновления нужен
-исправный lifecycle/transport MCP; после него — точные routes и кнопка
-«Граф из обсуждения». Числовой результат не подменяет эти оставшиеся gates.
+успешный live apply и active wait именно Markdown. После исправления target
+lifecycle требуется этот exactroute и кнопка «Граф из обсуждения».
+Числовой результат и успешный Layout active не подменяют эти оставшиеся gates.
+Никаких browser/CDP/REST/reload обходов или Storybook/Renderer edits в TopDown
+задаче нет. Изменения источников под transport error не вносились.
