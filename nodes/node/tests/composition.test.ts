@@ -2,10 +2,9 @@ import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createDocument, MouseEvent, type Element, type HTMLInputElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@renderer/html"
-import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
+import "./compiler.ts"
 
 const root = resolve(import.meta.dir, "../../..")
-Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: [resolve(root, "nodes"), resolve(root, "ui")]}))
 const {createNodeStory} = await import("../.storybook/stories/nodes.tsx")
 const {planProjectedNodeGeometry} = await import("@nodes/node/geometry")
 const theme = await Bun.file(resolve(root, "ui/themes/theme.css")).text()

@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test"
-import {resolve} from "node:path"
+import {dirname, resolve} from "node:path"
 import {JsxCompilerSession} from "@zavx0z/template/compiler"
 
 const root = resolve(import.meta.dir, "../..")
@@ -135,11 +135,24 @@ async function readPackageJson(path: string): Promise<Readonly<{
 }
 
 async function productionSource(): Promise<string> {
+  const visited = new Set<string>()
   const sources: string[] = []
-  for await (const relativePath of new Bun.Glob("**/*.{ts,tsx}").scan({cwd: packageRoot})) {
-    if (relativePath.split("/").some(part => ["tests", ".storybook", "node_modules", "tree", "layout", "parameters", "sockets"].includes(part))) continue
-    sources.push(await Bun.file(resolve(packageRoot, relativePath)).text())
+  const visit = async (file: string): Promise<void> => {
+    if (visited.has(file)) return
+    visited.add(file)
+    const source = await Bun.file(file).text()
+    sources.push(source)
+    const imports = new Bun.Transpiler({loader: file.endsWith(".tsx") ? "tsx" : "ts"}).scan(source).imports
+    for (const entry of imports) {
+      if (!entry.path.startsWith(".") && !entry.path.startsWith("@webxr/nodes/") && !/^@nodes\/(node|parameters|sockets)(?:\/|$)/u.test(entry.path)) continue
+      const target = Bun.resolveSync(entry.path, dirname(file))
+      if (target.startsWith(`${packageRoot}/`) && /\.[jt]sx?$/u.test(target)) await visit(target)
+    }
   }
+  // Проверяется исполняемое замыкание public exports: тестовые WebGPU fixtures
+  // не являются production лишь из-за расположения внутри каталога компонента.
+  const manifest = await readPackageJson(packageRoot)
+  for (const target of Object.values(manifest.exports)) await visit(resolve(packageRoot, target))
   return sources.join("\n")
 }
 

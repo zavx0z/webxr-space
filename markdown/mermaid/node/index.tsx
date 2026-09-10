@@ -10,6 +10,8 @@ export function MermaidNode(props: GraphNodeProps) {
     description={node.label}
     shape={node.shape}
     rect={props.rect}
+    intrinsic={props.intrinsic}
+    elementRef={props.elementRef}
     selected={props.selected}
     hidden={props.hidden}
     onActivate={props.onActivate}

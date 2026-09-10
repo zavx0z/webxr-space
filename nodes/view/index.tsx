@@ -3,28 +3,58 @@
 
 @packageDocumentation
 */
-import {useMemo, useRef, useState} from "@zavx0z/component"
-import {Element} from "@zavx0z/dom"
+import {useMemo, useRef, useState, useLayoutEffect, useSyncExternalStore} from "@zavx0z/component"
 import {GraphControls} from "../shared/graph/controls/index.tsx"
 import {GridPoint} from "../shared/graph/grid-point/index.tsx"
 import {Frame} from "@webxr/nodes/frame"
 import {Link, projectLinkRoute} from "@webxr/nodes/link"
 import {MemoGraphNodeContent} from "../shared/graph/node/index.tsx"
 import {clamp, finite, positive, fitGraph, intersects, IDENTITY_TRANSFORM} from "../shared/graph/navigation.ts"
-import type {GraphSelection, GraphTransform, GraphViewProps} from "../shared/graph/contracts.ts"
+import type {GraphScene, GraphSelection, GraphTransform, GraphViewProps} from "../shared/graph/contracts.ts"
+import {createMeasuredGraph, type MeasuredGraphState} from "../shared/graph/measurement.ts"
 
 export type {GraphScene, GraphNode, GraphNodeProps, GraphFrame, GraphLink, GraphRect, GraphSelection, GraphTransform, GraphViewport, GraphViewProps} from "../shared/graph/contracts.ts"
+export type {GraphInput, GraphInputNode, GraphMeasurement, GraphMeasuredLayout, GraphLayoutComputer} from "../shared/graph/contracts.ts"
+
+const idleMeasurement: MeasuredGraphState = Object.freeze({scene: null, pending: false, error: null, generation: 0})
+const idleStore = {getSnapshot: () => idleMeasurement, subscribe: (_listener: () => void) => () => {}}
 
 /**
 Показывает принятую числовую сцену, не создавая модель или редактор.
 
 @property scene - Согласованные ноды, рамки, маршруты и границы в CSS-координатах графа.
+@property [input] - Ноды без геометрии; их представления сохраняют intrinsic CSS и передают elementRef.
+@property [layout] - Политика размещения по настоящим измерениям, синхронная либо асинхронная.
 @property [pending] - Сохраняет прежние элементы скрытыми и блокирует устаревший ввод.
 @property [navigation] - Прокрутка, pan/zoom или внешнее управление преобразованием.
 @property [isCurrent] - Проверяет актуальность источника перед каждым действием.
 @property [selection] - Управляемое выделение; без него просмотр хранит только собственный выбор.
 */
 export function GraphView(props: GraphViewProps) {
+  const retainedScene = useRef<GraphScene | null>(null)
+  if (props.input !== undefined && props.scene != null) throw new Error("GraphView принимает input/layout либо готовую scene")
+  const measurement = useMemo(() => {
+    if (props.input === undefined) return null
+    if (props.layout === undefined) throw new Error("Измеряемому GraphView необходим layout")
+    return createMeasuredGraph(props.input, props.layout)
+  }, [props.input, props.layout, props.width, props.height])
+  const measurementStore = measurement ?? idleStore
+  const measured = useSyncExternalStore(measurementStore.subscribe, measurementStore.getSnapshot)
+  const elements = useRef(new Map<string, HTMLElement>())
+  const references = useRef(new Map<string, (element: HTMLElement | null) => void>())
+  const reference = (id: string) => {
+    let callback = references.current.get(id)
+    if (callback === undefined) {
+      callback = element => {
+        if (element === null) elements.current.delete(id)
+        else elements.current.set(id, element)
+      }
+      references.current.set(id, callback)
+    }
+    return callback
+  }
+  useLayoutEffect(() => measurement?.connect(elements.current), [measurement])
+  if (measured.error !== null) throw measured.error
   const navigation = props.navigation ?? "none"
   const width = positive(props.width ?? 760, "GraphView width")
   const height = positive(props.height ?? 480, "GraphView height")
@@ -35,7 +65,7 @@ export function GraphView(props: GraphViewProps) {
   if (maxScale < minScale) throw new RangeError("GraphView maxScale must be at least minScale")
   const padding = finite(props.fitPadding ?? 24, "GraphView fitPadding")
   if (padding < 0) throw new RangeError("GraphView fitPadding must be non-negative")
-  const scene = props.scene
+  const scene = measurement === null ? props.scene ?? null : measured.scene ?? retainedScene.current
   const grid = useMemo(() => {
     if (props.gridSize === undefined) return []
     const size = positive(props.gridSize, "GraphView gridSize")
@@ -50,10 +80,23 @@ export function GraphView(props: GraphViewProps) {
   const initial = scene === null || navigation !== "pan-zoom" ? IDENTITY_TRANSFORM
     : fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale)
   const [ownedTransform, setOwnedTransform] = useState(initial)
+  const initiallyFitted = useRef(scene !== null)
   const [ownedSelection, setOwnedSelection] = useState<GraphSelection>(null)
   const transform = props.transform ?? ownedTransform
   const selection = props.selection === undefined ? ownedSelection : props.selection
-  const pending = props.pending === true || scene === null
+  const pending = props.pending === true || scene === null || measurement !== null && measured.pending
+  useLayoutEffect(() => {
+    if (!pending && scene !== null) {
+      retainedScene.current = scene
+      if (!initiallyFitted.current && navigation === "pan-zoom" && props.transform === undefined) {
+        initiallyFitted.current = true
+        setOwnedTransform(fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale))
+      }
+    }
+  }, [scene, pending, navigation, props.transform, width, contentHeight, padding, minScale, maxScale])
+  useLayoutEffect(() => {
+    props.onLayoutStateChange?.({pending, error: measured.error})
+  }, [pending, measured.error, props.onLayoutStateChange])
   const token = useMemo(() => ({}), [scene, pending, props.isCurrent, props.interactive])
   const active = useRef(token)
   active.current = token
@@ -67,9 +110,10 @@ export function GraphView(props: GraphViewProps) {
     height: contentHeight / transform.scale,
     overscan: (props.overscan ?? 160) / transform.scale,
   } : undefined)
-  const nodes = scene?.nodes.filter(node => props.materializeCulled === true || intersects(viewport, node.rect)) ?? []
-  const frames = scene?.frames.filter(frame => props.materializeCulled === true || intersects(viewport, frame.rect)) ?? []
-  const links = scene?.links.filter(link => props.materializeCulled === true || intersects(viewport, projectLinkRoute(link.route).bounds)) ?? []
+  const nodes = measurement !== null ? props.input!.nodes.map(node => measured.scene?.nodes.find(entry => entry.id === node.id) ?? {...node, rect: scene?.nodes.find(entry => entry.id === node.id)?.rect})
+    : scene?.nodes.filter(node => props.materializeCulled === true || intersects(viewport, node.rect)) ?? []
+  const frames = scene?.frames.filter(frame => measurement !== null || props.materializeCulled === true || intersects(viewport, frame.rect)) ?? []
+  const links = scene?.links.filter(link => measurement !== null || props.materializeCulled === true || intersects(viewport, projectLinkRoute(link.route).bounds)) ?? []
   const publishTransform = (next: GraphTransform, event: Event) => {
     if (!current()) return
     const value = Object.freeze({
@@ -90,14 +134,14 @@ export function GraphView(props: GraphViewProps) {
   dispatch.current = {scene, select, current}
   const activations = useMemo(() => {
     const entries = [
-      ...(scene?.nodes.map(entry => ({kind: "node" as const, id: entry.id})) ?? []),
+      ...((props.input?.nodes ?? scene?.nodes)?.map(entry => ({kind: "node" as const, id: entry.id})) ?? []),
       ...(scene?.frames.map(entry => ({kind: "frame" as const, id: entry.id})) ?? []),
       ...(scene?.links.map(entry => ({kind: "link" as const, id: entry.id})) ?? []),
     ]
     return new Map(entries.map(entry => [`${entry.kind}/${entry.id}`, (event: Event) => {
       if (dispatch.current.scene === scene && dispatch.current.current()) dispatch.current.select(entry, event)
     }]))
-  }, [scene])
+  }, [scene, props.input])
   const fit = (event: Event) => {
     if (scene !== null) publishTransform(fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale), event)
   }
@@ -114,8 +158,10 @@ export function GraphView(props: GraphViewProps) {
     }
   }
   const pointerDown = (event: PointerEvent) => {
-    if (navigation !== "pan-zoom" || !current() || !(event.target instanceof Element)) return
-    if (event.target.closest("[data-node-id], [data-link-id], [data-frame-id]")) return
+    if (navigation !== "pan-zoom" || !current()) return
+    const target = event.target
+    if (target === null || !("closest" in target) || typeof target.closest !== "function") return
+    if (target.closest("[data-node-id]") || target.closest("[data-link-id]") || target.closest("[data-frame-id]")) return
     pointers.current.set(event.pointerId, {x: event.clientX, y: event.clientY})
   }
   const pointerMove = (event: PointerEvent) => {
@@ -147,6 +193,7 @@ export function GraphView(props: GraphViewProps) {
   return <section
     aria-label={props.label ?? "Просмотр графа"}
     data-graph-view=""
+    data-layout-generation={measurement === null ? undefined : measured.generation}
     data-layout-pending={pending ? "true" : undefined}
     aria-busy={String(pending)}
     data-node-count={nodes.length}
@@ -204,16 +251,22 @@ export function GraphView(props: GraphViewProps) {
     >
       <div
         data-graph-scene=""
-        hidden={pending}
+        hidden={pending && measurement === null}
+        data-measuring={pending && measurement !== null ? "true" : undefined}
         style={css`
           position: relative;
           box-sizing: border-box;
-          width: ${navigation === "scroll" ? `${Math.max(1, (scene?.bounds.x ?? 0) + (scene?.bounds.width ?? 0))}px` : "100%"};
-          height: ${navigation === "scroll" ? `${Math.max(1, (scene?.bounds.y ?? 0) + (scene?.bounds.height ?? 0))}px` : "100%"};
+          width: ${navigation === "scroll" && scene !== null && measurement === null ? `${Math.max(1, scene.bounds.x + scene.bounds.width)}px` : "100%"};
+          height: ${navigation === "scroll" && scene !== null ? `${Math.max(1, scene.bounds.y + scene.bounds.height)}px` : "100%"};
           transform: translate(${transform.x}px, ${transform.y}px) scale(${transform.scale});
           transform-origin: 0 0;
 
           &[hidden] {
+            visibility: hidden;
+            pointer-events: none;
+          }
+
+          &[data-measuring="true"] {
             visibility: hidden;
             pointer-events: none;
           }
@@ -254,7 +307,9 @@ export function GraphView(props: GraphViewProps) {
           key={node.id}
           node={node}
           selected={selection?.kind === "node" && selection.id === node.id}
-          hidden={node.hidden === true || !intersects(viewport, node.rect)}
+          hidden={measurement === null && (node.hidden === true || node.rect !== undefined && !intersects(viewport, node.rect))}
+          intrinsic={measurement !== null}
+          elementRef={measurement === null ? undefined : reference(node.id)}
           onActivate={activations.get(`node/${node.id}`)!}
         />)}
       </div>

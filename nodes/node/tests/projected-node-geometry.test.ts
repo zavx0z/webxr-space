@@ -1,20 +1,13 @@
 import {expect, test} from "bun:test"
-import {resolve} from "node:path"
 import type {
   NodeJsonValue,
   ParameterSnapshot,
   Socket,
 } from "@nodes/tree"
-import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
+import "./compiler.ts"
 import type {ProjectedNodeSnapshot} from "@nodes/node/geometry"
 
-const root = resolve(import.meta.dir, "../../..")
 
-Bun.plugin(createTemplateJsxBunPlugin({
-  cwd: root,
-  persistent: true,
-  sourceRoots: [resolve(root, "nodes"), resolve(root, "ui")],
-}))
 
 const [
   {planProjectedNodeGeometry},

@@ -13,19 +13,18 @@ import {nodePreview} from "../node-tree/view.ts"
 import type {VisibleNode, NodeTreeView, NodeTreeProps, NodeTreeActions} from "../node-tree/contracts.ts"
 
 export type ModelNodeData = Readonly<{
-  entry: VisibleNode
-  view: NodeTreeView
-  treeProps: NodeTreeProps
+  node: VisibleNode["node"]
+  connectedSocketKeys: ReadonlySet<string>
+  resolvedSocketSides?: ReadonlyMap<string, "left" | "right"> | undefined
+  treeProps: Omit<NodeTreeProps, "layout">
   actions: NodeTreeActions
 }>
 
 export function ModelNode(input: GraphNodeProps) {
   const projection = input.data as ModelNodeData
-  const entry = {...projection.entry, culled: input.hidden}
-  const view = projection.view
   const actions = {...projection.actions, selectNode: (_id: string) => input.onActivate}
-  const props: NodeTreeProps = {...projection.treeProps, selection: input.selected ? {kind: "node", id: input.id} : null}
-  const node = entry.node
+  const props: Omit<NodeTreeProps, "layout"> = {...projection.treeProps, selection: input.selected ? {kind: "node", id: input.id} : null}
+  const node = projection.node
   const collapsed = props.collapsedNodeIds?.has(node.id) ?? metadataBoolean(node.metadata, "collapsed", false)
   const preview = nodePreview(node, props.previewNodeIds)
   const kind = props.nodeKinds?.get(node.id) ?? (preview === undefined ? "parameter" : "content")
@@ -35,11 +34,11 @@ export function ModelNode(input: GraphNodeProps) {
     title: metadataString(node.metadata, "description", "") || undefined,
     category: metadataString(node.metadata, "category", "") || undefined,
     headerColor: metadataString(node.metadata, "headerColor", "") || undefined,
-      rect: entry.rect, selected: props.selection?.kind === "node" && props.selection.id === node.id,
-    hidden: entry.culled, collapsed, parameters: node.parameters, sockets: node.sockets,
+      rect: input.rect, intrinsic: input.intrinsic, elementRef: input.elementRef, selected: props.selection?.kind === "node" && props.selection.id === node.id,
+    hidden: input.hidden, collapsed, parameters: node.parameters, sockets: node.sockets,
     snapshot: node, shape: props.nodeShapes?.get(node.id),
-    parameterStore: actions.parameterStore(node.id), connectedSocketKeys: view.connectedSocketKeys,
-    resolvedSocketSides: view.geometry.portSides,
+    parameterStore: actions.parameterStore(node.id), connectedSocketKeys: projection.connectedSocketKeys,
+    resolvedSocketSides: projection.resolvedSocketSides,
     contentVisible: props.previewNodeIds?.has(node.id) ?? preview?.enabled ?? true,
     onActivate: actions.selectNode(node.id),
       onCollapseChange: props.onNodeCollapseChange === undefined ? undefined : actions.collapseNode(node.id),
@@ -55,15 +54,17 @@ export function ModelNode(input: GraphNodeProps) {
       title={metadataString(node.metadata, "description", "") || undefined}
       category={metadataString(node.metadata, "category", "") || undefined}
       headerColor={metadataString(node.metadata, "headerColor", "") || undefined}
-      rect={entry.rect}
+      rect={input.rect}
+      intrinsic={input.intrinsic}
+      elementRef={input.elementRef}
       selected={props.selection?.kind === "node" && props.selection.id === node.id}
-      hidden={entry.culled}
+      hidden={input.hidden}
       collapsed={collapsed}
       parameters={node.parameters}
       sockets={node.sockets}
       parameterStore={actions.parameterStore(node.id)}
-      connectedSocketKeys={view.connectedSocketKeys}
-      resolvedSocketSides={view.geometry.portSides}
+      connectedSocketKeys={projection.connectedSocketKeys}
+      resolvedSocketSides={projection.resolvedSocketSides}
       onActivate={actions.selectNode(node.id)}
       onCollapseChange={props.onNodeCollapseChange === undefined ? undefined : actions.collapseNode(node.id)}
       onParameterInput={actions.parameterInput}
@@ -77,15 +78,17 @@ export function ModelNode(input: GraphNodeProps) {
       title={metadataString(node.metadata, "description", "") || undefined}
       category={metadataString(node.metadata, "category", "") || undefined}
       headerColor={metadataString(node.metadata, "headerColor", "") || undefined}
-      rect={entry.rect}
+      rect={input.rect}
+      intrinsic={input.intrinsic}
+      elementRef={input.elementRef}
       selected={props.selection?.kind === "node" && props.selection.id === node.id}
-      hidden={entry.culled}
+      hidden={input.hidden}
       collapsed={collapsed}
       parameters={node.parameters}
       sockets={node.sockets}
       parameterStore={actions.parameterStore(node.id)}
-      connectedSocketKeys={view.connectedSocketKeys}
-      resolvedSocketSides={view.geometry.portSides}
+      connectedSocketKeys={projection.connectedSocketKeys}
+      resolvedSocketSides={projection.resolvedSocketSides}
       onActivate={actions.selectNode(node.id)}
       onCollapseChange={props.onNodeCollapseChange === undefined ? undefined : actions.collapseNode(node.id)}
       onParameterInput={actions.parameterInput}
@@ -100,10 +103,12 @@ export function ModelNode(input: GraphNodeProps) {
     {custom === undefined && kind === "diagram" ? <DiagramNode
       id={node.id}
       description={metadataString(node.metadata, "description", metadataString(node.metadata, "label", node.id))}
-      rect={entry.rect}
+      rect={input.rect}
+      intrinsic={input.intrinsic}
+      elementRef={input.elementRef}
       shape={props.nodeShapes?.get(node.id)}
       selected={props.selection?.kind === "node" && props.selection.id === node.id}
-      hidden={entry.culled}
+      hidden={input.hidden}
       onActivate={actions.selectNode(node.id)}
     /> : null}
     {custom !== undefined ? <CustomNodeView>

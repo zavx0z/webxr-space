@@ -7,11 +7,14 @@ import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {Typography} from "@zavx0z/ui/typography"
 import type {NodeRect} from "../geometry/src/geometry.ts"
 import type {NodeShape} from "../shared/contracts.ts"
+import type {CallbackRef} from "@zavx0z/template/jsx-runtime"
 
 export type DiagramNodeProps = Readonly<{
   id: string
   description: string
-  rect: NodeRect
+  rect?: NodeRect | undefined
+  intrinsic?: boolean | undefined
+  elementRef?: CallbackRef<HTMLElement> | undefined
   shape?: NodeShape | undefined
   selected?: boolean | undefined
   hidden?: boolean | undefined
@@ -24,6 +27,7 @@ export type DiagramNodeProps = Readonly<{
 export function DiagramNode(props: DiagramNodeProps) {
   const round = props.shape === "oval" || props.shape === "circle"
   return <article
+    ref={props.elementRef}
     role="option"
     tabIndex={0}
     aria-label={props.description}
@@ -36,10 +40,13 @@ export function DiagramNode(props: DiagramNodeProps) {
     style={css`
       box-sizing: border-box;
       position: absolute;
-      left: ${props.rect.x}px;
-      top: ${props.rect.y}px;
-      width: ${props.rect.width}px;
-      height: ${props.shape === "circle" ? props.rect.width : props.rect.height}px;
+      display: flex;
+      flex-direction: column;
+      left: ${props.rect?.x ?? 0}px;
+      top: ${props.rect?.y ?? 0}px;
+      width: ${props.intrinsic || props.rect === undefined ? "auto" : `${props.rect.width}px`};
+      height: ${props.rect === undefined || props.intrinsic && props.shape !== "circle" ? "auto" : `${props.shape === "circle" ? props.rect.width : props.rect.height}px`};
+      min-width: ${props.intrinsic && props.shape === "circle" ? "3em" : "0"};
       z-index: 3;
 
       &[hidden] {
@@ -56,8 +63,9 @@ export function DiagramNode(props: DiagramNodeProps) {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
+        flex: 0 0 auto;
+        width: ${props.intrinsic ? "auto" : "100%"};
+        height: ${props.intrinsic && props.shape !== "circle" ? "auto" : "100%"};
         border-radius: ${round ? "50%" : "4px"};
       `}
     >
@@ -65,7 +73,7 @@ export function DiagramNode(props: DiagramNodeProps) {
         text={props.description}
         style={css`
           display: block;
-          width: 100%;
+          width: ${props.intrinsic ? "auto" : "100%"};
           text-align: center;
           white-space: normal;
         `}

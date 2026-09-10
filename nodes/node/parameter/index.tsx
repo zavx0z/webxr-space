@@ -14,10 +14,11 @@ export type {ParameterNodeProps} from "../shared/contracts.ts"
 
 /** Составляет ноду из Pane и готовых параметров. */
 export function ParameterNode(props: ParameterNodeProps) {
-  const geometry = planProjectedNodeGeometry({id: props.id, parameters: props.parameters ?? [], sockets: props.sockets ?? []}, props.rect.width,
+  const geometry = planProjectedNodeGeometry({id: props.id, parameters: props.parameters ?? [], sockets: props.sockets ?? []}, props.rect?.width,
     props.connectedSocketKeys, props.resolvedSocketSides, {collapsed: props.collapsed})
   const headerHeight = props.collapsed ? geometry.height - 2 * NODE_BORDER_WIDTH : NODE_HEADER_HEIGHT
   return <article
+    ref={props.elementRef}
     role={props.embedded ? "group" : "option"}
     tabIndex={props.embedded ? -1 : 0}
     aria-label={props.label}
@@ -31,10 +32,12 @@ export function ParameterNode(props: ParameterNodeProps) {
     style={css`
       box-sizing: border-box;
       position: ${props.embedded ? "relative" : "absolute"};
-      left: ${props.embedded ? 0 : props.rect.x}px;
-      top: ${props.embedded ? 0 : props.rect.y}px;
-      width: ${props.rect.width}px;
-      height: ${props.collapsed ? geometry.height : props.rect.height}px;
+      display: flex;
+      flex-direction: column;
+      left: ${props.embedded ? 0 : props.rect?.x ?? 0}px;
+      top: ${props.embedded ? 0 : props.rect?.y ?? 0}px;
+      width: ${props.intrinsic || props.rect === undefined ? "auto" : `${props.rect.width}px`};
+      height: ${props.collapsed ? `${geometry.height}px` : props.intrinsic || props.rect === undefined ? "auto" : `${props.rect.height}px`};
       min-width: ${NODE_MINIMUM_WIDTH}px;
       min-height: 0;
       z-index: 3;
@@ -98,8 +101,8 @@ export function ParameterNode(props: ParameterNodeProps) {
       style={css`
         position: relative;
         box-sizing: border-box;
-        width: 100%;
-        height: 100%;
+        width: ${props.intrinsic ? "auto" : "100%"};
+        height: ${props.intrinsic ? "auto" : "100%"};
         padding: 0;
         overflow: visible;
         border-radius: ${props.collapsed ? headerHeight / 2 : 6}px;
@@ -111,6 +114,7 @@ export function ParameterNode(props: ParameterNodeProps) {
         frameId={props.frameId}
         label={props.label}
         rect={props.rect}
+        intrinsic={props.intrinsic}
         title={props.title}
         category={props.category}
         headerColor={props.headerColor}

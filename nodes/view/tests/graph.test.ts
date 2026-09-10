@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test"
 import {dirname, resolve} from "node:path"
-import {createDocument, MouseEvent, WheelEvent} from "@zavx0z/dom"
+import {createDocument, MouseEvent, PointerEvent, WheelEvent} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/component"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
@@ -24,6 +24,8 @@ test("[GRAPH-VIEW-001] просмотр самостоятельно выпол�
     component.render(template, props)
     const node = owner.querySelector('[data-node-id="counter"]')!
     const button = node.querySelector("button")!
+    expect(() => button.dispatchEvent(new PointerEvent("pointerdown", {pointerId: 1, bubbles: true}))).not.toThrow()
+    button.dispatchEvent(new PointerEvent("pointerup", {pointerId: 1, bubbles: true}))
     button.dispatchEvent(new MouseEvent("click", {bubbles: true}))
     await Promise.resolve()
     expect(button.textContent).toBe("1")

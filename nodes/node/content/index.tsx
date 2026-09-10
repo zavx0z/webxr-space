@@ -34,7 +34,7 @@ export type ContentNodeProps = Omit<ParameterNodeProps, "children" | "embedded">
 /** Квадратная область содержимого и ParameterNode образуют одну ноду графа. */
 export function ContentNode(props: ContentNodeProps) {
   const visible = props.contentVisible !== false
-  const geometry = planProjectedNodeGeometry({id: props.id, parameters: props.parameters ?? [], sockets: props.sockets ?? []}, props.rect.width,
+  const geometry = planProjectedNodeGeometry({id: props.id, parameters: props.parameters ?? [], sockets: props.sockets ?? []}, props.rect?.width,
     props.connectedSocketKeys, props.resolvedSocketSides, {collapsed: props.collapsed, contentVisible: visible})
   const parameterHeight = geometry.height - (visible ? geometry.width : 0)
   const actions = [...(props.actions ?? []), {
@@ -46,6 +46,7 @@ export function ContentNode(props: ContentNodeProps) {
     onClick: (event: Event) => props.onContentVisibleChange?.(!visible, event),
   }]
   return <article
+    ref={props.elementRef}
     role="option"
     tabIndex={0}
     aria-label={props.label}
@@ -62,10 +63,10 @@ export function ContentNode(props: ContentNodeProps) {
       position: absolute;
       display: flex;
       flex-direction: column;
-      left: ${props.rect.x}px;
-      top: ${props.rect.y}px;
-      width: ${geometry.width}px;
-      height: ${geometry.height}px;
+      left: ${props.rect?.x ?? 0}px;
+      top: ${props.rect?.y ?? 0}px;
+      width: ${props.intrinsic ? "auto" : `${geometry.width}px`};
+      height: ${props.intrinsic ? "auto" : `${geometry.height}px`};
       min-width: 0;
       min-height: 0;
       overflow: visible;
@@ -128,6 +129,7 @@ export function ContentNode(props: ContentNodeProps) {
       onParameterChange={props.onParameterChange}
       onSocketActivate={props.onSocketActivate}
       embedded
+      intrinsic={props.intrinsic}
       rect={{x: 0, y: 0, width: geometry.width, height: parameterHeight}}
       actions={actions}
     />

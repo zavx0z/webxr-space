@@ -12,7 +12,9 @@ export type ParameterNodeProps = Readonly<{
   id: string
   frameId?: string | undefined
   label: string
-  rect: NodeRect
+  rect?: NodeRect | undefined
+  intrinsic?: boolean | undefined
+  elementRef?: ((element: HTMLElement | null) => void) | undefined
   title?: string | undefined
   category?: string | undefined
   headerColor?: string | undefined

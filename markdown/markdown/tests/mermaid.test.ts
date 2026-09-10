@@ -2,6 +2,7 @@ import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createDocument, type Element} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/component"
+import {flushDocumentLayoutObservers} from "@zavx0z/dom/geometry"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
@@ -12,12 +13,22 @@ const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["markdown", "nodes", "ui"].map(path => resolve(root, path))}))
 const {Markdown} = await import("../src/markdown.tsx")
 const {layoutMermaidGraph} = await import("../../mermaid/src/layout.ts")
-const {projectLinkArrowheads} = await import("@webxr/nodes/link")
+const {projectLinkArrowheads, projectLinkRoute} = await import("@webxr/nodes/link")
 
-async function settled(owner: Element) {
+async function settled(owner: Element, renderer: ReturnType<typeof createDocumentRenderer>, component: ReturnType<typeof createRoot>) {
   const deadline = Date.now() + 8000
-  while (owner.querySelector('[data-mermaid][aria-busy="true"]')) {
-    if (Date.now() > deadline) throw new Error("Mermaid remained pending")
+  for (;;) {
+    renderer.flush()
+    const delivered = flushDocumentLayoutObservers(owner.ownerDocument!)
+    component.flush()
+    if (!delivered && !owner.querySelector('[data-mermaid][aria-busy="true"]')) break
+    if (Date.now() > deadline) {
+      const nodes = []
+      for (let node = owner.querySelector("article[data-node-id]"); node !== null; node = node.parentElement) {
+        nodes.push({tag: node.tagName, rect: node.getLayoutRect(), hidden: node.getAttribute("hidden"), style: node.getAttribute("style")})
+      }
+      throw new Error(`Mermaid remained pending: connected=${owner.isConnected}, boxes=${renderer.flush().boxByNode.size}, rootBox=${renderer.flush().boxByNode.has(owner)}, clientWidth=${owner.getBoundingClientRect().width}, parent=${owner.parentNode?.nodeName}, sameDocument=${owner.ownerDocument === renderer.document}; ${JSON.stringify(nodes)}`)
+    }
     await new Promise(resolve => setTimeout(resolve, 10))
   }
   const error = owner.querySelector('[role="alert"]')
@@ -35,7 +46,7 @@ test("[MARKDOWN-MERMAID-SOURCE] the actual README Mermaid fence is parsed by Mer
   ].sort())
   expect(readme).not.toContain("dependencies.svg")
   expect(graph.edges.every(edge => edge.endArrow)).toBe(true)
-  const plan = layoutMermaidGraph(graph)
+  const plan = layoutMermaidGraph(graph, graph.nodes.map(node => ({id: node.id, width: 180, height: 60, anchors: []})))
   expect(plan.nodes).toHaveLength(7)
   expect(plan.edges).toHaveLength(7)
 })
@@ -50,7 +61,7 @@ test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows a
   const renderer = createDocumentRenderer({document, root: owner, viewport: {width: 1000, height: 900}})
   try {
     component.render(template, {source: source("B")})
-    await settled(owner)
+    await settled(owner, renderer, component)
     expect(owner.querySelector('[data-mermaid-ready="true"]')).not.toBeNull()
     const article = owner.querySelector('[data-markdown]')!
     const first = owner.querySelector('article[data-node-id="A"]')!
@@ -60,13 +71,14 @@ test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows a
     expect(owner.querySelectorAll("canvas")).toHaveLength(0)
     expect(owner.querySelectorAll('[data-socket-id]')).toHaveLength(0)
     const frame = renderer.flush()
-    expect(frame.boxByNode.get(first)!.width).toBe(210)
+    expect(frame.boxByNode.get(first)!.width).toBe(first.getLayoutRect()!.width)
+    expect(frame.boxByNode.get(first)!.width).not.toBe(210)
     const link = owner.querySelector('[data-link-end-arrow="true"]')!
     expect(frame.displayList.some(item => item.node === link)).toBe(true)
     const arrow = owner.querySelector('[data-link-arrow="end"]')!
     expect(frame.displayList.some(item => item.node === arrow)).toBe(true)
     component.render(template, {source: source("C")})
-    await settled(owner)
+    await settled(owner, renderer, component)
     expect(owner.querySelector('[data-markdown]')).toBe(article)
     expect(owner.querySelector('article[data-node-id="A"]')).toBe(first)
     expect(owner.querySelector('article[data-node-id="B"]')).toBeNull()
@@ -84,7 +96,7 @@ test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows a
 test("[MARKDOWN-MERMAID-DIRECTIONS] LR, RL, TB and BT use Layout geometry and real terminal arrowheads", () => {
   for (const direction of ["LR", "RL", "TB", "BT"] as const) {
     const graph: MermaidGraph = {direction, nodes: [{id: "A", label: "A", shape: "circle"}, {id: "B", label: "B", shape: "oval"}], edges: [{id: "e", from: "A", to: "B", startArrow: false, endArrow: true}]}
-    const plan = layoutMermaidGraph(graph)
+    const plan = layoutMermaidGraph(graph, graph.nodes.map(node => ({id: node.id, width: 100, height: node.shape === "circle" ? 100 : 50, anchors: []})))
     const a = plan.nodes[0]!.rect
     const b = plan.nodes[1]!.rect
     if (direction === "LR") expect(b.x).toBeGreaterThan(a.x)
@@ -102,4 +114,48 @@ test("[MARKDOWN-MERMAID-DIRECTIONS] LR, RL, TB and BT use Layout geometry and re
 test("[MARKDOWN-MERMAID-ERROR] malformed syntax is rejected and does not poison the next diagram", async () => {
   await expect(parseMermaidFlowchart("flowchart LR\nA --> [")).rejects.toThrow()
   expect((await parseMermaidFlowchart("flowchart LR\nB --> C")).nodes).toHaveLength(2)
+})
+
+test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсуждения передают реальные размеры действующему TopDown", async () => {
+  const source = `flowchart TD
+  ContentNode --> ContentSurface
+  ContentNode --> ParameterNode
+  ContentNode --> Pane
+  ParameterNode --> ParameterNodeContents
+  ParameterNode --> Pane
+  DiagramNode --> Pane
+  DiagramNode --> Typography`
+  const graph = await parseMermaidFlowchart(source)
+  const document = createDocument()
+  const owner = document.createElement("div")
+  document.append(owner)
+  const component = createRoot(owner)
+  const renderer = createDocumentRenderer({document, root: owner, viewport: {width: 1600, height: 1200}})
+  try {
+    component.render(Markdown as unknown as CompiledTemplate<MarkdownProps>, {source: "```mermaid\n" + source + "\n```"})
+    await settled(owner, renderer, component)
+    const surface = owner.querySelector("[data-graph-scene]")!
+    const elements = graph.nodes.map(node => owner.querySelector(`article[data-node-id="${node.id}"]`)!)
+    const measured = elements.map((element, index) => ({id: graph.nodes[index]!.id, width: element.getLayoutRect()!.width, height: element.getLayoutRect()!.height, anchors: []}))
+    expect(new Set(measured.map(node => node.width)).size).toBeGreaterThan(3)
+    expect(elements).toHaveLength(7)
+    const expected = layoutMermaidGraph(graph, measured)
+    for (const node of expected.nodes) {
+      const element = elements[graph.nodes.findIndex(value => value.id === node.id)]!
+      const actual = element.getLayoutRect(surface)!
+      expect(actual.x).toBeCloseTo(node.rect.x)
+      expect(actual.y).toBeCloseTo(node.rect.y)
+      expect(actual.width).toBeCloseTo(node.rect.width)
+      expect(actual.height).toBeCloseTo(node.rect.height)
+    }
+    expect(expected.edges).toHaveLength(7)
+    for (const edge of expected.edges) {
+      expect(owner.querySelector(`[data-link-id="${edge.id}"]`)!.getAttribute("d")).toBe(projectLinkRoute(edge.route).d)
+    }
+    // Это проверка передачи размеров/геометрии, а не принятие совпадения с Codex Desktop.
+  } finally {
+    component.unmount()
+    renderer.dispose()
+    owner.remove()
+  }
 })

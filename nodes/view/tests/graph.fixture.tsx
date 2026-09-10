@@ -3,6 +3,7 @@ import type {GraphNodeProps, GraphScene} from "@webxr/nodes/view"
 
 /** Состояние принадлежит настоящему компоненту, чтобы обнаруживать remount. */
 export function CounterNode(props: GraphNodeProps) {
+  if (props.rect === undefined) throw new Error("CounterNode требует готовую геометрию")
   const [count, setCount] = useState(0)
   return <article
     data-node-id={props.id}

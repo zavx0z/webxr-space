@@ -2,12 +2,17 @@ import {createCubicLinkRoute, type LinkPathPoint, type LinkRoute} from "@webxr/n
 import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import type {MermaidGraph} from "./parser.ts"
+import type {GraphMeasurement} from "@webxr/nodes/view"
 
-/** Существующий числовой план; автоматическое CSS-измерение отслеживается отдельно. */
-export function layoutMermaidGraph(graph: MermaidGraph) {
+/** Передаёт измеренные размеры действующим алгоритмам; их политики не изменяет. */
+export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly GraphMeasurement[]) {
   const horizontal = graph.direction === "LR" || graph.direction === "RL"
   const reverse = graph.direction === "RL" || graph.direction === "BT"
-  const dimensions = graph.nodes.map(node => ({id: node.id, width: 210, height: node.shape === "circle" ? 210 : 64}))
+  const dimensions = graph.nodes.map(node => {
+    const measured = measurements.find(value => value.id === node.id)
+    if (measured === undefined) throw new Error(`Нода ${node.id} ещё не измерена`)
+    return {id: node.id, width: measured.width, height: measured.height}
+  })
   const ports = graph.edges.flatMap(edge => [
     {id: `${edge.id}/out`, nodeId: edge.from},
     {id: `${edge.id}/in`, nodeId: edge.to},
@@ -24,7 +29,7 @@ export function layoutMermaidGraph(graph: MermaidGraph) {
       edges: graph.edges.map(edge => ({id: edge.id, sourcePortId: `${edge.from}/out`, targetPortId: `${edge.to}/in`})),
       layoutOptions: {spacing: 32, layerSpacing: 96, padding: 24, clearance: 8},
     })
-    : layoutTopDown({nodes: dimensions, ports: ports.map(port => ({...port, x: 105})), edges, layoutOptions: {nodeSpacing: 32, layerSpacing: 64, padding: 24}})
+    : layoutTopDown({nodes: dimensions, ports: ports.map(port => ({...port, x: dimensions.find(node => node.id === port.nodeId)!.width / 2})), edges, layoutOptions: {nodeSpacing: 32, layerSpacing: 64, padding: 24}})
   const point = (value: LinkPathPoint): LinkPathPoint => ({
     x: reverse && horizontal ? 2 * result.bounds.x + result.bounds.width - value.x : value.x,
     y: reverse && !horizontal ? 2 * result.bounds.y + result.bounds.height - value.y : value.y,

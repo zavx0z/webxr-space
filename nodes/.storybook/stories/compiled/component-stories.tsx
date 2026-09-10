@@ -8,6 +8,7 @@ import {ParameterNode} from "@nodes/node/parameter"
 import {planProjectedNodeGeometry} from "@nodes/node/geometry"
 import {nodeSocketLayoutPortId, socketKey, type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/view/tree"
 import {GraphEditor} from "@webxr/nodes/editor"
+import type {GraphMeasurement} from "@webxr/nodes/view"
 import {NumberParameter} from "@nodes/parameters/number"
 import {Frame} from "@webxr/nodes/frame"
 import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"
@@ -97,7 +98,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
   const [farViewport, setFarViewport] = useState(false)
   const [transform, setTransform] = useState<NodeTreeTransform>({x: 24, y: 24, scale: 1})
   const [lastAction, setLastAction] = useState("Выберите ноду или измените значение")
-  const layout = useMemo(() => graphLayout(snapshot), [snapshot])
+  const layout = useMemo(() => props.component === "node-tree" ? graphLayout(snapshot) : null, [snapshot, props.component])
   const node = snapshot.nodes[0]!
   const geometry = planProjectedNodeGeometry(node, 320)
   const sourceValue = node.parameters.find(parameter => parameter.id === "value")?.value ?? 0
@@ -215,7 +216,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
       /> : null}
       {props.component === "node-tree" ? <ModelGraphView
         store={store}
-        layout={layout}
+        layout={layout!}
         label="Живая проекция"
         transform={transform}
         viewport={farViewport ? {x: 10_000, y: 10_000, width: 760, height: 480, overscan: 0} : undefined}
@@ -227,7 +228,7 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
       /> : null}
       {props.component === "node-editor" ? <GraphEditor
         store={store}
-        layout={graphLayout}
+        measureLayout={graphMeasuredLayout}
         title="Живой редактор нод"
         label="Живой редактор нод"
         width={760}
@@ -251,6 +252,15 @@ function GraphStory(props: Readonly<{component: string; variant: string; graph: 
     <output aria-label="Состояние графа">{`Нод: ${snapshot.nodes.length}; revision: ${snapshot.revision}; value: ${JSON.stringify(sourceValue)}`}</output>
     <output aria-label="Действие редактора">{lastAction}</output>
   </section>
+}
+
+function graphMeasuredLayout(snapshot: NodeTreeSnapshot, _state: NodePresentationState, nodes: readonly GraphMeasurement[]) {
+  return layoutFixed({
+    viewport: {width: 900, height: 600},
+    nodes,
+    ports: nodes.flatMap(node => node.anchors.map(anchor => ({id: nodeSocketLayoutPortId(node.id, anchor.id), nodeId: node.id, y: anchor.y}))),
+    edges: snapshot.links.map(link => ({id: link.id, sourcePortId: nodeSocketLayoutPortId(link.from.nodeId, link.from.socketId), targetPortId: nodeSocketLayoutPortId(link.to.nodeId, link.to.socketId)})),
+  })
 }
 
 function graphLayout(snapshot: NodeTreeSnapshot, state: NodePresentationState = {}) {
@@ -544,6 +554,7 @@ function graphSource(component: string, variant: string): string {
     ...(component === "node" ? ['import {ParameterNode} from "@nodes/node/parameter"'] : []),
     `import {${component !== "node" ? "nodeSocketLayoutPortId, socketKey, " : ""}type NodePresentationState, type NodeTreeSelection, type NodeTreeTransform} from "@webxr/nodes/view/tree"`,
     ...(component === "node-editor" ? ['import {GraphEditor} from "@webxr/nodes/editor"'] : []),
+    ...(component === "node-editor" ? ['import type {GraphMeasurement} from "@webxr/nodes/view"'] : []),
     ...(component !== "node" ? ['import {layoutFixed} from "@nodes/layout/fixed"'] : []),
     ...(component === "node-tree" ? [modelGraphViewSource] : []),
     ...(authored ? ['import {NumberParameter} from "@nodes/parameters/number"'] : []),
@@ -590,7 +601,7 @@ function graphSource(component: string, variant: string): string {
     "    const [farViewport, setFarViewport] = useState(false)",
     "    const [transform, setTransform] = useState<NodeTreeTransform>({x: 24, y: 24, scale: 1})",
     '    const [lastAction, setLastAction] = useState("Выберите ноду или измените значение")',
-    ...(component === "node" ? [] : ["    const layout = useMemo(() => graphLayout(snapshot), [snapshot])"]),
+    ...(component === "node-tree" ? ["    const layout = useMemo(() => graphLayout(snapshot), [snapshot])"] : []),
     "    const node = snapshot.nodes[0]!",
     ...(component === "node" ? ["    const geometry = planProjectedNodeGeometry(node, 320)"] : []),
     '    const sourceValue = node.parameters.find(parameter => parameter.id === "value")?.value ?? 0',
@@ -701,7 +712,7 @@ function graphSource(component: string, variant: string): string {
     ] : [
       `        <${api}`,
       "          store={store}",
-      "          layout={layout}",
+      component === "node-tree" ? "          layout={layout}" : "          measureLayout={graphMeasuredLayout}",
       ...(component === "node-tree" ? [
         '          label="Живая проекция"',
         "          transform={transform}",
@@ -770,5 +781,15 @@ function graphSource(component: string, variant: string): string {
       "  })",
       "}",
     ]),
+    ...(component === "node-editor" ? [
+      "function graphMeasuredLayout(snapshot: NodeTreeSnapshot, _state: NodePresentationState, nodes: readonly GraphMeasurement[]) {",
+      "  return layoutFixed({",
+      "    viewport: {width: 900, height: 600},",
+      "    nodes,",
+      "    ports: nodes.flatMap(node => node.anchors.map(anchor => ({id: nodeSocketLayoutPortId(node.id, anchor.id), nodeId: node.id, y: anchor.y}))),",
+      "    edges: snapshot.links.map(link => ({id: link.id, sourcePortId: nodeSocketLayoutPortId(link.from.nodeId, link.from.socketId), targetPortId: nodeSocketLayoutPortId(link.to.nodeId, link.to.socketId)})),",
+      "  })",
+      "}",
+    ] : []),
   ].join("\n")
 }

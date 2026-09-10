@@ -12,28 +12,34 @@ export type {NodeRect, NodeTreeTransform, NodeTreeViewport} from "../shared/proj
 export {createNodeTreeLayout, StaleNodeTreeLayoutError} from "../shared/projection/layout.ts"
 export {nodeSocketLayoutPortId} from "../shared/projection/geometry.ts"
 export {socketKey} from "@nodes/sockets/shared"
+export {useMeasuredNodeTreePresentation, type MeasuredNodeTreeComputer} from "../shared/node-tree/measured.ts"
 
 /**
 Адаптирует существующий Store и принятую раскладку для GraphView.
 Этот отдельный вход подключает представления параметров; основной GraphView
 не импортирует его и не создаёт вторую модель значений.
 */
-export function useNodeTreePresentation(props: NodeTreeProps) {
-  const snapshot = useSyncExternalStore(props.store.subscribe, props.store.getSnapshot)
+const emptySubscribe = (_listener: () => void) => () => {}
+const emptySnapshot = () => null
+
+export function useNodeTreePresentation(props: NodeTreeProps | null) {
+  const snapshot = useSyncExternalStore(props?.store.subscribe ?? emptySubscribe, props?.store.getSnapshot ?? emptySnapshot)
   const layout = useMemo(() => {
+    if (props === null) return null
     const compute = props.layout
     return typeof compute === "function" ? createNodeTreeLayout(props.store, source => compute(source, props)) : compute
-  }, [props.store, props.layout, snapshot, props.collapsedNodeIds, props.previewNodeIds, props.nodeKinds, props.nodeShapes])
-  const layoutStore = useMemo(() => getNodeTreeLayoutStore(props.store, layout), [props.store, layout])
-  const state = useSyncExternalStore(layoutStore.subscribe, layoutStore.getSnapshot)
+  }, [props?.store, props?.layout, snapshot, props?.collapsedNodeIds, props?.previewNodeIds, props?.nodeKinds, props?.nodeShapes])
+  const layoutStore = useMemo(() => props === null || layout === null ? null : getNodeTreeLayoutStore(props?.store, layout), [props?.store, layout])
+  const state = useSyncExternalStore(layoutStore?.subscribe ?? emptySubscribe, layoutStore?.getSnapshot ?? emptySnapshot)
   const active = useRef(layoutStore)
-  const selectView = useMemo(() => createNodeTreeViewSelector(props.store), [props.store])
+  const selectView = useMemo(() => props === null ? null : createNodeTreeViewSelector(props?.store), [props?.store])
   const previous = useRef<GraphScene | null>(null)
-  const actions = useMemo(() => createActions(props, state.topology, layoutStore, () => active.current === layoutStore), [
-    props.store, layoutStore, state.topology, props.onSelectionChange, props.onNodeCollapseChange,
-    props.onNodePreviewChange, props.onSocketActivate, props.onParameterInput, props.onParameterChange,
+  const actions = useMemo(() => props === null || state === null || layoutStore === null ? null : createActions(props, state.topology, () => active.current === layoutStore && !layoutStore.getSnapshot().pending), [
+    props?.store, layoutStore, state?.topology, props?.onSelectionChange, props?.onNodeCollapseChange,
+    props?.onNodePreviewChange, props?.onSocketActivate, props?.onParameterInput, props?.onParameterChange,
   ])
   const scene = useMemo(() => {
+    if (props === null || state === null || actions === null || selectView === null) return null
     if (state.pending) return previous.current
     const view = selectView(state, props.viewport, props.materializeCulled === true)
     return Object.freeze({
@@ -43,7 +49,7 @@ export function useNodeTreePresentation(props: NodeTreeProps) {
         rect: entry.rect,
         hidden: entry.culled,
         view: ModelNode,
-        data: {entry, view, treeProps: props, actions},
+        data: {node: entry.node, connectedSocketKeys: view.connectedSocketKeys, resolvedSocketSides: view.geometry.portSides, treeProps: props, actions},
       }))),
       frames: Object.freeze(view.frames.map(({frame, rect, culled}) => Object.freeze({
         id: frame.id,
@@ -65,13 +71,13 @@ export function useNodeTreePresentation(props: NodeTreeProps) {
         hidden: culled,
       }))),
     }) satisfies GraphScene
-  }, [state, props.viewport, props.materializeCulled, props.nodeKinds, props.nodeShapes, props.nodeContent,
-    props.nodeViews, props.collapsedNodeIds, props.previewNodeIds, actions, selectView])
+  }, [state, props?.viewport, props?.materializeCulled, props?.nodeKinds, props?.nodeShapes, props?.nodeContent,
+    props?.nodeViews, props?.collapsedNodeIds, props?.previewNodeIds, actions, selectView])
   active.current = layoutStore
   useLayoutEffect(() => {
-    if (!state.pending) previous.current = scene
-  }, [state.pending, scene])
-  const isCurrent = useMemo(() => () => active.current === layoutStore && !layoutStore.getSnapshot().pending &&
-    props.store.getTopologySnapshot() === state.topology, [props.store, layoutStore, state.topology])
-  return {scene, pending: state.pending, isCurrent}
+    if (state !== null && !state.pending) previous.current = scene
+  }, [state?.pending, scene])
+  const isCurrent = useMemo(() => () => props !== null && state !== null && layoutStore !== null && active.current === layoutStore && !layoutStore.getSnapshot().pending &&
+    props?.store.getTopologySnapshot() === state?.topology, [props?.store, layoutStore, state?.topology])
+  return {scene, pending: state?.pending ?? false, isCurrent}
 }

@@ -47,12 +47,11 @@ export function sameLinkEntry(left: VisibleLink, right: VisibleLink): boolean {
 }
 
 export function createActions(
-  props: NodeTreeProps,
+  props: Omit<NodeTreeProps, "layout">,
   topology: NodeTreeSnapshot,
-  layoutStore: ReturnType<typeof getNodeTreeLayoutStore>,
   isActive: () => boolean,
 ): NodeTreeActions {
-  const current = () => isActive() && props.store.getTopologySnapshot() === topology && !layoutStore.getSnapshot().pending
+  const current = () => isActive() && props.store.getTopologySnapshot() === topology
   const frame = new Map<string, (event: Event) => void>()
   const link = new Map<string, (event: Event) => void>()
   const node = new Map<string, (event: Event) => void>()

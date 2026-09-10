@@ -122,8 +122,9 @@ export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{head
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        width: ${props.rect.width}px;
+        width: ${props.intrinsic || props.rect === undefined ? "auto" : `${props.rect.width}px`};
         margin-left: ${-NODE_BORDER_WIDTH}px;
+        margin-right: ${props.intrinsic ? -NODE_BORDER_WIDTH : 0}px;
         min-width: 0;
         gap: ${NODE_ROW_GAP}px;
         padding: ${NODE_BODY_PADDING_TOP}px 0 ${NODE_BODY_PADDING_BOTTOM}px;

@@ -32,6 +32,7 @@
     "@webxr/nodes": "*"
   },
   "devDependencies": {
+    "@renderer/html": "*",
     "@zavx0z/highlighter": "link:@zavx0z/highlighter"
   },
   "peerDependenciesMeta": {

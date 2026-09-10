@@ -5,11 +5,10 @@ import type {Node} from "typescript/unstable/ast"
 import {isFunctionDeclaration, isJsxOpeningElement, isJsxSelfClosingElement, isIdentifier} from "typescript/unstable/ast/is"
 import {createDocument, MouseEvent, type Element} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@renderer/html"
-import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
+import "./compiler.ts"
 import {dependencyComponents, dependencyGraph} from "../.storybook/stories/dependencies-data.ts"
 
 const root = resolve(import.meta.dir, "../../..")
-Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["nodes", "ui", "markdown"].map(directory => resolve(root, directory))}))
 const {createDependencyStory} = await import("../.storybook/stories/dependencies.tsx")
 const theme = await Bun.file(resolve(root, "ui/themes/theme.css")).text()
 
