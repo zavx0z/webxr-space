@@ -8,24 +8,15 @@ import type {ParameterNodeProps} from "../shared/contracts.ts"
 import {Button, IconButton} from "@zavx0z/ui/buttons/button"
 import {chevronDownIcon, chevronRightIcon} from "@zavx0z/ui/themes/icons"
 import {metadataBoolean, metadataString, Parameter, type ParameterInput} from "@nodes/parameters/shared"
-import {parameterSpacingBefore, projectedSocketSide} from "../shared/parameter-presentation.ts"
+import {parameterSpacingBefore} from "../shared/parameter-presentation.ts"
 import {Socket} from "@nodes/sockets/socket"
-import {SOCKET_KINDS, type SocketKind, type SocketShape} from "@nodes/sockets/presets"
+import {resolveSocketKind, resolveSocketShape} from "@nodes/sockets/presets"
 import {NODE_BODY_PADDING_TOP, NODE_BODY_PADDING_BOTTOM, NODE_ROW_GAP} from "../shared/metrics.ts"
 import {NODE_BORDER_WIDTH} from "@nodes/sockets/metrics"
-import type {Socket as CoreSocket} from "@nodes/tree"
+import {prepareNodeContents} from "./src/prepare.ts"
 
 export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{headerHeight: number}>) {
-  validateParameterNodeProps(props)
-  const parameters = props.parameters ?? []
-  if (props.children != null && parameters.length > 0) {
-    throw new Error(`Node ${props.id} accepts either authored Component children or projected Parameters`)
-  }
-  const sockets = props.sockets ?? []
-  const parameterIds = new Set(parameters.map(parameter => parameter.id))
-  const loose = sockets.filter(socket => socket.parameterId === undefined || !parameterIds.has(socket.parameterId))
-  const right = loose.filter(socket => resolvedSocketSide(props, socket) === "right")
-  const left = loose.filter(socket => resolvedSocketSide(props, socket) === "left")
+  const {parameters, sockets, left, right} = prepareNodeContents(props)
   const collapseLabel = props.collapsed === true ? `Развернуть ${props.label}` : `Свернуть ${props.label}`
   const collapseIcon = props.collapsed === true ? chevronRightIcon : chevronDownIcon
   const toggleCollapse = (event: Event) => {
@@ -138,11 +129,11 @@ export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{head
         key={socket.id}
         id={socket.id}
         nodeId={props.id}
-        kind={socketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))}
+        kind={resolveSocketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))}
         direction={socket.direction}
         side="right"
         label={metadataString(socket.metadata, "label", socket.id)}
-        shape={socketShape(metadataString(socket.metadata, "shape", ""))}
+        shape={resolveSocketShape(metadataString(socket.metadata, "shape", ""))}
         connected={props.connectedSocketKeys?.has(`${props.id}\u0000${socket.id}`) === true}
         disabled={metadataBoolean(socket.metadata, "disabled", false)}
         presentation="row"
@@ -178,11 +169,11 @@ export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{head
         key={socket.id}
         id={socket.id}
         nodeId={props.id}
-        kind={socketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))}
+        kind={resolveSocketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))}
         direction={socket.direction}
         side="left"
         label={metadataString(socket.metadata, "label", socket.id)}
-        shape={socketShape(metadataString(socket.metadata, "shape", ""))}
+        shape={resolveSocketShape(metadataString(socket.metadata, "shape", ""))}
         connected={props.connectedSocketKeys?.has(`${props.id}\u0000${socket.id}`) === true}
         disabled={metadataBoolean(socket.metadata, "disabled", false)}
         presentation="row"
@@ -202,33 +193,4 @@ export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{head
       />)}
     </section>
   </>
-}
-
-
-function resolvedSocketSide(props: ParameterNodeProps, socket: CoreSocket): "left" | "right" {
-  return projectedSocketSide(props.id, socket, props.resolvedSocketSides)
-}
-
-
-function socketKind(value: string): SocketKind {
-  return SOCKET_KINDS.includes(value as SocketKind) ? value as SocketKind : "custom"
-}
-
-function socketShape(value: string): SocketShape | undefined {
-  return value === "circle" || value === "square" || value === "diamond" ||
-    value === "circle-dot" || value === "square-dot" || value === "diamond-dot" ||
-    value === "line" || value === "volume-grid" ? value : undefined
-}
-
-function validateParameterNodeProps(props: ParameterNodeProps): void {
-  if (props.id.trim().length === 0) throw new TypeError("Node id must be non-empty")
-  if (props.label.trim().length === 0) throw new TypeError(`Node ${props.id} label must be non-empty`)
-  if (props.headerColor !== undefined && !/^#[0-9a-f]{6}$/iu.test(props.headerColor)) {
-    throw new TypeError(`Node ${props.id} headerColor must be #rrggbb`)
-  }
-  const ids = new Set<string>()
-  for (const socket of props.sockets ?? []) {
-    if (ids.has(socket.id)) throw new Error(`Node ${props.id} Socket id must be unique: ${socket.id}`)
-    ids.add(socket.id)
-  }
 }

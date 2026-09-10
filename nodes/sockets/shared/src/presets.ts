@@ -73,6 +73,16 @@ export const SOCKET_PRESETS: Readonly<Record<SocketKind, SocketPreset>> = Object
   custom: preset("custom", "Custom", "#d659d1", "circle-dot"),
 })
 
+/** Сохраняет известный вид сокета; неизвестный вид отображается как custom. */
+export function resolveSocketKind(value: string): SocketKind {
+  return SOCKET_KINDS.includes(value as SocketKind) ? value as SocketKind : "custom"
+}
+
+/** Сохраняет допустимую форму; неизвестная оставляет выбор предустановке сокета. */
+export function resolveSocketShape(value: string): SocketShape | undefined {
+  return SOCKET_SHAPES.includes(value as SocketShape) ? value as SocketShape : undefined
+}
+
 export function socketPreset(kind: SocketKind): SocketPreset {
   if (!SOCKET_KINDS.includes(kind)) throw new TypeError(`Unsupported Socket kind: ${kind}`)
   return SOCKET_PRESETS[kind]

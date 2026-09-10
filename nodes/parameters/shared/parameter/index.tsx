@@ -67,7 +67,7 @@ import {
 import {metadata, metadataBoolean, metadataNumber, metadataObjectArray, metadataString, metadataStringArray} from "../src/metadata.ts"
 import {socketKey, socketSide} from "@nodes/sockets/shared"
 import {NODE_PARAMETER_SPACING_MEDIUM, NODE_PARAMETER_SPACING_SMALL, PARAMETER_OUTPUT_HEIGHT} from "../src/metrics.ts"
-import {SOCKET_KINDS, type SocketKind, type SocketShape} from "@nodes/sockets/presets"
+import {resolveSocketKind, resolveSocketShape} from "@nodes/sockets/presets"
 import type {ParameterProps, ParameterEndpoint} from "../src/contracts.ts"
 import {CheckboxParameter} from "../../boolean/checkbox/index.tsx"
 import {CollectionParameter} from "../../collections/collection/index.tsx"
@@ -460,7 +460,7 @@ function parameterSocket(
   connectedSocketKeys?: ReadonlySet<string>,
   resolvedSocketSides?: ReadonlyMap<string, "left" | "right">,
 ): ParameterEndpoint {
-  const kind = socketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))
+  const kind = resolveSocketKind(socket.valueType?.id ?? metadataString(socket.metadata, "kind", "custom"))
   return Object.freeze({
     id: socket.id,
     kind,
@@ -468,20 +468,10 @@ function parameterSocket(
     side: resolvedSocketSides?.get(socketKey(nodeId, socket.id)) ?? socketSide(socket),
     label: metadataString(socket.metadata, "label", socket.id),
     title: metadataString(socket.metadata, "description", "") || undefined,
-    shape: socketShape(metadataString(socket.metadata, "shape", "")),
+    shape: resolveSocketShape(metadataString(socket.metadata, "shape", "")),
     connected: connectedSocketKeys?.has(socketKey(nodeId, socket.id)) === true,
     disabled: metadataBoolean(socket.metadata, "disabled", false),
   })
-}
-
-function socketKind(value: string): SocketKind {
-  return SOCKET_KINDS.includes(value as SocketKind) ? value as SocketKind : "custom"
-}
-
-function socketShape(value: string): SocketShape | undefined {
-  return value === "circle" || value === "square" || value === "diamond" ||
-    value === "circle-dot" || value === "square-dot" || value === "diamond-dot" ||
-    value === "line" || value === "volume-grid" ? value : undefined
 }
 
 function selectionOptions(value: NodeJsonValue): readonly SelectFieldOption[] | undefined {
