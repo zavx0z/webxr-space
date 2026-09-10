@@ -63,9 +63,28 @@ cd0fe61a58465d8d78d16364, active=lastWorking, failed/built/candidate/activating=
 diagnostics пусты, незавершённых MCP операций на этом этапе нет.
 
 Этот gate подтверждает удаление старого каталога и сохранение стандартного
-Dependencies. Последующее уточнение направления маркеров пользователь передал
-отдельной runtime-задаче; её прежнее изображение не считается окончательно
-принятой ориентацией. Правки runtime projection не входят в коммит очистки Nodes.
+Dependencies. После уточнения пользователя runtime-задача вернула исходную
+иерархию: целевой DiagramNode находится сверху, составляющие — ниже. Координаты
+нод и маршруты совпадают с исходным TopDown; изменён только конец размещения
+наконечника: startArrow вместо endArrow. Центрирование и прокрутка сохранены.
+
+Окончательная проверка runtime: два теста, 26 assertions и typecheck PASS.
+Проверены исходные nodes/routes, направление начального маркера к компоненту,
+центрирование на Display 900×650, доступность содержимого через прокрутку на
+Display 180×80 и сохранение identity нод.
+
+Исправленный candidate 549f450680fe363f74ba25d1 проверен до применения;
+после обновления declaration применена @nodes/node 35283672516f80c750589c20.
+Повторная проверка именно этой active revision: diagram → «Зависимости»,
+ready/presented, frame5, diagnostics/consoleErrors пусты. Capture
+capture_PFA8bDRRr0St_zlnNaUh5fNv совпал по SHA с исправленным candidate capture
+capture_o3YzUlEodR7JvUc9TMrU_0kS. active=lastWorking,
+failed/built/candidate/activating=null; незавершённых MCP операций нет.
+
+Правки runtime/dependency-view.tsx и новый runtime/dependency-view.test.ts
+остаются в рабочем дереве Storybook вместе с первоначальным незакоммиченным
+блоком структурных зависимостей. Они не включены в коммиты Nodes; чужой блок
+не добавлялся в Git целиком ради этой доработки.
 
 Platform code, общая UI theme, font assets/registry и внешний runtime
 Storybook в коммитах этой задачи не изменялись. Чужое staged переименование
