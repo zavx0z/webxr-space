@@ -66,7 +66,7 @@ test("one transaction of independent transforms retains layout and publishes one
   const f = fixture()
   try {
     let previous = f.renderer.flush()
-    for (const [x, y, scale] of [[16, 8, 1], [32, 20, 0.8], [0, 0, 1]]) {
+    for (const [x, y, scale] of [[16, 8, 1], [32, 20, 0.8], [-30, -12, 1.2], [0, 0, 1]]) {
       const old = f.snapshot(previous)
       f.resetMeasured()
       f.document.transaction(() => {

@@ -41,6 +41,18 @@ CSS-координат проекции в viewport Canvas. Без него ко
 [Контракт DOM](../../dom/README.md#размер-и-положение-элемента) и
 [поведенческие проверки](tests/bounding-client-rect.test.ts).
 
+`translate`, `translateX` и `translateY` сохраняют отрицательные значения.
+Проценты считаются от соответствующей стороны собственного border-box; порядок
+переноса и `scale` сохраняется. Это изменяет client geometry, paint и hit,
+сохраняя исходную layout geometry. Ограничения неотрицательных размеров
+не меняются. [Проверки знака, процентов и порядка преобразований](tests/signed-translation.test.ts)
+и [согласованности обновлённого кадра](tests/transform-batch.test.ts).
+
+Совместные изменения transform родителя и атрибутов `vector-path` учитываются
+в одном кадре независимо от их порядка. Смена `hidden` или `d` не теряется
+за transform-only обновлением; отдельные изменения сохраняют свои быстрые пути.
+[Проверки смешанной инвалидации и retained/fresh parity](tests/transform-vector-mutations.test.ts).
+
 ## Локальная геометрия и скрытое измерение
 
 Поставщик обслуживает также `Element.getLayoutRect(relativeTo?)`: тот же

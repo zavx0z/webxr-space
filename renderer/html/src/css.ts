@@ -600,10 +600,17 @@ export const resolveLength = (
   length: CSSLength | null,
   available: number,
 ): number | null => {
+  const value = resolveSignedLength(length, available)
+  return value === null ? null : Math.max(0, value)
+}
+
+/** Перенос CSS сохраняет знак; процент относится к соответствующей стороне собственного бокса. */
+export const resolveSignedLength = (
+  length: CSSLength | null,
+  available: number,
+): number | null => {
   if (!length) return null
-  if (length.unit === "percent")
-    return Math.max(0, available * length.value * 0.01)
-  return Math.max(0, length.value)
+  return length.unit === "percent" ? available * length.value * 0.01 : length.value
 }
 
 export const elementTag = (element: Element): string => {

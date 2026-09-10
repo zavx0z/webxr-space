@@ -25,6 +25,7 @@ import {
   computeStyle,
   elementTag,
   resolveLength,
+  resolveSignedLength,
   resolveLineHeight,
   styleRulesDependOnAttribute,
   styleRulesMayDependOnPointerState,
@@ -787,6 +788,9 @@ export const createDocumentRenderer = (
           record.target instanceof HTMLVectorPathElement
         ) {
           subtreeDirty.add(record.target)
+          // Перенос и изменение пути в одном кадре требуют общей инвалидации:
+          // transform-only обновление сохранило бы прежние geometry/visibility пути.
+          if (transformTargets.size > 0) blockFastPath()
           vectorPathTargets.add(record.target)
           characterDataTargets.clear()
         } else if (isTransformOnlyStyleMutation(record) && !styleRulesDependOnAttribute(rules, "style")) {
@@ -3293,8 +3297,8 @@ const resolveElementTransform = (
       ? Object.freeze({
           scaleX: 1,
           scaleY: 1,
-          translateX: resolveLength(operation.x, width) ?? 0,
-          translateY: resolveLength(operation.y, height) ?? 0,
+          translateX: resolveSignedLength(operation.x, width) ?? 0,
+          translateY: resolveSignedLength(operation.y, height) ?? 0,
         })
       : Object.freeze({
           scaleX: operation.x,
