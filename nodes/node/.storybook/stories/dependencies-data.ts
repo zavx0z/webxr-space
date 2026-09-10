@@ -1,4 +1,4 @@
-/** Source-backed component relationships used only by this package documentation. */
+/** Связи компонентов подтверждены исходным кодом и используются только документацией этого пакета. */
 export type DependencyScope = "nodes" | "parameter"
 export type DependencyComponent = Readonly<{
   id: string
@@ -12,7 +12,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ContentNode",
     "owner": "node",
-    "source": "nodes/node/content/src/content.tsx",
+    "source": "nodes/node/content/index.tsx",
     "description": "Добавляет произвольное JSX-содержимое к ParameterNode. Содержимое и параметры можно сворачивать независимо.",
     "uses": [
       "Pane",
@@ -23,7 +23,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ParameterNode",
     "owner": "node",
-    "source": "nodes/node/parameter/src/parameter.tsx",
+    "source": "nodes/node/parameter/index.tsx",
     "description": "Нода с шапкой и готовыми параметрами. Pane оформляет поверхность; ParameterNodeContents собирает её содержимое.",
     "uses": [
       "Pane",
@@ -33,7 +33,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "DiagramNode",
     "owner": "node",
-    "source": "nodes/node/diagram/src/diagram.tsx",
+    "source": "nodes/node/diagram/index.tsx",
     "description": "Показывает описание на всю площадь. В этой схеме каждый прямоугольник — настоящий DiagramNode.",
     "uses": [
       "Pane",
@@ -43,7 +43,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ContentSurface",
     "owner": "node",
-    "source": "nodes/node/content/src/surface/src/surface.tsx",
+    "source": "nodes/node/content/surface/index.tsx",
     "description": "Внутренняя область произвольного содержимого. Принимает children; изображение — только один из поддерживаемых вариантов.",
     "uses": [
       "ContentImage"
@@ -52,14 +52,14 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ContentImage",
     "owner": "node",
-    "source": "nodes/node/content/src/image/src/image.tsx",
+    "source": "nodes/node/content/image/index.tsx",
     "description": "Необязательное отображение изображения внутри области содержимого. Не ограничивает ContentNode только изображениями.",
     "uses": []
   },
   {
     "id": "ParameterNodeContents",
     "owner": "node",
-    "source": "nodes/node/parameter/src/contents/src/contents.tsx",
+    "source": "nodes/node/parameter/contents/index.tsx",
     "description": "Внутренняя часть ParameterNode: кнопки шапки, готовые параметры и самостоятельные сокеты.",
     "uses": [
       "Button",
@@ -71,7 +71,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "Parameter",
     "owner": "parameters",
-    "source": "nodes/parameters/shared/parameter/src/parameter.tsx",
+    "source": "nodes/parameters/shared/parameter/index.tsx",
     "description": "Адаптер данных: выбирает готовый компонент параметра по его виду. Здесь подробно показан путь числового параметра; другие виды не раскрыты. Это не класс хранения значения из @nodes/tree.",
     "uses": [
       "NumberParameter"
@@ -80,7 +80,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "NumberParameter",
     "owner": "parameters",
-    "source": "nodes/parameters/numeric/number/src/number.tsx",
+    "source": "nodes/parameters/numeric/number/index.tsx",
     "description": "Готовый числовой параметр. Собирает общее оформление параметра и готовое числовое поле UI.",
     "uses": [
       "ParameterLayout",
@@ -90,7 +90,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ParameterLayout",
     "owner": "parameters",
-    "source": "nodes/parameters/shared/layout/src/layout.tsx",
+    "source": "nodes/parameters/shared/layout/index.tsx",
     "description": "Размещает подпись, переданное поле и сокеты. Значение не хранит.",
     "uses": [
       "ParameterEndpoints",
@@ -100,7 +100,7 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ParameterEndpoints",
     "owner": "parameters",
-    "source": "nodes/parameters/shared/endpoints/src/endpoints.tsx",
+    "source": "nodes/parameters/shared/endpoints/index.tsx",
     "description": "Показывает сокеты нужной стороны, сохраняя их идентификаторы.",
     "uses": [
       "Socket"
@@ -109,14 +109,14 @@ export const dependencyComponents: readonly DependencyComponent[] = [
   {
     "id": "ParameterLabel",
     "owner": "parameters",
-    "source": "nodes/parameters/shared/label/src/label.tsx",
+    "source": "nodes/parameters/shared/label/index.tsx",
     "description": "Подпись параметра. Учитывает подключение, скрытие и подсказку.",
     "uses": []
   },
   {
     "id": "Socket",
     "owner": "sockets",
-    "source": "nodes/sockets/socket/src/socket.tsx",
+    "source": "nodes/sockets/socket/index.tsx",
     "description": "Один адресуемый вход или выход. Показывает форму и состояние, передаёт активацию приложению.",
     "uses": []
   },

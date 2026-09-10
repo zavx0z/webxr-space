@@ -3,7 +3,7 @@ import type {ComponentRoot} from "@zavx0z/component"
 import type {Document, Element, Node} from "@zavx0z/dom"
 import type {RoutedNodesStory} from "./story-types.ts"
 
-/** Mounts authored production components into the host's exact semantic Document. */
+/** Монтирует авторские компоненты в тот же семантический Document, который передал хост. */
 export function mountNodesStory(
   document: Document,
   route: string,

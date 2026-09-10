@@ -2,7 +2,8 @@ import {useState} from "@zavx0z/component"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import type {Document} from "@zavx0z/dom"
 import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"
-import {NodeTree, type NodeTreeSelection, type NodeTreeStore} from "@webxr/nodes/node-tree"
+import {GraphView} from "@webxr/nodes/view"
+import {useNodeTreePresentation, type NodeTreeSelection, type NodeTreeStore} from "@webxr/nodes/view/tree"
 import {layoutFixed} from "@nodes/layout/fixed"
 import type {LayoutResult} from "@nodes/layout/types"
 import type {NodeKind} from "@nodes/node/contracts"
@@ -54,6 +55,13 @@ type DependenciesStoryProps = Readonly<{
 
 function DependenciesStory(props: DependenciesStoryProps) {
   const [selection, setSelection] = useState<NodeTreeSelection>({kind: "node", id: props.scope === "nodes" ? "ContentNode" : "NumberParameter"})
+  const presentation = useNodeTreePresentation({
+    store: props.store,
+    layout: props.layout,
+    nodeKinds: props.kinds,
+    selection,
+    onSelectionChange: setSelection,
+  })
   const selected = selection?.kind === "node" ? dependencyComponents.find(component => component.id === selection.id) : undefined
   const relation = selection?.kind === "link" ? dependencyGraph(props.scope).relations.find(relation => relation.id === selection.id) : undefined
   const incoming = selected === undefined ? [] : dependencyComponents.filter(component => component.uses.includes(selected.id))
@@ -102,10 +110,10 @@ function DependenciesStory(props: DependenciesStoryProps) {
         width: ${props.layout.bounds.width + 48}px;
         height: ${props.layout.bounds.height + 48}px;
       `}>
-        <NodeTree
-          store={props.store}
-          layout={props.layout}
-          nodeKinds={props.kinds}
+        <GraphView
+          scene={presentation.scene}
+          pending={presentation.pending}
+          isCurrent={presentation.isCurrent}
           label="Зависимости компонентов"
           selection={selection}
           onSelectionChange={setSelection}
@@ -133,7 +141,8 @@ function DependenciesStory(props: DependenciesStoryProps) {
 function sourceFor(scope: DependencyScope) {
   const graph = dependencyGraph(scope)
   return [
-    'import {NodeTree} from "@webxr/nodes/node-tree"',
+    'import {GraphView} from "@webxr/nodes/view"',
+    'import {useNodeTreePresentation} from "@webxr/nodes/view/tree"',
     'import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"',
     'import {layoutFixed} from "@nodes/layout/fixed"',
     'import {useEffect, useMemo} from "@zavx0z/component"',
@@ -158,6 +167,7 @@ function sourceFor(scope: DependencyScope) {
     '    ports: tree.snapshot().nodes.flatMap(node => node.sockets.map(socket => ({id: `${node.id}/${socket.id}`, nodeId: node.id, y: 31}))),',
     '    edges: relations.map(edge => ({id: edge.id, sourcePortId: `${edge.from}/out`, targetPortId: `${edge.to}/in`})),',
     '  }), [tree])',
+    '  const presentation = useNodeTreePresentation({store, layout, nodeKinds: kinds})',
     '  return <div style={css`',
     '    width: 100%;',
     '    overflow: auto;',
@@ -166,10 +176,10 @@ function sourceFor(scope: DependencyScope) {
     '      width: ${layout.bounds.width + 48}px;',
     '      height: ${layout.bounds.height + 48}px;',
     '    `}>',
-    '      <NodeTree',
-    '        store={store}',
-    '        layout={layout}',
-    '        nodeKinds={kinds}',
+    '      <GraphView',
+    '        scene={presentation.scene}',
+    '        pending={presentation.pending}',
+    '        isCurrent={presentation.isCurrent}',
     '      />',
     '    </div>',
     '  </div>',

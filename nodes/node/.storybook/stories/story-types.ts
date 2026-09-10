@@ -55,7 +55,7 @@ export function withStoryProps(
   })
 }
 
-/** Shared compiled owner lifecycle and source serialization for view stories. */
+/** Общий жизненный цикл скомпилированного представления и сериализация исходника для историй. */
 export function mountOwnerStory<Props extends Readonly<Record<string, unknown>>>(
   document: SemanticDocument,
   template: CompiledTemplate<Props>,

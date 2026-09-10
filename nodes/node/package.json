@@ -9,8 +9,8 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     "./diagram": "./diagram/index.tsx",
-    "./parameter": "./parameter/src/parameter.tsx",
-    "./content": "./content/src/content.tsx",
+    "./parameter": "./parameter/index.tsx",
+    "./content": "./content/index.tsx",
     "./geometry": "./geometry/src/geometry.ts",
     "./contracts": "./shared/contracts.ts",
     "./metrics": "./geometry/src/metrics.ts"

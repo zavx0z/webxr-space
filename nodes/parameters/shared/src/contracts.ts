@@ -1,6 +1,6 @@
 /**
-Общие props связывают представление параметра с его нодой и Socket.
-Значения остаются во внешнем Store; callbacks несут точный адрес изменения.
+Общие свойства связывают представление параметра с его нодой и Socket.
+Значения остаются во внешнем Store; обработчики получают точный адрес изменения.
 
 @packageDocumentation
 */
@@ -54,7 +54,7 @@ export type ParameterEndpoint = Readonly<{
 
 @property [connected] - Скрывает поле, сохраняя строку, подпись и Socket.
 
-@property [onSocketActivate] - Получает исходный socket id; создание связи остаётся у приложения.
+@property [onSocketActivate] - Получает исходный идентификатор сокета; создание связи остаётся у приложения.
 */
 export type ParameterBaseProps = Readonly<{
   id: string
@@ -73,15 +73,15 @@ export type ParameterBaseProps = Readonly<{
 }>
 
 /**
-Проекция exact Parameter Store в существующий semantic Document.
+Проекция переданного хранилища параметра в существующий семантический Document.
 
 @property snapshot - Используется напрямую, когда store не передан.
 
-@property [store] - Заимствованная подписка на значение; adapter не создаёт и не уничтожает Store.
+@property [store] - Заимствованная подписка на значение; адаптер не создаёт и не уничтожает Store.
 
 @property [connectedSocketKeys] - Текущие адреса связанных Socket; определяют видимость поля.
 
-@property [resolvedSocketSides] - Стороны endpoint из принятой раскладки; приоритетнее направления.
+@property [resolvedSocketSides] - Стороны сокетов из принятой раскладки; приоритетнее направления.
 
 @property [onInput] - Публикует адресованное значение без записи в Store.
 */
