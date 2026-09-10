@@ -11,7 +11,7 @@ import type {
 import type {FixedLayoutGraph, FixedLayoutResult} from "@nodes/layout/fixed"
 import type {
   TopDownCycleWitness,
-  TopDownLayoutGraph,
+  TopDownInput,
   TopDownLayoutResult,
 } from "@nodes/layout/top-down"
 import type {LayoutResult} from "@nodes/layout/types"
@@ -114,13 +114,13 @@ export type AdaptiveWorkerEndpoint = WorkerEndpoint<
 >
 
 /** Top-down policy contract with a typed cycle witness and no fallback. */
-export type TopDownWorkerRequest = WorkerRequest<TopDownLayoutGraph>
+export type TopDownWorkerRequest = WorkerRequest<TopDownInput>
 export type TopDownWorkerSuccess = WorkerSuccess<TopDownLayoutResult>
 export type TopDownWorkerFailure = WorkerFailure<
   SerializedWorkerError | SerializedTopDownLayoutError
 >
 export type TopDownWorkerResponse = TopDownWorkerSuccess | TopDownWorkerFailure
-export type TopDownWorkerInput = WorkerInput<TopDownLayoutGraph>
+export type TopDownWorkerInput = WorkerInput<TopDownInput>
 export type TopDownWorkerEndpoint = WorkerEndpoint<
   TopDownWorkerRequest,
   TopDownWorkerResponse

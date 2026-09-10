@@ -38,7 +38,16 @@ export function Mermaid(props: Readonly<{source: string}>) {
     return {
       bounds: {x: 0, y: 0, width: plan.width, height: plan.height},
       nodes: plan.nodes.map(node => ({...node.rect})),
-      links: plan.edges.map(edge => ({id: edge.id, title: `${edge.from} → ${edge.to}`, route: edge.route, startArrow: edge.startArrow, endArrow: edge.endArrow})),
+      links: plan.edges.map(edge => ({
+        id: edge.id,
+        title: `${edge.from} → ${edge.to}`,
+        route: edge.route,
+        startArrow: edge.startArrow,
+        endArrow: edge.endArrow,
+        color: "var(--widget-box-content, currentColor)",
+        strokeWidth: 1,
+        markers: edge.markers,
+      })),
     }
   }, [state.graph])
   const layoutState = useMemo(() => (value: Readonly<{pending: boolean}>) => {

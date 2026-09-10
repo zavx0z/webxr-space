@@ -1,4 +1,4 @@
-import type {TopDownLayoutGraph, TopDownLayoutResult} from "@nodes/layout/top-down"
+import type {TopDownInput, TopDownLayoutResult} from "@nodes/layout/top-down"
 import {WorkerTransportClient} from "../../../../execution/worker/src/transport.ts"
 import type {
   TopDownWorkerEndpoint,
@@ -8,7 +8,7 @@ import type {
 
 /** Main-thread client for the physically separate top-down policy Worker. */
 export class TopDownWorkerClient extends WorkerTransportClient<
-  TopDownLayoutGraph,
+  TopDownInput,
   TopDownLayoutResult,
   never,
   TopDownWorkerFailure["error"]
@@ -19,7 +19,7 @@ export class TopDownWorkerClient extends WorkerTransportClient<
 
   override layout(input: Readonly<{
     generation: number
-    graph: TopDownLayoutGraph
+    graph: TopDownInput
   }>): Promise<TopDownWorkerSuccess> {
     return super.layout(input)
   }

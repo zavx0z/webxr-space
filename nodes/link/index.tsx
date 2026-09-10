@@ -15,11 +15,14 @@ import {
   createCubicLinkRoute,
   projectLinkRoute,
   projectLinkArrowheads,
+  projectLinkMarkers,
   type LinkCubicCurve,
   type LinkPathBounds,
   type LinkPathPoint,
   type LinkPathProjection,
   type LinkRoute,
+  type LinkMarkerStyle,
+  type LinkMarkerGeometry,
 } from "../shared/routing/link-path.ts"
 import {socketPreset, type SocketKind} from "@nodes/sockets/presets"
 
@@ -27,6 +30,7 @@ export {
   createCubicLinkRoute,
   projectLinkRoute,
   projectLinkArrowheads,
+  projectLinkMarkers,
 }
 
 export type {
@@ -35,6 +39,8 @@ export type {
   LinkPathPoint,
   LinkPathProjection,
   LinkRoute,
+  LinkMarkerStyle,
+  LinkMarkerGeometry,
 }
 
 export type LinkEndpoint = Readonly<{
@@ -46,6 +52,10 @@ export type LinkDefinition = Readonly<{
   id: string
   title: string
   route: LinkRoute
+  color?: string | undefined
+  strokeWidth?: number | undefined
+  /** Готовая marker geometry; отсутствие сохраняет прежние открытые стрелки. */
+  markers?: readonly LinkMarkerGeometry[] | undefined
   kind?: SocketKind | undefined
   from?: LinkEndpoint | undefined
   to?: LinkEndpoint | undefined
@@ -75,6 +85,9 @@ export function Link(props: LinkProps) {
     title: props.title,
     route: props.route,
     kind: props.kind,
+    color: props.color,
+    strokeWidth: props.strokeWidth,
+    markers: props.markers,
     from: props.from,
     to: props.to,
     startArrow: props.startArrow,
@@ -87,6 +100,9 @@ export function Link(props: LinkProps) {
     props.title,
     props.route,
     props.kind,
+    props.color,
+    props.strokeWidth,
+    props.markers,
     props.from,
     props.to,
     props.startArrow,
@@ -103,8 +119,8 @@ export function Link(props: LinkProps) {
   const definition = useSyncExternalStore(store.subscribe, store.getSnapshot)
   validateLinkProps(definition)
   const projection = projectLinkRoute(definition.route)
-  const arrowheads = projectLinkArrowheads(definition.route, definition.startArrow, definition.endArrow)
-  const color = socketPreset(definition.kind ?? "custom").color
+  const arrowheads = definition.markers ?? projectLinkArrowheads(definition.route, definition.startArrow, definition.endArrow)
+  const color = definition.color ?? socketPreset(definition.kind ?? "custom").color
   return <>
     <vector-path
       role="option"
@@ -131,7 +147,8 @@ export function Link(props: LinkProps) {
         height: 0;
         color: ${color};
         stroke: ${color};
-        stroke-width: 2.2px;
+        fill: none;
+        stroke-width: ${definition.strokeWidth ?? 2.2}px;
         pointer-hit-width: 16px;
 
         &[aria-selected="true"] {
@@ -155,7 +172,9 @@ export function Link(props: LinkProps) {
       id={definition.id}
       side={arrow.side}
       d={arrow.d}
+      filled={definition.markers !== undefined}
       color={color}
+      strokeWidth={definition.strokeWidth}
       selected={definition.selected}
       disabled={definition.disabled}
       hidden={definition.hidden}
@@ -167,7 +186,9 @@ function LinkArrow(props: Readonly<{
   id: string
   side: string
   d: string
+  filled: boolean
   color: string
+  strokeWidth?: number | undefined
   selected?: boolean | undefined
   disabled?: boolean | undefined
   hidden?: boolean | undefined
@@ -188,7 +209,9 @@ function LinkArrow(props: Readonly<{
       overflow: visible;
       z-index: 2;
       stroke: ${props.color};
-      stroke-width: ${props.selected ? 3.4 : 2.2}px;
+      color: ${props.color};
+      fill: ${props.filled ? "currentColor" : "none"};
+      stroke-width: ${props.filled ? 0 : props.selected ? 3.4 : props.strokeWidth ?? 2.2}px;
       opacity: ${props.disabled ? .45 : 1};
       pointer-events: none;
 

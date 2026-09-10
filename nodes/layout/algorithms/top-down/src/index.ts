@@ -1,8 +1,8 @@
 /**
 Числовая вертикальная раскладка DAG.
 
-Алгоритм соединяет SOUTH и NORTH порты кубическими маршрутами; цикл даёт
-структурированный witness до публикации геометрии.
+Портовый вход сохраняет SOUTH/NORTH, контурный — присоединяет связи к фигурам.
+Оба возвращают кубические маршруты и typed witness при цикле.
 
 @packageDocumentation
 */
@@ -13,6 +13,10 @@ import type {
   TopDownLayoutErrorCode,
   TopDownLayoutEdge,
   TopDownLayoutGraph,
+  TopDownInput,
+  TopDownContourGraph,
+  TopDownContourEdge,
+  TopDownShape,
   TopDownLayoutResult,
 } from "../../../protocol/types/src/top-down.ts"
 import {solveTopDownCurves} from "./curve-solver.ts"
@@ -24,6 +28,10 @@ export type {
   TopDownLayoutEdge,
   TopDownLayoutErrorCode,
   TopDownLayoutGraph,
+  TopDownInput,
+  TopDownContourGraph,
+  TopDownContourEdge,
+  TopDownShape,
   TopDownLayoutNode,
   TopDownLayoutOptions,
   TopDownLayoutPort,
@@ -33,10 +41,8 @@ export type {
 } from "../../../protocol/types/src/top-down.ts"
 
 /**
-Typed structural failure detected before top-down placement starts.
-
-The policy has no fallback solver. `witness` identifies the unresolved cycle
-without exposing internal ranking or routing state.
+Структурированный отказ до размещения. Witness указывает цикл; другого
+solver или скрытого fallback нет.
 */
 export class TopDownLayoutError extends Error {
   override readonly name = "TopDownLayoutError"
@@ -50,33 +56,16 @@ export class TopDownLayoutError extends Error {
 }
 
 /**
-Calculates one intrinsic flat-DAG scene from top to bottom.
+Вычисляет плоский DAG в локальных CSS-пикселях без viewport и DOM.
 
-The call is synchronous, deterministic and independent of viewport state.
-Source ports leave through `SOUTH`; target ports enter through `NORTH`.
+Портовый вход сохраняет точные SOUTH/NORTH endpoints. Явный contour-вход
+сохраняет порядок nodes/edges и возвращает пересечения фигур отдельно от ports.
+Результат детерминирован для одинакового входа, исходные массивы не изменяются.
 
-@param graph - Measured leaf rectangles, exact port offsets and semantic edges.
-
-@returns Geometry-only rectangles, endpoints and uniform rounded-corner cubic chains.
-
-@throws {@link TopDownLayoutError} when the directed node graph contains a cycle.
-@throws `Error` when IDs, dimensions, port offsets or endpoints are invalid.
-
-@example
-```ts
-const result = layoutTopDown({
-  nodes: [
-    {id: "root", width: 180, height: 72},
-    {id: "leaf", width: 160, height: 64},
-  ],
-  ports: [
-    {id: "root/out", nodeId: "root", x: 90},
-    {id: "leaf/in", nodeId: "leaf", x: 80},
-  ],
-  edges: [{id: "flow", sourcePortId: "root/out", targetPortId: "leaf/in"}],
-})
-```
+@param graph - Измеренные фигуры и связи либо измеренные прямоугольники и точные порты.
+@returns Геометрия нод и кубических маршрутов; contour содержит также guidePoints/attachment.
+@throws {@link TopDownLayoutError} при цикле; Error при недопустимом числовом входе.
 */
-export function layoutTopDown(graph: TopDownLayoutGraph): TopDownLayoutResult {
+export function layoutTopDown(graph: TopDownInput): TopDownLayoutResult {
   return solveTopDownCurves(graph, (witness) => new TopDownLayoutError("CYCLE_DETECTED", witness))
 }

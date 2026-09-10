@@ -1,0 +1,4187 @@
+{
+  "source": "Research snapshot at5d241d4, original port solver; synthetic inputs",
+  "fixtures": [
+    {
+      "name": "seven-uniform",
+      "input": {
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ContentSurface",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Pane",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "DiagramNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Typography",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "ContentNode",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "ContentSurface",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "ContentNode",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "ParameterNode",
+            "x": 105
+          },
+          {
+            "id": "edge-2/out",
+            "nodeId": "ContentNode",
+            "x": 105
+          },
+          {
+            "id": "edge-2/in",
+            "nodeId": "Pane",
+            "x": 105
+          },
+          {
+            "id": "edge-3/out",
+            "nodeId": "ParameterNode",
+            "x": 105
+          },
+          {
+            "id": "edge-3/in",
+            "nodeId": "ParameterNodeContents",
+            "x": 105
+          },
+          {
+            "id": "edge-4/out",
+            "nodeId": "ParameterNode",
+            "x": 105
+          },
+          {
+            "id": "edge-4/in",
+            "nodeId": "Pane",
+            "x": 105
+          },
+          {
+            "id": "edge-5/out",
+            "nodeId": "DiagramNode",
+            "x": 105
+          },
+          {
+            "id": "edge-5/in",
+            "nodeId": "Pane",
+            "x": 105
+          },
+          {
+            "id": "edge-6/out",
+            "nodeId": "DiagramNode",
+            "x": 105
+          },
+          {
+            "id": "edge-6/in",
+            "nodeId": "Typography",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          },
+          {
+            "id": "edge-2",
+            "sourcePortId": "edge-2/out",
+            "targetPortId": "edge-2/in"
+          },
+          {
+            "id": "edge-3",
+            "sourcePortId": "edge-3/out",
+            "targetPortId": "edge-3/in"
+          },
+          {
+            "id": "edge-4",
+            "sourcePortId": "edge-4/out",
+            "targetPortId": "edge-4/in"
+          },
+          {
+            "id": "edge-5",
+            "sourcePortId": "edge-5/out",
+            "targetPortId": "edge-5/in"
+          },
+          {
+            "id": "edge-6",
+            "sourcePortId": "edge-6/out",
+            "targetPortId": "edge-6/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 956,
+          "height": 308
+        },
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "x": 148,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ContentSurface",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "DiagramNode",
+            "x": 538,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Pane",
+            "x": 478,
+            "y": 236,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNode",
+            "x": 268,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNodeContents",
+            "x": 148,
+            "y": 236,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Typography",
+            "x": 738,
+            "y": 236,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 253,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 373,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 253,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-2/in",
+            "x": 583,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-2/out",
+            "x": 253,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-3/in",
+            "x": 253,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-3/out",
+            "x": 373,
+            "y": 186,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-4/in",
+            "x": 583,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-4/out",
+            "x": 373,
+            "y": 186,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-5/in",
+            "x": 583,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-5/out",
+            "x": 643,
+            "y": 186,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-6/in",
+            "x": 843,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-6/out",
+            "x": 643,
+            "y": 186,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 207.974046,
+                    "y": 80.0403489
+                  },
+                  {
+                    "x": 121.2035632,
+                    "y": 95.535078
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.9221379,
+                  "y": 96.1210468
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.9221379,
+                  "y": 96.1210468
+                },
+                "controlPoints": [
+                  {
+                    "x": 114.6407126,
+                    "y": 96.7070156
+                  },
+                  {
+                    "x": 113,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 113,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 291.368366,
+                    "y": 79.9934096
+                  },
+                  {
+                    "x": 364.8418298,
+                    "y": 95.3003812
+                  }
+                ],
+                "endPoint": {
+                  "x": 368.1050979,
+                  "y": 95.9802287
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 368.1050979,
+                  "y": 95.9802287
+                },
+                "controlPoints": [
+                  {
+                    "x": 371.368366,
+                    "y": 96.6600762
+                  },
+                  {
+                    "x": 373,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 373,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 451.3347782,
+                    "y": 80.2639491
+                  },
+                  {
+                    "x": 844.673891,
+                    "y": 96.6530788
+                  }
+                ],
+                "endPoint": {
+                  "x": 848.0043346,
+                  "y": 96.7918473
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 848.0043346,
+                  "y": 96.7918473
+                },
+                "controlPoints": [
+                  {
+                    "x": 851.3347782,
+                    "y": 96.9306158
+                  },
+                  {
+                    "x": 853,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 853,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 853,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 853,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 853,
+                    "y": 202.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 853,
+                  "y": 206
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 853,
+                  "y": 206
+                },
+                "controlPoints": [
+                  {
+                    "x": 853,
+                    "y": 209.3333333
+                  },
+                  {
+                    "x": 851.3404322,
+                    "y": 211.1536637
+                  }
+                ],
+                "endPoint": {
+                  "x": 848.0212966,
+                  "y": 211.4609911
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 848.0212966,
+                  "y": 211.4609911
+                },
+                "controlPoints": [
+                  {
+                    "x": 844.702161,
+                    "y": 211.7683185
+                  },
+                  {
+                    "x": 671.3404322,
+                    "y": 227.8203304
+                  }
+                ],
+                "endPoint": {
+                  "x": 583,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 334.631634,
+                    "y": 193.9934096
+                  },
+                  {
+                    "x": 261.1581702,
+                    "y": 209.3003812
+                  }
+                ],
+                "endPoint": {
+                  "x": 257.8949021,
+                  "y": 209.9802287
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 257.8949021,
+                  "y": 209.9802287
+                },
+                "controlPoints": [
+                  {
+                    "x": 254.631634,
+                    "y": 210.6600762
+                  },
+                  {
+                    "x": 253,
+                    "y": 212.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 253,
+                  "y": 216
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 216
+                },
+                "controlPoints": [
+                  {
+                    "x": 253,
+                    "y": 219.3333333
+                  },
+                  {
+                    "x": 253,
+                    "y": 229.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 253,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 411.368366,
+                    "y": 193.9934096
+                  },
+                  {
+                    "x": 484.8418298,
+                    "y": 209.3003812
+                  }
+                ],
+                "endPoint": {
+                  "x": 488.1050979,
+                  "y": 209.9802287
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 488.1050979,
+                  "y": 209.9802287
+                },
+                "controlPoints": [
+                  {
+                    "x": 491.368366,
+                    "y": 210.6600762
+                  },
+                  {
+                    "x": 494.6058632,
+                    "y": 211.4460731
+                  }
+                ],
+                "endPoint": {
+                  "x": 497.8175895,
+                  "y": 212.3382193
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 497.8175895,
+                  "y": 212.3382193
+                },
+                "controlPoints": [
+                  {
+                    "x": 501.0293158,
+                    "y": 213.2303655
+                  },
+                  {
+                    "x": 554.6058632,
+                    "y": 228.1127398
+                  }
+                ],
+                "endPoint": {
+                  "x": 583,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 643,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 601.3033441,
+                    "y": 194.0185877
+                  },
+                  {
+                    "x": 521.183387,
+                    "y": 209.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 517.9100322,
+                  "y": 210.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 517.9100322,
+                  "y": 210.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 514.6366774,
+                    "y": 210.6852543
+                  },
+                  {
+                    "x": 514.5695699,
+                    "y": 211.5605607
+                  }
+                ],
+                "endPoint": {
+                  "x": 517.7087096,
+                  "y": 212.681682
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 517.7087096,
+                  "y": 212.681682
+                },
+                "controlPoints": [
+                  {
+                    "x": 520.8478493,
+                    "y": 213.8028033
+                  },
+                  {
+                    "x": 561.2362365,
+                    "y": 228.2272273
+                  }
+                ],
+                "endPoint": {
+                  "x": 583,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 643,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 684.6966559,
+                    "y": 194.0185877
+                  },
+                  {
+                    "x": 764.816613,
+                    "y": 209.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 768.0899678,
+                  "y": 210.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 768.0899678,
+                  "y": 210.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 771.3633226,
+                    "y": 210.6852543
+                  },
+                  {
+                    "x": 774.5695699,
+                    "y": 211.5605607
+                  }
+                ],
+                "endPoint": {
+                  "x": 777.7087096,
+                  "y": 212.681682
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 777.7087096,
+                  "y": 212.681682
+                },
+                "controlPoints": [
+                  {
+                    "x": 780.8478493,
+                    "y": 213.8028033
+                  },
+                  {
+                    "x": 821.2362365,
+                    "y": 228.2272273
+                  }
+                ],
+                "endPoint": {
+                  "x": 843,
+                  "y": 236
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "seven-varied",
+      "input": {
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 130,
+            "height": 44
+          },
+          {
+            "id": "ContentSurface",
+            "width": 148,
+            "height": 44
+          },
+          {
+            "id": "ParameterNode",
+            "width": 146,
+            "height": 44
+          },
+          {
+            "id": "Pane",
+            "width": 68,
+            "height": 44
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 212,
+            "height": 44
+          },
+          {
+            "id": "DiagramNode",
+            "width": 132,
+            "height": 44
+          },
+          {
+            "id": "Typography",
+            "width": 118,
+            "height": 44
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "ContentNode",
+            "x": 65
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "ContentSurface",
+            "x": 74
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "ContentNode",
+            "x": 65
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "ParameterNode",
+            "x": 73
+          },
+          {
+            "id": "edge-2/out",
+            "nodeId": "ContentNode",
+            "x": 65
+          },
+          {
+            "id": "edge-2/in",
+            "nodeId": "Pane",
+            "x": 34
+          },
+          {
+            "id": "edge-3/out",
+            "nodeId": "ParameterNode",
+            "x": 73
+          },
+          {
+            "id": "edge-3/in",
+            "nodeId": "ParameterNodeContents",
+            "x": 106
+          },
+          {
+            "id": "edge-4/out",
+            "nodeId": "ParameterNode",
+            "x": 73
+          },
+          {
+            "id": "edge-4/in",
+            "nodeId": "Pane",
+            "x": 34
+          },
+          {
+            "id": "edge-5/out",
+            "nodeId": "DiagramNode",
+            "x": 66
+          },
+          {
+            "id": "edge-5/in",
+            "nodeId": "Pane",
+            "x": 34
+          },
+          {
+            "id": "edge-6/out",
+            "nodeId": "DiagramNode",
+            "x": 66
+          },
+          {
+            "id": "edge-6/in",
+            "nodeId": "Typography",
+            "x": 59
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          },
+          {
+            "id": "edge-2",
+            "sourcePortId": "edge-2/out",
+            "targetPortId": "edge-2/in"
+          },
+          {
+            "id": "edge-3",
+            "sourcePortId": "edge-3/out",
+            "targetPortId": "edge-3/in"
+          },
+          {
+            "id": "edge-4",
+            "sourcePortId": "edge-4/out",
+            "targetPortId": "edge-4/in"
+          },
+          {
+            "id": "edge-5",
+            "sourcePortId": "edge-5/out",
+            "targetPortId": "edge-5/in"
+          },
+          {
+            "id": "edge-6",
+            "sourcePortId": "edge-6/out",
+            "targetPortId": "edge-6/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 657.5,
+          "height": 248
+        },
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "x": 142.5,
+            "y": 8,
+            "width": 130,
+            "height": 44
+          },
+          {
+            "id": "ContentSurface",
+            "x": 8,
+            "y": 102,
+            "width": 148,
+            "height": 44
+          },
+          {
+            "id": "DiagramNode",
+            "x": 402.5,
+            "y": 102,
+            "width": 132,
+            "height": 44
+          },
+          {
+            "id": "Pane",
+            "x": 413.5,
+            "y": 196,
+            "width": 68,
+            "height": 44
+          },
+          {
+            "id": "ParameterNode",
+            "x": 206,
+            "y": 102,
+            "width": 146,
+            "height": 44
+          },
+          {
+            "id": "ParameterNodeContents",
+            "x": 101,
+            "y": 196,
+            "width": 212,
+            "height": 44
+          },
+          {
+            "id": "Typography",
+            "x": 531.5,
+            "y": 196,
+            "width": 118,
+            "height": 44
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 82,
+            "y": 102,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 207.5,
+            "y": 52,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 279,
+            "y": 102,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 207.5,
+            "y": 52,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-2/in",
+            "x": 447.5,
+            "y": 196,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-2/out",
+            "x": 207.5,
+            "y": 52,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-3/in",
+            "x": 207,
+            "y": 196,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-3/out",
+            "x": 279,
+            "y": 146,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-4/in",
+            "x": 447.5,
+            "y": 196,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-4/out",
+            "x": 279,
+            "y": 146,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-5/in",
+            "x": 447.5,
+            "y": 196,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-5/out",
+            "x": 468.5,
+            "y": 146,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-6/in",
+            "x": 590.5,
+            "y": 196,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-6/out",
+            "x": 468.5,
+            "y": 146,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 207.5,
+                  "y": 52
+                },
+                "controlPoints": [
+                  {
+                    "x": 167.3012178,
+                    "y": 60.0077255
+                  },
+                  {
+                    "x": 90.1727555,
+                    "y": 75.371961
+                  }
+                ],
+                "endPoint": {
+                  "x": 86.9036533,
+                  "y": 76.0231766
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 86.9036533,
+                  "y": 76.0231766
+                },
+                "controlPoints": [
+                  {
+                    "x": 83.6345511,
+                    "y": 76.6743922
+                  },
+                  {
+                    "x": 82,
+                    "y": 78.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 82,
+                  "y": 82
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 82,
+                  "y": 82
+                },
+                "controlPoints": [
+                  {
+                    "x": 82,
+                    "y": 85.3333333
+                  },
+                  {
+                    "x": 82,
+                    "y": 95.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 82,
+                  "y": 102
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 207.5,
+                  "y": 52
+                },
+                "controlPoints": [
+                  {
+                    "x": 229.7600646,
+                    "y": 59.7832394
+                  },
+                  {
+                    "x": 271.1336565,
+                    "y": 74.2495302
+                  }
+                ],
+                "endPoint": {
+                  "x": 274.2801939,
+                  "y": 75.3497181
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 274.2801939,
+                  "y": 75.3497181
+                },
+                "controlPoints": [
+                  {
+                    "x": 277.4267313,
+                    "y": 76.449906
+                  },
+                  {
+                    "x": 279,
+                    "y": 78.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 279,
+                  "y": 82
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 279,
+                  "y": 82
+                },
+                "controlPoints": [
+                  {
+                    "x": 279,
+                    "y": 85.3333333
+                  },
+                  {
+                    "x": 279,
+                    "y": 95.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 279,
+                  "y": 102
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 207.5,
+                  "y": 52
+                },
+                "controlPoints": [
+                  {
+                    "x": 336.8366953,
+                    "y": 60.2275251
+                  },
+                  {
+                    "x": 592.1834767,
+                    "y": 76.470959
+                  }
+                ],
+                "endPoint": {
+                  "x": 595.510086,
+                  "y": 76.6825754
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 595.510086,
+                  "y": 76.6825754
+                },
+                "controlPoints": [
+                  {
+                    "x": 598.8366953,
+                    "y": 76.8941918
+                  },
+                  {
+                    "x": 600.5,
+                    "y": 78.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 600.5,
+                  "y": 82
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 600.5,
+                  "y": 82
+                },
+                "controlPoints": [
+                  {
+                    "x": 600.5,
+                    "y": 85.3333333
+                  },
+                  {
+                    "x": 600.5,
+                    "y": 162.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 600.5,
+                  "y": 166
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 600.5,
+                  "y": 166
+                },
+                "controlPoints": [
+                  {
+                    "x": 600.5,
+                    "y": 169.3333333
+                  },
+                  {
+                    "x": 598.8551468,
+                    "y": 171.2687669
+                  }
+                ],
+                "endPoint": {
+                  "x": 595.5654403,
+                  "y": 171.8063006
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 595.5654403,
+                  "y": 171.8063006
+                },
+                "controlPoints": [
+                  {
+                    "x": 592.2757338,
+                    "y": 172.3438343
+                  },
+                  {
+                    "x": 496.8551468,
+                    "y": 187.9354335
+                  }
+                ],
+                "endPoint": {
+                  "x": 447.5,
+                  "y": 196
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 279,
+                  "y": 146
+                },
+                "controlPoints": [
+                  {
+                    "x": 256.5744561,
+                    "y": 153.7866472
+                  },
+                  {
+                    "x": 214.8722805,
+                    "y": 168.2665693
+                  }
+                ],
+                "endPoint": {
+                  "x": 211.7233683,
+                  "y": 169.3599416
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 211.7233683,
+                  "y": 169.3599416
+                },
+                "controlPoints": [
+                  {
+                    "x": 208.5744561,
+                    "y": 170.4533139
+                  },
+                  {
+                    "x": 207,
+                    "y": 172.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 207,
+                  "y": 176
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 207,
+                  "y": 176
+                },
+                "controlPoints": [
+                  {
+                    "x": 207,
+                    "y": 179.3333333
+                  },
+                  {
+                    "x": 207,
+                    "y": 189.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 207,
+                  "y": 196
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 279,
+                  "y": 146
+                },
+                "controlPoints": [
+                  {
+                    "x": 305.7343908,
+                    "y": 153.8630561
+                  },
+                  {
+                    "x": 356.0052875,
+                    "y": 168.648614
+                  }
+                ],
+                "endPoint": {
+                  "x": 359.2031725,
+                  "y": 169.5891684
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 359.2031725,
+                  "y": 169.5891684
+                },
+                "controlPoints": [
+                  {
+                    "x": 362.4010575,
+                    "y": 170.5297228
+                  },
+                  {
+                    "x": 365.59664,
+                    "y": 171.4780359
+                  }
+                ],
+                "endPoint": {
+                  "x": 368.7899201,
+                  "y": 172.4341078
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 368.7899201,
+                  "y": 172.4341078
+                },
+                "controlPoints": [
+                  {
+                    "x": 371.9832002,
+                    "y": 173.3901797
+                  },
+                  {
+                    "x": 421.2633067,
+                    "y": 188.1447026
+                  }
+                ],
+                "endPoint": {
+                  "x": 447.5,
+                  "y": 196
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 468.5,
+                  "y": 146
+                },
+                "controlPoints": [
+                  {
+                    "x": 446.2399354,
+                    "y": 153.7832394
+                  },
+                  {
+                    "x": 404.8663435,
+                    "y": 168.2495302
+                  }
+                ],
+                "endPoint": {
+                  "x": 401.7198061,
+                  "y": 169.3497181
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 401.7198061,
+                  "y": 169.3497181
+                },
+                "controlPoints": [
+                  {
+                    "x": 398.5732687,
+                    "y": 170.449906
+                  },
+                  {
+                    "x": 398.493658,
+                    "y": 171.7394346
+                  }
+                ],
+                "endPoint": {
+                  "x": 401.480974,
+                  "y": 173.2183039
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 401.480974,
+                  "y": 173.2183039
+                },
+                "controlPoints": [
+                  {
+                    "x": 404.46829,
+                    "y": 174.6971732
+                  },
+                  {
+                    "x": 432.1603247,
+                    "y": 188.4061013
+                  }
+                ],
+                "endPoint": {
+                  "x": 447.5,
+                  "y": 196
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 468.5,
+                  "y": 146
+                },
+                "controlPoints": [
+                  {
+                    "x": 490.7600646,
+                    "y": 153.7832394
+                  },
+                  {
+                    "x": 532.1336565,
+                    "y": 168.2495302
+                  }
+                ],
+                "endPoint": {
+                  "x": 535.2801939,
+                  "y": 169.3497181
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 535.2801939,
+                  "y": 169.3497181
+                },
+                "controlPoints": [
+                  {
+                    "x": 538.4267313,
+                    "y": 170.449906
+                  },
+                  {
+                    "x": 541.493658,
+                    "y": 171.7394346
+                  }
+                ],
+                "endPoint": {
+                  "x": 544.480974,
+                  "y": 173.2183039
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 544.480974,
+                  "y": 173.2183039
+                },
+                "controlPoints": [
+                  {
+                    "x": 547.46829,
+                    "y": 174.6971732
+                  },
+                  {
+                    "x": 575.1603247,
+                    "y": 188.4061013
+                  }
+                ],
+                "endPoint": {
+                  "x": 590.5,
+                  "y": 196
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "diamond",
+      "input": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "C",
+            "x": 105
+          },
+          {
+            "id": "edge-2/out",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-2/in",
+            "nodeId": "D",
+            "x": 105
+          },
+          {
+            "id": "edge-3/out",
+            "nodeId": "C",
+            "x": 105
+          },
+          {
+            "id": "edge-3/in",
+            "nodeId": "D",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          },
+          {
+            "id": "edge-2",
+            "sourcePortId": "edge-2/out",
+            "targetPortId": "edge-2/in"
+          },
+          {
+            "id": "edge-3",
+            "sourcePortId": "edge-3/out",
+            "targetPortId": "edge-3/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 486,
+          "height": 308
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "x": 138,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "x": 268,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "x": 138,
+            "y": 236,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 243,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 373,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 243,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-2/in",
+            "x": 243,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-2/out",
+            "x": 113,
+            "y": 186,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-3/in",
+            "x": 243,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-3/out",
+            "x": 373,
+            "y": 186,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 243,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 201.3033441,
+                    "y": 80.0185877
+                  },
+                  {
+                    "x": 121.183387,
+                    "y": 95.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.9100322,
+                  "y": 96.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.9100322,
+                  "y": 96.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 114.6366774,
+                    "y": 96.6852543
+                  },
+                  {
+                    "x": 113,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 113,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 243,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 284.6966559,
+                    "y": 80.0185877
+                  },
+                  {
+                    "x": 364.816613,
+                    "y": 95.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 368.0899678,
+                  "y": 96.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 368.0899678,
+                  "y": 96.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 371.3633226,
+                    "y": 96.6852543
+                  },
+                  {
+                    "x": 373,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 373,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 192.6666667
+                  },
+                  {
+                    "x": 113,
+                    "y": 202.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 206
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 206
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 209.3333333
+                  },
+                  {
+                    "x": 114.6366774,
+                    "y": 211.3147457
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.9100322,
+                  "y": 211.944237
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.9100322,
+                  "y": 211.944237
+                },
+                "controlPoints": [
+                  {
+                    "x": 121.183387,
+                    "y": 212.5737283
+                  },
+                  {
+                    "x": 201.3033441,
+                    "y": 227.9814123
+                  }
+                ],
+                "endPoint": {
+                  "x": 243,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 192.6666667
+                  },
+                  {
+                    "x": 373,
+                    "y": 202.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 206
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 206
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 209.3333333
+                  },
+                  {
+                    "x": 371.3633226,
+                    "y": 211.3147457
+                  }
+                ],
+                "endPoint": {
+                  "x": 368.0899678,
+                  "y": 211.944237
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 368.0899678,
+                  "y": 211.944237
+                },
+                "controlPoints": [
+                  {
+                    "x": 364.816613,
+                    "y": 212.5737283
+                  },
+                  {
+                    "x": 284.6966559,
+                    "y": 227.9814123
+                  }
+                ],
+                "endPoint": {
+                  "x": 243,
+                  "y": 236
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "long-edge",
+      "input": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "C",
+            "x": 105
+          },
+          {
+            "id": "edge-2/out",
+            "nodeId": "C",
+            "x": 105
+          },
+          {
+            "id": "edge-2/in",
+            "nodeId": "D",
+            "x": 105
+          },
+          {
+            "id": "edge-3/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-3/in",
+            "nodeId": "D",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          },
+          {
+            "id": "edge-2",
+            "sourcePortId": "edge-2/out",
+            "targetPortId": "edge-2/in"
+          },
+          {
+            "id": "edge-3",
+            "sourcePortId": "edge-3/out",
+            "targetPortId": "edge-3/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 296,
+          "height": 422
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "x": 78,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "x": 8,
+            "y": 236,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "x": 78,
+            "y": 350,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 183,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 113,
+            "y": 236,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 113,
+            "y": 186,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-2/in",
+            "x": 183,
+            "y": 350,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-2/out",
+            "x": 113,
+            "y": 300,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-3/in",
+            "x": 183,
+            "y": 350,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-3/out",
+            "x": 183,
+            "y": 72,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 183,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 161.2362365,
+                    "y": 79.7727727
+                  },
+                  {
+                    "x": 120.8478493,
+                    "y": 94.1971967
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.7087096,
+                  "y": 95.318318
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.7087096,
+                  "y": 95.318318
+                },
+                "controlPoints": [
+                  {
+                    "x": 114.5695699,
+                    "y": 96.4394393
+                  },
+                  {
+                    "x": 113,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 113,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 186
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 202.6666667
+                  },
+                  {
+                    "x": 113,
+                    "y": 219.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 236
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 300
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 306.6666667
+                  },
+                  {
+                    "x": 113,
+                    "y": 316.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 320
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 320
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 323.3333333
+                  },
+                  {
+                    "x": 114.5695699,
+                    "y": 325.5605607
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.7087096,
+                  "y": 326.681682
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.7087096,
+                  "y": 326.681682
+                },
+                "controlPoints": [
+                  {
+                    "x": 120.8478493,
+                    "y": 327.8028033
+                  },
+                  {
+                    "x": 161.2362365,
+                    "y": 342.2272273
+                  }
+                ],
+                "endPoint": {
+                  "x": 183,
+                  "y": 350
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 183,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 204.7637635,
+                    "y": 79.7727727
+                  },
+                  {
+                    "x": 245.1521507,
+                    "y": 94.1971967
+                  }
+                ],
+                "endPoint": {
+                  "x": 248.2912904,
+                  "y": 95.318318
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 248.2912904,
+                  "y": 95.318318
+                },
+                "controlPoints": [
+                  {
+                    "x": 251.4304301,
+                    "y": 96.4394393
+                  },
+                  {
+                    "x": 253,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 253,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 253,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 253,
+                    "y": 316.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 253,
+                  "y": 320
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 253,
+                  "y": 320
+                },
+                "controlPoints": [
+                  {
+                    "x": 253,
+                    "y": 323.3333333
+                  },
+                  {
+                    "x": 251.4304301,
+                    "y": 325.5605607
+                  }
+                ],
+                "endPoint": {
+                  "x": 248.2912904,
+                  "y": 326.681682
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 248.2912904,
+                  "y": 326.681682
+                },
+                "controlPoints": [
+                  {
+                    "x": 245.1521507,
+                    "y": 327.8028033
+                  },
+                  {
+                    "x": 204.7637635,
+                    "y": 342.2272273
+                  }
+                ],
+                "endPoint": {
+                  "x": 183,
+                  "y": 350
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "disconnected",
+      "input": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "E",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "C",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "D",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 746,
+          "height": 194
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "x": 8,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "x": 268,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "x": 268,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "E",
+            "x": 528,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 113,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 373,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 373,
+            "y": 72,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 88.6666667
+                  },
+                  {
+                    "x": 113,
+                    "y": 105.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 88.6666667
+                  },
+                  {
+                    "x": 373,
+                    "y": 105.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 122
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "parallel",
+      "input": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "B",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "B",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 226,
+          "height": 194
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "x": 8,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 113,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 113,
+            "y": 72,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 110.2856511,
+                    "y": 78.7858722
+                  },
+                  {
+                    "x": 106.0949223,
+                    "y": 89.2626942
+                  }
+                ],
+                "endPoint": {
+                  "x": 104.8569534,
+                  "y": 92.3576165
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 104.8569534,
+                  "y": 92.3576165
+                },
+                "controlPoints": [
+                  {
+                    "x": 103.6189845,
+                    "y": 95.4525388
+                  },
+                  {
+                    "x": 103.6189845,
+                    "y": 98.5474612
+                  }
+                ],
+                "endPoint": {
+                  "x": 104.8569534,
+                  "y": 101.6423835
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 104.8569534,
+                  "y": 101.6423835
+                },
+                "controlPoints": [
+                  {
+                    "x": 106.0949223,
+                    "y": 104.7373058
+                  },
+                  {
+                    "x": 110.2856511,
+                    "y": 115.2141278
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 115.7143489,
+                    "y": 78.7858722
+                  },
+                  {
+                    "x": 119.9050777,
+                    "y": 89.2626942
+                  }
+                ],
+                "endPoint": {
+                  "x": 121.1430466,
+                  "y": 92.3576165
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 121.1430466,
+                  "y": 92.3576165
+                },
+                "controlPoints": [
+                  {
+                    "x": 122.3810155,
+                    "y": 95.4525388
+                  },
+                  {
+                    "x": 122.3810155,
+                    "y": 98.5474612
+                  }
+                ],
+                "endPoint": {
+                  "x": 121.1430466,
+                  "y": 101.6423835
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 121.1430466,
+                  "y": 101.6423835
+                },
+                "controlPoints": [
+                  {
+                    "x": 119.9050777,
+                    "y": 104.7373058
+                  },
+                  {
+                    "x": 115.7143489,
+                    "y": 115.2141278
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "fanout-12",
+      "input": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N0",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N1",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N2",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N3",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N4",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N5",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N6",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N7",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N8",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N9",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N10",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N11",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-0/in",
+            "nodeId": "N0",
+            "x": 105
+          },
+          {
+            "id": "edge-1/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-1/in",
+            "nodeId": "N1",
+            "x": 105
+          },
+          {
+            "id": "edge-2/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-2/in",
+            "nodeId": "N2",
+            "x": 105
+          },
+          {
+            "id": "edge-3/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-3/in",
+            "nodeId": "N3",
+            "x": 105
+          },
+          {
+            "id": "edge-4/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-4/in",
+            "nodeId": "N4",
+            "x": 105
+          },
+          {
+            "id": "edge-5/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-5/in",
+            "nodeId": "N5",
+            "x": 105
+          },
+          {
+            "id": "edge-6/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-6/in",
+            "nodeId": "N6",
+            "x": 105
+          },
+          {
+            "id": "edge-7/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-7/in",
+            "nodeId": "N7",
+            "x": 105
+          },
+          {
+            "id": "edge-8/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-8/in",
+            "nodeId": "N8",
+            "x": 105
+          },
+          {
+            "id": "edge-9/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-9/in",
+            "nodeId": "N9",
+            "x": 105
+          },
+          {
+            "id": "edge-10/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-10/in",
+            "nodeId": "N10",
+            "x": 105
+          },
+          {
+            "id": "edge-11/out",
+            "nodeId": "A",
+            "x": 105
+          },
+          {
+            "id": "edge-11/in",
+            "nodeId": "N11",
+            "x": 105
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourcePortId": "edge-0/out",
+            "targetPortId": "edge-0/in"
+          },
+          {
+            "id": "edge-1",
+            "sourcePortId": "edge-1/out",
+            "targetPortId": "edge-1/in"
+          },
+          {
+            "id": "edge-2",
+            "sourcePortId": "edge-2/out",
+            "targetPortId": "edge-2/in"
+          },
+          {
+            "id": "edge-3",
+            "sourcePortId": "edge-3/out",
+            "targetPortId": "edge-3/in"
+          },
+          {
+            "id": "edge-4",
+            "sourcePortId": "edge-4/out",
+            "targetPortId": "edge-4/in"
+          },
+          {
+            "id": "edge-5",
+            "sourcePortId": "edge-5/out",
+            "targetPortId": "edge-5/in"
+          },
+          {
+            "id": "edge-6",
+            "sourcePortId": "edge-6/out",
+            "targetPortId": "edge-6/in"
+          },
+          {
+            "id": "edge-7",
+            "sourcePortId": "edge-7/out",
+            "targetPortId": "edge-7/in"
+          },
+          {
+            "id": "edge-8",
+            "sourcePortId": "edge-8/out",
+            "targetPortId": "edge-8/in"
+          },
+          {
+            "id": "edge-9",
+            "sourcePortId": "edge-9/out",
+            "targetPortId": "edge-9/in"
+          },
+          {
+            "id": "edge-10",
+            "sourcePortId": "edge-10/out",
+            "targetPortId": "edge-10/in"
+          },
+          {
+            "id": "edge-11",
+            "sourcePortId": "edge-11/out",
+            "targetPortId": "edge-11/in"
+          }
+        ]
+      },
+      "expected": {
+        "direction": "DOWN",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 3086,
+          "height": 194
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "x": 1438,
+            "y": 8,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N0",
+            "x": 8,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N1",
+            "x": 268,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N10",
+            "x": 528,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N11",
+            "x": 788,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N2",
+            "x": 1048,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N3",
+            "x": 1308,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N4",
+            "x": 1568,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N5",
+            "x": 1828,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N6",
+            "x": 2088,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N7",
+            "x": 2348,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N8",
+            "x": 2608,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N9",
+            "x": 2868,
+            "y": 122,
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "ports": [
+          {
+            "id": "edge-0/in",
+            "x": 113,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-0/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-1/in",
+            "x": 373,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-1/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-10/in",
+            "x": 633,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-10/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-11/in",
+            "x": 893,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-11/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-2/in",
+            "x": 1153,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-2/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-3/in",
+            "x": 1413,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-3/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-4/in",
+            "x": 1673,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-4/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-5/in",
+            "x": 1933,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-5/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-6/in",
+            "x": 2193,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-6/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-7/in",
+            "x": 2453,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-7/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-8/in",
+            "x": 2713,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-8/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          },
+          {
+            "id": "edge-9/in",
+            "x": 2973,
+            "y": 122,
+            "side": "NORTH"
+          },
+          {
+            "id": "edge-9/out",
+            "x": 1543,
+            "y": 72,
+            "side": "SOUTH"
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1067.9997454,
+                    "y": 80.3042003
+                  },
+                  {
+                    "x": 121.3320602,
+                    "y": 96.8543347
+                  }
+                ],
+                "endPoint": {
+                  "x": 117.9992361,
+                  "y": 96.9126008
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 117.9992361,
+                  "y": 96.9126008
+                },
+                "controlPoints": [
+                  {
+                    "x": 114.666412,
+                    "y": 96.9708669
+                  },
+                  {
+                    "x": 113,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 113,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 113,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 113,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 113,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1154.6662863,
+                    "y": 80.2977289
+                  },
+                  {
+                    "x": 381.3314317,
+                    "y": 96.821978
+                  }
+                ],
+                "endPoint": {
+                  "x": 377.998859,
+                  "y": 96.8931868
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 377.998859,
+                  "y": 96.8931868
+                },
+                "controlPoints": [
+                  {
+                    "x": 374.6662863,
+                    "y": 96.9643956
+                  },
+                  {
+                    "x": 373,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 373,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 373,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 373,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 373,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-10",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1241.3327047,
+                    "y": 80.2875631
+                  },
+                  {
+                    "x": 641.3301903,
+                    "y": 96.7711487
+                  }
+                ],
+                "endPoint": {
+                  "x": 637.9981142,
+                  "y": 96.8626892
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 637.9981142,
+                  "y": 96.8626892
+                },
+                "controlPoints": [
+                  {
+                    "x": 634.6660381,
+                    "y": 96.9542297
+                  },
+                  {
+                    "x": 633,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 633,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 633,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 633,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 633,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 633,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-11",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1327.9987686,
+                    "y": 80.2692781
+                  },
+                  {
+                    "x": 901.3271765,
+                    "y": 96.679724
+                  }
+                ],
+                "endPoint": {
+                  "x": 897.9963059,
+                  "y": 96.8078344
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 897.9963059,
+                  "y": 96.8078344
+                },
+                "controlPoints": [
+                  {
+                    "x": 894.6654353,
+                    "y": 96.9359448
+                  },
+                  {
+                    "x": 893,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 893,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 893,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 893,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 893,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 893,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1414.6632529,
+                    "y": 80.2267146
+                  },
+                  {
+                    "x": 1161.3162645,
+                    "y": 96.4669062
+                  }
+                ],
+                "endPoint": {
+                  "x": 1157.9897587,
+                  "y": 96.6801437
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1157.9897587,
+                  "y": 96.6801437
+                },
+                "controlPoints": [
+                  {
+                    "x": 1154.6632529,
+                    "y": 96.8933812
+                  },
+                  {
+                    "x": 1153,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 1153,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1153,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 1153,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 1153,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 1153,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1501.3033441,
+                    "y": 80.0185877
+                  },
+                  {
+                    "x": 1421.183387,
+                    "y": 95.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 1417.9100322,
+                  "y": 96.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1417.9100322,
+                  "y": 96.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 1414.6366774,
+                    "y": 96.6852543
+                  },
+                  {
+                    "x": 1413,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 1413,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1413,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 1413,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 1413,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 1413,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1584.6966559,
+                    "y": 80.0185877
+                  },
+                  {
+                    "x": 1664.816613,
+                    "y": 95.4262717
+                  }
+                ],
+                "endPoint": {
+                  "x": 1668.0899678,
+                  "y": 96.055763
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1668.0899678,
+                  "y": 96.055763
+                },
+                "controlPoints": [
+                  {
+                    "x": 1671.3633226,
+                    "y": 96.6852543
+                  },
+                  {
+                    "x": 1673,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 1673,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1673,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 1673,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 1673,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 1673,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1671.3367471,
+                    "y": 80.2267146
+                  },
+                  {
+                    "x": 1924.6837355,
+                    "y": 96.4669062
+                  }
+                ],
+                "endPoint": {
+                  "x": 1928.0102413,
+                  "y": 96.6801437
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1928.0102413,
+                  "y": 96.6801437
+                },
+                "controlPoints": [
+                  {
+                    "x": 1931.3367471,
+                    "y": 96.8933812
+                  },
+                  {
+                    "x": 1933,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 1933,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 1933,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 1933,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 1933,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 1933,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1758.0012314,
+                    "y": 80.2692781
+                  },
+                  {
+                    "x": 2184.6728235,
+                    "y": 96.679724
+                  }
+                ],
+                "endPoint": {
+                  "x": 2188.0036941,
+                  "y": 96.8078344
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2188.0036941,
+                  "y": 96.8078344
+                },
+                "controlPoints": [
+                  {
+                    "x": 2191.3345647,
+                    "y": 96.9359448
+                  },
+                  {
+                    "x": 2193,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 2193,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2193,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 2193,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 2193,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 2193,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-7",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1844.6672953,
+                    "y": 80.2875631
+                  },
+                  {
+                    "x": 2444.6698097,
+                    "y": 96.7711487
+                  }
+                ],
+                "endPoint": {
+                  "x": 2448.0018858,
+                  "y": 96.8626892
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2448.0018858,
+                  "y": 96.8626892
+                },
+                "controlPoints": [
+                  {
+                    "x": 2451.3339619,
+                    "y": 96.9542297
+                  },
+                  {
+                    "x": 2453,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 2453,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2453,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 2453,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 2453,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 2453,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-8",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 1931.3337137,
+                    "y": 80.2977289
+                  },
+                  {
+                    "x": 2704.6685683,
+                    "y": 96.821978
+                  }
+                ],
+                "endPoint": {
+                  "x": 2708.001141,
+                  "y": 96.8931868
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2708.001141,
+                  "y": 96.8931868
+                },
+                "controlPoints": [
+                  {
+                    "x": 2711.3337137,
+                    "y": 96.9643956
+                  },
+                  {
+                    "x": 2713,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 2713,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2713,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 2713,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 2713,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 2713,
+                  "y": 122
+                }
+              }
+            ]
+          },
+          {
+            "id": "edge-9",
+            "curves": [
+              {
+                "startPoint": {
+                  "x": 1543,
+                  "y": 72
+                },
+                "controlPoints": [
+                  {
+                    "x": 2018.0002546,
+                    "y": 80.3042003
+                  },
+                  {
+                    "x": 2964.6679398,
+                    "y": 96.8543347
+                  }
+                ],
+                "endPoint": {
+                  "x": 2968.0007639,
+                  "y": 96.9126008
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2968.0007639,
+                  "y": 96.9126008
+                },
+                "controlPoints": [
+                  {
+                    "x": 2971.333588,
+                    "y": 96.9708669
+                  },
+                  {
+                    "x": 2973,
+                    "y": 98.6666667
+                  }
+                ],
+                "endPoint": {
+                  "x": 2973,
+                  "y": 102
+                }
+              },
+              {
+                "startPoint": {
+                  "x": 2973,
+                  "y": 102
+                },
+                "controlPoints": [
+                  {
+                    "x": 2973,
+                    "y": 105.3333333
+                  },
+                  {
+                    "x": 2973,
+                    "y": 115.3333333
+                  }
+                ],
+                "endPoint": {
+                  "x": 2973,
+                  "y": 122
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

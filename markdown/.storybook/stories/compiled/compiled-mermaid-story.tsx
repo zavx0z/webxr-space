@@ -8,21 +8,38 @@ import {mountOwnerStory} from "../story-types.ts"
 const initial = '```mermaid\nflowchart LR\n  Source["Источник"] --> Parameters(["Параметры"])\n  Parameters --> Result(("Результат"))\n```'
 const changed = '```mermaid\nflowchart TB\n  Source["Источник"] --> Result(("Результат"))\n```'
 
+const referenceGraph = `\`\`\`mermaid
+flowchart TD
+  ContentNode --> ContentSurface
+  ContentNode --> ParameterNode
+  ContentNode --> Pane
+  ParameterNode --> ParameterNodeContents
+  ParameterNode --> Pane
+  DiagramNode --> Pane
+  DiagramNode --> Typography
+\`\`\``
+
 function MermaidExample() {
-  const [alternate, setAlternate] = useState(false)
-  return <section style={css`
+  const [source, setSource] = useState(initial)
+  return <section
+    style={css`
     display: flex;
     flex-direction: column;
     width: 100%;
     min-width: 0;
     gap: 12px;
     padding: 12px;
-  `}>
+    `}
+  >
     <Button
       label="Изменить диаграмму"
-      onClick={() => setAlternate(value => !value)}
+      onClick={() => setSource(value => value === initial ? changed : initial)}
     />
-    <Markdown source={alternate ? changed : initial} />
+    <Button
+      label="Граф из обсуждения"
+      onClick={() => setSource(referenceGraph)}
+    />
+    <Markdown source={source} />
   </section>
 }
 

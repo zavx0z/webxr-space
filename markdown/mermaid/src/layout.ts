@@ -1,10 +1,10 @@
-import {createCubicLinkRoute, type LinkPathPoint, type LinkRoute} from "@webxr/nodes/link"
+import {createCubicLinkRoute, projectLinkMarkers, type LinkPathPoint, type LinkRoute} from "@webxr/nodes/link"
 import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import type {MermaidGraph} from "./parser.ts"
 import type {GraphMeasurement} from "@webxr/nodes/view"
 
-/** Передаёт измеренные размеры действующим алгоритмам; их политики не изменяет. */
+/** Измеренный flowchart: вертикальные диаграммы используют свободные contour endpoints TopDown. */
 export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly GraphMeasurement[]) {
   const horizontal = graph.direction === "LR" || graph.direction === "RL"
   const reverse = graph.direction === "RL" || graph.direction === "BT"
@@ -13,11 +13,6 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
     if (measured === undefined) throw new Error(`Нода ${node.id} ещё не измерена`)
     return {id: node.id, width: measured.width, height: measured.height}
   })
-  const ports = graph.edges.flatMap(edge => [
-    {id: `${edge.id}/out`, nodeId: edge.from},
-    {id: `${edge.id}/in`, nodeId: edge.to},
-  ])
-  const edges = graph.edges.map(edge => ({id: edge.id, sourcePortId: `${edge.id}/out`, targetPortId: `${edge.id}/in`}))
   const result = horizontal
     ? layoutFixed({
       viewport: {width: 1400, height: 700},
@@ -29,7 +24,23 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
       edges: graph.edges.map(edge => ({id: edge.id, sourcePortId: `${edge.from}/out`, targetPortId: `${edge.to}/in`})),
       layoutOptions: {spacing: 32, layerSpacing: 96, padding: 24, clearance: 8},
     })
-    : layoutTopDown({nodes: dimensions, ports: ports.map(port => ({...port, x: dimensions.find(node => node.id === port.nodeId)!.width / 2})), edges, layoutOptions: {nodeSpacing: 32, layerSpacing: 64, padding: 24}})
+    : layoutTopDown({
+      attachment: "contour",
+      nodes: dimensions.map(node => {
+        const shape = graph.nodes.find(value => value.id === node.id)!.shape
+        // Фактический CSS contour всех круглых Pane — эллипс. После pre-paint
+        // стабилизации квадратного bbox он совпадает с circle без ручных размеров.
+        return {...node, shape: shape === "rectangle" ? "rectangle" as const : "ellipse" as const}
+      }),
+      edges: graph.edges.map(edge => ({
+        id: edge.id,
+        sourceNodeId: edge.from,
+        targetNodeId: edge.to,
+        startInset: edge.startArrow ? 4 : 0,
+        endInset: edge.endArrow ? 4 : 0,
+      })),
+      layoutOptions: {nodeSpacing: 50, layerSpacing: 50, padding: 8},
+    })
   const point = (value: LinkPathPoint): LinkPathPoint => ({
     x: reverse && horizontal ? 2 * result.bounds.x + result.bounds.width - value.x : value.x,
     y: reverse && !horizontal ? 2 * result.bounds.y + result.bounds.height - value.y : value.y,
@@ -41,7 +52,7 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
         startPoint: point(curve.startPoint),
         controlPoints: [point(curve.controlPoints[0]), point(curve.controlPoints[1])] as const,
         endPoint: point(curve.endPoint),
-      })))
+      })), {start: graph.edges.find(value => value.id === edge.id)!.startArrow ? 8 : 4, end: graph.edges.find(value => value.id === edge.id)!.endArrow ? 8 : 4})
     } else {
       const section = edge.sections[0]!
       route = {kind: "orthogonal", points: [section.startPoint, ...section.bendPoints, section.endPoint].map(point)}
@@ -49,13 +60,22 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
     return [edge.id, route] as const
   }))
   return {
-    width: result.bounds.x + result.bounds.width + 24,
-    height: result.bounds.y + result.bounds.height + 24,
+    width: result.bounds.x + result.bounds.width,
+    height: result.bounds.y + result.bounds.height,
     nodes: graph.nodes.map(node => {
       const rect = result.nodes.find(entry => entry.id === node.id)!
       const position = point({x: rect.x + (reverse && horizontal ? rect.width : 0), y: rect.y + (reverse && !horizontal ? rect.height : 0)})
       return {...node, rect: {...rect, ...position}}
     }),
-    edges: graph.edges.map(edge => ({...edge, route: routes.get(edge.id)!})),
+    edges: graph.edges.map(edge => {
+      const route = routes.get(edge.id)!
+      // SVG marker viewport end: 10.5×14 / viewBox11.5×14, meet scale10.5/11.5.
+      // Desktop refX добавляет4 к11.5 на end и вычитает4 из1 на start.
+      const markerGeometry = horizontal ? [] : projectLinkMarkers(route, {
+        ...(edge.startArrow ? {start: {length: 11.5, width: 14, offset: 3}} : {}),
+        ...(edge.endArrow ? {end: {length: 10.5, width: 14 * 10.5 / 11.5, offset: 4 * 10.5 / 11.5}} : {}),
+      })
+      return {...edge, route, markers: horizontal ? undefined : markerGeometry}
+    }),
   }
 }

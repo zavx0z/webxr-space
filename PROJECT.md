@@ -540,4 +540,6 @@ Mermaid использует тот же просмотр без редакто�
 Готовые числовые планы сохранены как публичный вход scene. Новый input/layout
 и GraphEditor.measureLayout используют реальные CSS-размеры и локальные anchors
 до первого видимого кадра: [договор и проверки](nodes/measurement-gap.md).
-Алгоритмическое совпадение с Codex Desktop остаётся отдельным исследованием.
+TopDown получил отдельный contour-вход с совместимым flat Dagre order,
+пересечениями фигур и rounded routes. [Числовые эталоны и границы parity](nodes/layout/top-down-parity.md)
+отделяют upstream geometry от визуального принятия Desktop; точный Socket-вход сохраняется.

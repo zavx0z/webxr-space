@@ -26,3 +26,5 @@ export const story_workers_coffman_graham_equivalence = defineReportStory("worke
 export const story_workers_coffman_graham_failure = defineReportStory("workers/coffman-graham/failure")
 export const story_workers_transport_lifecycle = defineReportStory("workers/transport/lifecycle")
 export const story_workers_transport_faults = defineReportStory("workers/transport/faults")
+
+export const story_algorithms_top_down_contour = defineReportStory("algorithms/top-down/contour")

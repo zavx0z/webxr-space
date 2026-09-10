@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test"
-import {resolve} from "node:path"
+import {dirname, resolve} from "node:path"
 import {createDocument, type Element} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/component"
 import {flushDocumentLayoutObservers} from "@zavx0z/dom/geometry"
@@ -77,12 +77,15 @@ test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows a
     expect(frame.displayList.some(item => item.node === link)).toBe(true)
     const arrow = owner.querySelector('[data-link-arrow="end"]')!
     expect(frame.displayList.some(item => item.node === arrow)).toBe(true)
-    component.render(template, {source: source("C")})
+    component.render(template, {source: source("C").replace("flowchart LR", "flowchart TD")})
     await settled(owner, renderer, component)
     expect(owner.querySelector('[data-markdown]')).toBe(article)
     expect(owner.querySelector('article[data-node-id="A"]')).toBe(first)
     expect(owner.querySelector('article[data-node-id="B"]')).toBeNull()
     expect(owner.querySelector('article[data-node-id="C"]')).not.toBeNull()
+    expect(owner.querySelector('[data-link-end-arrow="true"]')).toBe(link)
+    expect(owner.querySelector('[data-link-arrow="end"]')).toBe(arrow)
+    expect(renderer.flush().displayList.some(item => item.node === arrow)).toBe(true)
     component.render(template, {source: "Only text"})
     expect(owner.querySelector('[data-mermaid]')).toBeNull()
   } finally {
@@ -140,6 +143,17 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
     expect(new Set(measured.map(node => node.width)).size).toBeGreaterThan(3)
     expect(elements).toHaveLength(7)
     const expected = layoutMermaidGraph(graph, measured)
+    // Независимый upstream oracle получает фактические CSS-размеры тех же Elements.
+    const mermaidEntry = Bun.resolveSync("mermaid", resolve(root, "markdown"))
+    const referencePath = Bun.resolveSync("dagre-d3-es/src/dagre/layout.js", dirname(mermaidEntry))
+    const referenceRoot = resolve(dirname(referencePath), "../..")
+    expect((await Bun.file(resolve(referenceRoot, "package.json")).json()).version).toBe("7.0.14")
+    const {layout} = await import(referencePath)
+    const {Graph} = await import(resolve(referenceRoot, "src/graphlib/index.js"))
+    const oracle = new Graph({multigraph: true, compound: true}).setGraph({rankdir: "TB", nodesep: 50, ranksep: 50, edgesep: 20, marginx: 8, marginy: 8})
+    for (const node of measured) oracle.setNode(node.id, {...node})
+    for (const edge of graph.edges) oracle.setEdge(edge.from, edge.to, {minlen: 1, weight: 1, width: 0, height: 0, labelpos: "c"}, edge.id)
+    layout(oracle)
     for (const node of expected.nodes) {
       const element = elements[graph.nodes.findIndex(value => value.id === node.id)]!
       const actual = element.getLayoutRect(surface)!
@@ -147,12 +161,41 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
       expect(actual.y).toBeCloseTo(node.rect.y)
       expect(actual.width).toBeCloseTo(node.rect.width)
       expect(actual.height).toBeCloseTo(node.rect.height)
+      expect(actual.x).toBeCloseTo(oracle.node(node.id).x - actual.width / 2, 6)
+      expect(actual.y).toBeCloseTo(oracle.node(node.id).y - actual.height / 2, 6)
     }
     expect(expected.edges).toHaveLength(7)
     for (const edge of expected.edges) {
       expect(owner.querySelector(`[data-link-id="${edge.id}"]`)!.getAttribute("d")).toBe(projectLinkRoute(edge.route).d)
     }
-    // Это проверка передачи размеров/геометрии, а не принятие совпадения с Codex Desktop.
+    // Проверены measured positions по upstream; это ещё не pixel acceptance Desktop.
+    for (const edge of expected.edges) {
+      const arrow = owner.querySelector(`[data-link-owner="${edge.id}"][data-link-arrow="end"]`)!
+      expect(arrow.getAttribute("d")).toBe(edge.markers![0]!.d)
+      expect(renderer.flush().displayList.some(item => item.node === arrow)).toBe(true)
+    }
+  } finally {
+    component.unmount()
+    renderer.dispose()
+    owner.remove()
+  }
+})
+
+test("[MARKDOWN-CONTOUR-CIRCLE] intrinsic круг становится квадратным до принятия вертикальной сцены", async () => {
+  const document = createDocument()
+  const owner = document.createElement("div")
+  document.append(owner)
+  const component = createRoot(owner)
+  const renderer = createDocumentRenderer({document, root: owner, viewport: {width: 800, height: 800}})
+  try {
+    component.render(Markdown as unknown as CompiledTemplate<MarkdownProps>, {source: "```mermaid\nflowchart TD\nA --> B\nB@{ shape: circle }\n```"})
+    await settled(owner, renderer, component)
+    const circle = owner.querySelector('[data-node-id="B"]')!
+    const rect = circle.getLayoutRect()!
+    expect(rect.width).toBeCloseTo(rect.height, 6)
+    expect(owner.querySelector('[data-mermaid-ready="true"]')).not.toBeNull()
+    const arrow = owner.querySelector('[data-link-arrow="end"]')!
+    expect(renderer.flush().displayList.some(item => item.node === arrow)).toBe(true)
   } finally {
     component.unmount()
     renderer.dispose()

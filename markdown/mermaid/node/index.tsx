@@ -15,5 +15,12 @@ export function MermaidNode(props: GraphNodeProps) {
     selected={props.selected}
     hidden={props.hidden}
     onActivate={props.onActivate}
+    style={css`
+      --diagram-node-padding-inline: ${node.shape === "circle" ? 31 : 15}px;
+      --diagram-node-padding-block: 11px;
+      --diagram-node-font-family: sans-serif;
+      --diagram-node-font-size: 16px;
+      --diagram-node-line-height: 20px;
+    `}
   />
 }

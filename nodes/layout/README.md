@@ -11,7 +11,7 @@ TSX в `.storybook/` принадлежит только документаци�
 | --- | --- | --- |
 | [Fixed](./algorithms/fixed/src/index.ts) | Измеренные ноды, `y` портов, связи, viewport, spacing | `RIGHT` / `DOWN`, источник `EAST`, приёмник `WEST`, ортогональные sections. Один порт с конфликтующими ролями отклоняется |
 | [Adaptive](./algorithms/adaptive/src/index.ts) | Тот же граф с `capability` и `allowedSides` | Одна сторона для каждого точного сокета, включая общий. Возвращает bounds, sections и диагностику ограниченного поиска |
-| [TopDown](./algorithms/top-down/src/index.ts) | Плоский DAG и `x` портов без viewport | `SOUTH` → `NORTH`, единые цепочки cubic curves. Цикл возвращает typed witness |
+| [TopDown](./algorithms/top-down/src/index.ts) | Плоский DAG: точные `x` портов либо `attachment: "contour"` | Прежние `SOUTH` → `NORTH` или пересечения фигур, cubic curves. [Контракт и parity evidence](top-down-parity.md) |
 | [Coffman–Graham](./algorithms/coffman-graham/src/index.ts) | DAG, `x` портов и `maxNodesPerLayer` | Ограниченные по ширине слои, cubic curves и массив crossings. Цикл возвращает typed witness |
 
 В [каталоге](.storybook/catalog.json) каждый алгоритм имеет отдельный предмет

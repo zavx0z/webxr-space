@@ -1,3 +1,5 @@
+import {orderFlatGraph} from "./flat-order.ts"
+import {intersectContour, roundedContourCurves, cubicExtrema} from "./contour.ts"
 import {
   Graph,
   layout as layoutDagre,
@@ -13,6 +15,9 @@ import type {
   TopDownCycleWitness,
   TopDownEdgeGeometry,
   TopDownLayoutGraph,
+  TopDownInput,
+  TopDownContourGraph,
+  TopDownShape,
   TopDownLayoutResult,
   TopDownPortGeometry,
 } from "../../../protocol/types/src/top-down.ts"
@@ -27,7 +32,7 @@ const MAX_PORTS = 256
 const MAX_EDGES = 512
 const EPSILON = 1e-7
 
-type NormalizedNode = Readonly<{id: string; width: number; height: number}>
+type NormalizedNode = Readonly<{id: string; width: number; height: number; shape?: TopDownShape}>
 type NormalizedPort = Readonly<{id: string; nodeIndex: number; offsetX: number}>
 type NormalizedEdge = Readonly<{
   id: string
@@ -35,8 +40,11 @@ type NormalizedEdge = Readonly<{
   targetPortIndex: number
   sourceNodeIndex: number
   targetNodeIndex: number
+  startInset?: number
+  endInset?: number
 }>
 type NormalizedGraph = Readonly<{
+  contour: boolean
   nodes: readonly NormalizedNode[]
   ports: readonly NormalizedPort[]
   edges: readonly NormalizedEdge[]
@@ -59,26 +67,30 @@ type RoundedPrimitive = Readonly<{
   control: LayoutPoint
   end: LayoutPoint
 }>
-/**
-Runs the single Codex-compatible top-down pipeline.
-
-Every graph uses one Dagre/Sugiyama pass. Every semantic edge then uses the
-same local corner rounding over its own Dagre point chain. No edge can
-select another placement or routing algorithm.
-*/
+/** Числовой DAG: точные порты либо явное присоединение к контурам. */
 export function solveTopDownCurves(
-  input: TopDownLayoutGraph,
+  input: TopDownInput,
   cycleError: (witness: TopDownCycleWitness) => Error,
 ): TopDownLayoutResult {
-  const graph = normalizeGraph(input)
+  const contour = "attachment" in input && input.attachment === "contour" ? input : undefined
+  const portInput: TopDownLayoutGraph = contour ? {
+    nodes: contour.nodes,
+    ports: contour.edges.flatMap(edge => [
+      {id: `${edge.id}/out`, nodeId: edge.sourceNodeId, x: 0},
+      {id: `${edge.id}/in`, nodeId: edge.targetNodeId, x: 0},
+    ]),
+    edges: contour.edges.map(edge => ({id: edge.id, sourcePortId: `${edge.id}/out`, targetPortId: `${edge.id}/in`})),
+    ...(contour.layoutOptions ? {layoutOptions: contour.layoutOptions} : {}),
+  } : input as TopDownLayoutGraph
+  const graph = normalizeGraph(portInput, contour)
   validateDag(graph, cycleError)
   const placed = placeWithDagre(graph)
   const routed = routeRoundedEdges(graph, placed)
   return materialize(graph, placed, routed)
 }
 
-function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
-  if (input.nodes.length > MAX_NODES || input.ports.length > MAX_PORTS || input.edges.length > MAX_EDGES) {
+function normalizeGraph(input: TopDownLayoutGraph, contour?: TopDownContourGraph): NormalizedGraph {
+  if (input.nodes.length > MAX_NODES || !contour && input.ports.length > MAX_PORTS || input.edges.length > MAX_EDGES) {
     throw new Error(`Top-down graph exceeds the bounded policy budget: ${input.nodes.length}/${input.ports.length}/${input.edges.length}`)
   }
   const options = {
@@ -88,16 +100,21 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
     padding: positive(input.layoutOptions?.padding, DEFAULT_PADDING, "padding"),
   }
   const nodeIds = new Set<string>()
-  const nodes = [...input.nodes].sort(compareIds).map((node): NormalizedNode => {
+  const nodes = (contour ? [...input.nodes] : [...input.nodes].sort(compareIds)).map((node): NormalizedNode => {
     requireId(node.id, "node")
     if (nodeIds.has(node.id)) throw new Error(`Duplicate top-down node: ${node.id}`)
     nodeIds.add(node.id)
     return {
       id: node.id,
+      ...(contour ? {shape: contour.nodes.find(value => value.id === node.id)?.shape ?? "rectangle"} : {}),
       width: positive(node.width, undefined, `node.width:${node.id}`),
       height: positive(node.height, undefined, `node.height:${node.id}`),
     }
   })
+  for (const node of nodes) {
+    if (node.shape !== undefined && !["rectangle", "ellipse", "circle"].includes(node.shape)) throw new Error(`Неизвестный contour: ${node.shape}`)
+    if (node.shape === "circle" && node.width !== node.height) throw new Error(`Круг требует одинаковых width/height: ${node.id}`)
+  }
   const nodeIndexById = new Map(nodes.map((node, index) => [node.id, index]))
   const portIds = new Set<string>()
   const ports = [...input.ports].sort(compareIds).map((port): NormalizedPort => {
@@ -115,7 +132,7 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
   const portIndexById = new Map(ports.map((port, index) => [port.id, index]))
   const edgeIds = new Set<string>()
   const roles = new Int8Array(ports.length)
-  const edges = [...input.edges].sort(compareIds).map((edge): NormalizedEdge => {
+  const edges = (contour ? [...input.edges] : [...input.edges].sort(compareIds)).map((edge): NormalizedEdge => {
     requireId(edge.id, "edge")
     if (edgeIds.has(edge.id)) throw new Error(`Duplicate top-down edge: ${edge.id}`)
     edgeIds.add(edge.id)
@@ -128,7 +145,13 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
     if (targetPortIndex === undefined) throw new Error(`Unknown top-down target port: ${edge.id}/${edge.targetPortId}`)
     setRole(roles, sourcePortIndex, 1, edge.id, ports[sourcePortIndex]!.id)
     setRole(roles, targetPortIndex, 2, edge.id, ports[targetPortIndex]!.id)
+    const contourEdge = contour?.edges.find(value => value.id === edge.id)
+    const startInset = contourEdge?.startInset ?? 0
+    const endInset = contourEdge?.endInset ?? 0
+    if (!Number.isFinite(startInset + endInset) || startInset < 0 || endInset < 0) throw new Error(`Недопустимый inset: ${edge.id}`)
     return {
+      startInset,
+      endInset,
       id: edge.id,
       sourcePortIndex,
       targetPortIndex,
@@ -136,7 +159,7 @@ function normalizeGraph(input: TopDownLayoutGraph): NormalizedGraph {
       targetNodeIndex: ports[targetPortIndex]!.nodeIndex,
     }
   })
-  return {nodes, ports, edges, options}
+  return {contour: contour !== undefined, nodes, ports, edges, options}
 }
 
 function validateDag(graph: NormalizedGraph, cycleError: (witness: TopDownCycleWitness) => Error): void {
@@ -189,7 +212,7 @@ function placeWithDagre(graph: NormalizedGraph): Placement {
     insertedNodes.add(nodeIndex)
     layoutNodeOrder.push(nodeIndex)
   }
-  for (const edge of graph.edges) {
+  if (!graph.contour) for (const edge of graph.edges) {
     insertNode(edge.sourceNodeIndex)
     insertNode(edge.targetNodeIndex)
   }
@@ -198,17 +221,19 @@ function placeWithDagre(graph: NormalizedGraph): Placement {
     const node = graph.nodes[index]!
     dagre.setNode(node.id, {width: node.width, height: node.height})
   }
-  for (const edge of [...graph.edges].reverse()) {
+  for (const edge of graph.contour ? graph.edges : [...graph.edges].reverse()) {
     dagre.setEdge(
       graph.nodes[edge.sourceNodeIndex]!.id,
       graph.nodes[edge.targetNodeIndex]!.id,
-      {height: 0, minlen: 1, weight: 1, width: 0},
+      {height: 0, minlen: 1, weight: 1, width: 0, ...(graph.contour ? {labelpos: "c"} : {})},
       edge.id,
     )
   }
-  const desiredOrder = portOrderConstraints(graph)
+  const desiredOrder = graph.contour ? [] : portOrderConstraints(graph)
   layoutDagre(dagre, {
+    useDynamic: false,
     customOrder(layoutGraph, order) {
+      if (graph.contour) return orderFlatGraph(layoutGraph)
       const constraints = acyclicOrderConstraints(desiredOrder.filter(({left, right}) =>
         layoutGraph.node(left)?.rank === layoutGraph.node(right)?.rank))
       order(layoutGraph, {constraints: [...constraints]})
@@ -316,6 +341,14 @@ function acyclicOrderConstraints(values: readonly OrderConstraint[]): readonly O
 
 function routeRoundedEdges(graph: NormalizedGraph, placed: Placement): readonly TopDownEdgeGeometry[] {
   return graph.edges.map((edge): TopDownEdgeGeometry => {
+    if (graph.contour) {
+      const guidePoints = placed.edgePoints.get(edge.id)!
+      const source = graph.nodes[edge.sourceNodeIndex]!
+      const target = graph.nodes[edge.targetNodeIndex]!
+      const start = intersectContour({...source, x: placed.nodeX[edge.sourceNodeIndex]!, y: placed.nodeY[edge.sourceNodeIndex]!}, guidePoints[1]!)
+      const end = intersectContour({...target, x: placed.nodeX[edge.targetNodeIndex]!, y: placed.nodeY[edge.targetNodeIndex]!}, guidePoints.at(-2)!)
+      return {id: edge.id, guidePoints, attachment: {start, end}, curves: roundedContourCurves([start, ...guidePoints.slice(1, -1), end], edge.startInset, edge.endInset)}
+    }
     const start = point(placed.portX[edge.sourcePortIndex]!, placed.portY[edge.sourcePortIndex]!)
     const end = point(placed.portX[edge.targetPortIndex]!, placed.portY[edge.targetPortIndex]!)
     const dagrePoints = placed.edgePoints.get(edge.id)!
@@ -424,6 +457,8 @@ function materialize(
   })
   const edges = routed.map((edge): TopDownEdgeGeometry => ({
     id: edge.id,
+    ...(edge.guidePoints ? {guidePoints: edge.guidePoints.map(translate)} : {}),
+    ...(edge.attachment ? {attachment: {start: translate(edge.attachment.start), end: translate(edge.attachment.end)}} : {}),
     curves: [translateCurve(edge.curves[0]), ...edge.curves.slice(1).map(translateCurve)],
   }))
   const ports: TopDownPortGeometry[] = []
@@ -450,7 +485,7 @@ function materialize(
       width: node.width,
       height: node.height,
     })),
-    ports,
+    ports: graph.contour ? [] : ports,
     edges,
   }
 }
@@ -466,7 +501,7 @@ function geometryBounds(
   let bottom = Math.max(0, ...graph.nodes.map((node, index) => placed.nodeY[index]! + node.height))
   for (const edge of edges) {
     for (const curve of edge.curves) {
-      for (const curvePoint of [curve.startPoint, ...curve.controlPoints, curve.endPoint]) {
+      for (const curvePoint of graph.contour ? cubicExtrema(curve) : [curve.startPoint, ...curve.controlPoints, curve.endPoint]) {
         left = Math.min(left, curvePoint.x)
         top = Math.min(top, curvePoint.y)
         right = Math.max(right, curvePoint.x)

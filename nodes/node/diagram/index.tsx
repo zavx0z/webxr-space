@@ -67,6 +67,8 @@ export function DiagramNode(props: DiagramNodeProps) {
         width: ${props.intrinsic ? "auto" : "100%"};
         height: ${props.intrinsic && props.shape !== "circle" ? "auto" : "100%"};
         border-radius: ${round ? "50%" : "4px"};
+        padding-inline: var(--diagram-node-padding-inline, 8px);
+        padding-block: var(--diagram-node-padding-block, 8px);
       `}
     >
       <Typography
@@ -76,6 +78,9 @@ export function DiagramNode(props: DiagramNodeProps) {
           width: ${props.intrinsic ? "auto" : "100%"};
           text-align: center;
           white-space: normal;
+          font-family: var(--diagram-node-font-family, var(--font-family));
+          font-size: var(--diagram-node-font-size, var(--font-size-sm));
+          line-height: var(--diagram-node-line-height, 16px);
         `}
       />
     </Pane>

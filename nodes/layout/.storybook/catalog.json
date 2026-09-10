@@ -287,6 +287,24 @@
                   "../README.md"
                 ]
               }
+            },
+            {
+              "id": "contour",
+              "label": "Контуры фигур · свободное присоединение",
+              "route": "algorithms/top-down/contour",
+              "module": {
+                "path": "./stories/subjects.ts",
+                "export": "story_algorithms_top_down_contour"
+              },
+              "resources": {
+                "fixture": "./stories/fixtures.ts",
+                "tests": [
+                  "../tests/top-down-parity.test.ts"
+                ],
+                "references": [
+                  "../top-down-parity.md"
+                ]
+              }
             }
           ],
           "directory": "algorithms/top-down"

@@ -1,0 +1,2277 @@
+{
+  "provenance": {
+    "package": "dagre-d3-es",
+    "version": "7.0.14",
+    "source": "https://github.com/tbo47/dagre-es",
+    "desktopReference": "26.903.61454 build8378 / Mermaid11.16.0",
+    "scope": "upstream flat numeric surrogate; synthetic dimensions, not Desktop replay or screenshot metrics",
+    "hashes": {
+      "src/dagre/normalize.js": "a1b73cf647d867471289b2f152b233752bc966d5b24586681790640eea46d078",
+      "src/dagre/layout.js": "76d6a92030279ea5c22bd034d71debdf6d46f2e56b94c26babd6a34e907e192c",
+      "src/dagre/util.js": "9bb955ebb814eadbb2f5f191f4f770af6cc3fe60a52f76d8208febf325ad98ce",
+      "src/dagre/add-border-segments.js": "9314952cefec131ce59aada2ab8fe33e50894fda60b374c376dd5d39c27be3ba",
+      "src/dagre/acyclic.js": "8718f354dca625bf0213a4719fa8d90723a624a5c12074f3af8e19cffaec0b1a",
+      "src/dagre/index.js": "e629890627161c504239f73abdffe1db49467043e7ff49c0e6b9ba82a6e32459",
+      "src/dagre/nesting-graph.js": "377d16b13bd03f6b81ed0214f01ba766ee4dafec89ff370a1c6c9aa184da864d",
+      "src/dagre/greedy-fas.js": "52f20b8fcf194d7f0df0fed0fb95d5097e38a452baad440b9307a622334c5cee",
+      "src/dagre/parent-dummy-chains.js": "d65e598d4442bb5bb7c6e67b2255dda169d2eac9b1cfc41702741307c295fb28",
+      "src/dagre/coordinate-system.js": "7eec6e8ca940210d337f2473b8cdf2976ac0fb71c77b90e2a3a0a251d5dfc017",
+      "src/dagre/debug.js": "f1e8c9e637feb7bc207c2442e2ff1d64607463ff520200d003dd662a2c13611d",
+      "src/dagre/data/list.js": "5d68f04da855e274c4983d8720f8e014808554d99e759af391551ca698b71abc",
+      "src/dagre/rank/util.js": "867f1f3f8a4c2493bede73417e23b494c7ac7064217590c4e831f1f64a041135",
+      "src/dagre/rank/network-simplex.js": "62f8bfdc486ea82a62bad39194b9f9fa2c24f22c27459a6d2ddf7db42c641c3f",
+      "src/dagre/rank/feasible-tree.js": "ac4db776d64d0788fbcc51e18760ebfb2d7f7495ec5ff1d9b7639a1873d2d84f",
+      "src/dagre/rank/index.js": "d6bda6a568923fa8aa6e425b44e10dbd777ea8a07afa7b0306adc53cfe840669",
+      "src/dagre/position/index.js": "bf7803a5bceab7e5bf3064b3833faadac7fd6c5b50446a5b328dda0652e5af7d",
+      "src/dagre/position/bk.js": "d37012c11a27f1da050798792854e4a39102b400dec46d8af6b84975690680e7",
+      "src/dagre/order/build-layer-graph.js": "d3043229487746c910b0fc6adf12720654fe78ef970b127db0cf867f8d425cab",
+      "src/dagre/order/sort.js": "1f6cc7da538549f788a74549b8843c78516cb38b8bcdc26858db9c8cfecaaa71",
+      "src/dagre/order/barycenter.js": "37e173da019c25ee13743b3f304cb1ddb0d159536375de0a8dc191e128bc1a8e",
+      "src/dagre/order/sort-subgraph.js": "46f098510a17cfbe9c95181035f2a4b90f619b8e6586df5c14fc676b7a5bf599",
+      "src/dagre/order/index.js": "fd467b87dedbc57a58d36d48e5774574ad9e8210e79410e20f9b53be33681218",
+      "src/dagre/order/resolve-conflicts.js": "537e4f7e9e0a0cd8105916ff9bb200c9d66a2713b5e65d18797a78fadf788601",
+      "src/dagre/order/init-order.js": "bdd808c33a321d921f7ecd58fd232784f5c042571800af47dc999d25ba7c3f03",
+      "src/dagre/order/add-subgraph-constraints.js": "f38a5099f604c68b5138c0e95ac483425e1ced4fa62e3b432145cb7c78c9e369",
+      "src/dagre/order/cross-count.js": "87b7c9135bb2cafdfdb0f5131fdf6ceb33af0102f3a5306070a24e9111c50702",
+      "src/graphlib/graph.js": "3edb5adb4962643e0f743fa9183dad3b36df94c0a1af476eec2b0d8b77b2054b",
+      "src/graphlib/index.js": "28aa8766dadb4ad2e4e0ad5a1fbb508c43fd9a274bcca19e0d5651948015f171",
+      "src/graphlib/json.js": "da451ba7528556cc5c849efa1f91c376710c58cb38cc43caa77e7dbb7460c090",
+      "src/graphlib/alg/floyd-warshall.js": "f7bfc470d2562de8a8d2af949c207e4b2a5a7793fa5f00c16af6f4a761a9721c",
+      "src/graphlib/alg/prim.js": "13afa990442a18dd2c739e222ea032184dbd5b63d55ab12f53c1ba40033a521e",
+      "src/graphlib/alg/is-acyclic.js": "de3cc0f972cb6f1ce8bfe83fc3ed49672970f3f480d620c97862dd65645d6c1d",
+      "src/graphlib/alg/tarjan.js": "a6d8e61af7828276538acae238871550e666c783f5e7cb9eca0d6dab63c9b89d",
+      "src/graphlib/alg/postorder.js": "726ab5f891e60d97765a5bb15fd58df7f51bb063be7da11df9b2fa07c027dd70",
+      "src/graphlib/alg/find-cycles.js": "953f8443b49e31a6647de3754d5e8d512146954f542693b716fbba977acb8fc8",
+      "src/graphlib/alg/dijkstra.js": "b3be2e760e4bb431c4ef1875c23e42bb1025c791d56645081f6c1e5c5088a62a",
+      "src/graphlib/alg/index.js": "a35dd04116acb8f30a982e8ae10866af26b09abaf7a9fd2c16259c45269e028f",
+      "src/graphlib/alg/components.js": "15a19390096a7754514ba2c08d1320e3836b42f0e585c74ead0674585a0bded5",
+      "src/graphlib/alg/dijkstra-all.js": "1effd9d82c510550d03d9ddd3497ba010a194f030ebd2eccb8dcf31933e421f3",
+      "src/graphlib/alg/dfs.js": "c49dc05a344566f15eadc172d1034c63d89796a498d0691a4069da3c7e06cbf7",
+      "src/graphlib/alg/preorder.js": "09fed89780f9036b59abd2d7eba6150e0c8bb5feb558ce24937ca5a814648b6d",
+      "src/graphlib/alg/topsort.js": "1adc3fc67756a324d5864e0b0dd7e08bec09439d1d8635b2e21cc4f4fd6b44af",
+      "src/graphlib/data/priority-queue.js": "b80b1284c31697a9f615cf3129cd0ec5e5abef6fb1f849de4074a0fbc0f3a6ba"
+    }
+  },
+  "fixtures": [
+    {
+      "name": "seven-uniform",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ContentSurface",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Pane",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "DiagramNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Typography",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ContentSurface"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ParameterNode"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "ParameterNodeContents"
+          },
+          {
+            "id": "edge-4",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-5",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-6",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Typography"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 8
+          },
+          {
+            "id": "ContentSurface",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "ParameterNode",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 122
+          },
+          {
+            "id": "Pane",
+            "width": 210,
+            "height": 64,
+            "x": 528,
+            "y": 236
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 236
+          },
+          {
+            "id": "DiagramNode",
+            "width": 210,
+            "height": 64,
+            "x": 778,
+            "y": 122
+          },
+          {
+            "id": "Typography",
+            "width": 210,
+            "height": 64,
+            "x": 788,
+            "y": 236
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 268,
+                "y": 63.019230769230774
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 373,
+                "y": 72
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 478,
+                "y": 71.5
+              },
+              {
+                "x": 563,
+                "y": 97
+              },
+              {
+                "x": 563,
+                "y": 154
+              },
+              {
+                "x": 563,
+                "y": 211
+              },
+              {
+                "x": 593.7017543859649,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 373,
+                "y": 186
+              },
+              {
+                "x": 373,
+                "y": 211
+              },
+              {
+                "x": 373,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "points": [
+              {
+                "x": 478,
+                "y": 177.01923076923077
+              },
+              {
+                "x": 633,
+                "y": 211
+              },
+              {
+                "x": 633,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "points": [
+              {
+                "x": 815.6315789473684,
+                "y": 186
+              },
+              {
+                "x": 763,
+                "y": 211
+              },
+              {
+                "x": 705.9824561403509,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "points": [
+              {
+                "x": 888.6140350877193,
+                "y": 186
+              },
+              {
+                "x": 893,
+                "y": 211
+              },
+              {
+                "x": 893,
+                "y": 236
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1006,
+          "height": 308
+        }
+      }
+    },
+    {
+      "name": "seven-varied",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 130,
+            "height": 44
+          },
+          {
+            "id": "ContentSurface",
+            "width": 148,
+            "height": 44
+          },
+          {
+            "id": "ParameterNode",
+            "width": 146,
+            "height": 44
+          },
+          {
+            "id": "Pane",
+            "width": 68,
+            "height": 44
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 212,
+            "height": 44
+          },
+          {
+            "id": "DiagramNode",
+            "width": 132,
+            "height": 44
+          },
+          {
+            "id": "Typography",
+            "width": 118,
+            "height": 44
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ContentSurface"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ParameterNode"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "ParameterNodeContents"
+          },
+          {
+            "id": "edge-4",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-5",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-6",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Typography"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 130,
+            "height": 44,
+            "x": 214,
+            "y": 8
+          },
+          {
+            "id": "ContentSurface",
+            "width": 148,
+            "height": 44,
+            "x": 8,
+            "y": 102
+          },
+          {
+            "id": "ParameterNode",
+            "width": 146,
+            "height": 44,
+            "x": 206,
+            "y": 102
+          },
+          {
+            "id": "Pane",
+            "width": 68,
+            "height": 44,
+            "x": 435,
+            "y": 196
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 212,
+            "height": 44,
+            "x": 173,
+            "y": 196
+          },
+          {
+            "id": "DiagramNode",
+            "width": 132,
+            "height": 44,
+            "x": 536,
+            "y": 102
+          },
+          {
+            "id": "Typography",
+            "width": 118,
+            "height": 44,
+            "x": 553,
+            "y": 196
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 214,
+                "y": 45.50761421319797
+              },
+              {
+                "x": 82,
+                "y": 77
+              },
+              {
+                "x": 82,
+                "y": 102
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 279,
+                "y": 52
+              },
+              {
+                "x": 279,
+                "y": 77
+              },
+              {
+                "x": 279,
+                "y": 102
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 344,
+                "y": 51.97841726618705
+              },
+              {
+                "x": 418,
+                "y": 77
+              },
+              {
+                "x": 418,
+                "y": 124
+              },
+              {
+                "x": 418,
+                "y": 171
+              },
+              {
+                "x": 445.1276595744681,
+                "y": 196
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 279,
+                "y": 146
+              },
+              {
+                "x": 279,
+                "y": 171
+              },
+              {
+                "x": 279,
+                "y": 196
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "points": [
+              {
+                "x": 352,
+                "y": 142.05789473684212
+              },
+              {
+                "x": 469,
+                "y": 171
+              },
+              {
+                "x": 469,
+                "y": 196
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "points": [
+              {
+                "x": 573.2127659574468,
+                "y": 146
+              },
+              {
+                "x": 540.5,
+                "y": 171
+              },
+              {
+                "x": 502.468085106383,
+                "y": 196
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "points": [
+              {
+                "x": 606.6808510638298,
+                "y": 146
+              },
+              {
+                "x": 612,
+                "y": 171
+              },
+              {
+                "x": 612,
+                "y": 196
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 679,
+          "height": 248
+        }
+      }
+    },
+    {
+      "name": "asymmetric",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 87.125,
+            "height": 27
+          },
+          {
+            "id": "ContentSurface",
+            "width": 151.7,
+            "height": 111
+          },
+          {
+            "id": "ParameterNode",
+            "width": 246,
+            "height": 36.25
+          },
+          {
+            "id": "Pane",
+            "width": 35,
+            "height": 78
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 133,
+            "height": 94
+          },
+          {
+            "id": "DiagramNode",
+            "width": 60,
+            "height": 19
+          },
+          {
+            "id": "Typography",
+            "width": 298,
+            "height": 47
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ContentSurface"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ParameterNode"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "ParameterNodeContents"
+          },
+          {
+            "id": "edge-4",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-5",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-6",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Typography"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "ContentNode",
+            "width": 87.125,
+            "height": 27,
+            "x": 279.1375,
+            "y": 8
+          },
+          {
+            "id": "ContentSurface",
+            "width": 151.7,
+            "height": 111,
+            "x": 8,
+            "y": 85
+          },
+          {
+            "id": "ParameterNode",
+            "width": 246,
+            "height": 36.25,
+            "x": 209.7,
+            "y": 122.375
+          },
+          {
+            "id": "Pane",
+            "width": 35,
+            "height": 78,
+            "x": 483.2,
+            "y": 254
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 133,
+            "height": 94,
+            "x": 266.2,
+            "y": 246
+          },
+          {
+            "id": "DiagramNode",
+            "width": 60,
+            "height": 19,
+            "x": 687.2,
+            "y": 131
+          },
+          {
+            "id": "Typography",
+            "width": 298,
+            "height": 47,
+            "x": 568.2,
+            "y": 269.5
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 279.1375,
+                "y": 28.521797153024913
+              },
+              {
+                "x": 83.85,
+                "y": 60
+              },
+              {
+                "x": 83.85,
+                "y": 85
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 326.2064935064935,
+                "y": 35
+              },
+              {
+                "x": 332.7,
+                "y": 60
+              },
+              {
+                "x": 332.7,
+                "y": 122.375
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 366.2625,
+                "y": 31.483072916666664
+              },
+              {
+                "x": 490.7,
+                "y": 60
+              },
+              {
+                "x": 490.7,
+                "y": 140.5
+              },
+              {
+                "x": 490.7,
+                "y": 221
+              },
+              {
+                "x": 495.2833333333333,
+                "y": 254
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 332.7,
+                "y": 158.625
+              },
+              {
+                "x": 332.7,
+                "y": 221
+              },
+              {
+                "x": 332.7,
+                "y": 246
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "points": [
+              {
+                "x": 372.7776397515528,
+                "y": 158.625
+              },
+              {
+                "x": 510.7,
+                "y": 221
+              },
+              {
+                "x": 506.1166666666667,
+                "y": 254
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "points": [
+              {
+                "x": 704.4251552795032,
+                "y": 150
+              },
+              {
+                "x": 608.95,
+                "y": 221
+              },
+              {
+                "x": 518.2,
+                "y": 281.3602771362587
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "points": [
+              {
+                "x": 717.2,
+                "y": 150
+              },
+              {
+                "x": 717.2,
+                "y": 221
+              },
+              {
+                "x": 717.2,
+                "y": 269.5
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 874.2,
+          "height": 348
+        }
+      }
+    },
+    {
+      "name": "diamond",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "A",
+            "targetNodeId": "B"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "A",
+            "targetNodeId": "C"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "B",
+            "targetNodeId": "D"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "C",
+            "targetNodeId": "D"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64,
+            "x": 138,
+            "y": 8
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 122
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64,
+            "x": 138,
+            "y": 236
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 170.01754385964912,
+                "y": 72
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 315.9824561403509,
+                "y": 72
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 113,
+                "y": 186
+              },
+              {
+                "x": 113,
+                "y": 211
+              },
+              {
+                "x": 170.01754385964912,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 373,
+                "y": 186
+              },
+              {
+                "x": 373,
+                "y": 211
+              },
+              {
+                "x": 315.9824561403509,
+                "y": 236
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 486,
+          "height": 308
+        }
+      }
+    },
+    {
+      "name": "long-edge",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "A",
+            "targetNodeId": "B"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "B",
+            "targetNodeId": "C"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "C",
+            "targetNodeId": "D"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "A",
+            "targetNodeId": "D"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64,
+            "x": 78,
+            "y": 8
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 236
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64,
+            "x": 78,
+            "y": 350
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 143.7017543859649,
+                "y": 72
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 113,
+                "y": 186
+              },
+              {
+                "x": 113,
+                "y": 211
+              },
+              {
+                "x": 113,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 113,
+                "y": 300
+              },
+              {
+                "x": 113,
+                "y": 325
+              },
+              {
+                "x": 143.7017543859649,
+                "y": 350
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 222.2982456140351,
+                "y": 72
+              },
+              {
+                "x": 253,
+                "y": 97
+              },
+              {
+                "x": 253,
+                "y": 154
+              },
+              {
+                "x": 253,
+                "y": 211
+              },
+              {
+                "x": 253,
+                "y": 268
+              },
+              {
+                "x": 253,
+                "y": 325
+              },
+              {
+                "x": 222.2982456140351,
+                "y": 350
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 296,
+          "height": 422
+        }
+      }
+    },
+    {
+      "name": "disconnected",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "E",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "A",
+            "targetNodeId": "B"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "C",
+            "targetNodeId": "D"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 8
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "C",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 8
+          },
+          {
+            "id": "D",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 122
+          },
+          {
+            "id": "E",
+            "width": 210,
+            "height": 64,
+            "x": 528,
+            "y": 8
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 113,
+                "y": 72
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 373,
+                "y": 72
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 122
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 746,
+          "height": 194
+        }
+      }
+    },
+    {
+      "name": "parallel",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "A",
+            "targetNodeId": "B"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "A",
+            "targetNodeId": "B"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 8
+          },
+          {
+            "id": "B",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 107.3859649122807,
+                "y": 72
+              },
+              {
+                "x": 103,
+                "y": 97
+              },
+              {
+                "x": 107.3859649122807,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 118.6140350877193,
+                "y": 72
+              },
+              {
+                "x": 123,
+                "y": 97
+              },
+              {
+                "x": 118.6140350877193,
+                "y": 122
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 226,
+          "height": 194
+        }
+      }
+    },
+    {
+      "name": "fanout-12",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N0",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N1",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N2",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N3",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N4",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N5",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N6",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N7",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N8",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N9",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N10",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "N11",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "A",
+            "targetNodeId": "N0"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "A",
+            "targetNodeId": "N1"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "A",
+            "targetNodeId": "N2"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "A",
+            "targetNodeId": "N3"
+          },
+          {
+            "id": "edge-4",
+            "sourceNodeId": "A",
+            "targetNodeId": "N4"
+          },
+          {
+            "id": "edge-5",
+            "sourceNodeId": "A",
+            "targetNodeId": "N5"
+          },
+          {
+            "id": "edge-6",
+            "sourceNodeId": "A",
+            "targetNodeId": "N6"
+          },
+          {
+            "id": "edge-7",
+            "sourceNodeId": "A",
+            "targetNodeId": "N7"
+          },
+          {
+            "id": "edge-8",
+            "sourceNodeId": "A",
+            "targetNodeId": "N8"
+          },
+          {
+            "id": "edge-9",
+            "sourceNodeId": "A",
+            "targetNodeId": "N9"
+          },
+          {
+            "id": "edge-10",
+            "sourceNodeId": "A",
+            "targetNodeId": "N10"
+          },
+          {
+            "id": "edge-11",
+            "sourceNodeId": "A",
+            "targetNodeId": "N11"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "A",
+            "width": 210,
+            "height": 64,
+            "x": 1438,
+            "y": 8
+          },
+          {
+            "id": "N0",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "N1",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 122
+          },
+          {
+            "id": "N2",
+            "width": 210,
+            "height": 64,
+            "x": 528,
+            "y": 122
+          },
+          {
+            "id": "N3",
+            "width": 210,
+            "height": 64,
+            "x": 788,
+            "y": 122
+          },
+          {
+            "id": "N4",
+            "width": 210,
+            "height": 64,
+            "x": 1048,
+            "y": 122
+          },
+          {
+            "id": "N5",
+            "width": 210,
+            "height": 64,
+            "x": 1308,
+            "y": 122
+          },
+          {
+            "id": "N6",
+            "width": 210,
+            "height": 64,
+            "x": 1568,
+            "y": 122
+          },
+          {
+            "id": "N7",
+            "width": 210,
+            "height": 64,
+            "x": 1828,
+            "y": 122
+          },
+          {
+            "id": "N8",
+            "width": 210,
+            "height": 64,
+            "x": 2088,
+            "y": 122
+          },
+          {
+            "id": "N9",
+            "width": 210,
+            "height": 64,
+            "x": 2348,
+            "y": 122
+          },
+          {
+            "id": "N10",
+            "width": 210,
+            "height": 64,
+            "x": 2608,
+            "y": 122
+          },
+          {
+            "id": "N11",
+            "width": 210,
+            "height": 64,
+            "x": 2868,
+            "y": 122
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 1438,
+                "y": 44.18531468531469
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 1438,
+                "y": 45.11538461538461
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 1438,
+                "y": 46.57692307692308
+              },
+              {
+                "x": 633,
+                "y": 97
+              },
+              {
+                "x": 633,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 1438,
+                "y": 49.207692307692305
+              },
+              {
+                "x": 893,
+                "y": 97
+              },
+              {
+                "x": 893,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "points": [
+              {
+                "x": 1438,
+                "y": 55.34615384615385
+              },
+              {
+                "x": 1153,
+                "y": 97
+              },
+              {
+                "x": 1153,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "points": [
+              {
+                "x": 1470.017543859649,
+                "y": 72
+              },
+              {
+                "x": 1413,
+                "y": 97
+              },
+              {
+                "x": 1413,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "points": [
+              {
+                "x": 1615.982456140351,
+                "y": 72
+              },
+              {
+                "x": 1673,
+                "y": 97
+              },
+              {
+                "x": 1673,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-7",
+            "points": [
+              {
+                "x": 1648,
+                "y": 55.34615384615385
+              },
+              {
+                "x": 1933,
+                "y": 97
+              },
+              {
+                "x": 1933,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-8",
+            "points": [
+              {
+                "x": 1648,
+                "y": 49.207692307692305
+              },
+              {
+                "x": 2193,
+                "y": 97
+              },
+              {
+                "x": 2193,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-9",
+            "points": [
+              {
+                "x": 1648,
+                "y": 46.57692307692308
+              },
+              {
+                "x": 2453,
+                "y": 97
+              },
+              {
+                "x": 2453,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-10",
+            "points": [
+              {
+                "x": 1648,
+                "y": 45.11538461538461
+              },
+              {
+                "x": 2713,
+                "y": 97
+              },
+              {
+                "x": 2713,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-11",
+            "points": [
+              {
+                "x": 1648,
+                "y": 44.18531468531469
+              },
+              {
+                "x": 2973,
+                "y": 97
+              },
+              {
+                "x": 2973,
+                "y": 122
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 3086,
+          "height": 194
+        }
+      }
+    },
+    {
+      "name": "numeric-ids",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "10",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "2",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "1",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "3",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "10",
+            "targetNodeId": "2"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "10",
+            "targetNodeId": "1"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "2",
+            "targetNodeId": "3"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "1",
+            "targetNodeId": "3"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "10",
+            "width": 210,
+            "height": 64,
+            "x": 138,
+            "y": 8
+          },
+          {
+            "id": "2",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 122
+          },
+          {
+            "id": "1",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 122
+          },
+          {
+            "id": "3",
+            "width": 210,
+            "height": 64,
+            "x": 138,
+            "y": 236
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 170.01754385964912,
+                "y": 72
+              },
+              {
+                "x": 113,
+                "y": 97
+              },
+              {
+                "x": 113,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 315.9824561403509,
+                "y": 72
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 113,
+                "y": 186
+              },
+              {
+                "x": 113,
+                "y": 211
+              },
+              {
+                "x": 170.01754385964912,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 373,
+                "y": 186
+              },
+              {
+                "x": 373,
+                "y": 211
+              },
+              {
+                "x": 315.9824561403509,
+                "y": 236
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 486,
+          "height": 308
+        }
+      }
+    },
+    {
+      "name": "reordered-edges",
+      "input": {
+        "attachment": "contour",
+        "nodes": [
+          {
+            "id": "DiagramNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Typography",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "Pane",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ContentNode",
+            "width": 210,
+            "height": 64
+          },
+          {
+            "id": "ContentSurface",
+            "width": 210,
+            "height": 64
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Typography"
+          },
+          {
+            "id": "edge-1",
+            "sourceNodeId": "DiagramNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-2",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-3",
+            "sourceNodeId": "ParameterNode",
+            "targetNodeId": "ParameterNodeContents"
+          },
+          {
+            "id": "edge-4",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "Pane"
+          },
+          {
+            "id": "edge-5",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ParameterNode"
+          },
+          {
+            "id": "edge-6",
+            "sourceNodeId": "ContentNode",
+            "targetNodeId": "ContentSurface"
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "DiagramNode",
+            "width": 210,
+            "height": 64,
+            "x": 18,
+            "y": 122
+          },
+          {
+            "id": "Typography",
+            "width": 210,
+            "height": 64,
+            "x": 8,
+            "y": 236
+          },
+          {
+            "id": "Pane",
+            "width": 210,
+            "height": 64,
+            "x": 268,
+            "y": 236
+          },
+          {
+            "id": "ParameterNode",
+            "width": 210,
+            "height": 64,
+            "x": 468,
+            "y": 122
+          },
+          {
+            "id": "ParameterNodeContents",
+            "width": 210,
+            "height": 64,
+            "x": 528,
+            "y": 236
+          },
+          {
+            "id": "ContentNode",
+            "width": 210,
+            "height": 64,
+            "x": 478,
+            "y": 8
+          },
+          {
+            "id": "ContentSurface",
+            "width": 210,
+            "height": 64,
+            "x": 728,
+            "y": 122
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-0",
+            "points": [
+              {
+                "x": 117.3859649122807,
+                "y": 186
+              },
+              {
+                "x": 113,
+                "y": 211
+              },
+              {
+                "x": 113,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-1",
+            "points": [
+              {
+                "x": 190.36842105263156,
+                "y": 186
+              },
+              {
+                "x": 243,
+                "y": 211
+              },
+              {
+                "x": 300.0175438596491,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-2",
+            "points": [
+              {
+                "x": 505.63157894736844,
+                "y": 186
+              },
+              {
+                "x": 453,
+                "y": 211
+              },
+              {
+                "x": 417.9122807017544,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-3",
+            "points": [
+              {
+                "x": 606.6842105263158,
+                "y": 186
+              },
+              {
+                "x": 633,
+                "y": 211
+              },
+              {
+                "x": 633,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-4",
+            "points": [
+              {
+                "x": 478,
+                "y": 68.5
+              },
+              {
+                "x": 373,
+                "y": 97
+              },
+              {
+                "x": 373,
+                "y": 154
+              },
+              {
+                "x": 373,
+                "y": 211
+              },
+              {
+                "x": 373,
+                "y": 236
+              }
+            ]
+          },
+          {
+            "id": "edge-5",
+            "points": [
+              {
+                "x": 577.3859649122807,
+                "y": 72
+              },
+              {
+                "x": 573,
+                "y": 97
+              },
+              {
+                "x": 573,
+                "y": 122
+              }
+            ]
+          },
+          {
+            "id": "edge-6",
+            "points": [
+              {
+                "x": 688,
+                "y": 63.94
+              },
+              {
+                "x": 833,
+                "y": 97
+              },
+              {
+                "x": 833,
+                "y": 122
+              }
+            ]
+          }
+        ],
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 946,
+          "height": 308
+        }
+      }
+    }
+  ]
+}

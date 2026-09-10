@@ -77,3 +77,8 @@ contour intersections и rounded routing ради parity в этом срезе 
 их доработка требует отдельного исследования и решения. Модельный adapter сохраняет
 свой существующий горизонтальный socket protocol; общий GraphView уже отображает
 готовые cubic/orthogonal маршруты выбранных числовых политик.
+
+Последующий срез [TopDown contour parity](layout/top-down-parity.md) использует
+готовые measurements без изменения этого lifecycle. Он добавляет отдельный
+contour input, сохраняет точные Socket ports и передаёт заполненные маркеры
+через generic vector-path fill. Numerical reference и visual acceptance различаются.

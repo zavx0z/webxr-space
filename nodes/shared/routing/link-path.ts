@@ -1,3 +1,4 @@
+import {trimCubicCurves} from "./trim-curves.ts"
 import {VECTOR_PATH_COORDINATE_LIMIT} from "@zavx0z/dom/html/vector-path-element"
 
 export type LinkPathPoint = Readonly<{
@@ -92,7 +93,7 @@ export function projectLinkRoute(route: LinkRoute): LinkPathProjection {
   return projection
 }
 
-export function createCubicLinkRoute(curves: readonly LinkCubicCurve[]): LinkRoute {
+export function createCubicLinkRoute(curves: readonly LinkCubicCurve[], gaps: Readonly<{start?: number; end?: number}> = {}): LinkRoute {
   if (!Array.isArray(curves) || curves.length === 0) routeError("needs cubic")
   assertSegmentLimit(curves.length)
   const normalized = curves.map((curve, index): LinkCubicCurve => {
@@ -112,7 +113,10 @@ export function createCubicLinkRoute(curves: readonly LinkCubicCurve[]): LinkRou
     if (index > 0 && !samePoint(curves[index - 1]!.endPoint, result.startPoint)) routeError(`curve ${index} disconnected`)
     return result
   })
-  const projection = projectCubicRoute(Object.freeze({kind: "cubic", curves: Object.freeze(normalized)}))
+  const original = projectCubicRoute(Object.freeze({kind: "cubic", curves: Object.freeze(normalized)}))
+  const trimmed = trimCubicCurves(normalized, gaps.start ?? 0, gaps.end ?? 0)
+  const projection = trimmed === normalized ? original : projectCubicRoute({kind: "cubic", curves: trimmed})
+  terminals.set(projection, terminals.get(original)!)
   const route = Object.freeze({kind: "path" as const, projection})
   projectedRoutes.add(route)
   return route
@@ -272,4 +276,32 @@ function arrowhead(tip: LinkPathPoint, previous: LinkPathPoint): string {
   const left = {x: tip.x - dx * 9 - dy * 4, y: tip.y - dy * 9 + dx * 4}
   const right = {x: tip.x - dx * 9 + dy * 4, y: tip.y - dy * 9 - dx * 4}
   return `M ${coordinate(left.x)} ${coordinate(left.y)} L ${coordinate(tip.x)} ${coordinate(tip.y)} L ${coordinate(right.x)} ${coordinate(right.y)}`
+}
+
+/** Числовой маркер отделён от осевой линии; offset направлен от endpoint внутрь маршрута. */
+export type LinkMarkerStyle = Readonly<{length: number; width: number; offset: number}>
+export type LinkMarkerGeometry = Readonly<{
+  side: "start" | "end"
+  tip: LinkPathPoint
+  points: readonly [LinkPathPoint, LinkPathPoint, LinkPathPoint]
+  d: string
+}>
+
+/** Замкнутый triangle path для публичной заливки; функция сама ничего не рисует. */
+export function projectLinkMarkers(route: LinkRoute, styles: Readonly<{start?: LinkMarkerStyle; end?: LinkMarkerStyle}>): readonly LinkMarkerGeometry[] {
+  const geometry = terminals.get(projectLinkRoute(route))!
+  return (["start", "end"] as const).flatMap(side => {
+    const style = styles[side]
+    if (!style) return []
+    if (!Number.isFinite(style.length + style.width + style.offset) || style.length <= 0 || style.width <= 0 || style.offset < 0) routeError("marker dimensions")
+    const endpoint = side === "start" ? geometry.start : geometry.end
+    const previous = side === "start" ? geometry.startNext : geometry.endPrevious
+    const distance = Math.hypot(endpoint.x - previous.x, endpoint.y - previous.y)
+    const dx = (endpoint.x - previous.x) / distance
+    const dy = (endpoint.y - previous.y) / distance
+    const tip = frozenPoint({x: endpoint.x - dx * style.offset, y: endpoint.y - dy * style.offset})
+    const left = frozenPoint({x: tip.x - dx * style.length - dy * style.width / 2, y: tip.y - dy * style.length + dx * style.width / 2})
+    const right = frozenPoint({x: tip.x - dx * style.length + dy * style.width / 2, y: tip.y - dy * style.length - dx * style.width / 2})
+    return [{side, tip, points: [tip, left, right] as const, d: `M ${coordinate(tip.x)} ${coordinate(tip.y)} L ${coordinate(left.x)} ${coordinate(left.y)} L ${coordinate(right.x)} ${coordinate(right.y)} L ${coordinate(tip.x)} ${coordinate(tip.y)}`}]
+  })
 }

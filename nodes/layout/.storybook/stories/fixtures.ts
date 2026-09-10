@@ -98,3 +98,19 @@ export function coffmanGrahamGraph(maxNodesPerLayer = 3, cycle = false): Coffman
     layoutOptions: {...graph.layoutOptions, maxNodesPerLayer},
   }
 }
+
+/** Числовые размеры этого примера заданы явно; product GraphView измеряет свой CSS. */
+export function contourGraph(): import("@nodes/layout/top-down").TopDownContourGraph {
+  return {
+    attachment: "contour",
+    nodes: [
+      {id: "source", width: 180, height: 60, shape: "rectangle"},
+      {id: "ellipse", width: 140, height: 70, shape: "ellipse"},
+      {id: "circle", width: 90, height: 90, shape: "circle"},
+    ],
+    edges: [
+      {id: "first", sourceNodeId: "source", targetNodeId: "ellipse"},
+      {id: "second", sourceNodeId: "source", targetNodeId: "circle"},
+    ],
+  }
+}

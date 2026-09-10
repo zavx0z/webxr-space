@@ -87,6 +87,10 @@ corners bend through equivalent quadratic-to-cubic Bézier segments.
 export type TopDownEdgeGeometry = Readonly<{
   id: string
   curves: readonly [TopDownCurveSegment, ...TopDownCurveSegment[]]
+  /** Исходные guide points Dagre до contour intersection и inset; только contour-вход. */
+  guidePoints?: readonly LayoutPoint[]
+  /** Пересечения контура до inset; это не Socket ports. */
+  attachment?: Readonly<{start: LayoutPoint; end: LayoutPoint}>
 }>
 
 /** Geometry-only result of one deterministic top-down calculation. */
@@ -105,3 +109,29 @@ export type TopDownCycleWitness = Readonly<{
 }>
 
 export type TopDownLayoutErrorCode = "CYCLE_DETECTED"
+
+/** Форма измеренной границы. Скруглённый rectangle сохраняет прямоугольный intersection. */
+export type TopDownShape = "rectangle" | "ellipse" | "circle"
+
+/** Связь между контурами; inset отсчитывается от границы внутрь маршрута до скругления. */
+export type TopDownContourEdge = Readonly<{
+  id: string
+  sourceNodeId: string
+  targetNodeId: string
+  startInset?: number
+  endInset?: number
+}>
+
+/**
+Плоская диаграмма без точных Socket anchors. Порядок массивов участвует в раскладке.
+Совместимый flat Dagre order, пересечения с фигурами и угол-зависимые скругления.
+Портовый вход остаётся отдельным договором с прежними NORTH/SOUTH и порядком портов.
+*/
+export type TopDownContourGraph = Readonly<{
+  attachment: "contour"
+  nodes: readonly (TopDownLayoutNode & Readonly<{shape?: TopDownShape}>)[]
+  edges: readonly TopDownContourEdge[]
+  layoutOptions?: TopDownLayoutOptions
+}>
+
+export type TopDownInput = TopDownLayoutGraph | TopDownContourGraph

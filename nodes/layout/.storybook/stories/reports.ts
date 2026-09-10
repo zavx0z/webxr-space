@@ -8,6 +8,7 @@ import {
   adaptiveGraph,
   invalidAdaptiveGraph,
   topDownGraph,
+  contourGraph,
   coffmanGrahamGraph,
 } from "./fixtures.ts"
 
@@ -43,8 +44,8 @@ export function algorithmReport(route: string): LayoutReport {
     return evaluate(route, "Адаптивная раскладка", "Два ребра используют один точный source/shared. Алгоритм выбирает одну допустимую сторону этого порта и возвращает фактическую диагностику ограниченного поиска.", "adaptive", "layoutAdaptiveWithDiagnostics", input, () => layoutAdaptiveWithDiagnostics(input), invalid)
   }
   if (policy === "top-down") {
-    const input = topDownGraph(variant === "cycle")
-    return evaluate(route, "Раскладка сверху вниз", "Измеренный плоский DAG: SOUTH → NORTH, маршруты из cubic Bézier segments. Здесь показан числовой контракт; подключение этих сторон к NodeEditor ещё не реализовано.", "top-down", "layoutTopDown", input, () => layoutTopDown(input), variant === "cycle")
+    const input = variant === "contour" ? contourGraph() : topDownGraph(variant === "cycle")
+    return evaluate(route, "Раскладка сверху вниз", variant === "contour" ? "Порядок входа сохраняется; связи пересекают контуры прямоугольника, эллипса и круга. guidePoints и attachment отделены от точных портов. Это числовой пример, не пиксельный эталон." : "Измеренный плоский DAG: SOUTH → NORTH и прежний точный портовый контракт.", "top-down", "layoutTopDown", input, () => layoutTopDown(input), variant === "cycle")
   }
   if (policy === "coffman-graham") {
     const input = coffmanGrahamGraph(variant === "narrow" ? 2 : 3, variant === "cycle")

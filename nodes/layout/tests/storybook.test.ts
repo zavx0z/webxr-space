@@ -35,7 +35,8 @@ test("[LAYOUT-STORYBOOK-001] все algorithms/protocol/workers имеют ис�
       }
     }
   }
-  expect(routes.size).toBe(26)
+  expect(routes.size).toBe(27)
+  expect(routes.has("algorithms/top-down/contour")).toBe(true)
 })
 
 test("[LAYOUT-STORYBOOK-002] каждый числовой вариант вызывает реальный алгоритм или typed отказ", async () => {

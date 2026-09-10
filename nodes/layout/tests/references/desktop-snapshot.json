@@ -1,0 +1,18 @@
+{
+  "application": "/Applications/ChatGPT.app",
+  "bundleIdentifier": "com.openai.codex",
+  "version": "26.903.61454",
+  "build": "8378",
+  "inspectedAt": "2026-09-09T21:49:23.871943+00:00",
+  "archive": "/Applications/ChatGPT.app/Contents/Resources/app.asar",
+  "assets": {
+    "mermaid-diagram-b1da182f1e0f.js": "de5c2ec8b129402e3c09758fdcca1ae2266b816eae971af93b4fa4d05443a29c",
+    "mermaid.core-c44f8236db73.js": "c3ab5f5ad3a332f53f38ba0ccd56b684a01d567b3e6992e183439848192502ee",
+    "chunk-FWX5IMBZ-ad461b1b2b67.js": "3432dd9b0236cfc9c696283927b83426ae4a55d237a65abfd84225c9546ad89d",
+    "dagre-VKFMJZFB-d3a00d536702.js": "7457eb9744a187fa6333c7c590b85c0475e2933495a8d46abd61f0c2d1f4b386",
+    "dagre-4c63bfb16e34.js": "a85543ebcb42cc32b74f1c10db1f570ae202fa46645a3a85c28d3d805f3ab475",
+    "chunk-52WLFC77-a126479d4a86.js": "c8377f44030193012df31bcc562d9ea7d7d4e73296e1451ce89dd68e44f9cea4",
+    "chunk-WYO6CB5R-b2169a2d8a33.js": "c7b876f356aa74904e9087434deb8e46a31aa77362450149e02a1928a8d9da4f",
+    "chunk-PUDLZKDR-4d030086da3d.js": "27286194cf8a7f25f45531a75386796cdd1a38cc2a6b8c90a027d599a5be238f"
+  }
+}
