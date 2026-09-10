@@ -57,8 +57,8 @@ function exclusive<Result>(operation: () => Promise<Result>): Promise<Result> {
 /**
 Создаёт один нативный host для компонентов любых пакетов выбранного проекта.
 
-После создания импортируйте production-компоненты через `await import(...)`:
-Headless подключает к этим импортам существующий Template compiler. Для JSX в spec
+Для обычных импортов подключите `@immersive/headless/preload` в Bun test config.
+Без preload доступны динамические импорты после createHeadless(). Для JSX в spec
 укажите `@jsxImportSource @immersive/headless`. GPU-операции разных host выполняются последовательно;
 глобальные WebGPU-объекты восстанавливаются после каждой операции.
 

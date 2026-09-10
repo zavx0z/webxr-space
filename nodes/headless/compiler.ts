@@ -2,7 +2,7 @@ import {existsSync} from "node:fs"
 import {dirname, relative, resolve, sep} from "node:path"
 import {JsxCompilerSession} from "@zavx0z/template/compiler"
 
-const registered = new Set<string>()
+const registered = new Map<string, () => Promise<void>>()
 
 export function repositoryRoot(directory: string): string {
   let current = resolve(directory)
@@ -15,28 +15,42 @@ export function repositoryRoot(directory: string): string {
 }
 
 /**
-Подключает обычный Template compiler к последующим динамическим импортам TSX.
-Охватывает все пакеты выбранного проекта. Spec-файлы используют JSX-транспорт Headless;
-каждая компиляция production-модуля закрывает собственную TypeScript-сессию.
+Подключает обычный Template compiler к последующим импортам TSX.
+Для статических импортов вызывается из Bun preload до загрузки spec.
+Охватывает все пакеты выбранного проекта. Spec-файлы используют JSX-транспорт Headless.
+Preload может разделять сессию между модулями и закрывать её после тестов;
+обычная регистрация закрывает сессию после каждого модуля.
 */
-export function registerHeadlessCompiler(projectRoot: string): void {
+export function registerHeadlessCompiler(projectRoot: string, sharedSession = false): () => Promise<void> {
   const root = resolve(projectRoot)
-  if (registered.has(root)) return
+  const existing = registered.get(root)
+  if (existing !== undefined) return existing
+  let session: JsxCompilerSession | null = null
+  const close = async () => {
+    const previous = session
+    session = null
+    await previous?.close()
+  }
   Bun.plugin({
     name: `headless-template:${root}`,
     setup(builder) {
       builder.onLoad({filter: /\.tsx$/}, async ({path}) => {
         const local = relative(root, path)
-        if (local.startsWith(`..${sep}`) || local === ".." || local.split(sep).includes("node_modules")
-          || /\.(?:spec|test)\.tsx$/.test(path)) return undefined
-        const compiler = new JsxCompilerSession({cwd: root, sourceRoots: [root]})
+        if (local.startsWith(`..${sep}`) || local === ".." || local.split(sep).includes("node_modules")) return undefined
+        if (/\.(?:spec|test)\.tsx$/.test(path)) {
+          return {contents: await Bun.file(path).text(), loader: "tsx"}
+        }
+        const compiler = sharedSession
+          ? session ??= new JsxCompilerSession({cwd: root, sourceRoots: [root]})
+          : new JsxCompilerSession({cwd: root, sourceRoots: [root]})
         try {
           return {contents: await compiler.transformFile(path), loader: "ts"}
         } finally {
-          await compiler.close()
+          if (!sharedSession) await compiler.close()
         }
       })
     },
   })
-  registered.add(root)
+  registered.set(root, close)
+  return close
 }

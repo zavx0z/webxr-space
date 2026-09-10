@@ -5,13 +5,21 @@ Template compiler, Component, DOM, HTML Renderer и нативный WebGPU/Dawn
 `render` возвращает живой внешний элемент компонента, `screenshot` — PNG
 по его актуальному border-box без внешних полей.
 
+Для обычных импортов компонентов подключите компилятор до загрузки spec через
+`bunfig.toml` рабочего каталога тестов:
+
+```toml
+[test]
+preload = ["@immersive/headless/preload"]
+```
+
 ```tsx
 /** @jsxImportSource @immersive/headless */
 import {afterAll, expect, test} from "bun:test"
 import {createHeadless} from "@immersive/headless"
+import {Typography} from "@zavx0z/ui/typography"
 
 const headless = createHeadless({width: 320, height: 180})
-const {Typography} = await import("@zavx0z/ui/typography")
 afterAll(() => headless.dispose())
 
 test("показывает переданный текст", async () => {
@@ -26,8 +34,13 @@ test("показывает переданный текст", async () => {
 })
 ```
 
-Production-компоненты импортируются динамически **после `createHeadless()`**:
-его загрузчик компилирует TSX всех пакетов выбранного `projectRoot`.
+Preload компилирует production-TSX до выполнения статических импортов и не
+создаёт GPU-устройство. Общая TypeScript-сессия закрывается после тестов.
+В этом репозитории он подключён для запуска из корня и из пакета `@nodes/node`.
+Для разового запуска из корня доступен флаг
+`bun test --preload ./nodes/headless/preload.ts`.
+Без preload остаётся возможность импортировать компоненты динамически после
+`createHeadless()`: его загрузчик использует выбранный `projectRoot`.
 JSX в spec только упаковывает компонент и props; авторский CSS остаётся
 в production-TSX и обрабатывается Template.
 Также поддерживается `headless.render(Component, props)`.

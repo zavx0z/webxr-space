@@ -15,7 +15,7 @@ export function jsx(type: unknown, props: Record<string, unknown> | null, key: C
     return fixedChildren(Array.isArray(children) ? children : children == null ? [] : [children])
   }
   if (!isCompiledTemplate(type)) {
-    throw new Error("Headless ожидает скомпилированный компонент: импортируйте его динамически после createHeadless()")
+    throw new Error("Headless ожидает скомпилированный компонент: подключите @immersive/headless/preload или импортируйте компонент динамически после createHeadless()")
   }
   return component(type, props ?? {}, key)
 }

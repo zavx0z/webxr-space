@@ -8,6 +8,7 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./index.ts",
+    "./preload": "./preload.ts",
     "./jsx-runtime": "./jsx-runtime.ts",
     "./jsx-dev-runtime": "./jsx-dev-runtime.ts"
   },
