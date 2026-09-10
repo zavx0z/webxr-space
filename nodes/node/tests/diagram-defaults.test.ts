@@ -4,7 +4,7 @@ import {createDocument} from "@zavx0z/dom"
 import {createRoot} from "@zavx0z/component"
 import {createDocumentRenderer} from "@renderer/html"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import type {DiagramNodeProps} from "../diagram/index.tsx"
+import type {DiagramNodeProps} from "../diagram/contract/input.ts"
 import "./compiler.ts"
 
 const {DiagramNode} = await import("../diagram/index.tsx")

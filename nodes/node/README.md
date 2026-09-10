@@ -5,16 +5,19 @@
 Каждый компонент и его авторская TSX-разметка находятся в `index.tsx` собственного
 каталога. Публичные импорты ниже разрешаются непосредственно в эти файлы.
 
-| Компонент | Назначение | Импорт |
-| --- | --- | --- |
-| DiagramNode | Описание на всю ноду; прямоугольник, овал или круг | `@nodes/node/diagram` |
-| ParameterNode | Шапка, готовые параметры и сокеты на основе Pane | `@nodes/node/parameter` |
-| ContentNode | ParameterNode плюс произвольный компонент содержимого | `@nodes/node/content` |
-| ContentImage | Изображение с сохранением исходных пропорций | `@nodes/node/image` |
-| ContentSurface | Произвольное содержимое или изображение квадратной области | `@nodes/node/surface` |
-| ParameterNodeContents | Шапка, действия, параметры и сокеты внутри ParameterNode | `@nodes/node/contents` |
+| Компонент             | Назначение                                                 | Импорт                  |
+|-----------------------|------------------------------------------------------------|-------------------------|
+| DiagramNode           | Описание на всю ноду; прямоугольник, овал или круг         | `@nodes/node/diagram`   |
+| ParameterNode         | Шапка, готовые параметры и сокеты на основе Pane           | `@nodes/node/parameter` |
+| ContentNode           | ParameterNode плюс произвольный компонент содержимого      | `@nodes/node/content`   |
+| ContentImage          | Изображение с сохранением исходных пропорций               | `@nodes/node/image`     |
+| ContentSurface        | Произвольное содержимое или изображение квадратной области | `@nodes/node/surface`   |
+| ParameterNodeContents | Шапка, действия, параметры и сокеты внутри ParameterNode   | `@nodes/node/contents`  |
 
 Все шесть каталогов находятся непосредственно в корне `@nodes/node`.
+Входной тип DiagramNodeProps с описанием полей находится в
+[diagram/contract/input.ts](diagram/contract/input.ts) и импортируется через
+`@nodes/node/diagram/contract/input`. Сам DiagramNode остаётся в `diagram/index.tsx`.
 Каждый содержит `index.tsx` и `spec/deps.spec.ts`: тест сравнивает полный
 статический граф компонентов и нативных JSX-тегов через общий
 [dependency fixture](../../fixtures/dependency-graph.ts). Он включает все ветви

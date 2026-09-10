@@ -3,7 +3,7 @@ import {afterEach, beforeEach, describe, expect, test} from "bun:test"
 import {mkdir, rm} from "node:fs/promises"
 import {resolve} from "node:path"
 import {createHeadless, type Headless} from "@immersive/headless"
-import type {DiagramNodeProps} from "../index.tsx"
+import type {DiagramNodeProps} from "../contract/input.ts"
 
 /**
  Каждый вариант describe задаёт props настоящего компонента.

@@ -9,6 +9,7 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     "./diagram": "./diagram/index.tsx",
+    "./diagram/contract/input": "./diagram/contract/input.ts",
     "./parameter": "./parameter/index.tsx",
     "./content": "./content/index.tsx",
     "./image": "./image/index.tsx",

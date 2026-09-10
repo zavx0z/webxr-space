@@ -1,27 +1,12 @@
 /**
- Описание и форма узла диаграммы.
+Описание и форма узла диаграммы. Входной контракт DiagramNodeProps находится
+в contract/input.ts; этот модуль владеет разметкой и поведением компонента.
 
- @packageDocumentation
- */
+@packageDocumentation
+*/
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {Typography} from "@zavx0z/ui/typography"
-import type {NodeRect} from "../shared/contracts.ts"
-import type {NodeShape} from "../shared/contracts.ts"
-import type {CallbackRef} from "@zavx0z/template/jsx-runtime"
-
-export type DiagramNodeProps = Readonly<{
-  id: string
-  description: string
-  rect?: NodeRect | undefined
-  intrinsic?: boolean | undefined
-  elementRef?: CallbackRef<HTMLElement> | undefined
-  shape?: NodeShape | undefined
-  selected?: boolean | undefined
-  hidden?: boolean | undefined
-  title?: string | undefined
-  style?: CssStyle | undefined
-  onActivate?: ((event: Event) => void) | undefined
-}>
+import type {DiagramNodeProps} from "./contract/input.ts"
 
 /** Описание заполняет Pane выбранной формы без полей редактора и видимых сокетов. */
 export function DiagramNode(props: DiagramNodeProps) {
