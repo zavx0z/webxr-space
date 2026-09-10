@@ -81,11 +81,14 @@ capture_PFA8bDRRr0St_zlnNaUh5fNv совпал по SHA с исправленны
 capture_o3YzUlEodR7JvUc9TMrU_0kS. active=lastWorking,
 failed/built/candidate/activating=null; незавершённых MCP операций нет.
 
-Правки runtime/dependency-view.tsx и новый runtime/dependency-view.test.ts
-остаются в рабочем дереве Storybook вместе с первоначальным незакоммиченным
-блоком структурных зависимостей. Они не включены в коммиты Nodes; чужой блок
-не добавлялся в Git целиком ради этой доработки.
+На этапе проверки правки runtime/dependency-view.tsx и новый
+runtime/dependency-view.test.ts сохранялись вместе с первоначальным блоком
+структурных зависимостей. По последующему поручению пользователя закоммитить
+все оставшиеся изменения этот блок полностью закреплён в Storybook: 5e73092.
+Оставшиеся переносы fixture/spec в WebXR закреплены коммитом 3edcde1.
+Перед фиксацией повторно прошли 25 тестов нод, 30 целевых тестов Storybook
+и проверки типов обоих пакетов.
 
 Platform code, общая UI theme, font assets/registry и внешний runtime
-Storybook в коммитах этой задачи не изменялись. Чужое staged переименование
-spec и прежние удаления тестовых файлов сохранены отдельно.
+Storybook в коммитах компонентов Nodes не изменялись. Переносы spec/fixture
+и удаления прежних тестовых файлов закреплены отдельным завершающим коммитом.
