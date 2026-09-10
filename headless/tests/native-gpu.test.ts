@@ -9,7 +9,7 @@ test("[HEADLESS-NATIVE-GPU] bun-webgpu рисует треугольник в т
   await mkdir(directory, {recursive: true})
   await rm(imagePath, {force: true})
   const worker = Bun.spawn([process.execPath, resolve(import.meta.dir, "../fixtures/native-gpu.ts")], {
-    cwd: resolve(import.meta.dir, "../../.."),
+    cwd: resolve(import.meta.dir, "../.."),
     stdout: "pipe",
     stderr: "pipe",
     timeout: 20000,
@@ -43,7 +43,7 @@ test("[HEADLESS-NATIVE-GPU] bun-webgpu рисует треугольник в т
 
 test("[HEADLESS-NATIVE-DIAGNOSTICS] адаптер getCompilationInfo возвращает настоящую ошибку неверного WGSL", async () => {
   const worker = Bun.spawn([process.execPath, resolve(import.meta.dir, "../fixtures/native-gpu.ts"), "diagnostics"], {
-    cwd: resolve(import.meta.dir, "../../.."),
+    cwd: resolve(import.meta.dir, "../.."),
     stdout: "pipe",
     stderr: "pipe",
     timeout: 20000,

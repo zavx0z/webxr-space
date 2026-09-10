@@ -17,7 +17,7 @@ const packageDirectories = Object.freeze({
   "@zavx0z/space": "space",
   "@zavx0z/ui": "ui",
   "@nodes/node": "nodes/node",
-  "@immersive/headless": "nodes/headless",
+  "@immersive/headless": "headless",
   "@nodes/parameters": "nodes/parameters",
   "@nodes/sockets": "nodes/sockets",
   "@nodes/tree": "nodes/tree",

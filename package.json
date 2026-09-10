@@ -27,7 +27,7 @@
     "nodes/parameters",
     "nodes/sockets",
     "nodes/node",
-    "nodes/headless",
+    "headless",
     "devtools"
   ],
   "scripts": {
