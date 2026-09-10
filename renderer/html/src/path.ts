@@ -16,7 +16,7 @@ const TOKEN = /[MLQC]|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/g
 
 type PathToken = string | number
 
-/** Parses the bounded absolute, open `M/L/Q/C` project path grammar. */
+/** Разбирает ограниченную абсолютную грамматику одного контура `M/L/Q/C`. */
 export function parseRenderPath(source: string): RenderPathGeometry | null {
   if (source.length > MAX_SOURCE_LENGTH) return null
   const tokens = tokenizePath(source)
@@ -218,4 +218,18 @@ function segmentBounds(segments: readonly RenderPathSegment[]): RenderPathBounds
     width: maximumX - minimumX,
     height: maximumY - minimumY,
   })
+}
+
+/** Внутренняя область того же sampled контура с неявным замыкающим ребром. */
+export function pointInPathFill(geometry: RenderPathGeometry, x: number, y: number, rule: "nonzero" | "evenodd"): boolean {
+  let winding = 0
+  const segments = geometry.segments
+  const closing = {from: segments[segments.length - 1]!.to, to: segments[0]!.from}
+  for (let index = 0; index <= segments.length; index += 1) {
+    const {from, to} = index === segments.length ? closing : segments[index]!
+    if ((from.y > y) === (to.y > y)) continue
+    const crossing = from.x + (y - from.y) * (to.x - from.x) / (to.y - from.y)
+    if (crossing > x) winding += to.y > from.y ? 1 : -1
+  }
+  return rule === "evenodd" ? Math.abs(winding) % 2 === 1 : winding !== 0
 }

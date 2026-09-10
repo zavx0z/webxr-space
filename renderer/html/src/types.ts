@@ -240,6 +240,9 @@ export type PathDisplayItem = Readonly<{
   x: number
   y: number
   geometry: RenderPathGeometry
+  /** Наличие fillRule обозначает заливку; цвет передаётся через fill. */
+  fill?: string
+  fillRule?: "nonzero" | "evenodd"
   stroke: string
   strokeWidth: number
   opacity: number
@@ -271,6 +274,7 @@ export type HitMetadata = Readonly<{
     originY: number
     strokeWidth: number
     pointerHitWidth: number
+    fillRule?: "nonzero" | "evenodd"
     presentationOwner: Element | null
   }>
   textControl?: Readonly<{

@@ -1,3 +1,4 @@
+import {pointInPathFill} from "./path.ts"
 import {
   Event,
   HTMLElement,
@@ -788,6 +789,13 @@ const pointInStrokedPath = (
     y > Math.max(first.y, second.y) + coarseRadius
   ) return false
 
+  if (path.fillRule !== undefined && pointInPathFill(
+    path.geometry,
+    (x - transform.translateX) / transform.scaleX - path.originX,
+    (y - transform.translateY) / transform.scaleY - path.originY,
+    path.fillRule,
+  )) return true
+
   for (const segment of path.geometry.segments) {
     const from = transformedPathPoint(
       transform,
@@ -813,7 +821,7 @@ const pointInStrokedPath = (
       path.pointerHitWidth * normalScale,
       path.strokeWidth * normalScale,
     )
-    if (pointSegmentDistanceSquared(x, y, from.x, from.y, to.x, to.y) <= (targetWidth / 2) ** 2) {
+    if (targetWidth > 0 && pointSegmentDistanceSquared(x, y, from.x, from.y, to.x, to.y) <= (targetWidth / 2) ** 2) {
       return true
     }
   }

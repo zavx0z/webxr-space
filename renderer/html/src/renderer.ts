@@ -400,6 +400,8 @@ const ROOT_STYLE: ComputedStyle = Object.freeze({
   }),
   background: null,
   color: "#000000",
+  fill: null,
+  fillRule: "nonzero",
   stroke: "#000000",
   strokeWidth: 1,
   pointerHitWidth: 0,
@@ -1402,6 +1404,7 @@ const tryBuildVectorPathFrame = (
   const layoutNode = layoutCache.get(target)
   if (layoutNode === undefined || layoutNode.parent === null) return null
   const nextStyle = computeStyle(target, layoutNode.parent.style, rules, interactionState)
+  if (layoutNode.style.fill !== null || nextStyle.fill !== null) return null
   if (!samePathStyleExceptPaint(layoutNode.style, nextStyle)) return null
   const geometry = readVectorPathGeometry(target)
   const indexes = collectionIndexes(previous)
@@ -2529,6 +2532,8 @@ const buildLayoutTree = (
         cached.style.letterSpacing !== style.letterSpacing ||
         cached.style.textAlign !== style.textAlign ||
         cached.style.whiteSpace !== style.whiteSpace ||
+        cached.style.fill !== style.fill ||
+        cached.style.fillRule !== style.fillRule ||
         cached.style.stroke !== style.stroke ||
         cached.style.strokeWidth !== style.strokeWidth ||
         cached.style.userSelect !== style.userSelect ||
@@ -5709,6 +5714,25 @@ const emitVectorPath = (
   const geometry = readVectorPathGeometry(path)
   if (geometry === null) return
 
+  if (layoutNode.style.fill !== null && layoutNode.effectiveOpacity > 0) {
+    state.displayList.push(Object.freeze({
+      kind: "path",
+      key: "path-fill",
+      node: path,
+      x,
+      y,
+      geometry,
+      fill: layoutNode.style.fill === "currentcolor" ? layoutNode.style.color : layoutNode.style.fill,
+      fillRule: layoutNode.style.fillRule,
+      stroke: layoutNode.style.stroke,
+      strokeWidth: 0,
+      opacity: layoutNode.effectiveOpacity,
+      clips,
+      presentationOwner,
+      transform: IDENTITY_TRANSFORM,
+    }))
+  }
+
   if (layoutNode.style.strokeWidth > 0 && layoutNode.effectiveOpacity > 0) {
     state.displayList.push(Object.freeze({
       kind: "path",
@@ -5727,7 +5751,7 @@ const emitVectorPath = (
   }
 
   const targetWidth = Math.max(layoutNode.style.strokeWidth, layoutNode.style.pointerHitWidth)
-  if (targetWidth <= 0) return
+  if (targetWidth <= 0 && layoutNode.style.fill === null) return
   const envelope = vectorPathHitEnvelope(geometry, x, y, targetWidth)
   const base = createHit(
     path,
@@ -5748,6 +5772,7 @@ const emitVectorPath = (
       originY: y,
       strokeWidth: layoutNode.style.strokeWidth,
       pointerHitWidth: layoutNode.style.pointerHitWidth,
+      ...(layoutNode.style.fill === null ? {} : {fillRule: layoutNode.style.fillRule}),
       presentationOwner,
     }),
   }))
@@ -6961,6 +6986,8 @@ const textStyle = (inherited: ComputedStyle): ComputedStyle =>
     borderRadii: ROOT_STYLE.borderRadii,
     background: null,
     color: inherited.color,
+    fill: inherited.fill,
+    fillRule: inherited.fillRule,
     stroke: inherited.stroke,
     strokeWidth: inherited.strokeWidth,
     pointerHitWidth: 0,

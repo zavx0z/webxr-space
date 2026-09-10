@@ -107,6 +107,8 @@ export type ComputedStyle = Readonly<{
   borderRadii: ComputedCornerRadii
   background: string | null
   color: string
+  fill: string | null
+  fillRule: "nonzero" | "evenodd"
   stroke: string
   strokeWidth: number
   pointerHitWidth: number
@@ -537,6 +539,15 @@ export const computeStyle = (
     borderRadii: readBorderRadii(values),
     background,
     color,
+    fill: (() => {
+      const value = readValue(values, "fill")
+      if (value === "none" || value === "initial") return null
+      if (value === undefined || value === "inherit" || value === "unset") return parent?.fill ?? null
+      return value === "currentcolor" ? "currentcolor" : resolvedColor(value, color)
+    })(),
+    fillRule: readValue(values, "fill-rule") === "initial" ? "nonzero"
+      : readValue(values, "fill-rule") === "evenodd" ? "evenodd"
+      : readValue(values, "fill-rule") === "nonzero" ? "nonzero" : parent?.fillRule ?? "nonzero",
     stroke,
     strokeWidth: pixelNumber(
       readValue(values, "stroke-width"),
@@ -1214,6 +1225,16 @@ const expandDeclaration = (
     case "border-left-color": {
       const color = normalizeSpecifiedColor(value)
       return color === null ? [] : [[property, color]]
+    }
+    case "fill": {
+      const normalized = value.trim().toLowerCase()
+      if (["none", "inherit", "initial", "unset"].includes(normalized)) return [[property, normalized]]
+      const color = normalizeSpecifiedColor(value)
+      return color === null ? [] : [[property, color]]
+    }
+    case "fill-rule": {
+      const normalized = value.trim().toLowerCase()
+      return ["nonzero", "evenodd", "inherit", "initial", "unset"].includes(normalized) ? [[property, normalized]] : []
     }
     case "stroke-width":
     case "pointer-hit-width":

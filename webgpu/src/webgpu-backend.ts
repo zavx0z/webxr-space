@@ -1,3 +1,4 @@
+import {pathFillVertices} from "./path-fill.ts"
 import {
   BufferGeometry,
   BufferAttribute,
@@ -319,6 +320,7 @@ type PathEntry = RetainedClipState & {
   originX: number
   originY: number
   strokeWidth: number
+  fillRule: PathDisplayItem["fillRule"]
 }
 
 const WHITE = "#ffffff"
@@ -1836,7 +1838,11 @@ export class RendererWebGpuBackend {
           token,
         }))
       } else if (item.kind === "path") {
-        assertFinitePositive(item.strokeWidth, `${label}.strokeWidth`)
+        if (item.fillRule !== undefined) {
+          if (item.fillRule !== "nonzero" && item.fillRule !== "evenodd") throw new Error(`${label}.fillRule is unsupported`)
+          if (typeof item.fill !== "string") throw new Error(`${label}.fill must be a color`)
+          assertFiniteNonNegative(item.strokeWidth, `${label}.strokeWidth`)
+        } else assertFinitePositive(item.strokeWidth, `${label}.strokeWidth`)
         if (item.presentationOwner !== null) {
           this.#validateDisplayNode(item.presentationOwner, frame, `${label}.presentationOwner`)
           const transform = frame.presentationTransforms?.get(item.presentationOwner)
@@ -1870,7 +1876,8 @@ export class RendererWebGpuBackend {
             throw new Error(`${segmentLabel} must have positive length`)
           }
         }
-        const color = parseDisplayColor(item.stroke)
+        if (item.fillRule !== undefined) pathFillVertices(item.geometry, item.fillRule)
+        const color = parseDisplayColor(item.fillRule === undefined ? item.stroke : item.fill!)
         const opacity = assertUnitOpacity(item.opacity, `${label}.opacity`)
         assertFiniteFloat32(item.strokeWidth, `${label}.strokeWidth`)
         for (const [component, value] of Object.entries({
@@ -2206,6 +2213,7 @@ export class RendererWebGpuBackend {
     const geometry = createScalarPathGeometry(value.item)
     const material = new MeshBasicMaterial({color: scalarPathColor(value)})
     const node = new Mesh(geometry, material)
+    node.visible = geometry.attributes.position!.count > 0
     node.name = `${value.item.node.nodeName}:${value.item.key}`
     node.renderLayer = "ui"
     const entry: PathEntry = {
@@ -2217,6 +2225,7 @@ export class RendererWebGpuBackend {
       originX: value.item.x,
       originY: value.item.y,
       strokeWidth: value.item.strokeWidth,
+      fillRule: value.item.fillRule,
     }
     this.#updateClips(entry, value.clips)
     positionPathMesh(node, value.transform)
@@ -2314,13 +2323,16 @@ export class RendererWebGpuBackend {
         || entry.originX !== value.item.x
         || entry.originY !== value.item.y
         || entry.strokeWidth !== value.item.strokeWidth
+        || entry.fillRule !== value.item.fillRule
       ) {
         updateScalarPathGeometry(entry.geometry, value.item)
         entry.geometrySource = value.item.geometry
         entry.originX = value.item.x
         entry.originY = value.item.y
         entry.strokeWidth = value.item.strokeWidth
+        entry.fillRule = value.item.fillRule
       }
+      entry.node.visible = entry.geometry.attributes.position!.count > 0
       entry.material.color.copy(scalarPathColor(value))
       this.#updateClips(entry, value.clips)
       positionPathMesh(entry.node, value.transform)
@@ -2684,7 +2696,7 @@ function packPathSegment(
 }
 
 function isInstancedPathCompatible(value: PreparedPathItem): boolean {
-  return value.color.a === 1 && value.opacity === 1
+  return value.item.fillRule === undefined && value.color.a === 1 && value.opacity === 1
 }
 
 function scalarPathColor(value: PreparedPathItem): Color {
@@ -2715,6 +2727,15 @@ function scalarPathGeometryData(item: PathDisplayItem): Readonly<{
   positions: Float32Array
   indices: Uint32Array
 }> {
+  if (item.fillRule !== undefined) {
+    const source = pathFillVertices(item.geometry, item.fillRule)
+    const positions = source.slice()
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i] = positions[i]! + item.x
+      positions[i + 1] = positions[i + 1]! + item.y
+    }
+    return {positions, indices: Uint32Array.from({length: positions.length / 3}, (_, index) => index)}
+  }
   const points = [
     item.geometry.segments[0]!.from,
     ...item.geometry.segments.map((segment) => segment.to),
@@ -3079,6 +3100,7 @@ function isReusableDisplayItem(item: DisplayItem): boolean {
   let reusable: boolean
   if (item.kind === "path") {
     reusable = isFrozenDataRecord(item, ["geometry", "stroke", "strokeWidth", "presentationOwner"])
+      && (item.fillRule === undefined || isFrozenDataRecord(item, ["fill", "fillRule"]))
       && isFrozenDataRecord(item.geometry, ["cubics", "segments", "bounds"])
       && isFrozenDataRecord(item.geometry.cubics)
       && isFrozenDataRecord(item.geometry.segments)

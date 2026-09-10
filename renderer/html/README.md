@@ -70,3 +70,6 @@ records. Наследование и явный `visibility:visible` потом�
 
 Обзор пакета в Storybook берётся из этого README. Обычные директории
 описываются TSDoc их `index.ts`; отдельного манифеста с метаданными здесь нет.
+
+[Заливка vector-path](vector-fill.md) описывает CSS fill/fill-rule, ограниченную
+грамматику контуров, paint/hit и generic evidence.
