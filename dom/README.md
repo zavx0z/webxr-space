@@ -66,6 +66,22 @@ CSS transforms, SVG-геометрию или методы `getClientRects`/`off
 [HTML Renderer](../renderer/html/tests/bounding-client-rect.test.ts),
 [перенос HUD ↔ Display](../browser/tests/projection-input.test.ts).
 
+## Измерение до показа
+
+`Element.getLayoutRect(relativeTo?)` и `readElementLayoutRect` возвращают
+дробный `DOMRectReadOnly | null` до CSS transforms и Browser projection.
+`observeElementLayout` из `@zavx0z/dom/geometry` доставляет изменение рамки
+перед кадром; подписку можно установить в первом `useLayoutEffect`, когда
+provider ещё не готов. Browser завершает вызванные callback обновления
+компонентов до GPU submission. `visibility:hidden` сохраняет измеряемый бокс.
+
+Обычный авторский `HTMLElement` ref подходит напрямую. Расширение браузерного
+`Element` и runtime-проверка semantic объекта принадлежат `geometry.ts`.
+Компоненты не импортируют implementation classes и не приводят refs к ним.
+Расширение относится к профилю WebXR; настоящий native DOM не изменяется.
+
+[Полный договор, координаты, ограничения и evidence](layout-geometry.md).
+
 ## Документация и проверки
 
 Этот README описывает пакет целиком. В Storybook выбор директории `display`

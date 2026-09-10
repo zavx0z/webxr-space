@@ -1,3 +1,4 @@
+import {flushDocumentLayoutObservers, registerDocumentLayoutObserverScheduler} from "@zavx0z/dom/geometry"
 import {subscribeDocumentAuthorStyleSheets, subscribeDocumentCompiledStyleSheets} from "@zavx0z/dom"
 import {DisplayElement, publishDisplayMetrics} from "@zavx0z/dom/display"
 import {readDisplayStyle} from "@renderer/html"
@@ -346,6 +347,7 @@ export const createAttachedRoot = async (
       ? undefined
       : await loadFontFaces(options.fontSources, options.canvas.ownerDocument?.baseURI))
     runtime = await createRuntime({
+      deferInitialFrame: true,
       canvas: options.canvas,
       document,
       clipboard: environment.read().clipboard,
@@ -474,6 +476,7 @@ export const createAttachedRoot = async (
     }
   }
 
+  const unsubscribeLayoutScheduler = registerDocumentLayoutObserverScheduler(document, runtime.requestRender)
   const unsubscribeBeforeRender = runtime.subscribeBeforeRender(() => {
     inFrame = true
     try {
@@ -482,6 +485,16 @@ export const createAttachedRoot = async (
       synchronizeCamera()
       const delta = environment.frame(space, viewPoint, typeof performance === "undefined" ? Date.now() : performance.now())
       synchronize()
+      // Геометрия готова после регистрации проекций, до первого GPU-показа.
+      // Изменения компонентов из callbacks должны попасть в тот же кадр.
+      appRoot.flush()
+      synchronize()
+      let layoutPass = 0
+      while (flushDocumentLayoutObservers(document)) {
+        if (++layoutPass > 32) throw new Error("Layout observations did not stabilize before paint")
+        appRoot.flush()
+        synchronize()
+      }
       for (const animation of animations.values()) {
         if (animation.playing) animation.mixer.update(delta)
       }
@@ -728,6 +741,7 @@ export const createAttachedRoot = async (
       unsubscribeDisplayCompiledStyles()
       unsubscribeMutations()
       unsubscribeBeforeRender()
+      unsubscribeLayoutScheduler()
       unsubscribePresented()
       releaseAnimations(animations)
       releaseObjects(runtime, objects)

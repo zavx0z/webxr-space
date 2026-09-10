@@ -41,6 +41,21 @@ CSS-координат проекции в viewport Canvas. Без него ко
 [Контракт DOM](../../dom/README.md#размер-и-положение-элемента) и
 [поведенческие проверки](tests/bounding-client-rect.test.ts).
 
+## Локальная геометрия и скрытое измерение
+
+Поставщик обслуживает также `Element.getLayoutRect(relativeTo?)`: тот же
+актуальный CPU layout, дробный border-box до transforms и Browser projection.
+Публичный DOM скрывает устройство RenderFrame от компонентов. Наблюдение
+доставляется Browser после расчёта, до GPU и после синхронизации проекций.
+
+`visibility:hidden` сохраняет layout boxes, но исключает собственные paint/hit
+records. Наследование и явный `visibility:visible` потомка соблюдаются.
+Изменение текста, font CSS, author stylesheets и constraints использует текущую
+систему invalidation; внешние изменяемые метрики требуют `invalidate(root)`.
+
+[Договор и evidence](../../dom/layout-geometry.md),
+[generic tests](tests/layout-rect.test.ts).
+
 ## Документация и проверки
 
 - [Прокрутка и обновления кадра](scrolling.md).

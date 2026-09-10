@@ -1,5 +1,5 @@
 import {registerDocumentGeometryReader} from "@zavx0z/dom/geometry"
-import {readFrameClientRects} from "./client-rect.ts"
+import {readFrameClientRects, readFrameLayoutRect} from "./client-rect.ts"
 import {
   HTMLElement,
   HTMLImageElement,
@@ -544,7 +544,8 @@ export const createDocumentRenderer = (
   try {
     if (options.registerGeometry !== false) {
       releaseGeometry = registerDocumentGeometryReader(options.document, options.root, element =>
-        readFrameClientRects(flush(), element, options.projectClientPoint))
+        readFrameClientRects(flush(), element, options.projectClientPoint),
+        element => readFrameLayoutRect(flush(), element))
     }
   } catch (error) {
     renderer.dispose()
@@ -2519,6 +2520,7 @@ const buildLayoutTree = (
     const inheritedChanged =
       cached !== undefined &&
       (cached.style.color !== style.color ||
+        cached.style.visibility !== style.visibility ||
         cached.style.fontSize !== style.fontSize ||
         cached.style.fontFamily !== style.fontFamily ||
         cached.style.fontWeight !== style.fontWeight ||
@@ -2767,7 +2769,7 @@ const placeInlineLayout = (
     state.boxes.push(box)
     state.boxByNode.set(node.node, box)
     state.transforms.set(node.node, context.presentation)
-    if (!isElement(node.node)) continue
+    if (!isElement(node.node) || node.style.visibility === "hidden") continue
     state.hits.set(node.node, Object.freeze({
       ...createHit(node.node, node.tag ?? "", bounds.x, bounds.y, bounds.width, bounds.height, clips, context.presentation, node.style),
       ...(rects.length > 1 ? {fragments: rects} : {}),
@@ -2792,7 +2794,7 @@ const placeInlineLayout = (
       place(node, x + fragment.x + margin.left, y + fragment.y + margin.top,
         width, height, fragment.width - horizontal(margin), fragment.height - vertical(margin),
         clips, depth + (layout.paths.get(node)?.length ?? 0), state, context)
-    } else if (fragment.kind === "text" && hasPaintableText(fragment.text)) {
+    } else if (fragment.kind === "text" && node.style.visibility !== "hidden" && hasPaintableText(fragment.text)) {
       const index = indices.get(node.node) ?? 0
       indices.set(node.node, index + 1)
       state.displayList.push(Object.freeze({
@@ -3661,7 +3663,7 @@ const place = (
   state.boxByNode.set(layoutNode.node, box)
 
   emitBoxShadow(layoutNode, box, clips, state)
-  if (hasRectPaint(layoutNode.style.background, border) && width > 0 && height > 0) {
+  if (layoutNode.style.visibility !== "hidden" && hasRectPaint(layoutNode.style.background, border) && width > 0 && height > 0) {
     state.displayList.push(
       Object.freeze({
         kind: "rect",
@@ -3681,7 +3683,7 @@ const place = (
     )
   }
 
-  if (isElement(layoutNode.node)) {
+  if (isElement(layoutNode.node) && layoutNode.style.visibility !== "hidden") {
     state.hits.set(
       layoutNode.node,
       createHit(
@@ -5276,6 +5278,7 @@ const emitScrollbars = (
   clips: readonly RenderClip[],
   state: BuildState,
 ): void => {
+  if (layoutNode.style.visibility === "hidden") return
   if (!isElement(layoutNode.node) || layoutNode.style.scrollbarWidth === "none") return
   const paintY = metrics.maxScrollTop > 0 && visibleScrollbarOverflow(layoutNode.style.overflowY)
   const paintX = metrics.maxScrollLeft > 0 && visibleScrollbarOverflow(layoutNode.style.overflowX)
@@ -5544,6 +5547,7 @@ const emitBoxShadow = (
   clips: readonly RenderClip[],
   state: BuildState,
 ): void => {
+  if (layoutNode.style.visibility === "hidden") return
   const shadow = layoutNode.style.boxShadow
   if (shadow === null || box.width <= 0 || box.height <= 0) return
   const contraction = Math.max(0, -shadow.spreadRadius)
@@ -5592,6 +5596,7 @@ const emitReplacedControlPresentation = (
   clips: readonly RenderClip[],
   state: BuildState,
 ): void => {
+  if (layoutNode.style.visibility === "hidden") return
   if (layoutNode.node instanceof HTMLImageElement) {
     emitImagePresentation(layoutNode.node, layoutNode, box, clips, state)
     return
@@ -5700,6 +5705,7 @@ const emitVectorPath = (
   presentationOwner: Element | null,
   state: BuildState,
 ): void => {
+  if (layoutNode.style.visibility === "hidden") return
   const geometry = readVectorPathGeometry(path)
   if (geometry === null) return
 
@@ -5860,7 +5866,7 @@ const emitSelectPicker = (
   const box = state.boxByNode.get(select)
   const layoutNode = layoutCache.get(select)
   const options = [...select.options]
-  if (box === undefined || layoutNode === undefined || options.length === 0) return
+  if (box === undefined || layoutNode === undefined || layoutNode.style.visibility === "hidden" || options.length === 0) return
   const transform = box.transform
   const scaleX = Math.abs(transform.scaleX)
   const scaleY = Math.abs(transform.scaleY)
@@ -6833,6 +6839,7 @@ const emitTextItems = (
   clips: readonly RenderClip[],
   state: BuildState,
 ): void => {
+  if (layoutNode.style.visibility === "hidden") return
   const value = layoutNode.text
   if (!value) return
   const lines = splitTextLines(value)

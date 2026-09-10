@@ -1,4 +1,4 @@
-import {readElementBoundingClientRect, type DOMRect} from "../geometry.ts"
+import {readElementBoundingClientRect, readElementLayoutRect, type DOMRectReadOnly, type DOMRect, type ElementGeometryTarget} from "../geometry.ts"
 import type {Document} from "./document.ts"
 import {getClassList} from "./dom-token-list.ts"
 import type {DOMTokenList} from "./dom-token-list.ts"
@@ -83,6 +83,12 @@ export class Element extends Node {
   getBoundingClientRect(): DOMRect {
     if (!(this instanceof Element)) throw new TypeError("Illegal Element invocation")
     return readElementBoundingClientRect(this)
+  }
+
+  /** Дробная локальная border-box рамка до transforms/projection; null без готового бокса. */
+  getLayoutRect(relativeTo?: ElementGeometryTarget): DOMRectReadOnly | null {
+    if (!(this instanceof Element)) throw new TypeError("Illegal Element invocation")
+    return readElementLayoutRect(this, relativeTo)
   }
 
   hasAttributes(): boolean {

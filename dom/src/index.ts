@@ -1,5 +1,5 @@
-export {DOMRect, DOMRectReadOnly, registerDocumentGeometryReader} from "../geometry.ts"
-export type {DOMRectInit, ElementClientRectReader} from "../geometry.ts"
+export {DOMRect, DOMRectReadOnly, registerDocumentGeometryReader, readElementLayoutRect, observeElementLayout} from "../geometry.ts"
+export type {DOMRectInit, ElementGeometryTarget, ElementClientRectReader, ElementLayoutRectReader, ElementLayoutObserverOptions} from "../geometry.ts"
 export {CustomEvent, Event} from "./event.ts"
 export {DataTransfer, sealDataTransfer} from "../data-transfer.ts"
 export {ClipboardEvent} from "../clipboard-event.ts"

@@ -25,3 +25,17 @@ export function readFrameClientRects(frame: RenderFrame, element: Element, proje
     return [{x: left, y: top, width: right - left, height: bottom - top}]
   })
 }
+
+/** Дробная объединённая border-box рамка до transforms и Browser projection. */
+export function readFrameLayoutRect(frame: RenderFrame, element: Element): Readonly<DOMRectInit> | null {
+  const box = frame.boxByNode.get(element)
+  if (box === undefined) return null
+  // Размер уже вычислен layout: восстановление через дальнюю грань теряет точность при переносе.
+  if (box.fragments === undefined) return {x: box.x, y: box.y, width: box.width, height: box.height}
+  const rects = box.fragments
+  const left = Math.min(...rects.map(rect => rect.x))
+  const top = Math.min(...rects.map(rect => rect.y))
+  const right = Math.max(...rects.map(rect => rect.x + rect.width))
+  const bottom = Math.max(...rects.map(rect => rect.y + rect.height))
+  return {x: left, y: top, width: right - left, height: bottom - top}
+}

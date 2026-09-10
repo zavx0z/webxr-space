@@ -156,6 +156,8 @@ export type CreateDocumentSpaceRuntimeOptions = Readonly<{
   pixelRatio?: number
   viewPoint?: DocumentSpaceViewPointSnapshot
   cameraGestures?: boolean
+  /** Browser Root выполняет первый render после подключения проекций и pre-paint наблюдения. */
+  deferInitialFrame?: boolean
   onViewportChange?(size: RootSize): void
 }>
 
@@ -467,6 +469,7 @@ const createClaimedDocumentSpaceRuntime = async (
   let cameraGesturesEnabled = options.cameraGestures === true
   let presentedFrames = 0
   let requestedFrame: unknown | null = null
+  let awaitingInitialRender = options.deferInitialFrame === true
   let tooltipTimer: unknown | null = null
   let tooltipOwner: Readonly<{kind: "plane" | "overlay"; owner: Node}> | null = null
   let resizeObserver: ResizeObserverOwner | null = null
@@ -490,7 +493,7 @@ const createClaimedDocumentSpaceRuntime = async (
 
   const requestRender = (): void => {
     assertActive(disposed)
-    if (renderError !== null) return
+    if (renderError !== null || awaitingInitialRender) return
     if (rendering) {
       if (preparing) return
       renderRequestedDuringFrame = true
@@ -573,6 +576,7 @@ const createClaimedDocumentSpaceRuntime = async (
     assertActive(disposed)
     if (renderError !== null) return
     if (rendering) throw new Error("Document space render is already in progress")
+    awaitingInitialRender = false
     if (requestedFrame !== null) {
       seams.cancelFrame(requestedFrame)
       requestedFrame = null
@@ -1969,7 +1973,7 @@ const createClaimedDocumentSpaceRuntime = async (
     })
     resizeObserver.observe(options.canvas)
     resize()
-    render()
+    if (!awaitingInitialRender) render()
     return runtime
   } catch (error) {
     runtime.dispose()
