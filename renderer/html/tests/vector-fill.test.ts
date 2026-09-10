@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {createDocument, type Element} from "@zavx0z/dom"
 import {createDocumentRenderer, hitTestProjection} from "../src/index.ts"
-import {parseRenderPath, pointInPathFill} from "../src/path.ts"
+import {parseRenderPath, pointInPathFill} from "../vector/index.ts"
 
 function style(node: Element, property: string, value: string) {
   node.setAttribute("style", `${node.getAttribute("style") ?? ""};${property}:${value}`)

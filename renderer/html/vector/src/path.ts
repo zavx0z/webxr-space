@@ -4,7 +4,7 @@ import type {
   RenderPathGeometry,
   RenderPathPoint,
   RenderPathSegment,
-} from "./types.ts"
+} from "../../src/types.ts"
 import {VECTOR_PATH_COORDINATE_LIMIT} from "@zavx0z/dom"
 
 const CURVE_STEPS = 6

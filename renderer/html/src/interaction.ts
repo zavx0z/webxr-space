@@ -1,4 +1,4 @@
-import {pointInPathFill} from "./path.ts"
+import {pointInPathFill} from "../vector/index.ts"
 import {
   Event,
   HTMLElement,

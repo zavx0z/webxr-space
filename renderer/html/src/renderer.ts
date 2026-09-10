@@ -70,7 +70,7 @@ import type {
   RenderTransform,
   RenderViewport,
 } from "./types.ts"
-import {parseRenderPath} from "./path.ts"
+import {parseRenderPath} from "../vector/index.ts"
 import {layoutInlineFlow, type InlineInput, type InlinePlan} from "./inline-flow.ts"
 import {createTextSource} from "./text-selection.ts"
 import {createPopoverIndex} from "./popover-index.ts"

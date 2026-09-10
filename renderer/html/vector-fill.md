@@ -4,6 +4,12 @@ Capability `VECTOR-FILL` принадлежит DOM, `@renderer/html` и WebGPU.
 HTMLVectorPathElement хранит `d`; Renderer разрешает CSS, строит paint и hit;
 WebGPU превращает нормализованный контур в retained Mesh.
 
+Физический модуль `vector/index.ts` объединяет разбор, нормализацию и
+проверку внутренней области; реализация находится в `vector/src/path.ts`.
+Storybook связывает сценарий через `subject.directory:"vector"`; отдельная
+ручная категория не входит в итоговое дерево навигации. Публичные exports
+пакета не меняются.
+
 Поддерживается прежняя ограниченная грамматика **одного** контура: абсолютный
 начальный `M`, затем явные `L`, `Q`, `C`. Повторный `M`, `Z`, относительные
 команды, дуги и сокращённые команды отвергаются. Для заливки последнее ребро
@@ -59,3 +65,19 @@ paint/hit. Для заполненных контуров используетс
 
 Unit-тесты backend проверяют данные и lifecycle, не имитируют native GPU.
 Реальная GPU-проверка выполняется через capture этой owner story.
+
+## Проверка структурной привязки — 2026-09-10
+
+После переноса в физический `vector` MCP search показывает subject с
+`parentId:package:@renderer/html`, без ручной category; route
+`vector/fill/geometry` сохранён. Реализация совпадает с прежней побайтно,
+кроме пути type import. Целевые parse/fill/consumer проверки: 14 pass;
+typecheck HTML Renderer и WebGPU проходит.
+
+Nonlive candidate `f0866b16752cff8f5f1d4d07` достиг состояния built без
+диагностик. Exact open завершился ошибкой `package target creation is
+indeterminate`, последующий status с views — timeout. Поэтому live новой
+revision переноса **не подтверждён**. GPU evidence до переноса относится к
+прежней active revision `2036312fd7b6f2dc83792193`; перенос не изменил поведение
+реализации. Ограничение повторной live-проверки относится к Storybook target,
+его runtime/browser code в этой задаче не изменялся.

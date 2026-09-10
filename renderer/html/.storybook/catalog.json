@@ -3,7 +3,7 @@
   "categories": [{
     "id": "vector", "label": "Векторные контуры", "route": "vector",
     "subjects": [{
-      "id": "fill", "label": "Заливка контура", "route": "vector/fill", "kind": "component",
+      "id": "fill", "label": "Заливка контура", "route": "vector/fill", "kind": "component", "directory": "vector",
       "presentation": {"protocol": "story-presentation/1", "projection": "display", "widgets": ["source", "diagnostics"]},
       "variants": [{"id": "geometry", "label": "Заливка, обводка и clipping", "route": "vector/fill/geometry", "module": {"path": "./runtime.ts", "export": "geometry"}}]
     }]

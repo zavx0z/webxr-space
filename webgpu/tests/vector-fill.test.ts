@@ -2,7 +2,7 @@ import {expect, test} from "bun:test"
 import {createDocument} from "@zavx0z/dom"
 import {Mesh, MeshBasicMaterial, type BufferGeometry} from "@zavx0z/engine"
 import {createDocumentRenderer} from "@renderer/html"
-import {parseRenderPath, pointInPathFill} from "../../renderer/html/src/path.ts"
+import {parseRenderPath, pointInPathFill} from "../../renderer/html/vector/index.ts"
 import {pathFillVertices} from "../src/path-fill.ts"
 import {RendererWebGpuBackend} from "../src/webgpu-backend.ts"
 
