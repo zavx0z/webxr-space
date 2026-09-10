@@ -6,9 +6,11 @@ import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
 import {createDocumentRenderer} from "@renderer/html"
 import {Space, ViewPoint, TrueTypeFont} from "@zavx0z/engine"
 import {Renderer, RendererWebGpuBackend, RendererWebGpuScreenOverlay} from "@zavx0z/webgpu"
-import {NativeGpuCanvas} from "./native-canvas.ts"
+import {NativeGpuCanvas, type CapturedFrame} from "./native-canvas.ts"
 import {installShaderCompilationDiagnostics} from "./shader-diagnostics.ts"
 import {registerHeadlessCompiler, repositoryRoot} from "./compiler.ts"
+
+export type {CapturedFrame} from "./native-canvas.ts"
 
 /**
 Окружение нативного рендера; не содержит знания о конкретных компонентах.
@@ -43,6 +45,8 @@ export interface Headless {
   render<Props>(type: AuthoredComponent<Props> | CompiledTemplate<Props>, props: Props): Promise<Element>
   /** Возвращает PNG по актуальному border-box указанного элемента текущего Document. */
   screenshot(element: Element): Promise<Buffer>
+  /** Возвращает RGBA8 и PNG одного кадра по границам элемента для сравнений изображений. */
+  capture(element: Element): Promise<CapturedFrame>
   /** Освобождает component root, layout, GPU-поверхность и устройство. Повторный вызов безопасен. */
   dispose(): Promise<void>
 }
@@ -57,8 +61,7 @@ function exclusive<Result>(operation: () => Promise<Result>): Promise<Result> {
 /**
 Создаёт один нативный host для компонентов любых пакетов выбранного проекта.
 
-Для обычных импортов подключите `@immersive/headless/preload` в Bun test config.
-Без preload доступны динамические импорты после createHeadless(). Для JSX в spec
+Компонент импортируется динамически после createHeadless(). Для JSX в spec
 укажите `@jsxImportSource @immersive/headless`. GPU-операции разных host выполняются последовательно;
 глобальные WebGPU-объекты восстанавливаются после каждой операции.
 
@@ -147,6 +150,17 @@ export function createHeadless(options: HeadlessOptions = {}): Headless {
     if (error !== null) throw new Error(`Ошибка GPU-кадра Headless: ${error.message}`)
   }
 
+  const capture = (element: Element): Promise<CapturedFrame> => exclusive(() => withGpu(async () => {
+    if (!ready || element.ownerDocument !== document || !host.contains(element)) {
+      throw new Error("Снимок доступен только для смонтированного элемента этого Headless")
+    }
+    await draw()
+    const bounds = element.getBoundingClientRect()
+    const x = Math.floor(bounds.x)
+    const y = Math.floor(bounds.y)
+    return canvas.capture({x, y, width: Math.ceil(bounds.right) - x, height: Math.ceil(bounds.bottom) - y})
+  }))
+
   return {
     render(value: unknown, props?: unknown): Promise<Element> {
       return exclusive(() => withGpu(async () => {
@@ -160,17 +174,9 @@ export function createHeadless(options: HeadlessOptions = {}): Headless {
         return host.firstElementChild!
       }))
     },
-    screenshot(element): Promise<Buffer> {
-      return exclusive(() => withGpu(async () => {
-        if (!ready || element.ownerDocument !== document || !host.contains(element)) {
-          throw new Error("Снимок доступен только для смонтированного элемента этого Headless")
-        }
-        await draw()
-        const bounds = element.getBoundingClientRect()
-        const x = Math.floor(bounds.x)
-        const y = Math.floor(bounds.y)
-        return canvas.screenshot({x, y, width: Math.ceil(bounds.right) - x, height: Math.ceil(bounds.bottom) - y})
-      }))
+    capture,
+    async screenshot(element): Promise<Buffer> {
+      return (await capture(element)).png
     },
     dispose(): Promise<void> {
       return exclusive(async () => {

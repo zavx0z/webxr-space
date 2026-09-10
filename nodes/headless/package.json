@@ -8,7 +8,7 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./index.ts",
-    "./preload": "./preload.ts",
+    "./image": "./image.ts",
     "./jsx-runtime": "./jsx-runtime.ts",
     "./jsx-dev-runtime": "./jsx-dev-runtime.ts"
   },
@@ -18,11 +18,7 @@
     "check": "bun run --parallel typecheck test"
   },
   "dependencies": {
-    "bun-webgpu": "0.1.7",
-    "pngjs": "7.0.0"
-  },
-  "devDependencies": {
-    "@types/pngjs": "6.0.5"
+    "bun-webgpu": "0.1.7"
   },
   "peerDependencies": {
     "@renderer/html": "*",

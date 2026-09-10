@@ -1,14 +1,16 @@
 /** @jsxImportSource @immersive/headless */
-import {describe, expect, test} from "bun:test"
+import {afterEach, beforeEach, describe, expect, test} from "bun:test"
 import {mkdir, rm} from "node:fs/promises"
 import {resolve} from "node:path"
-import {PNG} from "pngjs"
-import {createHeadless} from "@immersive/headless"
-import {DiagramNode, type DiagramNodeProps} from "../index.tsx"
+import {createHeadless, type Headless} from "@immersive/headless"
+import type {DiagramNodeProps} from "../index.tsx"
 
 /**
  Каждый вариант describe задаёт props настоящего компонента.
- Обычный test использует импортированный компонент; PNG сохраняется по границам элемента в results/story.
+ Параметризация test содержит runtime, который импортирует компонент и возвращает JSX для переданных props.
+ Тест монтирует результат через headless и получает живой элемент. Headless владеет монтированием и его очисткой.
+ beforeEach создаёт headless и подготавливает файл снимка, afterEach освобождает headless.
+ PNG сохраняется по границам элемента в results/story.
  */
 describe.each([
   {
@@ -44,17 +46,25 @@ describe.each([
 ] satisfies { name: string, props: DiagramNodeProps, expectedSize: { width: number, height: number } }[])(
   "$name",
   ({props, expectedSize}) => {
-    test(
-      "[DIAGRAM-STORY] DiagramNode отображает вариант и сохраняет его PNG",
-      async () => {
-        const headless = createHeadless({width: 320, height: 280})
-        try {
-          const directory = resolve(import.meta.dir, "../results/story")
-          const path = resolve(directory, `${props.shape}.png`)
-          await mkdir(directory, {recursive: true})
-          await rm(path, {force: true})
+    let headless: Headless
+    const directory = resolve(import.meta.dir, "../results/story")
+    const path = resolve(directory, `${props.shape}.png`)
 
-          const element = await headless.render(
+    beforeEach(async () => {
+      headless = createHeadless({width: 320, height: 280})
+      await mkdir(directory, {recursive: true})
+      await rm(path, {force: true})
+    })
+
+    afterEach(async () => {
+      await headless?.dispose()
+    })
+
+    test.each([
+      {
+        runtime: async (props: DiagramNodeProps) => {
+          const {DiagramNode} = await import("../index.tsx")
+          return (
             <DiagramNode
               id={props.id}
               description={props.description}
@@ -62,25 +72,29 @@ describe.each([
               shape={props.shape}
             />
           )
-          const png = await headless.screenshot(element)
-          await Bun.write(path, png)
+        },
+      },
+    ])(
+      "[DIAGRAM-STORY] DiagramNode отображает вариант и сохраняет его PNG",
+      async ({runtime}) => {
+        const element = await headless.render(await runtime(props))
+        const png = await headless.screenshot(element)
+        await Bun.write(path, png)
 
-          expect(element.localName, "Headless должен вернуть внешний article компонента").toBe("article")
-          expect(element.getAttribute("data-node-shape"), "Нода должна получить форму выбранного варианта").toBe(props.shape)
-          expect(element.textContent, "Вариант должен отображать переданное описание").toBe(props.description)
-          const bounds = element.getBoundingClientRect()
-          expect({
-            width: bounds.width,
-            height: bounds.height
-          }, "Размеры варианта должны соответствовать его форме").toEqual(expectedSize)
-          const image = PNG.sync.read(png)
-          expect({
-            width: image.width,
-            height: image.height
-          }, "PNG должен сохраняться по границам компонента без внешних полей").toEqual(expectedSize)
-        } finally {
-          await headless.dispose()
-        }
+        expect(element.isConnected, "Headless должен смонтировать JSX, возвращённый runtime").toBe(true)
+        expect(element.localName, "Headless должен вернуть внешний article компонента").toBe("article")
+        expect(element.getAttribute("data-node-shape"), "Нода должна получить форму выбранного варианта").toBe(props.shape)
+        expect(element.textContent, "Вариант должен отображать переданное описание").toBe(props.description)
+        const bounds = element.getBoundingClientRect()
+        expect({
+          width: bounds.width,
+          height: bounds.height
+        }, "Размеры варианта должны соответствовать его форме").toEqual(expectedSize)
+        const image = await new Bun.Image(png).metadata()
+        expect({
+          width: image.width,
+          height: image.height
+        }, "PNG должен сохраняться по границам компонента без внешних полей").toEqual(expectedSize)
       },
       25000,
     )

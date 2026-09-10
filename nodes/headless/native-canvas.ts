@@ -1,10 +1,13 @@
-import {PNG} from "pngjs"
+import {imageFromRgba} from "./image.ts"
 import {globalConstructors} from "bun-webgpu"
 
 const {GPUBufferUsage, GPUTextureUsage, GPUMapMode} = globalConstructors
 
 /** Целочисленная область GPU-текстуры в физических пикселях, включая границу компонента. */
 export type NativeCanvasClip = Readonly<{x: number, y: number, width: number, height: number}>
+
+/** RGBA8 и PNG одного и того же кадра после чтения GPU-текстуры. */
+export type CapturedFrame = Readonly<{width: number, height: number, rgba: Uint8Array, png: Buffer}>
 
 /**
 Оконная поверхность для нативного spec: поддерживает только `getContext("webgpu")`.
@@ -43,15 +46,19 @@ export class NativeGpuCanvas {
   @throws Если координаты нецелые, размеры неположительные или область выходит за Canvas.
   */
   async screenshot(clip: NativeCanvasClip = {x: 0, y: 0, width: this.width, height: this.height}): Promise<Buffer> {
+    return (await this.capture(clip)).png
+  }
+
+  /** Возвращает RGBA8 для сравнений и PNG, закодированный нативным Bun.Image. */
+  async capture(clip: NativeCanvasClip = {x: 0, y: 0, width: this.width, height: this.height}): Promise<CapturedFrame> {
     const {x, y, width, height} = clip
     if (![x, y, width, height].every(Number.isSafeInteger) || x < 0 || y < 0 || width <= 0 || height <= 0
       || x + width > this.width || y + height > this.height) {
       throw new Error("Область снимка должна иметь целые координаты и положительные размеры внутри Canvas")
     }
     const rgba = await this.#context.readRgba(clip)
-    const image = new PNG({width, height})
-    image.data = Buffer.from(rgba)
-    return PNG.sync.write(image)
+    const png = await imageFromRgba(rgba, width, height).png().buffer()
+    return {width, height, rgba, png}
   }
 
   /** Освобождает поверхность и выделенное для этой проверки устройство Renderer. */

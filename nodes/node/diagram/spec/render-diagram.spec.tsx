@@ -2,8 +2,8 @@
 import {afterAll, expect, test} from "bun:test"
 import {mkdir, rm} from "node:fs/promises"
 import {resolve} from "node:path"
-import {PNG} from "pngjs"
 import {createHeadless} from "@immersive/headless"
+import {imageFromRgba} from "@immersive/headless/image"
 
 const headless = createHeadless({width: 320, height: 180})
 const {DiagramNode} = await import("../index.tsx")
@@ -33,10 +33,10 @@ test("[DIAGRAM-NATIVE-PNG] настоящий DiagramNode рендерится �
     )
     expect(element.localName, "render должен вернуть внешний article компонента").toBe("article")
     expect(element.textContent, "Возвращённый элемент должен содержать переданное описание").toBe(description)
-    const png = await headless.screenshot(element)
-    await Bun.write(path, png)
-    const image = PNG.sync.read(png)
-    expect([image.width, image.height], "PNG должен совпадать с границами компонента 240 × 100 без внешних полей").toEqual([240, 100])
+    const image = await headless.capture(element)
+    await Bun.write(path, image.png)
+    const metadata = await new Bun.Image(image.png).metadata()
+    expect([metadata.width, metadata.height], "PNG должен совпадать с границами компонента 240 × 100 без внешних полей").toEqual([240, 100])
     return {image, element}
   }
   const first = await render("labelled", "DiagramNode · Bun WebGPU")
@@ -44,21 +44,21 @@ test("[DIAGRAM-NATIVE-PNG] настоящий DiagramNode рендерится �
   expect(second.element, "Обновление props должно сохранить внешний элемент компонента").toBe(first.element)
   const labelled = first.image
   const empty = second.image
-  const difference = new PNG({width: labelled.width, height: labelled.height})
+  const difference = new Uint8Array(labelled.width * labelled.height * 4)
   let changedInside = 0
   let changedBorder = 0
   for (let y = 0; y < labelled.height; y += 1) {
     for (let x = 0; x < labelled.width; x += 1) {
       const offset = (y * labelled.width + x) * 4
-      const changed = labelled.data.subarray(offset, offset + 4).some((value, channel) => value !== empty.data[offset + channel])
-      difference.data[offset] = changed ? 255 : 0
-      difference.data[offset + 3] = 255
+      const changed = labelled.rgba.subarray(offset, offset + 4).some((value, channel) => value !== empty.rgba[offset + channel])
+      difference[offset] = changed ? 255 : 0
+      difference[offset + 3] = 255
       if (!changed) continue
       if (x > 0 && x < labelled.width - 1 && y > 0 && y < labelled.height - 1) changedInside += 1
       else changedBorder += 1
     }
   }
-  await Bun.write(resolve(directory, "difference.png"), PNG.sync.write(difference))
+  await imageFromRgba(difference, labelled.width, labelled.height).png().write(resolve(directory, "difference.png"))
   expect(changedInside, "Описание должно изменить видимые пиксели внутри настоящей ноды").toBeGreaterThan(20)
   expect(changedBorder, "Изменение описания не должно менять рамку обрезанного снимка").toBe(0)
 }, 65000)
@@ -73,7 +73,7 @@ test("[HEADLESS-PACKAGE] тот же host принимает Typography из UI 
   expect(element.textContent, "Props другого пакета должны доходить до живого DOM").toBe("Компонент из другого пакета")
   const png = await headless.screenshot(element)
   await Bun.write(resolve(import.meta.dir, "../results/render-diagram/typography.png"), png)
-  const image = PNG.sync.read(png)
+  const image = await new Bun.Image(png).metadata()
   const bounds = element.getBoundingClientRect()
   expect([image.width, image.height], "Снимок другого компонента должен совпадать с его границами").toEqual([
     Math.ceil(bounds.right) - Math.floor(bounds.x),

@@ -1,7 +1,6 @@
 import {expect, test} from "bun:test"
 import {mkdir, rm} from "node:fs/promises"
 import {resolve} from "node:path"
-import {PNG} from "pngjs"
 import type {NativeGpuProbe} from "../fixtures/native-gpu.ts"
 
 test("[HEADLESS-NATIVE-GPU] bun-webgpu рисует треугольник в текстуру и возвращает пиксели без браузера", async () => {
@@ -27,9 +26,9 @@ test("[HEADLESS-NATIVE-GPU] bun-webgpu рисует треугольник в т
     await Bun.write(imagePath, png)
     expect([frame.width, frame.height], "Размер текстуры должен быть 17 × 13").toEqual([17, 13])
     expect(frame.rgba.length, "RGBA должен содержать все пиксели без GPU-padding").toBe(17 * 13 * 4)
-    const image = PNG.sync.read(png)
+    const image = await new Bun.Image(png).metadata()
     expect([image.width, image.height], "Canvas.screenshot должен вернуть PNG исходного размера").toEqual([17, 13])
-    expect([...image.data], "PNG Canvas должен сохранить все прочитанные GPU-пиксели").toEqual(frame.rgba)
+    expect(await new Bun.Image(png).png().buffer(), "PNG должен без изменений проходить нативный decode/encode").toEqual(png)
     const pixel = (x: number, y: number) => frame.rgba.slice((y * frame.width + x) * 4, (y * frame.width + x) * 4 + 4)
     expect(pixel(8, 6), "Фрагментный шейдер должен закрасить центр красным").toEqual([255, 0, 0, 255])
     for (const [x, y] of [[0, 0], [16, 0], [0, 12], [16, 12]] as const) {
