@@ -8,7 +8,7 @@
   "sideEffects": false,
   "packageManager": "bun@1.4.0",
   "exports": {
-    "./diagram": "./diagram/src/diagram.tsx",
+    "./diagram": "./diagram/index.tsx",
     "./parameter": "./parameter/src/parameter.tsx",
     "./content": "./content/src/content.tsx",
     "./geometry": "./geometry/src/geometry.ts",
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel tests",
+    "test": "bun test --parallel tests diagram/spec diagram/tests",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

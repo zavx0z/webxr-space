@@ -1,7 +1,12 @@
+/**
+ Описание и форма узла диаграммы.
+
+ @packageDocumentation
+ */
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {Typography} from "@zavx0z/ui/typography"
-import type {NodeRect} from "../../geometry/src/geometry.ts"
-import type {NodeShape} from "../../shared/contracts.ts"
+import type {NodeRect} from "../geometry/src/geometry.ts"
+import type {NodeShape} from "../shared/contracts.ts"
 
 export type DiagramNodeProps = Readonly<{
   id: string
@@ -15,7 +20,7 @@ export type DiagramNodeProps = Readonly<{
   onActivate?: ((event: Event) => void) | undefined
 }>
 
-/** A description fills a shaped Pane without editor fields or visible sockets. */
+/** Описание заполняет Pane выбранной формы без полей редактора и видимых сокетов. */
 export function DiagramNode(props: DiagramNodeProps) {
   const round = props.shape === "oval" || props.shape === "circle"
   return <article
