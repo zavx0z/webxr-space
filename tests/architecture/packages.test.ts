@@ -12,6 +12,7 @@ const packages = Object.freeze([
   ["renderer", "@webxr/renderer", "Независимые пакеты рендеринга документов"],
   ["renderer/html", "@renderer/html", "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU"],
   ["markdown", "@webxr/markdown", "Разбор и отображение Markdown через готовые UI-компоненты"],
+  ["typedoc", "@webxr/typedoc", "Разбор TypeScript 7 и отображение документации типов"],
   ["webgpu", "@zavx0z/webgpu", "Shaders, buffers, textures, uploads и рисование"],
   ["browser", "@zavx0z/browser", "Canvas, resize, input, RAF и общий цикл кадров"],
   ["space", "@zavx0z/space", "Object, Asset, Group, Mesh, Line, Text, Light, Animation, Geometry, Material"],

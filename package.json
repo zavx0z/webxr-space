@@ -17,6 +17,7 @@
     "renderer",
     "renderer/html",
     "markdown",
+    "typedoc",
     "webgpu",
     "browser",
     "space",

@@ -259,6 +259,25 @@
         "typescript",
       ],
     },
+    "typedoc": {
+      "name": "@webxr/typedoc",
+      "version": "0.0.0",
+      "dependencies": {
+        "typescript": "7.0.2",
+      },
+      "peerDependencies": {
+        "@webxr/markdown": "*",
+        "@zavx0z/component": "*",
+        "@zavx0z/template": "*",
+        "@zavx0z/ui": "*",
+      },
+      "optionalPeers": [
+        "@webxr/markdown",
+        "@zavx0z/component",
+        "@zavx0z/template",
+        "@zavx0z/ui",
+      ],
+    },
     "ui": {
       "name": "@zavx0z/ui",
       "version": "0.0.0",
@@ -442,6 +461,8 @@
     "@webxr/nodes": ["@webxr/nodes@workspace:nodes"],
 
     "@webxr/renderer": ["@webxr/renderer@workspace:renderer"],
+
+    "@webxr/typedoc": ["@webxr/typedoc@workspace:typedoc"],
 
     "@zavx0z/browser": ["@zavx0z/browser@workspace:browser"],
 

@@ -1,0 +1,43 @@
+{
+  "name": "@webxr/typedoc",
+  "label": "TypeDoc",
+  "version": "0.0.0",
+  "description": "Разбор TypeScript 7 и отображение документации типов",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./typedoc/index.tsx",
+    "./parser": "./parser/index.ts",
+    "./model": "./shared/model.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "typescript": "7.0.2"
+  },
+  "peerDependencies": {
+    "@zavx0z/component": "*",
+    "@zavx0z/template": "*",
+    "@webxr/markdown": "*",
+    "@zavx0z/ui": "*"
+  },
+  "peerDependenciesMeta": {
+    "@zavx0z/component": {
+      "optional": true
+    },
+    "@zavx0z/template": {
+      "optional": true
+    },
+    "@webxr/markdown": {
+      "optional": true
+    },
+    "@zavx0z/ui": {
+      "optional": true
+    }
+  }
+}
