@@ -82,3 +82,31 @@ lifecycle требуется этот exactroute и кнопка «Граф из
 Числовой результат и успешный Layout active не подменяют эти оставшиеся gates.
 Никаких browser/CDP/REST/reload обходов или Storybook/Renderer edits в TopDown
 задаче нет. Изменения источников под transport error не вносились.
+
+## Проверка после dispatch-boundary fix
+
+Storybook owner исправил преждевременный createSent в cddb325;72tests/typecheck
+прошли у владельца. По координации выполнен ровно один ensure нового daemon:
+instance6e50b153-8f73-4a01-a283-b9d195823bd3. Status только withoutviews.
+Layout сохранил active632061498367853997c4e418.
+
+Markdown nonlivecheck:success, candidate1c933443676f4328f3ec5484, diagnostics[].
+Единственный безопасный exactopen того же flowchart route снова вернул
+`Storybook package target creation is indeterminate: @webxr/markdown`.
+Новый viewId/receipt не получен; active остался прежним e3acd03ff57508427a1c5fa8.
+После этого gate остановлен без retrycreate, новогоensure или измененияunknownstate.
+
+Это не доказательство неработоспособности dispatch fix: он намеренно не очищает
+исторические createSent:true/unknown reservations. По одному guard response нельзя
+утверждать, что прежний запрос действительно отправлялся либо что target отсутствует.
+
+Безопасный следующий шаг — адресный read-only аудит этой reservation у Storybook
+owner: сопоставить её ожидаемую identity/URL и сохранённые send/receipt evidence
+с авторитетной inventory соответствующих targets. Если найдётся прежний target
+или late receipt, использовать штатную reconciliation и продолжить exactroute.
+При отсутствии доказательств не удалять unknown запись и не создавать второй
+потенциальный target. При необходимости расширить именно owner diagnostics,
+сохранив неизвестный исход, а не обходить guard в потребителе.
+
+Итоговая визуальная цель остаётся незавершённой:7-node interact/capture,
+сопоставление с исходным Desktop screenshot и Markdown live/active ещё не приняты.
