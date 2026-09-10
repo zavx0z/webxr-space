@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
-import {buildComponentDependencyGraph, type ComponentDependencyGraph} from "../fixtures/dependency-graph.ts"
+import {buildComponentDependencyGraph, type ComponentDependencyGraph} from "../../../../fixtures/dependency-graph.ts"
 
 const root = resolve(import.meta.dir, "../../../..")
 
