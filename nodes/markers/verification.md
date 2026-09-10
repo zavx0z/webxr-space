@@ -50,3 +50,22 @@ Markdown 8c2860f0a14491925d3b9fc2. Просмотр кандидата не вы
 
 Platform code, общая UI theme, font assets/registry и внешний runtime
 Storybook в этой задаче не изменялись.
+
+## Последующая сверка runtime owner
+
+После коммита компонентов 959ab5d runtime owner выполнил только read-only
+status/inspect. Видимая вкладка @nodes/node на route diagram действительно
+показывала candidate fac58f4d97dcd512085240fe: ready/presented, frame41,
+diagnostics и consoleErrors пусты. Это согласуется с пользовательской проверкой
+обновлённых стилей, хотя global active оставался 09d1f89335170f2d07b32744.
+
+Вкладки Nodes и Markdown уже вернулись к прежним active revisions, указанным
+выше. У Nodes фактический bridge route был пустым; cached metadata всё ещё
+содержала markers/arrow/filled. Исторические captures новых компонентов остаются
+свидетельством просмотра кандидатов, но не текущего содержимого этих вкладок.
+Ни у одного пакета нет activating job; ожидания применения в фоне нет.
+Причина закрытия соединения этой сверкой не установлена; repair не выполнялся.
+
+Направление графа Dependencies сохраняет смысл «компонент → использует»:
+DiagramNode → Pane/Typography/article, Pane → section, Typography → span.
+Это направление исходного dependency graph, не разворот геометрии Arrow.
