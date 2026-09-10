@@ -4,6 +4,7 @@
 @packageDocumentation
 */
 import {useMemo, useRef, useState, useLayoutEffect, useSyncExternalStore} from "@zavx0z/component"
+import {observeElementLayout, readElementLayoutRect} from "@zavx0z/dom/geometry"
 import {GraphControls} from "../shared/graph/controls/index.tsx"
 import {GridPoint} from "../shared/graph/grid-point/index.tsx"
 import {Frame} from "@webxr/nodes/frame"
@@ -27,6 +28,7 @@ const idleStore = {getSnapshot: () => idleMeasurement, subscribe: (_listener: ()
 @property [layout] - Политика размещения по настоящим измерениям, синхронная либо асинхронная.
 @property [pending] - Сохраняет прежние элементы скрытыми и блокирует устаревший ввод.
 @property [navigation] - Прокрутка, pan/zoom или внешнее управление преобразованием.
+@property [autoSize] - В pan-zoom измеряет CSS viewport. До ручного жеста и после «Вписать» подгоняет сцену при resize; после жеста сохраняет transform. Новый граф открывают новым keyed экземпляром.
 @property [isCurrent] - Проверяет актуальность источника перед каждым действием.
 @property [selection] - Управляемое выделение; без него просмотр хранит только собственный выбор.
 */
@@ -56,11 +58,24 @@ export function GraphView(props: GraphViewProps) {
   useLayoutEffect(() => measurement?.connect(elements.current), [measurement])
   if (measured.error !== null) throw measured.error
   const navigation = props.navigation ?? "none"
-  const width = positive(props.width ?? 760, "GraphView width")
+  const autoSize = props.autoSize === true && navigation === "pan-zoom"
+  const viewportElement = useRef<HTMLDivElement | null>(null)
+  const [viewportSize, setViewportSize] = useState<Readonly<{width: number; height: number}> | null>(null)
+  useLayoutEffect(() => {
+    const element = viewportElement.current
+    if (!autoSize || element === null) return
+    return observeElementLayout(element, rect => {
+      const next = rect !== null && rect.width > 0 && rect.height > 0 ? {width: rect.width, height: rect.height} : null
+      setViewportSize(previous => previous?.width === next?.width && previous?.height === next?.height ? previous : next)
+    })
+  }, [autoSize])
+  const width = autoSize ? viewportSize?.width ?? 1 : positive(props.width ?? 760, "GraphView width")
   const height = positive(props.height ?? 480, "GraphView height")
   const controls = props.controls ?? navigation === "pan-zoom"
-  const contentHeight = Math.max(1, height - (controls ? 30 : 0))
-  const minScale = positive(props.minScale ?? .16, "GraphView minScale")
+  const contentHeight = autoSize ? viewportSize?.height ?? 1 : Math.max(1, height - (controls ? 30 : 0))
+  const scaleFloor = finite(props.minScale ?? .16, "GraphView minScale")
+  if (scaleFloor < 0) throw new RangeError("GraphView minScale must be non-negative")
+  const minScale = Math.max(Number.MIN_VALUE, scaleFloor)
   const maxScale = positive(props.maxScale ?? 3, "GraphView maxScale")
   if (maxScale < minScale) throw new RangeError("GraphView maxScale must be at least minScale")
   const padding = finite(props.fitPadding ?? 24, "GraphView fitPadding")
@@ -80,11 +95,13 @@ export function GraphView(props: GraphViewProps) {
   const initial = scene === null || navigation !== "pan-zoom" ? IDENTITY_TRANSFORM
     : fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale)
   const [ownedTransform, setOwnedTransform] = useState(initial)
+  const [followingFit, setFollowingFit] = useState(true)
   const initiallyFitted = useRef(scene !== null)
   const [ownedSelection, setOwnedSelection] = useState<GraphSelection>(null)
-  const transform = props.transform ?? ownedTransform
+  const transform = props.transform ?? (autoSize && followingFit && scene !== null && viewportSize !== null
+    ? fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale) : ownedTransform)
   const selection = props.selection === undefined ? ownedSelection : props.selection
-  const pending = props.pending === true || scene === null || measurement !== null && measured.pending
+  const pending = props.pending === true || scene === null || measurement !== null && measured.pending || autoSize && viewportSize === null
   useLayoutEffect(() => {
     if (!pending && scene !== null) {
       retainedScene.current = scene
@@ -102,7 +119,17 @@ export function GraphView(props: GraphViewProps) {
   active.current = token
   const current = () => active.current === token && !pending && props.interactive !== false && (props.isCurrent?.() ?? true)
   const pointers = useRef(new Map<number, Readonly<{x: number; y: number}>>())
-  if (pending) pointers.current.clear()
+  useLayoutEffect(() => {
+    const element = viewportElement.current
+    const release = () => {
+      for (const id of pointers.current.keys()) {
+        if (element?.hasPointerCapture(id)) element.releasePointerCapture(id)
+      }
+      pointers.current.clear()
+    }
+    if (pending || navigation !== "pan-zoom" || props.interactive === false) release()
+    return release
+  }, [pending, navigation, props.interactive])
   const viewport = props.viewport ?? (navigation === "pan-zoom" ? {
     x: -transform.x / transform.scale,
     y: -transform.y / transform.scale,
@@ -114,14 +141,17 @@ export function GraphView(props: GraphViewProps) {
     : scene?.nodes.filter(node => props.materializeCulled === true || intersects(viewport, node.rect)) ?? []
   const frames = scene?.frames.filter(frame => measurement !== null || props.materializeCulled === true || intersects(viewport, frame.rect)) ?? []
   const links = scene?.links.filter(link => measurement !== null || props.materializeCulled === true || intersects(viewport, projectLinkRoute(link.route).bounds)) ?? []
-  const publishTransform = (next: GraphTransform, event: Event) => {
+  const publishTransform = (next: GraphTransform, event: Event, fitted = false) => {
     if (!current()) return
     const value = Object.freeze({
       x: finite(next.x, "GraphView transform x"),
       y: finite(next.y, "GraphView transform y"),
       scale: clamp(positive(next.scale, "GraphView transform scale"), minScale, maxScale),
     })
-    if (props.transform === undefined) setOwnedTransform(value)
+    if (props.transform === undefined) {
+      setFollowingFit(fitted)
+      setOwnedTransform(value)
+    }
     props.onTransformChange?.(value, event)
   }
   const select = (value: GraphSelection, event: Event) => {
@@ -143,7 +173,12 @@ export function GraphView(props: GraphViewProps) {
     }]))
   }, [scene, props.input])
   const fit = (event: Event) => {
-    if (scene !== null) publishTransform(fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale), event)
+    if (scene !== null) publishTransform(fitGraph(scene.bounds, width, contentHeight, padding, minScale, maxScale), event, true)
+  }
+  // Browser передаёт координаты в CSS viewport текущей проекции; учитываем начало области графа.
+  const localPoint = (event: MouseEvent) => {
+    const rect = viewportElement.current === null ? null : readElementLayoutRect(viewportElement.current)
+    return {x: event.clientX - (rect?.x ?? 0), y: event.clientY - (rect?.y ?? 0)}
   }
   const wheel = (event: WheelEvent) => {
     if (navigation !== "pan-zoom" || !current()) return
@@ -152,27 +187,32 @@ export function GraphView(props: GraphViewProps) {
     if (event.ctrlKey || event.metaKey) {
       const scale = clamp(transform.scale * Math.exp(-event.deltaY * unit * .0025), minScale, maxScale)
       const ratio = scale / transform.scale
-      publishTransform({x: event.clientX - (event.clientX - transform.x) * ratio, y: event.clientY - (event.clientY - transform.y) * ratio, scale}, event)
+      const point = localPoint(event)
+      publishTransform({x: point.x - (point.x - transform.x) * ratio, y: point.y - (point.y - transform.y) * ratio, scale}, event)
     } else {
       publishTransform({x: transform.x - event.deltaX * unit, y: transform.y - event.deltaY * unit, scale: transform.scale}, event)
     }
   }
   const pointerDown = (event: PointerEvent) => {
     if (navigation !== "pan-zoom" || !current()) return
+    if (event.button !== 0) return
     const target = event.target
     if (target === null || !("closest" in target) || typeof target.closest !== "function") return
     if (target.closest("[data-node-id]") || target.closest("[data-link-id]") || target.closest("[data-frame-id]")) return
-    pointers.current.set(event.pointerId, {x: event.clientX, y: event.clientY})
+    viewportElement.current?.setPointerCapture(event.pointerId)
+    pointers.current.set(event.pointerId, localPoint(event))
+    event.preventDefault()
   }
   const pointerMove = (event: PointerEvent) => {
     if (!current()) return
     const previous = pointers.current.get(event.pointerId)
     if (previous === undefined) return
     const before = [...pointers.current.values()]
-    pointers.current.set(event.pointerId, {x: event.clientX, y: event.clientY})
+    const point = localPoint(event)
+    pointers.current.set(event.pointerId, point)
     const after = [...pointers.current.values()]
     if (after.length === 1) {
-      publishTransform({x: transform.x + event.clientX - previous.x, y: transform.y + event.clientY - previous.y, scale: transform.scale}, event)
+      publishTransform({x: transform.x + point.x - previous.x, y: transform.y + point.y - previous.y, scale: transform.scale}, event)
     } else if (before.length >= 2 && after.length >= 2) {
       const distance = (points: typeof before) => Math.hypot(points[0]!.x - points[1]!.x, points[0]!.y - points[1]!.y)
       const oldDistance = distance(before)
@@ -189,7 +229,10 @@ export function GraphView(props: GraphViewProps) {
     }
     event.preventDefault()
   }
-  const pointerUp = (event: PointerEvent) => { pointers.current.delete(event.pointerId) }
+  const pointerUp = (event: PointerEvent) => {
+    pointers.current.delete(event.pointerId)
+    if (viewportElement.current?.hasPointerCapture(event.pointerId)) viewportElement.current.releasePointerCapture(event.pointerId)
+  }
   return <section
     aria-label={props.label ?? "Просмотр графа"}
     data-graph-view=""
@@ -206,8 +249,8 @@ export function GraphView(props: GraphViewProps) {
       position: relative;
       display: flex;
       flex-direction: column;
-      width: ${props.width === undefined && navigation !== "pan-zoom" ? "100%" : `${width}px`};
-      height: ${navigation === "scroll" ? "auto" : props.height === undefined && navigation === "none" ? "100%" : `${height}px`};
+      width: ${autoSize || props.width === undefined && navigation !== "pan-zoom" ? "100%" : `${width}px`};
+      height: ${navigation === "scroll" ? "auto" : autoSize || props.height === undefined && navigation === "none" ? "100%" : `${height}px`};
       min-width: 0;
       min-height: 0;
       overflow: hidden;
@@ -231,6 +274,7 @@ export function GraphView(props: GraphViewProps) {
       `}
     >Ожидание раскладки</p>
     <div
+      ref={viewportElement}
       data-graph-viewport=""
       onClick={event => { if (!event.defaultPrevented) select(null, event) }}
       onWheel={wheel}
@@ -238,6 +282,7 @@ export function GraphView(props: GraphViewProps) {
       onPointerMove={pointerMove}
       onPointerUp={pointerUp}
       onPointerCancel={pointerUp}
+      onLostPointerCapture={event => { pointers.current.delete(event.pointerId) }}
       style={css`
         position: relative;
         box-sizing: border-box;
@@ -245,6 +290,12 @@ export function GraphView(props: GraphViewProps) {
         min-width: 0;
         min-height: 0;
         flex-grow: 1;
+
+        ${autoSize && css`
+          flex-basis: 0;
+          background: var(--graph-background, #181818);
+        `}
+
         overflow: ${navigation === "scroll" ? "auto" : "hidden"};
         touch-action: ${navigation === "pan-zoom" ? "none" : "auto"};
       `}

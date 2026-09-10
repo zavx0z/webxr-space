@@ -88,6 +88,7 @@ export function GraphEditor(props: GraphEditorProps) {
       title={props.title ?? "Редактор графа"}
       width={props.width}
       height={props.height}
+      autoSize={props.autoSize}
       navigation={props.navigation ?? "pan-zoom"}
       interactive={props.interactive}
       controls={props.controls}

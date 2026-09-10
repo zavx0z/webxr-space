@@ -72,10 +72,13 @@ export type GraphViewProps = Readonly<{
   title?: string | undefined
   width?: number | undefined
   height?: number | undefined
+  /** В pan-zoom занимает CSS-контейнер и измеряет настоящий viewport. До ручного жеста следует fit при resize; кнопка «Вписать» возвращает этот режим. */
+  autoSize?: boolean | undefined
   navigation?: "none" | "scroll" | "pan-zoom" | undefined
   interactive?: boolean | undefined
   controls?: boolean | undefined
   gridSize?: number | undefined
+  /** Нижняя граница масштаба; 0 снимает пользовательский предел для вписывания больших графов. */
   minScale?: number | undefined
   maxScale?: number | undefined
   fitPadding?: number | undefined
