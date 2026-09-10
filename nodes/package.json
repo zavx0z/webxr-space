@@ -26,7 +26,7 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel ./tests ./frame/tests ./view/tests",
+    "test": "bun test --parallel ./tests ./frame/tests ./view/tests ./frame/spec ./markers/arrow/spec",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

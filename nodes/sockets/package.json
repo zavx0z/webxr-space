@@ -15,7 +15,7 @@
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel socket/tests",
+    "test": "bun test --parallel socket/tests socket/spec",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependenciesMeta": {
