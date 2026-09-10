@@ -164,6 +164,11 @@
     "nodes/node": {
       "name": "@nodes/node",
       "version": "0.0.0",
+      "devDependencies": {
+        "@immersive/headless": "*",
+        "@types/pngjs": "6.0.5",
+        "pngjs": "7.0.0",
+      },
       "peerDependencies": {
         "@nodes/parameters": "*",
         "@nodes/sockets": "*",
