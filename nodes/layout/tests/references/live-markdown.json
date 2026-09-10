@@ -1,0 +1,128 @@
+{
+  "provenance": {
+    "kind": "MCP live observation, not a Desktop golden image",
+    "viewId": "storybook-view-v1_J7u8kLThw1a0FgPqgnol_mkdZ8vmKe33cR_Sk98vELI",
+    "revision": "71aa3fcaefa7d518ae083b5d",
+    "capture": {
+      "status": "success",
+      "captureId": "capture_f5MdZEivM4MeBt4nDGEy7KjT",
+      "resourceUri": "storybook://captures/capture_f5MdZEivM4MeBt4nDGEy7KjT",
+      "mimeType": "image/png",
+      "width": 2304,
+      "height": 2048,
+      "bytes": 51563,
+      "sha256": "a79dc8205d9e2bb05a1261b3df2fef47208cc3bf53e3a4f20ab41c278faddcb2",
+      "packageId": "@webxr/markdown",
+      "route": "components/data/markdown/mermaid/flowchart",
+      "graphDigest": "37eb752626f01a14e9e6642556a04049aad9918ac4500583a70fc0c4d0e12ef8",
+      "revision": "71aa3fcaefa7d518ae083b5d",
+      "area": "preview",
+      "consoleErrors": [],
+      "capturedAt": "2026-09-10T11:11:37.607Z"
+    },
+    "nativePage": {
+      "visibilityState": "hidden",
+      "hasFocus": false
+    }
+  },
+  "nodes": [
+    {
+      "id": "ContentNode",
+      "nodeId": "node:2873",
+      "x": 218.1875,
+      "y": 8,
+      "width": 132.7578125,
+      "height": 44
+    },
+    {
+      "id": "ContentSurface",
+      "nodeId": "node:2858",
+      "x": 8,
+      "y": 102,
+      "width": 151.109375,
+      "height": 44
+    },
+    {
+      "id": "ParameterNode",
+      "nodeId": "node:2843",
+      "x": 209.109375,
+      "y": 102,
+      "width": 150.9140625,
+      "height": 44
+    },
+    {
+      "id": "Pane",
+      "nodeId": "node:2828",
+      "x": 444.2382813,
+      "y": 196,
+      "width": 69.984375,
+      "height": 44
+    },
+    {
+      "id": "ParameterNodeContents",
+      "nodeId": "node:2813",
+      "x": 174.8945313,
+      "y": 196,
+      "width": 219.34375,
+      "height": 44
+    },
+    {
+      "id": "DiagramNode",
+      "nodeId": "node:2798",
+      "x": 548.1054688,
+      "y": 102,
+      "width": 136.015625,
+      "height": 44
+    },
+    {
+      "id": "Typography",
+      "nodeId": "node:2783",
+      "x": 564.2226563,
+      "y": 196,
+      "width": 123.78125,
+      "height": 44
+    }
+  ],
+  "comparison": {
+    "oracle": "dagre-d3-es7.0.14, measured live dimensions, not Desktop replay",
+    "expected": [
+      {
+        "id": "ContentNode",
+        "x": 218.1875,
+        "y": 8
+      },
+      {
+        "id": "ContentSurface",
+        "x": 8,
+        "y": 102
+      },
+      {
+        "id": "ParameterNode",
+        "x": 209.109375,
+        "y": 102
+      },
+      {
+        "id": "Pane",
+        "x": 444.23828125,
+        "y": 196
+      },
+      {
+        "id": "ParameterNodeContents",
+        "x": 174.89453125,
+        "y": 196
+      },
+      {
+        "id": "DiagramNode",
+        "x": 548.10546875,
+        "y": 102
+      },
+      {
+        "id": "Typography",
+        "x": 564.22265625,
+        "y": 196
+      }
+    ],
+    "maxDelta": 5.000003966415534e-8,
+    "passed": true
+  }
+}

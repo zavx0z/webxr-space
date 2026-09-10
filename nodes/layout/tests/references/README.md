@@ -31,3 +31,9 @@ Desktop marker postprocess:
 - https://github.com/mermaid-js/mermaid/blob/mermaid%4011.16.0/packages/mermaid/package.json
 - https://github.com/tbo47/dagre-es
 - https://github.com/mermaid-js/mermaid/blob/mermaid%4011.16.0/packages/mermaid/src/utils/lineWithOffset.ts
+
+`live-markdown.json` хранит фактические MCP CSS rectangles, capture provenance и
+независимое сравнение этих размеров через `compare-live.ts`. Это observation,
+не новое golden expected по screenshot. `live-identity.json` фиксирует сохранение
+21 opaque semantic Element ID при live selection; source updates проверяются
+отдельным integration test.

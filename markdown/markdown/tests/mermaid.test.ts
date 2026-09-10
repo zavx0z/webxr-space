@@ -133,7 +133,12 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
   const owner = document.createElement("div")
   document.append(owner)
   const component = createRoot(owner)
-  const renderer = createDocumentRenderer({document, root: owner, viewport: {width: 1600, height: 1200}})
+  const renderer = createDocumentRenderer({
+    document,
+    root: owner,
+    viewport: {width: 1600, height: 1200},
+    styleSheets: [await Bun.file(Bun.resolveSync("@zavx0z/ui/themes/theme.css", root)).text()],
+  })
   try {
     component.render(Markdown as unknown as CompiledTemplate<MarkdownProps>, {source: "```mermaid\n" + source + "\n```"})
     await settled(owner, renderer, component)
@@ -161,6 +166,10 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
       expect(actual.y).toBeCloseTo(node.rect.y)
       expect(actual.width).toBeCloseTo(node.rect.width)
       expect(actual.height).toBeCloseTo(node.rect.height)
+      const label = element.querySelector("span")!.getLayoutRect()!
+      // Neo rectangle: label bbox +32/+24, включая границу CSS-компонента.
+      expect(actual.width - label.width).toBeCloseTo(32, 6)
+      expect(actual.height - label.height).toBeCloseTo(24, 6)
       expect(actual.x).toBeCloseTo(oracle.node(node.id).x - actual.width / 2, 6)
       expect(actual.y).toBeCloseTo(oracle.node(node.id).y - actual.height / 2, 6)
     }

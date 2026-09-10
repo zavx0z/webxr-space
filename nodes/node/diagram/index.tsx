@@ -67,8 +67,10 @@ export function DiagramNode(props: DiagramNodeProps) {
         width: ${props.intrinsic ? "auto" : "100%"};
         height: ${props.intrinsic && props.shape !== "circle" ? "auto" : "100%"};
         border-radius: ${round ? "50%" : "4px"};
-        padding-inline: var(--diagram-node-padding-inline, 8px);
-        padding-block: var(--diagram-node-padding-block, 8px);
+        padding-top: var(--diagram-node-padding-block, 8px);
+        padding-right: var(--diagram-node-padding-inline, 8px);
+        padding-bottom: var(--diagram-node-padding-block, 8px);
+        padding-left: var(--diagram-node-padding-inline, 8px);
       `}
     >
       <Typography
