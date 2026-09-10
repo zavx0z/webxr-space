@@ -22,6 +22,7 @@ const packages = Object.freeze([
   ["nodes/parameters", "@nodes/parameters", "Представления параметров нод и проекция Parameter Store"],
   ["nodes/sockets", "@nodes/sockets", "Адресуемый Socket и его визуальные предустановки"],
   ["nodes/node", "@nodes/node", "DiagramNode, ParameterNode и ContentNode на основе Pane"],
+  ["nodes/headless", "@immersive/headless", "Нативный рендер компонентов в живой DOM и PNG без браузера"],
   ["devtools", "@zavx0z/devtools", "Диагностика Document, состояния элементов и результатов Renderer"],
 ] as const)
 

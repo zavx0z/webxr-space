@@ -17,6 +17,7 @@ const packageDirectories = Object.freeze({
   "@zavx0z/space": "space",
   "@zavx0z/ui": "ui",
   "@nodes/node": "nodes/node",
+  "@immersive/headless": "nodes/headless",
   "@nodes/parameters": "nodes/parameters",
   "@nodes/sockets": "nodes/sockets",
   "@nodes/tree": "nodes/tree",
@@ -57,6 +58,7 @@ const allowedInternalDependencies: Readonly<Record<PackageName, readonly Package
     ],
     "@zavx0z/ui": ["@zavx0z/component", "@zavx0z/dom", "@zavx0z/template"],
     "@nodes/node": ["@nodes/tree", "@nodes/parameters", "@nodes/sockets", "@zavx0z/component", "@zavx0z/template", "@zavx0z/ui"],
+    "@immersive/headless": ["@renderer/html", "@zavx0z/component", "@zavx0z/dom", "@zavx0z/engine", "@zavx0z/template", "@zavx0z/ui", "@zavx0z/webgpu"],
     "@nodes/parameters": ["@nodes/tree", "@nodes/sockets", "@zavx0z/component", "@zavx0z/dom", "@zavx0z/template", "@zavx0z/ui"],
     "@nodes/sockets": ["@nodes/tree", "@zavx0z/component", "@zavx0z/template"],
     "@nodes/tree": [],
@@ -141,6 +143,12 @@ function scanPackageImports(packageName: PackageName): Promise<readonly SourceIm
   return scanning
 }
 
+function belongsToPackage(packageName: PackageName, file: string): boolean {
+  const packageRoot = resolve(root, packageDirectories[packageName])
+  return !Object.values(packageDirectories).some(directory =>
+    directory !== packageDirectories[packageName] && resolve(packageRoot, file).startsWith(resolve(root, directory) + sep))
+}
+
 async function scanPackageImportsUncached(
   packageName: PackageName,
 ): Promise<readonly SourceImport[]> {
@@ -148,7 +156,7 @@ async function scanPackageImportsUncached(
   const imports: SourceImport[] = []
   for await (const file of sourceGlob.scan({cwd: packageRoot, onlyFiles: true})) {
     if (!isProductionSource(file)) continue
-    if (Object.values(packageDirectories).some(directory => directory !== packageDirectories[packageName] && resolve(packageRoot, file).startsWith(resolve(root, directory) + sep))) continue
+    if (!belongsToPackage(packageName, file)) continue
     const source = await Bun.file(join(packageRoot, file)).text()
     const transpiler = new Bun.Transpiler({loader: loaderFor(file)})
     for (const sourceImport of transpiler.scanImports(source)) {
@@ -269,7 +277,6 @@ describe("Направление производственных зависим
   })
 
   test("[PKG-007] Nodes не создаёт Document, Canvas, Renderer и Space", async () => {
-    const nodesRoot = join(root, packageDirectories["@webxr/nodes"])
     const forbiddenConstructions = [
       ["Document", /\b(?:createDocument|new\s+Document)\s*\(/u],
       ["Canvas", /(?:<canvas(?:\s|>)|\bnew\s+(?:Offscreen)?Canvas\s*\(|\.createElement\s*\(\s*["'`]canvas["'`])/u],
@@ -277,15 +284,18 @@ describe("Направление производственных зависим
       ["Space", /(?:<space(?:\s|>)|\b(?:createSpace|new\s+Space)\s*\()/u],
     ] as const
 
-    for await (const file of sourceGlob.scan({cwd: nodesRoot, onlyFiles: true})) {
-      if (!isProductionSource(file)) continue
-      const source = await Bun.file(join(nodesRoot, file)).text()
-      for (const [owner, pattern] of forbiddenConstructions) {
-        assertRequirement(
-          !pattern.test(source),
-          "PKG-007",
-          `@webxr/nodes/${file} содержит создание владельца ${owner}`,
-        )
+    for (const packageName of packageNames.filter(name => name === "@webxr/nodes" || name.startsWith("@nodes/"))) {
+      const packageRoot = join(root, packageDirectories[packageName])
+      for await (const file of sourceGlob.scan({cwd: packageRoot, onlyFiles: true})) {
+        if (!isProductionSource(file) || !belongsToPackage(packageName, file)) continue
+        const source = await Bun.file(join(packageRoot, file)).text()
+        for (const [owner, pattern] of forbiddenConstructions) {
+          assertRequirement(
+            !pattern.test(source),
+            "PKG-007",
+            `${packageName}/${file} содержит создание владельца ${owner}`,
+          )
+        }
       }
     }
   })

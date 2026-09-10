@@ -1,0 +1,44 @@
+{
+  "name": "@immersive/headless",
+  "label": "Headless",
+  "version": "0.0.0",
+  "description": "Нативный рендер компонентов в живой DOM и PNG без браузера",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.0",
+  "exports": {
+    ".": "./index.ts",
+    "./jsx-runtime": "./jsx-runtime.ts",
+    "./jsx-dev-runtime": "./jsx-dev-runtime.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --project tsconfig.json --pretty false",
+    "test": "bun test --parallel tests",
+    "check": "bun run --parallel typecheck test"
+  },
+  "dependencies": {
+    "bun-webgpu": "0.1.7",
+    "pngjs": "7.0.0"
+  },
+  "devDependencies": {
+    "@types/pngjs": "6.0.5"
+  },
+  "peerDependencies": {
+    "@renderer/html": "*",
+    "@zavx0z/component": "*",
+    "@zavx0z/dom": "*",
+    "@zavx0z/engine": "*",
+    "@zavx0z/template": "*",
+    "@zavx0z/ui": "*",
+    "@zavx0z/webgpu": "*"
+  },
+  "peerDependenciesMeta": {
+    "@renderer/html": {"optional": true},
+    "@zavx0z/component": {"optional": true},
+    "@zavx0z/dom": {"optional": true},
+    "@zavx0z/engine": {"optional": true},
+    "@zavx0z/template": {"optional": true},
+    "@zavx0z/ui": {"optional": true},
+    "@zavx0z/webgpu": {"optional": true}
+  }
+}

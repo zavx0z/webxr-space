@@ -12,7 +12,8 @@
     "layout",
     "parameters",
     "sockets",
-    "node"
+    "node",
+    "headless"
   ],
   "exports": {
     "./view": "./view/index.tsx",
