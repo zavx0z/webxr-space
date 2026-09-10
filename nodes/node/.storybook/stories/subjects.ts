@@ -13,5 +13,3 @@ export const content_3 = defineOwnerStory("content/collapsed", document => creat
 export const diagram_0 = defineOwnerStory("diagram/rectangle", document => createNodeStory(document, "diagram/rectangle"))
 export const diagram_1 = defineOwnerStory("diagram/oval", document => createNodeStory(document, "diagram/oval"))
 export const diagram_2 = defineOwnerStory("diagram/circle", document => createNodeStory(document, "diagram/circle"))
-
-export {dependencies_overview, dependencies_parameter} from "./dependencies-subjects.ts"

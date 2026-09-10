@@ -7,8 +7,9 @@
 | Владелец | Проверка | Результат |
 | --- | --- | --- |
 | @webxr/nodes | bun run --cwd nodes check | 53 теста, 4105 assertions, typecheck PASS |
-| @nodes/node | bun run --cwd nodes/node check | 27 тестов, 316 assertions, typecheck PASS |
+| @nodes/node, до удаления устаревших историй | bun run --cwd nodes/node check | 27 тестов, 316 assertions, typecheck PASS |
 | @webxr/markdown | bun run --cwd markdown check | 25 тестов, 328 assertions, typecheck PASS |
+| @nodes/node, после удаления устаревших историй | bun run --cwd nodes/node check | 25 тестов, 209 assertions, typecheck PASS |
 
 Проверены отсутствие неявного kind, все 19 явных Socket kinds, приоритет color,
 компоненты start/end/both, смешанные виды, legacy flags и advanced markers,
@@ -16,20 +17,19 @@
 Source-примеры компилируются публичным Template compiler. Реальные тесты
 DiagramNode проверяют fill/border/padding/typography и измеренный круг.
 
-## Storybook MCP: просмотр кандидатов
+## Storybook MCP: компоненты
 
-Использованы только status/check/open/inspect/interact/capture инструменты MCP.
-Кандидаты были ready/presented, diagnostics и consoleErrors пусты.
+Использованы только инструменты Storybook MCP. Проверенные кандидаты были
+ready/presented, diagnostics и consoleErrors пусты.
 
 - @webxr/nodes, b24ad300edaa280475b0b140: components/link/orthogonal,
   arrows, filled-arrows, mixed-markers, types, color; markers/arrow/open и filled.
   На preview видны нейтральная связь без стрелок, отдельные start/end/both,
   смешанные фигуры, 20 строк default+явные типы и приоритет color.
 - @nodes/node, 337a8aa6a7ce2818f7d8838c: diagram/rectangle показывает общий
-  DiagramNode с новым оформлением. composition/dependencies сохраняет свой
-  явно заданный custom-цвет связей.
+  DiagramNode с новым оформлением.
 - @nodes/node, fac58f4d97dcd512085240fe: обзор diagram → кнопка «Зависимости».
-  Реальный runtime viewer показывает шесть DiagramNode и пять нейтральных связей
+  Runtime viewer показывает шесть DiagramNode и пять нейтральных связей
   с открытыми Arrow. Capture: capture_jF9Eune5Zl2ZrfVdluaJvBXp.
 - @webxr/markdown, ad063b17b3b3d913e7ccc7db: components/data/markdown/mermaid/flowchart.
   После стабилизации layout кнопка «Граф из обсуждения» показывает семь нод
@@ -38,34 +38,35 @@ DiagramNode проверяют fill/border/padding/typography и измерен�
 Preview capture подтверждает изображение данного кадра; это не доказательство
 first-visible frame или pixel-perfect совпадения с Desktop.
 
-## Незавершённое применение
+## Применение и итоговая очистка
 
-storybook_check(live:true) завершился activation diagnostic
-`The connection was closed.` для Nodes, Node и Markdown. Повтор Nodes дал тот
-же результат. Последние рабочие active revisions сохранены:
-Nodes 0fde56930b9f7092c33dc7fc, Node 09d1f89335170f2d07b32744,
-Markdown 8c2860f0a14491925d3b9fc2. Просмотр кандидата не выдан за успешную
-активацию всех вкладок. Диагностика передана координатору Storybook runtime;
-после исправления требуется scoped apply и wait active.
+Первые попытки применения завершились `The connection was closed.` и сохранили
+прежние active revisions. Затем runtime owner штатными MCP check/live/wait
+подтвердил active=lastWorking: Nodes 437e6837b7cb06c77749419c,
+Markdown fdc479f14d33ccdeea361f69 и Node fac58f4d97dcd512085240fe.
+Причина исторического закрытия соединения не устанавливалась; сервер не
+перезапускался. Видимый обновлённый Diagram до применения был корректным preview.
+
+По отдельному поручению удалены устаревшая категория и две самостоятельные
+истории состава нод: их три story/data-модуля, единственный reexport,
+два исключительно связанных с ними теста и ссылки в README/coverage.
+Оставшиеся 12 обычных вариантов каталога совпадают с предыдущими declarations;
+все их module/fixture/test пути разрешаются. Стандартный Dependencies,
+его spec/deps.spec.ts и fixture сохранены, DIAGRAM-DEPENDENCIES проходит.
+
+Финальный совместный gate runtime owner подтвердил отсутствие удалённых
+категории и предмета в поиске Storybook и сохранение diagram. Обзор diagram →
+«Зависимости» проверен: ready/presented, frame64, diagnostics/consoleErrors пусты.
+Capture capture_GEc0Gl6OyGhHNK33JjWF3wGW фиксирует этот просмотр.
+После live check и wait active ревизия проверки очистки @nodes/node:
+cd0fe61a58465d8d78d16364, active=lastWorking, failed/built/candidate/activating=null,
+diagnostics пусты, незавершённых MCP операций на этом этапе нет.
+
+Этот gate подтверждает удаление старого каталога и сохранение стандартного
+Dependencies. Последующее уточнение направления маркеров пользователь передал
+отдельной runtime-задаче; её прежнее изображение не считается окончательно
+принятой ориентацией. Правки runtime projection не входят в коммит очистки Nodes.
 
 Platform code, общая UI theme, font assets/registry и внешний runtime
-Storybook в этой задаче не изменялись.
-
-## Последующая сверка runtime owner
-
-После коммита компонентов 959ab5d runtime owner выполнил только read-only
-status/inspect. Видимая вкладка @nodes/node на route diagram действительно
-показывала candidate fac58f4d97dcd512085240fe: ready/presented, frame41,
-diagnostics и consoleErrors пусты. Это согласуется с пользовательской проверкой
-обновлённых стилей, хотя global active оставался 09d1f89335170f2d07b32744.
-
-Вкладки Nodes и Markdown уже вернулись к прежним active revisions, указанным
-выше. У Nodes фактический bridge route был пустым; cached metadata всё ещё
-содержала markers/arrow/filled. Исторические captures новых компонентов остаются
-свидетельством просмотра кандидатов, но не текущего содержимого этих вкладок.
-Ни у одного пакета нет activating job; ожидания применения в фоне нет.
-Причина закрытия соединения этой сверкой не установлена; repair не выполнялся.
-
-Направление графа Dependencies сохраняет смысл «компонент → использует»:
-DiagramNode → Pane/Typography/article, Pane → section, Typography → span.
-Это направление исходного dependency graph, не разворот геометрии Arrow.
+Storybook в коммитах этой задачи не изменялись. Чужое staged переименование
+spec и прежние удаления тестовых файлов сохранены отдельно.

@@ -2,59 +2,6 @@
   "schemaVersion": 1,
   "categories": [
     {
-      "id": "structure",
-      "label": "Устройство",
-      "subjects": [
-        {
-          "id": "dependencies",
-          "label": "Кто кого использует",
-          "route": "composition",
-          "kind": "example",
-          "presentation": {
-            "protocol": "story-presentation/1",
-            "projection": "display",
-            "widgets": [
-              "props",
-              "source",
-              "diagnostics"
-            ]
-          },
-          "variants": [
-            {
-              "id": "overview",
-              "label": "Состав нод",
-              "route": "composition/dependencies",
-              "module": {
-                "path": "./stories/dependencies-subjects.ts",
-                "export": "dependencies_overview"
-              },
-              "resources": {
-                "fixture": "./stories/dependencies.tsx",
-                "tests": [
-                  "../tests/dependencies.test.ts"
-                ]
-              }
-            },
-            {
-              "id": "parameter",
-              "label": "Числовой параметр",
-              "route": "composition/parameter",
-              "module": {
-                "path": "./stories/dependencies-subjects.ts",
-                "export": "dependencies_parameter"
-              },
-              "resources": {
-                "fixture": "./stories/dependencies.tsx",
-                "tests": [
-                  "../tests/dependencies.test.ts"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "nodes",
       "label": "Ноды",
       "subjects": [

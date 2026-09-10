@@ -1,32 +1,5 @@
 # Ноды
 
-## Кто кого использует
-
-Стрелка означает **использует**. Диаграмма ниже задана Mermaid прямо в этом документе.
-
-```mermaid
-flowchart LR
-  ContentNode --> Pane
-  ContentNode --> ContentSurface
-  ContentNode --> ParameterNode
-  ParameterNode --> Pane
-  ParameterNode --> ParameterNodeContents
-  DiagramNode --> Pane
-  DiagramNode --> Typography
-```
-
-В Storybook откройте **Устройство → Кто кого использует**:
-
-- **Состав нод** — связи ContentNode, ParameterNode и DiagramNode с компонентами,
-  которые они используют.
-- **Числовой параметр** — путь от ParameterNodeContents через готовый
-  NumberParameter до NumberField и Socket.
-
-В интерактивных схемах каждый прямоугольник — наш DiagramNode. Линии читаются слева направо:
-«использует». Нажатие показывает назначение, пакет, зависимости и исходный файл.
-При нехватке ширины схема прокручивается горизонтально. Проверка
-[NODE-DEPENDENCIES-SOURCE](tests/dependencies.test.ts) сверяет отношения с TSX.
-
 ## Компоненты
 
 Каждый компонент и его авторская TSX-разметка находятся в `index.tsx` собственного
