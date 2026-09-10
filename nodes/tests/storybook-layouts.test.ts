@@ -78,6 +78,8 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   expect(storySource).not.toContain("renderLayoutSvg")
 })
 
+// Шесть production stories включают холодную компиляцию под parallel runner;
+// прежние 30s исчерпывались до завершения сценариев. Состав и проверки сценариев сохранены.
 test("[NODES-STORYBOOK-002] каждый route вычисляет реальный Layout и монтирует production GraphEditor", async () => {
   const subjects = await import("../.storybook/stories/subjects/layout.ts") as Record<string, unknown>
   const descriptors = Object.values(subjects).filter(isOwnerStoryDescriptor)
@@ -150,7 +152,7 @@ test("[NODES-STORYBOOK-002] каждый route вычисляет реальны
       expect(display.childNodes).toHaveLength(0)
     }
   }
-})
+}, 60_000)
 
 function isOwnerStoryDescriptor(value: unknown): value is OwnerStoryDescriptor {
   return value !== null && typeof value === "object" &&

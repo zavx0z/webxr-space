@@ -8,6 +8,8 @@ const workspace = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "markdown"), resolve(workspace, "ui"), resolve(workspace, "nodes")]}))
 const markdown = await import("../../.storybook/stories/subjects/components-data-markdown.ts")
 
+// Загрузка настоящей compiled story входит в тест: на Intel Mac при parallel compile
+// она занимает больше 5s. Assertions прежние, зависание остаётся ограничено 30s.
 test("cross-block story copies ordinary paragraphs, Markdown and code while excluding gutter numbers", async () => {
   const document = createDocument()
   const {story} = await markdown.story_selection_cross_block.create(document)
@@ -31,4 +33,4 @@ test("cross-block story copies ordinary paragraphs, Markdown and code while excl
     renderer.dispose()
     story.dispose()
   }
-})
+}, 30_000)
