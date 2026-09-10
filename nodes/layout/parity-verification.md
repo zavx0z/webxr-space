@@ -25,7 +25,7 @@ capturedAt `2026-09-10T12:03:05.898Z`.
 |---|---|---|
 | Padding и font size | Neo16/12 вокруг label, font16px | Реализованы; label+32/+24 и height44 проверены |
 | Radius | .5rem×1.25=10px в штатной поддерживаемой ветви CSS при root16 |10px, проверен у7Pane; неподдерживаемая ветвь8px и runtimeoverride отделены |
-| Default dark fill/border | JSгенератор:rgba54/54/54/.96, white/.156 | Реализованы только Mermaid; общаяUItheme не менялась |
+| Default dark fill/border | JSгенератор:rgba54/54/54/.96, white/.156 | Теперь defaults DiagramNode; общая UI theme не менялась |
 | Default conversation text/lines | White и70%white приdefault/bluechat theme | Реализованы; bareseed/opaque/customtheme варианты не выданы за actualruntime |
 | System font | -apple-system/BlinkMacSystemFont/SegoeUI/sans-serif, fonts.ui=null | Запрашивается тот жеstack; текущийregistry имеетInterfallback, exactsystemfontfile/version отсутствуют |
 | Label bbox/runtime overrides | Вычисляются во времяработы Codex | Не установлены чтением appassets; нужен runtimefont/контрольныйSVG иразрешённыйfontsource |
@@ -89,7 +89,8 @@ DiagramNode теперь задаёт те же отступы четырьмя 
 Ни parser, ни stylesheet scanner, ни платформенный owner не менялись.
 Новый regression проверяет node bbox − label bbox = 32 / 24 с учётом границы.
 До исправления он падал (18 вместо 32), после исправления проходит; live размеры
-подтверждают результат. Без caller variables default padding остаётся прежним.
+подтверждают результат. Следующее принятое изменение переносит padding15/11
+(для круга31/11) в defaults DiagramNode, сохраняя caller overrides.
 
 После этой локальной правки:
 - обычный Markdown check: 25 pass, typecheck PASS, 314 assertions;

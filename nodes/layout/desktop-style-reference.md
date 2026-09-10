@@ -45,10 +45,11 @@ SVG Mermaid получает обычные rx/ry10; superellipse всей UI в
 
 ## Реализованный scope
 
-Только Mermaid задаёт default dark palette/background, radius10 и запрос
-восстановленного system font stack. DiagramNode использует общие CSS overrides;
-без них другие consumers сохраняют прежние UI defaults. Числовой TopDown,
-платформа и общая UI theme не менялись. Все стили — настоящий авторский CSS.
+По принятому 10 сентября решению оформление ноды перенесено в defaults
+DiagramNode: radius10, fill/border, белый текст, padding и system font stack
+16px/20px. Mermaid использует эти defaults и сохраняет собственный фон сцены
+и явные overrides. Другие виды Node, числовой TopDown, платформа и общая UI
+theme не менялись. Все стили — настоящий авторский CSS.
 
 Для явно выбранного оформления доступны inherited author variables:
 `--mermaid-background`, `--mermaid-node-radius`, `--mermaid-node-fill`,

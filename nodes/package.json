@@ -20,7 +20,9 @@
     "./view/tree": "./view/tree.ts",
     "./editor": "./editor/index.tsx",
     "./frame": "./frame/index.tsx",
-    "./link": "./link/index.tsx"
+    "./link": "./link/index.tsx",
+    "./markers": "./markers/index.ts",
+    "./markers/arrow": "./markers/arrow/index.tsx"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

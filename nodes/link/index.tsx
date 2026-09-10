@@ -1,3 +1,6 @@
+import {MarkerSlot} from "../shared/markers/slot/index.tsx"
+import {Arrow} from "../markers/arrow/index.tsx"
+import type {MarkerComponent, MarkerContext} from "../shared/markers/contracts.ts"
 /**
 Link отображает маршрут владельца Layout через семантический vector-path.
 Подписка на переданный Store сохраняет идентичность элемента пути; преобразование маршрута разделяется со всеми проекциями.
@@ -16,6 +19,7 @@ import {
   projectLinkRoute,
   projectLinkArrowheads,
   projectLinkMarkers,
+  projectLinkEndpoints,
   type LinkCubicCurve,
   type LinkPathBounds,
   type LinkPathPoint,
@@ -26,11 +30,14 @@ import {
 } from "../shared/routing/link-path.ts"
 import {socketPreset, type SocketKind} from "@nodes/sockets/presets"
 
+const DEFAULT_LINK_COLOR = "#9e9e9e"
+
 export {
   createCubicLinkRoute,
   projectLinkRoute,
   projectLinkArrowheads,
   projectLinkMarkers,
+  projectLinkEndpoints,
 }
 
 export type {
@@ -52,14 +59,21 @@ export type LinkDefinition = Readonly<{
   id: string
   title: string
   route: LinkRoute
+  /** Явный цвет имеет приоритет над kind и нейтральным default. */
   color?: string | undefined
   strokeWidth?: number | undefined
-  /** Готовая marker geometry; отсутствие сохраняет прежние открытые стрелки. */
+  /** Точная заполненная геометрия приоритетнее component slots и legacy boolean arrows; [] отключает стрелки. */
   markers?: readonly LinkMarkerGeometry[] | undefined
+  /** Только явно заданный тип; отсутствие означает обычную нейтральную связь. */
   kind?: SocketKind | undefined
   from?: LinkEndpoint | undefined
   to?: LinkEndpoint | undefined
+  /** Компоненты концов. null явно отключает legacy стрелку на соответствующем конце. */
+  startMarker?: MarkerComponent | null | undefined
+  endMarker?: MarkerComponent | null | undefined
+  /** @deprecated Используйте startMarker={Arrow}. */
   startArrow?: boolean | undefined
+  /** @deprecated Используйте endMarker={Arrow}. */
   endArrow?: boolean | undefined
   selected?: boolean | undefined
   disabled?: boolean | undefined
@@ -90,6 +104,8 @@ export function Link(props: LinkProps) {
     markers: props.markers,
     from: props.from,
     to: props.to,
+    startMarker: props.startMarker,
+    endMarker: props.endMarker,
     startArrow: props.startArrow,
     endArrow: props.endArrow,
     selected: props.selected,
@@ -105,6 +121,8 @@ export function Link(props: LinkProps) {
     props.markers,
     props.from,
     props.to,
+    props.startMarker,
+    props.endMarker,
     props.startArrow,
     props.endArrow,
     props.selected,
@@ -119,8 +137,18 @@ export function Link(props: LinkProps) {
   const definition = useSyncExternalStore(store.subscribe, store.getSnapshot)
   validateLinkProps(definition)
   const projection = projectLinkRoute(definition.route)
-  const arrowheads = definition.markers ?? projectLinkArrowheads(definition.route, definition.startArrow, definition.endArrow)
-  const color = definition.color ?? socketPreset(definition.kind ?? "custom").color
+  const color = definition.color ?? (definition.kind === undefined ? DEFAULT_LINK_COLOR : socketPreset(definition.kind).color)
+  const endpoints = projectLinkEndpoints(definition.route)
+  const Start = definition.startMarker === undefined ? definition.startArrow ? Arrow : null : definition.startMarker
+  const End = definition.endMarker === undefined ? definition.endArrow ? Arrow : null : definition.endMarker
+  const context = (side: "start" | "end"): MarkerContext => ({
+    ...endpoints[side], ownerId: definition.id, side, color,
+    strokeWidth: definition.strokeWidth ?? 2.2,
+    selected: definition.selected === true,
+    disabled: definition.disabled === true,
+    hidden: definition.hidden === true,
+  })
+  const arrowheads = definition.markers ?? []
   return <>
     <vector-path
       role="option"
@@ -129,10 +157,10 @@ export function Link(props: LinkProps) {
       aria-selected={String(definition.selected === true)}
       aria-disabled={String(definition.disabled === true)}
       data-link-id={definition.id}
-      data-socket-kind={definition.kind ?? "custom"}
+      data-socket-kind={definition.kind}
       data-path-segments={projection.segmentCount}
-      data-link-start-arrow={definition.startArrow === true ? "true" : undefined}
-      data-link-end-arrow={definition.endArrow === true ? "true" : undefined}
+      data-link-start-arrow={definition.markers ? definition.markers.some(marker => marker.side === "start") ? "true" : undefined : Start ? "true" : undefined}
+      data-link-end-arrow={definition.markers ? definition.markers.some(marker => marker.side === "end") ? "true" : undefined : End ? "true" : undefined}
       hidden={definition.hidden === true}
       d={projection.d}
       onClick={props.onActivate}
@@ -167,12 +195,20 @@ export function Link(props: LinkProps) {
         ${props.style}
       `}
     ></vector-path>
+    {definition.markers === undefined && Start ? <MarkerSlot
+      marker={Start}
+      context={context("start")}
+    /> : null}
+    {definition.markers === undefined && End ? <MarkerSlot
+      marker={End}
+      context={context("end")}
+    /> : null}
     {arrowheads.map(arrow => <LinkArrow
       key={arrow.side}
       id={definition.id}
       side={arrow.side}
       d={arrow.d}
-      filled={definition.markers !== undefined}
+      filled={true}
       color={color}
       strokeWidth={definition.strokeWidth}
       selected={definition.selected}

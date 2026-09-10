@@ -10,12 +10,13 @@ const publicOwners = Object.freeze({
   "./editor": ["./editor/index.tsx", "GraphEditor"],
   "./frame": ["./frame/index.tsx", "Frame"],
   "./link": ["./link/index.tsx", "Link"],
+  "./markers/arrow": ["./markers/arrow/index.tsx", "Arrow"],
 } as const)
 
 test("[NODES-001] каждый public TSX является compilable natural owner", async () => {
   const packageJson = await readPackageJson(packageRoot)
   expect(packageJson.exports["."]).toBe(undefined)
-  expect(Object.keys(packageJson.exports).filter(key => key !== "./view/tree")).toEqual(Object.keys(publicOwners))
+  expect(Object.keys(packageJson.exports).filter(key => key !== "./view/tree" && key !== "./markers")).toEqual(Object.keys(publicOwners))
   expect(packageJson.exports["./view/tree"]).toBe("./view/tree.ts")
 
   const compiler = new JsxCompilerSession({

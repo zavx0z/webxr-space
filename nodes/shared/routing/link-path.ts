@@ -1,3 +1,5 @@
+import {arrowGeometry} from "../markers/geometry.ts"
+import type {MarkerPlacement} from "../markers/contracts.ts"
 import {trimCubicCurves} from "./trim-curves.ts"
 import {VECTOR_PATH_COORDINATE_LIMIT} from "@zavx0z/dom/html/vector-path-element"
 
@@ -289,19 +291,22 @@ export type LinkMarkerGeometry = Readonly<{
 
 /** Замкнутый triangle path для публичной заливки; функция сама ничего не рисует. */
 export function projectLinkMarkers(route: LinkRoute, styles: Readonly<{start?: LinkMarkerStyle; end?: LinkMarkerStyle}>): readonly LinkMarkerGeometry[] {
-  const geometry = terminals.get(projectLinkRoute(route))!
+  const endpoints = projectLinkEndpoints(route)
   return (["start", "end"] as const).flatMap(side => {
     const style = styles[side]
     if (!style) return []
-    if (!Number.isFinite(style.length + style.width + style.offset) || style.length <= 0 || style.width <= 0 || style.offset < 0) routeError("marker dimensions")
-    const endpoint = side === "start" ? geometry.start : geometry.end
-    const previous = side === "start" ? geometry.startNext : geometry.endPrevious
-    const distance = Math.hypot(endpoint.x - previous.x, endpoint.y - previous.y)
-    const dx = (endpoint.x - previous.x) / distance
-    const dy = (endpoint.y - previous.y) / distance
-    const tip = frozenPoint({x: endpoint.x - dx * style.offset, y: endpoint.y - dy * style.offset})
-    const left = frozenPoint({x: tip.x - dx * style.length - dy * style.width / 2, y: tip.y - dy * style.length + dx * style.width / 2})
-    const right = frozenPoint({x: tip.x - dx * style.length + dy * style.width / 2, y: tip.y - dy * style.length - dx * style.width / 2})
-    return [{side, tip, points: [tip, left, right] as const, d: `M ${coordinate(tip.x)} ${coordinate(tip.y)} L ${coordinate(left.x)} ${coordinate(left.y)} L ${coordinate(right.x)} ${coordinate(right.y)} L ${coordinate(tip.x)} ${coordinate(tip.y)}`}]
+    const geometry = arrowGeometry(endpoints[side], style, true)
+    geometry.points.forEach(frozenPoint)
+    return [{side, ...geometry}]
   })
+}
+
+/** Концы исходной осевой линии, до видимых stroke gaps; направление на каждом конце наружу. */
+export function projectLinkEndpoints(route: LinkRoute): Readonly<{start: MarkerPlacement; end: MarkerPlacement}> {
+  const value = terminals.get(projectLinkRoute(route))!
+  const placement = (position: LinkPathPoint, previous: LinkPathPoint): MarkerPlacement => {
+    const length = Math.hypot(position.x - previous.x, position.y - previous.y)
+    return {position, direction: {x: (position.x - previous.x) / length, y: (position.y - previous.y) / length}}
+  }
+  return {start: placement(value.start, value.startNext), end: placement(value.end, value.endPrevious)}
 }

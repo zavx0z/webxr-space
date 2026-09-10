@@ -59,19 +59,21 @@ Reference Desktop:26.903.61454/build8378, Mermaid11.16.0. Сохранённое
 Mermaid TD/TB/BT использует измеренные GraphView dimensions и contour-вход,
 spacing50/rankSpacing50/padding8. LR/RL сохраняют Fixed. Не меняются Component
 identity, Document/Canvas/Space, observer lifecycle и модель @nodes/tree.
-DiagramNode поддерживает CSS custom properties для padding и typography;
-Mermaid задаёт собственные значения, а остальные consumers сохраняют defaults.
-Mermaid применяет scoped default dark-оформление из того же reference Desktop;
-остальные consumers сохраняют публичную UItheme. [Источники и runtime-пределы](desktop-style-reference.md).
+DiagramNode владеет общими defaults оформления нод из reference Desktop
+и поддерживает CSS custom properties для padding и typography. Mermaid
+использует эти defaults, сохраняя фон сцены и явные overrides. Другие виды
+Node и общая UI theme не меняются. [Источники и runtime-пределы](desktop-style-reference.md).
 В круглом Mermaid node padding учитывает reference ширину label+64; measured
 bbox проходит как ellipse до стабилизации square, затем это та же окружность.
 System font stack request не доказывает наличие точного Desktop font; это отдельный
 интеграционный рубеж. Stadium parser пока отображает как oval: parity этой формы
 не заявлена, в опорном графе все фигуры rectangle.
 
-Link получает generic числовой marker geometry, цвет и толщину. Без markers
-прежние открытые стрелки сохраняются. Для заполненной стрелки используется
-обычный vector-path с CSS fill; platform owner реализует общую capability.
+Link получает компоненты startMarker/endMarker, вычисляет исходный endpoint
+и направление, а публичный Arrow строит open/filled фигуру. Без слотов и legacy
+boolean flags стрелок нет. Legacy flags и advanced markers сохраняются для
+совместимости; Mermaid больше не подготавливает marker geometry вручную.
+Заполненная стрелка использует обычный vector-path с CSS fill.
 Начальные/конечные gaps линии применяются после скругления, отдельно от marker
 tips: интегрирование длины с допуском1e−8 и de Casteljau сохраняют исходную кривую.
 Проверка на параболе использует аналитическую длину. Короткая линия, в которую
@@ -80,6 +82,6 @@ tips: интегрирование длины с допуском1e−8 и de Ca
 
 Mermaid применяет reference point inset4 до скругления; neo+Desktop дают gaps4
 без стрелки и8 со стрелкой после него. Marker viewport/refX преобразованы в
-triangle points с сохранённым logical scale. Эти значения принадлежат Mermaid
-presentation adapter, а не всем пользователям TopDown. Цвет/шрифт и растровые
+параметры length/width/offset публичного Arrow с сохранённым logical scale.
+Эти значения принадлежат Mermaid presentation adapter, а не всем пользователям TopDown. Цвет/шрифт и растровые
 отличия требуют отдельной визуальной проверки при одинаковом окружении.

@@ -13,7 +13,7 @@ const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["markdown", "nodes", "ui"].map(path => resolve(root, path))}))
 const {Markdown} = await import("../src/markdown.tsx")
 const {layoutMermaidGraph} = await import("../../mermaid/src/layout.ts")
-const {projectLinkArrowheads, projectLinkRoute} = await import("@webxr/nodes/link")
+const {projectLinkArrowheads, projectLinkRoute, projectLinkMarkers} = await import("@webxr/nodes/link")
 
 async function settled(owner: Element, renderer: ReturnType<typeof createDocumentRenderer>, component: ReturnType<typeof createRoot>) {
   const deadline = Date.now() + 8000
@@ -84,7 +84,7 @@ test("[MARKDOWN-MERMAID-VIEW] a Markdown fence becomes native nodes and arrows a
     expect(owner.querySelector('article[data-node-id="B"]')).toBeNull()
     expect(owner.querySelector('article[data-node-id="C"]')).not.toBeNull()
     expect(owner.querySelector('[data-link-end-arrow="true"]')).toBe(link)
-    expect(owner.querySelector('[data-link-arrow="end"]')).toBe(arrow)
+    expect(owner.querySelector('[data-link-arrow="end"]') === arrow).toBe(true)
     expect(renderer.flush().displayList.some(item => item.node === arrow)).toBe(true)
     component.render(template, {source: "Only text"})
     expect(owner.querySelector('[data-mermaid]')).toBeNull()
@@ -184,7 +184,7 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
     // Проверены measured positions по upstream; это ещё не pixel acceptance Desktop.
     for (const edge of expected.edges) {
       const arrow = owner.querySelector(`[data-link-owner="${edge.id}"][data-link-arrow="end"]`)!
-      expect(arrow.getAttribute("d")).toBe(edge.markers![0]!.d)
+      expect(arrow.getAttribute("d")).toBe(projectLinkMarkers(edge.route, {end: {length: 10.5, width: 14 * 10.5 / 11.5, offset: 4 * 10.5 / 11.5}})[0]!.d)
       expect(renderer.flush().displayList.some(item => item.node === arrow)).toBe(true)
     }
   } finally {

@@ -22,3 +22,9 @@ export const story_node_editor_navigation = story("components/node-editor/naviga
 export const story_node_editor_controlled = story("components/node-editor/controlled")
 export const story_node_editor_readonly = story("components/node-editor/readonly")
 export const story_node_tree_topology = story("components/node-tree/topology")
+
+export const story_link_arrows = story("components/link/arrows")
+export const story_link_filled_arrows = story("components/link/filled-arrows")
+export const story_link_types = story("components/link/types")
+export const story_link_color = story("components/link/color")
+export const story_link_mixed_markers = story("components/link/mixed-markers")

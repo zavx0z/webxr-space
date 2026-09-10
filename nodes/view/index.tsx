@@ -299,6 +299,8 @@ export function GraphView(props: GraphViewProps) {
           strokeWidth={link.strokeWidth}
           markers={link.markers}
           route={link.route}
+          startMarker={link.startMarker}
+          endMarker={link.endMarker}
           startArrow={link.startArrow}
           endArrow={link.endArrow}
           disabled={link.disabled}

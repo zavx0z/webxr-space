@@ -57,7 +57,7 @@ test("[GRAPH-MEASURED-001] реальные размеры, async поколен
     expect(computations).toBe(count)
     expect(a.getLayoutRect()!.width).toBe(width)
     deferred = true
-    styleOwner.replace([{id: "font", cssText: "article { font-size: 24.5px; }"}])
+    styleOwner.replace([{id: "font", cssText: "article { --diagram-node-font-size: 24.5px; }"}])
     const hiddenFrame = flush()
     expect(a.getLayoutRect()!.width).toBeGreaterThan(width)
     expect(hiddenFrame.displayList.some(item => item.node === a || item.node === a.querySelector("span"))).toBe(false)

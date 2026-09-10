@@ -99,7 +99,7 @@
           "variants": [
             {
               "id": "orthogonal",
-              "label": "Ортогональная",
+              "label": "По умолчанию · ортогональная",
               "route": "components/link/orthogonal",
               "module": {
                 "path": "./stories/subjects/components.ts",
@@ -169,6 +169,96 @@
                 "fixture": "./stories/compiled/component-stories.tsx",
                 "tests": [
                   "../tests/storybook-components.test.ts"
+                ]
+              }
+            },
+            {
+              "id": "arrows",
+              "label": "Открытые стрелки",
+              "route": "components/link/arrows",
+              "module": {
+                "path": "./stories/subjects/components.ts",
+                "export": "story_link_arrows"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/link-gallery.tsx",
+                "tests": [
+                  "../tests/link-defaults.test.ts"
+                ],
+                "references": [
+                  "../link/README.md"
+                ]
+              }
+            },
+            {
+              "id": "filled-arrows",
+              "label": "Заполненные стрелки",
+              "route": "components/link/filled-arrows",
+              "module": {
+                "path": "./stories/subjects/components.ts",
+                "export": "story_link_filled_arrows"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/link-gallery.tsx",
+                "tests": [
+                  "../tests/link-defaults.test.ts"
+                ],
+                "references": [
+                  "../link/README.md"
+                ]
+              }
+            },
+            {
+              "id": "mixed-markers",
+              "label": "Разные маркеры на концах",
+              "route": "components/link/mixed-markers",
+              "module": {
+                "path": "./stories/subjects/components.ts",
+                "export": "story_link_mixed_markers"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/link-gallery.tsx",
+                "tests": [
+                  "../tests/link-defaults.test.ts"
+                ],
+                "references": [
+                  "../link/README.md"
+                ]
+              }
+            },
+            {
+              "id": "types",
+              "label": "Явные типы",
+              "route": "components/link/types",
+              "module": {
+                "path": "./stories/subjects/components.ts",
+                "export": "story_link_types"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/link-gallery.tsx",
+                "tests": [
+                  "../tests/link-defaults.test.ts"
+                ],
+                "references": [
+                  "../link/README.md"
+                ]
+              }
+            },
+            {
+              "id": "color",
+              "label": "Явный цвет",
+              "route": "components/link/color",
+              "module": {
+                "path": "./stories/subjects/components.ts",
+                "export": "story_link_color"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/link-gallery.tsx",
+                "tests": [
+                  "../tests/link-defaults.test.ts"
+                ],
+                "references": [
+                  "../link/README.md"
                 ]
               }
             }
@@ -330,6 +420,66 @@
             }
           ],
           "directory": "editor"
+        },
+        {
+          "id": "arrow",
+          "kind": "component",
+          "label": "Стрелка",
+          "apiName": "Arrow",
+          "route": "markers/arrow",
+          "directory": "markers/arrow",
+          "tags": [
+            "Arrow",
+            "marker",
+            "Стрелка"
+          ],
+          "presentation": {
+            "protocol": "story-presentation/1",
+            "projection": "display",
+            "widgets": [
+              "props",
+              "source",
+              "diagnostics"
+            ]
+          },
+          "variants": [
+            {
+              "id": "open",
+              "label": "Открытая",
+              "route": "markers/arrow/open",
+              "module": {
+                "path": "./stories/subjects/markers.ts",
+                "export": "story_arrow_open"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/arrow-stories.tsx",
+                "tests": [
+                  "../tests/marker-slots.test.ts"
+                ],
+                "references": [
+                  "../markers/README.md"
+                ]
+              }
+            },
+            {
+              "id": "filled",
+              "label": "Заполненная",
+              "route": "markers/arrow/filled",
+              "module": {
+                "path": "./stories/subjects/markers.ts",
+                "export": "story_arrow_filled"
+              },
+              "resources": {
+                "fixture": "./stories/compiled/arrow-stories.tsx",
+                "tests": [
+                  "../tests/marker-slots.test.ts"
+                ],
+                "references": [
+                  "../markers/README.md"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

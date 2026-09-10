@@ -25,7 +25,7 @@ test("[NODES-CATALOG-001] every public Socket kind and Parameter mechanism is di
   const {SOCKET_KINDS} = await import("@nodes/sockets/presets")
   expect(category("sockets").subjects.map(subject => subject.id)).toEqual([...SOCKET_KINDS])
   expect(category("parameters").subjects.map(subject => subject.id)).toEqual(Object.keys(PARAMETER_EXAMPLES))
-  expect(category("components").subjects.map(subject => subject.apiName)).toEqual(["Frame", "Link", "GraphView", "GraphEditor"])
+  expect(category("components").subjects.map(subject => subject.apiName)).toEqual(["Frame", "Link", "GraphView", "GraphEditor", "Arrow"])
   const routes = new Set<string>()
   for (const item of catalog.categories) for (const subject of item.subjects) for (const variant of subject.variants) {
     expect(routes.has(variant.route)).toBe(false)
@@ -95,7 +95,7 @@ test("[NODES-CATALOG-004] text input and Socket activation retain existing seman
 })
 
 test("[NODES-CATALOG-005] Node, Frame, Link, NodeTree and GraphEditor variants mount production owners", async () => {
-  const selectors: Record<string, string> = {node: "article[data-node-id]", frame: "[data-frame-id]", link: "[data-link-id]", "node-tree": "[data-graph-view]", "node-editor": "[data-graph-editor]"}
+  const selectors: Record<string, string> = {arrow: "[data-marker-kind]", node: "article[data-node-id]", frame: "[data-frame-id]", link: "[data-link-id]", "node-tree": "[data-graph-view]", "node-editor": "[data-graph-editor]"}
   for (const subject of category("components").subjects) for (const variant of subject.variants) {
     const mounted = await mount(variant)
     try {

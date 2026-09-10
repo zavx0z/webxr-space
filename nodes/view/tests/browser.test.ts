@@ -166,7 +166,7 @@ test.each(([
     nodes[0]!.getLayoutRect()
     expect(submissions).toBe(beforeRead)
     async = true
-    styles.replace([{id: "font", cssText: "article { font-size: 25.5px; }"}])
+    styles.replace([{id: "font", cssText: "article { --diagram-node-font-size: 25.5px; }"}])
     host.render()
     expect(observations.at(-1)!.visible).toBe(false)
     const job = jobs.at(-1)!

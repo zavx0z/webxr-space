@@ -1,3 +1,4 @@
+import {LinkGallery, linkGallerySource, isLinkGalleryVariant} from "./link-gallery.tsx"
 import {ModelGraphView, modelGraphViewSource} from "./model-view.tsx"
 import {ContentNode} from "@nodes/node/content"
 import {createRoot, useMemo, useState, useSyncExternalStore} from "@zavx0z/component"
@@ -23,14 +24,20 @@ export function createComponentStory(document: Document, route: string) {
     const staging = document.createElement("div")
     const root = createRoot(staging)
     try {
-      root.render(<LinkStory
-        variant={variant!}
-      />)
+      if (isLinkGalleryVariant(variant!)) {
+        root.render(<LinkGallery
+          variant={variant!}
+        />)
+      } else {
+        root.render(<LinkStory
+          variant={variant!}
+        />)
+      }
     } catch (error) {
       root.unmount()
       throw error
     }
-    return mountNodesStory(document, route, staging, root, linkSource(variant!), {component: "Link", variant})
+    return mountNodesStory(document, route, staging, root, isLinkGalleryVariant(variant!) ? linkGallerySource(variant!) : linkSource(variant!), {component: "Link", variant})
   }
   if (component === "frame") {
     const staging = document.createElement("div")
@@ -363,7 +370,6 @@ function linkStore(variant: string) {
   let value: LinkDefinition = {
     id: "example-link",
     title: "Пример связи",
-    kind: "float",
     route: routeFor(variant === "cubic"),
     selected: variant === "states",
     disabled: variant === "disabled",
@@ -396,8 +402,7 @@ function previewImage(): string {
 
 function linkSource(variant: string): string {
   return [
-    'import {createRoot, useMemo, useSyncExternalStore} from "@zavx0z/component"',
-    'import type {HTMLElement} from "@zavx0z/dom"',
+    'import {useMemo, useSyncExternalStore} from "@zavx0z/component"',
     'import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"',
     'import {Button} from "@zavx0z/ui/buttons/button"',
     "",
@@ -409,12 +414,11 @@ function linkSource(variant: string): string {
     '  }]) : {kind: "orthogonal", points: [{x: 20, y: 30}, {x: 200, y: 30}, {x: 200, y: 120}, {x: 380, y: 120}]}',
     "}",
     "",
-    "function Example() {",
+    "export function Example() {",
     "  const store = useMemo(() => {",
     "    let value: LinkDefinition = {",
     '      id: "example-link",',
     '      title: "Пример связи",',
-    '      kind: "float",',
     `      route: routeFor(${variant === "cubic"}),`,
     `      selected: ${variant === "states"},`,
     `      disabled: ${variant === "disabled"},`,
@@ -466,17 +470,6 @@ function linkSource(variant: string): string {
     "  </section>",
     "}",
     "",
-    "// container принадлежит Display текущего Experience.",
-    "export function mountExample(container: HTMLElement) {",
-    "  const root = createRoot(container)",
-    "  try {",
-    "    root.render(<Example />)",
-    "  } catch (error) {",
-    "    root.unmount()",
-    "    throw error",
-    "  }",
-    "  return () => root.unmount()",
-    "}",
   ].join("\n")
 }
 

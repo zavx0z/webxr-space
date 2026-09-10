@@ -1,8 +1,12 @@
-import {useEffect, useMemo, useState} from "@zavx0z/component"
+import type {CompiledTemplate} from "@zavx0z/template/compiled"
+import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
+import {Arrow} from "@webxr/nodes/markers/arrow"
+import type {MarkerProps} from "@webxr/nodes/markers"
+import {component, createContext, provideContext, useContext, useEffect, useMemo, useState} from "@zavx0z/component"
 import {CodeEditor} from "@zavx0z/ui/views/code-editor"
 import {parseMermaidFlowchart, type MermaidGraph} from "./src/parser.ts"
 import {layoutMermaidGraph} from "./src/layout.ts"
-import {GraphView, type GraphInput, type GraphLayoutComputer} from "@webxr/nodes/view"
+import {GraphView, type GraphViewProps, type GraphInput, type GraphLayoutComputer} from "@webxr/nodes/view"
 import {MermaidNode} from "./node/index.tsx"
 
 type MermaidState = Readonly<{
@@ -42,11 +46,10 @@ export function Mermaid(props: Readonly<{source: string}>) {
         id: edge.id,
         title: `${edge.from} → ${edge.to}`,
         route: edge.route,
-        startArrow: edge.startArrow,
-        endArrow: edge.endArrow,
+        startMarker: edge.startArrow ? MermaidMarker : undefined,
+        endMarker: edge.endArrow ? MermaidMarker : undefined,
         color: "var(--diagram-link-color, currentColor)",
         strokeWidth: 1,
-        markers: edge.markers,
       })),
     }
   }, [state.graph])
@@ -62,10 +65,12 @@ export function Mermaid(props: Readonly<{source: string}>) {
       min-width: 0;
       width: 100%;
       background: var(--mermaid-background, #181818);
-      --diagram-node-radius: var(--mermaid-node-radius, 10px);
-      --diagram-node-fill: var(--mermaid-node-fill, rgba(54, 54, 54, .96));
-      --diagram-node-border: var(--mermaid-node-border, rgba(255, 255, 255, .156));
-      --diagram-node-color: var(--mermaid-node-color, #ffffff);
+      --diagram-node-radius: var(--mermaid-node-radius);
+      --diagram-node-fill: var(--mermaid-node-fill);
+      --diagram-node-border: var(--mermaid-node-border);
+      --diagram-node-color: var(--mermaid-node-color);
+      --diagram-node-font-family: var(--mermaid-font-family);
+      --diagram-node-line-height: var(--mermaid-line-height);
       --diagram-link-color: var(--mermaid-link-color, rgba(255, 255, 255, .7));
 
       &[data-mermaid-ready="false"] [data-graph-view] {
@@ -75,7 +80,8 @@ export function Mermaid(props: Readonly<{source: string}>) {
     `}
   >
     {pending ? <MermaidLoading /> : null}
-    {input === undefined ? null : <GraphView
+    {input === undefined ? null : <MermaidGraphView
+      horizontal={state.graph?.direction === "LR" || state.graph?.direction === "RL"}
       input={input}
       layout={layout}
       pending={!parsed}
@@ -107,4 +113,35 @@ function MermaidError(props: Readonly<{source: string; error: string}>) {
       `}
     />
   </div>
+}
+
+/** Только различающиеся размеры/refX reference Mermaid; placement и рисование принадлежат Link/Arrow. */
+function MermaidMarker(props: MarkerProps) {
+  const horizontal = useContext(MermaidHorizontal)
+  const start = props.context.side === "start"
+  return <Arrow
+    context={props.context}
+    variant={horizontal ? "open" : "filled"}
+    length={horizontal ? 9 : start ? 11.5 : 10.5}
+    width={horizontal ? 8 : start ? 14 : 14 * 10.5 / 11.5}
+    offset={horizontal ? 0 : start ? 3 : 4 * 10.5 / 11.5}
+  />
+}
+
+const MermaidHorizontal = createContext(false)
+type GraphChildren = JsxSourceElement | readonly JsxSourceElement[] | null | undefined
+
+/** Контекст оформления сохраняет один тип Marker/Arrow при смене LR↔TD без второго состояния графа. */
+function MermaidGraphView(props: GraphViewProps & Readonly<{horizontal: boolean}>) {
+  const content: GraphChildren = renderMermaidGraph(props)
+  return <MermaidGraphContent>{content}</MermaidGraphContent>
+}
+
+function renderMermaidGraph(props: GraphViewProps & Readonly<{horizontal: boolean}>): GraphChildren {
+  return provideContext(MermaidHorizontal, props.horizontal,
+    component(GraphView as unknown as CompiledTemplate<GraphViewProps>, props, "graph")) as unknown as JsxSourceElement
+}
+
+function MermaidGraphContent(props: Readonly<{children: GraphChildren}>) {
+  return <>{props.children}</>
 }
