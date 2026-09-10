@@ -1,0 +1,74 @@
+{
+  "reference": {
+    "bundleIdentifier": "com.openai.codex",
+    "version": "26.903.61454",
+    "build": "8378",
+    "savedChunksMatched": true,
+    "matchedCount": 8,
+    "frameworkMetadataVersion": "152.0.7977.83"
+  },
+  "sources": {
+    "app-initial-49fc08c26651.css": "609a3a7d63469a0d06d33cce070c1711716bf786d03aafe85689c24629b90b43",
+    "app-initial-1b87ae739476.js": "c87b94027faefdc31cc165975dc0f14b28e3f6d922f6a5188756c8f570f2b3d7",
+    "local-conversation-thread-b5c1b90153e1.js": "a1cc0311cb9535538be33b79b3e8b24da47e1e8d720eed9ec781369e8b8c7c30"
+  },
+  "assumptions": [
+    "Статический dark conversation default с default/blue effective chat theme",
+    "Нет пользовательских font/theme overrides и opaque-window override",
+    "Штатная поддержка CSS Chromium и начальный размер root font16px",
+    "Live computed styles Codex и пользовательские настройки не читались"
+  ],
+  "font": {
+    "requestedStack": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "uiFontDefault": null,
+    "customOverride": "fonts.ui/fonts.uiFace -> --vscode-font-family",
+    "bundledOpenAISansIsDefault": false,
+    "exactSystemFaceFileAndVersion": null,
+    "ourRegistrySans": "Inter Regular / assets/inter-regular.ttf"
+  },
+  "radius": {
+    "baseRem": 0.5,
+    "normalScale": 1,
+    "cornerShapeSupportedScale": 1.25,
+    "normalAtRoot16px": 8,
+    "supportedAtRoot16px": 10,
+    "condition": "@supports(corner-shape:superellipse(1.5))",
+    "sourceOffsets": {
+      "radiusBase": 66588,
+      "scaleCondition": 810944
+    },
+    "chromiumSupportPrimarySource": "https://developer.chrome.com/blog/new-in-chrome-139"
+  },
+  "darkPalette": {
+    "seed": {
+      "surface": "#181818",
+      "ink": "#ffffff",
+      "contrast": 60,
+      "opaqueWindows": false
+    },
+    "normalizedContrast": 0.6,
+    "nodeMixAmount": 0.128,
+    "roundedNodeChannel": 54,
+    "nodeFill": "rgba(54, 54, 54, 0.96)",
+    "nodeOpaqueAlternative": "rgb(54, 54, 54)",
+    "nodeBorder": "rgba(255, 255, 255, 0.156)",
+    "textWithDefaultChatTheme": "#ffffff",
+    "bareSeedTextWithoutChatThemeBridge": "#dfdfdf",
+    "descriptionOutsideConversation": "rgba(255, 255, 255, 0.498)",
+    "conversationDescriptionOverride": "70% of --color-text",
+    "conversationLineColor": "rgba(255, 255, 255, 0.7)",
+    "background": "#181818",
+    "sourceOffsets": {
+      "seed": 7013418,
+      "contrast": 7011928,
+      "darkGenerator": 7009985,
+      "roundChannel": 7012642,
+      "conversationOverride": 350720
+    }
+  },
+  "limits": [
+    "Defaults не доказывают runtime overrides исторического screenshot",
+    "System face не поставляется отдельным app font asset и отсутствует в нашем текущем public registry",
+    "Проприетарные JS/CSS/font binaries не скопированы в tracked production assets"
+  ]
+}

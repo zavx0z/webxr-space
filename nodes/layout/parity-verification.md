@@ -4,44 +4,47 @@
 
 Числовая реализация и live-публикация проверены. Layout active:
 `632061498367853997c4e418`. Markdown active:
-`71aa3fcaefa7d518ae083b5d`; `check(live:true)` и `wait(active)` завершились успешно.
+`8c2860f0a14491925d3b9fc2`; `check(live:true)` и `wait(active)` завершились успешно.
 
 В актуальном Markdown preview действительно показаны исходные 7 нод / 7 связей
 и 7 заполненных стрелок. Correct preview capture:
-`storybook://captures/capture_f5MdZEivM4MeBt4nDGEy7KjT`,
-SHA-256 `a79dc8205d9e2bb05a1261b3df2fef47208cc3bf53e3a4f20ab41c278faddcb2`,
-ревизия `71aa3fcaefa7d518ae083b5d`, 2304 × 2048,
-capturedAt `2026-09-10T11:11:37.607Z`.
+`storybook://captures/capture_sclo10DkN-SM1_lM66nehsh-`,
+SHA-256 `369cc78f11a1e40f102feb31e871e7393f04479a571d2308a7a615ac064d765c`,
+ревизия `8c2860f0a14491925d3b9fc2`, 2304 × 2048,
+capturedAt `2026-09-10T12:03:05.898Z`.
 
-**Это не pixel-perfect совпадение с Codex Desktop.** Сопоставление с исходным
-снимком подтверждает те же уровни и порядок, размещение общей зависимости Pane,
-свободные контурные endpoints и форму направленных rounded routes. Остаются
-видимые различия шрифтовых метрик, темы/фона, радиуса рамок и размещения графа
-в контейнере. Полного Desktop font/theme/scale snapshot нет, сравнение пикселей
-при одинаковых входных условиях не выполнено. Наши компоненты и публичная тема
-сохранены; данные source graph не заменены готовым SVG или ручными координатами.
+**Pixel-perfect пока не доказан.** После разрешённого чтения app подтверждены та же
+версия26.903.61454/build8378 и все8savedhashes. Radius и палитра уже восстановлены
+и реализованы для статического default dark conversation; подробные источники,
+формулы и assumptions — [desktop-style-reference.md](desktop-style-reference.md).
+Приложение/архив не изменялись, пользовательские runtime settings не читались.
 
-## Что именно ещё отличается от исходного изображения
+## Оставшиеся границы после чтения app
 
-| Область | Reference и источник | Наша реализация | Влияние и недостающие данные |
-|---|---|---|---|
-| Отступы ноды | Neo rect 16 px по X / 12 px по Y; shape handler729–731 | 15/11 CSS padding +border1, итог label+32/+24 | Геометрия ноды; известное значение выполнено и проверено |
-| Размер шрифта | Base theme16px, chunk-WYO...:906 |16px | Известное значение выполнено |
-| Гарнитура и label bbox | Desktop читает computed fontFamily из --font-sans, mermaid-diagram:250–254 | CSS sans-serif; live ContentNode label100.7578125×20 | Меняет размеры самих нод и placement. Нет exact computed family, fontsource/version и SVG label bbox |
-| Радиус рамки | Desktop CSS rx/ry=var(--radius-md), mermaid-diagram:39–42; export копирует computed value:205–206 | Pane4px | Локальный рисунок ноды. Числовое значение --radius-md отсутствует; theme.radius из Mermaid не заменяет Desktop override |
-| Цвета нод, текста, рёбер | Desktop вычисляет --color-background-elevated-primary / --color-border-primary-outline / --color-text / --color-codex-description, mermaid-diagram:243–254 | Публичные widget-box роли UI и currentColor fallback | Локальное оформление; resolved RGB/alpha того Desktop отсутствуют |
-| Линии и маркеры | Angular radius5, point inset4, neo/desktop gaps и marker refX | Реализованы отдельно от портов/типографики | Геометрия диаграммы; numeric/capture evidence приведены ниже |
-| Внешняя рамка и центрирование | Desktop wrapper mx-auto / px-4 / py-3, mermaid-diagram:278 | Storybook Display и toolbar, иное свободное место | Внешний контейнер, не алгоритм. Для сравнения можно исключить его единым crop/translation/scale normalization |
+| Область | Reference | Наша реализация / статус |
+|---|---|---|
+| Padding и font size | Neo16/12 вокруг label, font16px | Реализованы; label+32/+24 и height44 проверены |
+| Radius | .5rem×1.25=10px в штатной поддерживаемой ветви CSS при root16 |10px, проверен у7Pane; неподдерживаемая ветвь8px и runtimeoverride отделены |
+| Default dark fill/border | JSгенератор:rgba54/54/54/.96, white/.156 | Реализованы только Mermaid; общаяUItheme не менялась |
+| Default conversation text/lines | White и70%white приdefault/bluechat theme | Реализованы; bareseed/opaque/customtheme варианты не выданы за actualruntime |
+| System font | -apple-system/BlinkMacSystemFont/SegoeUI/sans-serif, fonts.ui=null | Запрашивается тот жеstack; текущийregistry имеетInterfallback, exactsystemfontfile/version отсутствуют |
+| Label bbox/runtime overrides | Вычисляются во времяработы Codex | Не установлены чтением appassets; нужен runtimefont/контрольныйSVG иразрешённыйfontsource |
+| Внешнийконтейнер | Codexwrapper и StorybookDisplay различны | Можно исключить единымcrop/translation/scale normalization; это неалгоритм |
 
-В сохранённом dataset нет app CSS assets с определениями этих переменных и нет
-файлов шрифтов. Нужен экспортированный SVG именно Desktop26.903.61454/build8378:
-экспорт сохраняет computed radius, embedded theme/fontFamily, rects, paths и
-viewBox. Для эквивалентных glyph metrics дополнительно нужен указанный им точный
-font source/version. Другой путь — разрешённое адресное чтение CSS/fonts
-соответствующего Desktop archive; текущую установку нельзя молча объявить версией
-8378. Для строгого pixel comparison нужны также DPR/scale исходного screenshot
-либо SVG как контроль координат. Значения не подобраны по внешнему сходству,
-общая тема всей UI и platform font/render code в этой задаче не изменялись.
+Default исходники теперь доступны; недостаёт именно данных runtime override и
+конкретного системного font face/version, а не определения--radius-md вообще.
+OpenAI Sans изapp не подменяетsystemdefault и не копировался. Нового font shim,
+платформенного font/render изменения или чтения/System/fonts не было.
+
+## Последняя проверка default-оформления
+
+Normal Markdown check25PASS+typecheck, related Node/GraphView8PASS. Regression
+проверяет padding32/24, radius10 ичисловойRGBA рамки; targeted1PASS/95assertions.
+На visible/focused странице послеsourceclick frame8 появилсяframe9 с7nodes,
+7path и7path-fill ДОпоследующегоcapture. Все7радиусов=10, borderwhite/.156,
+diagnostics/consoleErrors пусты. Результатзаписан в
+[desktop-style-live.json](tests/references/desktop-style-live.json).
+Scopedapply иwaitactive подтверждены для8c2860f0a14491925d3b9fc2.
 
 ## Live geometry и identity
 
@@ -71,7 +74,7 @@ Element ID: 7 нод, 7 линий, 7 стрелок. Доказательств
 Сохранение identity при обновлении source LR → TD дополнительно проверено
 интеграционным тестом, а не приписано live selection-сценарию.
 
-Страница была hidden / hasFocus=false. Preview capture вызывает render, поэтому
+На прежнем этапе геометрии71aa3 страница была hidden / hasFocus=false. Preview capture вызывает render, поэтому
 этот снимок доказывает результат GPU-рисования, но не автономный первый visible
 frame. Последний проверялся Browser pre-paint тестами отдельно.
 

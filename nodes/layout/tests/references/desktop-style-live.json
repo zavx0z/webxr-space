@@ -1,0 +1,314 @@
+{
+  "revision": "8c2860f0a14491925d3b9fc2",
+  "frame": 9,
+  "nativePage": {
+    "visibilityState": "visible",
+    "hasFocus": true
+  },
+  "nodes": [
+    {
+      "id": "ContentNode",
+      "nodeId": "node:2873",
+      "x": 218.1875,
+      "y": 8,
+      "width": 132.7578125,
+      "height": 44
+    },
+    {
+      "id": "ContentSurface",
+      "nodeId": "node:2858",
+      "x": 8,
+      "y": 102,
+      "width": 151.109375,
+      "height": 44
+    },
+    {
+      "id": "ParameterNode",
+      "nodeId": "node:2843",
+      "x": 209.109375,
+      "y": 102,
+      "width": 150.9140625,
+      "height": 44
+    },
+    {
+      "id": "Pane",
+      "nodeId": "node:2828",
+      "x": 444.2382813,
+      "y": 196,
+      "width": 69.984375,
+      "height": 44
+    },
+    {
+      "id": "ParameterNodeContents",
+      "nodeId": "node:2813",
+      "x": 174.8945313,
+      "y": 196,
+      "width": 219.34375,
+      "height": 44
+    },
+    {
+      "id": "DiagramNode",
+      "nodeId": "node:2798",
+      "x": 548.1054688,
+      "y": 102,
+      "width": 136.015625,
+      "height": 44
+    },
+    {
+      "id": "Typography",
+      "nodeId": "node:2783",
+      "x": 564.2226563,
+      "y": 196,
+      "width": 123.78125,
+      "height": 44
+    }
+  ],
+  "panes": [
+    {
+      "nodeId": "node:2923",
+      "name": "ContentNode",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2935",
+      "name": "ContentSurface",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2947",
+      "name": "ParameterNode",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2959",
+      "name": "Pane",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2971",
+      "name": "ParameterNodeContents",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2983",
+      "name": "DiagramNode",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2995",
+      "name": "Typography",
+      "radius": 10,
+      "border": "rgba(255, 255, 255, .156)",
+      "paint": [
+        {
+          "key": "background",
+          "kind": "rect"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "nodeId": "node:19",
+      "name": "ContentNode → ContentSurface",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:22",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:11",
+      "name": "ContentNode → ParameterNode",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:14",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2914",
+      "name": "ContentNode → Pane",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2917",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2906",
+      "name": "ParameterNode → ParameterNodeContents",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2909",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2898",
+      "name": "ParameterNode → Pane",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2901",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2890",
+      "name": "DiagramNode → Pane",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2893",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2882",
+      "name": "DiagramNode → Typography",
+      "paint": [
+        {
+          "key": "path",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "nodeId": "node:2885",
+      "name": "",
+      "paint": [
+        {
+          "key": "path-fill",
+          "kind": "path"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "console": [],
+  "capture": {
+    "status": "success",
+    "captureId": "capture_sclo10DkN-SM1_lM66nehsh-",
+    "resourceUri": "storybook://captures/capture_sclo10DkN-SM1_lM66nehsh-",
+    "mimeType": "image/png",
+    "width": 2304,
+    "height": 2048,
+    "bytes": 43712,
+    "sha256": "369cc78f11a1e40f102feb31e871e7393f04479a571d2308a7a615ac064d765c",
+    "packageId": "@webxr/markdown",
+    "route": "components/data/markdown/mermaid/flowchart",
+    "graphDigest": "37eb752626f01a14e9e6642556a04049aad9918ac4500583a70fc0c4d0e12ef8",
+    "revision": "8c2860f0a14491925d3b9fc2",
+    "area": "preview",
+    "consoleErrors": [],
+    "capturedAt": "2026-09-10T12:03:05.898Z"
+  },
+  "scope": "Статический default dark conversation Desktop8378; не доказательство runtime overrides Codex"
+}

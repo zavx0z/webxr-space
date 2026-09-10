@@ -44,7 +44,7 @@ export function Mermaid(props: Readonly<{source: string}>) {
         route: edge.route,
         startArrow: edge.startArrow,
         endArrow: edge.endArrow,
-        color: "var(--widget-box-content, currentColor)",
+        color: "var(--diagram-link-color, currentColor)",
         strokeWidth: 1,
         markers: edge.markers,
       })),
@@ -61,6 +61,12 @@ export function Mermaid(props: Readonly<{source: string}>) {
       display: block;
       min-width: 0;
       width: 100%;
+      background: var(--mermaid-background, #181818);
+      --diagram-node-radius: var(--mermaid-node-radius, 10px);
+      --diagram-node-fill: var(--mermaid-node-fill, rgba(54, 54, 54, .96));
+      --diagram-node-border: var(--mermaid-node-border, rgba(255, 255, 255, .156));
+      --diagram-node-color: var(--mermaid-node-color, #ffffff);
+      --diagram-link-color: var(--mermaid-link-color, rgba(255, 255, 255, .7));
 
       &[data-mermaid-ready="false"] [data-graph-view] {
         visibility: hidden;

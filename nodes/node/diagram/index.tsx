@@ -66,7 +66,9 @@ export function DiagramNode(props: DiagramNodeProps) {
         flex: 0 0 auto;
         width: ${props.intrinsic ? "auto" : "100%"};
         height: ${props.intrinsic && props.shape !== "circle" ? "auto" : "100%"};
-        border-radius: ${round ? "50%" : "4px"};
+        border-radius: ${round ? "50%" : "var(--diagram-node-radius, 4px)"};
+        background: var(--diagram-node-fill, var(--widget-box-background));
+        border-color: var(--diagram-node-border, var(--widget-box-outline));
         padding-top: var(--diagram-node-padding-block, 8px);
         padding-right: var(--diagram-node-padding-inline, 8px);
         padding-bottom: var(--diagram-node-padding-block, 8px);
@@ -80,6 +82,7 @@ export function DiagramNode(props: DiagramNodeProps) {
           width: ${props.intrinsic ? "auto" : "100%"};
           text-align: center;
           white-space: normal;
+          color: var(--diagram-node-color, var(--widget-regular-content));
           font-family: var(--diagram-node-font-family, var(--font-family));
           font-size: var(--diagram-node-font-size, var(--font-size-sm));
           line-height: var(--diagram-node-line-height, 16px);

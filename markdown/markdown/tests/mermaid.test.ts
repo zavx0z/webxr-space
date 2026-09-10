@@ -170,6 +170,10 @@ test("[MARKDOWN-MEASURED-REFERENCE] семь нод исходного обсу�
       // Neo rectangle: label bbox +32/+24, включая границу CSS-компонента.
       expect(actual.width - label.width).toBeCloseTo(32, 6)
       expect(actual.height - label.height).toBeCloseTo(24, 6)
+      const pane = element.querySelector("section")!
+      const paneBox = renderer.flush().boxByNode.get(pane)!
+      expect(paneBox.border.radii.topLeft).toBe(10)
+      expect(paneBox.border.colors.top.match(/[\d.]+/g)!.map(Number)).toEqual([255, 255, 255, .156])
       expect(actual.x).toBeCloseTo(oracle.node(node.id).x - actual.width / 2, 6)
       expect(actual.y).toBeCloseTo(oracle.node(node.id).y - actual.height / 2, 6)
     }

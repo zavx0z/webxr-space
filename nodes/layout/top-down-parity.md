@@ -61,10 +61,11 @@ spacing50/rankSpacing50/padding8. LR/RL сохраняют Fixed. Не меня�
 identity, Document/Canvas/Space, observer lifecycle и модель @nodes/tree.
 DiagramNode поддерживает CSS custom properties для padding и typography;
 Mermaid задаёт собственные значения, а остальные consumers сохраняют defaults.
-Фон и цвета берутся из публичной темы приложения, не из зеркала Desktop tokens.
+Mermaid применяет scoped default dark-оформление из того же reference Desktop;
+остальные consumers сохраняют публичную UItheme. [Источники и runtime-пределы](desktop-style-reference.md).
 В круглом Mermaid node padding учитывает reference ширину label+64; measured
 bbox проходит как ellipse до стабилизации square, затем это та же окружность.
-Sans font request не доказывает наличие точного Desktop font; это отдельный
+System font stack request не доказывает наличие точного Desktop font; это отдельный
 интеграционный рубеж. Stadium parser пока отображает как oval: parity этой формы
 не заявлена, в опорном графе все фигуры rectangle.
 

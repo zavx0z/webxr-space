@@ -37,3 +37,9 @@ Desktop marker postprocess:
 не новое golden expected по screenshot. `live-identity.json` фиксирует сохранение
 21 opaque semantic Element ID при live selection; source updates проверяются
 отдельным integration test.
+
+`desktop-style-defaults.json` содержит восстановленные из того же установленного
+app статические значения, source hashes и явные assumptions, без bundle/fonts.
+`desktop-style-live.json` — отдельная проверка ихCSS-реализации на7нодах.
+Разрешённое чтение app подтвердило8/8 исходныхhashes; пользовательскиеruntime
+settings и системныеfontresources не читались.
