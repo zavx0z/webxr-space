@@ -7,7 +7,7 @@ import {createHash} from "node:crypto"
 import {analyzeTypeDoc, type AnalyzeTypeDocInput, type AnalyzeTypeDocOutput} from "../parser/index.ts"
 import type {AnalyzeTypeDocInput as InputContract} from "../parser/contract/input.ts"
 import type {AnalyzeTypeDocOutput as OutputContract} from "../parser/contract/output.ts"
-import {readComment} from "../parser/src/comments.ts"
+import {readComment} from "../shared/parser/comments.ts"
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const directories: string[] = []
@@ -108,9 +108,9 @@ describe("структурированный разбор TypeScript 7", () => {
     expect(declaration.kind).toBe("interface")
     expect(declaration.signature).toContain("export interface AnalyzeTypeDocOutput")
     expect(declaration.members.map(member => member.name)).toEqual(["document", "sources"])
-    expect(declaration.members[0]!.description).toContain("Структурированная документация")
-    expect(declaration.members[1]!.description).toContain("SHA-256")
-    expect(declaration.comment.summary).toContain("Данные после `await analyzeTypeDoc({root, path})`")
+    expect(declaration.members[0]!.description).toContain("{@link TypeDocDocument}")
+    expect(declaration.members[1]!.description).toContain("{@link TypeDocSource}")
+    expect(declaration.comment.summary).toContain("{@link @webxr/typedoc/parser#analyzeTypeDoc | analyzeTypeDoc}")
     expect(declaration.comment.summary).toContain("Promise отклоняется с Error")
     expect(declaration.comment.examples[0]).toContain("analysis.sources")
     expect(analysis.sources.some(source => source.path === join(repository, "typedoc/parser/contract/output.ts"))).toBe(true)
@@ -127,17 +127,126 @@ describe("структурированный разбор TypeScript 7", () => {
 export type Input<T> = readonly [first: T, second?: number, ...rest: boolean[]]
 export type Concrete = Input<string>
 export type Unnamed = [string, number?]
-export type Empty = []`})
+export type Empty = []
+interface RestItem { id: string }
+export type ObjectRest = [head: string, ...rest: RestItem[]]`})
     const {document} = await analyzeTypeDoc({root, path: "input.ts"})
     expect(document.declarations[0]!.signature).toContain("readonly [first: T, second?: number, ...rest: boolean[]]")
     expect(document.declarations[0]!.members).toEqual([
       {name: "first", type: "T", optional: false, description: "Первый аргумент."},
       {name: "second", type: "number | undefined", optional: true, description: "Второй аргумент.", defaultValue: "fallback"},
-      {name: "rest", type: "boolean[]", optional: false, description: "Остальные аргументы."},
+      {
+        name: "rest",
+        type: "boolean[]",
+        optional: false,
+        description: "Остальные аргументы.",
+        children: [{name: "[]", type: "boolean", optional: false, description: ""}],
+      },
     ])
     expect(document.declarations[1]!.members[0]).toMatchObject({name: "first", type: "string"})
     expect(document.declarations[2]!.members.map(({name, optional}) => ({name, optional}))).toEqual([{name: "0", optional: false}, {name: "1", optional: true}])
     expect(document.declarations[3]!.members).toEqual([])
+    expect(document.declarations[4]!.members[1]!.children).toEqual([{
+      name: "[]",
+      type: "RestItem",
+      optional: false,
+      description: "",
+      children: [{name: "id", type: "string", optional: false, description: ""}],
+    }])
+  })
+
+  test("строит вложенное дерево object, nullable optional, array, tuple и object union через checker", async () => {
+    const root = await fixture({"input.ts": `/** Лист.\n@property value - Значение листа.\n*/
+interface Leaf { value: string }
+interface Callable {
+  (value: Leaf): void
+  metadata: { source: string }
+}
+/** Вход. */
+export interface Input {
+  config?: { endpoint: { host: string }; retry?: number }
+  items: readonly Leaf[]
+  tuple: readonly [primary: Leaf, fallback?: { code: number }]
+  choice: { common: { enabled: boolean }; left: string } | { common: { enabled: boolean }; right: number }
+  optionalChoice?: { common: { enabled: boolean }; left: string } | { common: { enabled: boolean }; right: number }
+  callback: Callable
+  scalar: string
+}`})
+    const {document} = await analyzeTypeDoc({root, path: "input.ts"})
+    const members = new Map(document.declarations[0]!.members.map(member => [member.name, member]))
+
+    expect(members.get("config")).toMatchObject({type: expect.stringContaining("undefined"), optional: true})
+    expect(members.get("config")!.children!.map(member => ({name: member.name, optional: member.optional}))).toEqual([
+      {name: "endpoint", optional: false},
+      {name: "retry", optional: true},
+    ])
+    expect(members.get("config")!.children![0]!.children).toEqual([
+      {name: "host", type: "string", optional: false, description: ""},
+    ])
+    expect(members.get("items")!.children).toEqual([{
+      name: "[]",
+      type: "Leaf",
+      optional: false,
+      description: "",
+      children: [{name: "value", type: "string", optional: false, description: "Значение листа."}],
+    }])
+    expect(members.get("tuple")!.children!.map(member => ({name: member.name, optional: member.optional}))).toEqual([
+      {name: "primary", optional: false},
+      {name: "fallback", optional: true},
+    ])
+    expect(members.get("tuple")!.children![0]!.children).toEqual([
+      {name: "value", type: "string", optional: false, description: "Значение листа."},
+    ])
+    expect(members.get("tuple")!.children![1]!.children).toEqual([
+      {name: "code", type: "number", optional: false, description: ""},
+    ])
+    expect(members.get("choice")!.children).toEqual([{
+      name: "common",
+      type: "{ enabled: boolean; } | { enabled: boolean; }",
+      optional: false,
+      description: "",
+      children: [{name: "enabled", type: "boolean", optional: false, description: ""}],
+    }])
+    expect(members.get("optionalChoice")!.children).toEqual(members.get("choice")!.children)
+    expect(members.get("callback")).not.toHaveProperty("children")
+    expect(members.get("scalar")).not.toHaveProperty("children")
+  })
+
+  test("останавливает self-recursion конечной строкой с исходным type и ограничивает глубокое дерево", async () => {
+    const levels = Array.from({length: 20}, (_, index) => `level${index}: {`).join(" ")
+    const closures = "}".repeat(20)
+    const wide = Array.from({length: 300}, (_, index) => `field${index}: string`).join("; ")
+    const root = await fixture({"input.ts": `export interface Node {
+  value: string
+  next?: Node
+  descendants: Node[]
+}
+export interface Deep { ${levels} leaf: string ${closures} }
+export interface Wide { ${wide} }
+export interface NestedWide { value: { ${wide} } }`})
+    const {document} = await analyzeTypeDoc({root, path: "input.ts"})
+    const node = document.declarations[0]!
+    const next = node.members.find(member => member.name === "next")!
+    const descendants = node.members.find(member => member.name === "descendants")!
+    expect(next.type).toContain("Node")
+    expect(next).not.toHaveProperty("children")
+    expect(descendants.children).toEqual([{name: "[]", type: "Node", optional: false, description: ""}])
+
+    let current = document.declarations[1]!.members[0]!
+    let visibleLevels = 1
+    while (current.children) {
+      expect(current.children).toHaveLength(1)
+      current = current.children[0]!
+      visibleLevels += 1
+    }
+    expect(visibleLevels).toBeGreaterThan(1)
+    expect(visibleLevels).toBeLessThan(20)
+    expect(current).not.toHaveProperty("children")
+    expect(document.declarations[2]!.members).toHaveLength(300)
+    expect(document.declarations[2]!.members.at(-1)!.name).toBe("field299")
+    expect(document.declarations[3]!.members[0]!.children).toHaveLength(256)
+    expect(document.declarations[3]!.members[0]!.children!.at(-1)!.name).toBe("field255")
+    expect(JSON.parse(JSON.stringify(document))).toEqual(document)
   })
 
   test("стандартный Promise не раскрывает методы, пользовательский Promise сохраняет поля", async () => {
@@ -215,7 +324,7 @@ export type {Shape as PublicShape} from "./bridge.ts"`,
     expect(result.document.declarations[1]!.members.every(member => member.optional)).toBe(true)
     expect(result.document.declarations[1]!.members.find(member => member.name === "shape")!.defaultValue).toBe("circle")
     expect(result.document.declarations[3]!.members).toEqual([])
-    expect(result.sources.map(source => source.path).filter(path => path.startsWith(root))).toEqual([join(root, "base.ts"), join(root, "bridge.ts"), join(root, "input.ts")])
+    expect(result.sources.map(source => source.path).filter(path => path.startsWith(root))).toEqual([join(root, "base.ts"), join(root, "bridge.ts"), join(root, "input.ts"), join(root, "tsconfig.json")])
   })
 
   test("скалярные alias не раскрывают встроенные методы", async () => {
@@ -262,7 +371,7 @@ export type RecordUnion = {value: string} | {value: number}`})
       "unrelated.ts": "export type Unrelated = string",
     })
     const before = await analyzeTypeDoc({root, path: "input.ts"})
-    expect(before.sources.map(source => source.path)).toEqual([join(root, "base.ts"), join(root, "input.ts"), join(root, "shape.ts")])
+    expect(before.sources.map(source => source.path)).toEqual([join(root, "base.ts"), join(root, "input.ts"), join(root, "shape.ts"), join(root, "tsconfig.json")])
     await writeFile(join(root, "base.ts"), "export interface Base { id: string }")
     const after = await analyzeTypeDoc({root, path: "input.ts"})
     expect(after.sources.find(source => source.path.endsWith("/base.ts"))!.digest).not.toBe(before.sources.find(source => source.path.endsWith("/base.ts"))!.digest)

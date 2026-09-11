@@ -42,10 +42,14 @@ function Examples(props: Readonly<{examples: readonly string[]}>) {
 
 @param props - Одна {@link TypeDocDeclaration}; signature и members сохраняют разные роли исходного текста и эффективного типа.
 */
-export function Declaration(props: Readonly<{declaration: TypeDocDeclaration}>) {
+export function Declaration(props: Readonly<{
+  declaration: TypeDocDeclaration
+  onTarget(declaration: string, path: readonly string[], target: HTMLElement | null): void
+}>) {
   const declaration = props.declaration
   return <section
     data-typedoc-declaration={declaration.name}
+    ref={element => props.onTarget(declaration.name, [], element)}
     style={css`
       display: flex;
       flex-direction: column;
@@ -89,7 +93,12 @@ export function Declaration(props: Readonly<{declaration: TypeDocDeclaration}>) 
     {declaration.comment.summary ? <Description
       source={declaration.comment.summary}
     /> : null}
-    {declaration.members.length > 0 ? <Members members={declaration.members} /> : null}
+    {declaration.members.length > 0 ? <Members
+      declaration={declaration.name}
+      members={declaration.members}
+      path={[]}
+      onTarget={props.onTarget}
+    /> : null}
     {declaration.comment.examples.length > 0 ? <Examples
       examples={declaration.comment.examples}
     /> : null}

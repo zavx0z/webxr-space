@@ -10,9 +10,12 @@
   "exports": {
     ".": "./typedoc/index.tsx",
     "./parser": "./parser/index.ts",
+    "./batch": "./batch/index.ts",
     "./contract/input": "./typedoc/contract/input.ts",
     "./parser/contract/input": "./parser/contract/input.ts",
-    "./parser/contract/output": "./parser/contract/output.ts"
+    "./parser/contract/output": "./parser/contract/output.ts",
+    "./batch/contract/input": "./batch/contract/input.ts",
+    "./batch/contract/output": "./batch/contract/output.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

@@ -17,7 +17,16 @@ export type TreeItem = Readonly<{
   children?: readonly TreeItem[] | undefined
   actions?: readonly WidgetAction[] | undefined
 }>
-export type TreeHandle = Readonly<{focus(id?: string): void}>
+export type TreeHandle = Readonly<{
+  focus(id?: string): void
+  /**
+  Показывает уже раскрытую строку в области дерева, сохраняя текущий фокус.
+
+  @param id - Точный ключ видимой строки; родителей раскрывает владелец expandedKeys.
+  @returns false, если строка отсутствует или находится в свёрнутой ветви.
+  */
+  reveal(id: string): boolean
+}>
 export type TreeProps = WidgetHeaderProps & Readonly<{
   items: readonly TreeItem[]
   expandedKeys: readonly string[]
@@ -61,6 +70,12 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
     aria-expanded={expandable ? String(expanded) : undefined}
     aria-disabled={String(item.disabled === true)}
     tabIndex={props.context.focusKey === item.id ? 0 : -1}
+    onClick={event => {
+      if (event.target === event.currentTarget) props.context.select(item.id, event)
+    }}
+    onDoubleClick={event => {
+      if (event.target === event.currentTarget) props.context.activate(item.id, event)
+    }}
     onKeyDown={event => {
       if (event.target !== event.currentTarget) return
       props.context.key(item.id, event)
@@ -251,8 +266,14 @@ export function Tree(props: TreeProps) {
   const focusKey = props.selectedKeys.find(key => rows.some(row => row.item.id === key && !row.item.disabled))
     ?? rows.find(row => !row.item.disabled)?.item.id ?? null
   const focus = (id = focusKey ?? "") => refs.current.get(id)?.focus({preventScroll: true})
+  const reveal = (id: string): boolean => {
+    const element = refs.current.get(id)
+    if (element === undefined) return false
+    element.scrollIntoView({block: "nearest", inline: "nearest"})
+    return true
+  }
   useLayoutEffect(() => {
-    props.onReady?.(Object.freeze({focus}))
+    props.onReady?.(Object.freeze({focus, reveal}))
     return () => props.onReady?.(null)
   }, [props.onReady, focusKey])
   const toggle = (id: string, event: Event) => {

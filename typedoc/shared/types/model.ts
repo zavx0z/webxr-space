@@ -29,6 +29,10 @@ export interface TypeDocComment {
 
 @property [defaultValue] - Текст после `=` в документированном `[name=value]`.
 Не вычисляется и не подтверждает фактическую инициализацию во время исполнения.
+
+@property [children] - Поля вложенного объектного типа или элементы коллекции.
+Отсутствует у конечных строк, включая остановленные из-за рекурсии или лимита обхода;
+массив представляет свой тип элемента единственной строкой с именем `[]`.
 */
 export interface TypeDocMember {
   readonly name: string
@@ -36,6 +40,7 @@ export interface TypeDocMember {
   readonly optional: boolean
   readonly description: string
   readonly defaultValue?: string
+  readonly children?: readonly TypeDocMember[]
 }
 
 /**

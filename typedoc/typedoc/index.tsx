@@ -6,8 +6,10 @@
 
 @packageDocumentation
 */
+import {useLayoutEffect, useRef} from "@zavx0z/component"
 import type {TypeDocProps} from "./contract/input.ts"
 import {Declaration} from "./src/declaration.tsx"
+import {createTypeDocNavigation} from "./src/navigation.ts"
 import {EmptyDocument} from "./src/text-content.tsx"
 
 export type {TypeDocProps} from "./contract/input.ts"
@@ -38,6 +40,12 @@ export type {TypeDocProps} from "./contract/input.ts"
 такие проверки не заменяют визуальный просмотр Experience.
 */
 export function TypeDoc(props: TypeDocProps) {
+  const navigation = useRef(createTypeDocNavigation())
+  useLayoutEffect(() => {
+    props.onReady?.(navigation.current.handle)
+    return () => props.onReady?.(null)
+  }, [props.onReady])
+  useLayoutEffect(() => () => navigation.current.dispose(), [])
   return <article
     data-typedoc=""
     aria-label={props.title ?? props.document.name}
@@ -82,6 +90,7 @@ export function TypeDoc(props: TypeDocProps) {
     {props.document.declarations.map(declaration => <Declaration
       key={declaration.name}
       declaration={declaration}
+      onTarget={navigation.current.register}
     />)}
   </article>
 }

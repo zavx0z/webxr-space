@@ -54,11 +54,19 @@ function DefaultValue(props: Readonly<{value: string}>) {
 
 @param props - Одна запись {@link TypeDocMember}; тип, optional и описание уже подготовлены parser.
 */
-function Member(props: Readonly<{member: TypeDocMember}>) {
+function Member(props: Readonly<{
+  declaration: string
+  member: TypeDocMember
+  path: readonly string[]
+  onTarget(declaration: string, path: readonly string[], target: HTMLElement | null): void
+}>) {
   const member = props.member
+  const path = [...props.path, member.name]
   const optionalMark = member.optional ? "?" : ""
   return <section
     data-typedoc-member={member.name}
+    data-typedoc-member-path={JSON.stringify(path)}
+    ref={element => props.onTarget(props.declaration, path, element)}
     style={css`
       display: flex;
       flex-direction: column;
@@ -98,6 +106,12 @@ function Member(props: Readonly<{member: TypeDocMember}>) {
     {member.defaultValue !== undefined ? <DefaultValue
       value={member.defaultValue!}
     /> : null}
+    {member.children?.length ? <Members
+      declaration={props.declaration}
+      members={member.children}
+      path={path}
+      onTarget={props.onTarget}
+    /> : null}
   </section>
 }
 
@@ -106,7 +120,12 @@ function Member(props: Readonly<{member: TypeDocMember}>) {
 
 @param props - Массив {@link TypeDocMember} в порядке parser; имена используются как ключи внутри декларации.
 */
-export function Members(props: Readonly<{members: readonly TypeDocMember[]}>) {
+export function Members(props: Readonly<{
+  declaration: string
+  members: readonly TypeDocMember[]
+  path: readonly string[]
+  onTarget(declaration: string, path: readonly string[], target: HTMLElement | null): void
+}>) {
   return <section
     data-typedoc-members=""
     style={css`
@@ -129,7 +148,10 @@ export function Members(props: Readonly<{members: readonly TypeDocMember[]}>) {
     <h3 data-typedoc-heading="3">Поля</h3>
     {props.members.map(member => <Member
       key={member.name}
+      declaration={props.declaration}
       member={member}
+      path={props.path}
+      onTarget={props.onTarget}
     />)}
   </section>
 }

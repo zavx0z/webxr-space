@@ -1,6 +1,6 @@
 import {NodeBuilderFlags, type Project, type Type} from "typescript/unstable/async"
 import {isNamedTupleMember, isOptionalTypeNode, isTupleTypeNode, isTypeOperatorNode, type Node} from "typescript/unstable/ast"
-import type {TypeDocMember} from "../../shared/types/model.ts"
+import type {TypeDocMember} from "../types/model.ts"
 import type {documentation} from "./documentation.ts"
 
 /**
@@ -30,7 +30,12 @@ const members = await tupleMembers(project, type, declaration, docs)
 // readonly [first: string, second?: number] даёт строки first и second.
 ```
 */
-export async function tupleMembers(project: Project, type: Type, declaration: Node, docs: ReturnType<typeof documentation>): Promise<TypeDocMember[] | undefined> {
+export async function tupleMembers(
+  project: Project,
+  type: Type,
+  declaration: Node,
+  docs: ReturnType<typeof documentation> | undefined,
+): Promise<TypeDocMember[] | undefined> {
   if (!type.isTypeReference() || !(await type.getTarget()).isTupleType()) return undefined
   const emitted = await project.checker.typeToTypeNode(type, declaration, NodeBuilderFlags.InTypeAlias | NodeBuilderFlags.NoTruncation | NodeBuilderFlags.AllowEmptyTuple)
   const tuple = emitted && isTypeOperatorNode(emitted) ? emitted.type : emitted
@@ -38,7 +43,7 @@ export async function tupleMembers(project: Project, type: Type, declaration: No
   return Promise.all(tuple.elements.map(async (element, index) => {
     const named = isNamedTupleMember(element)
     const name = named ? element.name.text : String(index)
-    const property = docs.properties.get(name)
+    const property = docs?.properties.get(name)
     return {
       name,
       type: await project.emitter.printNode(named || isOptionalTypeNode(element) ? element.type : element),

@@ -1,7 +1,7 @@
 import {describe, expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
-import {createDocument, HTMLElement} from "@zavx0z/dom"
+import {createDocument, DOMRect, HTMLElement} from "@zavx0z/dom"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
@@ -57,6 +57,76 @@ describe("TypeDoc production view", () => {
       component.unmount()
     }
     expect(container.childNodes).toHaveLength(0)
+  })
+
+  test("навигация находит декларацию и вложенное поле по точному пути", () => {
+    const ready: {handle: Parameters<NonNullable<TypeDocProps["onReady"]>>[0]} = {handle: null}
+    let captured: Exclude<Parameters<NonNullable<TypeDocProps["onReady"]>>[0], null> | null = null
+    const original = contractDocument.declarations[0]!
+    const document = {
+      ...contractDocument,
+      declarations: [{
+        ...original,
+        members: [{
+          name: "config",
+          type: "Config",
+          optional: false,
+          description: "",
+          children: [{
+            name: "input.output",
+            type: "string",
+            optional: false,
+            description: "Вложенное поле.",
+          }],
+        }],
+      }],
+    }
+    const mounted = mount({
+      document,
+      onReady(value) { ready.handle = value },
+    })
+    const {component, container} = mounted
+    try {
+      const handle = ready.handle
+      if (!handle) throw new Error("TypeDoc не передал navigation handle")
+      captured = handle
+      const declaration = container.querySelector('[data-typedoc-declaration="DiagramNodeProps"]') as HTMLElement
+      const member = (path: readonly string[]) => {
+        const target = [...container.querySelectorAll("[data-typedoc-member-path]")]
+          .find(element => element.getAttribute("data-typedoc-member-path") === JSON.stringify(path))
+        if (!(target instanceof HTMLElement)) throw new Error(`Не найдена цель TypeDoc: ${JSON.stringify(path)}`)
+        return target
+      }
+      const config = member(["config"])
+      const nested = member(["config", "input.output"])
+      const calls: Array<Readonly<{target: string; options: ScrollIntoViewOptions}>> = []
+      declaration.scrollIntoView = options => { calls.push({target: "declaration", options: options as ScrollIntoViewOptions}) }
+      nested.scrollIntoView = options => { calls.push({target: "nested", options: options as ScrollIntoViewOptions}) }
+      expect(handle.navigate("DiagramNodeProps", [])).toBe(true)
+      expect(handle.navigate("DiagramNodeProps", ["config", "input.output"])).toBe(true)
+      expect(handle.navigate("DiagramNodeProps", ["config.input", "output"])).toBe(false)
+      expect(calls).toEqual([
+        {target: "declaration", options: {block: "start", inline: "nearest"}},
+        {target: "nested", options: {block: "start", inline: "nearest"}},
+      ])
+      container.getBoundingClientRect = () => new DOMRect(0, 100, 100, 100)
+      declaration.getBoundingClientRect = () => new DOMRect(0, 0, 100, 300)
+      config.getBoundingClientRect = () => new DOMRect(0, 80, 100, 180)
+      nested.getBoundingClientRect = () => new DOMRect(0, 95, 100, 55)
+      expect(handle.locate(container as unknown as Element)).toEqual({declaration: "DiagramNodeProps", path: ["config", "input.output"]})
+      declaration.getBoundingClientRect = () => new DOMRect(0, 160, 100, 120)
+      config.getBoundingClientRect = () => new DOMRect(0, 180, 100, 80)
+      nested.getBoundingClientRect = () => new DOMRect(0, 200, 100, 20)
+      expect(handle.locate(container as unknown as Element)).toEqual({declaration: "DiagramNodeProps", path: []})
+      declaration.getBoundingClientRect = () => new DOMRect(0, 300, 100, 30)
+      config.getBoundingClientRect = () => new DOMRect(0, 340, 100, 30)
+      nested.getBoundingClientRect = () => new DOMRect(0, 380, 100, 30)
+      expect(handle.locate(container as unknown as Element)).toBeNull()
+    } finally {
+      component.unmount()
+    }
+    expect(ready.handle).toBeNull()
+    expect(captured?.navigate("DiagramNodeProps", [])).toBe(false)
   })
 
   test("сигнатуры, типы и defaults рисуются цветными TypeScript runs готового CodeEditor", () => {
