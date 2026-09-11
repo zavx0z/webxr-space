@@ -1,11 +1,11 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
-import {createDocument, HTMLElement} from "@zavx0z/dom"
+import {createDocument, HTMLElement, readDocumentScrollIntoViewRequests} from "@zavx0z/dom"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createDocumentInteractionController, createDocumentRenderer} from "@renderer/html"
-import type {TreeProps} from "../widgets/tree.tsx"
+import type {TreeProps, TreeHandle} from "../widgets/tree.tsx"
 
 const workspace = resolve(import.meta.dir, "../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "ui")]}))
@@ -20,11 +20,13 @@ function mount(items: TreeProps["items"], expandedKeys: readonly string[]) {
   document.append(container)
   const component = createRoot(container)
   const selections: string[][] = []
+  const ready: {handle: TreeHandle | null} = {handle: null}
   let props: TreeProps = {
     title: "Контракт",
     items,
     expandedKeys,
     selectedKeys: [],
+    onReady(handle) { ready.handle = handle },
     onSelectionChange(keys) {
       selections.push([...keys])
       props = {...props, selectedKeys: keys}
@@ -38,6 +40,8 @@ function mount(items: TreeProps["items"], expandedKeys: readonly string[]) {
   return {
     container,
     selections,
+    document,
+    ready,
     clickTreeItemCenter(id: string, row = false) {
       const item = container.querySelector(`[data-tree-id="${id}"]`)
       if (!(item instanceof HTMLElement)) throw new Error(`Не найден Tree item: ${id}`)
@@ -81,4 +85,19 @@ test("раскрытая ветвь включает дочерние строк
   } finally {
     fixture.dispose()
   }
+})
+
+
+test("reveal раскрытой ветви прокручивает только её строку, не все вложенные строки", () => {
+  const fixture = mount([{
+    id: "comment",
+    label: "comment",
+    children: Array.from({length: 40}, (_, index) => ({id: `field-${index}`, label: `field ${index}`})),
+  }], ["comment"])
+  try {
+    expect(fixture.ready.handle?.reveal("comment")).toBe(true)
+    const request = readDocumentScrollIntoViewRequests(fixture.document).at(-1)
+    const branch = fixture.container.querySelector('[data-tree-id="comment"]')!
+    expect(request?.target === branch.querySelector("[data-tree-row]")).toBe(true)
+  } finally { fixture.dispose() }
 })

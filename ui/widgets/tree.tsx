@@ -20,7 +20,8 @@ export type TreeItem = Readonly<{
 export type TreeHandle = Readonly<{
   focus(id?: string): void
   /**
-  Показывает уже раскрытую строку в области дерева, сохраняя текущий фокус.
+  Показывает только собственную строку раскрытой ветви, сохраняя текущий фокус.
+  Высота вложенных строк не участвует в выравнивании прокрутки.
 
   @param id - Точный ключ видимой строки; родителей раскрывает владелец expandedKeys.
   @returns false, если строка отсутствует или находится в свёрнутой ветви.
@@ -269,7 +270,9 @@ export function Tree(props: TreeProps) {
   const reveal = (id: string): boolean => {
     const element = refs.current.get(id)
     if (element === undefined) return false
-    element.scrollIntoView({block: "nearest", inline: "nearest"})
+    const row = element.querySelector("[data-tree-row]")
+    if (row === null) return false
+    row.scrollIntoView({block: "nearest", inline: "nearest"})
     return true
   }
   useLayoutEffect(() => {

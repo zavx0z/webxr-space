@@ -26,7 +26,9 @@ function intersects(viewport: DOMRect, bounds: DOMRect) {
 /**
 Создаёт внутренний реестр целей одного смонтированного TypeDoc.
 Регистрация использует полный tuple декларации и пути, поэтому `input.output`
-и вложенность `input` → `output` не совпадают.
+и вложенность `input` → `output` не совпадают. Определение текущего поля читает
+прямоугольники собственного содержимого секции, исключая контейнер вложенных
+полей: высота родителя не делает его видимым вместе с каждым потомком.
 */
 export function createTypeDocNavigation() {
   const targets = new Map<string, NavigationTarget>()
@@ -42,7 +44,9 @@ export function createTypeDocNavigation() {
       if (viewportBounds.width <= 0 || viewportBounds.height <= 0) return null
       const visible: VisibleTarget[] = [...targets.values()]
         .filter(target => target.element.ownerDocument === viewport.ownerDocument)
-        .map(target => ({target, bounds: target.element.getBoundingClientRect()}))
+        .flatMap(target => [...target.element.children]
+          .filter(element => !element.hasAttribute("data-typedoc-members"))
+          .map(element => ({target, bounds: element.getBoundingClientRect()})))
         .filter(({bounds}) => intersects(viewportBounds, bounds))
       if (visible.length === 0) return null
       const atTop = visible.filter(({bounds}) => bounds.top <= viewportBounds.top && bounds.bottom > viewportBounds.top)

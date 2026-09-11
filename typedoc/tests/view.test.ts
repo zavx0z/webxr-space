@@ -99,6 +99,14 @@ describe("TypeDoc production view", () => {
       }
       const config = member(["config"])
       const nested = member(["config", "input.output"])
+      // Геометрия собственного текста моделируется отдельно от вложенных секций.
+      for (const section of [declaration, config, nested]) {
+        for (const child of section.children) {
+          if (!child.hasAttribute("data-typedoc-members")) {
+            child.getBoundingClientRect = () => section.getBoundingClientRect()
+          }
+        }
+      }
       const calls: Array<Readonly<{target: string; options: ScrollIntoViewOptions}>> = []
       declaration.scrollIntoView = options => { calls.push({target: "declaration", options: options as ScrollIntoViewOptions}) }
       nested.scrollIntoView = options => { calls.push({target: "nested", options: options as ScrollIntoViewOptions}) }
