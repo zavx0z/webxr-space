@@ -1,10 +1,38 @@
 import {createCubicLinkRoute, type LinkPathPoint, type LinkRoute} from "@webxr/nodes/link"
 import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
-import type {MermaidGraph} from "./parser.ts"
+import type {MermaidGraph} from "../types/graph.ts"
 import type {GraphMeasurement} from "@webxr/nodes/view"
 
-/** Измеренный flowchart: вертикальные диаграммы используют свободные contour endpoints TopDown. */
+/**
+Строит план {@link @webxr/nodes/view#GraphView | GraphView} из разобранного графа и фактических измерений нод.
+Горизонтальные схемы используют fixed layout, вертикальные — contour TopDown;
+RL/BT отражают координаты, сохраняя идентификаторы графа.
+
+@param graph - Нормализованный {@link MermaidGraph} без координат.
+
+@param measurements - Измерения {@link GraphMeasurement} в CSS px с id из graph.nodes.
+Ширина и высота должны быть конечными и строго положительными. Helper проверяет
+наличие записи для каждой ноды, а недопустимые размеры отклоняют вызываемые
+{@link layoutFixed} и {@link layoutTopDown} со своими ограничениями числового плана.
+
+@returns Размеры области, прямоугольники нод и маршруты связей в координатах CSS px.
+
+@throws Error, если для хотя бы одной ноды нет измерения; ошибки проверки входа
+числовыми layout-функциями передаются вызывающему коду.
+
+@example
+```ts
+const graph: MermaidGraph = {
+  direction: "TB",
+  nodes: [{id: "A", label: "Начало", shape: "rectangle"}],
+  edges: [],
+}
+const plan = layoutMermaidGraph(graph, [
+  {id: "A", width: 120, height: 60, anchors: []},
+])
+```
+*/
 export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly GraphMeasurement[]) {
   const horizontal = graph.direction === "LR" || graph.direction === "RL"
   const reverse = graph.direction === "RL" || graph.direction === "BT"
@@ -41,6 +69,14 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
       })),
       layoutOptions: {nodeSpacing: 50, layerSpacing: 50, padding: 8},
     })
+  /**
+  Отражает точку плана относительно bounds для RL/BT; остальные направления сохраняет.
+  Входные и выходные координаты заданы в CSS px локальной области графа.
+
+  @param value - Конечные координаты {@link LinkPathPoint} из полученного плана; helper их не валидирует.
+
+  @returns Новая точка в том же масштабе после отражения требуемой оси.
+  */
   const point = (value: LinkPathPoint): LinkPathPoint => ({
     x: reverse && horizontal ? 2 * result.bounds.x + result.bounds.width - value.x : value.x,
     y: reverse && !horizontal ? 2 * result.bounds.y + result.bounds.height - value.y : value.y,

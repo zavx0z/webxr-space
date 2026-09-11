@@ -18,6 +18,10 @@ const crossBlockMarkdown = [
   "Этот абзац находится после кода, но участвует в том же выделении.",
 ].join("\n")
 
+/**
+Составляет обычный текст, {@link Markdown} и {@link CodeEditor} в одном дереве для проверки сквозного выделения.
+Последний редактор принимает вставку; selection и clipboard остаются ответственностью платформы.
+*/
 function CrossBlockSelectionStory() {
   return <section
     aria-label="Выделение через обычный текст, Markdown и код"
@@ -68,6 +72,13 @@ function CrossBlockSelectionStory() {
   </section>
 }
 
+/**
+Монтирует сценарий сквозного выделения в Document Storybook с проекцией исходного примера.
+
+@param document - Заимствованный semantic Document внешнего Storybook; lifecycle создаваемой истории предоставляет {@link mountOwnerStory}.
+
+@returns Готовая owner story с исходным примером и dispose для последующего снятия.
+*/
 export function createCompiledCrossBlockSelectionStory(document: SemanticDocument) {
   return mountOwnerStory(document, CrossBlockSelectionStory as unknown as CompiledTemplate<{}>,
     {}, "cross-block-selection", [

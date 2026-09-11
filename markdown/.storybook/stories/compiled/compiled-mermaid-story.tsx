@@ -19,6 +19,10 @@ flowchart TD
   DiagramNode --> Typography
 \`\`\``
 
+/**
+Сценарий смены исходника {@link Markdown} с Mermaid: горизонтальный, вертикальный и reference-граф.
+Кнопки обновляют один компонент, позволяя проверить повторный разбор и состояние готовности.
+*/
 function MermaidExample() {
   const [source, setSource] = useState(initial)
   return <section
@@ -43,6 +47,13 @@ function MermaidExample() {
   </section>
 }
 
+/**
+Монтирует интерактивный Mermaid-сценарий в переданном {@link Document} и добавляет пример исходника.
+
+@param document - Заимствованный semantic Document внешнего Storybook; lifecycle создаваемой истории предоставляет {@link mountOwnerStory}.
+
+@returns Готовая owner story с исходным примером и dispose для последующего снятия.
+*/
 export function createMermaidStory(document: Document) {
   return mountOwnerStory(document, MermaidExample as unknown as CompiledTemplate<{}>, {}, "mermaid", [
     'import {Markdown} from "@webxr/markdown"',

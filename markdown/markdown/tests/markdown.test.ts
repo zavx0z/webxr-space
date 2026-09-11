@@ -6,7 +6,7 @@ import {registerLanguageHighlighter} from "@zavx0z/highlighter"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import {markdownDestinations, parseMarkdown} from "../../parser/src/parser.ts"
-import type {MarkdownProps} from "../src/markdown.tsx"
+import type {MarkdownProps} from "../contract/input.ts"
 import {createDocumentRenderer} from "@renderer/html"
 
 const root = resolve(import.meta.dir, "../../..")
@@ -16,7 +16,7 @@ Bun.plugin(createTemplateJsxBunPlugin({
   sourceRoots: [resolve(root, "markdown"), resolve(root, "ui"), resolve(root, "nodes")],
 }))
 
-const {Markdown} = await import("../src/markdown.tsx")
+const {Markdown} = await import("../index.tsx")
 const template = Markdown as unknown as CompiledTemplate<MarkdownProps>
 
 function mount(props: MarkdownProps) {

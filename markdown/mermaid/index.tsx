@@ -1,22 +1,42 @@
-import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import {Arrow} from "@webxr/nodes/markers/arrow"
-import type {MarkerProps} from "@webxr/nodes/markers"
-import {component, createContext, provideContext, useContext, useEffect, useMemo, useState} from "@zavx0z/component"
-import {CodeEditor} from "@zavx0z/ui/views/code-editor"
-import {parseMermaidFlowchart, type MermaidGraph} from "./src/parser.ts"
+/**
+Показывает {@link Mermaid}-схему через общий GraphView. Разбор, раскладка и частные
+адаптеры отображения находятся в src; здесь остаётся композиция Mermaid.
+
+@packageDocumentation
+*/
+import {useEffect, useMemo, useState} from "@zavx0z/component"
+import {parseMermaidFlowchart} from "./src/parser.ts"
 import {layoutMermaidGraph} from "./src/layout.ts"
-import {GraphView, type GraphViewProps, type GraphInput, type GraphLayoutComputer} from "@webxr/nodes/view"
-import {MermaidNode} from "./node/index.tsx"
+import type {GraphInput, GraphLayoutComputer} from "@webxr/nodes/view"
+import {MermaidNode} from "./src/node.tsx"
+import type {MermaidInput} from "./contract/input.ts"
+import type {MermaidGraph} from "./types/graph.ts"
+import type {MermaidState} from "./types/state.ts"
+import {MermaidError, MermaidLoading} from "./src/feedback.tsx"
+import {MermaidMarker} from "./src/marker.tsx"
+import {MermaidGraphView} from "./src/graph-view.tsx"
 
-type MermaidState = Readonly<{
-  source: string
-  graph: MermaidGraph | null
-  error: string | null
-}>
+export type {MermaidInput} from "./contract/input.ts"
 
-/** Разбор Mermaid загружается при появлении блока; граф показывает общий GraphView. */
-export function Mermaid(props: Readonly<{source: string}>) {
+/**
+Показывает flowchart как часть [документа Markdown](../README.md#mermaid).
+Асинхронно загружает parser, сохраняет последний разобранный граф и передаёт его
+общему GraphView. Результат отменённого effect не применяется.
+
+GraphView измеряет реальные DiagramNode перед раскладкой; готовый граф
+публикуется по [циклу измерения и показа](../../nodes/measurement-gap.md).
+Компонент хранит готовность по ссылке графа, а направление передаёт контекстом
+адаптеру наконечников. Ошибка разбора показывает исходник рядом с сообщением.
+
+@param props - Исходный {@link Mermaid} flowchart без Markdown-ограждения согласно {@link MermaidInput}.
+
+@remarks
+[Сценарии Mermaid](../markdown/tests/mermaid.test.ts) проверяют направления,
+маршруты и сохранение нод при обновлении. Интерактивная
+[история смены диаграммы](../.storybook/stories/compiled/compiled-mermaid-story.tsx)
+использует тот же production-компонент.
+*/
+export function Mermaid(props: MermaidInput) {
   const [state, setState] = useState<MermaidState>({source: props.source, graph: null, error: null})
   const [readyGraph, setReadyGraph] = useState<MermaidGraph | null>(null)
   useEffect(() => {
@@ -94,54 +114,4 @@ export function Mermaid(props: Readonly<{source: string}>) {
       error={current.error}
     /> : null}
   </section>
-}
-
-function MermaidLoading() {
-  return <p role="status">Подготовка Mermaid-диаграммы…</p>
-}
-
-function MermaidError(props: Readonly<{source: string; error: string}>) {
-  return <div>
-    <p role="alert">{props.error}</p>
-    <CodeEditor
-      value={props.source}
-      languageId="mermaid"
-      readOnly={true}
-      style={css`
-        width: 100%;
-        height: auto;
-      `}
-    />
-  </div>
-}
-
-/** Только различающиеся размеры/refX reference Mermaid; placement и рисование принадлежат Link/Arrow. */
-function MermaidMarker(props: MarkerProps) {
-  const horizontal = useContext(MermaidHorizontal)
-  const start = props.context.side === "start"
-  return <Arrow
-    context={props.context}
-    variant={horizontal ? "open" : "filled"}
-    length={horizontal ? 9 : start ? 11.5 : 10.5}
-    width={horizontal ? 8 : start ? 14 : 14 * 10.5 / 11.5}
-    offset={horizontal ? 0 : start ? 3 : 4 * 10.5 / 11.5}
-  />
-}
-
-const MermaidHorizontal = createContext(false)
-type GraphChildren = JsxSourceElement | readonly JsxSourceElement[] | null | undefined
-
-/** Контекст оформления сохраняет один тип Marker/Arrow при смене LR↔TD без второго состояния графа. */
-function MermaidGraphView(props: GraphViewProps & Readonly<{horizontal: boolean}>) {
-  const content: GraphChildren = renderMermaidGraph(props)
-  return <MermaidGraphContent>{content}</MermaidGraphContent>
-}
-
-function renderMermaidGraph(props: GraphViewProps & Readonly<{horizontal: boolean}>): GraphChildren {
-  return provideContext(MermaidHorizontal, props.horizontal,
-    component(GraphView as unknown as CompiledTemplate<GraphViewProps>, props, "graph")) as unknown as JsxSourceElement
-}
-
-function MermaidGraphContent(props: Readonly<{children: GraphChildren}>) {
-  return <>{props.children}</>
 }

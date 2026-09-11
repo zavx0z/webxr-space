@@ -1,24 +1,29 @@
-/// <reference path="./mermaid-vendor.d.ts" />
+/// <reference path="../types/mermaid-vendor.d.ts" />
 import {parseFragment, type DefaultTreeAdapterTypes} from "parse5"
 import type {NodeShape} from "@nodes/node/contracts"
-
-export type MermaidGraph = Readonly<{
-  direction: "LR" | "RL" | "TB" | "BT"
-  nodes: readonly Readonly<{id: string; label: string; shape: NodeShape}>[]
-  edges: readonly Readonly<{id: string; from: string; to: string; startArrow: boolean; endArrow: boolean}>[]
-}>
-
-type FlowDatabase = Readonly<{
-  getVertices(): Map<string, Readonly<{id: string; text: string; type?: string}>>
-  getEdges(): readonly Readonly<{start: string; end: string; type: string; text?: string; stroke?: string}>[]
-  getDirection(): string
-  getSubGraphs(): readonly unknown[]
-}>
+import type {MermaidGraph} from "../types/graph.ts"
+import type {FlowDatabase} from "../types/parser.ts"
 
 let queue: Promise<unknown> = Promise.resolve()
 let initialized = false
 
-/** Uses Mermaid's own flowchart parser. No Mermaid SVG or native DOM renderer is invoked. */
+/**
+Последовательно разбирает flowchart официальным Mermaid parser и нормализует модель для GraphView.
+Библиотека загружается по первому вызову; SVG и native DOM renderer не запускаются.
+Ошибка одного запроса не останавливает очередь следующих разборов.
+
+@param source - Mermaid-код без Markdown-ограждения, не длиннее 50 000 UTF-16 code units.
+
+@returns Promise замороженного графа с поддержанными формами и связями.
+
+@throws Promise отклоняется при ошибке Mermaid, превышении 128 узлов,
+subgraph, неподдержанном направлении, форме, подписи или стиле связи.
+
+@example
+```ts
+const graph = await parseMermaidFlowchart("flowchart LR\nA --> B")
+```
+*/
 export function parseMermaidFlowchart(source: string): Promise<MermaidGraph> {
   const result = queue.then(async () => {
     if (source.length > 50_000) throw new Error("Mermaid: диаграмма превышает 50 000 символов")
@@ -49,6 +54,16 @@ export function parseMermaidFlowchart(source: string): Promise<MermaidGraph> {
   return result
 }
 
+/**
+Переводит поддержанные формы Mermaid в контракт DiagramNode.
+Отсутствующая форма, square, rect и round дают rectangle; stadium даёт oval.
+
+@param type - Имя формы из базы Mermaid или undefined для стандартной формы.
+
+@throws Error для форм вне поддержанного набора.
+
+@returns rectangle для прямоугольных форм, circle для круга и oval для ellipse/stadium.
+*/
 function nodeShape(type: string | undefined): NodeShape {
   if (type === undefined || type === "square" || type === "rect" || type === "round") return "rectangle"
   if (type === "circle") return "circle"
@@ -56,7 +71,19 @@ function nodeShape(type: string | undefined): NodeShape {
   throw new Error(`Mermaid: форма ${type} пока не поддерживается`)
 }
 
+/**
+Удаляет HTML-разметку подписи Mermaid через инертный parse5, сохраняя br как перевод строки.
+
+@param source - HTML-подобная подпись из базы Mermaid, предварительно заменённая на id при пустом значении.
+
+@returns Текстовые узлы без тегов с переводами строк на месте br.
+*/
 function plainText(source: string): string {
+  /**
+  Рекурсивно собирает текст подписи и явные br, не создавая DOM-элементов приложения.
+
+  @param node - Узел фрагмента parse5; текст возвращается напрямую, br даёт перевод строки, остальные узлы объединяют потомков.
+  */
   const read = (node: DefaultTreeAdapterTypes.ChildNode): string => {
     if (node.nodeName === "#text") return (node as DefaultTreeAdapterTypes.TextNode).value
     if ("tagName" in node && node.tagName === "br") return "\n"

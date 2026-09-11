@@ -1,4 +1,5 @@
-import {Markdown, type MarkdownProps} from "../src/markdown.tsx"
+import {Markdown} from "../index.tsx"
+import type {MarkdownProps} from "../contract/input.ts"
 
 /** Renderer reproduction: row height must contain text wrapped at the final cell width. */
 export const markdownTableWrappingSource = [

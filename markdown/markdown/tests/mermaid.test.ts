@@ -6,12 +6,13 @@ import {flushDocumentLayoutObservers} from "@zavx0z/dom/geometry"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import {parseMermaidFlowchart, type MermaidGraph} from "../../mermaid/src/parser.ts"
-import type {MarkdownProps} from "../src/markdown.tsx"
+import {parseMermaidFlowchart} from "../../mermaid/src/parser.ts"
+import type {MermaidGraph} from "../../mermaid/types/graph.ts"
+import type {MarkdownProps} from "../contract/input.ts"
 
 const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["markdown", "nodes", "ui"].map(path => resolve(root, path))}))
-const {Markdown} = await import("../src/markdown.tsx")
+const {Markdown} = await import("../index.tsx")
 const {layoutMermaidGraph} = await import("../../mermaid/src/layout.ts")
 const {projectLinkArrowheads, projectLinkRoute, projectLinkMarkers} = await import("@webxr/nodes/link")
 
