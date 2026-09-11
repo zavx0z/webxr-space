@@ -1,9 +1,3 @@
-/**
-Входной контракт DiagramNode. Описывает данные и обработчики, которые передаёт
-вызывающая сторона; разметка компонента находится в соседнем index.tsx.
-
-@packageDocumentation
-*/
 import type {NodeRect, NodeShape} from "../../shared/contracts.ts"
 import type {CallbackRef} from "@zavx0z/template/jsx-runtime"
 
@@ -53,16 +47,16 @@ const input: DiagramNodeProps = {
 }
 ```
 */
-export type DiagramNodeProps = Readonly<{
-  id: string
-  description: string
-  rect?: NodeRect | undefined
-  intrinsic?: boolean | undefined
-  elementRef?: CallbackRef<HTMLElement> | undefined
-  shape?: NodeShape | undefined
-  selected?: boolean | undefined
-  hidden?: boolean | undefined
-  title?: string | undefined
-  style?: CssStyle | undefined
-  onActivate?: ((event: Event) => void) | undefined
-}>
+export interface DiagramNodeProps {
+  readonly id: string
+  readonly description: string
+  readonly rect?: NodeRect | undefined
+  readonly intrinsic?: boolean | undefined
+  readonly elementRef?: CallbackRef<HTMLElement> | undefined
+  readonly shape?: NodeShape | undefined
+  readonly selected?: boolean | undefined
+  readonly hidden?: boolean | undefined
+  readonly title?: string | undefined
+  readonly style?: CssStyle | undefined
+  readonly onActivate?: ((event: Event) => void) | undefined
+}

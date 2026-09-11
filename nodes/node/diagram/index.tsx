@@ -7,6 +7,7 @@
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {Typography} from "@zavx0z/ui/typography"
 import type {DiagramNodeProps} from "./contract/input.ts"
+export type {DiagramNodeProps} from "./contract/input.ts"
 
 /** Описание заполняет Pane выбранной формы без полей редактора и видимых сокетов. */
 export function DiagramNode(props: DiagramNodeProps) {
