@@ -4,15 +4,11 @@
 @packageDocumentation
 */
 
-import type {NodeChildren} from "../shared/contracts.ts"
-import type {NodePreviewImage} from "../shared/contracts.ts"
 import {ContentImage} from "../image/index.tsx"
+import type {ContentSurfaceProps} from "./contract/input.ts"
+export type {ContentSurfaceProps} from "./contract/input.ts"
 
-export type ContentSurfaceProps = Readonly<{
-  children?: NodeChildren
-  image?: NodePreviewImage | undefined
-  label: string
-}>
+/** Показывает авторское содержимое либо изображение в границах предоставленной области. */
 
 export function ContentSurface(props: ContentSurfaceProps) {
   return <section

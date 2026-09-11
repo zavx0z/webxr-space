@@ -7,39 +7,12 @@
 
 import type {FunctionComponent} from "@zavx0z/component"
 import {NODE_BORDER_WIDTH, NODE_ROW_HEIGHT, SOCKET_GLYPH_SIZE} from "../shared/src/metrics.ts"
-import {socketPreset, SOCKET_KINDS, SOCKET_SHAPES, SOCKET_PRESETS, type SocketKind, type SocketShape, type SocketDirection, type SocketSide} from "../shared/src/presets.ts"
+import {socketPreset, SOCKET_KINDS, SOCKET_SHAPES, SOCKET_PRESETS} from "../shared/src/presets.ts"
 
-/**
-Контракт адресуемого Socket.
+import type {SocketProps} from "./contract/input.ts"
+export type {SocketProps} from "./contract/input.ts"
 
-@property id - Идентификатор сокета внутри ноды.
-
-@property nodeId - Вместе с id образует полный адрес Socket.
-
-@property side - Физическая сторона ноды; не выводится автоматически из direction.
-
-@property [shape] - Переопределяет форму предустановки, сохраняя kind и цвет.
-
-@property [presentation=endpoint] - Режим row включает подпись и занимает полную ширину строки.
-
-@property [onActivate] - Сообщает активацию; создание связей остаётся у приложения.
-*/
-export type SocketProps = Readonly<{
-  id: string
-  nodeId: string
-  kind: SocketKind
-  direction: SocketDirection
-  side: SocketSide
-  label: string
-  title?: string | undefined
-  shape?: SocketShape | undefined
-  connected?: boolean | undefined
-  selected?: boolean | undefined
-  disabled?: boolean | undefined
-  presentation?: "endpoint" | "row" | undefined
-  style?: CssStyle | undefined
-  onActivate?: ((event: Event) => void) | undefined
-}>
+/** Проецирует адрес, вид и состояние сокета; изменение связей остаётся у вызывающего кода. */
 
 export function Socket(props: SocketProps) {
   validateSocketProps(props)

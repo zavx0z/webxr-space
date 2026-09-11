@@ -4,12 +4,11 @@
 @packageDocumentation
 */
 
-import type {NodePreviewImage} from "../shared/contracts.ts"
+import type {ContentImageProps} from "./contract/input.ts"
+export type {ContentImageProps} from "./contract/input.ts"
 
-export function ContentImage(props: Readonly<{
-  image: NodePreviewImage
-  label: string
-}>) {
+/** Вписывает исходное изображение в предоставленную область без изменения его пропорций. */
+export function ContentImage(props: ContentImageProps) {
   return <img
     src={props.image.src}
     width={props.image.width}

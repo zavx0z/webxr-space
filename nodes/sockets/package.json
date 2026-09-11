@@ -9,6 +9,7 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     "./socket": "./socket/index.tsx",
+    "./socket/contract/input": "./socket/contract/input.ts",
     "./presets": "./shared/src/presets.ts",
     "./shared": "./shared/src/keys.ts",
     "./metrics": "./shared/src/metrics.ts"
