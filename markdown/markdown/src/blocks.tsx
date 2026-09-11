@@ -4,7 +4,7 @@ import type {
   MarkdownInline,
   MarkdownTableRow,
   MarkdownTableCell,
-} from "../../parser/src/parser.ts"
+} from "../../shared/types/model.ts"
 import {Divider} from "@zavx0z/ui/divider"
 import {CodeEditor} from "@zavx0z/ui/views/code-editor"
 import type {InlineListProps, ListProps} from "../types/blocks.ts"

@@ -1,4 +1,4 @@
-import type {MarkdownBlock, MarkdownInline} from "../../parser/src/parser.ts"
+import type {MarkdownBlock, MarkdownInline} from "../../shared/types/model.ts"
 
 /**
 Вход частных компонентов строчного содержимого на основе {@link MarkdownInline}.

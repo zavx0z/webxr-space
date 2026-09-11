@@ -10,13 +10,19 @@
   "exports": {
     ".": "./markdown/index.tsx",
     "./contract/input": "./markdown/contract/input.ts",
-    "./parser": "./parser/src/parser.ts",
+    "./parser": "./parser/index.ts",
     "./mermaid": "./mermaid/index.tsx",
-    "./mermaid/contract/input": "./mermaid/contract/input.ts"
+    "./mermaid/contract/input": "./mermaid/contract/input.ts",
+    "./parser/contract/input": "./parser/contract/input.ts",
+    "./parser/contract/output": "./parser/contract/output.ts",
+    "./destinations": "./destinations/index.ts",
+    "./destinations/contract/input": "./destinations/contract/input.ts",
+    "./destinations/contract/output": "./destinations/contract/output.ts",
+    "./types": "./shared/types/model.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel markdown/tests",
+    "test": "bun test --parallel parser/tests destinations/tests markdown/tests",
     "check": "bun run --parallel typecheck test"
   },
   "dependencies": {

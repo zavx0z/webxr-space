@@ -7,7 +7,7 @@
 @packageDocumentation
 */
 import {useMemo} from "@zavx0z/component"
-import {parseMarkdown} from "../parser/src/parser.ts"
+import {parseMarkdown} from "../parser/index.ts"
 import type {MarkdownProps} from "./contract/input.ts"
 import {Block} from "./src/blocks.tsx"
 
