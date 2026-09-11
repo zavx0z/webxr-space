@@ -1,4 +1,4 @@
-import type {TypeDocDocument} from "../shared/model.ts"
+import type {TypeDocDocument} from "../shared/types/model.ts"
 
 /** Узкая вкладка должна вмещать длинные типы, описание и многострочную сигнатуру. */
 export const contractDocument: TypeDocDocument = {

@@ -4,16 +4,41 @@
 
 @packageDocumentation
 */
-import {API, SymbolFlags, TypeFlags, type Type} from "typescript/unstable/async"
-import {isTypeAliasDeclaration, isInterfaceDeclaration, type Node} from "typescript/unstable/ast"
+import {API, SymbolFlags} from "typescript/unstable/async"
+import {isTypeAliasDeclaration, isInterfaceDeclaration} from "typescript/unstable/ast"
 import {basename, resolve} from "node:path"
 import {stat} from "node:fs/promises"
-import {documentation} from "./src/documentation.ts"
+import {documentation, enclosingProperty} from "./src/documentation.ts"
+import {hasObjectFields} from "./src/object-fields.ts"
+import {tupleMembers} from "./src/tuple-members.ts"
+import {isPromiseType} from "./src/promise-type.ts"
+import type {AnalyzeTypeDocInput} from "./contract/input.ts"
+import type {AnalyzeTypeDocOutput} from "./contract/output.ts"
+import type {TypeDocDeclaration, TypeDocMember} from "../shared/types/model.ts"
 import {sourceTracker} from "./src/sources.ts"
-import type {TypeDocAnalysis, TypeDocDeclaration, TypeDocMember} from "../shared/model.ts"
 
-/** Разрешает эффективные поля, включая Readonly, Partial и наследование интерфейсов. */
-export async function analyzeTypeDoc(root: string, path: string): Promise<TypeDocAnalysis> {
+export type {AnalyzeTypeDocInput} from "./contract/input.ts"
+export type {AnalyzeTypeDocOutput} from "./contract/output.ts"
+
+/**
+Извлекает документацию экспортируемых type/interface через отдельную сессию TypeScript.
+Разрешает поля {@link Readonly}, {@link Partial}, наследование и tuple; исходные модули не исполняет.
+Сессия закрывается перед завершением Promise, в том числе при ошибке.
+
+@param input - {@link AnalyzeTypeDocInput}: рабочий root и путь к документируемому файлу.
+
+@returns {@link AnalyzeTypeDocOutput} с моделью справочника и digest посещённых источников.
+
+@throws Promise отклоняется при отсутствии файла или экспортируемых type/interface,
+ошибках TypeScript в анализируемом источнике и посещённых объявлениях.
+
+@example
+```ts
+const result = await analyzeTypeDoc({root: projectRoot, path: "contract/input.ts"})
+```
+*/
+export async function analyzeTypeDoc(input: AnalyzeTypeDocInput): Promise<AnalyzeTypeDocOutput> {
+  const {root, path} = input
   const absolutePath = resolve(root, path)
   if (!(await stat(absolutePath).catch(() => undefined))?.isFile()) throw new Error(`TypeDoc: исходник не найден: ${absolutePath}`)
   const api = new API({cwd: resolve(root)})
@@ -35,8 +60,9 @@ export async function analyzeTypeDoc(root: string, path: string): Promise<TypeDo
       await sources.follow(exported)
       const docs = documentation(declaration)
       const type = await project.checker.getTypeAtLocation(declaration)
-      const members: TypeDocMember[] = []
-      if (type && await hasObjectFields(type)) for (const member of await project.checker.getPropertiesOfType(type)) {
+      const tuple = type ? await tupleMembers(project, type, declaration, docs) : undefined
+      const members: TypeDocMember[] = tuple ?? []
+      if (type && !tuple && !await isPromiseType(project, type) && await hasObjectFields(type)) for (const member of await project.checker.getPropertiesOfType(type)) {
         const origin = await member.declarations[0]?.resolve()
         if (origin) await sources.visit(origin)
         const own = origin ? documentation(origin).comment.summary : ""
@@ -65,21 +91,4 @@ export async function analyzeTypeDoc(root: string, path: string): Promise<TypeDo
   } finally {
     await api.close()
   }
-}
-
-/** Скалярные alias не получают методы boxed string/number из стандартной библиотеки. */
-async function hasObjectFields(type: Type): Promise<boolean> {
-  if (type.isObjectType()) return true
-  if (!type.isUnionType() && !type.isIntersectionType()) return false
-  const parts = await type.getTypes() ?? []
-  if (type.isIntersectionType() && parts.some(part => (part.flags & TypeFlags.Primitive) !== 0)) return false
-  const objects = await Promise.all(parts.map(hasObjectFields))
-  return type.isIntersectionType() ? objects.some(Boolean) : objects.length > 0 && objects.every(Boolean)
-}
-
-function enclosingProperty(node: Node, name: string) {
-  for (let parent = node.parent; parent; parent = parent.parent) {
-    if (isTypeAliasDeclaration(parent) || isInterfaceDeclaration(parent)) return documentation(parent).properties.get(name)
-  }
-  return undefined
 }

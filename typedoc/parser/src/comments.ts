@@ -1,4 +1,23 @@
-/** Разбирает авторские TSDoc/JSDoc-теги, сохраняя Markdown только внутри описаний. */
+/**
+Разбирает текст авторских doc-блоков для {@link @webxr/typedoc/parser#analyzeTypeDoc | analyzeTypeDoc}.
+Сохраняет Markdown, ограждения кода и порядок примеров. Повторное `@property`
+с тем же именем заменяет запись; неизвестный block tag не попадает в описание.
+Inline-ссылки сохраняются текстом, без разрешения их целей.
+
+@param comments - Полные doc-блоки или их текстовое содержимое в порядке исходника.
+Допускается оформление с декоративными звёздочками или без них;
+отбор комментариев конкретного AST-узла выполняет вызывающий код.
+
+@returns `comment.summary`, массив `comment.examples` и карта `properties`.
+Default хранится текстом после `=`; parser его не вычисляет и не валидирует тип.
+
+@example
+```ts
+const docs = readComment(["Описание.\n@property [size=12] - Размер в CSS px."])
+const size = docs.properties.get("size")
+// size?.defaultValue равно "12"
+```
+*/
 export function readComment(comments: readonly string[]) {
   const properties = new Map<string, {description: string; defaultValue?: string}>()
   const summary: string[] = []
@@ -7,6 +26,9 @@ export function readComment(comments: readonly string[]) {
     let target = summary
     let property: {name: string; lines: string[]; defaultValue?: string} | undefined
     let fence: {character: string; length: number} | undefined
+    /**
+    Сохраняет накопленные строки текущего @property и его текстовый default, затем сбрасывает буфер.
+    */
     const finishProperty = () => {
       if (property) properties.set(property.name, {
         description: property.lines.join("\n").trim(),

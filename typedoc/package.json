@@ -10,7 +10,9 @@
   "exports": {
     ".": "./typedoc/index.tsx",
     "./parser": "./parser/index.ts",
-    "./model": "./shared/model.ts"
+    "./contract/input": "./typedoc/contract/input.ts",
+    "./parser/contract/input": "./parser/contract/input.ts",
+    "./parser/contract/output": "./parser/contract/output.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

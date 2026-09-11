@@ -2,12 +2,37 @@ import {SymbolFlags, type Diagnostic, type Project, type Symbol} from "typescrip
 import {SyntaxKind, isInterfaceDeclaration, isTypeAliasDeclaration, isExpressionWithTypeArguments, isImportTypeNode, isTypeQueryNode, isTypeReferenceNode, type Node, type SourceFile} from "typescript/unstable/ast"
 import {createHash} from "node:crypto"
 
-/** Следует только ссылкам из читаемых деклараций; тела модулей не исполняет. */
+/**
+Собирает источники деклараций и зависимостей для проверки актуальности справочника.
+Повторные файлы, узлы и символы отсеиваются внутри одного экземпляра; тела модулей
+не исполняются. Текст {@link SourceFile} хешируется SHA-256.
+
+@param project - Действующий проект API TypeScript; tracker заимствует его и не закрывает сессию.
+Все передаваемые затем узлы и символы должны относиться к этому проекту.
+
+@returns Операции `remember`, `visit`, `follow` и `result` над общим накопленным снимком.
+`result()` создаёт массив, отсортированный по пути; дальнейший обход расширяет следующий снимок.
+
+@example
+```ts
+const sources = sourceTracker(project)
+await sources.remember(file)
+await sources.visit(declaration)
+const snapshots = sources.result()
+```
+*/
 export function sourceTracker(project: Project) {
   const sources = new Map<string, string>()
   const diagnostics = new Map<string, readonly Diagnostic[]>()
   const visited = new Set<Node>()
   const symbols = new Set<number>()
+  /**
+  Регистрирует текст {@link SourceFile} один раз по имени файла.
+
+  @param file - Прочитанный исходник проекта, переданного в {@link sourceTracker}.
+
+  @throws Error при синтаксических диагностических сообщениях исходника.
+  */
   const remember = async (file: SourceFile) => {
     if (sources.has(file.fileName)) return
     if ((await project.program.getSyntacticDiagnostics(file.fileName)).length) {
@@ -15,6 +40,13 @@ export function sourceTracker(project: Project) {
     }
     sources.set(file.fileName, createHash("sha256").update(file.text).digest("hex"))
   }
+  /**
+  Следует объявлениям символа и ближайшим целям alias без повторного обхода его id.
+
+  @param symbol - Символ checker текущего проекта, включая экспортный alias.
+
+  @throws Ошибки чтения и проверки посещённых источников передаются вызывающему коду.
+  */
   const follow = async (symbol: Symbol): Promise<void> => {
     if (symbols.has(symbol.id)) return
     symbols.add(symbol.id)
@@ -27,6 +59,14 @@ export function sourceTracker(project: Project) {
       if (target) await follow(target)
     }
   }
+  /**
+  Учитывает источник узла и ссылки на типы; стандартную библиотеку учитывает без рекурсивного раскрытия.
+
+  @param node - Существующий AST-узел текущего проекта с исходным {@link SourceFile}.
+
+  @throws Error при синтаксической ошибке источника или semantic diagnostic
+  в диапазоне посещённого type/interface; ошибки зависимостей также передаются наружу.
+  */
   const visit = async (node: Node): Promise<void> => {
     if (visited.has(node)) return
     visited.add(node)
@@ -44,6 +84,11 @@ export function sourceTracker(project: Project) {
       if (error) throw new Error(`TypeDoc: ошибки типов: ${file.fileName}: TS${error.code}: ${error.text}`)
     }
     const references: Node[] = []
+    /**
+    Собирает ссылки на типы, которые затем разрешит checker текущего проекта.
+
+    @param child - Узел посещаемого объявления; {@link SourceFile} и Block прекращают эту ветку обхода.
+    */
     const walk = (child: Node) => {
       if (child.kind === SyntaxKind.SourceFile || child.kind === SyntaxKind.Block) return
       if (isTypeReferenceNode(child)) references.push(child.typeName)
@@ -60,6 +105,7 @@ export function sourceTracker(project: Project) {
     remember,
     visit,
     follow,
+    /** Возвращает снимки посещённых файлов, отсортированные по абсолютному пути. */
     result: () => [...sources].sort(([a], [b]) => a.localeCompare(b)).map(([path, digest]) => ({path, digest})),
   }
 }
