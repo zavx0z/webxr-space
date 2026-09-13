@@ -14,7 +14,7 @@ const root = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots: ["markdown", "nodes", "ui"].map(path => resolve(root, path))}))
 const {Markdown} = await import("../index.tsx")
 const {layoutMermaidGraph} = await import("../../mermaid/src/layout.ts")
-const {projectLinkArrowheads, projectLinkRoute, projectLinkMarkers} = await import("@webxr/nodes/link")
+const {projectLinkArrowheads, projectLinkRoute, projectLinkMarkers} = await import("@webxr/nodes/routing/link-path")
 
 async function settled(owner: Element, renderer: ReturnType<typeof createDocumentRenderer>, component: ReturnType<typeof createRoot>) {
   const deadline = Date.now() + 8000

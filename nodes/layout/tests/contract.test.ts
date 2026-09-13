@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
-import {layoutFixed, type FixedLayoutGraph} from "@nodes/layout/fixed"
+import {layoutFixed, type FixedLayoutInput} from "@nodes/layout/fixed"
 import {runFixedWorkerRequest} from "@nodes/layout/worker/fixed/executor"
 
 const packageRoot = resolve(import.meta.dir, "..")
@@ -75,7 +75,7 @@ test("[LAYOUT-004] Worker является stateless executor, а не втор�
   expect(response).not.toHaveProperty("graph")
 })
 
-function layoutGraph(): FixedLayoutGraph {
+function layoutGraph(): FixedLayoutInput {
   return {
     viewport: {width: 900, height: 600},
     nodes: [

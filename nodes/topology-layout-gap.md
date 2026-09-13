@@ -80,7 +80,7 @@ pending при изменении исходного snapshot: геометри�
 
 ## Отдельное ограничение несвязанных портов
 
-[Fixed](layout/algorithms/fixed/src/index.ts) и [Adaptive](layout/algorithms/adaptive/src/index.ts) исключают
+[Fixed](layout/algorithms/fixed/index.ts) и [Adaptive](layout/algorithms/adaptive/index.ts) исключают
 порты, не участвующие ни в одном Link. [Nodes](shared/projection/geometry.ts)
 пока требует геометрию каждого объявленного Socket. Поэтому удаление
 **последнего** Link при сохранении Socket может дать

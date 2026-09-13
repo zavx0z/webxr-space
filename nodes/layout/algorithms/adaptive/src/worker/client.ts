@@ -4,13 +4,13 @@ import type {
   AdaptiveWorkerFailure,
   AdaptiveWorkerSuccess,
 } from "../../../../execution/worker/src/types/worker.ts"
-import type {AdaptiveLayoutDiagnostics, AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
-import type {LayoutResult} from "@nodes/layout/types"
+import type {AdaptiveLayoutInput, AdaptiveLayoutOutput} from "@nodes/layout/adaptive"
+import type {AdaptiveLayoutDiagnostics} from "@nodes/layout/adaptive/types"
 
 /** Main-thread client for a physically separate adaptive-policy Worker. */
 export class AdaptiveWorkerClient extends WorkerTransportClient<
-  AdaptiveLayoutGraph,
-  LayoutResult,
+  AdaptiveLayoutInput,
+  AdaptiveLayoutOutput,
   AdaptiveLayoutDiagnostics,
   AdaptiveWorkerFailure["error"]
 > {
@@ -18,7 +18,7 @@ export class AdaptiveWorkerClient extends WorkerTransportClient<
     super(endpoint)
   }
 
-  override layout(input: Readonly<{generation: number; graph: AdaptiveLayoutGraph}>): Promise<AdaptiveWorkerSuccess> {
+  override layout(input: Readonly<{generation: number; graph: AdaptiveLayoutInput}>): Promise<AdaptiveWorkerSuccess> {
     return super.layout(input)
   }
 }

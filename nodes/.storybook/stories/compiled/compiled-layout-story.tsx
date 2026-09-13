@@ -2,7 +2,7 @@ import {planProjectedNodeGeometry} from "@nodes/node/geometry"
 import {socketKey, type NodePresentationState} from "@webxr/nodes/view/tree"
 import type {NodeTreeSnapshot} from "@nodes/tree"
 import {DisplayElement} from "@zavx0z/dom/display"
-import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive/diagnostics"
 import {layoutFixed} from "@nodes/layout/fixed"
 import type {LayoutResult} from "@nodes/layout/types"
 import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"
@@ -167,7 +167,9 @@ function sourceFor(fixture: LayoutStoryFixture): string {
         "const diagnostics = outcome.diagnostics",
       ].join("\n")
   return [
-    `import {${fixture.policy === "fixed" ? "layoutFixed" : "layoutAdaptiveWithDiagnostics"}} from "@nodes/layout/${fixture.policy}"`,
+    fixture.policy === "fixed"
+      ? 'import {layoutFixed} from "@nodes/layout/fixed"'
+      : 'import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive/diagnostics"',
     'import {createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"',
     'import {GraphEditor} from "@webxr/nodes/editor"',
     'import {createRoot} from "@zavx0z/component"',

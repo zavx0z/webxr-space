@@ -1,6 +1,6 @@
 import type {
-  CoffmanGrahamLayoutGraph,
-  CoffmanGrahamLayoutResult,
+  CoffmanGrahamLayoutInput,
+  CoffmanGrahamLayoutOutput,
 } from "@nodes/layout/coffman-graham"
 import {WorkerTransportClient} from "../../../../execution/worker/src/transport.ts"
 import type {
@@ -11,8 +11,8 @@ import type {
 
 /** Main-thread client for the physically separate Coffman–Graham Worker. */
 export class CoffmanGrahamWorkerClient extends WorkerTransportClient<
-  CoffmanGrahamLayoutGraph,
-  CoffmanGrahamLayoutResult,
+  CoffmanGrahamLayoutInput,
+  CoffmanGrahamLayoutOutput,
   never,
   CoffmanGrahamWorkerFailure["error"]
 > {
@@ -22,7 +22,7 @@ export class CoffmanGrahamWorkerClient extends WorkerTransportClient<
 
   override layout(input: Readonly<{
     generation: number
-    graph: CoffmanGrahamLayoutGraph
+    graph: CoffmanGrahamLayoutInput
   }>): Promise<CoffmanGrahamWorkerSuccess> {
     return super.layout(input)
   }

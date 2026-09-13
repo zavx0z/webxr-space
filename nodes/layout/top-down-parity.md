@@ -7,14 +7,14 @@
 Новый `TopDownContourGraph` выбирается явно через `attachment: "contour"`:
 
 ```ts
-layoutTopDown({
+layoutTopDown({graph: {
   attachment: "contour",
   nodes: [
     {id: "a", width: 140, height: 44, shape: "rectangle"},
     {id: "b", width: 90, height: 90, shape: "circle"},
   ],
   edges: [{id: "ab", sourceNodeId: "a", targetNodeId: "b", endInset: 4}],
-})
+}})
 ```
 
 Размеры поступают от вызывающего кода, без DOM/CSS/Renderer. Порядок nodes/edges

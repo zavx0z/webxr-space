@@ -1,4 +1,4 @@
-import type {AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
+import type {AdaptiveLayoutInput as AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
 import type {LayoutDirection, LayoutGraph} from "@nodes/layout/types"
 import type {
   NodeTreeDefinition,

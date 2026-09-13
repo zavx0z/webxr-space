@@ -1,5 +1,7 @@
 import {expect, test} from "bun:test"
-import {layoutTopDown, TopDownLayoutError, type TopDownContourGraph, type TopDownLayoutGraph} from "@nodes/layout/top-down"
+import {layoutTopDown} from "@nodes/layout/top-down"
+import {TopDownLayoutError} from "@nodes/layout/top-down/error"
+import type {TopDownContourGraph, TopDownLayoutGraph} from "@nodes/layout/types"
 import {runTopDownWorkerRequest} from "@nodes/layout/worker/top-down/executor"
 import reference from "./references/dagre-7.0.14.json"
 import ports from "./references/ports-before.json"
@@ -9,9 +11,9 @@ for (const fixture of reference.fixtures) {
   test(`[TOPDOWN-PARITY] ${fixture.name}: upstream coordinates и raw routes`, () => {
     const input = {...fixture.input, attachment: "contour" as const}
     const before = structuredClone(input)
-    const result = layoutTopDown(input)
+    const result = layoutTopDown({graph: input})
     expect(input).toEqual(before)
-    expect(layoutTopDown(input)).toEqual(result)
+    expect(layoutTopDown({graph: input})).toEqual(result)
     expect(result.ports).toEqual([])
     for (const expected of fixture.expected.nodes) {
       const actual = result.nodes.find(node => node.id === expected.id)!
@@ -35,7 +37,7 @@ for (const fixture of reference.fixtures) {
 
 for (const fixture of ports.fixtures) {
   test(`[TOPDOWN-PORT-COMPAT] ${fixture.name}: прежняя точная геометрия`, () => {
-    expect(JSON.stringify(layoutTopDown(fixture.input as TopDownLayoutGraph))).toBe(JSON.stringify(fixture.expected))
+    expect(JSON.stringify(layoutTopDown({graph: fixture.input as TopDownLayoutGraph}))).toBe(JSON.stringify(fixture.expected))
   })
 }
 
@@ -45,7 +47,7 @@ test("[TOPDOWN-CONTOURS] эллипсы, круги и боковое перес
     {id: "b", width: 90, height: 90, shape: "circle"},
     {id: "c", width: 340, height: 20},
   ], edges: [{id: "ab", sourceNodeId: "a", targetNodeId: "b"}, {id: "ac", sourceNodeId: "a", targetNodeId: "c"}]}
-  const result = layoutTopDown(graph)
+  const result = layoutTopDown({graph})
   for (const edge of result.edges) {
     const node = result.nodes.find(node => node.id === "a")!
     const point = edge.attachment!.start
@@ -55,11 +57,11 @@ test("[TOPDOWN-CONTOURS] эллипсы, круги и боковое перес
   const circle = result.nodes.find(node => node.id === "b")!
   const circleEnd = result.edges.find(edge => edge.id === "ab")!.attachment!.end
   expect(Math.hypot(circleEnd.x - circle.x - 45, circleEnd.y - circle.y - 45)).toBeCloseTo(45, 6)
-  const seven = layoutTopDown({...reference.fixtures[0]!.input, attachment: "contour"})
+  const seven = layoutTopDown({graph: {...reference.fixtures[0]!.input, attachment: "contour"}})
   const root = seven.nodes.find(node => node.id === "ContentNode")!
   expect(seven.edges[0]!.attachment!.start.x).toBe(root.x)
   expect(seven.edges[0]!.attachment!.start.y).toBeLessThan(root.y + root.height)
-  expect(() => layoutTopDown({...graph, nodes: [{id: "a", width: 100, height: 50, shape: "circle"}]})).toThrow("Круг")
+  expect(() => layoutTopDown({graph: {...graph, nodes: [{id: "a", width: 100, height: 50, shape: "circle"}]}})).toThrow("Круг")
 })
 
 test("[TOPDOWN-ROUNDED] эталонный угол90: Q с trim sqrt(50) и точным cubic transport", () => {
@@ -75,7 +77,7 @@ test("[TOPDOWN-ROUNDED] эталонный угол90: Q с trim sqrt(50) и т�
 })
 
 test("[TOPDOWN-CONTOUR-CYCLE] typed cycle и отсутствие фиктивных Socket ports", () => {
-  expect(() => layoutTopDown({attachment: "contour", nodes: [{id: "a", width: 20, height: 20}], edges: [{id: "loop", sourceNodeId: "a", targetNodeId: "a"}]})).toThrow(TopDownLayoutError)
+  expect(() => layoutTopDown({graph: {attachment: "contour", nodes: [{id: "a", width: 20, height: 20}], edges: [{id: "loop", sourceNodeId: "a", targetNodeId: "a"}]}})).toThrow(TopDownLayoutError)
 })
 
 test("[TOPDOWN-CURVE-BOUNDS] cubic extrema исключают лишнюю площадь control hull", () => {

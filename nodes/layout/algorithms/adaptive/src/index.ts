@@ -8,10 +8,8 @@
 */
 import type {
   LayoutEdge,
-  LayoutGraph,
-  LayoutPort,
+  LayoutOptions,
   LayoutPortSide,
-  LayoutResult,
   ResolvedLayoutGraph,
 } from "../../../protocol/types/src/protocol.ts"
 import {
@@ -19,85 +17,22 @@ import {
   evaluateResolvedLayout,
   type ResolvedLayoutEvaluation,
 } from "../../../shared/layout.ts"
-
-/** Semantic socket capability supplied by the presentation/measurement adapter. */
-export type AdaptivePortCapability = "in" | "out" | "inout"
-
-/** Measured socket plus the sides that the adaptive policy may choose. */
-export type AdaptiveLayoutPort = Readonly<LayoutPort & {
-  capability: AdaptivePortCapability
-  allowedSides: readonly LayoutPortSide[]
-}>
-
-/** Numeric graph accepted by the independent adaptive policy. */
-export type AdaptiveLayoutGraph = Readonly<Omit<LayoutGraph, "ports"> & {
-  ports: readonly AdaptiveLayoutPort[]
-}>
-
-export type AdaptiveSideAssignment = Readonly<{
-  portId: string
-  side: LayoutPortSide
-}>
-
-export type AdaptiveLayoutDiagnostics = Readonly<{
-  candidateBudget: number
-  theoreticalCandidateCount: string
-  fixedPortCount: number
-  dynamicPortCount: number
-  generatedCandidates: number
-  attemptedCandidates: number
-  routableCandidates: number
-  rejectedCandidates: number
-  selectedSides: readonly AdaptiveSideAssignment[]
-}>
-
-export type AdaptiveLayoutOutcome = Readonly<{
-  result: LayoutResult
-  diagnostics: AdaptiveLayoutDiagnostics
-}>
-
-export type AdaptiveCandidateFailure = Readonly<{
-  sides: readonly AdaptiveSideAssignment[]
-  error: string
-}>
-
-export type AdaptiveNoLegalSideWitness = Readonly<{
-  code: "NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT"
-  reason: "PORT_HAS_NO_ALLOWED_SIDE" | "CAPABILITY_ROLE_CONFLICT" | "NO_ROUTABLE_ASSIGNMENT"
-  candidateBudget: number
-  theoreticalCandidateCount: string
-  dynamicPortIds: readonly string[]
-  portId?: string
-  edgeId?: string
-  role?: "source" | "target"
-  attempts: readonly AdaptiveCandidateFailure[]
-}>
-
-/** Machine-readable failure for an adaptive graph with no legal side assignment. */
-export class AdaptiveLayoutError extends Error {
-  readonly code = "NO_LEGAL_ADAPTIVE_SIDE_ASSIGNMENT"
-
-  constructor(readonly witness: AdaptiveNoLegalSideWitness) {
-    super(`${witness.code}: ${witness.reason}`)
-    this.name = "AdaptiveLayoutError"
-  }
-}
+import type {AdaptiveLayoutInput} from "../contract/input.ts"
+import type {AdaptiveLayoutDiagnosticsOutput} from "../diagnostics/contract/output.ts"
+import type {AdaptiveLayoutPort, AdaptiveSideAssignment} from "../types/adaptive.ts"
+import {AdaptiveLayoutError} from "./error.ts"
 
 /** Hard upper bound for common-solver calls made by one adaptive request. */
 export const ADAPTIVE_CANDIDATE_BUDGET = 16
 
 /** Selects sides and returns only the common public geometry contract. */
-export function layoutAdaptive(graph: AdaptiveLayoutGraph): LayoutResult {
-  return layoutAdaptiveWithDiagnostics(graph).result
-}
-
 /**
  * Selects one side per exact socket with a bounded deterministic search.
  * Fixed one-side constraints are removed from the search dimension; dynamic
  * ports are ordered only by semantic ID and share one assignment across every
  * edge that references them.
  */
-export function layoutAdaptiveWithDiagnostics(graph: AdaptiveLayoutGraph): AdaptiveLayoutOutcome {
+export function computeAdaptiveLayout(graph: AdaptiveLayoutInput): AdaptiveLayoutDiagnosticsOutput {
   const normalized = normalizeAdaptiveGraph(graph)
   const dynamicPorts = normalized.ports
     .filter(({allowedSides}) => allowedSides.length === 2)
@@ -180,10 +115,11 @@ type NormalizedAdaptivePort = Readonly<Omit<AdaptiveLayoutPort, "allowedSides"> 
   allowedSides: readonly [LayoutPortSide] | readonly [LayoutPortSide, LayoutPortSide]
 }>
 
-type NormalizedAdaptiveGraph = Readonly<Omit<AdaptiveLayoutGraph, "ports" | "nodes" | "edges"> & {
-  nodes: AdaptiveLayoutGraph["nodes"]
+type NormalizedAdaptiveGraph = Readonly<Omit<AdaptiveLayoutInput, "ports" | "nodes" | "edges" | "layoutOptions"> & {
+  nodes: AdaptiveLayoutInput["nodes"]
   ports: readonly NormalizedAdaptivePort[]
   edges: readonly LayoutEdge[]
+  layoutOptions?: LayoutOptions
 }>
 
 type PortRole = Readonly<{source: boolean; target: boolean; sourceEdgeId?: string; targetEdgeId?: string}>
@@ -200,7 +136,8 @@ type RoutableCandidate = Readonly<{
   evaluation: ResolvedLayoutEvaluation
 }>
 
-function normalizeAdaptiveGraph(graph: AdaptiveLayoutGraph): NormalizedAdaptiveGraph {
+function normalizeAdaptiveGraph(graph: AdaptiveLayoutInput): NormalizedAdaptiveGraph {
+  const {layoutOptions, ...source} = graph
   const portIds = new Set<string>()
   const ports = [...graph.ports]
     .sort((left, right) => compareIds(left.id, right.id))
@@ -220,7 +157,8 @@ function normalizeAdaptiveGraph(graph: AdaptiveLayoutGraph): NormalizedAdaptiveG
     if (!portIds.has(edge.targetPortId)) throw new Error(`Unknown target port: ${edge.id}/${edge.targetPortId}`)
   }
   return {
-    ...graph,
+    ...source,
+    ...(layoutOptions === undefined ? {} : {layoutOptions}),
     nodes: [...graph.nodes].sort((left, right) => compareIds(left.id, right.id)),
     ports: ports.filter(({id}) => usedPortIds.has(id)),
     edges,

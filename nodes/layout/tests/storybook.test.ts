@@ -3,7 +3,7 @@ import {resolve} from "node:path"
 import {algorithmReport} from "../.storybook/stories/reports.ts"
 import {workerReport} from "../.storybook/stories/worker-reports.ts"
 import {layoutFixed} from "@nodes/layout/fixed"
-import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive/diagnostics"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {layoutCoffmanGraham} from "@nodes/layout/coffman-graham"
 import {fixedGraph, adaptiveGraph, topDownGraph, coffmanGrahamGraph} from "../.storybook/stories/fixtures.ts"
@@ -89,7 +89,7 @@ test("[LAYOUT-STORYBOOK-003] реальные стороны, направлен
 })
 
 test("[LAYOUT-STORYBOOK-004] вертикальные алгоритмы возвращают NORTH/SOUTH и связные кубические маршруты", () => {
-  for (const result of [layoutTopDown(topDownGraph()), layoutCoffmanGraham(coffmanGrahamGraph())]) {
+  for (const result of [layoutTopDown({graph: topDownGraph()}), layoutCoffmanGraham(coffmanGrahamGraph())]) {
     expect(result.direction).toBe("DOWN")
     expect(result.ports.find(port => port.id === "source/out-left")?.side).toBe("SOUTH")
     expect(result.ports.find(port => port.id === "left/in")?.side).toBe("NORTH")

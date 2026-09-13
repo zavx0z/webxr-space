@@ -1,4 +1,4 @@
-import {createCubicLinkRoute, type LinkPathPoint, type LinkRoute} from "@webxr/nodes/link"
+import {createCubicLinkRoute, type LinkPathPoint, type LinkRoute} from "@webxr/nodes/routing/link-path"
 import {layoutFixed} from "@nodes/layout/fixed"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import type {MermaidGraph} from "../types/graph.ts"
@@ -52,7 +52,7 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
       edges: graph.edges.map(edge => ({id: edge.id, sourcePortId: `${edge.from}/out`, targetPortId: `${edge.to}/in`})),
       layoutOptions: {spacing: 32, layerSpacing: 96, padding: 24, clearance: 8},
     })
-    : layoutTopDown({
+    : layoutTopDown({graph: {
       attachment: "contour",
       nodes: dimensions.map(node => {
         const shape = graph.nodes.find(value => value.id === node.id)!.shape
@@ -68,7 +68,7 @@ export function layoutMermaidGraph(graph: MermaidGraph, measurements: readonly G
         endInset: edge.endArrow ? 4 : 0,
       })),
       layoutOptions: {nodeSpacing: 50, layerSpacing: 50, padding: 8},
-    })
+    }})
   /**
   Отражает точку плана относительно bounds для RL/BT; остальные направления сохраняет.
   Входные и выходные координаты заданы в CSS px локальной области графа.

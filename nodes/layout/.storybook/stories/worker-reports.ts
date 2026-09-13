@@ -1,5 +1,5 @@
 import {layoutFixed} from "@nodes/layout/fixed"
-import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive/diagnostics"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {layoutCoffmanGraham} from "@nodes/layout/coffman-graham"
 import {WorkerRemoteError} from "@nodes/layout/worker/transport"
@@ -30,7 +30,7 @@ export async function workerReport(route: string, signal?: AbortSignal): Promise
   if (policy === "top-down") {
     const {createClient} = await import("./workers/top-down.ts")
     const graph = topDownGraph(failure)
-    return runWorker(route, createClient(), graph, () => ({result: layoutTopDown(graph)}), failure, signal)
+    return runWorker(route, createClient(), graph, () => ({result: layoutTopDown({graph})}), failure, signal)
   }
   if (policy === "coffman-graham") {
     const {createClient} = await import("./workers/coffman-graham.ts")

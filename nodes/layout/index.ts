@@ -12,6 +12,6 @@
 export * from "./protocol/types/src/index.ts"
 export {
   layoutFixed,
-  type FixedLayoutGraph,
-  type FixedLayoutResult,
-} from "./algorithms/fixed/src/index.ts"
+  type FixedLayoutInput,
+  type FixedLayoutOutput,
+} from "./algorithms/fixed/index.ts"

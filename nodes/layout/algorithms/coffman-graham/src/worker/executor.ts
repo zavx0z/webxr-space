@@ -1,7 +1,5 @@
-import {
-  CoffmanGrahamLayoutError,
-  layoutCoffmanGraham,
-} from "@nodes/layout/coffman-graham"
+import {layoutCoffmanGraham} from "@nodes/layout/coffman-graham"
+import {CoffmanGrahamLayoutError} from "@nodes/layout/coffman-graham/error"
 import {createWorkerExecutor, serializeWorkerError} from "../../../../execution/worker/src/executor.ts"
 import type {
   CoffmanGrahamWorkerFailure,

@@ -1,9 +1,9 @@
-import type {FixedLayoutGraph} from "@nodes/layout/fixed"
-import type {AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
-import type {TopDownLayoutGraph} from "@nodes/layout/top-down"
-import type {CoffmanGrahamLayoutGraph} from "@nodes/layout/coffman-graham"
+import type {FixedLayoutInput} from "@nodes/layout/fixed"
+import type {AdaptiveLayoutInput as AdaptiveLayoutGraph} from "@nodes/layout/adaptive"
+import type {TopDownLayoutGraph, TopDownContourGraph} from "@nodes/layout/types"
+import type {CoffmanGrahamLayoutInput} from "@nodes/layout/coffman-graham"
 
-export function fixedGraph(direction: "RIGHT" | "DOWN" = "RIGHT", compound = false): FixedLayoutGraph {
+export function fixedGraph(direction: "RIGHT" | "DOWN" = "RIGHT", compound = false): FixedLayoutInput {
   return {
     viewport: direction === "RIGHT" ? {width: 1100, height: 500} : {width: 420, height: 900},
     nodes: [
@@ -20,7 +20,7 @@ export function fixedGraph(direction: "RIGHT" | "DOWN" = "RIGHT", compound = fal
   }
 }
 
-export function conflictingFixedGraph(): FixedLayoutGraph {
+export function conflictingFixedGraph(): FixedLayoutInput {
   const graph = fixedGraph()
   return {
     ...graph,
@@ -84,7 +84,7 @@ export function topDownGraph(cycle = false): TopDownLayoutGraph {
   }
 }
 
-export function coffmanGrahamGraph(maxNodesPerLayer = 3, cycle = false): CoffmanGrahamLayoutGraph {
+export function coffmanGrahamGraph(maxNodesPerLayer = 3, cycle = false): CoffmanGrahamLayoutInput {
   const graph = topDownGraph(cycle)
   return {
     ...graph,
@@ -100,7 +100,7 @@ export function coffmanGrahamGraph(maxNodesPerLayer = 3, cycle = false): Coffman
 }
 
 /** Числовые размеры этого примера заданы явно; product GraphView измеряет свой CSS. */
-export function contourGraph(): import("@nodes/layout/top-down").TopDownContourGraph {
+export function contourGraph(): TopDownContourGraph {
   return {
     attachment: "contour",
     nodes: [

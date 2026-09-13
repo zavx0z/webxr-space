@@ -1,5 +1,5 @@
 import {layoutFixed} from "@nodes/layout/fixed"
-import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive"
+import {layoutAdaptiveWithDiagnostics} from "@nodes/layout/adaptive/diagnostics"
 import {layoutTopDown} from "@nodes/layout/top-down"
 import {layoutCoffmanGraham} from "@nodes/layout/coffman-graham"
 import {
@@ -45,7 +45,7 @@ export function algorithmReport(route: string): LayoutReport {
   }
   if (policy === "top-down") {
     const input = variant === "contour" ? contourGraph() : topDownGraph(variant === "cycle")
-    return evaluate(route, "Раскладка сверху вниз", variant === "contour" ? "Порядок входа сохраняется; связи пересекают контуры прямоугольника, эллипса и круга. guidePoints и attachment отделены от точных портов. Это числовой пример, не пиксельный эталон." : "Измеренный плоский DAG: SOUTH → NORTH и прежний точный портовый контракт.", "top-down", "layoutTopDown", input, () => layoutTopDown(input), variant === "cycle")
+    return evaluate(route, "Раскладка сверху вниз", variant === "contour" ? "Порядок входа сохраняется; связи пересекают контуры прямоугольника, эллипса и круга. guidePoints и attachment отделены от точных портов. Это числовой пример, не пиксельный эталон." : "Измеренный плоский DAG: SOUTH → NORTH и прежний точный портовый контракт.", "top-down", "layoutTopDown", input, () => layoutTopDown({graph: input}), variant === "cycle")
   }
   if (policy === "coffman-graham") {
     const input = coffmanGrahamGraph(variant === "narrow" ? 2 : 3, variant === "cycle")

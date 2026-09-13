@@ -1,4 +1,5 @@
-import {TopDownLayoutError, layoutTopDown} from "@nodes/layout/top-down"
+import {layoutTopDown} from "@nodes/layout/top-down"
+import {TopDownLayoutError} from "@nodes/layout/top-down/error"
 import {createWorkerExecutor, serializeWorkerError} from "../../../../execution/worker/src/executor.ts"
 import type {
   SerializedTopDownLayoutError,
@@ -8,7 +9,7 @@ import type {
 } from "../../../../execution/worker/src/types/worker.ts"
 
 const execute = createWorkerExecutor(
-  (graph: TopDownWorkerRequest["graph"]) => ({result: layoutTopDown(graph)}),
+  (graph: TopDownWorkerRequest["graph"]) => ({result: layoutTopDown({graph})}),
   serializeTopDownWorkerError,
 )
 

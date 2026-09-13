@@ -72,7 +72,7 @@ test("[NODES-STORYBOOK-001] полный Nodes catalog сохраняет шес
   )).text()
   expect(storySource).toContain('from "@webxr/nodes/editor"')
   expect(storySource).toContain('from "@nodes/layout/fixed"')
-  expect(storySource).toContain('from "@nodes/layout/adaptive"')
+  expect(storySource).toContain('from "@nodes/layout/adaptive/diagnostics"')
   expect(storySource).not.toContain("layoutTopDown")
   expect(storySource).not.toContain("layoutCoffmanGraham")
   expect(storySource).not.toContain("renderLayoutSvg")

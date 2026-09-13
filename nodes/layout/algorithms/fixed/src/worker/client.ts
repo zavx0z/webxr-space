@@ -4,12 +4,12 @@ import type {
   FixedWorkerFailure,
   FixedWorkerSuccess,
 } from "../../../../execution/worker/src/types/worker.ts"
-import type {FixedLayoutGraph, FixedLayoutResult} from "@nodes/layout/fixed"
+import type {FixedLayoutInput, FixedLayoutOutput} from "@nodes/layout/fixed"
 
 /** Main-thread client for a physically separate fixed-policy Worker. */
 export class FixedWorkerClient extends WorkerTransportClient<
-  FixedLayoutGraph,
-  FixedLayoutResult,
+  FixedLayoutInput,
+  FixedLayoutOutput,
   never,
   FixedWorkerFailure["error"]
 > {
@@ -17,7 +17,7 @@ export class FixedWorkerClient extends WorkerTransportClient<
     super(endpoint)
   }
 
-  override layout(input: Readonly<{generation: number; graph: FixedLayoutGraph}>): Promise<FixedWorkerSuccess> {
+  override layout(input: Readonly<{generation: number; graph: FixedLayoutInput}>): Promise<FixedWorkerSuccess> {
     return super.layout(input)
   }
 }

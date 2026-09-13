@@ -1,4 +1,5 @@
-import type {TopDownInput, TopDownLayoutResult} from "@nodes/layout/top-down"
+import type {TopDownLayoutOutput} from "@nodes/layout/top-down"
+import type {TopDownInput} from "@nodes/layout/types"
 import {WorkerTransportClient} from "../../../../execution/worker/src/transport.ts"
 import type {
   TopDownWorkerEndpoint,
@@ -9,7 +10,7 @@ import type {
 /** Main-thread client for the physically separate top-down policy Worker. */
 export class TopDownWorkerClient extends WorkerTransportClient<
   TopDownInput,
-  TopDownLayoutResult,
+  TopDownLayoutOutput,
   never,
   TopDownWorkerFailure["error"]
 > {

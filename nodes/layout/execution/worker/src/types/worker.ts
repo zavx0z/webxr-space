@@ -1,23 +1,18 @@
+import type {AdaptiveLayoutInput, AdaptiveLayoutOutput} from "@nodes/layout/adaptive"
+import type {AdaptiveLayoutDiagnostics, AdaptiveNoLegalSideWitness} from "@nodes/layout/adaptive/types"
 import type {
-  AdaptiveLayoutDiagnostics,
-  AdaptiveLayoutGraph,
-  AdaptiveNoLegalSideWitness,
-} from "@nodes/layout/adaptive"
-import type {
-  CoffmanGrahamCycleWitness,
-  CoffmanGrahamLayoutGraph,
-  CoffmanGrahamLayoutResult,
+  CoffmanGrahamLayoutInput,
+  CoffmanGrahamLayoutOutput,
 } from "@nodes/layout/coffman-graham"
-import type {FixedLayoutGraph, FixedLayoutResult} from "@nodes/layout/fixed"
+import type {CoffmanGrahamCycleWitness} from "@nodes/layout/types"
+import type {FixedLayoutInput, FixedLayoutOutput} from "@nodes/layout/fixed"
 import type {
-  TopDownCycleWitness,
-  TopDownInput,
-  TopDownLayoutResult,
+  TopDownLayoutOutput,
 } from "@nodes/layout/top-down"
-import type {LayoutResult} from "@nodes/layout/types"
+import type {TopDownCycleWitness, TopDownInput} from "@nodes/layout/types"
 
 /** Policy-neutral request envelope for one long-lived layout Worker. */
-export type WorkerRequest<Graph = FixedLayoutGraph> = Readonly<{
+export type WorkerRequest<Graph = FixedLayoutInput> = Readonly<{
   type: "layout"
   requestId: number
   generation: number
@@ -25,7 +20,7 @@ export type WorkerRequest<Graph = FixedLayoutGraph> = Readonly<{
 }>
 
 /** Policy-neutral success envelope; a policy may add structured diagnostics. */
-export type WorkerSuccess<Result = FixedLayoutResult, Diagnostics = never> = Readonly<{
+export type WorkerSuccess<Result = FixedLayoutOutput, Diagnostics = never> = Readonly<{
   type: "layout-result"
   requestId: number
   generation: number
@@ -73,11 +68,11 @@ export type WorkerFailure<Failure = SerializedWorkerError> = Readonly<{
 }>
 
 export type WorkerResponse<
-  Result = FixedLayoutResult,
+  Result = FixedLayoutOutput,
   Diagnostics = never,
   Failure = SerializedWorkerError,
 > = WorkerSuccess<Result, Diagnostics> | WorkerFailure<Failure>
-export type WorkerInput<Graph = FixedLayoutGraph> = Omit<WorkerRequest<Graph>, "type" | "requestId">
+export type WorkerInput<Graph = FixedLayoutInput> = Omit<WorkerRequest<Graph>, "type" | "requestId">
 
 /** Минимальная часть browser Worker API, нужная transport adapter. */
 export type WorkerEndpoint<
@@ -93,21 +88,21 @@ export type WorkerEndpoint<
 }>
 
 /** Fixed-policy specializations of the generic worker protocol. */
-export type FixedWorkerRequest = WorkerRequest<FixedLayoutGraph>
-export type FixedWorkerSuccess = WorkerSuccess<FixedLayoutResult>
+export type FixedWorkerRequest = WorkerRequest<FixedLayoutInput>
+export type FixedWorkerSuccess = WorkerSuccess<FixedLayoutOutput>
 export type FixedWorkerFailure = WorkerFailure<SerializedWorkerError>
 export type FixedWorkerResponse = FixedWorkerSuccess | FixedWorkerFailure
-export type FixedWorkerInput = WorkerInput<FixedLayoutGraph>
+export type FixedWorkerInput = WorkerInput<FixedLayoutInput>
 export type FixedWorkerEndpoint = WorkerEndpoint<FixedWorkerRequest, FixedWorkerResponse>
 
 /** Adaptive policy contract with structured diagnostics and failure witness. */
-export type AdaptiveWorkerRequest = WorkerRequest<AdaptiveLayoutGraph>
-export type AdaptiveWorkerSuccess = WorkerSuccess<LayoutResult, AdaptiveLayoutDiagnostics>
+export type AdaptiveWorkerRequest = WorkerRequest<AdaptiveLayoutInput>
+export type AdaptiveWorkerSuccess = WorkerSuccess<AdaptiveLayoutOutput, AdaptiveLayoutDiagnostics>
 export type AdaptiveWorkerFailure = WorkerFailure<
   SerializedWorkerError | SerializedAdaptiveLayoutError
 >
 export type AdaptiveWorkerResponse = AdaptiveWorkerSuccess | AdaptiveWorkerFailure
-export type AdaptiveWorkerInput = WorkerInput<AdaptiveLayoutGraph>
+export type AdaptiveWorkerInput = WorkerInput<AdaptiveLayoutInput>
 export type AdaptiveWorkerEndpoint = WorkerEndpoint<
   AdaptiveWorkerRequest,
   AdaptiveWorkerResponse
@@ -115,7 +110,7 @@ export type AdaptiveWorkerEndpoint = WorkerEndpoint<
 
 /** Top-down policy contract with a typed cycle witness and no fallback. */
 export type TopDownWorkerRequest = WorkerRequest<TopDownInput>
-export type TopDownWorkerSuccess = WorkerSuccess<TopDownLayoutResult>
+export type TopDownWorkerSuccess = WorkerSuccess<TopDownLayoutOutput>
 export type TopDownWorkerFailure = WorkerFailure<
   SerializedWorkerError | SerializedTopDownLayoutError
 >
@@ -127,14 +122,14 @@ export type TopDownWorkerEndpoint = WorkerEndpoint<
 >
 
 /** Width-bounded Coffman–Graham policy with a typed cycle witness. */
-export type CoffmanGrahamWorkerRequest = WorkerRequest<CoffmanGrahamLayoutGraph>
-export type CoffmanGrahamWorkerSuccess = WorkerSuccess<CoffmanGrahamLayoutResult>
+export type CoffmanGrahamWorkerRequest = WorkerRequest<CoffmanGrahamLayoutInput>
+export type CoffmanGrahamWorkerSuccess = WorkerSuccess<CoffmanGrahamLayoutOutput>
 export type CoffmanGrahamWorkerFailure = WorkerFailure<
   SerializedWorkerError | SerializedCoffmanGrahamLayoutError
 >
 export type CoffmanGrahamWorkerResponse =
   CoffmanGrahamWorkerSuccess | CoffmanGrahamWorkerFailure
-export type CoffmanGrahamWorkerInput = WorkerInput<CoffmanGrahamLayoutGraph>
+export type CoffmanGrahamWorkerInput = WorkerInput<CoffmanGrahamLayoutInput>
 export type CoffmanGrahamWorkerEndpoint = WorkerEndpoint<
   CoffmanGrahamWorkerRequest,
   CoffmanGrahamWorkerResponse

@@ -9,10 +9,10 @@ TSX в `.storybook/` принадлежит только документаци�
 
 | Алгоритм | Вход | Результат и ограничения |
 | --- | --- | --- |
-| [Fixed](./algorithms/fixed/src/index.ts) | Измеренные ноды, `y` портов, связи, viewport, spacing | `RIGHT` / `DOWN`, источник `EAST`, приёмник `WEST`, ортогональные sections. Один порт с конфликтующими ролями отклоняется |
-| [Adaptive](./algorithms/adaptive/src/index.ts) | Тот же граф с `capability` и `allowedSides` | Одна сторона для каждого точного сокета, включая общий. Возвращает bounds, sections и диагностику ограниченного поиска |
-| [TopDown](./algorithms/top-down/src/index.ts) | Плоский DAG: точные `x` портов либо `attachment: "contour"` | Прежние `SOUTH` → `NORTH` или пересечения фигур, cubic curves. [Контракт и parity evidence](top-down-parity.md) |
-| [Coffman–Graham](./algorithms/coffman-graham/src/index.ts) | DAG, `x` портов и `maxNodesPerLayer` | Ограниченные по ширине слои, cubic curves и массив crossings. Цикл возвращает typed witness |
+| [Fixed](./algorithms/fixed/index.ts) | Измеренные ноды, `y` портов, связи, viewport, spacing | `RIGHT` / `DOWN`, источник `EAST`, приёмник `WEST`, ортогональные sections. Один порт с конфликтующими ролями отклоняется |
+| [Adaptive](./algorithms/adaptive/index.ts) | Тот же граф с `capability` и `allowedSides` | Одна сторона для каждого точного сокета, включая общий. [Диагностический вариант](./algorithms/adaptive/diagnostics/index.ts) возвращает также bounded-search counters |
+| [TopDown](./algorithms/top-down/index.ts) | Плоский DAG: точные `x` портов либо `attachment: "contour"` | Прежние `SOUTH` → `NORTH` или пересечения фигур, cubic curves. [Контракт и parity evidence](top-down-parity.md) |
+| [Coffman–Graham](./algorithms/coffman-graham/index.ts) | DAG, `x` портов и `maxNodesPerLayer` | Ограниченные по ширине слои, cubic curves и массив crossings. Цикл возвращает typed witness |
 
 В [каталоге](.storybook/catalog.json) каждый алгоритм имеет отдельный предмет
 и применимые варианты. Каждая история действительно вызывает публичный API,
