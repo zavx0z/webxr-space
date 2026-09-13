@@ -1,55 +1,18 @@
 import {createGPUInstance, globalConstructors} from "bun-webgpu"
 import {createDocument, type Element} from "@zavx0z/dom"
 import {component, createRoot, normalizeChildren, type ComponentValue} from "@zavx0z/component"
-import {isCompiledTemplate, type CompiledTemplate} from "@zavx0z/template/compiled"
-import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
+import {isCompiledTemplate} from "@zavx0z/template/compiled"
 import {createDocumentRenderer} from "@renderer/html"
 import {Space, ViewPoint, TrueTypeFont} from "@zavx0z/engine"
 import {Renderer, RendererWebGpuBackend, RendererWebGpuScreenOverlay} from "@zavx0z/webgpu"
 import {NativeGpuCanvas, type CapturedFrame} from "./native-canvas.ts"
 import {installShaderCompilationDiagnostics} from "./shader-diagnostics.ts"
 import {registerHeadlessCompiler, repositoryRoot} from "./compiler.ts"
+import type {HeadlessOptions} from "./contract/input.ts"
+import type {Headless} from "./contract/output.ts"
 
-export type {CapturedFrame} from "./native-canvas.ts"
-
-/**
-Окружение нативного рендера; не содержит знания о конкретных компонентах.
-
-@property [projectRoot] - Корень исходников всех доступных пакетов; по умолчанию Git-корень Headless.
-
-@property [width=1024] - Ширина рабочей области в физических пикселях, положительное целое число.
-
-@property [height=768] - Высота рабочей области в физических пикселях, положительное целое число.
-
-@property [fontSource] - Файл TTF для измерения и рисования текста; по умолчанию публичный Inter из Engine.
-
-@property [styleSheetSources] - Файлы общих CSS; по умолчанию публичная UI-тема проекта.
-*/
-export type HeadlessOptions = Readonly<{
-  projectRoot?: string
-  width?: number
-  height?: number
-  fontSource?: string | URL
-  styleSheetSources?: readonly (string | URL)[]
-}>
-
-type AuthoredComponent<Props> = (props: Props) => JsxSourceElement
-
-export interface Headless {
-  /**
-  Монтирует JSX и возвращает его единственный внешний Element из живого Document.
-  Повторный render сохраняет identity при том же template/key. Снимок запрашивается отдельно.
-  @throws Если компонент не скомпилирован либо вернул не один внешний элемент.
-  */
-  render(value: JsxSourceElement | ComponentValue): Promise<Element>
-  render<Props>(type: AuthoredComponent<Props> | CompiledTemplate<Props>, props: Props): Promise<Element>
-  /** Возвращает PNG по актуальному border-box указанного элемента текущего Document. */
-  screenshot(element: Element): Promise<Buffer>
-  /** Возвращает RGBA8 и PNG одного кадра по границам элемента для сравнений изображений. */
-  capture(element: Element): Promise<CapturedFrame>
-  /** Освобождает component root, layout, GPU-поверхность и устройство. Повторный вызов безопасен. */
-  dispose(): Promise<void>
-}
+export type {HeadlessOptions} from "./contract/input.ts"
+export type {Headless} from "./contract/output.ts"
 
 let gpuOperations: Promise<unknown> = Promise.resolve()
 function exclusive<Result>(operation: () => Promise<Result>): Promise<Result> {
@@ -61,17 +24,24 @@ function exclusive<Result>(operation: () => Promise<Result>): Promise<Result> {
 /**
 Создаёт один нативный host для компонентов любых пакетов выбранного проекта.
 
-Компонент импортируется динамически после createHeadless(). Для JSX в spec
-укажите `@jsxImportSource @immersive/headless`. GPU-операции разных host выполняются последовательно;
+Test host заранее подключает `@immersive/headless/preload`, чтобы статические
+TSX-импорты и JSX сценария компилировались Template. `createHeadless` идемпотентно
+регистрирует тот же compiler и создаёт отдельный host. GPU-операции разных host выполняются последовательно;
 глобальные WebGPU-объекты восстанавливаются после каждой операции.
 
+@param options - Размер native Canvas и источники ресурсов окружения.
 @returns Host с живым DOM, отдельным получением PNG и явным dispose.
 
 @example
 ```tsx
+import {Typography} from "@zavx0z/ui/typography"
+
 const headless = createHeadless()
-const {Typography} = await import("@zavx0z/ui/typography")
-const element = await headless.render(<Typography text="Пример" />)
+const element = await headless.render(
+  <Typography
+    text="Пример"
+  />,
+)
 await Bun.write("typography.png", await headless.screenshot(element))
 await headless.dispose()
 ```
@@ -161,6 +131,13 @@ export function createHeadless(options: HeadlessOptions = {}): Headless {
     return canvas.capture({x, y, width: Math.ceil(bounds.right) - x, height: Math.ceil(bounds.bottom) - y})
   }))
 
+  function screenshot(element: Element): Promise<Buffer>
+  function screenshot(element: Element, format: "image"): Promise<Bun.Image>
+  async function screenshot(element: Element, format?: "image"): Promise<Buffer | Bun.Image> {
+    const png = (await capture(element)).png
+    return format === "image" ? new Bun.Image(png) : png
+  }
+
   return {
     render(value: unknown, props?: unknown): Promise<Element> {
       return exclusive(() => withGpu(async () => {
@@ -175,9 +152,7 @@ export function createHeadless(options: HeadlessOptions = {}): Headless {
       }))
     },
     capture,
-    async screenshot(element): Promise<Buffer> {
-      return (await capture(element)).png
-    },
+    screenshot,
     dispose(): Promise<void> {
       return exclusive(async () => {
         if (disposed) return

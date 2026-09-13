@@ -8,13 +8,13 @@
   "packageManager": "bun@1.4.0",
   "exports": {
     ".": "./index.ts",
-    "./image": "./image.ts",
+    "./preload": "./preload.ts",
     "./jsx-runtime": "./jsx-runtime.ts",
     "./jsx-dev-runtime": "./jsx-dev-runtime.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel tests",
+    "test": "bun test --preload ./preload.ts --parallel tests",
     "check": "bun run --parallel typecheck test"
   },
   "dependencies": {

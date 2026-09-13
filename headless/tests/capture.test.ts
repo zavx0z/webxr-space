@@ -65,3 +65,12 @@ test("[HEADLESS-SCREENSHOT] снимок другого DOM-корня окру�
   const metadata = await new Bun.Image(png).metadata()
   expect([metadata.width, metadata.height]).toEqual([138, 25])
 }, 25000)
+
+test("[HEADLESS-SCREENSHOT-IMAGE] формат image возвращает готовый Bun.Image", async () => {
+  const element = await headless.render(TextBox, {text: "Готовое изображение"})
+  const image = await headless.screenshot(element, "image")
+  const metadata = await image.metadata()
+
+  expect(image).toBeInstanceOf(Bun.Image)
+  expect([metadata.width, metadata.height]).toEqual([240, 100])
+}, 25000)

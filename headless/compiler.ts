@@ -15,9 +15,11 @@ export function repositoryRoot(directory: string): string {
 }
 
 /**
-Подключает обычный Template compiler к последующим импортам TSX.
-Вызывается из createHeadless до динамического импорта компонента.
-Охватывает все пакеты выбранного проекта. Spec-файлы используют JSX-транспорт Headless.
+Подключает обычный Template compiler ко всем последующим импортам TSX внутри проекта.
+
+Preload вызывает регистрацию до загрузки статического графа теста; `createHeadless`
+повторяет её идемпотентно для программных вызовов. Production TSX компилируется
+Template compiler, а JSX в spec/test автоматически использует инертный Headless transport.
 Сессия компиляции закрывается после обработки каждого модуля.
 */
 export function registerHeadlessCompiler(projectRoot: string): void {
@@ -30,7 +32,10 @@ export function registerHeadlessCompiler(projectRoot: string): void {
         const local = relative(root, path)
         if (local.startsWith(`..${sep}`) || local === ".." || local.split(sep).includes("node_modules")) return undefined
         if (/\.(?:spec|test)\.tsx$/.test(path)) {
-          return {contents: await Bun.file(path).text(), loader: "tsx"}
+          return {
+            contents: `/** @jsxImportSource @immersive/headless */\n${await Bun.file(path).text()}`,
+            loader: "tsx",
+          }
         }
         const compiler = new JsxCompilerSession({cwd: root, sourceRoots: [root]})
         try {
