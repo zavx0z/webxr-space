@@ -16,12 +16,19 @@
   ],
   "exports": {
     "./view": "./view/index.tsx",
+    "./view/contract/input": "./view/contract/input.ts",
     "./view/tree": "./view/tree.ts",
     "./editor": "./editor/index.tsx",
+    "./editor/contract/input": "./editor/contract/input.ts",
     "./frame": "./frame/index.tsx",
+    "./frame/contract/input": "./frame/contract/input.ts",
     "./link": "./link/index.tsx",
+    "./link/contract/input": "./link/contract/input.ts",
+    "./link/types": "./link/types/link.ts",
+    "./routing/link-path": "./shared/routing/link-path.ts",
     "./markers": "./markers/index.ts",
-    "./markers/arrow": "./markers/arrow/index.tsx"
+    "./markers/arrow": "./markers/arrow/index.tsx",
+    "./markers/arrow/contract/input": "./markers/arrow/contract/input.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",

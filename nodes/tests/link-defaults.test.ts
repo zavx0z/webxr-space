@@ -5,7 +5,8 @@ import {createRoot} from "@zavx0z/component"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import type {LinkProps, LinkDefinition} from "@webxr/nodes/link"
+import type {LinkProps} from "@webxr/nodes/link"
+import type {LinkDefinition} from "@webxr/nodes/link/types"
 import {SOCKET_KINDS, socketPreset} from "@nodes/sockets/presets"
 
 const root = resolve(import.meta.dir, "../..")

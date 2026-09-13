@@ -8,28 +8,11 @@ import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {visibilityOnIcon} from "@zavx0z/ui/themes/icons"
 import {ParameterNode} from "../parameter/index.tsx"
 import {ContentSurface} from "../surface/index.tsx"
-import type {NodePreviewImage} from "../shared/contracts.ts"
-import type {NodeChildren, ParameterNodeProps} from "../shared/contracts.ts"
+import type {ContentNodeProps} from "./contract/input.ts"
 import {planProjectedNodeGeometry} from "../shared/geometry.ts"
 
 export type {NodePreviewImage} from "../shared/contracts.ts"
-/**
-Содержимое и параметры одной ноды с независимой видимостью.
-
-@property [children] - Авторское содержимое квадратной области; при наличии имеет приоритет над image.
-
-@property [image] - Предпросмотр, используемый только при отсутствии children.
-
-@property [contentVisible=true] - Скрывает область содержимого без её размонтирования.
-
-@property [onContentVisibleChange] - Получает запрос изменения видимости; состояние меняет вызывающая сторона.
-*/
-export type ContentNodeProps = Omit<ParameterNodeProps, "children" | "embedded"> & Readonly<{
-  children?: NodeChildren
-  image?: NodePreviewImage | undefined
-  contentVisible?: boolean | undefined
-  onContentVisibleChange?: ((visible: boolean, event: Event) => void) | undefined
-}>
+export type {ContentNodeProps} from "./contract/input.ts"
 
 /** Квадратная область содержимого и ParameterNode образуют одну ноду графа. */
 export function ContentNode(props: ContentNodeProps) {

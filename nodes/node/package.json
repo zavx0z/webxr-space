@@ -11,19 +11,22 @@
     "./diagram": "./diagram/index.tsx",
     "./diagram/contract/input": "./diagram/contract/input.ts",
     "./parameter": "./parameter/index.tsx",
+    "./parameter/contract/input": "./parameter/contract/input.ts",
     "./content": "./content/index.tsx",
+    "./content/contract/input": "./content/contract/input.ts",
     "./image": "./image/index.tsx",
     "./image/contract/input": "./image/contract/input.ts",
     "./surface": "./surface/index.tsx",
     "./surface/contract/input": "./surface/contract/input.ts",
     "./contents": "./contents/index.tsx",
+    "./contents/contract/input": "./contents/contract/input.ts",
     "./geometry": "./shared/geometry.ts",
     "./contracts": "./shared/contracts.ts",
     "./metrics": "./shared/metrics.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "bun test --parallel tests diagram/spec diagram/tests content/spec parameter/spec image/spec surface/spec contents/spec",
+    "test": "bun test --parallel tests diagram/tests content/spec parameter/spec image/spec surface/spec contents/spec && bun test --preload @immersive/headless/preload --parallel diagram/spec",
     "check": "bun run --parallel typecheck test"
   },
   "peerDependencies": {

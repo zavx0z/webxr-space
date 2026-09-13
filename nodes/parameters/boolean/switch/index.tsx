@@ -6,18 +6,17 @@ SwitchParameter соединяет публичный SwitchField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {SwitchField, type SwitchFieldProps} from "@zavx0z/ui/fields/switch-field"
+import {SwitchField} from "@zavx0z/ui/fields/switch-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {SwitchParameterProps} from "./contract/input.ts"
+
+export type {SwitchParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт SwitchParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property onChange - Запрашивает новое checked без записи во внешний Store.
 */
-export type SwitchParameterProps = ParameterBaseProps & Omit<SwitchFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function SwitchParameter(props: SwitchParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -50,5 +49,3 @@ export function SwitchParameter(props: SwitchParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type SwitchParameterComponent = FunctionComponent<SwitchParameterProps>

@@ -6,18 +6,17 @@ CheckboxParameter соединяет публичный CheckboxField с ком�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {CheckboxField, type CheckboxFieldProps} from "@zavx0z/ui/fields/checkbox-field"
+import {CheckboxField} from "@zavx0z/ui/fields/checkbox-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {CheckboxParameterProps} from "./contract/input.ts"
+
+export type {CheckboxParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт CheckboxParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property [indeterminate] - Смешанное отображение; checked остаётся логическим значением.
 */
-export type CheckboxParameterProps = ParameterBaseProps & Omit<CheckboxFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function CheckboxParameter(props: CheckboxParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -46,5 +45,3 @@ export function CheckboxParameter(props: CheckboxParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type CheckboxParameterComponent = FunctionComponent<CheckboxParameterProps>

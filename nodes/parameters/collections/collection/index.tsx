@@ -6,10 +6,11 @@ CollectionParameter соединяет публичный CollectionField с к�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {CollectionField, type CollectionFieldProps} from "@zavx0z/ui/fields/collection-field"
+import {CollectionField} from "@zavx0z/ui/fields/collection-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {CollectionParameterProps} from "./contract/input.ts"
+
+export type {CollectionParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт CollectionParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property [onMove] - Запрашивает перестановку элемента; приложение публикует новый порядок.
 */
-export type CollectionParameterProps = ParameterBaseProps & Omit<CollectionFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function CollectionParameter(props: CollectionParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -59,5 +58,3 @@ export function CollectionParameter(props: CollectionParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type CollectionParameterComponent = FunctionComponent<CollectionParameterProps>

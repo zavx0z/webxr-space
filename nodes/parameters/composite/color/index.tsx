@@ -6,10 +6,11 @@ ColorParameter соединяет публичный ColorField с композ�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {ColorField, type ColorFieldProps} from "@zavx0z/ui/fields/color-field"
+import {ColorField} from "@zavx0z/ui/fields/color-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {ColorParameterProps} from "./contract/input.ts"
+
+export type {ColorParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт ColorParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property [open] - Управляемая видимость панели выбора цвета без изменения значения.
 */
-export type ColorParameterProps = ParameterBaseProps & Omit<ColorFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function ColorParameter(props: ColorParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -55,5 +54,3 @@ export function ColorParameter(props: ColorParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type ColorParameterComponent = FunctionComponent<ColorParameterProps>

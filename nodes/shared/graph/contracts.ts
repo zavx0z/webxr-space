@@ -1,6 +1,6 @@
 import type {FunctionComponent} from "@zavx0z/component"
 import type {FrameProps} from "@webxr/nodes/frame"
-import type {LinkDefinition} from "@webxr/nodes/link"
+import type {LinkDefinition} from "@webxr/nodes/link/types"
 
 /** Геометрия в CSS-пикселях графа до масштаба и пространственной проекции. */
 export type GraphRect = Readonly<{x: number; y: number; width: number; height: number}>
@@ -60,35 +60,3 @@ export type GraphMeasuredLayout = Readonly<{
 }>
 export type GraphLayoutComputer = (nodes: readonly GraphMeasurement[]) => GraphMeasuredLayout | Promise<GraphMeasuredLayout>
 export type GraphRenderedNode = Omit<GraphNode, "rect"> & Readonly<{rect?: GraphRect | undefined}>
-
-/** Просмотр заимствует сцену; источник отвечает за актуальность async-результата. */
-export type GraphViewProps = Readonly<{
-  scene?: GraphScene | null | undefined
-  input?: GraphInput | undefined
-  layout?: GraphLayoutComputer | undefined
-  pending?: boolean | undefined
-  isCurrent?: (() => boolean) | undefined
-  label?: string | undefined
-  title?: string | undefined
-  width?: number | undefined
-  height?: number | undefined
-  /** В pan-zoom занимает CSS-контейнер и измеряет настоящий viewport. До ручного жеста следует fit при resize; кнопка «Вписать» возвращает этот режим. */
-  autoSize?: boolean | undefined
-  navigation?: "none" | "scroll" | "pan-zoom" | undefined
-  interactive?: boolean | undefined
-  controls?: boolean | undefined
-  gridSize?: number | undefined
-  /** Нижняя граница масштаба; 0 снимает пользовательский предел для вписывания больших графов. */
-  minScale?: number | undefined
-  maxScale?: number | undefined
-  fitPadding?: number | undefined
-  overscan?: number | undefined
-  viewport?: GraphViewport | undefined
-  materializeCulled?: boolean | undefined
-  transform?: GraphTransform | undefined
-  selection?: GraphSelection | undefined
-  style?: CssStyle | undefined
-  onTransformChange?: ((transform: GraphTransform, event: Event) => void) | undefined
-  onSelectionChange?: ((selection: GraphSelection, event: Event) => void) | undefined
-  onLayoutStateChange?: ((state: Readonly<{pending: boolean; error: Error | null}>) => void) | undefined
-}>

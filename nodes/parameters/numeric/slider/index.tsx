@@ -6,10 +6,11 @@ SliderParameter соединяет публичный SliderField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {SliderField, type SliderFieldProps} from "@zavx0z/ui/fields/slider-field"
+import {SliderField} from "@zavx0z/ui/fields/slider-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {SliderParameterProps} from "./contract/input.ts"
+
+export type {SliderParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт SliderParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property max - Обязательная верхняя граница диапазона.
 */
-export type SliderParameterProps = ParameterBaseProps & Omit<SliderFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function SliderParameter(props: SliderParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -57,5 +56,3 @@ export function SliderParameter(props: SliderParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type SliderParameterComponent = FunctionComponent<SliderParameterProps>

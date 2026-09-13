@@ -7,25 +7,10 @@ import {useMemo, useState} from "@zavx0z/component"
 import {metadataBoolean} from "@nodes/parameters/shared"
 import {GraphView} from "../view/index.tsx"
 import {useNodeTreePresentation} from "../view/tree.ts"
-import {useMeasuredNodeTreePresentation, type MeasuredNodeTreeComputer} from "../shared/node-tree/measured.ts"
-import type {NodeTreeProps} from "../shared/node-tree/contracts.ts"
-import type {GraphViewProps} from "../shared/graph/contracts.ts"
+import {useMeasuredNodeTreePresentation} from "../shared/node-tree/measured.ts"
+import type {GraphEditorProps} from "./contract/input.ts"
 
-/**
-Композиция существующих инструментов изменения и общего просмотра.
-
-@property store - Заимствованный Store модели; значения не копируются в редактор.
-@property layout - Готовый результат, source-bound результат или числовая функция.
-@property [measureLayout] - Числовая политика для snapshot и настоящих измерений нод/Socket anchors; выполняется до показа.
-@property [onParameterInput] - Передаёт ввод значения приложению.
-@property [onParameterChange] - Передаёт подтверждённое значение приложению.
-@property [onSocketActivate] - Сообщает об активации сокета; жест создания связи пока отсутствует.
-*/
-export type GraphEditorProps = Omit<NodeTreeProps, "layout"> & Omit<GraphViewProps, "scene" | "pending" | "isCurrent" | "input" | "layout"> & Readonly<{
-  layout?: NodeTreeProps["layout"] | undefined
-  measureLayout?: MeasuredNodeTreeComputer | undefined
-  gridSize?: number | undefined
-}>
+export type {GraphEditorProps} from "./contract/input.ts"
 
 export function GraphEditor(props: GraphEditorProps) {
   if (props.layout === undefined && props.measureLayout === undefined) throw new Error("GraphEditor требует layout или measureLayout")

@@ -12,7 +12,9 @@ import {GraphEditor} from "@webxr/nodes/editor"
 import type {GraphMeasurement} from "@webxr/nodes/view"
 import {NumberParameter} from "@nodes/parameters/number"
 import {Frame} from "@webxr/nodes/frame"
-import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"
+import {Link} from "@webxr/nodes/link"
+import type {LinkDefinition} from "@webxr/nodes/link/types"
+import {createCubicLinkRoute} from "@webxr/nodes/routing/link-path"
 import {Button} from "@zavx0z/ui/buttons/button"
 import {parameterFixture} from "../../../parameters/.storybook/stories/fixtures/parameters.ts"
 import {mountNodesStory} from "../mount.ts"
@@ -403,7 +405,9 @@ function previewImage(): string {
 function linkSource(variant: string): string {
   return [
     'import {useMemo, useSyncExternalStore} from "@zavx0z/component"',
-    'import {Link, createCubicLinkRoute, type LinkDefinition} from "@webxr/nodes/link"',
+    'import {Link} from "@webxr/nodes/link"',
+    'import type {LinkDefinition} from "@webxr/nodes/link/types"',
+    'import {createCubicLinkRoute} from "@webxr/nodes/routing/link-path"',
     'import {Button} from "@zavx0z/ui/buttons/button"',
     "",
     'function routeFor(cubic: boolean): LinkDefinition["route"] {',

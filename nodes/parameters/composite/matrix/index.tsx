@@ -6,18 +6,17 @@ MatrixParameter соединяет публичный MatrixField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {MatrixField, type MatrixFieldProps} from "@zavx0z/ui/fields/matrix-field"
+import {MatrixField} from "@zavx0z/ui/fields/matrix-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {MatrixParameterProps} from "./contract/input.ts"
+
+export type {MatrixParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт MatrixParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property value - Квадратная числовая матрица размером 2, 3 или 4.
 */
-export type MatrixParameterProps = ParameterBaseProps & Omit<MatrixFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function MatrixParameter(props: MatrixParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -53,5 +52,3 @@ export function MatrixParameter(props: MatrixParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type MatrixParameterComponent = FunctionComponent<MatrixParameterProps>

@@ -7,19 +7,17 @@ OutputParameter соединяет публичный текстовый выв�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import type {NodeJsonValue} from "@nodes/tree"
 import {ParameterOutput} from "../../shared/output/index.tsx"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {OutputParameterProps} from "./contract/input.ts"
+
+export type {OutputParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт OutputParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property value - Отображается как текст или JSON; не изменяется этим компонентом.
 */
-export type OutputParameterProps = ParameterBaseProps & Readonly<{value: NodeJsonValue}>
-
 export function OutputParameter(props: OutputParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -43,5 +41,3 @@ export function OutputParameter(props: OutputParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type OutputParameterComponent = FunctionComponent<OutputParameterProps>

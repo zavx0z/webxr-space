@@ -6,10 +6,11 @@ ReferenceParameter соединяет публичный ReferenceField с ко�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {ReferenceField, type ReferenceFieldProps} from "@zavx0z/ui/fields/reference-field"
+import {ReferenceField} from "@zavx0z/ui/fields/reference-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {ReferenceParameterProps} from "./contract/input.ts"
+
+export type {ReferenceParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт ReferenceParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property [onPick] - Запрашивает выбор у приложения; новый объект не создаётся локально.
 */
-export type ReferenceParameterProps = ParameterBaseProps & Omit<ReferenceFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function ReferenceParameter(props: ReferenceParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -56,5 +55,3 @@ export function ReferenceParameter(props: ReferenceParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type ReferenceParameterComponent = FunctionComponent<ReferenceParameterProps>

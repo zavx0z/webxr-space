@@ -1,5 +1,5 @@
 import type {FunctionComponent} from "@zavx0z/component"
-import type {ParameterNodeProps} from "@nodes/node/contracts"
+import type {ParameterNodeProps} from "@nodes/node/parameter"
 import type {NodeChildren, NodeKind, NodeShape} from "@nodes/node/contracts"
 import type {NodeTreeExternalStore, NodeTreeSnapshot, ParameterSnapshot} from "@nodes/tree"
 import type {LayoutResult} from "@nodes/layout/types"

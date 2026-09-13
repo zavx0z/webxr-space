@@ -1,6 +1,7 @@
 import {Arrow} from "@webxr/nodes/markers/arrow"
 import type {MarkerProps} from "@webxr/nodes/markers"
-import {Link, type LinkRoute} from "@webxr/nodes/link"
+import {Link} from "@webxr/nodes/link"
+import type {LinkRoute} from "@webxr/nodes/routing/link-path"
 import {SOCKET_KINDS, socketPreset, type SocketKind} from "@nodes/sockets/presets"
 
 type Example = Readonly<{
@@ -115,7 +116,8 @@ function FilledArrow(props: MarkerProps) {
 export function linkGallerySource(variant: string): string {
   const examples = JSON.stringify(linkExamples(variant), null, 2)
   return [
-    'import {Link, type LinkRoute} from "@webxr/nodes/link"',
+    'import {Link} from "@webxr/nodes/link"',
+    'import type {LinkRoute} from "@webxr/nodes/routing/link-path"',
     'import {Arrow} from "@webxr/nodes/markers/arrow"',
     'import type {MarkerProps} from "@webxr/nodes/markers"',
     'import type {SocketKind} from "@nodes/sockets/presets"',

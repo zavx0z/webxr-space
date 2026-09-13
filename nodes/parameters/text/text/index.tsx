@@ -6,18 +6,17 @@ TextParameter соединяет публичный TextField с компози�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {TextField, type TextFieldProps} from "@zavx0z/ui/fields/text-field"
+import {TextField} from "@zavx0z/ui/fields/text-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {TextParameterProps} from "./contract/input.ts"
+
+export type {TextParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт TextParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property value - Текущее строковое значение; изменение публикуется через onInput/onChange.
 */
-export type TextParameterProps = ParameterBaseProps & Omit<TextFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function TextParameter(props: TextParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -53,5 +52,3 @@ export function TextParameter(props: TextParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type TextParameterComponent = FunctionComponent<TextParameterProps>

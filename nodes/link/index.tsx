@@ -1,6 +1,6 @@
 import {MarkerSlot} from "../shared/markers/slot/index.tsx"
 import {Arrow} from "../markers/arrow/index.tsx"
-import type {MarkerComponent, MarkerContext} from "../shared/markers/contracts.ts"
+import type {MarkerContext} from "../shared/markers/contracts.ts"
 /**
 Link отображает маршрут владельца Layout через семантический vector-path.
 Подписка на переданный Store сохраняет идентичность элемента пути; преобразование маршрута разделяется со всеми проекциями.
@@ -8,90 +8,21 @@ Link отображает маршрут владельца Layout через с
 @packageDocumentation
 */
 
-import type {ExternalStore} from "@nodes/tree"
 import {
   useMemo,
   useSyncExternalStore,
-  type FunctionComponent,
 } from "@zavx0z/component"
 import {
-  createCubicLinkRoute,
   projectLinkRoute,
-  projectLinkArrowheads,
-  projectLinkMarkers,
   projectLinkEndpoints,
-  type LinkCubicCurve,
-  type LinkPathBounds,
-  type LinkPathPoint,
-  type LinkPathProjection,
-  type LinkRoute,
-  type LinkMarkerStyle,
-  type LinkMarkerGeometry,
 } from "../shared/routing/link-path.ts"
-import {socketPreset, type SocketKind} from "@nodes/sockets/presets"
+import {socketPreset} from "@nodes/sockets/presets"
+import type {LinkProps} from "./contract/input.ts"
+import type {LinkDefinition} from "./types/link.ts"
 
 const DEFAULT_LINK_COLOR = "#9e9e9e"
 
-export {
-  createCubicLinkRoute,
-  projectLinkRoute,
-  projectLinkArrowheads,
-  projectLinkMarkers,
-  projectLinkEndpoints,
-}
-
-export type {
-  LinkCubicCurve,
-  LinkPathBounds,
-  LinkPathPoint,
-  LinkPathProjection,
-  LinkRoute,
-  LinkMarkerStyle,
-  LinkMarkerGeometry,
-}
-
-export type LinkEndpoint = Readonly<{
-  nodeId: string
-  socketId: string
-}>
-
-export type LinkDefinition = Readonly<{
-  id: string
-  title: string
-  route: LinkRoute
-  /** Явный цвет имеет приоритет над kind и нейтральным default. */
-  color?: string | undefined
-  strokeWidth?: number | undefined
-  /** Точная заполненная геометрия приоритетнее component slots и legacy boolean arrows; [] отключает стрелки. */
-  markers?: readonly LinkMarkerGeometry[] | undefined
-  /** Только явно заданный тип; отсутствие означает обычную нейтральную связь. */
-  kind?: SocketKind | undefined
-  from?: LinkEndpoint | undefined
-  to?: LinkEndpoint | undefined
-  /** Компоненты концов. null явно отключает legacy стрелку на соответствующем конце. */
-  startMarker?: MarkerComponent | null | undefined
-  endMarker?: MarkerComponent | null | undefined
-  /** @deprecated Используйте startMarker={Arrow}. */
-  startArrow?: boolean | undefined
-  /** @deprecated Используйте endMarker={Arrow}. */
-  endArrow?: boolean | undefined
-  selected?: boolean | undefined
-  disabled?: boolean | undefined
-  hidden?: boolean | undefined
-}>
-
-/**
-Представление одного маршрута с прямыми props или исходным внешним Store.
-
-@property [store] - При наличии владеет текущим LinkDefinition и обновляет существующий семантический путь.
-
-@property [onActivate] - Вызывается для допустимой активации выбранного пути; значение модели компонент не изменяет.
-*/
-export type LinkProps = LinkDefinition & Readonly<{
-  store?: ExternalStore<LinkDefinition> | undefined
-  style?: CssStyle | undefined
-  onActivate?: ((event: Event) => void) | undefined
-}>
+export type {LinkProps} from "./contract/input.ts"
 
 export function Link(props: LinkProps) {
   const direct = useMemo(() => Object.freeze({
@@ -257,8 +188,6 @@ function LinkArrow(props: Readonly<{
     `}
   />
 }
-
-export type LinkComponent = FunctionComponent<LinkProps>
 
 function validateLinkProps(props: LinkDefinition): void {
   if (props.id.trim().length === 0) throw new TypeError("Link id must be non-empty")

@@ -7,10 +7,10 @@
 import {NODE_BORDER_WIDTH} from "@nodes/sockets/metrics"
 import {Pane} from "@zavx0z/ui/surfaces/pane"
 import {ParameterNodeContents} from "../contents/index.tsx"
-import type {ParameterNodeProps} from "../shared/contracts.ts"
+import type {ParameterNodeProps} from "./contract/input.ts"
 import {planProjectedNodeGeometry, NODE_HEADER_HEIGHT, NODE_MINIMUM_WIDTH} from "../shared/geometry.ts"
 
-export type {ParameterNodeProps} from "../shared/contracts.ts"
+export type {ParameterNodeProps} from "./contract/input.ts"
 
 /** Составляет ноду из Pane и готовых параметров. */
 export function ParameterNode(props: ParameterNodeProps) {

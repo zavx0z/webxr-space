@@ -6,18 +6,17 @@ SelectParameter соединяет публичный SelectField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {SelectField, type SelectFieldProps} from "@zavx0z/ui/fields/select-field"
+import {SelectField} from "@zavx0z/ui/fields/select-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {SelectParameterProps} from "./contract/input.ts"
+
+export type {SelectParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт SelectParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property [state] - Передаёт особое состояние выбора публичному SelectField.
 */
-export type SelectParameterProps = ParameterBaseProps & Omit<SelectFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function SelectParameter(props: SelectParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -46,5 +45,3 @@ export function SelectParameter(props: SelectParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type SelectParameterComponent = FunctionComponent<SelectParameterProps>

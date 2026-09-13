@@ -6,18 +6,17 @@ CycleParameter соединяет публичный CycleField с композ�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {CycleField, type CycleFieldProps} from "@zavx0z/ui/fields/cycle-field"
+import {CycleField} from "@zavx0z/ui/fields/cycle-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {CycleParameterProps} from "./contract/input.ts"
+
+export type {CycleParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт CycleParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property [open] - Управляемое состояние списка; onOpenChange возвращает запрос изменения.
 */
-export type CycleParameterProps = ParameterBaseProps & Omit<CycleFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function CycleParameter(props: CycleParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -54,5 +53,3 @@ export function CycleParameter(props: CycleParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type CycleParameterComponent = FunctionComponent<CycleParameterProps>

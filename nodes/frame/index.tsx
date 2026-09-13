@@ -5,9 +5,9 @@ Frame отображает границы и подпись группы из г
 @packageDocumentation
 */
 
-import {type FunctionComponent} from "@zavx0z/component"
-import type {JsxSourceElement} from "@zavx0z/template/jsx-runtime"
-import type {NodeRect} from "../shared/projection/geometry.ts"
+import type {FrameProps} from "./contract/input.ts"
+
+export type {FrameProps} from "./contract/input.ts"
 
 /**
 Представление группы в общей проекции дерева.
@@ -16,20 +16,6 @@ import type {NodeRect} from "../shared/projection/geometry.ts"
 
 @property [parentFrameId] - Отношение к другой Frame в модели; не создаёт отдельный жизненный цикл.
 */
-export type FrameProps = Readonly<{
-  id: string
-  label: string
-  rect: NodeRect
-  parentFrameId?: string | undefined
-  title?: string | undefined
-  color?: string | undefined
-  selected?: boolean | undefined
-  hidden?: boolean | undefined
-  children?: JsxSourceElement | null | undefined
-  style?: CssStyle | undefined
-  onActivate?: ((event: Event) => void) | undefined
-}>
-
 export function Frame(props: FrameProps) {
   if (props.id.trim().length === 0) throw new TypeError("Frame id must be non-empty")
   if (props.label.trim().length === 0) throw new TypeError(`Frame ${props.id} label must be non-empty`)
@@ -90,5 +76,3 @@ export function Frame(props: FrameProps) {
     {props.children}
   </section>
 }
-
-export type FrameComponent = FunctionComponent<FrameProps>

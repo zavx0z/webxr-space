@@ -5,11 +5,13 @@ import {createRoot} from "@zavx0z/component"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
-import type {LinkProps, LinkRoute} from "@webxr/nodes/link"
+import type {LinkProps} from "@webxr/nodes/link"
+import type {LinkRoute} from "@webxr/nodes/routing/link-path"
 
 const rootPath = resolve(import.meta.dir, "../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: rootPath, persistent: true, sourceRoots: [resolve(rootPath, "nodes"), resolve(rootPath, "ui")]}))
-const {Link, projectLinkMarkers} = await import("@webxr/nodes/link")
+const {Link} = await import("@webxr/nodes/link")
+const {projectLinkMarkers} = await import("@webxr/nodes/routing/link-path")
 const {Arrow} = await import("@webxr/nodes/markers/arrow")
 const {FilledMarker} = await import("./marker-slots.fixture.tsx")
 

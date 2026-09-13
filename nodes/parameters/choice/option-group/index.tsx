@@ -6,18 +6,17 @@ OptionGroupParameter соединяет публичный ToggleButtonGroup с 
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {ToggleButtonGroup, type ToggleButtonGroupProps} from "@zavx0z/ui/buttons/toggle-button-group"
+import {ToggleButtonGroup} from "@zavx0z/ui/buttons/toggle-button-group"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {OptionGroupParameterProps} from "./contract/input.ts"
+
+export type {OptionGroupParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт OptionGroupParameter; общие свойства сокетов описаны в ParameterBaseProps.
 
 @property options - Полный набор вариантов; в каждый момент выбран одно строковое значение.
 */
-export type OptionGroupParameterProps = ParameterBaseProps & Omit<ToggleButtonGroupProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function OptionGroupParameter(props: OptionGroupParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -52,5 +51,3 @@ export function OptionGroupParameter(props: OptionGroupParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type OptionGroupParameterComponent = FunctionComponent<OptionGroupParameterProps>

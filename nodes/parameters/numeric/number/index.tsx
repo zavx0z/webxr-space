@@ -6,10 +6,11 @@ NumberParameter соединяет публичный NumberField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {NumberField, type NumberFieldProps} from "@zavx0z/ui/fields/number-field"
+import {NumberField} from "@zavx0z/ui/fields/number-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {NumberParameterProps} from "./contract/input.ts"
+
+export type {NumberParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт NumberParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property [softMax] - Мягкая верхняя граница перетаскивания; жёсткая валидация задаётся max.
 */
-export type NumberParameterProps = ParameterBaseProps & Omit<NumberFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function NumberParameter(props: NumberParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -55,5 +54,3 @@ export function NumberParameter(props: NumberParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type NumberParameterComponent = FunctionComponent<NumberParameterProps>

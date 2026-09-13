@@ -6,10 +6,11 @@ VectorParameter соединяет публичный VectorField с компо�
 @packageDocumentation
 */
 
-import type {FunctionComponent} from "@zavx0z/component"
-import {VectorField, type VectorFieldProps} from "@zavx0z/ui/fields/vector-field"
+import {VectorField} from "@zavx0z/ui/fields/vector-field"
 import {ParameterLayout} from "../../shared/layout/index.tsx"
-import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
+import type {VectorParameterProps} from "./contract/input.ts"
+
+export type {VectorParameterProps} from "./contract/input.ts"
 
 /**
 Авторский контракт VectorParameter; общие свойства сокетов описаны в ParameterBaseProps.
@@ -18,8 +19,6 @@ import type {ParameterBaseProps} from "../../shared/src/contracts.ts"
 
 @property [axes] - Подписи и ключи ячеек; соответствуют длине value.
 */
-export type VectorParameterProps = ParameterBaseProps & Omit<VectorFieldProps, "label" | "disabled" | "readOnly" | "title" | "style">
-
 export function VectorParameter(props: VectorParameterProps) {
   return <ParameterLayout
     id={props.id}
@@ -58,5 +57,3 @@ export function VectorParameter(props: VectorParameterProps) {
     />
   </ParameterLayout>
 }
-
-export type VectorParameterComponent = FunctionComponent<VectorParameterProps>

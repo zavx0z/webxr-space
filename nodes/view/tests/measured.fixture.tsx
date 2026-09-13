@@ -1,7 +1,7 @@
 import {DiagramNode} from "@nodes/node/diagram"
 import type {GraphNodeProps, GraphInput, GraphLayoutComputer} from "@webxr/nodes/view"
 import {layoutTopDown} from "@nodes/layout/top-down"
-import {createCubicLinkRoute} from "@webxr/nodes/link"
+import {createCubicLinkRoute} from "@webxr/nodes/routing/link-path"
 import {GraphEditor, type GraphEditorProps} from "@webxr/nodes/editor"
 import type {NodeTreeStore} from "@webxr/nodes/view/tree"
 import {layoutFixed} from "@nodes/layout/fixed"
@@ -37,11 +37,11 @@ export function graphInput(label = "Короткая"): GraphInput {
 }
 
 export const measuredLayout: GraphLayoutComputer = nodes => {
-  const result = layoutTopDown({
+  const result = layoutTopDown({graph: {
     nodes,
     ports: nodes.map(node => ({id: node.id, nodeId: node.id, x: node.width / 2})),
     edges: [{id: "edge", sourcePortId: "a", targetPortId: "b"}],
-  })
+  }})
   return {
     bounds: result.bounds,
     nodes: result.nodes,

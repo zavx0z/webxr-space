@@ -7,15 +7,10 @@ Link вычисляет endpoint и единичное направление и
 
 @packageDocumentation
 */
-import type {MarkerProps} from "../../shared/markers/contracts.ts"
 import {arrowGeometry} from "../../shared/markers/geometry.ts"
+import type {ArrowProps} from "./contract/input.ts"
 
-export type ArrowProps = MarkerProps & Readonly<{
-  variant?: "open" | "filled"
-  length?: number
-  width?: number
-  offset?: number
-}>
+export type {ArrowProps} from "./contract/input.ts"
 
 /**
 Наконечник направлен наружу от конца пути. Положительный offset отступает внутрь пути.

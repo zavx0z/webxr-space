@@ -4,7 +4,7 @@
 @packageDocumentation
 */
 
-import type {ParameterNodeProps} from "../shared/contracts.ts"
+import type {ParameterNodeContentsProps} from "./contract/input.ts"
 import {Button, IconButton} from "@zavx0z/ui/buttons/button"
 import {chevronDownIcon, chevronRightIcon} from "@zavx0z/ui/themes/icons"
 import {metadataBoolean, metadataString, Parameter, type ParameterInput} from "@nodes/parameters/shared"
@@ -15,7 +15,9 @@ import {NODE_BODY_PADDING_TOP, NODE_BODY_PADDING_BOTTOM, NODE_ROW_GAP} from "../
 import {NODE_BORDER_WIDTH} from "@nodes/sockets/metrics"
 import {prepareNodeContents} from "./src/prepare.ts"
 
-export function ParameterNodeContents(props: ParameterNodeProps & Readonly<{headerHeight: number}>) {
+export type {ParameterNodeContentsProps} from "./contract/input.ts"
+
+export function ParameterNodeContents(props: ParameterNodeContentsProps) {
   const {parameters, sockets, left, right} = prepareNodeContents(props)
   const collapseLabel = props.collapsed === true ? `Развернуть ${props.label}` : `Свернуть ${props.label}`
   const collapseIcon = props.collapsed === true ? chevronRightIcon : chevronDownIcon

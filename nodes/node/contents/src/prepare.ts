@@ -1,4 +1,4 @@
-import type {ParameterNodeProps} from "../../shared/contracts.ts"
+import type {ParameterNodeProps} from "../../parameter/contract/input.ts"
 import {projectedSocketSide} from "../../shared/parameter-presentation.ts"
 
 /** Проверяет данные ноды и выделяет самостоятельные сокеты по сторонам. */

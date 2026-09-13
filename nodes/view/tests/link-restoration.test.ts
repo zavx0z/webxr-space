@@ -12,7 +12,7 @@ import type {GraphViewProps, GraphLayoutComputer} from "@webxr/nodes/view"
 
 const workspace = resolve(import.meta.dir, "../../..")
 Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: ["nodes", "ui"].map(path => resolve(workspace, path))}))
-const {createCubicLinkRoute} = await import("@webxr/nodes/link")
+const {createCubicLinkRoute} = await import("@webxr/nodes/routing/link-path")
 const {GraphView} = await import("@webxr/nodes/view")
 const {graphInput} = await import("./measured.fixture.tsx")
 const font = new TrueTypeFont(await Bun.file(resolve(workspace, "engine/static/fonts/inter-regular.ttf")).arrayBuffer())
