@@ -194,53 +194,7 @@
               "diagnostics"
             ]
           },
-          "variants": [
-            {
-              "id": "diagram_0",
-              "label": "Прямоугольник",
-              "route": "diagram/rectangle",
-              "module": {
-                "path": "./stories/subjects.ts",
-                "export": "diagram_0"
-              },
-              "resources": {
-                "fixture": "./stories/nodes.tsx",
-                "tests": [
-                  "../tests/composition.test.ts"
-                ]
-              }
-            },
-            {
-              "id": "diagram_1",
-              "label": "Овал",
-              "route": "diagram/oval",
-              "module": {
-                "path": "./stories/subjects.ts",
-                "export": "diagram_1"
-              },
-              "resources": {
-                "fixture": "./stories/nodes.tsx",
-                "tests": [
-                  "../tests/composition.test.ts"
-                ]
-              }
-            },
-            {
-              "id": "diagram_2",
-              "label": "Круг",
-              "route": "diagram/circle",
-              "module": {
-                "path": "./stories/subjects.ts",
-                "export": "diagram_2"
-              },
-              "resources": {
-                "fixture": "./stories/nodes.tsx",
-                "tests": [
-                  "../tests/composition.test.ts"
-                ]
-              }
-            }
-          ]
+          "variants": []
         }
       ]
     }

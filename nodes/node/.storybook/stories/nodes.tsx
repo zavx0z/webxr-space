@@ -3,7 +3,6 @@ import type {Document} from "@zavx0z/dom"
 import {Parameter, createNodeTree, createNodeTreeExternalStore} from "@nodes/tree"
 import {ParameterNode} from "@nodes/node/parameter"
 import {ContentNode} from "@nodes/node/content"
-import {DiagramNode} from "@nodes/node/diagram"
 import {planProjectedNodeGeometry} from "@nodes/node/geometry"
 import {Button} from "@zavx0z/ui/buttons/button"
 import {Typography} from "@zavx0z/ui/typography"
@@ -65,17 +64,14 @@ function NodeStory(props: NodeStoryProps) {
   const [visible, setVisible] = useState(!props.route.endsWith("/content-hidden") && !props.route.endsWith("/collapsed"))
   const [width, setWidth] = useState(240)
   const content = props.route.startsWith("content/") || props.route.endsWith("/preview")
-  const diagram = props.route.startsWith("diagram/")
   const authored = props.route.endsWith("/authored-content")
   const empty = props.route.endsWith("/empty") || authored
   const node = snapshot.nodes[0]!
   const displayed = empty ? {...node, parameters: [], sockets: []} : node
-  const shape = props.route.endsWith("/circle") ? "circle" : props.route.endsWith("/oval") ? "oval" : "rectangle"
   const geometry = planProjectedNodeGeometry(displayed, width, undefined, undefined, {
-    kind: diagram ? "diagram" : content ? "content" : "parameter",
+    kind: content ? "content" : "parameter",
     collapsed,
     contentVisible: content && visible,
-    shape,
     height: 100,
   })
   return <section
@@ -100,13 +96,7 @@ function NodeStory(props: NodeStoryProps) {
       height: ${geometry.height}px;
       overflow: visible;
     `}>
-      {diagram ? <DiagramNode
-        id={node.id}
-        description="Описание занимает всю ноду"
-        rect={{x: 0, y: 0, width: geometry.width, height: geometry.height}}
-        shape={shape}
-      /> : null}
-      {!diagram && !content ? <ParameterNode
+      {!content ? <ParameterNode
         id={node.id}
         label="Нода с параметрами"
         rect={{x: 0, y: 0, width: geometry.width, height: geometry.height}}
@@ -144,18 +134,6 @@ function NodeStory(props: NodeStoryProps) {
 }
 
 function sourceFor(route: string): string {
-  const shape = route.endsWith("/circle") ? "circle" : route.endsWith("/oval") ? "oval" : "rectangle"
-  if (route.startsWith("diagram/")) return [
-    'import {DiagramNode} from "@nodes/node/diagram"',
-    'export function Example() {',
-    '  return <DiagramNode',
-    '    id="example"',
-    '    description="Описание занимает всю ноду"',
-    `    shape="${shape}"`,
-    `    rect={{x: 0, y: 0, width: 240, height: ${shape === "circle" ? 240 : 100}}}`,
-    '  />',
-    '}',
-  ].join("\n")
   const content = route.startsWith("content/") || route.endsWith("/preview")
   const authored = route.endsWith("/authored-content")
   const empty = route.endsWith("/empty") || authored
