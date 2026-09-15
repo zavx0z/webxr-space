@@ -1,6 +1,7 @@
 import {afterAll, describe, expect, test} from "bun:test"
 import {createHeadless, type Headless} from "@immersive/headless"
-import {DiagramNode, type DiagramNodeProps} from "@nodes/node/diagram"
+import type {DiagramNodeProps} from "@nodes/node/diagram"
+import {DiagramFixture} from "./fixture"
 
 type Scenario = Readonly<{
   name: string
@@ -49,14 +50,7 @@ describe.each([
 
     afterAll(() => headless.dispose())
 
-    const element = await headless.render(
-      <DiagramNode
-        id={props.id}
-        description={props.description}
-        rect={props.rect}
-        shape={props.shape}
-      />
-    )
+    const element = await headless.render(DiagramFixture, props)
 
     test("использует семантический article", () =>
       expect(element.localName, "Внешний элемент должен сохранять семантику article").toBe("article")
