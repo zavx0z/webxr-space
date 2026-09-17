@@ -75,10 +75,7 @@ describe.each([
     test("снимок соответствует собственным границам", async () => {
       const image = await headless.screenshot(element, "image")
       const metadata = await image.metadata()
-      expect(
-        metadata,
-        "Размер снимка должен совпадать с границами компонента",
-      ).toMatchObject(expected.size)
+      expect(metadata, "Размер снимка должен совпадать с границами компонента").toMatchObject(expected.size)
     })
   },
 )
