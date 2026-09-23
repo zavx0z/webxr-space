@@ -309,6 +309,7 @@ export function Inspector(props: InspectorProps) {
         display: flex;
         flex-direction: row;
         width: 100%;
+        min-height: 0;
         flex-grow: 1;
       `}
     >

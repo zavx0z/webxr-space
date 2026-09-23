@@ -1,0 +1,43 @@
+import {expect, test} from "bun:test"
+import {resolve} from "node:path"
+import {createDocument, type HTMLElement} from "@zavx0z/dom"
+import {createDocumentRenderer} from "@renderer/html"
+import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
+
+const workspace = resolve(import.meta.dir, "../..")
+Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceRoots: [resolve(workspace, "ui")]}))
+const stories = await import("../.storybook/stories/subjects/components-data-inspector.ts")
+const theme = await Bun.file(resolve(workspace, "ui/themes/theme.css")).text()
+
+test("Inspector ограничивает стек панелей доступной высотой и прокручивает его содержимое", async () => {
+  const document = createDocument()
+  const {story} = await stories.story_basic_default.create(document)
+  const owner = story.element as HTMLElement
+  const container = document.createElement("div")
+  container.setAttribute("style", "display:flex;width:400px;height:300px")
+  container.append(owner)
+  document.append(container)
+  const panels = owner.querySelector("[data-inspector-panels]") as HTMLElement
+  const tall = document.createElement("div")
+  tall.setAttribute("style", "height:1000px;min-height:1000px;flex-shrink:0")
+  panels.append(tall)
+  const renderer = createDocumentRenderer({
+    document,
+    root: container,
+    viewport: {width: 400, height: 300},
+    styleSheets: [theme],
+  })
+  try {
+    const initial = renderer.flush()
+    const scroll = initial.scrolls.get(panels)
+    expect(initial.boxByNode.get(owner)?.height).toBe(300)
+    expect(scroll?.clientHeight).toBeLessThan(scroll?.scrollHeight ?? 0)
+    expect(scroll?.maxScrollTop).toBeGreaterThan(0)
+    panels.scrollTop = 160
+    expect(renderer.flush().scrolls.get(panels)?.scrollTop).toBe(160)
+  } finally {
+    renderer.dispose()
+    story.dispose()
+  }
+  expect(document.childNodes).toHaveLength(1)
+}, 30_000)
