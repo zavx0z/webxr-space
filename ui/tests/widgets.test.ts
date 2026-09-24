@@ -186,7 +186,8 @@ test("Tree controls disclosure, lazy expansion, multiple selection and keyboard 
   const expanded: string[][] = []
   const activated: string[] = []
   let props: TreeProps = {title: "Hierarchy", items: [{id: "group", label: "Group", children: [
-    {id: "a", label: "First", muted: true}, {id: "b", label: "Second"},
+    {id: "a", label: "First", muted: true, actions: [{id: "remove", label: "Удалить элемент", iconSrc: "icon.svg"}]},
+    {id: "b", label: "Second"},
   ]}, {id: "lazy", label: "Lazy object", expandable: true}], expandedKeys: [], selectedKeys: [], selectionMode: "multiple",
     onExpandedChange(keys) { expanded.push([...keys]); props = {...props, expandedKeys: keys}; render() },
     onSelectionChange(keys) { selections.push([...keys]); props = {...props, selectedKeys: keys}; render() },
@@ -206,6 +207,7 @@ test("Tree controls disclosure, lazy expansion, multiple selection and keyboard 
     expect(expanded).toEqual([["group"]])
     const first = f.root.querySelector('[data-tree-id="a"]')!
     const second = f.root.querySelector('[data-tree-id="b"]')!
+    expect(first.querySelector('button[aria-label="Удалить элемент"]')).not.toBeNull()
     first.querySelector('[data-tree-row]')!.dispatchEvent(new MouseEvent("click", {bubbles: true}))
     second.querySelector('[data-tree-row]')!.dispatchEvent(new MouseEvent("click", {bubbles: true, metaKey: true}))
     expect(selections.at(-1)).toEqual(["a", "b"])

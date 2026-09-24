@@ -66,7 +66,8 @@ write/writeln/clear/toText и subscribe доступны независимо о
 expandedKeys и selectedKeys controlled. selectionMode multiple включает Ctrl/Meta
 toggle и Shift-range. Стрелки, Home/End, Enter и Space работают по видимым узлам;
 disabled не выбираются. `muted` только приглушает оформление. Двойной клик/Enter
-передаются в onActivate(id,event). Дерево ничего не знает о файлах или remote object IDs.
+передаются в onActivate(id,event). Действия строки получают доступное имя из
+`label` даже при одной иконке. Дерево ничего не знает о файлах или remote object IDs.
 
 `embedded` показывает тот же Tree внутри панели вызывающего приложения без
 встроенного заголовка и рамки. При `selectionFollowsFocus: false` стрелки

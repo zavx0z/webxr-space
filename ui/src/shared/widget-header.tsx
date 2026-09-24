@@ -27,6 +27,7 @@ export function WidgetActionButton(props: Readonly<{action: WidgetAction; stopPr
   >
     <Button
       label={action.label}
+      aria-label={action.label}
       iconSrc={action.iconSrc}
       iconOnly={action.iconSrc !== undefined}
       title={action.iconSrc === undefined ? undefined : action.label}
