@@ -32,9 +32,7 @@ GraphView измеряет реальные DiagramNode перед раскла�
 
 @remarks
 [Сценарии Mermaid](../markdown/tests/mermaid.test.ts) проверяют направления,
-маршруты и сохранение нод при обновлении. Интерактивная
-[история смены диаграммы](../.storybook/stories/compiled/compiled-mermaid-story.tsx)
-использует тот же production-компонент.
+маршруты и сохранение нод при обновлении. Тесты используют тот же production-компонент.
 */
 export function Mermaid(props: MermaidInput) {
   const [state, setState] = useState<MermaidState>({source: props.source, graph: null, error: null})

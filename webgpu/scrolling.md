@@ -65,23 +65,12 @@ executeBundles, нельзя интерпретировать как отсут�
 native draw encodes вместо 12740: один прямой кадр и одно построение bundle.
 Все 12740 GPU draws сохраняются. Проверки — `tests/render-bundle-cache.test.ts`.
 
-## Сценарии Storybook
+## Проверка прокрутки редактора кода
 
-Визуальный стенд находится в UI → Редактор кода → Производительность:
-
-- `components/data/code-editor/performance/large` — 420 HTML-строк, область 700×440.
-- `components/data/code-editor/performance/compact` — тот же исходник,
-  область 700×180 и подсказка заголовка.
-
-Сценарии используют production CodeEditor и переданный Storybook Document.
-Колесо и кнопки прокручивают настоящий semantic Element, соседняя панель
-остаётся неподвижной. Display, Canvas и frame/input lifecycle принадлежат
-общему Storybook Experience. Отдельные HTTP-сервер и приложение удалены.
-
-Исходник: `ui/.storybook/stories/compiled/compiled-code-editor-scroll-story.tsx`.
-Проверка: `bun test ui/tests/code-editor-scroll-story.test.ts`.
-Инструменты CPU/GPU-профилирования должны измерять общий кадр Storybook;
-сценарий не показывает исторические числа в качестве живого FPS.
+[Тестовый пример](../ui/tests/code-editor-scroll.fixture.tsx) создаёт 420 HTML-строк
+в production CodeEditor при высоте 440 и 180 px. [Проверка](../ui/tests/code-editor-scroll.test.ts)
+прокручивает semantic Element по обеим осям и подтверждает, что соседняя панель
+и identity строк сохраняются.
 
 ## Исторический диагностический контроль, 2026-09-07
 

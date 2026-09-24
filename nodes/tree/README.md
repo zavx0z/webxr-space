@@ -49,10 +49,8 @@ Store сохраняет переданную identity Parameter. Значени
 | Сохранение | Typed v2 round trip; неверный формат и order/byId; add/replace/remove/test; атомарный отказ и лимиты JSON Patch |
 | Валидация | Parameter/Socket equality и Link compatibility; allow/acyclic; направления, endpoints, повтор ID и неизвестная Frame |
 
-Декларации находятся в [каталоге](.storybook/catalog.json), исполняемые
-последовательности — в [scenarios.ts](.storybook/stories/scenarios.ts).
-Просмотр использует HTML-like TSX в Document, переданном Storybook. Этот
-development-only слой не входит в public exports и production-зависимости.
+Результаты этих случаев проверяются в [тестах модели](tests/model-cases.test.ts)
+через публичные API NodeTree.
 
 ## Шаблоны и NodeType
 
@@ -62,9 +60,8 @@ development-only слой не входит в public exports и production-за
 Scope и не создаёт тело подграфа. Поэтому шаблон нельзя выдавать за декларацию
 состава NodeType или фабрику значений из defaults.
 
-[Договор NodeType](./node-type.md) пока является проектом. Его будущие scenarios
-отмечены в [матрице покрытия](../storybook-coverage.md). Каталог показывает
-существующие API, а не имитирует ещё отсутствующую материализацию типов.
+[Договор NodeType](./node-type.md) пока является проектом. Будущая материализация типов остаётся отдельным требованием и не
+выдаётся тестами нынешнего API за реализованную.
 
 ## Проверки и границы
 
@@ -72,11 +69,5 @@ Scope и не создаёт тело подграфа. Поэтому шабл�
   и отсутствие графических зависимостей в production.
 - [Основа шаблонов](./tests/template-foundation.test.ts): typed Stores, references,
   round trip и сохранение identity при reconcile.
-- [Исполняемые истории](./tests/storybook-model.test.ts): соответствие деклараций,
-  наличие ресурсов и ожидаемые результаты каждой группы сценариев.
-- [Compiled mount](./tests/storybook-mount.test.ts): все варианты компилируются,
-  используют Document host, повторяются по нажатию и освобождают lifecycle.
-
-Визуальное качество Storybook проверяется отдельно через его общий Experience.
-Прохождение headless-тестов не является доказательством корректного layout или
-paint отображаемого примера.
+- [Случаи модели](./tests/model-cases.test.ts): no-op, ownership,
+  reconcile, проекции, сериализация и проверки связей.

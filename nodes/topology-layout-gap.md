@@ -74,9 +74,8 @@ pending при изменении исходного snapshot: геометри�
 - неверную текущую geometry, precomputed append, чужие/поддельные результаты;
 - Link add/remove при сохраняющейся параллельной связи.
 
-[Исходная регрессия](tests/storybook-components.test.ts) сохраняется как
-`NODES-CATALOG-006`. [Пример](.storybook/stories/compiled/component-stories.tsx)
-`components/node-tree/topology` показывает рабочее добавление ноды.
+[Проверка согласованности](tests/layout-coherence.test.ts) сохраняет
+регрессию добавления ноды и обновления раскладки.
 
 ## Отдельное ограничение несвязанных портов
 

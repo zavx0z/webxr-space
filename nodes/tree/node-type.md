@@ -3,7 +3,7 @@
 Статус: проект договора для первого среза NodeType, 7 сентября 2026.
 Декларации и операции ниже ещё не являются production API. Проверенная основа
 отдельно закреплена в [template-foundation.test.ts](./tests/template-foundation.test.ts).
-Полный план показа находится в [матрице Storybook](../storybook-coverage.md).
+План реализации NodeType задан ниже и проверяется по публичному контракту.
 
 ## Назначение и владельцы
 
@@ -263,7 +263,7 @@ Defaults применяются только к новым Parameters. No-op с�
 | NT-11 | Type-aware round trip проверяет сохранённую структуру и неизвестные типы | Будущая структурная проверка; generic hydrate её не заменяет |
 | NT-12 | Изменяемая структура атомарна и сохраняет surviving identities/Links | Следующий NodeType/NodeTree срез |
 
-Тесты текущей основы не названы реализацией NodeType. Storybook будет показывать
+Тесты текущей основы не названы реализацией NodeType. Будущий интерфейс сможет показывать
 их как templates/instances/value types до появления новых production операций.
 
 ## Источники решений
@@ -271,7 +271,7 @@ Defaults применяются только к новым Parameters. No-op с�
 - [Исследование и требования NodeType](codex://threads/01a03d8c-ba85-7b52-bbf1-e6bfe4214676):
   требование типа/экземпляра, компонентного расширения и одной реализации;
   прошлые registry остаются предложениями.
-- [Актуальное исследование Storybook](codex://threads/01a07cdb-80f5-73a1-a300-98d3756b4688):
+- [Актуальное исследование](codex://threads/01a07cdb-80f5-73a1-a300-98d3756b4688):
   inventory, ограничения и согласованный порядок срезов.
 - [Parameter](./model/parameter/src/index.ts), [NodeTree](./model/node-tree/src/index.ts), [foundation](./shared/foundation.ts),
   [serialization](./persistence/serialization/src/index.ts), [Nodes projection](../node-tree/src/node-tree.tsx).

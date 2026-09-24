@@ -6,9 +6,8 @@ WebGPU превращает нормализованный контур в retai
 
 Физический модуль `vector/index.ts` объединяет разбор, нормализацию и
 проверку внутренней области; реализация находится в `vector/src/path.ts`.
-Storybook связывает сценарий через `subject.directory:"vector"`; отдельная
-ручная категория не входит в итоговое дерево навигации. Публичные exports
-пакета не меняются.
+Публичные exports пакета задаются его `package.json` и остаются в ведении
+`@renderer/html`.
 
 Поддерживается прежняя ограниченная грамматика **одного** контура: абсолютный
 начальный `M`, затем явные `L`, `Q`, `C`. Повторный `M`, `Z`, относительные
@@ -57,11 +56,6 @@ paint/hit. Для заполненных контуров используетс
   winding rules и границы грамматики.
 - `../../webgpu/tests/vector-fill.test.ts`: `VECTOR-FILL-GPU-001..003` —
   совпадение tessellation и hit для семи форм, retained lifecycle и пустая область.
-- Storybook owner route `@renderer/html` → `vector/fill/geometry`:
-  `./.storybook/runtime.ts` создаёт обычные semantic vector-path из того же
-  Document. Красный triangle, зелёный вогнутый контур с белой обводкой, синяя
-  Q-кривая, жёлтая рамка evenodd; ниже оранжевый scale+clip, белый stroke-only,
-  полупрозрачная пурпурная C-кривая и скрытый белый контур.
 
 Unit-тесты backend проверяют данные и lifecycle, не имитируют native GPU.
 Реальная GPU-проверка выполняется через capture этой owner story.

@@ -3,7 +3,6 @@ import {resolve} from "node:path"
 import {createDocument, acquireDocumentAuthorStyleSheetOwner, MouseEvent} from "@zavx0z/dom"
 import {flushDocumentLayoutObservers} from "@zavx0z/dom/geometry"
 import {createRoot} from "@zavx0z/component"
-import type {ComponentRoot} from "@zavx0z/component"
 import {createDocumentRenderer} from "@renderer/html"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
@@ -16,7 +15,6 @@ Bun.plugin(createTemplateJsxBunPlugin({cwd: root, persistent: true, sourceRoots:
 const {GraphView} = await import("@webxr/nodes/view")
 const {graphInput, measuredLayout, MeasuredEditor, MeasuredCircle} = await import("./measured.fixture.tsx")
 const theme = await Bun.file(resolve(root, "ui/themes/theme.css")).text()
-const {createComponentStory} = await import("../../.storybook/stories/compiled/component-stories.tsx")
 
 test("[GRAPH-MEASURED-001] реальные размеры, async поколения и font обновления сохраняют те же элементы", async () => {
   const document = createDocument()
@@ -168,35 +166,5 @@ test("[GRAPH-MEASURED-SHAPE] круг получает диаметр от из�
     component.unmount()
     renderer.dispose()
     owner.remove()
-  }
-})
-
-test("[GRAPH-MEASURED-STORY] настоящая story сохраняет рабочий collapse после переноса из staging", () => {
-  const document = createDocument()
-  const {story} = createComponentStory(document, "components/node-editor/navigation")
-  document.append(story.element)
-  const component = story.componentRoot as ComponentRoot
-  const renderer = createDocumentRenderer({document, root: story.element, viewport: {width: 1000, height: 700}, styleSheets: [theme]})
-  const flush = () => {
-    for (let pass = 0; pass < 20; pass += 1) {
-      component.flush()
-      renderer.flush()
-      if (!flushDocumentLayoutObservers(document)) return
-    }
-    throw new Error("Story measurement не стабилизировался")
-  }
-  try {
-    flush()
-    const source = document.querySelector('[data-node-id="source"]')!
-    const before = source.getLayoutRect()!.height
-    const button = source.querySelector('button[aria-label="Свернуть Источник"]')!
-    button.dispatchEvent(new MouseEvent("click", {bubbles: true}))
-    flush()
-    expect(button.getAttribute("aria-expanded")).toBe("false")
-    expect(source.getLayoutRect()!.height).toBeLessThan(before)
-  } finally {
-    story.dispose()
-    renderer.dispose()
-    if (story.element.parentNode === document) document.removeChild(story.element)
   }
 })

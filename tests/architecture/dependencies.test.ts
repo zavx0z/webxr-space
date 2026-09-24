@@ -92,7 +92,6 @@ type SourceImport = Readonly<{
 
 const sourceGlob = new Bun.Glob("**/*.{ts,tsx,js,jsx,mjs,cjs}")
 const excludedSourceSegments = new Set([
-  ".storybook",
   "bench",
   "coverage",
   "dist",

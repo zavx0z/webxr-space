@@ -91,7 +91,7 @@ describe("Конечный состав пакетов", () => {
     )
   })
 
-  test("[PKG-003] Storybook объявляет каждый пакет в порядке рабочего пространства", async () => {
+  test("[PKG-003] package.json объявляет каждый пакет в порядке рабочего пространства", async () => {
     const rootManifest = await Bun.file(join(root, "package.json")).json() as {
       workspaces?: readonly string[]
     }
@@ -103,40 +103,7 @@ describe("Конечный состав пакетов", () => {
       `корневой package.json должен объявлять рабочие пространства в принятом порядке: ${acceptedDirectories.join(", ")}`,
     )
 
-    const rootDeclaration = Bun.file(join(root, ".storybook/manifest.json"))
-    const storybookManifest = (await rootDeclaration.exists() ? await rootDeclaration.json() : {}) as {
-      packages?: unknown
-    }
-    assertRequirement(
-      !Object.hasOwn(storybookManifest, "packages"),
-      "PKG-003",
-      "состав Storybook задаётся package.json#workspaces и не должен дублироваться в manifest.packages",
-    )
 
-    for (const [directory, packageName] of packages) {
-      const packageManifestPath = join(root, directory, "package.json")
-      const storybookPackageManifestPath = join(root, directory, ".storybook/manifest.json")
-      const packageManifest = await Bun.file(packageManifestPath).json() as {
-        name?: string
-      }
-      if (!await Bun.file(storybookPackageManifestPath).exists()) continue
-      const storybookPackageManifest = await Bun.file(storybookPackageManifestPath).json() as {
-        schemaVersion?: number
-        kind?: string
-        id?: string
-        packageJson?: string
-      }
-
-      assertRequirement(
-        storybookPackageManifest.schemaVersion === 1 &&
-          packageManifest.name === packageName &&
-          !Object.hasOwn(storybookPackageManifest, "kind") &&
-          !Object.hasOwn(storybookPackageManifest, "id") &&
-          !Object.hasOwn(storybookPackageManifest, "packageJson"),
-        "PKG-003",
-        `${directory}/.storybook/manifest.json не должен дублировать kind, id и путь package.json владельца ${packageName}`,
-      )
-    }
   })
 
   test("[PKG-010] пакеты подключаются извне без протокола workspace", async () => {

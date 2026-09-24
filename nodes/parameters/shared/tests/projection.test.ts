@@ -6,7 +6,7 @@ import {Parameter as ParameterModel, type ParameterSnapshot} from "@nodes/tree"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import type {ParameterEndpoint, ParameterInput, ParameterProps} from "@nodes/parameters/shared"
-import {PARAMETER_EXAMPLES, parameterFixture, type ParameterMechanism} from "../../.storybook/stories/fixtures/parameters.ts"
+import {PARAMETER_EXAMPLES, parameterFixture, type ParameterMechanism} from "./parameter.fixture.ts"
 
 const root = resolve(import.meta.dir, "../../../..")
 Bun.plugin(createTemplateJsxBunPlugin({

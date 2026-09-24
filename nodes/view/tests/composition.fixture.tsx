@@ -10,7 +10,7 @@ import {socketKey, type NodePresentationState} from "@webxr/nodes/view/tree"
 import {planProjectedNodeGeometry} from "@nodes/node/geometry"
 import type {NodeKind, NodeShape} from "@nodes/node/contracts"
 import {layoutFixed} from "@nodes/layout/fixed"
-import {InteractiveContent} from "../../node/.storybook/stories/nodes.tsx"
+import {InteractiveContent} from "../../node/tests/composition.fixture.tsx"
 
 const kinds: ReadonlyMap<string, NodeKind> = new Map([["source", "content"], ["target", "diagram"]])
 const shapes: ReadonlyMap<string, NodeShape> = new Map([["target", "oval"]])

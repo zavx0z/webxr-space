@@ -17,9 +17,7 @@
     "shared/**/*.ts",
     "shared/**/*.tsx",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    ".storybook/**/*.ts",
-    ".storybook/**/*.tsx"
+    "tests/**/*.tsx"
   ],
   "exclude": [
     "tree",

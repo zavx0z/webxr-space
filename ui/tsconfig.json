@@ -6,8 +6,6 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".storybook/**/*.ts",
-    ".storybook/**/*.tsx"
+    "**/*.tsx"
   ]
 }

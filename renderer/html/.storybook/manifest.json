@@ -1,5 +1,0 @@
-{
-  "schemaVersion": 1,
-  "runtime": {"module": "./runtime.ts", "export": "runtime"},
-  "catalog": "./catalog.json"
-}

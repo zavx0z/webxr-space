@@ -55,24 +55,3 @@ test("[MARKER-SLOTS] смешанные компоненты, исходные �
     owner.remove()
   }
 })
-
-test("[ARROW-STORIES] собственные open/filled варианты рисуют обычный и увеличенный Arrow", async () => {
-  const {createArrowStory} = await import("../.storybook/stories/compiled/arrow-stories.tsx")
-  for (const variant of ["open", "filled"] as const) {
-    const document = createDocument()
-    const {story} = createArrowStory(document, `markers/arrow/${variant}`)
-    document.append(story.element)
-    const renderer = createDocumentRenderer({document, root: story.element, viewport: {width: 600, height: 300}})
-    try {
-      const arrows = [...document.querySelectorAll('[data-marker-kind="arrow"]')]
-      expect(arrows).toHaveLength(2)
-      for (const arrow of arrows) {
-        expect(arrow.getAttribute("data-marker-variant")).toBe(variant)
-        expect(renderer.flush().displayList.some(item => item.node === arrow && item.key === (variant === "filled" ? "path-fill" : "path"))).toBe(true)
-      }
-    } finally {
-      story.dispose()
-      renderer.dispose()
-    }
-  }
-})

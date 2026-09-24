@@ -75,7 +75,6 @@ const productionFileGlob = new Bun.Glob("{package.json,**/*.{ts,tsx,js,jsx,mjs,c
 const codeFileGlob = new Bun.Glob("**/*.{ts,tsx,js,jsx,mjs,cjs}")
 const excludedSegments = new Set(["coverage", "dist", "node_modules"])
 const excludedProductionSegments = new Set([
-  ".storybook",
   "bench",
   "coverage",
   "dist",

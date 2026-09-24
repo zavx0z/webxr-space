@@ -116,20 +116,3 @@ test("[UI-BREADCRUMBS-002] пустой, повторяющийся или бе�
     items: [{id: "empty", label: ""}],
   })).toThrow("label must be non-empty")
 })
-
-test("[UI-BREADCRUMBS-003] каталог размещает Breadcrumbs только в Компоненты → Навигация", async () => {
-  const catalog = await Bun.file(resolve(uiRoot, ".storybook/catalog.json")).json() as {
-    categories: readonly Readonly<{
-      id: string
-      group?: Readonly<{id: string}> | undefined
-      subjects: readonly Readonly<{apiName?: string | undefined; route: string}>[]
-    }>[]
-  }
-  const owners = catalog.categories.flatMap(category => category.subjects.flatMap(subject =>
-    subject.apiName === "Breadcrumbs" ? [{category, subject}] : []))
-
-  expect(owners).toHaveLength(1)
-  expect(owners[0]?.category.id).toBe("components-navigation")
-  expect(owners[0]?.category.group?.id).toBe("components")
-  expect(owners[0]?.subject.route).toBe("components/navigation/breadcrumbs")
-})

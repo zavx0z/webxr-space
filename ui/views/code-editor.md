@@ -109,25 +109,18 @@ highlighter. Memoized строки сравнивают фактический �
 проверяет реальный Renderer drag, additive ranges, copy/paste, IME, Unicode offsets,
 cleanup, сохранение readonly и отсутствие лишних render при выделении.
 
-Русскоязычные production-примеры в Storybook:
-`components/data/code-editor/state/editable` и
-`components/data/code-editor/selection/multiple`. Кнопка «Выделить два значения»
-использует публичную модель; затем реальное копирование, вставка и undo работают
-через общую платформу. Эти примеры не создают второе глобальное меню.
+[Проверка нескольких выделений](../tests/selection-clipboard.test.ts)
+использует публичную модель и production CodeEditor: кнопка выделяет два
+значения, после чего копирование и распределённая вставка работают через общую
+платформу без второго глобального меню.
 
-## Прокрутка большого исходника в Storybook
+## Прокрутка большого исходника
 
-В разделе «Производительность» находятся два production-сценария:
+[Тестовый пример](../tests/code-editor-scroll.fixture.tsx) создаёт 420 HTML-строк
+в production CodeEditor: обычная область имеет размер 700×440, компактная —
+700×180 с подсказкой заголовка. Рядом находится неподвижная панель. Кнопки
+изменяют `scrollTop` и `scrollLeft`, а «В начало» сбрасывает обе оси.
 
-- `components/data/code-editor/performance/large` — 420 HTML-строк, область 700×440.
-- `components/data/code-editor/performance/compact` — тот же текст, область
-  700×180 и обычная подсказка заголовка.
-
-Рядом находится неподвижная панель. Колесо и кнопки изменяют `scrollTop` и
-`scrollLeft` настоящего CodeEditor; «В начало» сбрасывает обе оси. Весь сценарий
-живёт в предоставленном Storybook Document и использует его Display, Canvas и
-общий frame/input lifecycle. Отдельный браузерный сервер не требуется.
-
-`ui/tests/code-editor-scroll-story.test.ts` проверяет оба маршрута, геометрию,
-прокрутку, сохранение текста/узлов, неизменность старого Frame и cleanup.
-Исторические измерения GPU описаны в [WebGPU](../../webgpu/scrolling.md).
+[Проверка прокрутки](../tests/code-editor-scroll.test.ts) подтверждает
+геометрию, сохранение текста и identity строк, неподвижность соседней панели и
+cleanup. Исторические измерения GPU описаны в [WebGPU](../../webgpu/scrolling.md).

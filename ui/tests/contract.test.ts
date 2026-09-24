@@ -132,7 +132,7 @@ async function readPackageJson(): Promise<Readonly<{
 async function productionSource(): Promise<string> {
   const sources: string[] = []
   for await (const relativePath of new Bun.Glob("**/*.{ts,tsx}").scan({cwd: packageRoot})) {
-    if (relativePath.startsWith(".storybook/") || relativePath.startsWith("tests/")) continue
+    if (relativePath.startsWith("tests/")) continue
     sources.push(await Bun.file(resolve(packageRoot, relativePath)).text())
   }
   return sources.join("\n")

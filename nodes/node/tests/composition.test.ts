@@ -5,19 +5,19 @@ import {createDocumentRenderer} from "@renderer/html"
 import "./compiler.ts"
 
 const root = resolve(import.meta.dir, "../../..")
-const {createNodeStory} = await import("../.storybook/stories/nodes.tsx")
+const {createNodeFixture} = await import("./composition.fixture.tsx")
 const {planProjectedNodeGeometry} = await import("@nodes/node/geometry")
 const theme = await Bun.file(resolve(root, "ui/themes/theme.css")).text()
 
 function mount(route: string, looseSockets = false) {
   const document = createDocument()
-  const {story} = createNodeStory(document, route, looseSockets)
-  const owner = story.element as Element
+  const fixture = createNodeFixture(document, route, looseSockets)
+  const owner = fixture.element as Element
   document.append(owner)
   const renderer = createDocumentRenderer({document, root: owner, viewport: {width: 900, height: 1000}, styleSheets: [theme]})
   return {document, owner, renderer, dispose() {
     renderer.dispose()
-    story.dispose()
+    fixture.dispose()
     expect(document.childNodes).toHaveLength(0)
   }}
 }

@@ -339,31 +339,7 @@ describe("Markdown production owner", () => {
     }
   })
 
-  test("Markdown and CodeEditor stories reuse one compiled mounting and source lifecycle", async () => {
-    const {createCompiledMarkdownProductionStory, createCompiledMarkdownWrappingStory} = await import(
-      "../../.storybook/stories/compiled/compiled-markdown-production-story.tsx"
-    )
-    const {createCompiledCodeEditorProductionStory} = await import(
-      "../../../ui/.storybook/stories/compiled/compiled-code-editor-production-story.tsx"
-    )
-    const document = createDocument()
-    const host = document.createElement("div")
-    document.append(host)
-    for (const create of [
-      createCompiledMarkdownProductionStory,
-      createCompiledMarkdownWrappingStory,
-      createCompiledCodeEditorProductionStory,
-    ]) {
-      const {story} = create(document)
-      host.append(story.element)
-      expect(story.element.ownerDocument).toBe(document)
-      expect(story.source.html).toContain("data-story-component")
-      expect(story.source.typescript).toContain("createRoot(container).render(")
-      expect(story.componentRoot.readStyleSheets().styleSheets.length).toBeGreaterThan(0)
-      story.dispose()
-      expect(host.childNodes).toHaveLength(0)
-    }
-  })
+
 })
 
 describe("Markdown inline composition", () => {
