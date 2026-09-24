@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
-import {createDocument, InputEvent, KeyboardEvent, MouseEvent, CompositionEvent, readDocumentScrollIntoViewRequests, type HTMLInputElement} from "@zavx0z/dom"
+import {createDocument, Event, InputEvent, KeyboardEvent, MouseEvent, CompositionEvent, readDocumentScrollIntoViewRequests, type HTMLInputElement, type HTMLElement} from "@zavx0z/dom"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createDocumentRenderer} from "@renderer/html"
@@ -216,6 +216,51 @@ test("Tree controls disclosure, lazy expansion, multiple selection and keyboard 
     f.root.querySelector('[data-tree-id="lazy"]')!.querySelector("button")!.dispatchEvent(new MouseEvent("click", {bubbles: true}))
     expect(expanded.at(-1)).toEqual(["group", "lazy"])
     expect(f.root.querySelector('[data-tree-id="lazy"]')?.getAttribute("aria-expanded")).toBe("true")
+  } finally { f.component.unmount() }
+})
+
+test("embedded Tree keeps focus separate from selection and bounds a large hierarchy", () => {
+  const f = fixture()
+  const activated: string[] = []
+  const selected: string[][] = []
+  const items: TreeProps["items"] = [{
+    id: "group",
+    label: "Group",
+    selectable: false,
+    children: Array.from({length: 1000}, (_, index) => ({id: `item-${index}`, label: `Item ${index}`})),
+  }]
+  f.component.render(Tree as unknown as CompiledTemplate<TreeProps>, {
+    title: "Large hierarchy",
+    items,
+    expandedKeys: ["group"],
+    selectedKeys: [],
+    embedded: true,
+    selectionFollowsFocus: false,
+    windowing: {size: 80, rowHeight: 24, overscan: 12, viewRows: 20},
+    onSelectionChange: keys => selected.push([...keys]),
+    onActivate: id => activated.push(id),
+  })
+  try {
+    const tree = f.root.querySelector('[role="tree"]') as HTMLElement
+    expect(f.root.querySelector("header")).toBeNull()
+    expect(tree.getAttribute("data-tree-total")).toBe("1001")
+    expect(Number(tree.getAttribute("data-tree-materialized"))).toBeLessThanOrEqual(80)
+    const group = f.root.querySelector('[data-tree-id="group"]') as HTMLElement
+    group.focus()
+    group.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, cancelable: true, key: "ArrowDown"}))
+    expect((f.document.activeElement as HTMLElement).getAttribute("data-tree-id")).toBe("item-0")
+    expect(selected).toEqual([])
+    const first = f.document.activeElement as HTMLElement
+    first.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, cancelable: true, key: "Enter"}))
+    expect(activated).toEqual(["item-0"])
+    tree.scrollTop = 2400
+    tree.dispatchEvent(new Event("scroll"))
+    expect(Number(tree.getAttribute("data-tree-window-start"))).toBeGreaterThan(0)
+    expect(f.document.activeElement === first).toBeTrue()
+    first.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, cancelable: true, key: "End"}))
+    expect((f.document.activeElement as HTMLElement).getAttribute("data-tree-id")).toBe("item-999")
+    expect(Number(tree.getAttribute("data-tree-materialized"))).toBeLessThanOrEqual(81)
+    expect(selected).toEqual([])
   } finally { f.component.unmount() }
 })
 

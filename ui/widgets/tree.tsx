@@ -1,8 +1,15 @@
-import {useLayoutEffect, useRef} from "@zavx0z/component"
+import {useLayoutEffect, useRef, useState} from "@zavx0z/component"
 import {Button} from "../buttons/button.tsx"
 import {chevronDownIcon, chevronRightIcon} from "../src/shared/icon-assets.ts"
 import {WidgetHeader, WidgetActionButton, type WidgetHeaderProps, type WidgetAction} from "../src/shared/widget-header.tsx"
 import type {BadgeTone} from "../badge.tsx"
+import {
+  materializedTreeRows,
+  retainedTreeBlocks,
+  visibleTreeRows,
+  windowedTreeBlocks,
+  type WindowedTreeBlock,
+} from "./tree/windowing.ts"
 
 export type TreeItem = Readonly<{
   id: string
@@ -13,6 +20,10 @@ export type TreeItem = Readonly<{
   disabled?: boolean | undefined
   muted?: boolean | undefined
   expandable?: boolean | undefined
+  /** Ветвь для раскрытия сохраняет фокус, но не входит в выбор. */
+  selectable?: boolean | undefined
+  /** Помечает текущую страницу независимо от выбранных ключей. */
+  current?: boolean | undefined
   tone?: BadgeTone | undefined
   children?: readonly TreeItem[] | undefined
   actions?: readonly WidgetAction[] | undefined
@@ -38,9 +49,23 @@ export type TreeProps = WidgetHeaderProps & Readonly<{
   onSelectionChange?: ((keys: readonly string[], event: Event) => void) | undefined
   onActivate?: ((id: string, event: Event) => void) | undefined
   onReady?: ((handle: TreeHandle | null) => void) | undefined
+  /** Встраивает дерево в панель вызывающего компонента без собственного заголовка. */
+  embedded?: boolean | undefined
+  /** При false стрелки перемещают только фокус, не изменяя выбор. */
+  selectionFollowsFocus?: boolean | undefined
+  /** Ограничивает число смонтированных строк большой иерархии. */
+  windowing?: Readonly<{
+    size: number
+    rowHeight: number
+    overscan?: number
+    viewRows?: number
+    resetKey?: string
+    retainedItems?: readonly TreeItem[]
+  }> | undefined
   style?: CssStyle | undefined
 }>
 type TreeRow = Readonly<{item: TreeItem; parent: string | null}>
+type TreeItemBlock = Extract<WindowedTreeBlock<TreeItem>, {kind: "item"}>
 type TreeContext = Readonly<{
   expanded: ReadonlySet<string>
   selected: ReadonlySet<string>
@@ -50,9 +75,17 @@ type TreeContext = Readonly<{
   toggle(id: string, event: Event): void
   activate(id: string, event: Event): void
   key(id: string, event: KeyboardEvent): void
+  focusIn(id: string): void
+  rowHeight: number
 }>
 
-function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth: number}>) {
+/** Отображает одну строку и её доступных потомков в том же semantic Document. */
+function TreeBranch(props: Readonly<{
+  item: TreeItem
+  context: TreeContext
+  depth: number
+  block?: TreeItemBlock | undefined
+}>) {
   const item = props.item
   const children = item.children ?? []
   const expandable = item.expandable ?? children.length > 0
@@ -66,8 +99,11 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
     }}
     role="treeitem"
     data-tree-id={item.id}
+    hidden={props.block?.hidden === true}
+    aria-label={item.label}
     aria-level={props.depth}
-    aria-selected={String(selected)}
+    aria-selected={item.selectable === false ? undefined : String(selected)}
+    aria-current={item.current === true ? "page" : undefined}
     aria-expanded={expandable ? String(expanded) : undefined}
     aria-disabled={String(item.disabled === true)}
     tabIndex={props.context.focusKey === item.id ? 0 : -1}
@@ -81,12 +117,17 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
       if (event.target !== event.currentTarget) return
       props.context.key(item.id, event)
     }}
+    onFocusIn={event => { if (event.target === event.currentTarget) props.context.focusIn(item.id) }}
     style={css`
       display: flex;
       flex-direction: column;
       min-width: 0;
       width: 100%;
       list-style: none;
+
+      &[hidden] {
+        display: none;
+      }
     `}
   >
     <div
@@ -216,15 +257,22 @@ function TreeBranch(props: Readonly<{item: TreeItem; context: TreeContext; depth
         stopPropagation={true}
       />)}
     </div>
-    {expanded && children.length > 0 ? <TreeChildren
+    {(expanded && children.length > 0 || props.block?.children.length) ? <TreeChildren
       items={children}
+      blocks={props.block?.children}
       context={props.context}
       depth={props.depth + 1}
     /> : null}
   </li>
 }
 
-function TreeChildren(props: Readonly<{items: readonly TreeItem[]; context: TreeContext; depth: number}>) {
+/** Сохраняет вложенную ARIA-группу для обычного и ограниченного режима. */
+function TreeChildren(props: Readonly<{
+  items: readonly TreeItem[]
+  blocks?: readonly WindowedTreeBlock<TreeItem>[] | undefined
+  context: TreeContext
+  depth: number
+}>) {
   return <ul
     role="group"
     style={css`
@@ -238,19 +286,89 @@ function TreeChildren(props: Readonly<{items: readonly TreeItem[]; context: Tree
       list-style: none;
     `}
   >
+    {props.blocks === undefined ? <TreePlainRows
+      items={props.items}
+      context={props.context}
+      depth={props.depth}
+    /> : <TreeWindowedRows
+      blocks={props.blocks}
+      context={props.context}
+      depth={props.depth}
+    />}
+  </ul>
+}
+
+/** Отображает все строки небольшого дерева без окна материализации. */
+function TreePlainRows(props: Readonly<{items: readonly TreeItem[]; context: TreeContext; depth: number}>) {
+  return <>
     {props.items.map(item => <TreeBranch
       key={item.id}
       item={item}
       context={props.context}
       depth={props.depth}
     />)}
-  </ul>
+  </>
+}
+
+/** Отображает выбранные строки и распорки большого дерева. */
+function TreeWindowedRows(props: Readonly<{
+  blocks: readonly WindowedTreeBlock<TreeItem>[]
+  context: TreeContext
+  depth: number
+}>) {
+  return <>
+    {props.blocks.map(block => <TreeBlockView
+      key={block.kind === "spacer" ? block.key : block.item.id}
+      block={block}
+      context={props.context}
+      depth={props.depth}
+    />)}
+  </>
+}
+
+/** Выбирает предметную строку либо распорку без знания данных владельца. */
+function TreeBlockView(props: Readonly<{
+  block: WindowedTreeBlock<TreeItem>
+  context: TreeContext
+  depth: number
+}>) {
+  const block = props.block
+  return <>
+    {block.kind === "spacer" ? <TreeSpacer
+      rows={block.rows}
+      rowHeight={props.context.rowHeight}
+    /> : <TreeBranch
+      item={block.item}
+      context={props.context}
+      depth={props.depth}
+      block={block}
+    />}
+  </>
+}
+
+/** Удерживает высоту строк, не созданных в текущем окне. */
+function TreeSpacer(props: Readonly<{rows: number; rowHeight: number}>) {
+  return <li
+    role="presentation"
+    style={css`
+      height: ${props.rows * props.rowHeight}px;
+      min-height: ${props.rows * props.rowHeight}px;
+      list-style: none;
+    `}
+  />
 }
 
 /** Controlled hierarchy without file, process or debugger semantics. */
 export function Tree(props: TreeProps) {
   const refs = useRef(new Map<string, HTMLLIElement>())
   const anchor = useRef<string | null>(null)
+  const viewport = useRef<HTMLUListElement | null>(null)
+  const pendingFocus = useRef<string | null>(null)
+  const pendingReveal = useRef<string | null>(null)
+  const createdIds = useRef(new Set<string>())
+  const previousResetKey = useRef(props.windowing?.resetKey)
+  const [focusedId, setFocusedId] = useState<string | null>(null)
+  const [windowStart, setWindowStart] = useState(0)
   const expanded = new Set(props.expandedKeys)
   const selected = new Set(props.selectedKeys)
   const rows: TreeRow[] = []
@@ -264,12 +382,55 @@ export function Tree(props: TreeProps) {
     }
   }
   visit(props.items, null, true)
-  const focusKey = props.selectedKeys.find(key => rows.some(row => row.item.id === key && !row.item.disabled))
+  const focusKey = (props.selectionFollowsFocus === false && rows.some(row => row.item.id === focusedId && !row.item.disabled) ? focusedId : null)
+    ?? props.selectedKeys.find(key => rows.some(row => row.item.id === key && !row.item.disabled))
     ?? rows.find(row => !row.item.disabled)?.item.id ?? null
-  const focus = (id = focusKey ?? "") => refs.current.get(id)?.focus({preventScroll: true})
+  const windowRows = props.windowing === undefined ? [] : visibleTreeRows(props.items, expanded)
+  const maximumStart = Math.max(0, windowRows.length - (props.windowing?.size ?? 0))
+  const boundedStart = Math.min(maximumStart, Math.max(0, windowStart))
+  const visibleBlocks = props.windowing === undefined ? [] : windowedTreeBlocks(
+    props.items, windowRows, expanded, boundedStart, props.windowing.size, focusKey,
+  )
+  const rememberBlocks = (blocks: readonly WindowedTreeBlock<TreeItem>[]): void => {
+    for (const block of blocks) {
+      if (block.kind === "item") {
+        createdIds.current.add(block.item.id)
+        rememberBlocks(block.children)
+      }
+    }
+  }
+  rememberBlocks(visibleBlocks)
+  const blocks = props.windowing === undefined ? undefined : retainedTreeBlocks(
+    visibleBlocks, props.windowing.retainedItems ?? props.items, createdIds.current,
+  )
+  const ensureWindow = (id: string): boolean => {
+    if (props.windowing === undefined) return false
+    const index = windowRows.findIndex(row => row.item.id === id)
+    if (index < 0) return false
+    const viewportRows = props.windowing.viewRows ?? 20
+    const firstVisible = Math.floor((viewport.current?.scrollTop ?? 0) / props.windowing.rowHeight)
+    const outsideViewport = index < firstVisible || index >= firstVisible + viewportRows
+    if (index < boundedStart || index >= boundedStart + props.windowing.size || outsideViewport) {
+      const overscan = props.windowing.overscan ?? 12
+      const scrollRow = Math.max(0, index - Math.floor(viewportRows / 2))
+      setWindowStart(Math.min(maximumStart, Math.max(0, scrollRow - overscan)))
+      viewport.current && (viewport.current.scrollTop = scrollRow * props.windowing.rowHeight)
+    }
+    return true
+  }
+  const focus = (id = focusKey ?? "") => {
+    ensureWindow(id)
+    const target = refs.current.get(id)
+    if (target !== undefined && !target.hidden) target.focus({preventScroll: true})
+    else if (ensureWindow(id)) pendingFocus.current = id
+  }
   const reveal = (id: string): boolean => {
     const element = refs.current.get(id)
-    if (element === undefined) return false
+    if (element === undefined || element.hidden) {
+      if (!ensureWindow(id)) return false
+      pendingReveal.current = id
+      return true
+    }
     const row = element.querySelector("[data-tree-row]")
     if (row === null) return false
     row.scrollIntoView({block: "nearest", inline: "nearest"})
@@ -278,15 +439,52 @@ export function Tree(props: TreeProps) {
   useLayoutEffect(() => {
     props.onReady?.(Object.freeze({focus, reveal}))
     return () => props.onReady?.(null)
-  }, [props.onReady, focusKey])
+  }, [props.onReady, focusKey, boundedStart])
+  useLayoutEffect(() => {
+    const id = pendingFocus.current
+    if (id !== null && refs.current.get(id)?.hidden === false) {
+      pendingFocus.current = null
+      refs.current.get(id)?.focus({preventScroll: true})
+    }
+    const revealId = pendingReveal.current
+    if (revealId !== null && refs.current.get(revealId)?.hidden === false) {
+      pendingReveal.current = null
+      refs.current.get(revealId)?.querySelector("[data-tree-row]")?.scrollIntoView({block: "nearest", inline: "nearest"})
+    }
+  })
+  useLayoutEffect(() => {
+    for (const [id, element] of refs.current) {
+      const tabIndex = id === focusKey && !element.hidden ? 0 : -1
+      if (!element.hasAttribute("tabindex") || element.tabIndex !== tabIndex) element.tabIndex = tabIndex
+    }
+  }, [focusKey, blocks])
+  useLayoutEffect(() => {
+    if (previousResetKey.current === props.windowing?.resetKey) return
+    previousResetKey.current = props.windowing?.resetKey
+    setWindowStart(0)
+    if (viewport.current !== null) viewport.current.scrollTop = 0
+  }, [props.windowing?.resetKey])
   const toggle = (id: string, event: Event) => {
+    const branch = refs.current.get(id)
+    const active = branch?.ownerDocument.activeElement
+    if (expanded.has(id) && branch !== undefined && active != null && active !== branch && branch.contains(active)) {
+      if (props.selectionFollowsFocus === false) setFocusedId(id)
+      branch.focus({preventScroll: true})
+    }
     const next = new Set(expanded)
     if (next.has(id)) next.delete(id)
     else next.add(id)
     props.onExpandedChange?.([...next], event)
   }
   const select = (id: string, event: MouseEvent | KeyboardEvent) => {
-    if (rows.find(row => row.item.id === id)?.item.disabled) return
+    const item = rows.find(row => row.item.id === id)?.item
+    if (item === undefined || item.disabled) return
+    if (item.selectable === false) {
+      if (item.expandable ?? (item.children?.length ?? 0) > 0) toggle(id, event)
+      if (props.selectionFollowsFocus === false) setFocusedId(id)
+      focus(id)
+      return
+    }
     let keys = [id]
     if (props.selectionMode === "multiple" && event.shiftKey && anchor.current !== null) {
       const first = rows.findIndex(row => row.item.id === anchor.current)
@@ -300,12 +498,19 @@ export function Tree(props: TreeProps) {
       anchor.current = id
     } else anchor.current = id
     props.onSelectionChange?.(keys, event)
+    if (props.selectionFollowsFocus === false) setFocusedId(id)
     focus(id)
   }
   const context: TreeContext = {
-    expanded, selected, focusKey, refs: refs.current,
+    expanded, selected, focusKey, refs: refs.current, rowHeight: props.windowing?.rowHeight ?? 24,
     select, toggle,
-    activate: (id, event) => { if (!rows.find(row => row.item.id === id)?.item.disabled) props.onActivate?.(id, event) },
+    focusIn: id => { if (props.selectionFollowsFocus === false) setFocusedId(id) },
+    activate: (id, event) => {
+      const item = rows.find(row => row.item.id === id)?.item
+      if (item === undefined || item.disabled) return
+      if (item.selectable === false) toggle(id, event)
+      else props.onActivate?.(id, event)
+    },
     key(id, event) {
       const index = rows.findIndex(row => row.item.id === id)
       const current = rows[index]
@@ -317,20 +522,26 @@ export function Tree(props: TreeProps) {
       else if (event.key === "End") next = [...rows].reverse().find(row => !row.item.disabled)
       else if (event.key === "ArrowRight" && (current.item.expandable ?? (current.item.children?.length ?? 0) > 0)) {
         if (!expanded.has(id)) toggle(id, event)
-        else next = rows[index + 1]
+        else next = rows.slice(index + 1).find(row => !row.item.disabled && isTreeDescendant(row, id, rows))
       } else if (event.key === "ArrowLeft") {
         if (expanded.has(id)) toggle(id, event)
         else next = rows.find(row => row.item.id === current.parent)
-      } else if (event.key === "Enter") props.onActivate?.(id, event)
+      } else if (event.key === "Enter") context.activate(id, event)
       else if (event.key === " ") select(id, event)
       else return
       event.preventDefault()
-      if (next) select(next.item.id, event)
+      if (next) {
+        if (props.selectionFollowsFocus === false) {
+          setFocusedId(next.item.id)
+          focus(next.item.id)
+        } else select(next.item.id, event)
+      }
     },
   }
   const empty = props.items.length === 0 ? props.emptyLabel ?? "Нет элементов" : ""
   return <section
     data-widget="tree"
+    data-tree-embedded={props.embedded === true ? "true" : undefined}
     aria-label={props.title}
     style={css`
       box-sizing: border-box;
@@ -345,20 +556,36 @@ export function Tree(props: TreeProps) {
       border-radius: 6px;
       background: var(--widget-text-background);
 
+      &[data-tree-embedded="true"] {
+        border: 0;
+        border-radius: 0;
+      }
+
       ${props.style}
     `}
   >
-    <WidgetHeader
+    {props.embedded === true ? null : <WidgetHeader
       title={props.title}
       subtitle={props.subtitle}
       status={props.status}
       statusTone={props.statusTone}
       actions={props.actions}
-    />
+    />}
     <ul
+      ref={element => { viewport.current = element }}
       role="tree"
       aria-label={props.title}
       aria-multiselectable={String(props.selectionMode === "multiple")}
+      data-tree-total={props.windowing === undefined ? undefined : String(windowRows.length)}
+      data-tree-materialized={blocks === undefined ? undefined : String(materializedTreeRows(blocks))}
+      data-tree-window-start={props.windowing === undefined ? undefined : String(boundedStart)}
+      onScroll={event => {
+        if (props.windowing === undefined) return
+        const overscan = props.windowing.overscan ?? 12
+        setWindowStart(Math.min(maximumStart, Math.max(0,
+          Math.floor(event.currentTarget.scrollTop / props.windowing.rowHeight) - overscan,
+        )))
+      }}
       style={css`
         display: flex;
         flex-direction: column;
@@ -366,18 +593,21 @@ export function Tree(props: TreeProps) {
         min-height: 0;
         min-width: 0;
         margin: 0;
-        padding: 4px;
+        padding: ${props.embedded === true ? 0 : 4}px;
         overflow: auto;
         list-style: none;
         user-select: none;
       `}
     >
-      {props.items.map(item => <TreeBranch
-        key={item.id}
-        item={item}
+      {blocks === undefined ? <TreePlainRows
+        items={props.items}
         context={context}
         depth={1}
-      />)}
+      /> : <TreeWindowedRows
+        blocks={blocks}
+        context={context}
+        depth={1}
+      />}
     </ul>
     <span
       hidden={props.items.length > 0}
@@ -393,4 +623,14 @@ export function Tree(props: TreeProps) {
       {empty}
     </span>
   </section>
+}
+
+/** Находит принадлежность видимой строки раскрытой ветви для клавиатуры. */
+function isTreeDescendant(row: TreeRow, ancestorId: string, rows: readonly TreeRow[]): boolean {
+  let parent = row.parent
+  while (parent !== null) {
+    if (parent === ancestorId) return true
+    parent = rows.find(candidate => candidate.item.id === parent)?.parent ?? null
+  }
+  return false
 }

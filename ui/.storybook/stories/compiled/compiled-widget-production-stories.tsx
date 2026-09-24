@@ -82,27 +82,65 @@ function TreeWidgetStory() {
   ])
   const [expanded, setExpanded] = useState<readonly string[]>(["group"])
   const [selected, setSelected] = useState<readonly string[]>(["first"])
+  const [largeSelected, setLargeSelected] = useState<readonly string[]>([])
+  const largeItems: readonly TreeItem[] = [{
+    id: "catalog",
+    label: "Каталог",
+    selectable: false,
+    children: Array.from({length: 1000}, (_, index) => ({id: `entry-${index}`, label: `Элемент ${index}`})),
+  }]
   return <div
     style={css`
       display: flex;
+      gap: 8px;
       width: 680px;
       height: 360px;
     `}
   >
-    <Tree
-      title="Дерево данных"
-      subtitle="Раскрытие, выбор и ленивые узлы"
-      items={items}
-      expandedKeys={expanded}
-      selectedKeys={selected}
-      selectionMode="multiple"
-      onExpandedChange={keys => {
-        setExpanded(keys)
-        if (keys.includes("lazy")) setItems(previous => previous.map(item => item.id === "lazy"
-          ? {...item, children: [{id: "loaded", label: "Загруженный элемент"}]} : item))
-      }}
-      onSelectionChange={keys => setSelected(keys)}
-    />
+    <div style={css`
+      display: flex;
+      flex: 1;
+      min-width: 0;
+    `}>
+      <Tree
+        title="Дерево данных"
+        subtitle="Раскрытие, выбор и ленивые узлы"
+        items={items}
+        expandedKeys={expanded}
+        selectedKeys={selected}
+        selectionMode="multiple"
+        onExpandedChange={keys => {
+          setExpanded(keys)
+          if (keys.includes("lazy")) setItems(previous => previous.map(item => item.id === "lazy"
+            ? {...item, children: [{id: "loaded", label: "Загруженный элемент"}]} : item))
+        }}
+        onSelectionChange={keys => setSelected(keys)}
+      />
+    </div>
+    <div style={css`
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+    `}>
+      <strong
+        style={css`
+          color: var(--widget-regular-content);
+          padding: 4px 0;
+        `}
+      >Большой каталог</strong>
+      <Tree
+        title="Большой каталог"
+        items={largeItems}
+        expandedKeys={["catalog"]}
+        selectedKeys={largeSelected}
+        embedded={true}
+        selectionFollowsFocus={false}
+        windowing={{size: 80, rowHeight: 24, viewRows: 12}}
+        onSelectionChange={keys => setLargeSelected(keys)}
+      />
+    </div>
   </div>
 }
 
