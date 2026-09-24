@@ -3,7 +3,7 @@
   "label": "HTML",
   "version": "0.0.0",
   "private": true,
-  "description": "CSS, размеры, раскладка, прокрутка, список рисования и hit без GPU",
+  "description": "CSS, размеры, раскладка, прокрутка, список рисования и проверка попаданий без GPU",
   "type": "module",
   "sideEffects": false,
   "packageManager": "bun@1.4.0",

@@ -3,7 +3,7 @@
   "label": "Браузер",
   "version": "0.0.0",
   "private": true,
-  "description": "Canvas, resize, input, RAF и общий цикл кадров",
+  "description": "Canvas, обработка изменения размеров и ввода, общий цикл кадров браузера",
   "type": "module",
   "sideEffects": false,
   "packageManager": "bun@1.4.0",

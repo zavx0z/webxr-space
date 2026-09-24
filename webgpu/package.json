@@ -3,7 +3,7 @@
   "label": "WebGPU",
   "version": "0.0.0",
   "private": true,
-  "description": "Shaders, buffers, textures, uploads и рисование",
+  "description": "Шейдеры, буферы, текстуры, загрузка данных и рисование",
   "type": "module",
   "sideEffects": false,
   "packageManager": "bun@1.4.0",

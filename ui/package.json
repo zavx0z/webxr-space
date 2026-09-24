@@ -2,7 +2,7 @@
   "name": "@zavx0z/ui",
   "label": "UI",
   "version": "0.0.0",
-  "description": "Универсальные UI-компоненты, тема и иконки",
+  "description": "Универсальные компоненты интерфейса, тема и значки",
   "private": true,
   "type": "module",
   "sideEffects": [

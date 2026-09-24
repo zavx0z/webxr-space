@@ -2,7 +2,7 @@
   "name": "@zavx0z/dom",
   "label": "DOM",
   "version": "0.0.0",
-  "description": "Document, элементы, атрибуты, события, focus и состояние полей",
+  "description": "Семантический документ, элементы, атрибуты, события, фокус и состояние полей",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",

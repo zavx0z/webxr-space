@@ -2,7 +2,7 @@
   "name": "@zavx0z/component",
   "label": "Компоненты",
   "version": "0.0.0",
-  "description": "Состояние компонентов, hooks, context, эффекты и очистка",
+  "description": "Состояние компонентов, хуки, контекст, эффекты и освобождение ресурсов",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",

@@ -2,7 +2,7 @@
   "name": "@nodes/tree",
   "label": "Дерево нодов",
   "version": "0.0.0",
-  "description": "Живая модель NodeTree, Parameter stores, снимки и сохранение",
+  "description": "Живая модель NodeTree, хранилища параметров, снимки и сохранение",
   "private": true,
   "type": "module",
   "sideEffects": false,

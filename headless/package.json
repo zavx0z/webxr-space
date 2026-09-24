@@ -1,8 +1,8 @@
 {
   "name": "@immersive/headless",
-  "label": "Headless",
+  "label": "Без браузера",
   "version": "0.0.0",
-  "description": "Нативный рендер компонентов в живой DOM и PNG без браузера",
+  "description": "Без браузера: нативная отрисовка компонентов в живой DOM и PNG",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.0",
