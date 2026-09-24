@@ -418,11 +418,11 @@ export function Tree(props: TreeProps) {
     }
     return true
   }
-  const focus = (id = focusKey ?? "") => {
-    ensureWindow(id)
+  const focus = (id = focusKey ?? "", reveal = true) => {
+    if (reveal) ensureWindow(id)
     const target = refs.current.get(id)
     if (target !== undefined && !target.hidden) target.focus({preventScroll: true})
-    else if (ensureWindow(id)) pendingFocus.current = id
+    else if (reveal && ensureWindow(id)) pendingFocus.current = id
   }
   const reveal = (id: string): boolean => {
     const element = refs.current.get(id)
@@ -482,7 +482,7 @@ export function Tree(props: TreeProps) {
     if (item.selectable === false) {
       if (item.expandable ?? (item.children?.length ?? 0) > 0) toggle(id, event)
       if (props.selectionFollowsFocus === false) setFocusedId(id)
-      focus(id)
+      focus(id, event.type === "keydown")
       return
     }
     let keys = [id]
@@ -499,7 +499,7 @@ export function Tree(props: TreeProps) {
     } else anchor.current = id
     props.onSelectionChange?.(keys, event)
     if (props.selectionFollowsFocus === false) setFocusedId(id)
-    focus(id)
+    focus(id, event.type === "keydown")
   }
   const context: TreeContext = {
     expanded, selected, focusKey, refs: refs.current, rowHeight: props.windowing?.rowHeight ?? 24,

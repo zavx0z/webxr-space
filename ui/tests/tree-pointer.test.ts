@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {createRoot} from "@zavx0z/component"
-import {createDocument, HTMLElement, readDocumentScrollIntoViewRequests} from "@zavx0z/dom"
+import {createDocument, HTMLElement, KeyboardEvent, readDocumentScrollIntoViewRequests} from "@zavx0z/dom"
 import {createTemplateJsxBunPlugin} from "@zavx0z/template/bun"
 import type {CompiledTemplate} from "@zavx0z/template/compiled"
 import {createDocumentInteractionController, createDocumentRenderer} from "@renderer/html"
@@ -13,15 +13,21 @@ Bun.plugin(createTemplateJsxBunPlugin({cwd: workspace, persistent: true, sourceR
 const {Tree} = await import("../widgets/tree.tsx")
 const template = Tree as unknown as CompiledTemplate<TreeProps>
 
-function mount(items: TreeProps["items"], expandedKeys: readonly string[]) {
+function mount(
+  items: TreeProps["items"],
+  expandedKeys: readonly string[],
+  options: Pick<TreeProps, "windowing" | "selectionFollowsFocus"> = {},
+  height = 360,
+) {
   const document = createDocument()
   const container = document.createElement("div")
-  container.setAttribute("style", "display:flex;flex-direction:column;width:320px;height:360px")
+  container.setAttribute("style", `display:flex;flex-direction:column;width:320px;height:${height}px`)
   document.append(container)
   const component = createRoot(container)
   const selections: string[][] = []
   const ready: {handle: TreeHandle | null} = {handle: null}
   let props: TreeProps = {
+    ...options,
     title: "Контракт",
     items,
     expandedKeys,
@@ -35,7 +41,7 @@ function mount(items: TreeProps["items"], expandedKeys: readonly string[]) {
   }
   const render = () => component.render(template, props)
   render()
-  const renderer = createDocumentRenderer({document, root: container, viewport: {width: 320, height: 360}})
+  const renderer = createDocumentRenderer({document, root: container, viewport: {width: 320, height}})
   const interaction = createDocumentInteractionController({document})
   return {
     container,
@@ -99,5 +105,24 @@ test("reveal раскрытой ветви прокручивает только
     const request = readDocumentScrollIntoViewRequests(fixture.document).at(-1)
     const branch = fixture.container.querySelector('[data-tree-id="comment"]')!
     expect(request?.target === branch.querySelector("[data-tree-row]")).toBe(true)
+  } finally { fixture.dispose() }
+})
+
+test("клик по видимой строке за пределами 20 строк не прокручивает дерево", () => {
+  const fixture = mount(Array.from({length: 100}, (_, index) => ({id: `item-${index}`, label: `Item ${index}`})), [], {
+    selectionFollowsFocus: false,
+    windowing: {size: 80, rowHeight: 24, viewRows: 20},
+  }, 960)
+  try {
+    const tree = fixture.container.querySelector('[role="tree"]') as HTMLElement
+    fixture.clickTreeItemCenter("item-30", true)
+    expect(fixture.selections).toEqual([["item-30"]])
+    expect(tree.scrollTop).toBe(0)
+    expect(tree.getAttribute("data-tree-window-start")).toBe("0")
+    const selected = fixture.document.activeElement as HTMLElement
+    expect(selected.getAttribute("data-tree-id")).toBe("item-30")
+    selected.dispatchEvent(new KeyboardEvent("keydown", {bubbles: true, cancelable: true, key: "End"}))
+    expect(tree.scrollTop).toBeGreaterThan(0)
+    expect((fixture.document.activeElement as HTMLElement).getAttribute("data-tree-id")).toBe("item-99")
   } finally { fixture.dispose() }
 })

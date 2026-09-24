@@ -83,6 +83,10 @@ const breakpointMuteSvg = /* @__PURE__ */ iconSvg("<circle cx=\"12\" cy=\"12\" r
 const breakpointActiveSvg = /* @__PURE__ */ svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"6.8\" fill=\"#ff4f4f\"/><circle cx=\"12\" cy=\"12\" r=\"6.8\" stroke=\"#ffc1c1\" stroke-width=\"1.4\"/></svg>")
 const breakpointDisabledSvg = /* @__PURE__ */ svgIcon("<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"12\" cy=\"12\" r=\"6.3\" stroke=\"#d8a6a6\" stroke-opacity=\"0.74\" stroke-width=\"2.2\"/></svg>")
 const collapseSvg = /* @__PURE__ */ iconSvg("<path d=\"M9 3v6H3\"/><path d=\"M15 3v6h6\"/><path d=\"M21 15h-6v6\"/><path d=\"M3 15h6v6\"/>")
+/** Действия над деревом, показанные рядом с поиском владельца. */
+export const selectOpenedItemIcon = /* @__PURE__ */ iconSvg("<path d=\"M18 11a7 7 0 1 0-7 7\"/><path d=\"M15 11a4 4 0 1 0-4 4\"/><path d=\"M11 11v10l3-3 2.5 4 2-1-2.5-4 4-1Z\"/>")
+export const expandAllIcon = /* @__PURE__ */ iconSvg("<path d=\"M10 4H4v6\"/><path d=\"M14 20h6v-6\"/>", "#f3b6cf")
+export const collapseAllIcon = /* @__PURE__ */ iconSvg("<path d=\"M4 10h6V4\"/><path d=\"M20 14h-6v6\"/>", "#f3b6cf")
 const chevronLeftSvg = /* @__PURE__ */ iconSvg("<path d=\"m14 7-5 5 5 5\"/>")
 const micSvg = /* @__PURE__ */ iconSvg("<path d=\"M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z\"/><path d=\"M5 10a7 7 0 0 0 14 0\"/><path d=\"M12 17v4\"/><path d=\"M8 21h8\"/>")
 const keyboardSvg = /* @__PURE__ */ iconSvg("<rect x=\"3\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M7 10h.01\"/><path d=\"M11 10h.01\"/><path d=\"M15 10h.01\"/><path d=\"M19 10h.01\"/><path d=\"M7 14h10\"/>", "#5cf0ff")
