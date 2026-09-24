@@ -25,6 +25,7 @@ export const finalPackageDirectories = Object.freeze({
   "@webxr/renderer": "renderer",
   "@renderer/html": "renderer/html",
   "@webxr/markdown": "markdown",
+  "@webxr/typedoc": "typedoc",
   "@zavx0z/webgpu": "webgpu",
   "@zavx0z/browser": "browser",
   "@zavx0z/space": "space",
@@ -35,6 +36,7 @@ export const finalPackageDirectories = Object.freeze({
   "@nodes/layout": "nodes/layout",
   "@nodes/parameters": "nodes/parameters",
   "@nodes/sockets": "nodes/sockets",
+  "@immersive/headless": "headless",
   "@zavx0z/devtools": "devtools",
 } as const)
 

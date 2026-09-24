@@ -18,6 +18,11 @@
 Production-диапазон `maxNodesPerLayer` у Coffman–Graham — целое число от 2 до 16.
 Пустой массив `crossings` означает только отсутствие пересечений на данном входе.
 
+Фиксированная политика экспортирует `FixedLayoutInput` и `FixedLayoutOutput` из
+`@nodes/layout` и `@nodes/layout/fixed`. Они заменили прежние alias общего
+протокола `FixedLayoutGraph` и `FixedLayoutResult`; `layoutFixed` принимает
+измеренный вход и возвращает ту же числовую геометрию со сторонами портов.
+
 ## Числовой протокол
 
 [LayoutGraph / LayoutResult](./protocol/types/src/protocol.ts) задаёт measured

@@ -11,7 +11,7 @@ export const sourcePublicSymbols: Readonly<Record<string, readonly string[]>> = 
 
 export type PublicSymbolDisposition = Readonly<{
   decisionMarker: string
-  kind: "internalized" | "retired"
+  kind: "internalized" | "renamed" | "retired"
   ownerPackages: readonly string[]
   requirementIds: readonly string[]
   sourceId: string
@@ -121,6 +121,46 @@ const oldBrowserInternalizedSymbols = Object.freeze([
 
 export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Object.freeze([
   Object.freeze({
+    decisionMarker: "node-component-type-aliases",
+    kind: "retired" as const,
+    ownerPackages: Object.freeze(["@webxr/nodes"]),
+    requirementIds: Object.freeze(["NODES-001"]),
+    sourceId: "old-nodes-ui",
+    symbols: Object.freeze(["FrameComponent", "LinkComponent"]),
+  }),
+  Object.freeze({
+    decisionMarker: "node-component-type-aliases",
+    kind: "retired" as const,
+    ownerPackages: Object.freeze(["@nodes/parameters"]),
+    requirementIds: Object.freeze(["PARAMETERS-PROJECTION-001"]),
+    sourceId: "old-nodes-ui",
+    symbols: Object.freeze([
+      "CheckboxParameterComponent",
+      "CollectionParameterComponent",
+      "ColorParameterComponent",
+      "CycleParameterComponent",
+      "MatrixParameterComponent",
+      "NumberParameterComponent",
+      "OptionGroupParameterComponent",
+      "OutputParameterComponent",
+      "PathParameterComponent",
+      "ReferenceParameterComponent",
+      "SelectParameterComponent",
+      "SliderParameterComponent",
+      "SwitchParameterComponent",
+      "TextParameterComponent",
+      "VectorParameterComponent",
+    ]),
+  }),
+  Object.freeze({
+    decisionMarker: "fixed-layout-contract",
+    kind: "renamed" as const,
+    ownerPackages: Object.freeze(["@nodes/layout"]),
+    requirementIds: Object.freeze(["LAYOUT-FIXED-API-001"]),
+    sourceId: "old-nodes-layout",
+    symbols: Object.freeze(["FixedLayoutGraph", "FixedLayoutResult"]),
+  }),
+  Object.freeze({
     decisionMarker: "graph-view-composition",
     kind: "retired" as const,
     ownerPackages: Object.freeze(["@webxr/nodes"]),
@@ -180,6 +220,12 @@ export const publicSymbolDispositions: readonly PublicSymbolDisposition[] = Obje
 ])
 
 export const requirementEvidenceFiles = Object.freeze({
+  "LAYOUT-FIXED-API-001": "nodes/layout/tests/contract.test.ts",
+  "NODES-001": "nodes/tests/contract.test.ts",
+  "PARAMETERS-PROJECTION-001": "nodes/parameters/shared/tests/projection.test.ts",
+  "GRAPH-VIEW-001": "nodes/view/tests/graph.test.ts",
+  "NODES-LAYOUT-COHERENCE-001": "nodes/view/tests/layout-coherence.test.ts",
+  "NODES-LAYOUT-COHERENCE-002": "nodes/view/tests/layout-coherence.test.ts",
   "NODE-COMPOSITION-001": "nodes/node/tests/composition.test.ts",
   "NODE-COMPOSITION-002": "nodes/node/tests/composition.test.ts",
   "NODE-COMPOSITION-003": "nodes/node/tests/composition.test.ts",

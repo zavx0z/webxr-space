@@ -1,9 +1,22 @@
 import {expect, test} from "bun:test"
 import {resolve} from "node:path"
 import {layoutFixed, type FixedLayoutInput} from "@nodes/layout/fixed"
+import {layoutFixed as layoutFixedFromRoot, type FixedLayoutOutput} from "@nodes/layout"
 import {runFixedWorkerRequest} from "@nodes/layout/worker/fixed/executor"
 
 const packageRoot = resolve(import.meta.dir, "..")
+
+test("[LAYOUT-FIXED-API-001] FixedLayoutInput и FixedLayoutOutput сохраняют числовой договор фиксированной политики", () => {
+  const input: FixedLayoutInput = layoutGraph()
+  const output: FixedLayoutOutput = layoutFixed(input)
+
+  expect(layoutFixedFromRoot(input)).toEqual(output)
+  expect(output.ports.map(({id, side}) => ({id, side}))).toEqual([
+    {id: "source/socket", side: "EAST"},
+    {id: "target/socket", side: "WEST"},
+  ])
+  expect(output).not.toHaveProperty("viewport")
+})
 
 test("[LAYOUT-001] layout остаётся чистым numeric owner без UI/Renderer/Engine", async () => {
   const packageJson = await Bun.file(resolve(packageRoot, "package.json")).json()

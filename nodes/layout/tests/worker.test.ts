@@ -49,9 +49,7 @@ test("[LAYOUT-WORKER] executors сохраняют числовой резуль
 })
 
 function testWorker(path: string): Worker {
-  const worker = new Worker(new URL(path, import.meta.url), {type: "module"})
-  worker.unref()
-  return worker
+  return new Worker(new URL(path, import.meta.url), {type: "module"})
 }
 
 test("[LAYOUT-WORKER] отдельные Worker возвращают результат и typed отказ", async () => {

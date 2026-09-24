@@ -205,6 +205,7 @@ Nodes.
 | `renderer` | `@webxr/renderer` | Семейство рендереров документов |
 | `renderer/html` | `@renderer/html` | CSS, размеры, раскладка, прокрутка, список рисования и определение попаданий без GPU |
 | `markdown` | `@webxr/markdown` | Разбор Markdown и компоненты документа |
+| `typedoc` | `@webxr/typedoc` | Разбор TypeScript 7 и представление документации типов |
 | `webgpu` | `@zavx0z/webgpu` | Шейдеры, буферы, текстуры, загрузка данных и рисование |
 | `browser` | `@zavx0z/browser` | Canvas, изменение размера, ввод, RAF и общий цикл кадров |
 | `space` | `@zavx0z/space` | `Object`, `Asset`, `Group`, `Mesh`, `Line`, `Text`, `Light`, `Animation`, `Geometry`, `Material` |
@@ -215,11 +216,25 @@ Nodes.
 | `nodes/parameters` | `@nodes/parameters` | Представления параметров и проекция внешнего Parameter Store |
 | `nodes/sockets` | `@nodes/sockets` | Адресуемый Socket и его визуальные предустановки |
 | `nodes/node` | `@nodes/node` | DiagramNode, ParameterNode и ContentNode на основе Pane |
+| `headless` | `@immersive/headless` | Нативная отрисовка компонентов в живой DOM и PNG без браузера |
 | `devtools` | `@zavx0z/devtools` | Диагностика Document, состояния элементов и результатов Renderer |
 
 Состав и порядок пакетов задаются `package.json#workspaces`. Каждый пакет
 владеет собственным `package.json`, README, публичными TSDoc и проверками
 в `tests` или `contract/spec`.
+
+`fixed-layout-contract`: прежние публичные `FixedLayoutGraph` и
+`FixedLayoutResult` были alias общего `LayoutGraph` и `LayoutResult`. Пакет
+`@nodes/layout` теперь называет вход и результат фиксированной политики
+`FixedLayoutInput` и `FixedLayoutOutput`. Они экспортируются из `./fixed` и
+корня пакета; `layoutFixed` сохраняет числовое поведение и выбор сторон портов.
+
+`node-component-type-aliases`: старые типы `FrameComponent`, `LinkComponent` и
+`*ParameterComponent` дублировали типы функций с соответствующими `*Props`.
+Публичными остаются сами компоненты и их props в пакетах `@webxr/nodes` и
+`@nodes/parameters`; отдельные alias типов компонентов сняты. Проверки
+компиляции публичных TSX и проекции всех готовых параметров сохраняют
+наблюдаемое поведение.
 
 ## Модули пакета
 

@@ -347,10 +347,11 @@ describe("Направление производственных зависим
         assertRequirement((manifest.workspaces?.length ?? 0) > 0, "PKG-008", `${packageName} без scripts должен перечислять дочерние пакеты`)
         continue
       }
+      const testPhases = (manifest.scripts.test ?? "").split(" && ")
       assertRequirement(
-        /^bun test --parallel(?: [\w./-]+)*$/u.test(manifest.scripts.test ?? ""),
+        testPhases.every(phase => /^bun test (?:--preload [\w@./-]+ )?--parallel(?: [\w./-]+)*$/u.test(phase)),
         "PKG-008",
-        `${packageName} должен запускать package tests нативным параллельным Bun test`,
+        `${packageName} должен запускать каждую группу package tests нативным параллельным Bun test`,
       )
       assertRequirement(
         manifest.scripts.check === "bun run --parallel typecheck test",
