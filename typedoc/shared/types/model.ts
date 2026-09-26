@@ -60,6 +60,9 @@ export interface TypeDocMember {
 @property members - Строки {@link TypeDocMember} для эффективного типа в порядке компилятора.
 Включает наследование и mapped types; для скаляров и стандартных Promise-оболочек
 остаётся пустым, без методов boxed-значений и методов Promise.
+
+@property [schema] - JSON Schema того же разрешённого типа с описаниями из TSDoc.
+Parser заполняет схему; вручную подготовленная модель представления может её не содержать.
 */
 export interface TypeDocDeclaration {
   readonly name: string
@@ -67,6 +70,7 @@ export interface TypeDocDeclaration {
   readonly signature: string
   readonly comment: TypeDocComment
   readonly members: readonly TypeDocMember[]
+  readonly schema?: TypeDocSchema
 }
 
 /**
@@ -96,4 +100,23 @@ Parser записывает исходник и посещённые объяв�
 export interface TypeDocSource {
   readonly path: string
   readonly digest: string
+}
+
+/** JSON Schema 2020-12 для JSON-значений TypeScript-контракта. */
+export interface TypeDocSchema {
+  readonly type?: string
+  readonly description?: string
+  readonly const?: string | number | boolean | null
+  readonly enum?: readonly (string | number | boolean | null)[]
+  readonly properties?: Readonly<Record<string, TypeDocSchema>>
+  readonly required?: readonly string[]
+  readonly items?: TypeDocSchema | boolean
+  readonly prefixItems?: readonly TypeDocSchema[]
+  readonly minItems?: number
+  readonly maxItems?: number
+  readonly additionalProperties?: TypeDocSchema | boolean
+  readonly anyOf?: readonly TypeDocSchema[]
+  readonly allOf?: readonly TypeDocSchema[]
+  readonly not?: TypeDocSchema
+  readonly $ref?: string
 }

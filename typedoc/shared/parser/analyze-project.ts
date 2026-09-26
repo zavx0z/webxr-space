@@ -5,6 +5,7 @@ import {basename, join} from "node:path"
 import {readFile, stat} from "node:fs/promises"
 import {documentation} from "./documentation.ts"
 import {typeMembers} from "./type-members.ts"
+import {typeSchema} from "./schema.ts"
 import {sourceTracker} from "./sources.ts"
 import type {AnalyzeTypeDocOutput} from "../../parser/contract/output.ts"
 import type {TypeDocDeclaration, TypeDocSource} from "../types/model.ts"
@@ -51,6 +52,7 @@ export async function analyzeTypeDocProject(
       signature: declaration.getText(declaration.getSourceFile()),
       comment: docs.comment,
       members,
+      ...(type ? {schema: await typeSchema(project, type, declaration, node => sources.visit(node))} : {}),
     })
   }
   if (!declarations.length) throw new Error(`TypeDoc: нет экспортируемого type/interface: ${absolutePath}`)
